@@ -120,7 +120,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server.Start()
+	if err := server.Start(); err != nil {
+		log.Fatal(err)
+	}
 
 	// 5. Shutdown gracefully
 	report := injector.Shutdown()
