@@ -68,10 +68,11 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 ## Gotchas
 
 - **Repo directory is `samber-do-metrics`** but `go.mod` says `samber-do-auditlog`. The module name is canonical.
-- **`inferServiceType()` always returns `ServiceTypeUnknown`** — it's a stub. Service type classification is not yet implemented.
-- **JSON tags use snake_case** (`scope_name`, `service_name`, etc.) despite tagliatelle being enabled with camelCase rules. This generates ~24 lint warnings. This appears intentional (snake_case for JSON API compatibility) and is currently accepted.
+- **JSON tags use snake_case** (`scope_name`, `service_name`, etc.) via `tagliatelle` config set to `json: snake_case`. This is intentional for JSON API compatibility.
 - **`doc.go` and `plugin.go` both have package-level doc comments**, causing a `godoclint` warning about multiple godocs.
-- **`Opts()` when disabled** returns a fully-zeroed `InjectorOpts` with every field explicitly set to zero value. This is deliberate for clarity and exhaustruct compliance.
+- **`Plugin.containerID` was removed** — containerID is stored only in `Recorder` (passed at construction via `NewRecorder`). `Plugin.Report()` calls parameterless `BuildReport()`.
+- **`Report.Services` is sorted** by (scope_name, service_name) for deterministic output across runs.
+- **`writeToFile()` helper** in `plugin.go` eliminates the duplicated create-defer-close pattern across all 3 export methods.
 - **Test file uses external test package** (`auditlog_test`) — imports the package under test as `auditlog`.
 - **`example/` directory** is exempt from some lint rules (forbidigo, noinlineerr) since it's demo code.
 - **`html.templ`** uses `templ.JSONScript` to safely embed report JSON into the HTML page. The generated `html_templ.go` is excluded from lint via `_templ\.go$` pattern in `.golangci.yml`. Templ normalizes `<!DOCTYPE html>` to lowercase `<!doctype html>` — the HTML test uses case-insensitive comparison.
