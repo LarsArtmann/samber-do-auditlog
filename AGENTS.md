@@ -56,7 +56,7 @@ doc.go           — Package doc comment
 
 Extremely strict — nearly every golangci-lint linter enabled. Key implications:
 
-- **exhaustruct**: All struct fields must be explicitly initialized. Tests are exempted. This is why `newRegistrationEvent()`, `newInvocationEvent()`, `newShutdownEvent()`, `newServiceRecord()` exist as constructor helpers — they centralize field init to satisfy exhaustruct in one place.
+- **exhaustruct**: All struct fields must be explicitly initialized. Tests are exempted. This is why `newEvent()` and `newServiceRecord()` exist as constructor helpers — they centralize field init to satisfy exhaustruct in one place.
 - **depguard**: Only `$gostd`, `github.com/a-h/templ`, `github.com/larsartmann/samber-do-auditlog`, and `github.com/samber` allowed.
 - **noinlineerr**: Use `err := ...` then check, not `if err := ...; err != nil`.
 - **forbidigo**: `fmt.Print*` forbidden in non-example code.
@@ -71,7 +71,7 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **JSON tags use snake_case** (`scope_name`, `service_name`, etc.) via `tagliatelle` config set to `json: snake_case`. This is intentional for JSON API compatibility.
 - **`doc.go` and `plugin.go` both have package-level doc comments**, causing a `godoclint` warning about multiple godocs.
 - **`Plugin.containerID` was removed** — containerID is stored only in `Recorder` (passed at construction via `NewRecorder`). `Plugin.Report()` calls parameterless `BuildReport()`.
-- **`Report.Services` is sorted** by (scope_name, service_name) for deterministic output across runs.
+- **`Report.Services` is sorted** by (scope_name, service_name) for deterministic output across runs. Dependencies and dependents within each service are also sorted.
 - **`writeToFile()` helper** in `plugin.go` eliminates the duplicated create-defer-close pattern across all 3 export methods.
 - **Test file uses external test package** (`auditlog_test`) — imports the package under test as `auditlog`.
 - **`example/` directory** is exempt from some lint rules (forbidigo, noinlineerr) since it's demo code.
@@ -86,4 +86,5 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - `t.Setenv()` for testing `DO_AUDITLOG_ENABLED` env var behavior.
 - `t.TempDir()` for file export tests.
 - Benchmarks exist in the test file for performance measurement.
-- Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking, scope tree, export formats (JSON, NDJSON, HTML), error paths.
+- Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (including duration), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML), error paths, container_id propagation, report version, event sequence numbers.
+- **Coverage: ~93%** of statements.
