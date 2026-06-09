@@ -427,6 +427,26 @@ func (r *Recorder) BuildReport() Report {
 
 	scopeTree := r.buildScopeTreeLocked()
 
+	slices.SortFunc(services, func(a, b ServiceInfo) int {
+		if a.ScopeName != b.ScopeName {
+			if a.ScopeName < b.ScopeName {
+				return -1
+			}
+
+			return 1
+		}
+
+		if a.ServiceName < b.ServiceName {
+			return -1
+		}
+
+		if a.ServiceName > b.ServiceName {
+			return 1
+		}
+
+		return 0
+	})
+
 	return Report{
 		Version:      SchemaVersion,
 		ContainerID:  r.containerID,
