@@ -165,9 +165,8 @@ templ reportHTML(report Report) {
 	// Services table
 	document.getElementById('services-tbody').innerHTML = report.services.map(s => {
 	  const deps = (s.dependencies||[]).map(d => '<span>'+d.service_name+'</span>').join(', ');
-	  const status = s.invocation_error ? '<span class="has-error">error</span>' :
-	                 s.shutdown_at ? 'shutdown' :
-	                 s.first_invoked_at ? 'active' : 'registered';
+	  const status = s.status === 'invocation_error' || s.status === 'shutdown_error'
+	                 ? '<span class="has-error">'+s.status.replace(/_/g,' ')+'</span>' : s.status.replace(/_/g,' ');
 	  return '<tr>'
 	    +'<td class="mono">'+esc(s.service_name)+'</td>'
 	    +'<td>'+esc(s.scope_name)+'</td>'
