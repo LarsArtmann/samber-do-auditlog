@@ -1,9 +1,11 @@
 package auditlog_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -558,6 +560,108 @@ func TestPlugin_ScopeID(t *testing.T) {
 
 	if rootSvc.ScopeID == childSvc.ScopeID {
 		t.Error("root and child should have different ScopeIDs")
+	}
+}
+
+func TestPlugin_WriteReportJSON(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	var buf bytes.Buffer
+
+	err := p.WriteReportJSON(&buf)
+	if err != nil {
+		t.Fatalf("WriteReportJSON failed: %v", err)
+	}
+
+	var report auditlog.Report
+	if err := json.Unmarshal(buf.Bytes(), &report); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+
+	if report.ServiceCount != 1 {
+		t.Errorf("expected 1 service, got %d", report.ServiceCount)
+	}
+
+	if report.Version != auditlog.SchemaVersion {
+		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, report.Version)
+	}
+}
+
+func TestPlugin_WriteEventsNDJSON(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	var buf bytes.Buffer
+
+	err := p.WriteEventsNDJSON(&buf)
+	if err != nil {
+		t.Fatalf("WriteEventsNDJSON failed: %v", err)
+	}
+
+	lines := strings.Count(buf.String(), "\n")
+	if lines != 4 {
+		t.Errorf("expected 4 ndjson lines, got %d", lines)
+	}
+}
+
+func TestPlugin_EmptyReport(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+
+	report := p.Report()
+	if report.EventCount != 0 {
+		t.Errorf("expected 0 events, got %d", report.EventCount)
+	}
+
+	if report.ServiceCount != 0 {
+		t.Errorf("expected 0 services, got %d", report.ServiceCount)
+	}
+
+	if report.Version != auditlog.SchemaVersion {
+		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, report.Version)
+	}
+
+	if report.ScopeTree.Name != "" && report.ScopeTree.ID != "" {
+		t.Error("expected empty scope tree for empty report")
+	}
+}
+
+func TestPlugin_ConcurrentInvocations(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "postgres://localhost"}, nil
+	})
+
+	var wg sync.WaitGroup
+
+	for range 10 {
+		wg.Go(func() {
+			_, _ = do.InvokeNamed[*Database](injector, "db")
+		})
+	}
+
+	wg.Wait()
+
+	report := p.Report()
+	if report.ServiceCount != 1 {
+		t.Errorf("expected 1 service, got %d", report.ServiceCount)
+	}
+
+	svc := findServiceByName(t, report, "db")
+	if svc == nil {
+		t.Fatal("db not found")
+	}
+
+	if svc.InvocationCount != 10 {
+		t.Errorf("expected 10 invocations, got %d", svc.InvocationCount)
 	}
 }
 
