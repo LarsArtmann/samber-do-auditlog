@@ -5,41 +5,45 @@ Last updated: 2026-06-10
 
 ---
 
-## Priority 0 — Documentation (Quick Wins)
-
-- [ ] **Update CHANGELOG.md** — Current content is placeholder ("Initial release"). Should reflect actual development history: plugin creation, event capture, export formats, HTML visualization, scope tree, transient/value provider support, concurrent tests, etc.
-- [x] ~~Fill DOMAIN_LANGUAGE.md with actual domain terms~~ — Done 2026-06-10
-
-## Priority 1 — Code Quality
-
-- [x] ~~Fix `parentKey` construction in `OnBeforeInvocation`~~ — Moved `depKey` computation before lock for consistency. Done 2026-06-10.
-- [x] ~~Remove dead `classList &&` check in `html.templ` JS~~ — Done 2026-06-10.
-- [x] ~~Replace custom `contains()`/`searchString()` with `strings.Contains` in tests~~ — Done 2026-06-10.
-- [x] ~~Add concurrent access test for Recorder~~ — `TestPlugin_ConcurrentInvocations` already exists.
-- [x] ~~Add empty container edge case test~~ — `TestPlugin_EmptyReport` already exists.
-- [x] ~~Add `WriteReportJSON` test~~ — `TestPlugin_WriteReportJSON` already exists.
-- [x] ~~Add `WriteEventsNDJSON` to writer test~~ — `TestPlugin_WriteEventsNDJSON` already exists.
-
-## Priority 2 — Features (Future)
+## Priority 1 — Features (Future)
 
 - [ ] **Add `ReportOption` functional options** for filtering reports by service name, time range, event type. Enables efficient consumption for large containers. Currently `Report()` returns everything.
 - [ ] **Add `EventHandler` callback** in `Config` for real-time event streaming. `type EventHandler func(Event)` — called after each event is captured. Zero cost when nil. Enables live dashboards and metrics integration.
-- [ ] **Add convenience methods on `Event`** — `IsRegistration()`, `IsInvocation()`, `IsShutdown()`, `IsBefore()`, `IsAfter()`. Simple boolean methods that improve readability at call sites.
 
-## Priority 3 — Polish
+## Priority 2 — Polish
 
 - [ ] **Add `Config.Validate() error`** method — Currently validation is ad-hoc in `New()`. A proper `Validate()` method would centralize it and make the API more extensible.
-- [ ] **Consider `stackEntry.key()` method** — The `scopeID + "/" + serviceName` format is used in multiple places. A method would centralize the format.
-- [ ] **Upgrade templ dependency** — go.mod has v0.3.1020 but generator is v0.3.1036. Run `go get -u github.com/a-h/templ`.
-- [ ] **Verify LICENSE file** — Ensure MIT license text is correct and complete.
+
+## Priority 3 — Consider
+
+- [ ] **Versioned report schema with migration** — `SchemaVersion` exists but has no migration function. Postpone until v1.0 planning.
+- [ ] **Additional export formats** — Mermaid diagram, PlantUML. Only if users request them.
 
 ## Not Planned (Explicitly Rejected)
 
-- **Multi-module split** — Project is too small (1 package). Revisit at 5+ packages or when external consumers have conflicting dependency needs.
-- **External storage backends** — File and io.Writer exports are sufficient. EventHandler callback covers streaming use cases.
+- **Multi-module split** — Project is too small (1 package). Revisit at 5+ packages.
+- **External storage backends** — File and io.Writer exports are sufficient.
 - **Prometheus/OpenTelemetry integration** — Out of scope. Use EventHandler when available.
+- **`samber/lo` dependency** — Current stdlib `slices`/`cmp` usage is sufficient for this project size.
 
 ---
+
+## Completed (2026-06-10)
+
+- [x] Fill DOMAIN_LANGUAGE.md with actual domain terms
+- [x] Fix `OnBeforeShutdown` missing `recordScope` call
+- [x] Fix non-deterministic scope tree construction in `buildScopeTreeLocked`
+- [x] Add `ServiceStatus` type with computed field on `ServiceInfo`
+- [x] Update HTML template to use server-computed status
+- [x] Add `stackEntry.key()` and `serviceRecord.key()` methods
+- [x] Add `//go:generate templ generate` directive in `html.go`
+- [x] Remove dead `classList &&` check in HTML template JS
+- [x] Replace custom `contains`/`searchString` with `strings.Contains` in tests
+- [x] Add shutdown error test
+- [x] Add ServiceStatus computation tests
+- [x] Update CHANGELOG.md with actual development history
+- [x] Move `depKey` computation before lock in `OnBeforeInvocation`
+- [x] Comprehensive codebase analysis (code quality, naming, architecture, features)
 
 ## Completed (Historical)
 
@@ -50,13 +54,8 @@ Last updated: 2026-06-10
 - [x] Scope tree building
 - [x] JSON report export
 - [x] NDJSON event stream export
-- [x] Self-contained HTML visualization with D3-like force graph
+- [x] Self-contained HTML visualization with force-directed graph
 - [x] Environment variable toggle (DO_AUDITLOG_ENABLED)
 - [x] Zero-cost disabled mode
 - [x] Strict golangci-lint configuration
 - [x] External test package
-- [x] Transient and value provider tests
-- [x] Concurrent invocation test
-- [x] Empty report test
-- [x] Writer-based export tests
-- [x] Comprehensive code review and architecture documentation (2026-06-10)

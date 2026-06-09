@@ -30,12 +30,13 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 | **Explicit enable override** | `Config.Enabled: true` overrides env var | ✓ `plugin.go:46-48` |
 | **Container ID** | Human-readable identifier propagated to all events | ✓ `plugin.go:22-26` |
 | **Concurrent-safe recording** | 4-lock design: RWMutex for state, Mutex for stack, ordering, shutdown | ✓ `recorder.go:59-76` |
-| **Deterministic report output** | Services sorted by (scope_name, service_name) | ✓ `recorder.go:429-434` |
+| **Deterministic report output** | Services sorted by (scope_name, service_name), scope tree sorted by scope ID | ✓ `recorder.go:429-434, sortedScopesLocked` |
 | **Transient provider support** | Works with `do.ProvideTransient` — tracks multiple invocations | ✓ Tested: `TestPlugin_ProvideTransient` |
 | **Value provider support** | Works with `do.ProvideValue` | ✓ Tested: `TestPlugin_ProvideValue` |
 | **Named service support** | Works with `do.ProvideNamed` / `do.InvokeNamed` | ✓ Tested throughout |
 | **Schema versioning** | `SchemaVersion` constant for forward compatibility | ✓ `types.go:6` |
 | **Defensive copies** | `Events()` and `Report()` return copies, not internal slices | ✓ `recorder.go:544-550, 378-395` |
+| **Service lifecycle status** | Computed `ServiceStatus` field: registered, active, invocation_error, shutdown, shutdown_error | ✓ `types.go:ServiceStatus`, `recorder.go:computeServiceStatus` |
 
 ---
 
