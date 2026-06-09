@@ -53,7 +53,7 @@ func New(config Config) *Plugin {
 	}
 
 	return &Plugin{
-		recorder:    NewRecorder(),
+		recorder:    NewRecorder(config.ContainerID),
 		config:      config,
 		containerID: config.ContainerID,
 	}

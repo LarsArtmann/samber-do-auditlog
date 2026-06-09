@@ -64,6 +64,7 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 
 ## Gotchas
 
+- **Repo directory is `samber-do-metrics`** but `go.mod` says `samber-do-auditlog`. The module name is canonical.
 - **`inferServiceType()` always returns `ServiceTypeUnknown`** — it's a stub. Service type classification is not yet implemented.
 - **JSON tags use snake_case** (`scope_name`, `service_name`, etc.) despite tagliatelle being enabled with camelCase rules. This generates ~24 lint warnings. This appears intentional (snake_case for JSON API compatibility) and is currently accepted.
 - **`doc.go` and `plugin.go` both have package-level doc comments**, causing a `godoclint` warning about multiple godocs.

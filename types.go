@@ -31,15 +31,16 @@ type DependencyRef struct {
 
 // Event is a single, timestamped observation from the DI container lifecycle.
 type Event struct {
-	Sequence    int       `json:"sequence"`
-	Timestamp   time.Time `json:"timestamp"`
-	EventType   EventType `json:"event_type"`
-	Phase       Phase     `json:"phase"`
-	ScopeID     string    `json:"scope_id"`
-	ScopeName   string    `json:"scope_name"`
-	ServiceName string    `json:"service_name"`
-	DurationMs  *float64  `json:"duration_ms,omitempty"`
-	Error       *string   `json:"error,omitempty"`
+	Sequence     int       `json:"sequence"`
+	Timestamp    time.Time `json:"timestamp"`
+	EventType    EventType `json:"event_type"`
+	Phase        Phase     `json:"phase"`
+	ContainerID  string    `json:"container_id"`
+	ScopeID      string    `json:"scope_id"`
+	ScopeName    string    `json:"scope_name"`
+	ServiceName  string    `json:"service_name"`
+	DurationMs   *float64  `json:"duration_ms,omitempty"`
+	Error        *string   `json:"error,omitempty"`
 }
 
 // ServiceInfo aggregates all observed data for a single service.

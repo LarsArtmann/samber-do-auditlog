@@ -66,11 +66,12 @@ type Recorder struct {
 	invocationMu    sync.Mutex
 	invocationIndex int
 
-	sequence *atomic.Int64
+	sequence    *atomic.Int64
+	containerID string
 }
 
 // NewRecorder creates a new event recorder.
-func NewRecorder() *Recorder {
+func NewRecorder(containerID string) *Recorder {
 	return &Recorder{
 		mu:              sync.RWMutex{},
 		events:          make([]Event, 0, initialEventCapacity),
@@ -81,6 +82,7 @@ func NewRecorder() *Recorder {
 		invocationMu:    sync.Mutex{},
 		invocationIndex: 0,
 		sequence:        newSequenceCounter(),
+		containerID:     containerID,
 	}
 }
 
@@ -109,17 +111,18 @@ func (r *Recorder) recordScope(scope *do.Scope) {
 
 // newRegistrationEvent builds an Event struct with all fields initialized.
 // Centralizing the construction ensures exhaustruct sees every field.
-func newRegistrationEvent(seq int, now time.Time, phase Phase, scope *do.Scope, serviceName string) Event {
+func newRegistrationEvent(seq int, now time.Time, phase Phase, scope *do.Scope, serviceName string, containerID string) Event {
 	return Event{
-		Sequence:    seq,
-		Timestamp:   now,
-		EventType:   EventTypeRegistration,
-		Phase:       phase,
-		ScopeID:     scope.ID(),
-		ScopeName:   scope.Name(),
-		ServiceName: serviceName,
-		DurationMs:  nil,
-		Error:       nil,
+		Sequence:     seq,
+		Timestamp:    now,
+		EventType:    EventTypeRegistration,
+		Phase:        phase,
+		ContainerID:  containerID,
+		ScopeID:      scope.ID(),
+		ScopeName:    scope.Name(),
+		ServiceName:  serviceName,
+		DurationMs:   nil,
+		Error:        nil,
 	}
 }
 
@@ -132,32 +135,35 @@ func newInvocationEvent(
 	serviceName string,
 	dur *float64,
 	errStr *string,
+	containerID string,
 ) Event {
 	return Event{
-		Sequence:    seq,
-		Timestamp:   now,
-		EventType:   EventTypeInvocation,
-		Phase:       phase,
-		ScopeID:     scope.ID(),
-		ScopeName:   scope.Name(),
-		ServiceName: serviceName,
-		DurationMs:  dur,
-		Error:       errStr,
+		Sequence:     seq,
+		Timestamp:    now,
+		EventType:    EventTypeInvocation,
+		Phase:        phase,
+		ContainerID:  containerID,
+		ScopeID:      scope.ID(),
+		ScopeName:    scope.Name(),
+		ServiceName:  serviceName,
+		DurationMs:   dur,
+		Error:        errStr,
 	}
 }
 
 // newShutdownEvent builds an Event struct for a shutdown phase.
-func newShutdownEvent(seq int, now time.Time, phase Phase, scope *do.Scope, serviceName string, errStr *string) Event {
+func newShutdownEvent(seq int, now time.Time, phase Phase, scope *do.Scope, serviceName string, errStr *string, containerID string) Event {
 	return Event{
-		Sequence:    seq,
-		Timestamp:   now,
-		EventType:   EventTypeShutdown,
-		Phase:       phase,
-		ScopeID:     scope.ID(),
-		ScopeName:   scope.Name(),
-		ServiceName: serviceName,
-		DurationMs:  nil,
-		Error:       errStr,
+		Sequence:     seq,
+		Timestamp:    now,
+		EventType:    EventTypeShutdown,
+		Phase:        phase,
+		ContainerID:  containerID,
+		ScopeID:      scope.ID(),
+		ScopeName:    scope.Name(),
+		ServiceName:  serviceName,
+		DurationMs:   nil,
+		Error:        errStr,
 	}
 }
 
@@ -181,7 +187,7 @@ func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *servi
 
 func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
 	r.recordScope(scope)
-	r.addEvent(newRegistrationEvent(r.nextSequence(), time.Now(), PhaseBefore, scope, serviceName))
+	r.addEvent(newRegistrationEvent(r.nextSequence(), time.Now(), PhaseBefore, scope, serviceName, r.containerID))
 }
 
 func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
@@ -193,7 +199,7 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 		r.services[key] = newServiceRecord(scope, serviceName, now)
 	}
 	r.mu.Unlock()
-	r.addEvent(newRegistrationEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName))
+	r.addEvent(newRegistrationEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName, r.containerID))
 }
 
 func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
@@ -222,14 +228,14 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 	})
 	r.stackMu.Unlock()
 
-	r.addEvent(newInvocationEvent(r.nextSequence(), now, PhaseBefore, scope, serviceName, nil, nil))
+	r.addEvent(newInvocationEvent(r.nextSequence(), now, PhaseBefore, scope, serviceName, nil, nil, r.containerID))
 }
 
 func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err error) {
 	now := time.Now()
 	durationMs := r.popInvocationDuration(scope, serviceName, now)
 	errStr := errorToStringPtr(err)
-	r.addEvent(newInvocationEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName, durationMs, errStr))
+	r.addEvent(newInvocationEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName, durationMs, errStr, r.containerID))
 	r.recordInvocationResult(scope, serviceName, now, durationMs, errStr)
 }
 
@@ -295,14 +301,14 @@ func (r *Recorder) recordInvocationResult(
 }
 
 func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
-	r.addEvent(newShutdownEvent(r.nextSequence(), time.Now(), PhaseBefore, scope, serviceName, nil))
+	r.addEvent(newShutdownEvent(r.nextSequence(), time.Now(), PhaseBefore, scope, serviceName, nil, r.containerID))
 }
 
 func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err error) {
 	now := time.Now()
 	errStr := errorToStringPtr(err)
 
-	r.addEvent(newShutdownEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName, errStr))
+	r.addEvent(newShutdownEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName, errStr, r.containerID))
 
 	key := scope.ID() + "/" + serviceName
 
