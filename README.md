@@ -1,24 +1,70 @@
-# do-auditlog
+<div align="center">
 
-An audit-log plugin for [samber/do v2](https://github.com/samber/do) that tracks every registration, invocation, and shutdown with timestamps, dependency resolution, and build durations. Built for debugging and visualization.
+# 🔍 do-auditlog
+
+**Audit-log plugin for [samber/do v2](https://github.com/samber/do)**
+
+Track every service registration, invocation, and shutdown.
+Get timestamps, build durations, dependency graphs, and scope trees.
+Export as JSON, NDJSON, or a self-contained HTML visualization.
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/do-auditlog.svg)](https://pkg.go.dev/github.com/larsartmann/do-auditlog)
+[![Go Report Card](https://goreportcard.com/badge/github.com/larsartmann/do-auditlog)](https://goreportcard.com/report/github.com/larsartmann/do-auditlog)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+</div>
+
+---
+
+> [!CAUTION]
+> ## 🚧 ALPHA — WORK IN PROGRESS 🚧
+>
+> This project is in **early development**. The API may change at any time without notice.
+>
+> **No guarantees** are made regarding:
+> - Backward compatibility between versions
+> - Stability of exported types and functions
+> - Correctness in all edge cases
+>
+> **Use at your own risk.** Pin your dependency to a specific commit hash if you depend on this in production.
+>
+> Feedback, bug reports, and breaking-change requests are very welcome in [Issues](https://github.com/larsartmann/do-auditlog/issues).
+
+---
+
+## Why?
+
+samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, but no recorder, no export, no visualization.
+
+**do-auditlog** wires into those hooks in one line and gives you:
+
+- What services exist, when they were created, and how long they took to build
+- Which services depend on which — forward and reverse
+- The scope tree with per-scope service lists
+- A complete chronological event stream
+- A self-contained HTML page you can open in any browser to explore your DI container
 
 ## Features
 
-- **Zero-config hooks** — drop-in `*do.InjectorOpts` producer
-- **Dependency graph inference** — tracks which services resolved which, without access to do's internal DAG
-- **Reverse dependencies** — every service knows which services depend on it (`Dependents`)
-- **Scope tree capture** — records the full scope hierarchy with per-scope service lists
-- **Timing data** — build duration, invocation count, invocation order
-- **Machine-readable exports** — JSON report, NDJSON event stream, or self-contained HTML
-- **Minimal overhead** — ~1μs per cached invocation (see benchmarks)
-- **Debug mode friendly** — toggle on/off without changing container wiring
-- **Zero external dependencies** — only `samber/do/v2`
+| Feature | Description |
+|---------|-------------|
+| **Drop-in setup** | `do.NewWithOpts(plugin.Opts())` — one line, zero config |
+| **Dependency graph** | Infers which service resolved which, without accessing do's internal DAG |
+| **Reverse dependencies** | Every service knows who depends on it |
+| **Scope tree** | Full hierarchy with per-scope service lists |
+| **Timing** | Build duration, invocation count, invocation order |
+| **3 export formats** | JSON report · NDJSON stream · self-contained HTML |
+| **~1μs overhead** | In-memory capture, no I/O during container operation |
+| **Toggle on/off** | `Enabled: false` → zero hooks, zero cost |
+| **Zero extra deps** | Only depends on `samber/do/v2` |
 
 ## Install
 
 ```bash
 go get github.com/larsartmann/do-auditlog
 ```
+
+Requires Go 1.22+ and samber/do v2.
 
 ## Quick Start
 
@@ -27,41 +73,47 @@ package main
 
 import (
     "log"
+
     "github.com/larsartmann/do-auditlog"
     "github.com/samber/do/v2"
 )
 
 func main() {
+    // 1. Create the plugin
     plugin := auditlog.New(auditlog.Config{
-        Enabled:     true,
+        Enabled:     true,           // flip to false in production
         ContainerID: "my-app",
     })
 
+    // 2. Pass options to the DI container
     injector := do.NewWithOpts(plugin.Opts())
 
+    // 3. Register and use services as usual
     do.Provide(injector, func(i do.Injector) (*MyService, error) {
         return &MyService{}, nil
     })
     svc := do.MustInvoke[*MyService](injector)
     _ = svc
 
-    // Export as JSON, NDJSON, or HTML
-    plugin.ExportToFile("audit.json")
-    plugin.ExportEventsToNDJSON("events.ndjson")
-    plugin.ExportToHTML("audit.html")
+    // 4. Export when you're done
+    plugin.ExportToFile("audit.json")              // full report
+    plugin.ExportEventsToNDJSON("events.ndjson")   // streaming format
+    plugin.ExportToHTML("audit.html")              // open in browser
 }
 ```
 
 ## Export Formats
 
-### JSON Report (`ExportToFile` / `WriteReportJSON`)
+### JSON Report
 
-A single JSON file with complete event timeline, per-service summaries, and scope tree.
+Full snapshot: event timeline, service summaries, scope tree.
 
 ```json
 {
-  "container_id": "demo-app",
+  "container_id": "my-app",
+  "exported_at": "2026-06-09T22:18:00Z",
   "service_count": 3,
+  "event_count": 20,
   "services": [
     {
       "service_name": "*main.UserService",
@@ -79,7 +131,6 @@ A single JSON file with complete event timeline, per-service summaries, and scop
     }
   ],
   "scope_tree": {
-    "id": "...",
     "name": "[root]",
     "services": ["*main.Config", "*main.Database", "*main.Cache"],
     "children": []
@@ -87,67 +138,105 @@ A single JSON file with complete event timeline, per-service summaries, and scop
 }
 ```
 
-### NDJSON Event Stream (`ExportEventsToNDJSON` / `WriteEventsNDJSON`)
+### NDJSON Event Stream
 
-Each line is a self-contained JSON object — ideal for streaming ingestion and log aggregators.
+One JSON object per line. Feed it into log aggregators, stream processors, or custom tooling.
 
 ```ndjson
 {"sequence":1,"timestamp":"...","event_type":"registration","phase":"before","scope_name":"[root]","service_name":"*main.Config"}
 {"sequence":2,"timestamp":"...","event_type":"registration","phase":"after","scope_name":"[root]","service_name":"*main.Config"}
 {"sequence":3,"timestamp":"...","event_type":"invocation","phase":"before","scope_name":"[root]","service_name":"*main.Database"}
-{"sequence":4,"timestamp":"...","event_type":"invocation","phase":"after","scope_name":"[root]","service_name":"*main.Database","duration_ms":5.196}
+{"sequence":4,"timestamp":"...","event_type":"invocation","phase":"after","duration_ms":5.196,"scope_name":"[root]","service_name":"*main.Database"}
 ```
 
-### HTML Visualization (`ExportToHTML` / `WriteHTML`)
+### HTML Visualization
 
-A self-contained dark-themed HTML page with:
+A single, self-contained dark-themed HTML page. No external JS/CSS. Works offline.
 
-- **Stats cards** — services, events, scopes, dependencies
-- **Services table** — sortable with type tags, invocation counts, build durations
-- **Dependency graph** — force-directed SVG with color-coded service types
+**What you get:**
+
+- **Stats cards** — services, events, scopes, dependency count
+- **Services table** — name, scope, type tag, invocation order, count, build time, deps, status
+- **Dependency graph** — force-directed SVG with color-coded nodes (lazy · eager · transient)
 - **Timeline** — horizontal bars showing relative build durations
-- **Events table** — full chronological event log
+- **Events table** — full chronological log with sequence numbers
 
-No external JS/CSS dependencies. Works offline.
+Open the file in any browser. No server needed.
 
-## API
+## API Reference
 
 | Method | Description |
 |--------|-------------|
 | `New(config Config) *Plugin` | Create plugin. `ContainerID` defaults to `"default"`. |
-| `Opts() *do.InjectorOpts` | Pre-configured hooks for `do.NewWithOpts`. |
-| `Report() Report` | In-memory snapshot. |
-| `WriteReportJSON(w io.Writer) error` | Write report as indented JSON to any writer. |
-| `WriteEventsNDJSON(w io.Writer) error` | Write events as NDJSON to any writer. |
-| `WriteHTML(w io.Writer) error` | Write self-contained HTML visualization to any writer. |
-| `ExportToFile(path string) error` | Write JSON report to file. |
-| `ExportEventsToNDJSON(path string) error` | Write NDJSON events to file. |
-| `ExportToHTML(path string) error` | Write HTML visualization to file. |
-| `Events() []Event` | Defensive copy of raw events. |
+| `Opts() *do.InjectorOpts` | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`. |
+| `Report() Report` | In-memory snapshot. No I/O. |
+| `WriteReportJSON(w) error` | Indented JSON to any `io.Writer`. |
+| `WriteEventsNDJSON(w) error` | NDJSON event stream to any `io.Writer`. |
+| `WriteHTML(w) error` | Self-contained HTML visualization to any `io.Writer`. |
+| `ExportToFile(path) error` | JSON report to file. |
+| `ExportEventsToNDJSON(path) error` | NDJSON events to file. |
+| `ExportToHTML(path) error` | HTML visualization to file. |
+| `Events() []Event` | Defensive copy of raw event slice. |
 
 ## How Dependency Tracking Works
 
-do-auditlog uses a lightweight invocation stack:
+do-auditlog does **not** access samber/do's internal DAG. Instead, it uses a lightweight invocation stack:
 
-1. When `HookBeforeInvocation` fires for service A, A is pushed onto a stack.
-2. If A's provider calls `do.MustInvoke[B](i)`, `HookBeforeInvocation` fires for B while A is still on the stack.
-3. The plugin records that **A depends on B**.
-4. When `HookAfterInvocation` fires, the service is popped from the stack.
+1. `HookBeforeInvocation` fires for service A → A is pushed onto a stack
+2. A's provider calls `do.MustInvoke[B](i)` → `HookBeforeInvocation` fires for B while A is still on the stack
+3. The plugin records: **A depends on B**
+4. `HookAfterInvocation` fires → service is popped from the stack
 
-This correctly reconstructs the dependency graph even for cached services and across scopes. The reverse graph (`Dependents`) is computed at report time.
+This correctly reconstructs the dependency graph even for:
+- **Cached services** — subsequent invocations of a lazy service are near-instant but still tracked
+- **Cross-scope resolution** — services inherited from parent scopes
+- **Provider errors** — failed invocations are still recorded with error details
+
+The reverse graph (`Dependents`) is computed at report time from the forward dependencies.
 
 ## Performance
 
-Benchmarks on AMD Ryzen AI MAX+ 395:
+Benchmarks from a real run (AMD Ryzen AI MAX+ 395):
 
-| Scenario | ns/op | allocs | overhead |
-|----------|-------|--------|----------|
-| Cached invocation (enabled) | ~1,164 | 7 | baseline |
-| Cached invocation (disabled) | ~223 | 4 | — |
-| Registration (enabled) | ~20,571 | 49 | — |
+```
+BenchmarkHookOverhead_Invocation    ~1,305 ns/op    7 allocs    (enabled)
+BenchmarkHookOverhead_Disabled       ~252 ns/op    4 allocs    (disabled)
+BenchmarkHookOverhead_Registration  ~26,519 ns/op   49 allocs    (full container)
+```
 
-Overhead: ~1μs per cached invocation with audit logging enabled.
+**Overhead: ~1μs per cached invocation** when enabled. Zero cost when disabled.
+
+No file I/O happens during container operation. Export is a single `json.Marshal` or line iteration — you pay the cost only when you need the data.
+
+## Data Model
+
+```
+Report
+├── container_id        string
+├── exported_at         time
+├── service_count       int
+├── event_count         int
+├── services[]          ServiceInfo
+│   ├── service_name    string
+│   ├── scope_name      string
+│   ├── service_type    lazy | eager | transient
+│   ├── invocation_order int
+│   ├── build_duration_ms float64
+│   ├── dependencies[]  {scope_name, service_name}
+│   └── dependents[]    {scope_name, service_name}
+├── events[]            Event
+│   ├── sequence        int (monotonic)
+│   ├── timestamp       time
+│   ├── event_type      registration | invocation | shutdown
+│   ├── phase           before | after
+│   ├── duration_ms     float64 (after-invocation only)
+│   └── error           string (on failure only)
+└── scope_tree          ScopeNode
+    ├── name            string
+    ├── services[]      string
+    └── children[]      ScopeNode (recursive)
+```
 
 ## License
 
-MIT
+[MIT](https://opensource.org/licenses/MIT)
