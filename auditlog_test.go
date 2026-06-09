@@ -609,7 +609,7 @@ func BenchmarkHookOverhead_Invocation(b *testing.B) {
 
 	b.ResetTimer()
 
-	for range b.N {
+	for b.Loop() {
 		_, _ = do.InvokeNamed[*Database](injector, "db")
 	}
 }
@@ -622,7 +622,7 @@ func BenchmarkHookOverhead_Disabled(b *testing.B) {
 
 	b.ResetTimer()
 
-	for range b.N {
+	for b.Loop() {
 		_, _ = do.InvokeNamed[*Database](injector, "db")
 	}
 }
@@ -630,7 +630,7 @@ func BenchmarkHookOverhead_Disabled(b *testing.B) {
 func BenchmarkHookOverhead_Registration(b *testing.B) {
 	b.ResetTimer()
 
-	for range b.N {
+	for b.Loop() {
 		p := auditlog.New(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(p.Opts())
 		provideDB(injector, "svc", "test")

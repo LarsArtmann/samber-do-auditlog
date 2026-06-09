@@ -58,7 +58,7 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 | **3 export formats**     | JSON report · NDJSON stream · self-contained HTML                        |
 | **~1μs overhead**        | In-memory capture, no I/O during container operation                     |
 | **Toggle on/off**        | `Enabled: false` → zero hooks, zero cost                                 |
-| **Minimal deps**         | Only `samber/do/v2` + `a-h/templ` (HTML visualization)                  |
+| **Minimal deps**         | Only `samber/do/v2` + `a-h/templ` (HTML visualization)                   |
 
 ## Install
 
