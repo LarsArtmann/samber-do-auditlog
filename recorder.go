@@ -537,8 +537,20 @@ func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 		ID:       root.id,
 		Name:     root.name,
 		Services: scopeServices[root.id],
-		Children: build(root.id),
+		Children: sortScopeNodes(build(root.id)),
 	}
+}
+
+func sortScopeNodes(nodes []ScopeNode) []ScopeNode {
+	slices.SortFunc(nodes, func(a, b ScopeNode) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+
+	for i := range nodes {
+		nodes[i].Children = sortScopeNodes(nodes[i].Children)
+	}
+
+	return nodes
 }
 
 // Events returns a defensive copy of all captured events.
