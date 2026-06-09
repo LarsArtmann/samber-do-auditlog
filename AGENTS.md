@@ -76,6 +76,9 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **Test file uses external test package** (`auditlog_test`) — imports the package under test as `auditlog`.
 - **`example/` directory** is exempt from some lint rules (forbidigo, noinlineerr) since it's demo code.
 - **`html.templ`** uses `templ.JSONScript` to safely embed report JSON into the HTML page. The generated `html_templ.go` is excluded from lint via `_templ\.go$` pattern in `.golangci.yml`. Templ normalizes `<!DOCTYPE html>` to lowercase `<!doctype html>` — the HTML test uses case-insensitive comparison.
+- **templ version mismatch** — go.mod has v0.3.1020 but generator is v0.3.1036. Run `go get -u github.com/a-h/templ` to upgrade.
+- **Do NOT modularize** — Project is 1 package, 1757 LOC. Too small for multi-module split. Revisit at 5+ packages.
+- **`scopeKey()` is used in `OnBeforeInvocation`** — `depKey` is computed before the stack lock for consistency with `scopeKey()` format (`scopeID + "/" + serviceName`).
 
 ---
 

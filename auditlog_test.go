@@ -485,11 +485,11 @@ func TestPlugin_ExportToHTML(t *testing.T) {
 		t.Errorf("HTML file too small (%d bytes), expected a full page", len(data))
 	}
 
-	if !contains(strings.ToLower(string(data)), "<!doctype html>") {
+	if !strings.Contains(strings.ToLower(string(data)), "<!doctype html>") {
 		t.Error("expected DOCTYPE in HTML output")
 	}
 
-	if !contains(string(data), "db") {
+	if !strings.Contains(string(data), "db") {
 		t.Error("expected 'db' service name in HTML output")
 	}
 }
@@ -663,20 +663,6 @@ func TestPlugin_ConcurrentInvocations(t *testing.T) {
 	if svc.InvocationCount != 10 {
 		t.Errorf("expected 10 invocations, got %d", svc.InvocationCount)
 	}
-}
-
-func contains(s, sub string) bool {
-	return len(s) >= len(sub) && (s == sub || len(sub) == 0 || searchString(s, sub))
-}
-
-func searchString(s, sub string) bool {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
-	}
-
-	return false
 }
 
 func provideDB(injector do.Injector, name, url string) {
