@@ -1,4 +1,4 @@
-module github.com/larsartmann/do-auditlog
+module github.com/larsartmann/samber-do-auditlog
 
 go 1.26.3
 

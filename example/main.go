@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	auditlog "github.com/larsartmann/do-auditlog"
+	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/samber/do/v2"
 )
 

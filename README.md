@@ -8,8 +8,8 @@ Track every service registration, invocation, and shutdown.
 Get timestamps, build durations, dependency graphs, and scope trees.
 Export as JSON, NDJSON, or a self-contained HTML visualization.
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/do-auditlog.svg)](https://pkg.go.dev/github.com/larsartmann/do-auditlog)
-[![Go Report Card](https://goreportcard.com/badge/github.com/larsartmann/do-auditlog)](https://goreportcard.com/report/github.com/larsartmann/do-auditlog)
+[![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/samber-do-auditlog.svg)](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog)
+[![Go Report Card](https://goreportcard.com/badge/github.com/larsartmann/samber-do-auditlog)](https://goreportcard.com/report/github.com/larsartmann/samber-do-auditlog)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
@@ -28,7 +28,7 @@ Export as JSON, NDJSON, or a self-contained HTML visualization.
 >
 > **Use at your own risk.** Pin your dependency to a specific commit hash if you depend on this in production.
 >
-> Feedback, bug reports, and breaking-change requests are very welcome in [Issues](https://github.com/larsartmann/do-auditlog/issues).
+> Feedback, bug reports, and breaking-change requests are very welcome in [Issues](https://github.com/larsartmann/samber-do-auditlog/issues).
 
 ---
 
@@ -61,7 +61,7 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 ## Install
 
 ```bash
-go get github.com/larsartmann/do-auditlog
+go get github.com/larsartmann/samber-do-auditlog
 ```
 
 Requires Go 1.22+ and samber/do v2.
@@ -74,7 +74,7 @@ package main
 import (
     "log"
 
-    "github.com/larsartmann/do-auditlog"
+    "github.com/larsartmann/samber-do-auditlog"
     "github.com/samber/do/v2"
 )
 

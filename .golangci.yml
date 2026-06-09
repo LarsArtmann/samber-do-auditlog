@@ -135,6 +135,23 @@ linters:
           allow:
             - $gostd
             - $module
+            - github.com/samber
+        example:
+          files:
+            - "**/example/**"
+          allow:
+            - $gostd
+            - $module
+            - github.com/samber
+            - github.com/larsartmann/do-auditlog
+        tests:
+          files:
+            - "**/*_test.go"
+          allow:
+            - $gostd
+            - $module
+            - github.com/samber
+            - github.com/larsartmann/do-auditlog
     exhaustruct:
       exclude:
         - os/exec.Cmd
