@@ -375,6 +375,28 @@ func errorToStringPtr(err error) *string {
 	return &msg
 }
 
+// computeServiceStatus derives the lifecycle status from a service record.
+// Invocation errors take priority over shutdown errors.
+func computeServiceStatus(rec *serviceRecord) ServiceStatus {
+	if rec.invocationError != nil {
+		return ServiceStatusInvocationError
+	}
+
+	if rec.shutdownError != nil {
+		return ServiceStatusShutdownError
+	}
+
+	if rec.shutdownAt != nil {
+		return ServiceStatusShutdown
+	}
+
+	if rec.firstInvokedAt != nil {
+		return ServiceStatusActive
+	}
+
+	return ServiceStatusRegistered
+}
+
 // BuildReport assembles a machine-readable Report from all captured events.
 func (r *Recorder) BuildReport() Report {
 	r.mu.RLock()
@@ -413,6 +435,7 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 			ServiceName:          rec.serviceName,
 			ScopeID:              rec.scopeID,
 			ScopeName:            rec.scopeName,
+			Status:               computeServiceStatus(rec),
 			RegisteredAt:         rec.registeredAt,
 			FirstInvokedAt:       rec.firstInvokedAt,
 			InvocationCount:      rec.invocationCount,

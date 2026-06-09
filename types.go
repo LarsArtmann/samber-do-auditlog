@@ -22,6 +22,17 @@ const (
 	PhaseAfter  Phase = "after"
 )
 
+// ServiceStatus describes the lifecycle state of a service.
+type ServiceStatus string
+
+const (
+	ServiceStatusRegistered      ServiceStatus = "registered"
+	ServiceStatusActive          ServiceStatus = "active"
+	ServiceStatusInvocationError ServiceStatus = "invocation_error"
+	ServiceStatusShutdown        ServiceStatus = "shutdown"
+	ServiceStatusShutdownError   ServiceStatus = "shutdown_error"
+)
+
 // DependencyRef is a structured reference to another service for
 // dependency tracking and graph visualization.
 type DependencyRef struct {
@@ -49,6 +60,7 @@ type ServiceInfo struct {
 	ServiceName          string          `json:"service_name"`
 	ScopeID              string          `json:"scope_id"`
 	ScopeName            string          `json:"scope_name"`
+	Status               ServiceStatus   `json:"status"`
 	RegisteredAt         time.Time       `json:"registered_at"`
 	FirstInvokedAt       *time.Time      `json:"first_invoked_at,omitempty"`
 	InvocationCount      int             `json:"invocation_count"`
