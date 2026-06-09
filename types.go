@@ -19,16 +19,6 @@ const (
 	PhaseAfter  Phase = "after"
 )
 
-// ServiceType mirrors samber/do's service lifecycle classification.
-type ServiceType string
-
-const (
-	ServiceTypeLazy      ServiceType = "lazy"
-	ServiceTypeEager     ServiceType = "eager"
-	ServiceTypeTransient ServiceType = "transient"
-	ServiceTypeUnknown   ServiceType = "unknown"
-)
-
 // DependencyRef is a structured reference to another service for
 // dependency tracking and graph visualization.
 type DependencyRef struct {
@@ -54,7 +44,6 @@ type ServiceInfo struct {
 	ServiceName     string          `json:"service_name"`
 	ScopeID         string          `json:"scope_id"`
 	ScopeName       string          `json:"scope_name"`
-	ServiceType     ServiceType     `json:"service_type"`
 	RegisteredAt    time.Time       `json:"registered_at"`
 	FirstInvokedAt  *time.Time      `json:"first_invoked_at,omitempty"`
 	InvocationCount int             `json:"invocation_count"`

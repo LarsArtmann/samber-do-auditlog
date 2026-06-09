@@ -27,7 +27,6 @@ type serviceRecord struct {
 	scopeID         string
 	scopeName       string
 	serviceName     string
-	serviceType     ServiceType
 	registeredAt    time.Time
 	firstInvokedAt  *time.Time
 	invocationCount int
@@ -73,9 +72,11 @@ type Recorder struct {
 // NewRecorder creates a new event recorder.
 func NewRecorder() *Recorder {
 	return &Recorder{
+		mu:              sync.RWMutex{},
 		events:          make([]Event, 0, initialEventCapacity),
 		services:        make(map[string]*serviceRecord),
 		scopes:          make(map[string]scopeMeta),
+		stackMu:         sync.Mutex{},
 		stack:           nil,
 		invocationMu:    sync.Mutex{},
 		invocationIndex: 0,
@@ -166,7 +167,6 @@ func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *servi
 		scopeID:         scope.ID(),
 		scopeName:       scope.Name(),
 		serviceName:     serviceName,
-		serviceType:     inferServiceType(scope, serviceName),
 		registeredAt:    now,
 		firstInvokedAt:  nil,
 		invocationCount: 0,
@@ -334,10 +334,6 @@ func errorToStringPtr(err error) *string {
 	return &msg
 }
 
-func inferServiceType(_ *do.Scope, _ string) ServiceType {
-	return ServiceTypeUnknown
-}
-
 // BuildReport assembles a machine-readable Report from all captured events.
 func (r *Recorder) BuildReport(containerID string) Report {
 	r.mu.RLock()
@@ -364,7 +360,6 @@ func (r *Recorder) BuildReport(containerID string) Report {
 			ServiceName:     rec.serviceName,
 			ScopeID:         rec.scopeID,
 			ScopeName:       rec.scopeName,
-			ServiceType:     rec.serviceType,
 			RegisteredAt:    rec.registeredAt,
 			FirstInvokedAt:  rec.firstInvokedAt,
 			InvocationCount: rec.invocationCount,

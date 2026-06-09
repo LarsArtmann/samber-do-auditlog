@@ -124,10 +124,6 @@ const htmlTemplate = `<!DOCTYPE html>
     font-size: 0.7rem;
     font-weight: 600;
   }
-  .tag-lazy { background: #1f3a5f; color: var(--accent); }
-  .tag-eager { background: #1a3a2a; color: var(--accent2); }
-  .tag-transient { background: #2d1f4e; color: var(--accent3); }
-  .tag-unknown { background: #2d2d2d; color: var(--text-muted); }
   .has-error { color: var(--error); }
   .deps-list { font-size: 0.8rem; color: var(--text-muted); }
   .deps-list span { color: var(--accent); }
@@ -239,7 +235,6 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 // Services table
-const typeColors = {lazy:'tag-lazy',eager:'tag-eager',transient:'tag-transient',unknown:'tag-unknown'};
 document.getElementById('services-tbody').innerHTML = report.services.map(s => {
   const deps = (s.dependencies||[]).map(d => '<span>'+d.service_name+'</span>').join(', ');
   const status = s.invocation_error ? '<span class="has-error">error</span>' :
@@ -248,7 +243,6 @@ document.getElementById('services-tbody').innerHTML = report.services.map(s => {
   return '<tr>'
     +'<td class="mono">'+esc(s.service_name)+'</td>'
     +'<td>'+esc(s.scope_name)+'</td>'
-    +'<td><span class="tag '+(typeColors[s.service_type]||'tag-unknown')+'">'+s.service_type+'</span></td>'
     +'<td>'+s.invocation_order+'</td>'
     +'<td>'+s.invocation_count+'</td>'
     +'<td>'+(s.build_duration_ms ? s.build_duration_ms.toFixed(3) : '&ndash;')+'</td>'
@@ -298,12 +292,12 @@ function renderGraph() {
   const nameMap = {};
   services.forEach((s, i) => { nameMap[s.scope_name+'/'+s.service_name] = i; });
 
-  const typeColorMap = {lazy:'#58a6ff',eager:'#7ee787',transient:'#d2a8ff',unknown:'#8b949e'};
+  const nodeColor = '#58a6ff';
   const W = container.clientWidth || 800;
   const H = 500;
   const nodes = services.map((s, i) => ({
-    id: i, name: s.service_name, type: s.service_type,
-    color: typeColorMap[s.service_type] || typeColorMap.unknown,
+    id: i, name: s.service_name,
+    color: nodeColor,
     x: W/2 + (Math.random()-0.5)*300, y: H/2 + (Math.random()-0.5)*300,
     vx: 0, vy: 0
   }));

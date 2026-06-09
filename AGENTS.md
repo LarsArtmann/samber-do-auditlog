@@ -1,0 +1,83 @@
+# AGENTS.md — samber-do-auditlog
+
+Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI container lifecycle event (registration, invocation, shutdown) with timestamps, dependency graph inference, build duration tracking, and export to JSON / NDJSON / self-contained HTML.
+
+**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.26.3 · **Status**: ALPHA
+
+---
+
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `go test ./...` | Run all tests |
+| `go test -run TestPlugin_DisabledIsNoOp` | Run single test |
+| `go vet ./...` | Static analysis |
+| `golangci-lint run` | Full lint (heavy config, see below) |
+| `go run example/main.go` | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
+
+No flake.nix, no Makefile, no justfile. Standard Go toolchain only.
+
+---
+
+## Architecture
+
+Single-package library (`auditlog`) with four source files:
+
+```
+plugin.go    — Public API: New(), Opts(), Report(), Export*(), Events()
+recorder.go  — Core state machine: event capture, invocation stack, service aggregation
+types.go     — All domain types (Event, ServiceInfo, Report, etc.)
+html.go      — Self-contained HTML export (inline CSS + JS template)
+doc.go       — Package doc comment
+```
+
+### Data Flow
+
+1. User creates `Plugin` via `New(Config)` → gets `*do.InjectorOpts` via `Opts()`
+2. Hooks fire on every registration/invocation/shutdown → `Recorder` captures timestamped `Event`s
+3. Invocation stack (`Recorder.stack`) infers dependencies: if service A is on-stack when B's before-hook fires, A→B is a dependency
+4. `Report()` / `BuildReport()` assembles `ServiceInfo` slice (with forward + reverse deps), scope tree, and event stream
+5. Export methods serialize to JSON, NDJSON, or self-contained HTML
+
+### Concurrency Model
+
+- `Recorder.mu` (RWMutex) protects `events`, `services`, `scopes`
+- `Recorder.stackMu` (Mutex) protects the invocation stack
+- `Recorder.invocationMu` (Mutex) protects invocation ordering
+- Sequence numbers use per-recorder `atomic.Int64` (no global state)
+
+---
+
+## Lint Configuration (.golangci.yml)
+
+Extremely strict — nearly every golangci-lint linter enabled. Key implications:
+
+- **exhaustruct**: All struct fields must be explicitly initialized. Tests are exempted. This is why `newRegistrationEvent()`, `newInvocationEvent()`, `newShutdownEvent()`, `newServiceRecord()` exist as constructor helpers — they centralize field init to satisfy exhaustruct in one place.
+- **depguard**: Only `$gostd`, `github.com/larsartmann/samber-do-auditlog`, and `github.com/samber` allowed. No third-party deps beyond samber/do.
+- **noinlineerr**: Use `err := ...` then check, not `if err := ...; err != nil`.
+- **forbidigo**: `fmt.Print*` forbidden in non-example code.
+- **exclusions for tests**: exhaustruct, testpackage, gochecknoglobals, funlen, cyclop, goconst are relaxed in `*_test.go`.
+- **Formatters**: gci, goimports, gofumpt, golines (max-len 120).
+
+---
+
+## Gotchas
+
+- **`inferServiceType()` always returns `ServiceTypeUnknown`** — it's a stub. Service type classification is not yet implemented.
+- **JSON tags use snake_case** (`scope_name`, `service_name`, etc.) despite tagliatelle being enabled with camelCase rules. This generates ~24 lint warnings. This appears intentional (snake_case for JSON API compatibility) and is currently accepted.
+- **`doc.go` and `plugin.go` both have package-level doc comments**, causing a `godoclint` warning about multiple godocs.
+- **`Opts()` when disabled** returns a fully-zeroed `InjectorOpts` with every field explicitly set to zero value. This is deliberate for clarity and exhaustruct compliance.
+- **Test file uses external test package** (`auditlog_test`) — imports the package under test as `auditlog`.
+- **`example/` directory** is exempt from some lint rules (forbidigo, noinlineerr) since it's demo code.
+
+---
+
+## Testing Patterns
+
+- Standard `testing.T` + table-driven tests. No ginkgo/testify in this project.
+- Each test creates its own `Plugin` + `do.Injector` — no shared state.
+- `t.Setenv()` for testing `DO_AUDITLOG_ENABLED` env var behavior.
+- `t.TempDir()` for file export tests.
+- Benchmarks exist in the test file for performance measurement.
+- Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking, scope tree, export formats (JSON, NDJSON, HTML), error paths.
