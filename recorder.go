@@ -1,6 +1,7 @@
 package auditlog
 
 import (
+	"cmp"
 	"slices"
 	"sync"
 	"sync/atomic"
@@ -400,19 +401,12 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 
 	services := make([]ServiceInfo, 0, len(r.services))
 	for _, rec := range r.services {
-		deps := make([]DependencyRef, 0, len(rec.dependencies))
-		for depKey := range rec.dependencies {
-			if depRec, ok := r.services[depKey]; ok {
-				deps = append(deps, DependencyRef{
-					ScopeID:     depRec.scopeID,
-					ScopeName:   depRec.scopeName,
-					ServiceName: depRec.serviceName,
-				})
-			}
-		}
+		deps := r.buildDepsLocked(rec)
 
 		key := rec.scopeID + "/" + rec.serviceName
 		svcDependents := dependents[key]
+
+		sortDepRefs(svcDependents)
 
 		services = append(services, ServiceInfo{
 			ServiceName:          rec.serviceName,
@@ -433,26 +427,41 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 	}
 
 	slices.SortFunc(services, func(a, b ServiceInfo) int {
-		if a.ScopeName != b.ScopeName {
-			if a.ScopeName < b.ScopeName {
-				return -1
-			}
-
-			return 1
-		}
-
-		if a.ServiceName < b.ServiceName {
-			return -1
-		}
-
-		if a.ServiceName > b.ServiceName {
-			return 1
-		}
-
-		return 0
+		return cmp.Or(
+			cmp.Compare(a.ScopeName, b.ScopeName),
+			cmp.Compare(a.ServiceName, b.ServiceName),
+		)
 	})
 
 	return services
+}
+
+// buildDepsLocked builds sorted dependency refs for a service record.
+// Must be called with r.mu held for reading.
+func (r *Recorder) buildDepsLocked(rec *serviceRecord) []DependencyRef {
+	deps := make([]DependencyRef, 0, len(rec.dependencies))
+	for depKey := range rec.dependencies {
+		if depRec, ok := r.services[depKey]; ok {
+			deps = append(deps, DependencyRef{
+				ScopeID:     depRec.scopeID,
+				ScopeName:   depRec.scopeName,
+				ServiceName: depRec.serviceName,
+			})
+		}
+	}
+
+	sortDepRefs(deps)
+
+	return deps
+}
+
+func sortDepRefs(refs []DependencyRef) {
+	slices.SortFunc(refs, func(a, b DependencyRef) int {
+		return cmp.Or(
+			cmp.Compare(a.ScopeName, b.ScopeName),
+			cmp.Compare(a.ServiceName, b.ServiceName),
+		)
+	})
 }
 
 func buildDependentsMapLocked(services map[string]*serviceRecord) map[string][]DependencyRef {
@@ -498,6 +507,11 @@ func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 	scopeServices := make(map[string][]string)
 	for _, rec := range r.services {
 		scopeServices[rec.scopeID] = append(scopeServices[rec.scopeID], rec.serviceName)
+	}
+
+	for id, names := range scopeServices {
+		slices.Sort(names)
+		scopeServices[id] = names
 	}
 
 	var build func(parentID string) []ScopeNode
