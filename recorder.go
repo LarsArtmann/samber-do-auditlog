@@ -515,11 +515,13 @@ func buildDependentsMapLocked(services map[string]*serviceRecord) map[string][]D
 }
 
 func (r *Recorder) buildScopeTreeLocked() ScopeNode {
+	sortedScopes := sortedScopesLocked(r.scopes)
+
 	var root scopeMeta
 
 	hasRoot := false
 
-	for _, meta := range r.scopes {
+	for _, meta := range sortedScopes {
 		if meta.parentID == "" {
 			root = meta
 			hasRoot = true
@@ -528,12 +530,8 @@ func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 		}
 	}
 
-	if !hasRoot && len(r.scopes) > 0 {
-		for _, meta := range r.scopes {
-			root = meta
-
-			break
-		}
+	if !hasRoot && len(sortedScopes) > 0 {
+		root = sortedScopes[0]
 	}
 
 	scopeServices := make(map[string][]string)
@@ -551,7 +549,7 @@ func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 	build = func(parentID string) []ScopeNode {
 		var children []ScopeNode
 
-		for _, meta := range r.scopes {
+		for _, meta := range sortedScopes {
 			if meta.parentID == parentID {
 				children = append(children, ScopeNode{
 					ID:       meta.id,
@@ -571,6 +569,20 @@ func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 		Services: scopeServices[root.id],
 		Children: sortScopeNodes(build(root.id)),
 	}
+}
+
+func sortedScopesLocked(scopes map[string]scopeMeta) []scopeMeta {
+	result := make([]scopeMeta, 0, len(scopes))
+
+	for _, meta := range scopes {
+		result = append(result, meta)
+	}
+
+	slices.SortFunc(result, func(a, b scopeMeta) int {
+		return cmp.Compare(a.id, b.id)
+	})
+
+	return result
 }
 
 func sortScopeNodes(nodes []ScopeNode) []ScopeNode {
