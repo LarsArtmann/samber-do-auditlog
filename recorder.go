@@ -1,6 +1,7 @@
 package auditlog
 
 import (
+	"slices"
 	"sync"
 	"time"
 
@@ -154,9 +155,9 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 
 	var durationMs *float64
 	r.stackMu.Lock()
-	for i := len(r.stack) - 1; i >= 0; i-- {
-		if r.stack[i].serviceName == serviceName && r.stack[i].scopeID == scope.ID() {
-			d := float64(now.Sub(r.stack[i].start).Microseconds()) / 1000.0
+	for i, v := range slices.Backward(r.stack) {
+		if v.serviceName == serviceName && v.scopeID == scope.ID() {
+			d := float64(now.Sub(v.start).Microseconds()) / 1000.0
 			durationMs = &d
 			r.stack = append(r.stack[:i], r.stack[i+1:]...)
 			break

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/larsartmann/do-auditlog"
+	auditlog "github.com/larsartmann/do-auditlog"
 	"github.com/samber/do/v2"
 )
 

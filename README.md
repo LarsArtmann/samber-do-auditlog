@@ -58,6 +58,7 @@ func main() {
 ### Full Report (`ExportToFile`)
 
 A single JSON file containing:
+
 - Complete event timeline
 - Per-service summaries with dependencies
 - Scope tree for visualization
