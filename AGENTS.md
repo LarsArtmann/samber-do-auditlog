@@ -10,11 +10,11 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 
 | Command                                  | Purpose                                          |
 | ---------------------------------------- | ------------------------------------------------ |
+| `go generate ./...`                      | Regenerate templ (and any other generated code)  |
 | `go test ./...`                          | Run all tests                                    |
 | `go test -run TestPlugin_DisabledIsNoOp` | Run single test                                  |
 | `go vet ./...`                           | Static analysis                                  |
 | `golangci-lint run`                      | Full lint (heavy config, see below)              |
-| `templ generate`                         | Regenerate `html_templ.go` from `html.templ`     |
 | `go run example/main.go`                 | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
 
 No flake.nix, no Makefile, no justfile. Standard Go toolchain only.
@@ -76,9 +76,12 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **Test file uses external test package** (`auditlog_test`) — imports the package under test as `auditlog`.
 - **`example/` directory** is exempt from some lint rules (forbidigo, noinlineerr) since it's demo code.
 - **`html.templ`** uses `templ.JSONScript` to safely embed report JSON into the HTML page. The generated `html_templ.go` is excluded from lint via `_templ\.go$` pattern in `.golangci.yml`. Templ normalizes `<!DOCTYPE html>` to lowercase `<!doctype html>` — the HTML test uses case-insensitive comparison.
-- **templ version mismatch** — go.mod has v0.3.1020 but generator is v0.3.1036. Run `go get -u github.com/a-h/templ` to upgrade.
-- **Do NOT modularize** — Project is 1 package, 1757 LOC. Too small for multi-module split. Revisit at 5+ packages.
-- **`scopeKey()` is used in `OnBeforeInvocation`** — `depKey` is computed before the stack lock for consistency with `scopeKey()` format (`scopeID + "/" + serviceName`).
+- **`html_templ.go` is gitignored** — run `go generate ./...` before building. The `//go:generate templ generate` directive is in `html.go`.
+- **templ version mismatch** — go.mod has v0.3.1020 (latest published). Local generator is v0.3.1036 (unpublished). No action needed.
+- **Do NOT modularize** — Project is 1 package, ~1800 LOC. Too small for multi-module split. Revisit at 5+ packages.
+- **`ServiceStatus`** is computed in `buildServicesLocked` via `computeServiceStatus()`. Priority: invocation_error > shutdown_error > shutdown > active > registered. The HTML template now uses `s.status` instead of deriving from individual fields.
+- **`buildScopeTreeLocked`** uses `sortedScopesLocked()` to iterate scopes deterministically (sorted by scope ID), since map iteration order is non-deterministic in Go.
+- **`stackEntry.key()` and `serviceRecord.key()`** methods centralize the `scopeID + "/" + serviceName` key format.
 
 ---
 
@@ -89,5 +92,5 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - `t.Setenv()` for testing `DO_AUDITLOG_ENABLED` env var behavior.
 - `t.TempDir()` for file export tests.
 - Benchmarks exist in the test file for performance measurement.
-- Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (including duration), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations.
-- **Coverage: ~93%** of statements, 31 tests (24 top-level + 7 sub-tests).
+- Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (clean and error), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations, ServiceStatus computation across all states, transient and value providers.
+- **Coverage: ~95%** of statements, 34 tests.
