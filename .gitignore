@@ -6,3 +6,6 @@
 audit-report.json
 audit-events.ndjson
 audit-report.html
+
+# Generated reports
+reports/
