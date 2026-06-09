@@ -86,5 +86,5 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - `t.Setenv()` for testing `DO_AUDITLOG_ENABLED` env var behavior.
 - `t.TempDir()` for file export tests.
 - Benchmarks exist in the test file for performance measurement.
-- Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (including duration), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML), error paths, container_id propagation, report version, event sequence numbers.
-- **Coverage: ~93%** of statements.
+- Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (including duration), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations.
+- **Coverage: ~93%** of statements, 31 tests (24 top-level + 7 sub-tests).
