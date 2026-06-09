@@ -53,9 +53,11 @@ func TestPlugin_RegistrationAndInvocation(t *testing.T) {
 	if report.ContainerID != "test" {
 		t.Errorf("container_id: want test, got %s", report.ContainerID)
 	}
+
 	if report.ServiceCount != 1 {
 		t.Errorf("service_count: want 1, got %d", report.ServiceCount)
 	}
+
 	if report.EventCount != 4 { // before+after registration + before+after invocation
 		t.Errorf("event_count: want 4, got %d", report.EventCount)
 	}
@@ -64,12 +66,15 @@ func TestPlugin_RegistrationAndInvocation(t *testing.T) {
 	if svc.ServiceName != "db" {
 		t.Errorf("service_name: want db, got %s", svc.ServiceName)
 	}
+
 	if svc.InvocationCount != 1 {
 		t.Errorf("invocation_count: want 1, got %d", svc.InvocationCount)
 	}
+
 	if svc.FirstInvokedAt == nil {
 		t.Error("expected FirstInvokedAt to be set")
 	}
+
 	if svc.BuildDurationMs == nil || *svc.BuildDurationMs < 0 {
 		t.Error("expected BuildDurationMs to be set and non-negative")
 	}
@@ -81,17 +86,20 @@ func TestPlugin_DependencyTracking(t *testing.T) {
 
 	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
 		time.Sleep(1 * time.Millisecond)
+
 		return &Database{URL: "postgres://localhost"}, nil
 	})
 
 	do.ProvideNamed(injector, "cache", func(i do.Injector) (*Cache, error) {
 		time.Sleep(1 * time.Millisecond)
+
 		return &Cache{Entries: make(map[string]string)}, nil
 	})
 
 	do.ProvideNamed(injector, "users", func(i do.Injector) (*UserService, error) {
 		db := do.MustInvokeNamed[*Database](i, "db")
 		cache := do.MustInvokeNamed[*Cache](i, "cache")
+
 		return &UserService{DB: db, Cache: cache}, nil
 	})
 
@@ -106,15 +114,19 @@ func TestPlugin_DependencyTracking(t *testing.T) {
 	}
 
 	var users *auditlog.ServiceInfo
+
 	for i := range report.Services {
 		if report.Services[i].ServiceName == "users" {
 			users = &report.Services[i]
+
 			break
 		}
 	}
+
 	if users == nil {
 		t.Fatal("users service not found in report")
 	}
+
 	if len(users.Dependencies) != 2 {
 		t.Errorf("users dependencies: want 2, got %d (%v)", len(users.Dependencies), users.Dependencies)
 	}
@@ -133,25 +145,31 @@ func TestPlugin_ShutdownTracking(t *testing.T) {
 
 	report := p.Report()
 	shutdownEvents := 0
+
 	for _, e := range report.Events {
 		if e.EventType == auditlog.EventTypeShutdown {
 			shutdownEvents++
 		}
 	}
+
 	if shutdownEvents != 2 { // before + after
 		t.Errorf("shutdown events: want 2, got %d", shutdownEvents)
 	}
 
 	var db *auditlog.ServiceInfo
+
 	for i := range report.Services {
 		if report.Services[i].ServiceName == "db" {
 			db = &report.Services[i]
+
 			break
 		}
 	}
+
 	if db == nil {
 		t.Fatal("db service not found in report")
 	}
+
 	if db.ShutdownAt == nil {
 		t.Error("expected ShutdownAt to be set")
 	}
@@ -180,6 +198,7 @@ func TestPlugin_ExportToFile(t *testing.T) {
 	if err := json.Unmarshal(data, &report); err != nil {
 		t.Fatalf("unmarshal failed: %v", err)
 	}
+
 	if report.ServiceCount != 1 {
 		t.Errorf("expected 1 service in exported report, got %d", report.ServiceCount)
 	}
@@ -205,11 +224,13 @@ func TestPlugin_ExportEventsToNDJSON(t *testing.T) {
 	}
 
 	lines := 0
+
 	for _, b := range data {
 		if b == '\n' {
 			lines++
 		}
 	}
+
 	if lines != 4 { // before+after registration + before+after invocation
 		t.Errorf("expected 4 ndjson lines, got %d", lines)
 	}
@@ -235,9 +256,11 @@ func TestPlugin_ScopeTree(t *testing.T) {
 	if report.ScopeTree.Name != "[root]" {
 		t.Errorf("root scope name: want [root], got %s", report.ScopeTree.Name)
 	}
+
 	if len(report.ScopeTree.Children) != 1 {
 		t.Fatalf("expected 1 child scope, got %d", len(report.ScopeTree.Children))
 	}
+
 	if report.ScopeTree.Children[0].Name != "child" {
 		t.Errorf("child scope name: want child, got %s", report.ScopeTree.Children[0].Name)
 	}
@@ -254,6 +277,7 @@ func TestPlugin_CachedInvocationDoesNotCreateDuplicateDependency(t *testing.T) {
 
 	do.ProvideNamed(injector, "users", func(i do.Injector) (*UserService, error) {
 		db := do.MustInvokeNamed[*Database](i, "db")
+
 		return &UserService{DB: db}, nil
 	})
 
@@ -263,30 +287,39 @@ func TestPlugin_CachedInvocationDoesNotCreateDuplicateDependency(t *testing.T) {
 	_ = do.MustInvokeNamed[*UserService](injector, "users")
 
 	report := p.Report()
+
 	var users *auditlog.ServiceInfo
+
 	for i := range report.Services {
 		if report.Services[i].ServiceName == "users" {
 			users = &report.Services[i]
+
 			break
 		}
 	}
+
 	if users == nil {
 		t.Fatal("users service not found")
 	}
+
 	if len(users.Dependencies) != 1 {
 		t.Errorf("users should have exactly 1 dependency (db), got %d: %v", len(users.Dependencies), users.Dependencies)
 	}
 
 	var db *auditlog.ServiceInfo
+
 	for i := range report.Services {
 		if report.Services[i].ServiceName == "db" {
 			db = &report.Services[i]
+
 			break
 		}
 	}
+
 	if db == nil {
 		t.Fatal("db service not found")
 	}
+
 	if db.InvocationCount != 2 {
 		t.Errorf("db invocation_count: want 2, got %d", db.InvocationCount)
 	}

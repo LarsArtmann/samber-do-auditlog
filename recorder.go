@@ -59,21 +59,26 @@ func NewRecorder() *Recorder {
 
 func (r *Recorder) recordScope(scope *do.Scope) {
 	id := scope.ID()
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
 	if _, ok := r.scopes[id]; ok {
 		return
 	}
+
 	meta := scopeMeta{id: id, name: scope.Name()}
 	if ancestors := scope.Ancestors(); len(ancestors) > 0 {
 		meta.parentID = ancestors[0].ID()
 	}
+
 	r.scopes[id] = meta
 }
 
 // OnBeforeRegistration implements the do hook.
 func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
 	r.recordScope(scope)
+
 	now := time.Now()
 	r.addEvent(Event{
 		ID:          uuid.Must(uuid.NewRandom()).String(),
@@ -90,6 +95,7 @@ func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
 func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 	now := time.Now()
 	key := scope.ID() + "/" + serviceName
+
 	r.mu.Lock()
 	if _, ok := r.services[key]; !ok {
 		r.services[key] = &serviceRecord{
@@ -115,6 +121,7 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 // OnBeforeInvocation implements the do hook.
 func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 	r.recordScope(scope)
+
 	now := time.Now()
 
 	r.stackMu.Lock()
@@ -124,12 +131,14 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 		parent := r.stack[len(r.stack)-1]
 		parentKey := parent.scopeID + "/" + parent.serviceName
 		depKey := scope.ID() + "/" + serviceName
+
 		r.mu.Lock()
 		if rec, ok := r.services[parentKey]; ok {
 			rec.dependencies[depKey] = struct{}{}
 		}
 		r.mu.Unlock()
 	}
+
 	r.stack = append(r.stack, stackEntry{
 		scopeID:     scope.ID(),
 		scopeName:   scope.Name(),
@@ -154,18 +163,22 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 	now := time.Now()
 
 	var durationMs *float64
+
 	r.stackMu.Lock()
 	for i, v := range slices.Backward(r.stack) {
 		if v.serviceName == serviceName && v.scopeID == scope.ID() {
 			d := float64(now.Sub(v.start).Microseconds()) / 1000.0
 			durationMs = &d
+
 			r.stack = append(r.stack[:i], r.stack[i+1:]...)
+
 			break
 		}
 	}
 	r.stackMu.Unlock()
 
 	var errStr *string
+
 	if err != nil {
 		s := err.Error()
 		errStr = &s
@@ -184,7 +197,9 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 	})
 
 	key := scope.ID() + "/" + serviceName
+
 	r.mu.Lock()
+
 	rec, ok := r.services[key]
 	if !ok {
 		rec = &serviceRecord{
@@ -195,10 +210,12 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 		}
 		r.services[key] = rec
 	}
+
 	rec.invocationCount++
 	if rec.firstInvokedAt == nil {
 		rec.firstInvokedAt = &now
 	}
+
 	if durationMs != nil {
 		// The first (build) invocation is typically the slowest.
 		// Cached retrievals are near-instant, so we keep the max.
@@ -206,6 +223,7 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 			rec.buildDurationMs = durationMs
 		}
 	}
+
 	if err != nil {
 		rec.invocationError = errStr
 	}
@@ -231,6 +249,7 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 	now := time.Now()
 
 	var errStr *string
+
 	if err != nil {
 		s := err.Error()
 		errStr = &s
@@ -248,6 +267,7 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 	})
 
 	key := scope.ID() + "/" + serviceName
+
 	r.mu.Lock()
 	if rec, ok := r.services[key]; ok {
 		rec.shutdownAt = &now
@@ -275,6 +295,7 @@ func (r *Recorder) BuildReport(containerID string) Report {
 				deps = append(deps, depRec.scopeName+"/"+depRec.serviceName)
 			}
 		}
+
 		services = append(services, ServiceInfo{
 			ServiceName:        rec.serviceName,
 			ScopeID:            rec.scopeID,
@@ -307,24 +328,31 @@ func (r *Recorder) BuildReport(containerID string) Report {
 
 func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 	var root scopeMeta
+
 	hasRoot := false
+
 	for _, meta := range r.scopes {
 		if meta.parentID == "" {
 			root = meta
 			hasRoot = true
+
 			break
 		}
 	}
+
 	if !hasRoot && len(r.scopes) > 0 {
 		for _, meta := range r.scopes {
 			root = meta
+
 			break
 		}
 	}
 
 	var build func(parentID string) []ScopeNode
+
 	build = func(parentID string) []ScopeNode {
 		var children []ScopeNode
+
 		for _, meta := range r.scopes {
 			if meta.parentID == parentID {
 				children = append(children, ScopeNode{
@@ -334,6 +362,7 @@ func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 				})
 			}
 		}
+
 		return children
 	}
 
@@ -348,5 +377,6 @@ func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 func (r *Recorder) Events() []Event {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
+
 	return append([]Event(nil), r.events...)
 }

@@ -20,6 +20,7 @@ type Database struct {
 func (d *Database) Connect() error {
 	time.Sleep(5 * time.Millisecond) // simulate work
 	fmt.Println("Database connected")
+
 	return nil
 }
 
@@ -34,6 +35,7 @@ type Cache struct {
 func (c *Cache) Connect() error {
 	time.Sleep(3 * time.Millisecond) // simulate work
 	fmt.Println("Cache connected")
+
 	return nil
 }
 
@@ -53,6 +55,7 @@ type HTTPServer struct {
 
 func (s *HTTPServer) Start() error {
 	fmt.Printf("HTTP server listening on :%d\n", s.Port)
+
 	return nil
 }
 
@@ -73,19 +76,25 @@ func main() {
 
 	do.Provide(injector, func(i do.Injector) (*Database, error) {
 		cfg := do.MustInvoke[*Config](i)
+
 		db := &Database{Config: cfg}
-		if err := db.Connect(); err != nil {
+		err := db.Connect()
+		if err != nil {
 			return nil, err
 		}
+
 		return db, nil
 	})
 
 	do.Provide(injector, func(i do.Injector) (*Cache, error) {
 		cfg := do.MustInvoke[*Config](i)
+
 		cache := &Cache{Config: cfg}
-		if err := cache.Connect(); err != nil {
+		err := cache.Connect()
+		if err != nil {
 			return nil, err
 		}
+
 		return cache, nil
 	})
 
@@ -98,6 +107,7 @@ func main() {
 
 	do.Provide(injector, func(i do.Injector) (*HTTPServer, error) {
 		cfg := do.MustInvoke[*Config](i)
+
 		return &HTTPServer{
 			Users: do.MustInvoke[*UserService](i),
 			Port:  cfg.Port,
@@ -109,6 +119,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	server.Start()
 
 	// 5. Shutdown gracefully
@@ -121,27 +132,34 @@ func main() {
 	if err := plugin.ExportToFile("audit-report.json"); err != nil {
 		log.Fatal(err)
 	}
+
 	fmt.Println("Exported audit-report.json")
 
 	if err := plugin.ExportEventsToNDJSON("audit-events.ndjson"); err != nil {
 		log.Fatal(err)
 	}
+
 	fmt.Println("Exported audit-events.ndjson")
 
 	// 7. Print a quick summary
 	rep := plugin.Report()
+
 	fmt.Printf("\nAudit Summary:\n")
 	fmt.Printf("  Container:   %s\n", rep.ContainerID)
 	fmt.Printf("  Services:    %d\n", rep.ServiceCount)
 	fmt.Printf("  Events:      %d\n", rep.EventCount)
+
 	for _, s := range rep.Services {
 		fmt.Printf("  - %s (invoked %d times", s.ServiceName, s.InvocationCount)
+
 		if s.BuildDurationMs != nil {
 			fmt.Printf(", build %.3f ms", *s.BuildDurationMs)
 		}
+
 		if len(s.Dependencies) > 0 {
 			fmt.Printf(", deps: %v", s.Dependencies)
 		}
+
 		fmt.Println(")")
 	}
 }

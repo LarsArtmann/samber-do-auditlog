@@ -27,6 +27,7 @@ func New(config Config) *Plugin {
 	if config.ContainerID == "" {
 		config.ContainerID = "default"
 	}
+
 	return &Plugin{
 		recorder:    NewRecorder(),
 		config:      config,
@@ -40,6 +41,7 @@ func (p *Plugin) Opts() *do.InjectorOpts {
 	if !p.config.Enabled {
 		return &do.InjectorOpts{}
 	}
+
 	return &do.InjectorOpts{
 		HookBeforeRegistration: []func(*do.Scope, string){p.recorder.OnBeforeRegistration},
 		HookAfterRegistration:  []func(*do.Scope, string){p.recorder.OnAfterRegistration},
@@ -58,10 +60,12 @@ func (p *Plugin) Report() Report {
 // ExportToFile writes the full Report as indented JSON.
 func (p *Plugin) ExportToFile(path string) error {
 	report := p.Report()
+
 	data, err := json.MarshalIndent(report, "", "  ")
 	if err != nil {
 		return err
 	}
+
 	return os.WriteFile(path, data, 0o644)
 }
 
@@ -69,22 +73,27 @@ func (p *Plugin) ExportToFile(path string) error {
 // This format is ideal for streaming ingestion and fast append operations.
 func (p *Plugin) ExportEventsToNDJSON(path string) (err error) {
 	events := p.recorder.Events()
+
 	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
+
 	defer func() {
-		if cerr := f.Close(); cerr != nil && err == nil {
+		cerr := f.Close()
+		if cerr != nil && err == nil {
 			err = cerr
 		}
 	}()
 
 	enc := json.NewEncoder(f)
 	for _, e := range events {
-		if err = enc.Encode(e); err != nil {
+		err = enc.Encode(e)
+		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
