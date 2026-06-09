@@ -108,7 +108,6 @@ linters:
     - sqlclosecheck
     - staticcheck
     - tagalign
-    - tagliatelle
     - testableexamples
     - testifylint
     - testpackage
@@ -159,6 +158,10 @@ linters:
     exhaustruct:
       exclude:
         - os/exec.Cmd
+        - do.InjectorOpts
+        - sync.RWMutex
+        - sync.Mutex
+        - atomic.Int64
     ginkgolinter:
       forbid-focus-container: true
       forbid-spec-pollution: true
@@ -180,6 +183,9 @@ linters:
           name: exported
         - disabled: true
           name: package-comments
+    tagliatelle:
+      rules:
+        json: snake_case
     testifylint:
       disable:
         - go-require
@@ -214,6 +220,20 @@ linters:
         text: unused
         linters:
           - unused
+      - path: example/
+        linters:
+          - forbidigo
+          - funlen
+          - mnd
+          - unparam
+          - varnamelen
+          - noinlineerr
+      - path: _test\.go
+        linters:
+          - paralleltest
+          - noinlineerr
+          - gosec
+          - varnamelen
     paths:
       - _templ\.go$
       - \.gen\.go$
