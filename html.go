@@ -42,6 +42,7 @@ func writeHTMLReport(w io.Writer, report Report) error {
 	}
 
 	tmpl := template.Must(template.New("audit").Parse(htmlTemplate))
+
 	return tmpl.Execute(w, data)
 }
 
