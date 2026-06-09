@@ -388,3 +388,42 @@ func TestPlugin_ProviderError(t *testing.T) {
 		t.Errorf("invocation_count: want 1, got %d", svc.InvocationCount)
 	}
 }
+
+func BenchmarkHookOverhead_Invocation(b *testing.B) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "postgres://localhost"}, nil
+	})
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = do.InvokeNamed[*Database](injector, "db")
+	}
+}
+
+func BenchmarkHookOverhead_Disabled(b *testing.B) {
+	p := auditlog.New(auditlog.Config{Enabled: false})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "postgres://localhost"}, nil
+	})
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = do.InvokeNamed[*Database](injector, "db")
+	}
+}
+
+func BenchmarkHookOverhead_Registration(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		p := auditlog.New(auditlog.Config{Enabled: true})
+		injector := do.NewWithOpts(p.Opts())
+		do.ProvideNamed(injector, "svc", func(i do.Injector) (*Database, error) {
+			return &Database{URL: "test"}, nil
+		})
+	}
+}
