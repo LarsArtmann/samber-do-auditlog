@@ -115,34 +115,28 @@ func (p *Plugin) WriteEventsNDJSON(writer io.Writer) error {
 }
 
 // ExportToFile writes the full Report as indented JSON to path.
-//
-
 func (p *Plugin) ExportToFile(path string) error {
-	file, err := os.Create(path) //nolint:gosec
-	if err != nil {
-		return fmt.Errorf("create report file %q: %w", path, err)
-	}
-
-	defer func() { _ = file.Close() }()
-
-	return p.WriteReportJSON(file)
+	return writeToFile(path, p.WriteReportJSON)
 }
 
 // ExportEventsToNDJSON writes every captured event as a line-delimited JSON stream to path.
-//
-
 func (p *Plugin) ExportEventsToNDJSON(path string) error {
-	file, err := os.Create(path) //nolint:gosec
-	if err != nil {
-		return fmt.Errorf("create events file %q: %w", path, err)
-	}
-
-	defer func() { _ = file.Close() }()
-
-	return p.WriteEventsNDJSON(file)
+	return writeToFile(path, p.WriteEventsNDJSON)
 }
 
 // Events returns a defensive copy of all captured events.
 func (p *Plugin) Events() []Event {
 	return p.recorder.Events()
+}
+
+// writeToFile creates a file at path and calls fn with the writer.
+func writeToFile(path string, fn func(io.Writer) error) error {
+	file, err := os.Create(path) //nolint:gosec
+	if err != nil {
+		return fmt.Errorf("create file %q: %w", path, err)
+	}
+
+	defer func() { _ = file.Close() }()
+
+	return fn(file)
 }

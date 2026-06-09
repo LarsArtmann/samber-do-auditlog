@@ -4,18 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 )
 
 // ExportToHTML writes a self-contained HTML visualization to a file.
 func (p *Plugin) ExportToHTML(path string) error {
-	file, err := os.Create(path) //nolint:gosec
-	if err != nil {
-		return fmt.Errorf("create HTML file %q: %w", path, err)
-	}
-	defer func() { _ = file.Close() }()
-
-	return p.WriteHTML(file)
+	return writeToFile(path, p.WriteHTML)
 }
 
 // WriteHTML writes a self-contained HTML visualization to w.
