@@ -115,75 +115,33 @@ func (r *Recorder) recordScope(scope *do.Scope) {
 	r.mu.Unlock()
 }
 
-// newRegistrationEvent builds an Event struct with all fields initialized.
-// Centralizing the construction ensures exhaustruct sees every field.
-func newRegistrationEvent(
-	seq int,
-	now time.Time,
-	phase Phase,
-	scope *do.Scope,
-	serviceName string,
-	containerID string,
-) Event {
-	return Event{
-		Sequence:    seq,
-		Timestamp:   now,
-		EventType:   EventTypeRegistration,
-		Phase:       phase,
-		ContainerID: containerID,
-		ScopeID:     scope.ID(),
-		ScopeName:   scope.Name(),
-		ServiceName: serviceName,
-		DurationMs:  nil,
-		Error:       nil,
-	}
+// scopeKey produces the canonical map key for a service within a scope.
+func scopeKey(scope *do.Scope, serviceName string) string {
+	return scope.ID() + "/" + serviceName
 }
 
-// newInvocationEvent builds an Event struct for an invocation phase.
-func newInvocationEvent(
+// newEvent builds an Event struct with all fields initialized.
+func newEvent(
 	seq int,
 	now time.Time,
+	eventType EventType,
 	phase Phase,
 	scope *do.Scope,
 	serviceName string,
+	containerID string,
 	dur *float64,
 	errStr *string,
-	containerID string,
 ) Event {
 	return Event{
 		Sequence:    seq,
 		Timestamp:   now,
-		EventType:   EventTypeInvocation,
+		EventType:   eventType,
 		Phase:       phase,
 		ContainerID: containerID,
 		ScopeID:     scope.ID(),
 		ScopeName:   scope.Name(),
 		ServiceName: serviceName,
 		DurationMs:  dur,
-		Error:       errStr,
-	}
-}
-
-// newShutdownEvent builds an Event struct for a shutdown phase.
-func newShutdownEvent(
-	seq int,
-	now time.Time,
-	phase Phase,
-	scope *do.Scope,
-	serviceName string,
-	errStr *string,
-	containerID string,
-) Event {
-	return Event{
-		Sequence:    seq,
-		Timestamp:   now,
-		EventType:   EventTypeShutdown,
-		Phase:       phase,
-		ContainerID: containerID,
-		ScopeID:     scope.ID(),
-		ScopeName:   scope.Name(),
-		ServiceName: serviceName,
-		DurationMs:  nil,
 		Error:       errStr,
 	}
 }
@@ -209,19 +167,33 @@ func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *servi
 
 func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
 	r.recordScope(scope)
-	r.addEvent(newRegistrationEvent(r.nextSequence(), time.Now(), PhaseBefore, scope, serviceName, r.containerID))
+	r.addEvent(
+		newEvent(
+			r.nextSequence(),
+			time.Now(),
+			EventTypeRegistration,
+			PhaseBefore,
+			scope,
+			serviceName,
+			r.containerID,
+			nil,
+			nil,
+		),
+	)
 }
 
 func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 	now := time.Now()
-	key := scope.ID() + "/" + serviceName
+	key := scopeKey(scope, serviceName)
 
 	r.mu.Lock()
 	if _, ok := r.services[key]; !ok {
 		r.services[key] = newServiceRecord(scope, serviceName, now)
 	}
 	r.mu.Unlock()
-	r.addEvent(newRegistrationEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName, r.containerID))
+	r.addEvent(
+		newEvent(r.nextSequence(), now, EventTypeRegistration, PhaseAfter, scope, serviceName, r.containerID, nil, nil),
+	)
 }
 
 func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
@@ -233,7 +205,7 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 	if len(r.stack) > 0 {
 		parent := r.stack[len(r.stack)-1]
 		parentKey := parent.scopeID + "/" + parent.serviceName
-		depKey := scope.ID() + "/" + serviceName
+		depKey := scopeKey(scope, serviceName)
 
 		r.mu.Lock()
 		if rec, ok := r.services[parentKey]; ok {
@@ -250,7 +222,9 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 	})
 	r.stackMu.Unlock()
 
-	r.addEvent(newInvocationEvent(r.nextSequence(), now, PhaseBefore, scope, serviceName, nil, nil, r.containerID))
+	r.addEvent(
+		newEvent(r.nextSequence(), now, EventTypeInvocation, PhaseBefore, scope, serviceName, r.containerID, nil, nil),
+	)
 }
 
 func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err error) {
@@ -258,7 +232,17 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 	durationMs := r.popInvocationDuration(scope, serviceName, now)
 	errStr := errorToStringPtr(err)
 	r.addEvent(
-		newInvocationEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName, durationMs, errStr, r.containerID),
+		newEvent(
+			r.nextSequence(),
+			now,
+			EventTypeInvocation,
+			PhaseAfter,
+			scope,
+			serviceName,
+			r.containerID,
+			durationMs,
+			errStr,
+		),
 	)
 	r.recordInvocationResult(scope, serviceName, now, durationMs, errStr)
 }
@@ -293,7 +277,7 @@ func (r *Recorder) recordInvocationResult(
 	durationMs *float64,
 	errStr *string,
 ) {
-	key := scope.ID() + "/" + serviceName
+	key := scopeKey(scope, serviceName)
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -326,22 +310,26 @@ func (r *Recorder) recordInvocationResult(
 
 func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
 	now := time.Now()
-	key := scope.ID() + "/" + serviceName
+	key := scopeKey(scope, serviceName)
 
 	r.shutdownMu.Lock()
 	r.shutdownStart[key] = now
 	r.shutdownMu.Unlock()
 
-	r.addEvent(newShutdownEvent(r.nextSequence(), now, PhaseBefore, scope, serviceName, nil, r.containerID))
+	r.addEvent(
+		newEvent(r.nextSequence(), now, EventTypeShutdown, PhaseBefore, scope, serviceName, r.containerID, nil, nil),
+	)
 }
 
 func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err error) {
 	now := time.Now()
 	errStr := errorToStringPtr(err)
 
-	r.addEvent(newShutdownEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName, errStr, r.containerID))
+	r.addEvent(
+		newEvent(r.nextSequence(), now, EventTypeShutdown, PhaseAfter, scope, serviceName, r.containerID, nil, errStr),
+	)
 
-	key := scope.ID() + "/" + serviceName
+	key := scopeKey(scope, serviceName)
 
 	r.shutdownMu.Lock()
 
