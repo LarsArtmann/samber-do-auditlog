@@ -54,11 +54,11 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 | **Dependency graph**     | Infers which service resolved which, without accessing do's internal DAG |
 | **Reverse dependencies** | Every service knows who depends on it                                    |
 | **Scope tree**           | Full hierarchy with per-scope service lists                              |
-| **Timing**               | Build duration, invocation count, invocation order                       |
+| **Timing**               | First build duration, shutdown duration, invocation count & order        |
 | **3 export formats**     | JSON report · NDJSON stream · self-contained HTML                        |
 | **~1μs overhead**        | In-memory capture, no I/O during container operation                     |
 | **Toggle on/off**        | `Enabled: false` → zero hooks, zero cost                                 |
-| **Zero extra deps**      | Only depends on `samber/do/v2`                                           |
+| **Minimal deps**         | Only `samber/do/v2` + `a-h/templ` (HTML visualization)                  |
 
 ## Install
 
@@ -66,7 +66,7 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 go get github.com/larsartmann/samber-do-auditlog
 ```
 
-Requires Go 1.22+ and samber/do v2.
+Requires Go 1.24+ and samber/do v2.
 
 ## Quick Start
 
@@ -112,6 +112,7 @@ Full snapshot: event timeline, service summaries, scope tree.
 
 ```json
 {
+  "version": "0.1.0",
   "container_id": "my-app",
   "exported_at": "2026-06-09T22:18:00Z",
   "service_count": 3,
@@ -119,10 +120,9 @@ Full snapshot: event timeline, service summaries, scope tree.
   "services": [
     {
       "service_name": "*main.UserService",
-      "service_type": "lazy",
       "invocation_count": 1,
       "invocation_order": 2,
-      "build_duration_ms": 9.079,
+      "first_build_duration_ms": 9.079,
       "dependencies": [
         { "scope_name": "[root]", "service_name": "*main.Database" },
         { "scope_name": "[root]", "service_name": "*main.Cache" }
@@ -143,10 +143,10 @@ Full snapshot: event timeline, service summaries, scope tree.
 One JSON object per line. Feed it into log aggregators, stream processors, or custom tooling.
 
 ```ndjson
-{"sequence":1,"timestamp":"...","event_type":"registration","phase":"before","scope_name":"[root]","service_name":"*main.Config"}
-{"sequence":2,"timestamp":"...","event_type":"registration","phase":"after","scope_name":"[root]","service_name":"*main.Config"}
-{"sequence":3,"timestamp":"...","event_type":"invocation","phase":"before","scope_name":"[root]","service_name":"*main.Database"}
-{"sequence":4,"timestamp":"...","event_type":"invocation","phase":"after","duration_ms":5.196,"scope_name":"[root]","service_name":"*main.Database"}
+{"sequence":1,"timestamp":"...","event_type":"registration","phase":"before","container_id":"my-app","scope_name":"[root]","service_name":"*main.Config"}
+{"sequence":2,"timestamp":"...","event_type":"registration","phase":"after","container_id":"my-app","scope_name":"[root]","service_name":"*main.Config"}
+{"sequence":3,"timestamp":"...","event_type":"invocation","phase":"before","container_id":"my-app","scope_name":"[root]","service_name":"*main.Database"}
+{"sequence":4,"timestamp":"...","event_type":"invocation","phase":"after","container_id":"my-app","duration_ms":5.196,"scope_name":"[root]","service_name":"*main.Database"}
 ```
 
 ### HTML Visualization
@@ -156,8 +156,8 @@ A single, self-contained dark-themed HTML page. No external JS/CSS. Works offlin
 **What you get:**
 
 - **Stats cards** — services, events, scopes, dependency count
-- **Services table** — name, scope, type tag, invocation order, count, build time, deps, status
-- **Dependency graph** — force-directed SVG with color-coded nodes (lazy · eager · transient)
+- **Services table** — name, scope, invocation order, count, build time, deps, status
+- **Dependency graph** — force-directed SVG with interactive nodes
 - **Timeline** — horizontal bars showing relative build durations
 - **Events table** — full chronological log with sequence numbers
 
@@ -213,6 +213,7 @@ No file I/O happens during container operation. Export is a single `json.Marshal
 
 ```
 Report
+├── version             string (schema version, e.g. "0.1.0")
 ├── container_id        string
 ├── exported_at         time
 ├── service_count       int
@@ -220,17 +221,19 @@ Report
 ├── services[]          ServiceInfo
 │   ├── service_name    string
 │   ├── scope_name      string
-│   ├── service_type    lazy | eager | transient
+│   ├── registered_at   time
 │   ├── invocation_order int
-│   ├── build_duration_ms float64
+│   ├── first_build_duration_ms float64
+│   ├── shutdown_duration_ms float64
 │   ├── dependencies[]  {scope_name, service_name}
 │   └── dependents[]    {scope_name, service_name}
 ├── events[]            Event
 │   ├── sequence        int (monotonic)
 │   ├── timestamp       time
+│   ├── container_id    string
 │   ├── event_type      registration | invocation | shutdown
 │   ├── phase           before | after
-│   ├── duration_ms     float64 (after-invocation only)
+│   ├── duration_ms     float64 (after-invocation/shutdown only)
 │   └── error           string (on failure only)
 └── scope_tree          ScopeNode
     ├── name            string
