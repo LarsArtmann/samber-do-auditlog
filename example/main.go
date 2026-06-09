@@ -78,6 +78,7 @@ func main() {
 		cfg := do.MustInvoke[*Config](i)
 
 		db := &Database{Config: cfg}
+
 		err := db.Connect()
 		if err != nil {
 			return nil, err
@@ -90,6 +91,7 @@ func main() {
 		cfg := do.MustInvoke[*Config](i)
 
 		cache := &Cache{Config: cfg}
+
 		err := cache.Connect()
 		if err != nil {
 			return nil, err
@@ -142,6 +144,12 @@ func main() {
 	}
 
 	fmt.Println("Exported audit-events.ndjson")
+
+	if err := plugin.ExportToHTML("audit-report.html"); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Exported audit-report.html")
 
 	// 7. Print a quick summary
 	rep := plugin.Report()

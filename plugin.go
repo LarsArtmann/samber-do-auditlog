@@ -63,18 +63,22 @@ func (p *Plugin) WriteReportJSON(w io.Writer) error {
 	report := p.Report()
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
+
 	return enc.Encode(report)
 }
 
 // WriteEventsNDJSON writes every captured event as a line-delimited JSON stream to w.
 func (p *Plugin) WriteEventsNDJSON(w io.Writer) error {
 	events := p.recorder.Events()
+
 	enc := json.NewEncoder(w)
 	for _, e := range events {
-		if err := enc.Encode(e); err != nil {
+		err := enc.Encode(e)
+		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -85,6 +89,7 @@ func (p *Plugin) ExportToFile(path string) error {
 		return err
 	}
 	defer func() { _ = f.Close() }()
+
 	return p.WriteReportJSON(f)
 }
 
@@ -95,6 +100,7 @@ func (p *Plugin) ExportEventsToNDJSON(path string) error {
 		return err
 	}
 	defer func() { _ = f.Close() }()
+
 	return p.WriteEventsNDJSON(f)
 }
 
