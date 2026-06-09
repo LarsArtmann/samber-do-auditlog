@@ -2,6 +2,9 @@ package auditlog
 
 import "time"
 
+// SchemaVersion is the current report schema version.
+const SchemaVersion = "0.1.0"
+
 // EventType categorizes audit log events.
 type EventType string
 
@@ -41,19 +44,19 @@ type Event struct {
 
 // ServiceInfo aggregates all observed data for a single service.
 type ServiceInfo struct {
-	ServiceName     string          `json:"service_name"`
-	ScopeID         string          `json:"scope_id"`
-	ScopeName       string          `json:"scope_name"`
-	RegisteredAt    time.Time       `json:"registered_at"`
-	FirstInvokedAt  *time.Time      `json:"first_invoked_at,omitempty"`
-	InvocationCount int             `json:"invocation_count"`
-	InvocationOrder int             `json:"invocation_order"`
+	ServiceName          string          `json:"service_name"`
+	ScopeID              string          `json:"scope_id"`
+	ScopeName            string          `json:"scope_name"`
+	RegisteredAt         time.Time       `json:"registered_at"`
+	FirstInvokedAt       *time.Time      `json:"first_invoked_at,omitempty"`
+	InvocationCount      int             `json:"invocation_count"`
+	InvocationOrder      int             `json:"invocation_order"`
 	FirstBuildDurationMs *float64        `json:"first_build_duration_ms,omitempty"`
-	Dependencies    []DependencyRef `json:"dependencies,omitempty"`
-	Dependents      []DependencyRef `json:"dependents,omitempty"`
-	ShutdownAt      *time.Time      `json:"shutdown_at,omitempty"`
-	ShutdownError   *string         `json:"shutdown_error,omitempty"`
-	InvocationError *string         `json:"invocation_error,omitempty"`
+	Dependencies         []DependencyRef `json:"dependencies,omitempty"`
+	Dependents           []DependencyRef `json:"dependents,omitempty"`
+	ShutdownAt           *time.Time      `json:"shutdown_at,omitempty"`
+	ShutdownError        *string         `json:"shutdown_error,omitempty"`
+	InvocationError      *string         `json:"invocation_error,omitempty"`
 }
 
 // ScopeNode represents the scope hierarchy for visualization.
@@ -66,6 +69,7 @@ type ScopeNode struct {
 
 // Report is a consolidated, machine-readable snapshot of the audit log.
 type Report struct {
+	Version      string        `json:"version"`
 	ContainerID  string        `json:"container_id"`
 	ExportedAt   time.Time     `json:"exported_at"`
 	EventCount   int           `json:"event_count"`

@@ -24,18 +24,18 @@ type stackEntry struct {
 }
 
 type serviceRecord struct {
-	scopeID         string
-	scopeName       string
-	serviceName     string
-	registeredAt    time.Time
-	firstInvokedAt  *time.Time
-	invocationCount int
-	invocationOrder int
+	scopeID              string
+	scopeName            string
+	serviceName          string
+	registeredAt         time.Time
+	firstInvokedAt       *time.Time
+	invocationCount      int
+	invocationOrder      int
 	firstBuildDurationMs *float64
-	dependencies    map[string]struct{}
-	shutdownAt      *time.Time
-	invocationError *string
-	shutdownError   *string
+	dependencies         map[string]struct{}
+	shutdownAt           *time.Time
+	invocationError      *string
+	shutdownError        *string
 }
 
 type scopeMeta struct {
@@ -164,18 +164,18 @@ func newShutdownEvent(seq int, now time.Time, phase Phase, scope *do.Scope, serv
 // newServiceRecord constructs a serviceRecord with all fields set.
 func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *serviceRecord {
 	return &serviceRecord{
-		scopeID:         scope.ID(),
-		scopeName:       scope.Name(),
-		serviceName:     serviceName,
-		registeredAt:    now,
-		firstInvokedAt:  nil,
-		invocationCount: 0,
-		invocationOrder: 0,
+		scopeID:              scope.ID(),
+		scopeName:            scope.Name(),
+		serviceName:          serviceName,
+		registeredAt:         now,
+		firstInvokedAt:       nil,
+		invocationCount:      0,
+		invocationOrder:      0,
 		firstBuildDurationMs: nil,
-		dependencies:    make(map[string]struct{}),
-		shutdownAt:      nil,
-		invocationError: nil,
-		shutdownError:   nil,
+		dependencies:         make(map[string]struct{}),
+		shutdownAt:           nil,
+		invocationError:      nil,
+		shutdownError:        nil,
 	}
 }
 
@@ -355,25 +355,26 @@ func (r *Recorder) BuildReport(containerID string) Report {
 		svcDependents := dependents[key]
 
 		services = append(services, ServiceInfo{
-			ServiceName:     rec.serviceName,
-			ScopeID:         rec.scopeID,
-			ScopeName:       rec.scopeName,
-			RegisteredAt:    rec.registeredAt,
-			FirstInvokedAt:  rec.firstInvokedAt,
-			InvocationCount: rec.invocationCount,
-			InvocationOrder: rec.invocationOrder,
+			ServiceName:          rec.serviceName,
+			ScopeID:              rec.scopeID,
+			ScopeName:            rec.scopeName,
+			RegisteredAt:         rec.registeredAt,
+			FirstInvokedAt:       rec.firstInvokedAt,
+			InvocationCount:      rec.invocationCount,
+			InvocationOrder:      rec.invocationOrder,
 			FirstBuildDurationMs: rec.firstBuildDurationMs,
-			Dependencies:    deps,
-			Dependents:      svcDependents,
-			ShutdownAt:      rec.shutdownAt,
-			ShutdownError:   rec.shutdownError,
-			InvocationError: rec.invocationError,
+			Dependencies:         deps,
+			Dependents:           svcDependents,
+			ShutdownAt:           rec.shutdownAt,
+			ShutdownError:        rec.shutdownError,
+			InvocationError:      rec.invocationError,
 		})
 	}
 
 	scopeTree := r.buildScopeTreeLocked()
 
 	return Report{
+		Version:      SchemaVersion,
 		ContainerID:  containerID,
 		ExportedAt:   time.Now(),
 		EventCount:   len(r.events),

@@ -8,13 +8,13 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 
 ## Commands
 
-| Command | Purpose |
-|---|---|
-| `go test ./...` | Run all tests |
-| `go test -run TestPlugin_DisabledIsNoOp` | Run single test |
-| `go vet ./...` | Static analysis |
-| `golangci-lint run` | Full lint (heavy config, see below) |
-| `go run example/main.go` | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
+| Command                                  | Purpose                                          |
+| ---------------------------------------- | ------------------------------------------------ |
+| `go test ./...`                          | Run all tests                                    |
+| `go test -run TestPlugin_DisabledIsNoOp` | Run single test                                  |
+| `go vet ./...`                           | Static analysis                                  |
+| `golangci-lint run`                      | Full lint (heavy config, see below)              |
+| `go run example/main.go`                 | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
 
 No flake.nix, no Makefile, no justfile. Standard Go toolchain only.
 
