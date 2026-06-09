@@ -34,6 +34,7 @@ type serviceRecord struct {
 	firstBuildDurationMs *float64
 	dependencies         map[string]struct{}
 	shutdownAt           *time.Time
+	shutdownDurationMs   *float64
 	invocationError      *string
 	shutdownError        *string
 }
@@ -66,8 +67,11 @@ type Recorder struct {
 	invocationMu    sync.Mutex
 	invocationIndex int
 
-	sequence    *atomic.Int64
-	containerID string
+	sequence      *atomic.Int64
+	containerID   string
+
+	shutdownMu    sync.Mutex
+	shutdownStart map[string]time.Time
 }
 
 // NewRecorder creates a new event recorder.
@@ -83,6 +87,8 @@ func NewRecorder(containerID string) *Recorder {
 		invocationIndex: 0,
 		sequence:        newSequenceCounter(),
 		containerID:     containerID,
+		shutdownMu:      sync.Mutex{},
+		shutdownStart:   make(map[string]time.Time),
 	}
 }
 
@@ -301,7 +307,14 @@ func (r *Recorder) recordInvocationResult(
 }
 
 func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
-	r.addEvent(newShutdownEvent(r.nextSequence(), time.Now(), PhaseBefore, scope, serviceName, nil, r.containerID))
+	now := time.Now()
+	key := scope.ID() + "/" + serviceName
+
+	r.shutdownMu.Lock()
+	r.shutdownStart[key] = now
+	r.shutdownMu.Unlock()
+
+	r.addEvent(newShutdownEvent(r.nextSequence(), now, PhaseBefore, scope, serviceName, nil, r.containerID))
 }
 
 func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err error) {
@@ -312,9 +325,23 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 
 	key := scope.ID() + "/" + serviceName
 
+	r.shutdownMu.Lock()
+	start, ok := r.shutdownStart[key]
+	if ok {
+		delete(r.shutdownStart, key)
+	}
+	r.shutdownMu.Unlock()
+
+	var shutdownDur *float64
+	if ok {
+		d := float64(now.Sub(start).Microseconds()) / microsecondsPerMillisecond
+		shutdownDur = &d
+	}
+
 	r.mu.Lock()
 	if rec, ok := r.services[key]; ok {
 		rec.shutdownAt = &now
+		rec.shutdownDurationMs = shutdownDur
 		rec.shutdownError = errStr
 	}
 	r.mu.Unlock()
@@ -372,6 +399,7 @@ func (r *Recorder) BuildReport(containerID string) Report {
 			Dependencies:         deps,
 			Dependents:           svcDependents,
 			ShutdownAt:           rec.shutdownAt,
+			ShutdownDurationMs:   rec.shutdownDurationMs,
 			ShutdownError:        rec.shutdownError,
 			InvocationError:      rec.invocationError,
 		})

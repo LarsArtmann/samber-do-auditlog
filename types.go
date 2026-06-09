@@ -56,6 +56,7 @@ type ServiceInfo struct {
 	Dependencies         []DependencyRef `json:"dependencies,omitempty"`
 	Dependents           []DependencyRef `json:"dependents,omitempty"`
 	ShutdownAt           *time.Time      `json:"shutdown_at,omitempty"`
+	ShutdownDurationMs   *float64        `json:"shutdown_duration_ms,omitempty"`
 	ShutdownError        *string         `json:"shutdown_error,omitempty"`
 	InvocationError      *string         `json:"invocation_error,omitempty"`
 }
