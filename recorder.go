@@ -201,6 +201,7 @@ func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *servi
 		firstBuildDurationMs: nil,
 		dependencies:         make(map[string]struct{}),
 		shutdownAt:           nil,
+		shutdownDurationMs:   nil,
 		invocationError:      nil,
 		shutdownError:        nil,
 	}

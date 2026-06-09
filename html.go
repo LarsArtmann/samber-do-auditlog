@@ -9,13 +9,13 @@ import (
 
 // ExportToHTML writes a self-contained HTML visualization to a file.
 func (p *Plugin) ExportToHTML(path string) error {
-	f, err := os.Create(path) //nolint:gosec,noinlineerr
+	file, err := os.Create(path) //nolint:gosec
 	if err != nil {
 		return fmt.Errorf("create HTML file %q: %w", path, err)
 	}
-	defer func() { _ = f.Close() }()
+	defer func() { _ = file.Close() }()
 
-	return p.WriteHTML(f)
+	return p.WriteHTML(file)
 }
 
 // WriteHTML writes a self-contained HTML visualization to w.

@@ -1,7 +1,3 @@
-// Package auditlog provides a samber/do v2 plugin that records every
-// registration, invocation, and shutdown as timestamped events with
-// dependency graph inference, build duration tracking, and exporters
-// for JSON, NDJSON, and a self-contained HTML visualization.
 package auditlog
 
 import (
@@ -73,10 +69,10 @@ func envIsEnabled() bool {
 // When Enabled is false the returned opts are harmless no-ops.
 func (p *Plugin) Opts() *do.InjectorOpts {
 	if !p.config.Enabled {
-		return &do.InjectorOpts{}
+		return &do.InjectorOpts{} //nolint:exhaustruct
 	}
 
-	return &do.InjectorOpts{
+	return &do.InjectorOpts{ //nolint:exhaustruct
 		HookBeforeRegistration: []func(*do.Scope, string){p.recorder.OnBeforeRegistration},
 		HookAfterRegistration:  []func(*do.Scope, string){p.recorder.OnAfterRegistration},
 		HookBeforeInvocation:   []func(*do.Scope, string){p.recorder.OnBeforeInvocation},
@@ -124,7 +120,7 @@ func (p *Plugin) WriteEventsNDJSON(writer io.Writer) error {
 //
 
 func (p *Plugin) ExportToFile(path string) error {
-	file, err := os.Create(path) //nolint:gosec,noinlineerr
+	file, err := os.Create(path) //nolint:gosec
 	if err != nil {
 		return fmt.Errorf("create report file %q: %w", path, err)
 	}
@@ -138,7 +134,7 @@ func (p *Plugin) ExportToFile(path string) error {
 //
 
 func (p *Plugin) ExportEventsToNDJSON(path string) error {
-	file, err := os.Create(path) //nolint:gosec,noinlineerr
+	file, err := os.Create(path) //nolint:gosec
 	if err != nil {
 		return fmt.Errorf("create events file %q: %w", path, err)
 	}
