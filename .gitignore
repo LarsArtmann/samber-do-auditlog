@@ -1,4 +1,8 @@
 # Build artifacts
 /do-auditlog
-# Build artifacts
 /samber-do-auditlog
+
+# Generated example output
+audit-report.json
+audit-events.ndjson
+audit-report.html
