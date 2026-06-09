@@ -67,8 +67,8 @@ type Recorder struct {
 	invocationMu    sync.Mutex
 	invocationIndex int
 
-	sequence      *atomic.Int64
-	containerID   string
+	sequence    *atomic.Int64
+	containerID string
 
 	shutdownMu    sync.Mutex
 	shutdownStart map[string]time.Time
@@ -117,18 +117,25 @@ func (r *Recorder) recordScope(scope *do.Scope) {
 
 // newRegistrationEvent builds an Event struct with all fields initialized.
 // Centralizing the construction ensures exhaustruct sees every field.
-func newRegistrationEvent(seq int, now time.Time, phase Phase, scope *do.Scope, serviceName string, containerID string) Event {
+func newRegistrationEvent(
+	seq int,
+	now time.Time,
+	phase Phase,
+	scope *do.Scope,
+	serviceName string,
+	containerID string,
+) Event {
 	return Event{
-		Sequence:     seq,
-		Timestamp:    now,
-		EventType:    EventTypeRegistration,
-		Phase:        phase,
-		ContainerID:  containerID,
-		ScopeID:      scope.ID(),
-		ScopeName:    scope.Name(),
-		ServiceName:  serviceName,
-		DurationMs:   nil,
-		Error:        nil,
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeRegistration,
+		Phase:       phase,
+		ContainerID: containerID,
+		ScopeID:     scope.ID(),
+		ScopeName:   scope.Name(),
+		ServiceName: serviceName,
+		DurationMs:  nil,
+		Error:       nil,
 	}
 }
 
@@ -144,32 +151,40 @@ func newInvocationEvent(
 	containerID string,
 ) Event {
 	return Event{
-		Sequence:     seq,
-		Timestamp:    now,
-		EventType:    EventTypeInvocation,
-		Phase:        phase,
-		ContainerID:  containerID,
-		ScopeID:      scope.ID(),
-		ScopeName:    scope.Name(),
-		ServiceName:  serviceName,
-		DurationMs:   dur,
-		Error:        errStr,
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeInvocation,
+		Phase:       phase,
+		ContainerID: containerID,
+		ScopeID:     scope.ID(),
+		ScopeName:   scope.Name(),
+		ServiceName: serviceName,
+		DurationMs:  dur,
+		Error:       errStr,
 	}
 }
 
 // newShutdownEvent builds an Event struct for a shutdown phase.
-func newShutdownEvent(seq int, now time.Time, phase Phase, scope *do.Scope, serviceName string, errStr *string, containerID string) Event {
+func newShutdownEvent(
+	seq int,
+	now time.Time,
+	phase Phase,
+	scope *do.Scope,
+	serviceName string,
+	errStr *string,
+	containerID string,
+) Event {
 	return Event{
-		Sequence:     seq,
-		Timestamp:    now,
-		EventType:    EventTypeShutdown,
-		Phase:        phase,
-		ContainerID:  containerID,
-		ScopeID:      scope.ID(),
-		ScopeName:    scope.Name(),
-		ServiceName:  serviceName,
-		DurationMs:   nil,
-		Error:        errStr,
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeShutdown,
+		Phase:       phase,
+		ContainerID: containerID,
+		ScopeID:     scope.ID(),
+		ScopeName:   scope.Name(),
+		ServiceName: serviceName,
+		DurationMs:  nil,
+		Error:       errStr,
 	}
 }
 
@@ -241,7 +256,9 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 	now := time.Now()
 	durationMs := r.popInvocationDuration(scope, serviceName, now)
 	errStr := errorToStringPtr(err)
-	r.addEvent(newInvocationEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName, durationMs, errStr, r.containerID))
+	r.addEvent(
+		newInvocationEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName, durationMs, errStr, r.containerID),
+	)
 	r.recordInvocationResult(scope, serviceName, now, durationMs, errStr)
 }
 
@@ -326,6 +343,7 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 	key := scope.ID() + "/" + serviceName
 
 	r.shutdownMu.Lock()
+
 	start, ok := r.shutdownStart[key]
 	if ok {
 		delete(r.shutdownStart, key)
@@ -333,6 +351,7 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 	r.shutdownMu.Unlock()
 
 	var shutdownDur *float64
+
 	if ok {
 		d := float64(now.Sub(start).Microseconds()) / microsecondsPerMillisecond
 		shutdownDur = &d

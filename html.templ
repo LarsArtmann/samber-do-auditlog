@@ -3,11 +3,11 @@ package auditlog
 templ reportHTML(report Report) {
 	<!DOCTYPE html>
 	<html lang="en">
-	<head>
-	<meta charset="UTF-8"/>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-	<title>do-auditlog: { report.ContainerID }</title>
-	<style>
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>do-auditlog: { report.ContainerID }</title>
+			<style>
 	  :root {
 	    --bg: #0d1117;
 	    --surface: #161b22;
@@ -100,62 +100,55 @@ templ reportHTML(report Report) {
 	  .timeline-label { width: 200px; font-size: 0.8rem; font-family: monospace; text-align: right; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 	  .timeline-track { flex: 1; background: var(--surface); border-radius: 2px; height: 4px; position: relative; }
 	</style>
-	</head>
-	<body>
-	<h1>do-auditlog</h1>
-	<p class="subtitle">Container <span class="mono" id="container-id"></span> &mdash; exported <span id="exported-at"></span></p>
-
-	<div class="stats" id="stats"></div>
-
-	<div class="tab-bar">
-	  <button class="tab active" data-tab="services">Services</button>
-	  <button class="tab" data-tab="graph">Dependency Graph</button>
-	  <button class="tab" data-tab="timeline">Timeline</button>
-	  <button class="tab" data-tab="events">Events</button>
-	</div>
-
-	<div class="tab-content active" id="tab-services">
-	  <table>
-	    <thead>
-	      <tr>
-	        <th>Service</th>
-	        <th>Scope</th>
-	        <th>Order</th>
-	        <th>Invocations</th>
-	        <th>Build (ms)</th>
-	        <th>Dependencies</th>
-	        <th>Status</th>
-	      </tr>
-	    </thead>
-	    <tbody id="services-tbody"></tbody>
-	  </table>
-	</div>
-
-	<div class="tab-content" id="tab-graph">
-	  <div id="graph-container">
-	    <div class="legend">
-	      <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Lazy</div>
-	      <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div> Eager</div>
-	      <div class="legend-item"><div class="legend-dot" style="background:var(--accent3)"></div> Transient</div>
-	    </div>
-	  </div>
-	</div>
-
-	<div class="tab-content" id="tab-timeline">
-	  <div id="timeline-container"></div>
-	</div>
-
-	<div class="tab-content" id="tab-events">
-	  <table>
-	    <thead>
-	      <tr><th>#</th><th>Time</th><th>Type</th><th>Phase</th><th>Scope</th><th>Service</th><th>Duration</th><th>Error</th></tr>
-	    </thead>
-	    <tbody id="events-tbody"></tbody>
-	  </table>
-	</div>
-
-	@templ.JSONScript("report-data", report)
-	<script>
+		</head>
+		<body>
+			<h1>do-auditlog</h1>
+			<p class="subtitle">Container <span class="mono" id="container-id"></span> &mdash; exported <span id="exported-at"></span></p>
+			<div class="stats" id="stats"></div>
+			<div class="tab-bar">
+				<button class="tab active" data-tab="services">Services</button>
+				<button class="tab" data-tab="graph">Dependency Graph</button>
+				<button class="tab" data-tab="timeline">Timeline</button>
+				<button class="tab" data-tab="events">Events</button>
+			</div>
+			<div class="tab-content active" id="tab-services">
+				<table>
+					<thead>
+						<tr>
+							<th>Service</th>
+							<th>Scope</th>
+							<th>Order</th>
+							<th>Invocations</th>
+							<th>Build (ms)</th>
+							<th>Dependencies</th>
+							<th>Status</th>
+						</tr>
+					</thead>
+					<tbody id="services-tbody"></tbody>
+				</table>
+			</div>
+			<div class="tab-content" id="tab-graph">
+				<div id="graph-container">
+					<div class="legend">
+						<div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Lazy</div>
+						<div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div> Eager</div>
+						<div class="legend-item"><div class="legend-dot" style="background:var(--accent3)"></div> Transient</div>
+					</div>
+				</div>
+			</div>
+			<div class="tab-content" id="tab-timeline">
+				<div id="timeline-container"></div>
+			</div>
+			<div class="tab-content" id="tab-events">
+				<table>
+					<thead>
+						<tr><th>#</th><th>Time</th><th>Type</th><th>Phase</th><th>Scope</th><th>Service</th><th>Duration</th><th>Error</th></tr>
+					</thead>
+					<tbody id="events-tbody"></tbody>
+				</table>
+			</div>
+			@templ.JSONScript("report-data", report)
+			<script>
 	const report = JSON.parse(document.getElementById('report-data').textContent);
 
 	document.getElementById('container-id').textContent = report.container_id;
@@ -348,6 +341,6 @@ templ reportHTML(report Report) {
 
 	function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 	</script>
-	</body>
+		</body>
 	</html>
 }
