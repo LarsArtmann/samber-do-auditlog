@@ -45,9 +45,7 @@ func TestPlugin_EnvVarEnables(t *testing.T) {
 	p := auditlog.New(auditlog.Config{})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "postgres://localhost"}, nil
-	})
+	provideDB(injector, "db", "postgres://localhost")
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 
 	report := p.Report()
@@ -80,9 +78,7 @@ func TestPlugin_EnvVarValues(t *testing.T) {
 			p := auditlog.New(auditlog.Config{})
 			injector := do.NewWithOpts(p.Opts())
 
-			do.ProvideNamed(injector, "db", func(_ do.Injector) (*Database, error) {
-				return &Database{URL: "test"}, nil
-			})
+			provideDB(injector, "db", "test")
 			_ = do.MustInvokeNamed[*Database](injector, "db")
 
 			report := p.Report()
@@ -103,9 +99,7 @@ func TestPlugin_ExplicitEnabledOverridesEnv(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "postgres://localhost"}, nil
-	})
+	provideDB(injector, "db", "postgres://localhost")
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 
 	report := p.Report()
@@ -118,9 +112,7 @@ func TestPlugin_RegistrationAndInvocation(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true, ContainerID: "test"})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "postgres://localhost"}, nil
-	})
+	provideDB(injector, "db", "postgres://localhost")
 
 	_, err := do.InvokeNamed[*Database](injector, "db")
 	if err != nil {
@@ -166,9 +158,7 @@ func TestPlugin_InvocationOrder(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "a", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "a"}, nil
-	})
+	provideDB(injector, "a", "a")
 	do.ProvideNamed(injector, "b", func(i do.Injector) (*Cache, error) {
 		return &Cache{}, nil
 	})
@@ -223,13 +213,7 @@ func TestPlugin_DependencyTracking(t *testing.T) {
 
 	var users *auditlog.ServiceInfo
 
-	for i := range report.Services {
-		if report.Services[i].ServiceName == "users" {
-			users = &report.Services[i]
-
-			break
-		}
-	}
+	users = findServiceByName(t, report, "users")
 
 	if users == nil {
 		t.Fatal("users service not found in report")
@@ -241,13 +225,7 @@ func TestPlugin_DependencyTracking(t *testing.T) {
 
 	var db *auditlog.ServiceInfo
 
-	for i := range report.Services {
-		if report.Services[i].ServiceName == "db" {
-			db = &report.Services[i]
-
-			break
-		}
-	}
+	db = findServiceByName(t, report, "db")
 
 	if db == nil {
 		t.Fatal("db service not found")
@@ -262,9 +240,7 @@ func TestPlugin_ShutdownTracking(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "postgres://localhost"}, nil
-	})
+	provideDB(injector, "db", "postgres://localhost")
 
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 	_ = injector.Shutdown()
@@ -284,13 +260,7 @@ func TestPlugin_ShutdownTracking(t *testing.T) {
 
 	var db *auditlog.ServiceInfo
 
-	for i := range report.Services {
-		if report.Services[i].ServiceName == "db" {
-			db = &report.Services[i]
-
-			break
-		}
-	}
+	db = findServiceByName(t, report, "db")
 
 	if db == nil {
 		t.Fatal("db service not found in report")
@@ -305,9 +275,7 @@ func TestPlugin_ExportToFile(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "postgres://localhost"}, nil
-	})
+	provideDB(injector, "db", "postgres://localhost")
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 
 	path := t.TempDir() + "/report.json"
@@ -334,9 +302,7 @@ func TestPlugin_ExportEventsToNDJSON(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "postgres://localhost"}, nil
-	})
+	provideDB(injector, "db", "postgres://localhost")
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 
 	path := t.TempDir() + "/events.ndjson"
@@ -368,12 +334,8 @@ func TestPlugin_ScopeTree(t *testing.T) {
 
 	child := injector.Scope("child")
 
-	do.ProvideNamed(injector, "root-svc", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "root"}, nil
-	})
-	do.ProvideNamed(child, "child-svc", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "child"}, nil
-	})
+	provideDB(injector, "root-svc", "root")
+	provideDB(child, "child-svc", "child")
 
 	_ = do.MustInvokeNamed[*Database](injector, "root-svc")
 	_ = do.MustInvokeNamed[*Database](child, "child-svc")
@@ -404,9 +366,7 @@ func TestPlugin_CachedInvocation(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "postgres://localhost"}, nil
-	})
+	provideDB(injector, "db", "postgres://localhost")
 
 	do.ProvideNamed(injector, "users", func(i do.Injector) (*UserService, error) {
 		db := do.MustInvokeNamed[*Database](i, "db")
@@ -421,13 +381,7 @@ func TestPlugin_CachedInvocation(t *testing.T) {
 
 	var users *auditlog.ServiceInfo
 
-	for i := range report.Services {
-		if report.Services[i].ServiceName == "users" {
-			users = &report.Services[i]
-
-			break
-		}
-	}
+	users = findServiceByName(t, report, "users")
 
 	if users == nil {
 		t.Fatal("users service not found")
@@ -439,13 +393,7 @@ func TestPlugin_CachedInvocation(t *testing.T) {
 
 	var db *auditlog.ServiceInfo
 
-	for i := range report.Services {
-		if report.Services[i].ServiceName == "db" {
-			db = &report.Services[i]
-
-			break
-		}
-	}
+	db = findServiceByName(t, report, "db")
 
 	if db == nil {
 		t.Fatal("db service not found")
@@ -460,9 +408,7 @@ func TestPlugin_EventSequenceNumbers(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "postgres://localhost"}, nil
-	})
+	provideDB(injector, "db", "postgres://localhost")
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 
 	events := p.Events()
@@ -495,13 +441,7 @@ func TestPlugin_ProviderError(t *testing.T) {
 
 	var svc *auditlog.ServiceInfo
 
-	for i := range report.Services {
-		if report.Services[i].ServiceName == "failing" {
-			svc = &report.Services[i]
-
-			break
-		}
-	}
+	svc = findServiceByName(t, report, "failing")
 
 	if svc == nil {
 		t.Fatal("failing service not found in report")
@@ -520,9 +460,7 @@ func TestPlugin_ExportToHTML(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "postgres://localhost"}, nil
-	})
+	provideDB(injector, "db", "postgres://localhost")
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 
 	path := t.TempDir() + "/report.html"
@@ -560,6 +498,24 @@ func searchString(s, sub string) bool {
 	}
 
 	return false
+}
+
+func provideDB(injector do.Injector, name, url string) {
+	do.ProvideNamed(injector, name, func(_ do.Injector) (*Database, error) {
+		return &Database{URL: url}, nil
+	})
+}
+
+func findServiceByName(t *testing.T, report auditlog.Report, name string) *auditlog.ServiceInfo {
+	t.Helper()
+
+	for i := range report.Services {
+		if report.Services[i].ServiceName == name {
+			return &report.Services[i]
+		}
+	}
+
+	return nil
 }
 
 func findServiceBySuffix(t *testing.T, report auditlog.Report, suffix string) *auditlog.ServiceInfo {
@@ -649,9 +605,7 @@ func BenchmarkHookOverhead_Invocation(b *testing.B) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "postgres://localhost"}, nil
-	})
+	provideDB(injector, "db", "postgres://localhost")
 
 	b.ResetTimer()
 
@@ -664,9 +618,7 @@ func BenchmarkHookOverhead_Disabled(b *testing.B) {
 	p := auditlog.New(auditlog.Config{Enabled: false})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "postgres://localhost"}, nil
-	})
+	provideDB(injector, "db", "postgres://localhost")
 
 	b.ResetTimer()
 
@@ -681,8 +633,6 @@ func BenchmarkHookOverhead_Registration(b *testing.B) {
 	for range b.N {
 		p := auditlog.New(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(p.Opts())
-		do.ProvideNamed(injector, "svc", func(_ do.Injector) (*Database, error) {
-			return &Database{URL: "test"}, nil
-		})
+		provideDB(injector, "svc", "test")
 	}
 }

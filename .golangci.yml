@@ -215,6 +215,7 @@ linters:
           - funlen
           - cyclop
           - goconst
+          - staticcheck
       - path: _test\.go
         text: unused
         linters:

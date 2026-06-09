@@ -416,6 +416,7 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 		for depKey := range rec.dependencies {
 			if depRec, ok := r.services[depKey]; ok {
 				deps = append(deps, DependencyRef{
+					ScopeID:     depRec.scopeID,
 					ScopeName:   depRec.scopeName,
 					ServiceName: depRec.serviceName,
 				})
@@ -473,6 +474,7 @@ func buildDependentsMapLocked(services map[string]*serviceRecord) map[string][]D
 		for depKey := range rec.dependencies {
 			if _, ok := services[depKey]; ok {
 				dependents[depKey] = append(dependents[depKey], DependencyRef{
+					ScopeID:     rec.scopeID,
 					ScopeName:   rec.scopeName,
 					ServiceName: rec.serviceName,
 				})

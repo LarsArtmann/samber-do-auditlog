@@ -25,6 +25,7 @@ const (
 // DependencyRef is a structured reference to another service for
 // dependency tracking and graph visualization.
 type DependencyRef struct {
+	ScopeID     string `json:"scope_id"`
 	ScopeName   string `json:"scope_name"`
 	ServiceName string `json:"service_name"`
 }
