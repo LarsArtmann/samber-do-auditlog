@@ -1,57 +1,9 @@
-package auditlog
-
-import (
-	"encoding/json"
-	"html/template"
-	"io"
-	"os"
-)
-
-// ExportToHTML writes a self-contained HTML visualization to a file.
-func (p *Plugin) ExportToHTML(path string) error {
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = f.Close() }()
-
-	return p.WriteHTML(f)
-}
-
-// WriteHTML writes a self-contained HTML visualization to w.
-func (p *Plugin) WriteHTML(w io.Writer) error {
-	report := p.Report()
-
-	return writeHTMLReport(w, report)
-}
-
-type htmlData struct {
-	Report     Report
-	ReportJSON template.JS
-}
-
-func writeHTMLReport(w io.Writer, report Report) error {
-	reportJSON, err := json.Marshal(report)
-	if err != nil {
-		return err
-	}
-
-	data := htmlData{
-		Report:     report,
-		ReportJSON: template.JS(reportJSON),
-	}
-
-	tmpl := template.Must(template.New("audit").Parse(htmlTemplate))
-
-	return tmpl.Execute(w, data)
-}
-
-const htmlTemplate = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>do-auditlog: {{.Report.ContainerID}}</title>
+<title>do-auditlog: demo-app</title>
 <style>
   :root {
     --bg: #0d1117;
@@ -208,12 +160,12 @@ const htmlTemplate = `<!DOCTYPE html>
 </div>
 
 <script>
-const report = JSON.parse({{.ReportJSON}});
+const report = JSON.parse({"container_id":"demo-app","exported_at":"2026-06-09T22:44:37.959932537+02:00","event_count":0,"service_count":0,"services":[],"scope_tree":{"id":"","name":""}});
 
 document.getElementById('container-id').textContent = report.container_id;
 document.getElementById('exported-at').textContent = new Date(report.exported_at).toLocaleString();
 
-// Stats
+
 document.getElementById('stats').innerHTML = [
   {label: 'Services', value: report.service_count},
   {label: 'Events', value: report.event_count},
@@ -223,7 +175,7 @@ document.getElementById('stats').innerHTML = [
 
 function countScopes(node) { return 1 + (node.children || []).reduce((s, c) => s + countScopes(c), 0); }
 
-// Tabs
+
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').classList && document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -234,7 +186,7 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-// Services table
+
 document.getElementById('services-tbody').innerHTML = report.services.map(s => {
   const deps = (s.dependencies||[]).map(d => '<span>'+d.service_name+'</span>').join(', ');
   const status = s.invocation_error ? '<span class="has-error">error</span>' :
@@ -245,13 +197,13 @@ document.getElementById('services-tbody').innerHTML = report.services.map(s => {
     +'<td>'+esc(s.scope_name)+'</td>'
     +'<td>'+s.invocation_order+'</td>'
     +'<td>'+s.invocation_count+'</td>'
-    +'<td>'+(s.first_build_duration_ms ? s.first_build_duration_ms.toFixed(3) : '&ndash;')+'</td>'
+    +'<td>'+(s.build_duration_ms ? s.build_duration_ms.toFixed(3) : '&ndash;')+'</td>'
     +'<td class="deps-list">'+(deps||'&ndash;')+'</td>'
     +'<td>'+status+'</td>'
     +'</tr>';
 }).join('');
 
-// Events table
+
 const etIcons = {registration:'reg',invocation:'inv',shutdown:'sht'};
 document.getElementById('events-tbody').innerHTML = report.events.map(e => {
   return '<tr>'
@@ -266,22 +218,22 @@ document.getElementById('events-tbody').innerHTML = report.events.map(e => {
     +'</tr>';
 }).join('');
 
-// Timeline
-const maxDur = Math.max(...report.services.filter(s=>s.first_build_duration_ms).map(s=>s.first_build_duration_ms), 1);
+
+const maxDur = Math.max(...report.services.filter(s=>s.build_duration_ms).map(s=>s.build_duration_ms), 1);
 document.getElementById('timeline-container').innerHTML = report.services
-  .filter(s => s.first_build_duration_ms)
-  .sort((a,b) => (b.first_build_duration_ms||0) - (a.first_build_duration_ms||0))
+  .filter(s => s.build_duration_ms)
+  .sort((a,b) => (b.build_duration_ms||0) - (a.build_duration_ms||0))
   .map(s => {
-    const pct = ((s.first_build_duration_ms / maxDur) * 100).toFixed(1);
+    const pct = ((s.build_duration_ms / maxDur) * 100).toFixed(1);
     const color = s.invocation_error ? 'var(--error)' : 'var(--accent)';
     return '<div class="timeline-row">'
       +'<div class="timeline-label">'+esc(s.service_name)+'</div>'
       +'<div class="timeline-track"><div class="timeline-bar" style="width:'+pct+'%;background:'+color+'"></div></div>'
-      +'<div style="width:80px;text-align:right;font-size:0.8rem">'+s.first_build_duration_ms.toFixed(2)+' ms</div>'
+      +'<div style="width:80px;text-align:right;font-size:0.8rem">'+s.build_duration_ms.toFixed(2)+' ms</div>'
       +'</div>';
   }).join('');
 
-// Dependency Graph (D3-like force simulation via simple SVG)
+
 function renderGraph() {
   const container = document.getElementById('graph-container');
   if (container.querySelector('svg')) return;
@@ -309,9 +261,9 @@ function renderGraph() {
     });
   });
 
-  // Simple force simulation
+  
   for (let iter = 0; iter < 300; iter++) {
-    // Repulsion
+    
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i+1; j < nodes.length; j++) {
         let dx = nodes[j].x - nodes[i].x;
@@ -324,7 +276,7 @@ function renderGraph() {
         nodes[j].vy += dy/dist * force;
       }
     }
-    // Attraction
+    
     links.forEach(l => {
       let dx = nodes[l.target].x - nodes[l.source].x;
       let dy = nodes[l.target].y - nodes[l.source].y;
@@ -335,9 +287,9 @@ function renderGraph() {
       nodes[l.target].vx -= dx/dist * force;
       nodes[l.target].vy -= dy/dist * force;
     });
-    // Center gravity
+    
     nodes.forEach(n => { n.vx += (W/2 - n.x)*0.01; n.vy += (H/2 - n.y)*0.01; });
-    // Apply
+    
     nodes.forEach(n => { n.vx *= 0.6; n.vy *= 0.6; n.x += n.vx; n.y += n.vy; n.x = Math.max(60, Math.min(W-60, n.x)); n.y = Math.max(20, Math.min(H-20, n.y)); });
   }
 
@@ -345,7 +297,7 @@ function renderGraph() {
   const svg = document.createElementNS(ns, 'svg');
   svg.setAttribute('viewBox', '0 0 '+W+' '+H);
 
-  // Arrow marker
+  
   const defs = document.createElementNS(ns, 'defs');
   const marker = document.createElementNS(ns, 'marker');
   marker.setAttribute('id', 'arrow');
@@ -402,4 +354,3 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s; re
 </script>
 </body>
 </html>
-`

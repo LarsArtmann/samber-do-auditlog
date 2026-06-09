@@ -161,8 +161,8 @@ func main() {
 	for _, s := range rep.Services {
 		fmt.Printf("  - %s (invoked %d times", s.ServiceName, s.InvocationCount)
 
-		if s.BuildDurationMs != nil {
-			fmt.Printf(", build %.3f ms", *s.BuildDurationMs)
+		if s.FirstBuildDurationMs != nil {
+			fmt.Printf(", build %.3f ms", *s.FirstBuildDurationMs)
 		}
 
 		if len(s.Dependencies) > 0 {

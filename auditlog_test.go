@@ -152,8 +152,8 @@ func TestPlugin_RegistrationAndInvocation(t *testing.T) {
 		t.Error("expected FirstInvokedAt to be set")
 	}
 
-	if svc.BuildDurationMs == nil || *svc.BuildDurationMs < 0 {
-		t.Error("expected BuildDurationMs to be set and non-negative")
+	if svc.FirstBuildDurationMs == nil || *svc.FirstBuildDurationMs < 0 {
+		t.Error("expected FirstBuildDurationMs to be set and non-negative")
 	}
 
 	if svc.InvocationOrder != 0 {

@@ -31,7 +31,7 @@ type serviceRecord struct {
 	firstInvokedAt  *time.Time
 	invocationCount int
 	invocationOrder int
-	buildDurationMs *float64
+	firstBuildDurationMs *float64
 	dependencies    map[string]struct{}
 	shutdownAt      *time.Time
 	invocationError *string
@@ -171,7 +171,7 @@ func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *servi
 		firstInvokedAt:  nil,
 		invocationCount: 0,
 		invocationOrder: 0,
-		buildDurationMs: nil,
+		firstBuildDurationMs: nil,
 		dependencies:    make(map[string]struct{}),
 		shutdownAt:      nil,
 		invocationError: nil,
@@ -285,10 +285,8 @@ func (r *Recorder) recordInvocationResult(
 		r.invocationMu.Unlock()
 	}
 
-	if durationMs != nil {
-		if rec.buildDurationMs == nil || *durationMs > *rec.buildDurationMs {
-			rec.buildDurationMs = durationMs
-		}
+	if durationMs != nil && rec.firstBuildDurationMs == nil {
+		rec.firstBuildDurationMs = durationMs
 	}
 
 	if errStr != nil {
@@ -364,7 +362,7 @@ func (r *Recorder) BuildReport(containerID string) Report {
 			FirstInvokedAt:  rec.firstInvokedAt,
 			InvocationCount: rec.invocationCount,
 			InvocationOrder: rec.invocationOrder,
-			BuildDurationMs: rec.buildDurationMs,
+			FirstBuildDurationMs: rec.firstBuildDurationMs,
 			Dependencies:    deps,
 			Dependents:      svcDependents,
 			ShutdownAt:      rec.shutdownAt,

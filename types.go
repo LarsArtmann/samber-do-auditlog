@@ -48,7 +48,7 @@ type ServiceInfo struct {
 	FirstInvokedAt  *time.Time      `json:"first_invoked_at,omitempty"`
 	InvocationCount int             `json:"invocation_count"`
 	InvocationOrder int             `json:"invocation_order"`
-	BuildDurationMs *float64        `json:"build_duration_ms,omitempty"`
+	FirstBuildDurationMs *float64        `json:"first_build_duration_ms,omitempty"`
 	Dependencies    []DependencyRef `json:"dependencies,omitempty"`
 	Dependents      []DependencyRef `json:"dependents,omitempty"`
 	ShutdownAt      *time.Time      `json:"shutdown_at,omitempty"`
