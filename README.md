@@ -124,10 +124,10 @@ Full snapshot: event timeline, service summaries, scope tree.
       "invocation_order": 2,
       "first_build_duration_ms": 9.079,
       "dependencies": [
-        { "scope_name": "[root]", "service_name": "*main.Database" },
-        { "scope_name": "[root]", "service_name": "*main.Cache" }
+        { "scope_id": "...", "scope_name": "[root]", "service_name": "*main.Database" },
+        { "scope_id": "...", "scope_name": "[root]", "service_name": "*main.Cache" }
       ],
-      "dependents": [{ "scope_name": "[root]", "service_name": "*main.HTTPServer" }]
+      "dependents": [{ "scope_id": "...", "scope_name": "[root]", "service_name": "*main.HTTPServer" }]
     }
   ],
   "scope_tree": {
@@ -143,10 +143,10 @@ Full snapshot: event timeline, service summaries, scope tree.
 One JSON object per line. Feed it into log aggregators, stream processors, or custom tooling.
 
 ```ndjson
-{"sequence":1,"timestamp":"...","event_type":"registration","phase":"before","container_id":"my-app","scope_name":"[root]","service_name":"*main.Config"}
-{"sequence":2,"timestamp":"...","event_type":"registration","phase":"after","container_id":"my-app","scope_name":"[root]","service_name":"*main.Config"}
-{"sequence":3,"timestamp":"...","event_type":"invocation","phase":"before","container_id":"my-app","scope_name":"[root]","service_name":"*main.Database"}
-{"sequence":4,"timestamp":"...","event_type":"invocation","phase":"after","container_id":"my-app","duration_ms":5.196,"scope_name":"[root]","service_name":"*main.Database"}
+{"sequence":1,"timestamp":"...","event_type":"registration","phase":"before","container_id":"my-app","scope_id":"...","scope_name":"[root]","service_name":"*main.Config"}
+{"sequence":2,"timestamp":"...","event_type":"registration","phase":"after","container_id":"my-app","scope_id":"...","scope_name":"[root]","service_name":"*main.Config"}
+{"sequence":3,"timestamp":"...","event_type":"invocation","phase":"before","container_id":"my-app","scope_id":"...","scope_name":"[root]","service_name":"*main.Database"}
+{"sequence":4,"timestamp":"...","event_type":"invocation","phase":"after","container_id":"my-app","scope_id":"...","scope_name":"[root]","duration_ms":5.196,"service_name":"*main.Database"}
 ```
 
 ### HTML Visualization
@@ -220,17 +220,21 @@ Report
 ├── event_count         int
 ├── services[]          ServiceInfo
 │   ├── service_name    string
+│   ├── scope_id        string
 │   ├── scope_name      string
 │   ├── registered_at   time
 │   ├── invocation_order int
 │   ├── first_build_duration_ms float64
 │   ├── shutdown_duration_ms float64
-│   ├── dependencies[]  {scope_name, service_name}
-│   └── dependents[]    {scope_name, service_name}
+│   ├── invocation_error string (on failure)
+│   ├── shutdown_error   string (on failure)
+│   ├── dependencies[]  {scope_id, scope_name, service_name}
+│   └── dependents[]    {scope_id, scope_name, service_name}
 ├── events[]            Event
 │   ├── sequence        int (monotonic)
 │   ├── timestamp       time
 │   ├── container_id    string
+│   ├── scope_id        string
 │   ├── event_type      registration | invocation | shutdown
 │   ├── phase           before | after
 │   ├── duration_ms     float64 (after-invocation/shutdown only)
