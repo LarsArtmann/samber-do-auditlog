@@ -9,6 +9,13 @@ import (
 	"github.com/samber/do/v2"
 )
 
+const (
+	// microsecondsPerMillisecond converts microseconds to milliseconds.
+	microsecondsPerMillisecond = 1000.0
+	// initialEventCapacity is the starting capacity for the events slice.
+	initialEventCapacity = 1024
+)
+
 type stackEntry struct {
 	scopeID     string
 	scopeName   string
@@ -38,10 +45,13 @@ type scopeMeta struct {
 	parentID string
 }
 
-var sequenceCounter atomic.Int64
+// newSequenceCounter returns a fresh atomic counter for sequence generation.
+// Using a per-recorder counter keeps the package free of global state and
+// avoids cross-test interference.
+func newSequenceCounter() *atomic.Int64 {
+	var counter atomic.Int64
 
-func nextSequence() int {
-	return int(sequenceCounter.Add(1))
+	return &counter
 }
 
 // Recorder captures DI lifecycle events in-memory with minimal overhead.
@@ -56,47 +66,122 @@ type Recorder struct {
 
 	invocationMu    sync.Mutex
 	invocationIndex int
+
+	sequence *atomic.Int64
 }
 
 // NewRecorder creates a new event recorder.
 func NewRecorder() *Recorder {
 	return &Recorder{
-		events:   make([]Event, 0, 1024),
-		services: make(map[string]*serviceRecord),
-		scopes:   make(map[string]scopeMeta),
+		events:          make([]Event, 0, initialEventCapacity),
+		services:        make(map[string]*serviceRecord),
+		scopes:          make(map[string]scopeMeta),
+		stack:           nil,
+		invocationMu:    sync.Mutex{},
+		invocationIndex: 0,
+		sequence:        newSequenceCounter(),
 	}
 }
 
+func (r *Recorder) nextSequence() int {
+	return int(r.sequence.Add(1))
+}
+
 func (r *Recorder) recordScope(scope *do.Scope) {
-	id := scope.ID()
+	scopeID := scope.ID()
 
 	r.mu.Lock()
-	if _, ok := r.scopes[id]; ok {
+	if _, ok := r.scopes[scopeID]; ok {
 		r.mu.Unlock()
 
 		return
 	}
 
-	meta := scopeMeta{id: id, name: scope.Name()}
+	meta := scopeMeta{id: scopeID, name: scope.Name(), parentID: ""}
 	if ancestors := scope.Ancestors(); len(ancestors) > 0 {
 		meta.parentID = ancestors[0].ID()
 	}
 
-	r.scopes[id] = meta
+	r.scopes[scopeID] = meta
 	r.mu.Unlock()
+}
+
+// newRegistrationEvent builds an Event struct with all fields initialized.
+// Centralizing the construction ensures exhaustruct sees every field.
+func newRegistrationEvent(seq int, now time.Time, phase Phase, scope *do.Scope, serviceName string) Event {
+	return Event{
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeRegistration,
+		Phase:       phase,
+		ScopeID:     scope.ID(),
+		ScopeName:   scope.Name(),
+		ServiceName: serviceName,
+		DurationMs:  nil,
+		Error:       nil,
+	}
+}
+
+// newInvocationEvent builds an Event struct for an invocation phase.
+func newInvocationEvent(
+	seq int,
+	now time.Time,
+	phase Phase,
+	scope *do.Scope,
+	serviceName string,
+	dur *float64,
+	errStr *string,
+) Event {
+	return Event{
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeInvocation,
+		Phase:       phase,
+		ScopeID:     scope.ID(),
+		ScopeName:   scope.Name(),
+		ServiceName: serviceName,
+		DurationMs:  dur,
+		Error:       errStr,
+	}
+}
+
+// newShutdownEvent builds an Event struct for a shutdown phase.
+func newShutdownEvent(seq int, now time.Time, phase Phase, scope *do.Scope, serviceName string, errStr *string) Event {
+	return Event{
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeShutdown,
+		Phase:       phase,
+		ScopeID:     scope.ID(),
+		ScopeName:   scope.Name(),
+		ServiceName: serviceName,
+		DurationMs:  nil,
+		Error:       errStr,
+	}
+}
+
+// newServiceRecord constructs a serviceRecord with all fields set.
+func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *serviceRecord {
+	return &serviceRecord{
+		scopeID:         scope.ID(),
+		scopeName:       scope.Name(),
+		serviceName:     serviceName,
+		serviceType:     inferServiceType(scope, serviceName),
+		registeredAt:    now,
+		firstInvokedAt:  nil,
+		invocationCount: 0,
+		invocationOrder: 0,
+		buildDurationMs: nil,
+		dependencies:    make(map[string]struct{}),
+		shutdownAt:      nil,
+		invocationError: nil,
+		shutdownError:   nil,
+	}
 }
 
 func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
 	r.recordScope(scope)
-	r.addEvent(Event{
-		Sequence:    nextSequence(),
-		Timestamp:   time.Now(),
-		EventType:   EventTypeRegistration,
-		Phase:       PhaseBefore,
-		ScopeID:     scope.ID(),
-		ScopeName:   scope.Name(),
-		ServiceName: serviceName,
-	})
+	r.addEvent(newRegistrationEvent(r.nextSequence(), time.Now(), PhaseBefore, scope, serviceName))
 }
 
 func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
@@ -105,25 +190,10 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 
 	r.mu.Lock()
 	if _, ok := r.services[key]; !ok {
-		r.services[key] = &serviceRecord{
-			scopeID:      scope.ID(),
-			scopeName:    scope.Name(),
-			serviceName:  serviceName,
-			serviceType:  inferServiceType(scope, serviceName),
-			registeredAt: now,
-			dependencies: make(map[string]struct{}),
-		}
+		r.services[key] = newServiceRecord(scope, serviceName, now)
 	}
 	r.mu.Unlock()
-	r.addEvent(Event{
-		Sequence:    nextSequence(),
-		Timestamp:   now,
-		EventType:   EventTypeRegistration,
-		Phase:       PhaseAfter,
-		ScopeID:     scope.ID(),
-		ScopeName:   scope.Name(),
-		ServiceName: serviceName,
-	})
+	r.addEvent(newRegistrationEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName))
 }
 
 func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
@@ -152,26 +222,28 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 	})
 	r.stackMu.Unlock()
 
-	r.addEvent(Event{
-		Sequence:    nextSequence(),
-		Timestamp:   now,
-		EventType:   EventTypeInvocation,
-		Phase:       PhaseBefore,
-		ScopeID:     scope.ID(),
-		ScopeName:   scope.Name(),
-		ServiceName: serviceName,
-	})
+	r.addEvent(newInvocationEvent(r.nextSequence(), now, PhaseBefore, scope, serviceName, nil, nil))
 }
 
 func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err error) {
 	now := time.Now()
+	durationMs := r.popInvocationDuration(scope, serviceName, now)
+	errStr := errorToStringPtr(err)
+	r.addEvent(newInvocationEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName, durationMs, errStr))
+	r.recordInvocationResult(scope, serviceName, now, durationMs, errStr)
+}
 
+// popInvocationDuration finds and pops the matching stack frame, returning the
+// elapsed duration in milliseconds (nil if no frame matched).
+func (r *Recorder) popInvocationDuration(scope *do.Scope, serviceName string, now time.Time) *float64 {
 	var durationMs *float64
 
 	r.stackMu.Lock()
-	for i, v := range slices.Backward(r.stack) {
-		if v.serviceName == serviceName && v.scopeID == scope.ID() {
-			d := float64(now.Sub(v.start).Microseconds()) / 1000.0
+	defer r.stackMu.Unlock()
+
+	for i, frame := range slices.Backward(r.stack) {
+		if frame.serviceName == serviceName && frame.scopeID == scope.ID() {
+			d := float64(now.Sub(frame.start).Microseconds()) / microsecondsPerMillisecond
 			durationMs = &d
 
 			r.stack = append(r.stack[:i], r.stack[i+1:]...)
@@ -179,44 +251,31 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 			break
 		}
 	}
-	r.stackMu.Unlock()
 
-	var errStr *string
+	return durationMs
+}
 
-	if err != nil {
-		s := err.Error()
-		errStr = &s
-	}
-
-	r.addEvent(Event{
-		Sequence:    nextSequence(),
-		Timestamp:   now,
-		EventType:   EventTypeInvocation,
-		Phase:       PhaseAfter,
-		ScopeID:     scope.ID(),
-		ScopeName:   scope.Name(),
-		ServiceName: serviceName,
-		DurationMs:  durationMs,
-		Error:       errStr,
-	})
-
+// recordInvocationResult updates the per-service aggregate after an invocation.
+func (r *Recorder) recordInvocationResult(
+	scope *do.Scope,
+	serviceName string,
+	now time.Time,
+	durationMs *float64,
+	errStr *string,
+) {
 	key := scope.ID() + "/" + serviceName
 
 	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	rec, ok := r.services[key]
 	if !ok {
-		rec = &serviceRecord{
-			scopeID:      scope.ID(),
-			scopeName:    scope.Name(),
-			serviceName:  serviceName,
-			serviceType:  inferServiceType(scope, serviceName),
-			dependencies: make(map[string]struct{}),
-		}
+		rec = newServiceRecord(scope, serviceName, now)
 		r.services[key] = rec
 	}
 
 	rec.invocationCount++
+
 	if rec.firstInvokedAt == nil {
 		rec.firstInvokedAt = &now
 
@@ -232,44 +291,20 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 		}
 	}
 
-	if err != nil {
+	if errStr != nil {
 		rec.invocationError = errStr
 	}
-	r.mu.Unlock()
 }
 
 func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
-	r.addEvent(Event{
-		Sequence:    nextSequence(),
-		Timestamp:   time.Now(),
-		EventType:   EventTypeShutdown,
-		Phase:       PhaseBefore,
-		ScopeID:     scope.ID(),
-		ScopeName:   scope.Name(),
-		ServiceName: serviceName,
-	})
+	r.addEvent(newShutdownEvent(r.nextSequence(), time.Now(), PhaseBefore, scope, serviceName, nil))
 }
 
 func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err error) {
 	now := time.Now()
+	errStr := errorToStringPtr(err)
 
-	var errStr *string
-
-	if err != nil {
-		s := err.Error()
-		errStr = &s
-	}
-
-	r.addEvent(Event{
-		Sequence:    nextSequence(),
-		Timestamp:   now,
-		EventType:   EventTypeShutdown,
-		Phase:       PhaseAfter,
-		ScopeID:     scope.ID(),
-		ScopeName:   scope.Name(),
-		ServiceName: serviceName,
-		Error:       errStr,
-	})
+	r.addEvent(newShutdownEvent(r.nextSequence(), now, PhaseAfter, scope, serviceName, errStr))
 
 	key := scope.ID() + "/" + serviceName
 
@@ -285,6 +320,18 @@ func (r *Recorder) addEvent(e Event) {
 	r.mu.Lock()
 	r.events = append(r.events, e)
 	r.mu.Unlock()
+}
+
+// errorToStringPtr converts an error to a heap-allocated string pointer.
+// Returns nil when err is nil so we don't emit empty error fields in events.
+func errorToStringPtr(err error) *string {
+	if err == nil {
+		return nil
+	}
+
+	msg := err.Error()
+
+	return &msg
 }
 
 func inferServiceType(_ *do.Scope, _ string) ServiceType {
@@ -415,7 +462,7 @@ func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 	}
 }
 
-// Events returns a copy of all captured events.
+// Events returns a defensive copy of all captured events.
 func (r *Recorder) Events() []Event {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

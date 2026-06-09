@@ -25,6 +25,7 @@ type UserService struct {
 
 func TestPlugin_DisabledIsNoOp(t *testing.T) {
 	t.Setenv(auditlog.EnvKeyEnabled, "")
+
 	p := auditlog.New(auditlog.Config{})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -39,6 +40,7 @@ func TestPlugin_DisabledIsNoOp(t *testing.T) {
 
 func TestPlugin_EnvVarEnables(t *testing.T) {
 	t.Setenv(auditlog.EnvKeyEnabled, "true")
+
 	p := auditlog.New(auditlog.Config{})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -51,13 +53,17 @@ func TestPlugin_EnvVarEnables(t *testing.T) {
 	if report.EventCount == 0 {
 		t.Fatal("expected events when env var is set")
 	}
+
 	if report.ServiceCount != 1 {
 		t.Errorf("expected 1 service, got %d", report.ServiceCount)
 	}
 }
 
 func TestPlugin_EnvVarValues(t *testing.T) {
-	tests := []struct{ val string; want bool }{
+	tests := []struct {
+		val  string
+		want bool
+	}{
 		{"true", true},
 		{"1", true},
 		{"yes", true},
@@ -69,6 +75,7 @@ func TestPlugin_EnvVarValues(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.val, func(t *testing.T) {
 			t.Setenv(auditlog.EnvKeyEnabled, tc.val)
+
 			p := auditlog.New(auditlog.Config{})
 			injector := do.NewWithOpts(p.Opts())
 
@@ -81,6 +88,7 @@ func TestPlugin_EnvVarValues(t *testing.T) {
 			if tc.want && report.EventCount == 0 {
 				t.Errorf("env %q: expected events", tc.val)
 			}
+
 			if !tc.want && report.EventCount != 0 {
 				t.Errorf("env %q: expected no events, got %d", tc.val, report.EventCount)
 			}
@@ -90,6 +98,7 @@ func TestPlugin_EnvVarValues(t *testing.T) {
 
 func TestPlugin_ExplicitEnabledOverridesEnv(t *testing.T) {
 	t.Setenv(auditlog.EnvKeyEnabled, "")
+
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
