@@ -127,7 +127,9 @@ Full snapshot: event timeline, service summaries, scope tree.
         { "scope_id": "...", "scope_name": "[root]", "service_name": "*main.Database" },
         { "scope_id": "...", "scope_name": "[root]", "service_name": "*main.Cache" }
       ],
-      "dependents": [{ "scope_id": "...", "scope_name": "[root]", "service_name": "*main.HTTPServer" }]
+      "dependents": [
+        { "scope_id": "...", "scope_name": "[root]", "service_name": "*main.HTTPServer" }
+      ]
     }
   ],
   "scope_tree": {

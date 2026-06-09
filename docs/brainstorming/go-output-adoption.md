@@ -16,14 +16,14 @@ Captures DI lifecycle events, infers dependency graphs, and exports rich domain-
 
 ## Mapping: What Would Be Replaced?
 
-| Current in auditlog                              | go-output equivalent            | Fit                                                                                      |
-| ------------------------------------------------ | ------------------------------- | ---------------------------------------------------------------------------------------- |
-| `WriteReportJSON` (json.Encoder)                 | `serialization.JSONWriter`      | **Overkill** — stdlib `json.Encoder` is 5 lines, already done                            |
-| `WriteEventsNDJSON` (json.Encoder loop)          | `serialization.JSONLWriter`     | Marginal — NDJSON is trivially simple                                                    |
-| `ExportToHTML` (templ template)                  | `markup.HTMLRenderer`           | **Poor** — our HTML is a full interactive dashboard with tabs, SVG force graph, timeline |
-| `ScopeNode` tree                                 | `output.TreeNode`               | **Shape mismatch** — `ScopeNode` carries `Services []string`; `TreeNode` has `Metadata`  |
-| Dependency graph (custom SVG)                    | D2/Mermaid/DOT renderers        | Conceptual fit for graph text, but loses interactive SVG force simulation                |
-| `Report` struct                                  | `TableData`                     | **Fundamental mismatch** — `Report` has nested structs; `TableData` is `[][]string`      |
+| Current in auditlog                     | go-output equivalent        | Fit                                                                                      |
+| --------------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------- |
+| `WriteReportJSON` (json.Encoder)        | `serialization.JSONWriter`  | **Overkill** — stdlib `json.Encoder` is 5 lines, already done                            |
+| `WriteEventsNDJSON` (json.Encoder loop) | `serialization.JSONLWriter` | Marginal — NDJSON is trivially simple                                                    |
+| `ExportToHTML` (templ template)         | `markup.HTMLRenderer`       | **Poor** — our HTML is a full interactive dashboard with tabs, SVG force graph, timeline |
+| `ScopeNode` tree                        | `output.TreeNode`           | **Shape mismatch** — `ScopeNode` carries `Services []string`; `TreeNode` has `Metadata`  |
+| Dependency graph (custom SVG)           | D2/Mermaid/DOT renderers    | Conceptual fit for graph text, but loses interactive SVG force simulation                |
+| `Report` struct                         | `TableData`                 | **Fundamental mismatch** — `Report` has nested structs; `TableData` is `[][]string`      |
 
 ## PRO
 
