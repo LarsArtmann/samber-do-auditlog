@@ -49,24 +49,24 @@
 
 ### Tests (16 tests, all passing)
 
-| Test | Coverage |
-|---|---|
-| DisabledIsNoOp | Plugin disabled = zero events |
-| EnvVarEnables | DO_AUDITLOG_ENABLED=true activates |
-| EnvVarValues (7 subtests) | "true"/"1"/"yes" on; "false"/"0"/""/"random" off |
-| ExplicitEnabledOverridesEnv | Config.Enabled=true wins over unset env |
-| RegistrationAndInvocation | 4 events, service info populated |
-| InvocationOrder | Monotonically increasing order |
-| DependencyTracking | Stack-based A→B inference |
-| ShutdownTracking | Before/after shutdown events |
-| ExportToFile | JSON round-trip |
-| ExportEventsToNDJSON | 4 NDJSON lines |
-| ScopeTree | Parent-child scope hierarchy |
-| CachedInvocation | Cached service re-invocation tracking |
-| EventSequenceNumbers | Monotonically increasing sequence IDs |
-| ProviderError | Error captured in InvocationError |
-| ExportToHTML | Full HTML page with service data |
-| ProvideTransient / ProvideValue | Transient and value provider tracking |
+| Test                            | Coverage                                         |
+| ------------------------------- | ------------------------------------------------ |
+| DisabledIsNoOp                  | Plugin disabled = zero events                    |
+| EnvVarEnables                   | DO_AUDITLOG_ENABLED=true activates               |
+| EnvVarValues (7 subtests)       | "true"/"1"/"yes" on; "false"/"0"/""/"random" off |
+| ExplicitEnabledOverridesEnv     | Config.Enabled=true wins over unset env          |
+| RegistrationAndInvocation       | 4 events, service info populated                 |
+| InvocationOrder                 | Monotonically increasing order                   |
+| DependencyTracking              | Stack-based A→B inference                        |
+| ShutdownTracking                | Before/after shutdown events                     |
+| ExportToFile                    | JSON round-trip                                  |
+| ExportEventsToNDJSON            | 4 NDJSON lines                                   |
+| ScopeTree                       | Parent-child scope hierarchy                     |
+| CachedInvocation                | Cached service re-invocation tracking            |
+| EventSequenceNumbers            | Monotonically increasing sequence IDs            |
+| ProviderError                   | Error captured in InvocationError                |
+| ExportToHTML                    | Full HTML page with service data                 |
+| ProvideTransient / ProvideValue | Transient and value provider tracking            |
 
 ---
 
@@ -130,33 +130,33 @@ Previous close call: `.golangci.yml` had a duplicate `rules` key (tagliatelle + 
 
 ## f) Top 25 Things to Do Next (Sorted by Impact vs Effort)
 
-| # | Task | Impact | Effort |
-|---|---|---|---|
-| 1 | Write README.md with usage examples | HIGH | LOW |
-| 2 | Add `Opts()` disabled case exhaustruct exemption or zero-value return | MED | LOW |
-| 3 | Extract `Duration` custom type to replace `*float64` | MED | MED |
-| 4 | Add DOT/Mermaid graph export | HIGH | MED |
-| 5 | Add internal tests for `buildServicesLocked`, `buildScopeTreeLocked` | MED | LOW |
-| 6 | Remove "Type" column from HTML services table (nothing to show) | LOW | LOW |
-| 7 | Make `templ generate` a `go:generate` directive | MED | LOW |
-| 8 | Add `go:generate` to `html.templ` header | MED | LOW |
-| 9 | Add example with real DI container lifecycle (health checks, scopes) | MED | MED |
-| 10 | Rename repo dir to match module name (`samber-do-auditlog`) | MED | LOW |
-| 11 | Add `Report` round-trip test (JSON → unmarshal → re-marshal) | MED | LOW |
-| 12 | Add `ContainerID` validation (no slashes, not empty) | LOW | LOW |
-| 13 | Consider `Recorder` interface for testability | MED | MED |
-| 14 | Add OpenTelemetry bridge | HIGH | HIGH |
-| 15 | Add configurable event filtering | MED | MED |
-| 16 | Add `WithContainerID` functional option pattern | LOW | MED |
-| 17 | HTML: add click-to-highlight on dependency graph nodes | MED | MED |
-| 18 | HTML: responsive design for mobile | MED | MED |
-| 19 | Track benchmark results over time in CI | MED | MED |
-| 20 | Add `sampler` interface for sampling high-volume events | LOW | HIGH |
-| 21 | Add context.Context support to `BuildReport`/export methods | MED | MED |
-| 22 | Consider event streaming channel API (`Events() <-chan Event`) | MED | HIGH |
-| 23 | Add Prometheus metrics endpoint export | MED | MED |
-| 24 | Structured logging integration (slog) | LOW | MED |
-| 25 | Add PProf endpoints to HTML visualization | LOW | LOW |
+| #   | Task                                                                  | Impact | Effort |
+| --- | --------------------------------------------------------------------- | ------ | ------ |
+| 1   | Write README.md with usage examples                                   | HIGH   | LOW    |
+| 2   | Add `Opts()` disabled case exhaustruct exemption or zero-value return | MED    | LOW    |
+| 3   | Extract `Duration` custom type to replace `*float64`                  | MED    | MED    |
+| 4   | Add DOT/Mermaid graph export                                          | HIGH   | MED    |
+| 5   | Add internal tests for `buildServicesLocked`, `buildScopeTreeLocked`  | MED    | LOW    |
+| 6   | Remove "Type" column from HTML services table (nothing to show)       | LOW    | LOW    |
+| 7   | Make `templ generate` a `go:generate` directive                       | MED    | LOW    |
+| 8   | Add `go:generate` to `html.templ` header                              | MED    | LOW    |
+| 9   | Add example with real DI container lifecycle (health checks, scopes)  | MED    | MED    |
+| 10  | Rename repo dir to match module name (`samber-do-auditlog`)           | MED    | LOW    |
+| 11  | Add `Report` round-trip test (JSON → unmarshal → re-marshal)          | MED    | LOW    |
+| 12  | Add `ContainerID` validation (no slashes, not empty)                  | LOW    | LOW    |
+| 13  | Consider `Recorder` interface for testability                         | MED    | MED    |
+| 14  | Add OpenTelemetry bridge                                              | HIGH   | HIGH   |
+| 15  | Add configurable event filtering                                      | MED    | MED    |
+| 16  | Add `WithContainerID` functional option pattern                       | LOW    | MED    |
+| 17  | HTML: add click-to-highlight on dependency graph nodes                | MED    | MED    |
+| 18  | HTML: responsive design for mobile                                    | MED    | MED    |
+| 19  | Track benchmark results over time in CI                               | MED    | MED    |
+| 20  | Add `sampler` interface for sampling high-volume events               | LOW    | HIGH   |
+| 21  | Add context.Context support to `BuildReport`/export methods           | MED    | MED    |
+| 22  | Consider event streaming channel API (`Events() <-chan Event`)        | MED    | HIGH   |
+| 23  | Add Prometheus metrics endpoint export                                | MED    | MED    |
+| 24  | Structured logging integration (slog)                                 | LOW    | MED    |
+| 25  | Add PProf endpoints to HTML visualization                             | LOW    | LOW    |
 
 ---
 
