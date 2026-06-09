@@ -24,7 +24,8 @@ type UserService struct {
 }
 
 func TestPlugin_DisabledIsNoOp(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: false})
+	t.Setenv(auditlog.EnvKeyEnabled, "")
+	p := auditlog.New(auditlog.Config{})
 	injector := do.NewWithOpts(p.Opts())
 
 	do.ProvideValue(injector, &Database{URL: "postgres://localhost"})
@@ -33,6 +34,73 @@ func TestPlugin_DisabledIsNoOp(t *testing.T) {
 	report := p.Report()
 	if report.EventCount != 0 {
 		t.Fatalf("expected 0 events when disabled, got %d", report.EventCount)
+	}
+}
+
+func TestPlugin_EnvVarEnables(t *testing.T) {
+	t.Setenv(auditlog.EnvKeyEnabled, "true")
+	p := auditlog.New(auditlog.Config{})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "postgres://localhost"}, nil
+	})
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+	if report.EventCount == 0 {
+		t.Fatal("expected events when env var is set")
+	}
+	if report.ServiceCount != 1 {
+		t.Errorf("expected 1 service, got %d", report.ServiceCount)
+	}
+}
+
+func TestPlugin_EnvVarValues(t *testing.T) {
+	tests := []struct{ val string; want bool }{
+		{"true", true},
+		{"1", true},
+		{"yes", true},
+		{"false", false},
+		{"0", false},
+		{"", false},
+		{"random", false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.val, func(t *testing.T) {
+			t.Setenv(auditlog.EnvKeyEnabled, tc.val)
+			p := auditlog.New(auditlog.Config{})
+			injector := do.NewWithOpts(p.Opts())
+
+			do.ProvideNamed(injector, "db", func(_ do.Injector) (*Database, error) {
+				return &Database{URL: "test"}, nil
+			})
+			_ = do.MustInvokeNamed[*Database](injector, "db")
+
+			report := p.Report()
+			if tc.want && report.EventCount == 0 {
+				t.Errorf("env %q: expected events", tc.val)
+			}
+			if !tc.want && report.EventCount != 0 {
+				t.Errorf("env %q: expected no events, got %d", tc.val, report.EventCount)
+			}
+		})
+	}
+}
+
+func TestPlugin_ExplicitEnabledOverridesEnv(t *testing.T) {
+	t.Setenv(auditlog.EnvKeyEnabled, "")
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "postgres://localhost"}, nil
+	})
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+	if report.EventCount == 0 {
+		t.Fatal("explicit Enabled:true should work even when env is unset")
 	}
 }
 

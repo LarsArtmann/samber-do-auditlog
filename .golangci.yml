@@ -132,26 +132,27 @@ linters:
     depguard:
       rules:
         main:
+          files:
+            - "!**/*_test.go"
+            - "!**/example/**"
           allow:
             - $gostd
-            - $module
+            - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
         example:
           files:
             - "**/example/**"
           allow:
             - $gostd
-            - $module
+            - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
-            - github.com/larsartmann/do-auditlog
         tests:
           files:
             - "**/*_test.go"
           allow:
             - $gostd
-            - $module
+            - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
-            - github.com/larsartmann/do-auditlog
     exhaustruct:
       exclude:
         - os/exec.Cmd

@@ -17,11 +17,13 @@ Export as JSON, NDJSON, or a self-contained HTML visualization.
 ---
 
 > [!CAUTION]
+>
 > ## 🚧 ALPHA — WORK IN PROGRESS 🚧
 >
 > This project is in **early development**. The API may change at any time without notice.
 >
 > **No guarantees** are made regarding:
+>
 > - Backward compatibility between versions
 > - Stability of exported types and functions
 > - Correctness in all edge cases
@@ -46,17 +48,17 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| **Drop-in setup** | `do.NewWithOpts(plugin.Opts())` — one line, zero config |
-| **Dependency graph** | Infers which service resolved which, without accessing do's internal DAG |
-| **Reverse dependencies** | Every service knows who depends on it |
-| **Scope tree** | Full hierarchy with per-scope service lists |
-| **Timing** | Build duration, invocation count, invocation order |
-| **3 export formats** | JSON report · NDJSON stream · self-contained HTML |
-| **~1μs overhead** | In-memory capture, no I/O during container operation |
-| **Toggle on/off** | `Enabled: false` → zero hooks, zero cost |
-| **Zero extra deps** | Only depends on `samber/do/v2` |
+| Feature                  | Description                                                              |
+| ------------------------ | ------------------------------------------------------------------------ |
+| **Drop-in setup**        | `do.NewWithOpts(plugin.Opts())` — one line, zero config                  |
+| **Dependency graph**     | Infers which service resolved which, without accessing do's internal DAG |
+| **Reverse dependencies** | Every service knows who depends on it                                    |
+| **Scope tree**           | Full hierarchy with per-scope service lists                              |
+| **Timing**               | Build duration, invocation count, invocation order                       |
+| **3 export formats**     | JSON report · NDJSON stream · self-contained HTML                        |
+| **~1μs overhead**        | In-memory capture, no I/O during container operation                     |
+| **Toggle on/off**        | `Enabled: false` → zero hooks, zero cost                                 |
+| **Zero extra deps**      | Only depends on `samber/do/v2`                                           |
 
 ## Install
 
@@ -122,12 +124,10 @@ Full snapshot: event timeline, service summaries, scope tree.
       "invocation_order": 2,
       "build_duration_ms": 9.079,
       "dependencies": [
-        {"scope_name": "[root]", "service_name": "*main.Database"},
-        {"scope_name": "[root]", "service_name": "*main.Cache"}
+        { "scope_name": "[root]", "service_name": "*main.Database" },
+        { "scope_name": "[root]", "service_name": "*main.Cache" }
       ],
-      "dependents": [
-        {"scope_name": "[root]", "service_name": "*main.HTTPServer"}
-      ]
+      "dependents": [{ "scope_name": "[root]", "service_name": "*main.HTTPServer" }]
     }
   ],
   "scope_tree": {
@@ -165,18 +165,18 @@ Open the file in any browser. No server needed.
 
 ## API Reference
 
-| Method | Description |
-|--------|-------------|
-| `New(config Config) *Plugin` | Create plugin. `ContainerID` defaults to `"default"`. |
-| `Opts() *do.InjectorOpts` | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`. |
-| `Report() Report` | In-memory snapshot. No I/O. |
-| `WriteReportJSON(w) error` | Indented JSON to any `io.Writer`. |
-| `WriteEventsNDJSON(w) error` | NDJSON event stream to any `io.Writer`. |
-| `WriteHTML(w) error` | Self-contained HTML visualization to any `io.Writer`. |
-| `ExportToFile(path) error` | JSON report to file. |
-| `ExportEventsToNDJSON(path) error` | NDJSON events to file. |
-| `ExportToHTML(path) error` | HTML visualization to file. |
-| `Events() []Event` | Defensive copy of raw event slice. |
+| Method                             | Description                                               |
+| ---------------------------------- | --------------------------------------------------------- |
+| `New(config Config) *Plugin`       | Create plugin. `ContainerID` defaults to `"default"`.     |
+| `Opts() *do.InjectorOpts`          | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`. |
+| `Report() Report`                  | In-memory snapshot. No I/O.                               |
+| `WriteReportJSON(w) error`         | Indented JSON to any `io.Writer`.                         |
+| `WriteEventsNDJSON(w) error`       | NDJSON event stream to any `io.Writer`.                   |
+| `WriteHTML(w) error`               | Self-contained HTML visualization to any `io.Writer`.     |
+| `ExportToFile(path) error`         | JSON report to file.                                      |
+| `ExportEventsToNDJSON(path) error` | NDJSON events to file.                                    |
+| `ExportToHTML(path) error`         | HTML visualization to file.                               |
+| `Events() []Event`                 | Defensive copy of raw event slice.                        |
 
 ## How Dependency Tracking Works
 
@@ -188,6 +188,7 @@ do-auditlog does **not** access samber/do's internal DAG. Instead, it uses a lig
 4. `HookAfterInvocation` fires → service is popped from the stack
 
 This correctly reconstructs the dependency graph even for:
+
 - **Cached services** — subsequent invocations of a lazy service are near-instant but still tracked
 - **Cross-scope resolution** — services inherited from parent scopes
 - **Provider errors** — failed invocations are still recorded with error details

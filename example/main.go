@@ -60,9 +60,8 @@ func (s *HTTPServer) Start() error {
 }
 
 func main() {
-	// 1. Create the audit log plugin
+	// 1. Create the audit log plugin (enable via DO_AUDITLOG_ENABLED=true)
 	plugin := auditlog.New(auditlog.Config{
-		Enabled:     true,
 		ContainerID: "demo-app",
 	})
 
