@@ -1,5 +1,7 @@
 package auditlog
 
+//go:generate templ generate
+
 import (
 	"context"
 	"fmt"
