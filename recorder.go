@@ -309,6 +309,8 @@ func (r *Recorder) recordInvocationResult(
 }
 
 func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
+	r.recordScope(scope)
+
 	now := time.Now()
 	key := scopeKey(scope, serviceName)
 
