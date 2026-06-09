@@ -269,6 +269,12 @@ func TestPlugin_ShutdownTracking(t *testing.T) {
 	if db.ShutdownAt == nil {
 		t.Error("expected ShutdownAt to be set")
 	}
+
+	if db.ShutdownDurationMs == nil {
+		t.Error("expected ShutdownDurationMs to be set")
+	} else if *db.ShutdownDurationMs < 0 {
+		t.Errorf("expected ShutdownDurationMs >= 0, got %f", *db.ShutdownDurationMs)
+	}
 }
 
 func TestPlugin_ExportToFile(t *testing.T) {
@@ -483,6 +489,75 @@ func TestPlugin_ExportToHTML(t *testing.T) {
 
 	if !contains(string(data), "db") {
 		t.Error("expected 'db' service name in HTML output")
+	}
+}
+
+func TestPlugin_ContainerID(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true, ContainerID: "test-container"})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	events := p.Events()
+	if len(events) == 0 {
+		t.Fatal("expected events")
+	}
+
+	for _, e := range events {
+		if e.ContainerID != "test-container" {
+			t.Errorf("event %d container_id: want test-container, got %s", e.Sequence, e.ContainerID)
+		}
+	}
+}
+
+func TestPlugin_ReportVersion(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+	if report.Version != auditlog.SchemaVersion {
+		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, report.Version)
+	}
+}
+
+func TestPlugin_ScopeID(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	child := injector.Scope("child")
+
+	provideDB(injector, "root-svc", "root")
+	provideDB(child, "child-svc", "child")
+
+	_ = do.MustInvokeNamed[*Database](injector, "root-svc")
+	_ = do.MustInvokeNamed[*Database](child, "child-svc")
+
+	report := p.Report()
+
+	rootSvc := findServiceByName(t, report, "root-svc")
+	if rootSvc == nil {
+		t.Fatal("root-svc not found")
+	}
+
+	if rootSvc.ScopeID == "" {
+		t.Error("expected ScopeID to be set on root service")
+	}
+
+	childSvc := findServiceByName(t, report, "child-svc")
+	if childSvc == nil {
+		t.Fatal("child-svc not found")
+	}
+
+	if childSvc.ScopeID == "" {
+		t.Error("expected ScopeID to be set on child service")
+	}
+
+	if rootSvc.ScopeID == childSvc.ScopeID {
+		t.Error("root and child should have different ScopeIDs")
 	}
 }
 
