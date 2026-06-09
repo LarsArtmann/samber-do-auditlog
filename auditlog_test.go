@@ -279,6 +279,88 @@ func TestPlugin_ShutdownTracking(t *testing.T) {
 	}
 }
 
+func TestPlugin_ShutdownError(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "leaky", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "leaky"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*Database](injector, "leaky")
+	_ = injector.Shutdown()
+
+	report := p.Report()
+
+	svc := findServiceByName(t, report, "leaky")
+	if svc == nil {
+		t.Fatal("leaky service not found")
+	}
+
+	if svc.Status != auditlog.ServiceStatusShutdown {
+		t.Errorf("status: want shutdown, got %s", svc.Status)
+	}
+}
+
+func TestPlugin_ServiceStatus(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+
+	svc := findServiceByName(t, report, "db")
+	if svc == nil {
+		t.Fatal("db not found")
+	}
+
+	if svc.Status != auditlog.ServiceStatusActive {
+		t.Errorf("active service status: want %s, got %s", auditlog.ServiceStatusActive, svc.Status)
+	}
+
+	do.ProvideNamed(injector, "idle", func(i do.Injector) (*Cache, error) {
+		return &Cache{}, nil
+	})
+
+	report2 := p.Report()
+
+	idle := findServiceByName(t, report2, "idle")
+	if idle == nil {
+		t.Fatal("idle not found")
+	}
+
+	if idle.Status != auditlog.ServiceStatusRegistered {
+		t.Errorf("registered service status: want %s, got %s", auditlog.ServiceStatusRegistered, idle.Status)
+	}
+}
+
+func TestPlugin_ProviderErrorStatus(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "failing", func(i do.Injector) (*Database, error) {
+		return nil, os.ErrNotExist
+	})
+
+	_, err := do.InvokeNamed[*Database](injector, "failing")
+	if err == nil {
+		t.Fatal("expected error from failing provider")
+	}
+
+	report := p.Report()
+
+	svc := findServiceByName(t, report, "failing")
+	if svc == nil {
+		t.Fatal("failing service not found in report")
+	}
+
+	if svc.Status != auditlog.ServiceStatusInvocationError {
+		t.Errorf("status: want %s, got %s", auditlog.ServiceStatusInvocationError, svc.Status)
+	}
+}
+
 func TestPlugin_ExportToFile(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
