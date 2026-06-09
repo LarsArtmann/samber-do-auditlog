@@ -386,7 +386,7 @@ func errorToStringPtr(err error) *string {
 }
 
 // BuildReport assembles a machine-readable Report from all captured events.
-func (r *Recorder) BuildReport(containerID string) Report {
+func (r *Recorder) BuildReport() Report {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -429,7 +429,7 @@ func (r *Recorder) BuildReport(containerID string) Report {
 
 	return Report{
 		Version:      SchemaVersion,
-		ContainerID:  containerID,
+		ContainerID:  r.containerID,
 		ExportedAt:   time.Now(),
 		EventCount:   len(r.events),
 		ServiceCount: len(services),

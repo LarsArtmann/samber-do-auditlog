@@ -27,9 +27,8 @@ const defaultContainerID = "default"
 
 // Plugin wraps a samber/do v2 container with audit logging hooks.
 type Plugin struct {
-	recorder    *Recorder
-	config      Config
-	containerID string
+	recorder *Recorder
+	config   Config
 }
 
 // New creates an audit log plugin.
@@ -49,9 +48,8 @@ func New(config Config) *Plugin {
 	}
 
 	return &Plugin{
-		recorder:    NewRecorder(config.ContainerID),
-		config:      config,
-		containerID: config.ContainerID,
+		recorder: NewRecorder(config.ContainerID),
+		config:   config,
 	}
 }
 
@@ -84,7 +82,7 @@ func (p *Plugin) Opts() *do.InjectorOpts {
 
 // Report returns a consolidated snapshot of everything observed so far.
 func (p *Plugin) Report() Report {
-	return p.recorder.BuildReport(p.containerID)
+	return p.recorder.BuildReport()
 }
 
 // WriteReportJSON writes the full Report as indented JSON to writer.
