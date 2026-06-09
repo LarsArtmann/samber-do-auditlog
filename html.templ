@@ -218,7 +218,7 @@ templ reportHTML(report Report) {
 	  if (services.length === 0) return;
 
 	  const nameMap = {};
-	  services.forEach((s, i) => { nameMap[s.scope_name+'/'+s.service_name] = i; });
+	  services.forEach((s, i) => { nameMap[s.scope_id+'/'+s.service_name] = i; });
 
 	  const nodeColor = '#58a6ff';
 	  const W = container.clientWidth || 800;
@@ -232,7 +232,7 @@ templ reportHTML(report Report) {
 	  const links = [];
 	  services.forEach((s, i) => {
 	    (s.dependencies||[]).forEach(d => {
-	      const key = d.scope_name+'/'+d.service_name;
+	      const key = d.scope_id+'/'+d.service_name;
 	      if (nameMap[key] !== undefined) links.push({source: nameMap[key], target: i});
 	    });
 	  });
