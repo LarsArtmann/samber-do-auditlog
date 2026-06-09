@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	// microsecondsPerMillisecond converts microseconds to milliseconds.
-	microsecondsPerMillisecond = 1000.0
+	// microsPerMs converts microseconds to milliseconds.
+	microsPerMs = 1000.0
 	// initialEventCapacity is the starting capacity for the events slice.
 	initialEventCapacity = 1024
 )
@@ -200,12 +200,12 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 	r.recordScope(scope)
 
 	now := time.Now()
+	depKey := scopeKey(scope, serviceName)
 
 	r.stackMu.Lock()
 	if len(r.stack) > 0 {
 		parent := r.stack[len(r.stack)-1]
 		parentKey := parent.scopeID + "/" + parent.serviceName
-		depKey := scopeKey(scope, serviceName)
 
 		r.mu.Lock()
 		if rec, ok := r.services[parentKey]; ok {
@@ -257,7 +257,7 @@ func (r *Recorder) popInvocationDuration(scope *do.Scope, serviceName string, no
 
 	for i, frame := range slices.Backward(r.stack) {
 		if frame.serviceName == serviceName && frame.scopeID == scope.ID() {
-			d := float64(now.Sub(frame.start).Microseconds()) / microsecondsPerMillisecond
+			d := float64(now.Sub(frame.start).Microseconds()) / microsPerMs
 			durationMs = &d
 
 			r.stack = append(r.stack[:i], r.stack[i+1:]...)
@@ -342,7 +342,7 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 	var shutdownDur *float64
 
 	if ok {
-		d := float64(now.Sub(start).Microseconds()) / microsecondsPerMillisecond
+		d := float64(now.Sub(start).Microseconds()) / microsPerMs
 		shutdownDur = &d
 	}
 
