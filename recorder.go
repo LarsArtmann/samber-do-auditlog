@@ -390,6 +390,24 @@ func (r *Recorder) BuildReport() Report {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
+	services := r.buildServicesLocked()
+	scopeTree := r.buildScopeTreeLocked()
+
+	return Report{
+		Version:      SchemaVersion,
+		ContainerID:  r.containerID,
+		ExportedAt:   time.Now(),
+		EventCount:   len(r.events),
+		ServiceCount: len(services),
+		Events:       append([]Event(nil), r.events...),
+		Services:     services,
+		ScopeTree:    scopeTree,
+	}
+}
+
+// buildServicesLocked assembles sorted ServiceInfo from the recorded data.
+// Must be called with r.mu held for reading.
+func (r *Recorder) buildServicesLocked() []ServiceInfo {
 	dependents := buildDependentsMapLocked(r.services)
 
 	services := make([]ServiceInfo, 0, len(r.services))
@@ -425,8 +443,6 @@ func (r *Recorder) BuildReport() Report {
 		})
 	}
 
-	scopeTree := r.buildScopeTreeLocked()
-
 	slices.SortFunc(services, func(a, b ServiceInfo) int {
 		if a.ScopeName != b.ScopeName {
 			if a.ScopeName < b.ScopeName {
@@ -447,16 +463,7 @@ func (r *Recorder) BuildReport() Report {
 		return 0
 	})
 
-	return Report{
-		Version:      SchemaVersion,
-		ContainerID:  r.containerID,
-		ExportedAt:   time.Now(),
-		EventCount:   len(r.events),
-		ServiceCount: len(services),
-		Events:       append([]Event(nil), r.events...),
-		Services:     services,
-		ScopeTree:    scopeTree,
-	}
+	return services
 }
 
 func buildDependentsMapLocked(services map[string]*serviceRecord) map[string][]DependencyRef {
