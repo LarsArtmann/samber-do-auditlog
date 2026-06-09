@@ -66,7 +66,7 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 go get github.com/larsartmann/samber-do-auditlog
 ```
 
-Requires Go 1.24+ and samber/do v2.
+Requires Go 1.26+ and samber/do v2.
 
 ## Quick Start
 
@@ -242,6 +242,7 @@ Report
 │   ├── duration_ms     float64 (after-invocation/shutdown only)
 │   └── error           string (on failure only)
 └── scope_tree          ScopeNode
+    ├── id              string
     ├── name            string
     ├── services[]      string
     └── children[]      ScopeNode (recursive)
