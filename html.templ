@@ -1,0 +1,353 @@
+package auditlog
+
+templ reportHTML(report Report) {
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<title>do-auditlog: { report.ContainerID }</title>
+	<style>
+	  :root {
+	    --bg: #0d1117;
+	    --surface: #161b22;
+	    --border: #30363d;
+	    --text: #e6edf3;
+	    --text-muted: #8b949e;
+	    --accent: #58a6ff;
+	    --accent2: #7ee787;
+	    --accent3: #d2a8ff;
+	    --warning: #d29922;
+	    --error: #f85149;
+	    --radius: 8px;
+	  }
+	  * { margin: 0; padding: 0; box-sizing: border-box; }
+	  body {
+	    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+	    background: var(--bg);
+	    color: var(--text);
+	    line-height: 1.5;
+	    padding: 2rem;
+	    max-width: 1400px;
+	    margin: 0 auto;
+	  }
+	  h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+	  h2 { font-size: 1.2rem; margin: 2rem 0 1rem; color: var(--accent); }
+	  .subtitle { color: var(--text-muted); margin-bottom: 2rem; }
+	  .stats {
+	    display: grid;
+	    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	    gap: 1rem;
+	    margin-bottom: 2rem;
+	  }
+	  .stat-card {
+	    background: var(--surface);
+	    border: 1px solid var(--border);
+	    border-radius: var(--radius);
+	    padding: 1rem;
+	  }
+	  .stat-card .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+	  .stat-card .value { font-size: 1.75rem; font-weight: 700; color: var(--accent); }
+
+	  .tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+	  .tab {
+	    padding: 0.75rem 1.5rem;
+	    cursor: pointer;
+	    color: var(--text-muted);
+	    border-bottom: 2px solid transparent;
+	    transition: all 0.15s;
+	    font-size: 0.9rem;
+	    background: none;
+	    border-top: none;
+	    border-left: none;
+	    border-right: none;
+	  }
+	  .tab:hover { color: var(--text); }
+	  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+	  .tab-content { display: none; }
+	  .tab-content.active { display: block; }
+
+	  table { width: 100%; border-collapse: collapse; }
+	  th, td { text-align: left; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); }
+	  th { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+	  td { font-size: 0.85rem; }
+	  tr:hover td { background: var(--surface); }
+	  .has-error { color: var(--error); }
+	  .deps-list { font-size: 0.8rem; color: var(--text-muted); }
+	  .deps-list span { color: var(--accent); }
+	  .mono { font-family: 'SF Mono', Consolas, monospace; font-size: 0.8rem; }
+
+	  #graph-container {
+	    background: var(--surface);
+	    border: 1px solid var(--border);
+	    border-radius: var(--radius);
+	    min-height: 500px;
+	    position: relative;
+	    overflow: hidden;
+	  }
+	  #graph-container svg { width: 100%; height: 500px; }
+	  .graph-node { cursor: pointer; }
+	  .graph-node rect { rx: 6; ry: 6; stroke-width: 1.5; }
+	  .graph-node text { font-size: 11px; font-family: monospace; fill: var(--text); }
+	  .graph-edge line { stroke: var(--border); stroke-width: 1.5; }
+	  .graph-edge line.highlighted { stroke: var(--accent); stroke-width: 2; }
+	  .legend { position: absolute; top: 12px; right: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem; font-size: 0.75rem; }
+	  .legend-item { display: flex; align-items: center; gap: 0.5rem; margin: 0.25rem 0; }
+	  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+	  .timeline-bar { height: 4px; border-radius: 2px; transition: width 0.3s; }
+	  .timeline-row { display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0; }
+	  .timeline-label { width: 200px; font-size: 0.8rem; font-family: monospace; text-align: right; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	  .timeline-track { flex: 1; background: var(--surface); border-radius: 2px; height: 4px; position: relative; }
+	</style>
+	</head>
+	<body>
+	<h1>do-auditlog</h1>
+	<p class="subtitle">Container <span class="mono" id="container-id"></span> &mdash; exported <span id="exported-at"></span></p>
+
+	<div class="stats" id="stats"></div>
+
+	<div class="tab-bar">
+	  <button class="tab active" data-tab="services">Services</button>
+	  <button class="tab" data-tab="graph">Dependency Graph</button>
+	  <button class="tab" data-tab="timeline">Timeline</button>
+	  <button class="tab" data-tab="events">Events</button>
+	</div>
+
+	<div class="tab-content active" id="tab-services">
+	  <table>
+	    <thead>
+	      <tr>
+	        <th>Service</th>
+	        <th>Scope</th>
+	        <th>Order</th>
+	        <th>Invocations</th>
+	        <th>Build (ms)</th>
+	        <th>Dependencies</th>
+	        <th>Status</th>
+	      </tr>
+	    </thead>
+	    <tbody id="services-tbody"></tbody>
+	  </table>
+	</div>
+
+	<div class="tab-content" id="tab-graph">
+	  <div id="graph-container">
+	    <div class="legend">
+	      <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Lazy</div>
+	      <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div> Eager</div>
+	      <div class="legend-item"><div class="legend-dot" style="background:var(--accent3)"></div> Transient</div>
+	    </div>
+	  </div>
+	</div>
+
+	<div class="tab-content" id="tab-timeline">
+	  <div id="timeline-container"></div>
+	</div>
+
+	<div class="tab-content" id="tab-events">
+	  <table>
+	    <thead>
+	      <tr><th>#</th><th>Time</th><th>Type</th><th>Phase</th><th>Scope</th><th>Service</th><th>Duration</th><th>Error</th></tr>
+	    </thead>
+	    <tbody id="events-tbody"></tbody>
+	  </table>
+	</div>
+
+	@templ.JSONScript("report-data", report)
+	<script>
+	const report = JSON.parse(document.getElementById('report-data').textContent);
+
+	document.getElementById('container-id').textContent = report.container_id;
+	document.getElementById('exported-at').textContent = new Date(report.exported_at).toLocaleString();
+
+	// Stats
+	document.getElementById('stats').innerHTML = [
+	  {label: 'Services', value: report.service_count},
+	  {label: 'Events', value: report.event_count},
+	  {label: 'Scopes', value: countScopes(report.scope_tree)},
+	  {label: 'Dependencies', value: report.services.reduce((s, v) => s + (v.dependencies?.length || 0), 0)},
+	].map(s => '<div class="stat-card"><div class="label">'+s.label+'</div><div class="value">'+s.value+'</div></div>').join('');
+
+	function countScopes(node) { return 1 + (node.children || []).reduce((s, c) => s + countScopes(c), 0); }
+
+	// Tabs
+	document.querySelectorAll('.tab').forEach(tab => {
+	  tab.addEventListener('click', () => {
+	    document.querySelectorAll('.tab').classList && document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+	    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+	    tab.classList.add('active');
+	    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+	    if (tab.dataset.tab === 'graph') renderGraph();
+	  });
+	});
+
+	// Services table
+	document.getElementById('services-tbody').innerHTML = report.services.map(s => {
+	  const deps = (s.dependencies||[]).map(d => '<span>'+d.service_name+'</span>').join(', ');
+	  const status = s.invocation_error ? '<span class="has-error">error</span>' :
+	                 s.shutdown_at ? 'shutdown' :
+	                 s.first_invoked_at ? 'active' : 'registered';
+	  return '<tr>'
+	    +'<td class="mono">'+esc(s.service_name)+'</td>'
+	    +'<td>'+esc(s.scope_name)+'</td>'
+	    +'<td>'+s.invocation_order+'</td>'
+	    +'<td>'+s.invocation_count+'</td>'
+	    +'<td>'+(s.first_build_duration_ms ? s.first_build_duration_ms.toFixed(3) : '&ndash;')+'</td>'
+	    +'<td class="deps-list">'+(deps||'&ndash;')+'</td>'
+	    +'<td>'+status+'</td>'
+	    +'</tr>';
+	}).join('');
+
+	// Events table
+	const etIcons = {registration:'reg',invocation:'inv',shutdown:'sht'};
+	document.getElementById('events-tbody').innerHTML = report.events.map(e => {
+	  return '<tr>'
+	    +'<td class="mono">'+e.sequence+'</td>'
+	    +'<td class="mono">'+new Date(e.timestamp).toISOString().split('T')[1].slice(0,12)+'</td>'
+	    +'<td>'+etIcons[e.event_type]+'</td>'
+	    +'<td>'+e.phase+'</td>'
+	    +'<td>'+esc(e.scope_name)+'</td>'
+	    +'<td class="mono">'+esc(e.service_name)+'</td>'
+	    +'<td>'+(e.duration_ms ? e.duration_ms.toFixed(3) : '')+'</td>'
+	    +'<td class="has-error">'+(e.error ? esc(e.error) : '')+'</td>'
+	    +'</tr>';
+	}).join('');
+
+	// Timeline
+	const maxDur = Math.max(...report.services.filter(s=>s.first_build_duration_ms).map(s=>s.first_build_duration_ms), 1);
+	document.getElementById('timeline-container').innerHTML = report.services
+	  .filter(s => s.first_build_duration_ms)
+	  .sort((a,b) => (b.first_build_duration_ms||0) - (a.first_build_duration_ms||0))
+	  .map(s => {
+	    const pct = ((s.first_build_duration_ms / maxDur) * 100).toFixed(1);
+	    const color = s.invocation_error ? 'var(--error)' : 'var(--accent)';
+	    return '<div class="timeline-row">'
+	      +'<div class="timeline-label">'+esc(s.service_name)+'</div>'
+	      +'<div class="timeline-track"><div class="timeline-bar" style="width:'+pct+'%;background:'+color+'"></div></div>'
+	      +'<div style="width:80px;text-align:right;font-size:0.8rem">'+s.first_build_duration_ms.toFixed(2)+' ms</div>'
+	      +'</div>';
+	  }).join('');
+
+	// Dependency Graph (D3-like force simulation via simple SVG)
+	function renderGraph() {
+	  const container = document.getElementById('graph-container');
+	  if (container.querySelector('svg')) return;
+
+	  const services = report.services;
+	  if (services.length === 0) return;
+
+	  const nameMap = {};
+	  services.forEach((s, i) => { nameMap[s.scope_name+'/'+s.service_name] = i; });
+
+	  const nodeColor = '#58a6ff';
+	  const W = container.clientWidth || 800;
+	  const H = 500;
+	  const nodes = services.map((s, i) => ({
+	    id: i, name: s.service_name,
+	    color: nodeColor,
+	    x: W/2 + (Math.random()-0.5)*300, y: H/2 + (Math.random()-0.5)*300,
+	    vx: 0, vy: 0
+	  }));
+	  const links = [];
+	  services.forEach((s, i) => {
+	    (s.dependencies||[]).forEach(d => {
+	      const key = d.scope_name+'/'+d.service_name;
+	      if (nameMap[key] !== undefined) links.push({source: nameMap[key], target: i});
+	    });
+	  });
+
+	  // Simple force simulation
+	  for (let iter = 0; iter < 300; iter++) {
+	    // Repulsion
+	    for (let i = 0; i < nodes.length; i++) {
+	      for (let j = i+1; j < nodes.length; j++) {
+	        let dx = nodes[j].x - nodes[i].x;
+	        let dy = nodes[j].y - nodes[i].y;
+	        let dist = Math.sqrt(dx*dx + dy*dy) || 1;
+	        let force = 2000 / (dist * dist);
+	        nodes[i].vx -= dx/dist * force;
+	        nodes[i].vy -= dy/dist * force;
+	        nodes[j].vx += dx/dist * force;
+	        nodes[j].vy += dy/dist * force;
+	      }
+	    }
+	    // Attraction
+	    links.forEach(l => {
+	      let dx = nodes[l.target].x - nodes[l.source].x;
+	      let dy = nodes[l.target].y - nodes[l.source].y;
+	      let dist = Math.sqrt(dx*dx + dy*dy) || 1;
+	      let force = (dist - 100) * 0.05;
+	      nodes[l.source].vx += dx/dist * force;
+	      nodes[l.source].vy += dy/dist * force;
+	      nodes[l.target].vx -= dx/dist * force;
+	      nodes[l.target].vy -= dy/dist * force;
+	    });
+	    // Center gravity
+	    nodes.forEach(n => { n.vx += (W/2 - n.x)*0.01; n.vy += (H/2 - n.y)*0.01; });
+	    // Apply
+	    nodes.forEach(n => { n.vx *= 0.6; n.vy *= 0.6; n.x += n.vx; n.y += n.vy; n.x = Math.max(60, Math.min(W-60, n.x)); n.y = Math.max(20, Math.min(H-20, n.y)); });
+	  }
+
+	  const ns = 'http://www.w3.org/2000/svg';
+	  const svg = document.createElementNS(ns, 'svg');
+	  svg.setAttribute('viewBox', '0 0 '+W+' '+H);
+
+	  // Arrow marker
+	  const defs = document.createElementNS(ns, 'defs');
+	  const marker = document.createElementNS(ns, 'marker');
+	  marker.setAttribute('id', 'arrow');
+	  marker.setAttribute('viewBox', '0 0 10 10');
+	  marker.setAttribute('refX', '10');
+	  marker.setAttribute('refY', '5');
+	  marker.setAttribute('markerWidth', '6');
+	  marker.setAttribute('markerHeight', '6');
+	  marker.setAttribute('orient', 'auto');
+	  const path = document.createElementNS(ns, 'path');
+	  path.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+	  path.setAttribute('fill', '#30363d');
+	  marker.appendChild(path);
+	  defs.appendChild(marker);
+	  svg.appendChild(defs);
+
+	  links.forEach(l => {
+	    const line = document.createElementNS(ns, 'line');
+	    line.setAttribute('x1', nodes[l.source].x);
+	    line.setAttribute('y1', nodes[l.source].y);
+	    line.setAttribute('x2', nodes[l.target].x);
+	    line.setAttribute('y2', nodes[l.target].y);
+	    line.setAttribute('stroke', '#30363d');
+	    line.setAttribute('stroke-width', '1.5');
+	    line.setAttribute('marker-end', 'url(#arrow)');
+	    svg.appendChild(line);
+	  });
+
+	  nodes.forEach(n => {
+	    const g = document.createElementNS(ns, 'g');
+	    g.setAttribute('transform', 'translate('+n.x+','+n.y+')');
+	    g.classList.add('graph-node');
+	    const rect = document.createElementNS(ns, 'rect');
+	    const tw = n.name.length * 7.5 + 16;
+	    rect.setAttribute('x', -tw/2);
+	    rect.setAttribute('y', -12);
+	    rect.setAttribute('width', tw);
+	    rect.setAttribute('height', 24);
+	    rect.setAttribute('fill', '#161b22');
+	    rect.setAttribute('stroke', n.color);
+	    g.appendChild(rect);
+	    const text = document.createElementNS(ns, 'text');
+	    text.setAttribute('text-anchor', 'middle');
+	    text.setAttribute('dy', '4');
+	    text.textContent = n.name;
+	    g.appendChild(text);
+	    svg.appendChild(g);
+	  });
+
+	  container.appendChild(svg);
+	}
+
+	function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+	</script>
+	</body>
+	</html>
+}

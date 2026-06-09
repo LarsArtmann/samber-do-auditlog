@@ -137,6 +137,7 @@ linters:
             - "!**/example/**"
           allow:
             - $gostd
+            - github.com/a-h/templ
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
         example:
@@ -144,6 +145,7 @@ linters:
             - "**/example/**"
           allow:
             - $gostd
+            - github.com/a-h/templ
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
         tests:
@@ -151,6 +153,7 @@ linters:
             - "**/*_test.go"
           allow:
             - $gostd
+            - github.com/a-h/templ
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
     exhaustruct:

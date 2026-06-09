@@ -3,6 +3,7 @@ package auditlog_test
 import (
 	"encoding/json"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -538,7 +539,7 @@ func TestPlugin_ExportToHTML(t *testing.T) {
 		t.Errorf("HTML file too small (%d bytes), expected a full page", len(data))
 	}
 
-	if !contains(string(data), "<!DOCTYPE html>") {
+	if !contains(strings.ToLower(string(data)), "<!doctype html>") {
 		t.Error("expected DOCTYPE in HTML output")
 	}
 
@@ -559,6 +560,89 @@ func searchString(s, sub string) bool {
 	}
 
 	return false
+}
+
+func findServiceBySuffix(t *testing.T, report auditlog.Report, suffix string) *auditlog.ServiceInfo {
+	t.Helper()
+
+	for i := range report.Services {
+		if strings.HasSuffix(report.Services[i].ServiceName, suffix) {
+			return &report.Services[i]
+		}
+	}
+
+	return nil
+}
+
+func TestPlugin_ProvideTransient(t *testing.T) {
+	t.Parallel()
+
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideTransient(injector, func(i do.Injector) (*Database, error) {
+		return &Database{URL: "transient://db"}, nil
+	})
+
+	db1, err := do.Invoke[*Database](injector)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db2, err := do.Invoke[*Database](injector)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if db1 == db2 {
+		t.Error("transient should create new instances each time")
+	}
+
+	report := p.Report()
+	if report.ServiceCount == 0 {
+		t.Fatal("expected at least one service in report")
+	}
+
+	svc := findServiceBySuffix(t, report, ".Database")
+	if svc == nil {
+		t.Fatal("expected Database service in report")
+	}
+
+	if svc.InvocationCount != 2 {
+		t.Errorf("expected 2 invocations for transient, got %d", svc.InvocationCount)
+	}
+}
+
+func TestPlugin_ProvideValue(t *testing.T) {
+	t.Parallel()
+
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideValue(injector, &Database{URL: "value://db"})
+
+	db, err := do.Invoke[*Database](injector)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if db.URL != "value://db" {
+		t.Errorf("expected value://db, got %s", db.URL)
+	}
+
+	report := p.Report()
+	if report.ServiceCount == 0 {
+		t.Fatal("expected at least one service in report")
+	}
+
+	svc := findServiceBySuffix(t, report, ".Database")
+	if svc == nil {
+		t.Fatal("expected Database service in report")
+	}
+
+	if svc.InvocationCount < 1 {
+		t.Errorf("expected at least 1 invocation, got %d", svc.InvocationCount)
+	}
 }
 
 func BenchmarkHookOverhead_Invocation(b *testing.B) {
