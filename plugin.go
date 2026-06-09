@@ -2,6 +2,7 @@ package auditlog
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 
 	"github.com/samber/do/v2"
@@ -57,44 +58,44 @@ func (p *Plugin) Report() Report {
 	return p.recorder.BuildReport(p.containerID)
 }
 
-// ExportToFile writes the full Report as indented JSON.
-func (p *Plugin) ExportToFile(path string) error {
+// WriteReportJSON writes the full Report as indented JSON to w.
+func (p *Plugin) WriteReportJSON(w io.Writer) error {
 	report := p.Report()
-
-	data, err := json.MarshalIndent(report, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(path, data, 0o644)
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(report)
 }
 
-// ExportEventsToNDJSON writes every captured event as a line-delimited JSON stream.
-// This format is ideal for streaming ingestion and fast append operations.
-func (p *Plugin) ExportEventsToNDJSON(path string) (err error) {
+// WriteEventsNDJSON writes every captured event as a line-delimited JSON stream to w.
+func (p *Plugin) WriteEventsNDJSON(w io.Writer) error {
 	events := p.recorder.Events()
+	enc := json.NewEncoder(w)
+	for _, e := range events {
+		if err := enc.Encode(e); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
+// ExportToFile writes the full Report as indented JSON.
+func (p *Plugin) ExportToFile(path string) error {
 	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
+	defer func() { _ = f.Close() }()
+	return p.WriteReportJSON(f)
+}
 
-	defer func() {
-		cerr := f.Close()
-		if cerr != nil && err == nil {
-			err = cerr
-		}
-	}()
-
-	enc := json.NewEncoder(f)
-	for _, e := range events {
-		err = enc.Encode(e)
-		if err != nil {
-			return err
-		}
+// ExportEventsToNDJSON writes every captured event as a line-delimited JSON stream.
+func (p *Plugin) ExportEventsToNDJSON(path string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
 	}
-
-	return nil
+	defer func() { _ = f.Close() }()
+	return p.WriteEventsNDJSON(f)
 }
 
 // Events returns a defensive copy of all captured events.
