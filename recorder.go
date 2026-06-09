@@ -101,9 +101,9 @@ func (r *Recorder) recordScope(scope *do.Scope) {
 	scopeID := scope.ID()
 
 	r.mu.Lock()
-	if _, ok := r.scopes[scopeID]; ok {
-		r.mu.Unlock()
+	defer r.mu.Unlock()
 
+	if _, ok := r.scopes[scopeID]; ok {
 		return
 	}
 
@@ -113,7 +113,6 @@ func (r *Recorder) recordScope(scope *do.Scope) {
 	}
 
 	r.scopes[scopeID] = meta
-	r.mu.Unlock()
 }
 
 // scopeKey produces the canonical map key for a service within a scope.
