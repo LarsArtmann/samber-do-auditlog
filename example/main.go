@@ -9,14 +9,15 @@
 //   - Lazy singleton:       do.Provide
 //   - Named services:       do.ProvideNamed / do.MustInvokeNamed
 //   - Transient providers:  do.ProvideTransient (new instance per invoke)
-//   - Interface aliasing:   do.As + do.MustInvoke via interface type
+//   - Interface aliasing:   do.As (explicit) + do.MustInvokeAs (implicit)
 //   - Scopes:               injector.Scope("name") — child scopes, cross-scope deps
 //   - Health checks:        do.Healthchecker interface + HealthCheckWithContext
 //   - Graceful shutdown:    ShutdownerWithError interface + injector.Shutdown()
 //   - Dependency graph:     inferred automatically from provider call-chains
 //   - Invocation errors:    provider returning error is captured
 //   - Shutdown errors:      Shutdown() returning error is captured
-//   - Override:             do.Override for test-style hot-swapping
+//   - Override:             do.OverrideValue for test-style hot-swapping
+//   - OnEvent callback:     real-time event streaming via Config.OnEvent
 //   - Audit export:         JSON, NDJSON, HTML, Report struct
 package main
 
@@ -25,6 +26,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -44,10 +47,6 @@ type AppConfig struct {
 	Debug   bool
 }
 
-type DBConfig struct {
-	DSN string
-}
-
 type ServerConfig struct {
 	Port         int
 	ReadTimeout  time.Duration
@@ -64,15 +63,17 @@ func (l *Logger) Printf(format string, args ...any) {
 	fmt.Printf("[%s] "+format+"\n", append([]any{l.Prefix}, args...)...)
 }
 
+// Database implements do.ShutdownerWithError and do.Healthchecker.
+var _ do.ShutdownerWithError = (*Database)(nil)
+var _ do.Healthchecker = (*Database)(nil)
+
 type Database struct {
-	DSN     string
-	Open    bool
-	Healthy bool
+	DSN string
 }
 
-func (d *Database) Ping() error {
-	if !d.Open {
-		return errors.New("database connection closed")
+func (d *Database) HealthCheck() error {
+	if d.DSN == "" {
+		return errors.New("database: no connection string")
 	}
 
 	return nil
@@ -81,18 +82,20 @@ func (d *Database) Ping() error {
 func (d *Database) Shutdown() error {
 	fmt.Println("  Database: closing connection")
 
-	d.Open = false
-
 	return nil
 }
+
+// Cache implements do.ShutdownerWithError and do.HealthcheckerWithContext.
+var _ do.ShutdownerWithError = (*Cache)(nil)
+var _ do.HealthcheckerWithContext = (*Cache)(nil)
 
 type Cache struct {
 	Healthy bool
 }
 
-func (c *Cache) HealthCheck() error {
+func (c *Cache) HealthCheck(_ context.Context) error {
 	if !c.Healthy {
-		return errors.New("cache is unhealthy")
+		return errors.New("cache: unhealthy")
 	}
 
 	return nil
@@ -106,22 +109,24 @@ func (c *Cache) Shutdown() error {
 
 // --- Interface aliasing: accept interfaces, return structs ---
 
-type PaymentProcessor interface {
-	Charge(amount float64) error
+// Notifier is the interface consumers depend on.
+type Notifier interface {
+	Send(to, body string) error
 }
 
-type StripeProcessor struct {
-	APIKey string
+// EmailNotifier is the concrete struct producers return.
+type EmailNotifier struct {
+	From string
 }
 
-func (s *StripeProcessor) Charge(amount float64) error {
-	fmt.Printf("  Stripe: charging $%.2f\n", amount)
+func (e *EmailNotifier) Send(to, body string) error {
+	fmt.Printf("  Email: %s → %s: %s\n", e.From, to, body)
 
 	return nil
 }
 
-func (s *StripeProcessor) Shutdown() error {
-	fmt.Println("  StripeProcessor: shutting down")
+func (e *EmailNotifier) Shutdown() error {
+	fmt.Println("  EmailNotifier: closing SMTP connection")
 
 	return nil
 }
@@ -191,14 +196,15 @@ func (m *MatchingEngine) Shutdown() error {
 
 type HTTPServer struct {
 	Config  *AppConfig
+	Server  *ServerConfig
 	DB      *Database
 	Cache   *Cache
-	Payment PaymentProcessor
+	Notify  Notifier
 	Port    int
 }
 
 func (s *HTTPServer) ListenAndServe() error {
-	fmt.Printf("  HTTP server listening on :%d\n", s.Port)
+	fmt.Printf("  HTTP server listening on :%d (timeout: %v)\n", s.Port, s.Server.WriteTimeout)
 
 	return nil
 }
@@ -209,12 +215,18 @@ func (s *HTTPServer) Shutdown() error {
 	return nil
 }
 
-// --- Error demo services ---
+// --- Error demo: a service whose provider fails at invocation time ---
 
-type FlakyService struct{}
+type UnreliableService struct {
+	Reason string
+}
 
-func (f *FlakyService) Shutdown() error {
-	return errors.New("flaky shutdown failed: connection reset")
+// --- Error demo: a service whose shutdown fails ---
+
+type LeakyService struct{}
+
+func (l *LeakyService) Shutdown() error {
+	return errors.New("leaky: failed to release connection pool")
 }
 
 // ---------------------------------------------------------------------------
@@ -227,10 +239,19 @@ func main() {
 
 	// =================================================================
 	// 1. Create the audit-log plugin and the DI container
+	//    Demonstrates: NewWithOpts, OnEvent callback
 	// =================================================================
+
+	var eventLog []string
+
 	plugin := auditlog.New(auditlog.Config{
 		Enabled:     true,
 		ContainerID: "ride-share-app",
+		OnEvent: func(e auditlog.Event) {
+			if e.IsAfter() && e.IsInvocation() {
+				eventLog = append(eventLog, e.ServiceName)
+			}
+		},
 	})
 
 	injector := do.NewWithOpts(plugin.Opts())
@@ -247,7 +268,6 @@ func main() {
 	})
 
 	do.ProvideNamedValue(injector, "config.db.dsn", "postgres://localhost:5432/rideshare?sslmode=disable")
-	do.ProvideNamedValue(injector, "config.stripe.key", "sk_test_abc123")
 
 	// =================================================================
 	// 3. Lazy singletons — built on first Invoke, then cached
@@ -267,7 +287,7 @@ func main() {
 		logger.Printf("connecting to database: %s", dsn)
 		time.Sleep(8 * time.Millisecond) // simulate connection
 
-		return &Database{DSN: dsn, Open: true, Healthy: true}, nil
+		return &Database{DSN: dsn}, nil
 	})
 
 	do.Provide(injector, func(i do.Injector) (*Cache, error) {
@@ -278,17 +298,15 @@ func main() {
 
 	// =================================================================
 	// 4. Interface aliasing — "accept interfaces, return structs"
-	//    Demonstrates: do.As[*Concrete, Interface], do.MustInvoke[Interface]
+	//    Demonstrates: do.As[*Concrete, Interface] (explicit binding)
 	// =================================================================
 
-	do.Provide(injector, func(i do.Injector) (*StripeProcessor, error) {
-		apiKey := do.MustInvokeNamed[string](i, "config.stripe.key")
-
-		return &StripeProcessor{APIKey: apiKey}, nil
+	do.Provide(injector, func(i do.Injector) (*EmailNotifier, error) {
+		return &EmailNotifier{From: "no-reply@rideshare.app"}, nil
 	})
 
-	// Bind the concrete *StripeProcessor to the PaymentProcessor interface
-	do.As[*StripeProcessor, PaymentProcessor](injector)
+	// Explicit alias: bind *EmailNotifier → Notifier interface
+	do.As[*EmailNotifier, Notifier](injector)
 
 	// =================================================================
 	// 5. Transient provider — new instance every invocation
@@ -296,9 +314,11 @@ func main() {
 	// =================================================================
 
 	do.ProvideTransient(injector, func(i do.Injector) (*RideRequest, error) {
+		id := rideCounter.Add(1)
+
 		return &RideRequest{
-			ID:        rideCounter.Add(1),
-			RiderName: fmt.Sprintf("rider-%d", rideCounter.Load()),
+			ID:        id,
+			RiderName: fmt.Sprintf("rider-%d", id),
 			Pickup:    "123 Main St",
 			Dropoff:   "456 Elm Ave",
 			CreatedAt: time.Now(),
@@ -355,8 +375,7 @@ func main() {
 		return &PassengerService{Name: "dana"}, nil
 	})
 
-	// Matching engine lives in its own scope and pulls from both driver + passenger scopes
-	// via their parent (root) — it invokes directly from each scope
+	// Matching engine lives in its own scope and pulls from driver + passenger scopes
 	do.Provide(matchingScope, func(i do.Injector) (*MatchingEngine, error) {
 		// Invoke driver services from the driver scope
 		alice := do.MustInvoke[*DriverService](driverScope)
@@ -373,42 +392,59 @@ func main() {
 	})
 
 	// =================================================================
-	// 8. HTTP server — the entry point that wires everything together
+	// 8. Override — hot-swap a value before it's consumed
+	//    Demonstrates: do.OverrideValue (realistic: override config)
+	// =================================================================
+
+	// First register a default
+	do.ProvideValue(injector, &ServerConfig{
+		Port:         80,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	})
+
+	// Then override with the actual config (e.g. from env, flags, etc.)
+	do.OverrideValue(injector, &ServerConfig{
+		Port:         8080,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	})
+
+	// =================================================================
+	// 9. HTTP server — the entry point that wires everything together
 	// =================================================================
 
 	do.Provide(injector, func(i do.Injector) (*HTTPServer, error) {
 		cfg := do.MustInvoke[*AppConfig](i)
+		srvCfg := do.MustInvoke[*ServerConfig](i) // receives the overridden value
 		db := do.MustInvoke[*Database](i)
 		cache := do.MustInvoke[*Cache](i)
-		payment := do.MustInvoke[PaymentProcessor](i) // resolved via alias
+		notifier := do.MustInvoke[Notifier](i) // resolved via alias
 
 		return &HTTPServer{
 			Config:  cfg,
+			Server:  srvCfg,
 			DB:      db,
 			Cache:   cache,
-			Payment: payment,
+			Notify:  notifier,
 			Port:    cfg.Port,
 		}, nil
 	})
 
 	// =================================================================
-	// 9. Error-case service — invocation that returns an error
-	//    Demonstrates: error capture in audit log
+	// 10. Error-case services — demonstrating error capture
+	//     Invocation error: provider returns an error
+	//     Shutdown error: Shutdown() returns an error
 	// =================================================================
 
-	do.Provide(injector, func(i do.Injector) (*FlakyService, error) {
-		return &FlakyService{}, nil
+	// This provider intentionally fails — the error is captured in the audit log
+	do.Provide(injector, func(i do.Injector) (*UnreliableService, error) {
+		return nil, errors.New("unreliable: dependency 'payment-gateway' unavailable")
 	})
 
-	// =================================================================
-	// 10. Override — hot-swap a service (useful for testing)
-	//     Demonstrates: do.Override
-	// =================================================================
-
-	do.OverrideValue(injector, &ServerConfig{
-		Port:         8080,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+	// This service shuts down with an error
+	do.Provide(injector, func(i do.Injector) (*LeakyService, error) {
+		return &LeakyService{}, nil
 	})
 
 	// =================================================================
@@ -417,7 +453,7 @@ func main() {
 
 	fmt.Println("--- Invoking services ---")
 
-	// Main entry point — this cascades through the full dependency tree
+	// Main entry point — cascades through the full dependency tree
 	server, err := do.Invoke[*HTTPServer](injector)
 	if err != nil {
 		log.Fatalf("failed to invoke HTTPServer: %v", err)
@@ -451,20 +487,27 @@ func main() {
 		log.Fatalf("failed to invoke RideRequest: %v", err)
 	}
 
-	fmt.Printf("  RideRequest #%d → RideRequest #%d (different instances)\n", ride1.ID, ride2.ID)
+	fmt.Printf("  RideRequest #%d and #%d (different instances, transient)\n", ride1.ID, ride2.ID)
 
 	// Invoke named vehicles
 	sedan := do.MustInvokeNamed[*Vehicle](injector, "vehicle.sedan")
 	suv := do.MustInvokeNamed[*Vehicle](injector, "vehicle.suv")
 	van := do.MustInvokeNamed[*Vehicle](injector, "vehicle.van")
-	fmt.Printf("  Fleet: %s (%d), %s (%d), %s (%d)\n",
+	fmt.Printf("  Fleet: %s(%d), %s(%d), %s(%d)\n",
 		sedan.Name, sedan.Capacity, suv.Name, suv.Capacity, van.Name, van.Capacity)
 
-	// Invoke the flaky service (to capture it in the audit)
-	_, _ = do.Invoke[*FlakyService](injector)
+	// Invoke the leaky service (will fail on shutdown)
+	_ = do.MustInvoke[*LeakyService](injector)
+
+	// Invoke the unreliable service — this will FAIL and be captured
+	_, invocationErr := do.Invoke[*UnreliableService](injector)
+	if invocationErr != nil {
+		fmt.Printf("  Expected invocation error: %v\n", invocationErr)
+	}
 
 	// =================================================================
 	// HEALTH CHECK
+	// Demonstrates: Healthchecker, HealthcheckerWithContext interfaces
 	// =================================================================
 
 	fmt.Println()
@@ -484,6 +527,7 @@ func main() {
 
 	// =================================================================
 	// GRACEFUL SHUTDOWN
+	// Demonstrates: ShutdownerWithError, reverse-order shutdown
 	// =================================================================
 
 	fmt.Println()
@@ -503,26 +547,31 @@ func main() {
 	fmt.Println()
 	fmt.Println("--- Exporting audit reports ---")
 
-	if err := plugin.ExportToFile("audit-report.json"); err != nil {
+	dir, err := os.MkdirTemp("", "auditlog-demo-*")
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("  Written audit-report.json")
-
-	if err := plugin.ExportEventsToNDJSON("audit-events.ndjson"); err != nil {
+	if err := plugin.ExportToFile(dir + "/audit-report.json"); err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("  Written audit-events.ndjson")
+	fmt.Printf("  Written %s/audit-report.json\n", dir)
 
-	if err := plugin.ExportToHTML("audit-report.html"); err != nil {
+	if err := plugin.ExportEventsToNDJSON(dir + "/audit-events.ndjson"); err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("  Written audit-report.html")
+	fmt.Printf("  Written %s/audit-events.ndjson\n", dir)
+
+	if err := plugin.ExportToHTML(dir + "/audit-report.html"); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("  Written %s/audit-report.html\n", dir)
 
 	// =================================================================
-	// PRINT SUMMARY
+	// PRINT SUMMARY using ServiceRef.String() for compact display
 	// =================================================================
 
 	rep := plugin.Report()
@@ -542,8 +591,8 @@ func main() {
 	fmt.Println("  Services:")
 
 	for _, s := range rep.Services {
-		fmt.Printf("    %-35s scope=%-12s status=%-18s invoked=%d",
-			s.ServiceName, s.ScopeName, s.Status, s.InvocationCount)
+		fmt.Printf("    %-40s status=%-18s invoked=%d",
+			s.ServiceRef.String(), s.Status, s.InvocationCount)
 
 		if s.FirstBuildDurationMs != nil {
 			fmt.Printf(" build=%.3fms", *s.FirstBuildDurationMs)
@@ -594,21 +643,23 @@ func main() {
 		ok   bool
 	}{
 		{"do.NewWithOpts (plugin hooks)", rep.ContainerID == "ride-share-app"},
-		{"do.ProvideValue (eager value injection)", hasService(rep, "AppConfig")},
-		{"do.ProvideNamedValue (named values)", hasService(rep, "config.db.dsn")},
-		{"do.Provide (lazy singletons)", hasService(rep, "Database")},
-		{"do.ProvideNamed (named services)", hasService(rep, "vehicle.sedan")},
-		{"do.ProvideTransient (new instance per invoke)", hasService(rep, "RideRequest")},
-		{"do.As (interface aliasing)", hasService(rep, "PaymentProcessor")},
-		{"do.OverrideValue (hot-swap)", hasService(rep, "ServerConfig")},
+		{"do.ProvideValue (eager value injection)", hasServiceSuffix(rep, "AppConfig")},
+		{"do.ProvideNamedValue (named values)", hasServiceSuffix(rep, "config.db.dsn")},
+		{"do.Provide (lazy singletons)", hasServiceSuffix(rep, "Database")},
+		{"do.ProvideNamed (named services)", hasServiceSuffix(rep, "vehicle.sedan")},
+		{"do.ProvideTransient (new instance per invoke)", hasServiceSuffix(rep, "RideRequest")},
+		{"do.As (explicit interface aliasing)", hasServiceSuffix(rep, "Notifier")},
+		{"do.OverrideValue (hot-swap)", hasServiceSuffix(rep, "ServerConfig")},
 		{"injector.Scope (child scopes)", rep.ScopeCount >= 4},
-		{"Cross-scope dependencies", hasDeps(rep, "MatchingEngine")},
-		{"Dependency graph inference", hasDeps(rep, "HTTPServer")},
-		{"Health checks", len(health) > 0},
-		{"Graceful shutdown", rep.ShutdownSucceeded == (len(report.Errors) == 0)},
+		{"Cross-scope dependencies", hasDepsSuffix(rep, "MatchingEngine")},
+		{"Dependency graph inference", hasDepsSuffix(rep, "HTTPServer")},
+		{"Health checks (Healthchecker interface)", len(health) > 0},
+		{"Graceful shutdown (ShutdownerWithError)", rep.ShutdownSucceeded == (len(report.Errors) == 0)},
+		{"Invocation errors captured", hasInvocationError(rep)},
 		{"Shutdown errors captured", hasShutdownError(rep)},
 		{"Build duration tracking", hasBuildDuration(rep)},
 		{"Scope tree hierarchy", len(rep.ScopeTree.Children) >= 3},
+		{"OnEvent callback", len(eventLog) > 0},
 	}
 
 	allOK := true
@@ -638,9 +689,9 @@ func main() {
 // Helpers for the feature checklist
 // ---------------------------------------------------------------------------
 
-func hasService(r auditlog.Report, substr string) bool {
+func hasServiceSuffix(r auditlog.Report, suffix string) bool {
 	for _, s := range r.Services {
-		if s.ServiceName == substr || containsPart(s.ServiceName, substr) {
+		if strings.HasSuffix(s.ServiceName, suffix) || s.ServiceName == suffix {
 			return true
 		}
 	}
@@ -648,14 +699,20 @@ func hasService(r auditlog.Report, substr string) bool {
 	return false
 }
 
-func containsPart(name, substr string) bool {
-	return len(name) >= len(substr) &&
-		name[len(name)-len(substr):] == substr
+func hasDepsSuffix(r auditlog.Report, suffix string) bool {
+	for _, s := range r.Services {
+		if (strings.HasSuffix(s.ServiceName, suffix) || s.ServiceName == suffix) &&
+			len(s.Dependencies) > 0 {
+			return true
+		}
+	}
+
+	return false
 }
 
-func hasDeps(r auditlog.Report, substr string) bool {
+func hasInvocationError(r auditlog.Report) bool {
 	for _, s := range r.Services {
-		if containsPart(s.ServiceName, substr) && len(s.Dependencies) > 0 {
+		if s.InvocationError != nil {
 			return true
 		}
 	}
