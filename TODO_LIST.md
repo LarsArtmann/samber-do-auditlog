@@ -11,7 +11,7 @@ Last updated: 2026-06-10
 
 ## Priority 2 — Polish
 
-- [ ] **Add `Config.Validate() error`** method — Currently validation is ad-hoc in `New()`. A proper `Validate()` method would centralize it and make the API more extensible. Low urgency since Config is simple.
+- [x] **`Config.Validate() error`** — Added as forward-compatible API placeholder. Currently always returns nil.
 
 ## Priority 3 — Consider
 
@@ -62,6 +62,12 @@ Last updated: 2026-06-10
 - [x] Refactor: extract newEventFromRef and newServiceRecordFromMeta helpers
 - [x] Add test coverage for convenience methods (ServiceByName, FailedServices, IsError, String)
 - [x] Add health check test coverage (OnEvent, phase, JSON/NDJSON export)
+- [x] Add Event.ServiceType field with provider type per event
+- [x] Add capability tracking via enrichCapabilities() in BuildReport()
+- [x] Remove dead inferCapabilities code
+- [x] Fix all golangci-lint issues: 0 issues across entire project (was 28)
+- [x] Use maps.Copy in BuildReport for scope map copying
+- [x] Simplify Config.Validate() to honest placeholder
 
 ## Completed (Historical)
 
