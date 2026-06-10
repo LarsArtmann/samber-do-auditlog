@@ -8,6 +8,9 @@ import (
 // SchemaVersion is the current report schema version.
 const SchemaVersion = "0.2.0"
 
+// RootScopeName is the canonical name for the root scope in samber/do v2.
+const RootScopeName = "[root]"
+
 // EventType categorizes audit log events.
 type EventType string
 
@@ -89,6 +92,8 @@ type ServiceRef struct {
 	ServiceName string `json:"service_name"`
 }
 
+// String returns a human-readable "scope/name" format for the service reference.
+// Root scope services return just the service name.
 func (r ServiceRef) String() string {
 	if !r.IsRoot() {
 		return fmt.Sprintf("%s/%s", r.ScopeName, r.ServiceName)
@@ -99,7 +104,7 @@ func (r ServiceRef) String() string {
 
 // IsRoot returns true if the service belongs to the root scope.
 func (r ServiceRef) IsRoot() bool {
-	return r.ScopeName == "" || r.ScopeName == "[root]"
+	return r.ScopeName == "" || r.ScopeName == RootScopeName
 }
 
 // Event is a single, timestamped observation from the DI container lifecycle.
@@ -116,12 +121,23 @@ type Event struct {
 	Error       *string      `json:"error,omitempty"`
 }
 
+// IsRegistration returns true if the event is a registration event.
 func (e Event) IsRegistration() bool { return e.EventType == EventTypeRegistration }
-func (e Event) IsInvocation() bool   { return e.EventType == EventTypeInvocation }
-func (e Event) IsShutdown() bool     { return e.EventType == EventTypeShutdown }
-func (e Event) IsHealthCheck() bool  { return e.EventType == EventTypeHealthCheck }
-func (e Event) IsBefore() bool       { return e.Phase == PhaseBefore }
-func (e Event) IsAfter() bool        { return e.Phase == PhaseAfter }
+
+// IsInvocation returns true if the event is an invocation event.
+func (e Event) IsInvocation() bool { return e.EventType == EventTypeInvocation }
+
+// IsShutdown returns true if the event is a shutdown event.
+func (e Event) IsShutdown() bool { return e.EventType == EventTypeShutdown }
+
+// IsHealthCheck returns true if the event is a health check event.
+func (e Event) IsHealthCheck() bool { return e.EventType == EventTypeHealthCheck }
+
+// IsBefore returns true if the event is the start (before) phase of an operation.
+func (e Event) IsBefore() bool { return e.Phase == PhaseBefore }
+
+// IsAfter returns true if the event is the end (after) phase of an operation.
+func (e Event) IsAfter() bool { return e.Phase == PhaseAfter }
 
 // HasError returns true if the event recorded an error.
 func (e Event) HasError() bool { return e.Error != nil }

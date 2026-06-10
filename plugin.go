@@ -220,7 +220,17 @@ func writeToFile(path string, fn func(io.Writer) error) error {
 		return fmt.Errorf("create file %q: %w", path, err)
 	}
 
-	defer func() { _ = file.Close() }()
+	writeErr := fn(file)
 
-	return fn(file)
+	closeErr := file.Close()
+
+	if writeErr != nil {
+		return writeErr
+	}
+
+	if closeErr != nil {
+		return fmt.Errorf("close file %q: %w", path, closeErr)
+	}
+
+	return nil
 }

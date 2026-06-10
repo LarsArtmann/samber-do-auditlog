@@ -6,6 +6,7 @@ templ reportHTML(report Report) {
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; script-src 'unsafe-inline'; font-src https://fonts.gstatic.com;"/>
 			<title>do-auditlog: { report.ContainerID }</title>
 			<style>
 	  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
@@ -622,12 +623,12 @@ templ reportHTML(report Report) {
 
 	// Services table
 	const allServices = report.services.map(s => {
-	  const deps=(s.dependencies||[]).map(d=>'<span>'+d.service_name+'</span>').join(', ');
-	  const depsR=(s.dependents||[]).map(d=>'<span>'+d.service_name+'</span>').join(', ');
+	  const deps=(s.dependencies||[]).map(d=>'<span>'+esc(d.service_name)+'</span>').join(', ');
+	  const depsR=(s.dependents||[]).map(d=>'<span>'+esc(d.service_name)+'</span>').join(', ');
 	  const regAt=s.registered_offset_ns!=null?formatNs(s.registered_offset_ns):'';
 	  const invAt=s.first_invoked_offset_ns!=null?formatNs(s.first_invoked_offset_ns):'';
 	  const errMsgs=[s.invocation_error,s.shutdown_error].filter(Boolean).map(esc).join('\n');
-	  const statusBadge='<span class="status-badge '+s.status+'"'+(errMsgs?' data-error="'+errMsgs+'"':'')+'>'+(statusIcons[s.status]||'')+' '+s.status.replace(/_/g,' ')+'</span>';
+	  const statusBadge='<span class="status-badge '+esc(s.status)+'"'+(errMsgs?' data-error="'+errMsgs+'"':'')+'>'+(statusIcons[s.status]||'')+' '+s.status.replace(/_/g,' ')+'</span>';
 	  const svcIcon = typeIcons[s.service_type] || '';
 	  return '<tr data-search="'+esc(s.service_name.toLowerCase()+' '+s.scope_name+' '+(s.service_type||''))+'">'
 	    +'<td class="mono" title="Registered: '+regAt+(invAt?'\nInvoked: '+invAt:'')+'">'+(svcIcon?svcIcon+' ':'')+esc(s.service_name)+capabilityIcons(s)+'</td>'
@@ -652,7 +653,25 @@ templ reportHTML(report Report) {
 	});
 
 	// Events table
-	
+	const eventLabels={registration:'Registration',invocation:'Invocation',shutdown:'Shutdown',health_check:'Health'};
+	const allEvents = report.events.map(e => {
+	  const phase=e.phase==='before'?'\u25B4':'\u25BE';
+	  const evtBadge='<span class="event-badge '+e.event_type+'">'+(eventLabels[e.event_type]||e.event_type)+'</span>';
+	  const svcIcon=typeIcons[e.service_type]||'';
+	  const dur=e.duration_ms!=null?e.duration_ms.toFixed(3)+'ms':'';
+	  const errTip=e.error?' data-error="'+esc(e.error)+'"':'';
+	  return '<tr data-type="'+e.event_type+'" class="'+(e.error?'has-error':'')+'">'
+	    +'<td class="mono">'+e.sequence+'</td>'
+	    +'<td class="mono" title="'+esc(e.timestamp)+'">'+new Date(e.timestamp).toLocaleTimeString()+'</td>'
+	    +'<td>'+evtBadge+'</td>'
+	    +'<td>'+(svcIcon?typeBadge(e.service_type):'')+'</td>'
+	    +'<td class="mono">'+phase+'</td>'
+	    +'<td>'+esc(e.scope_name)+'</td>'
+	    +'<td class="mono">'+esc(e.service_name)+'</td>'
+	    +'<td class="mono">'+dur+'</td>'
+	    +'<td class="event-error"'+errTip+'>'+(e.error?'<span class="status-badge shutdown_error"'+errTip+'>error</span>':'')+'</td>'
+	    +'</tr>';
+	});
 	document.getElementById('events-tbody').innerHTML=allEvents.join('');
 
 	// Event filters

@@ -70,6 +70,15 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 | **Iterative buildCapabilityMap**      | BFS queue replaces recursive `maps.Copy` for capability map construction                                              | ✓ `recorder.go:buildCapabilityMap`                                |
 | **Single-lock Recorder**              | 4 mutexes → 1 RWMutex + 2 atomics: 23% faster, 50% fewer allocs                                                       | ✓ `recorder.go:Recorder`                                          |
 | **Locking protocol docs**             | Comprehensive godoc on Recorder struct: write/read paths, deadlock risk, enrichCapabilities warning                   | ✓ `recorder.go:71-90`                                             |
+| **Events tab rendering**              | Full event table with sequence, timestamp, type badge, provider badge, phase icon, scope, service, duration, error   | ✓ `html.templ`                                                    |
+| **HTML CSP meta tag**                 | `Content-Security-Policy` restricts to inline styles/scripts and Google Fonts                                        | ✓ `html.templ`                                                    |
+| **XSS-hardened HTML**                 | All user-controlled strings escaped via `esc()` including dependency names, status classes, error messages            | ✓ `html.templ`                                                    |
+| **Expanded fuzz tests**               | 3 fuzz targets: service names, error messages, dependency chains with 6+ XSS vector checks                          | ✓ `fuzz_test.go`                                                  |
+| **Migration input validation**        | `MigrateReport` rejects empty input, missing version; preserves ExportedAt; version guard for current schema         | ✓ `migration.go`                                                  |
+| **writeToFile error handling**        | Close errors properly returned instead of silently discarded                                                          | ✓ `plugin.go:writeToFile`                                         |
+| **RootScopeName constant**            | `"[root]"` magic string replaced with named constant across production code                                          | ✓ `types.go:RootScopeName`                                        |
+| **Expanded godoc**                    | All exported methods documented: `Event.Is*`, `ServiceRef.String()`                                                   | ✓ `types.go`                                                      |
+| **Godoc examples (7)**                | Runnable `Example*` functions for pkg.go.dev                                                                         | ✓ `example_test.go`                                               |
 
 ---
 

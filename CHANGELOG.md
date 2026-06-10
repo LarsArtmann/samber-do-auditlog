@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Security
+
+- **Fix XSS in HTML deps column**: `d.service_name` in dependency/dependent rendering now properly escaped via `esc()` — previously interpolated raw into HTML
+- **Fix XSS in HTML status badge**: `s.status` now escaped before insertion into CSS class attribute
+- **Add CSP meta tag**: `Content-Security-Policy` header restricts to inline styles/scripts and Google Fonts
+- **Expanded fuzz tests**: new `FuzzPluginHTML_ErrorMessages`, `FuzzPluginHTML_DepChain` covering error strings, dependency chains, and broader injection vector detection
+
+### Fixed
+
+- **Fix broken Events tab**: `allEvents` was referenced but never defined — the Events tab was completely non-functional with a `ReferenceError`. Now renders full event table with sequence, timestamp, type badge, provider badge, phase icon, scope, service, duration, and error
+- **MigrateReport now validates input**: returns error for empty input or missing version field
+- **MigrateReport preserves ExportedAt**: only sets `time.Now()` if original timestamp is zero
+- **MigrateReport version guard**: reports already at current schema version pass through unchanged
+- **writeToFile Close error handling**: file close errors are now properly returned instead of silently discarded
+
+### Changed
+
+- **Config.Validate()** now validates ContainerID for path separators (`/` and `\`) instead of being a no-op placeholder
+- **RootScopeName constant**: `"[root]"` magic string replaced with `RootScopeName` constant across production code
+- **Expanded godoc**: 7 exported methods (`Event.IsRegistration`, etc., `ServiceRef.String`) now have proper documentation comments
+
 ### Added
 
 - `ServiceStatus` type with computed `status` field on `ServiceInfo` — derives lifecycle state (registered, active, invocation_error, shutdown, shutdown_error) from existing fields

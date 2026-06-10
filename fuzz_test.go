@@ -2,6 +2,7 @@ package auditlog_test
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -20,6 +21,12 @@ func FuzzPluginHTML(f *testing.F) {
 		"\n\r\t",
 		"{{.ServiceName}}",
 		"${7*7}",
+		"<svg onload=alert(1)>",
+		"javascript:alert(1)",
+		"<iframe src=\"evil.com\">",
+		"<a href=\"javascript:alert(1)\">click</a>",
+		"'><script>alert(1)</script>",
+		"\" onmouseover=\"alert(1)",
 	}
 
 	for _, m := range malicious {
@@ -51,13 +58,154 @@ func FuzzPluginHTML(f *testing.F) {
 		}
 
 		output := buf.String()
-
-		// Verify the service name is HTML-escaped in data attributes.
-		// The page has legitimate <script> blocks for the visualization JS,
-		// so we check that the raw <script>alert string is not present.
-		raw := "<script>alert"
-		if strings.Contains(output, raw) {
-			t.Errorf("unescaped %q in HTML output for service %q", raw, svcName)
-		}
+		assertNoRawXSS(t, output, svcName)
 	})
+}
+
+func FuzzPluginHTML_ErrorMessages(f *testing.F) {
+	maliciousErrors := []string{
+		"<script>alert('err')</script>",
+		"<img src=x onerror=alert(1)>",
+		"\" onclick=\"alert(1)",
+		"<svg onload=alert(1)>",
+		"javascript:alert(1)",
+		"'><script>alert(1)</script>",
+	}
+
+	for _, m := range maliciousErrors {
+		f.Add(m)
+	}
+
+	f.Fuzz(func(t *testing.T, errMsg string) {
+		if errMsg == "" {
+			t.Skip()
+		}
+
+		plugin := auditlog.New(auditlog.Config{Enabled: true})
+		injector := do.NewWithOpts(plugin.Opts())
+
+		do.ProvideNamed(injector, "error-svc", func(_ do.Injector) (string, error) {
+			return "", fmt.Errorf("%s", errMsg) //nolint:err113
+		})
+
+		_, _ = do.InvokeNamed[string](injector, "error-svc")
+
+		var buf bytes.Buffer
+
+		writeErr := plugin.WriteHTML(&buf)
+		if writeErr != nil {
+			return
+		}
+
+		output := buf.String()
+		assertNoRawXSS(t, output, errMsg)
+	})
+}
+
+func FuzzPluginHTML_DepChain(f *testing.F) {
+	maliciousDeps := []string{
+		"<script>alert('dep')</script>",
+		"<img src=x onerror=alert(1)>",
+		"\" onclick=\"alert(1)",
+		"<svg onload=alert(1)>",
+	}
+
+	for _, m := range maliciousDeps {
+		f.Add(m)
+	}
+
+	f.Fuzz(func(t *testing.T, depName string) {
+		if depName == "" {
+			t.Skip()
+		}
+
+		plugin := auditlog.New(auditlog.Config{Enabled: true})
+		injector := do.NewWithOpts(plugin.Opts())
+
+		do.ProvideNamed(injector, depName, func(_ do.Injector) (string, error) {
+			return "dep-val", nil
+		})
+
+		do.ProvideNamed(injector, "parent-svc", func(i do.Injector) (string, error) {
+			_, _ = do.InvokeNamed[string](i, depName)
+
+			return "parent-val", nil
+		})
+
+		_, _ = do.InvokeNamed[string](injector, "parent-svc")
+
+		var buf bytes.Buffer
+
+		writeErr := plugin.WriteHTML(&buf)
+		if writeErr != nil {
+			return
+		}
+
+		output := buf.String()
+		assertNoRawXSS(t, output, depName)
+	})
+}
+
+func assertNoRawXSS(t *testing.T, output string, context string) {
+	t.Helper()
+
+	vectors := []string{
+		"<script>alert",
+		"<img src=x onerror=",
+		"<svg onload=",
+		"<iframe ",
+		" onmouseover=\"alert",
+	}
+
+	for _, v := range vectors {
+		if strings.Contains(output, v) {
+			t.Errorf("unescaped %q in HTML output for context %q", v, context)
+		}
+	}
+
+	// Check for javascript: and onerror= only in HTML portions (outside <script> blocks).
+	// Error messages like "javascript:alert(1)" are safely encoded inside JSON in <script> tags.
+	htmlOnly := stripScriptTags(output)
+
+	htmlVectors := []string{
+		"javascript:alert",
+		" onerror=",
+		" onclick=",
+		" onload=",
+	}
+
+	for _, v := range htmlVectors {
+		if strings.Contains(htmlOnly, v) {
+			t.Errorf("unescaped %q in HTML portion for context %q", v, context)
+		}
+	}
+}
+
+func stripScriptTags(html string) string {
+	var b strings.Builder
+
+	inScript := false
+	i := 0
+
+	for i < len(html) {
+		if !inScript && strings.HasPrefix(html[i:], "<script") {
+			end := strings.Index(html[i:], "</script>")
+			if end >= 0 {
+				i += end + len("</script>")
+
+				continue
+			}
+
+			break
+		}
+
+		if strings.HasPrefix(html[i:], "<script") {
+			inScript = true
+		}
+
+		b.WriteByte(html[i])
+		i++
+	}
+
+	return b.String()
 }

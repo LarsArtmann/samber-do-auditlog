@@ -23,6 +23,27 @@ _All items completed._
 
 ---
 
+## Completed (2026-06-10 Session 6)
+
+- [x] Fix broken Events tab — build allEvents array from report.events with full rendering
+- [x] Fix XSS in deps column — esc() around d.service_name in dependency/dependent rendering
+- [x] Fix XSS in status badge — esc() around s.status in CSS class attribute
+- [x] Add CSP meta tag to HTML — Content-Security-Policy defense-in-depth
+- [x] Add TestWriteHTML_EventsTabContent — verify events tab renders correctly
+- [x] Add TestWriteHTML_AllFiveTabs — smoke test all 5 tabs produce content
+- [x] Expand fuzz tests — 3 targets (service names, error messages, dep chains) with 6+ XSS vectors
+- [x] Add version guard to MigrateReport — return early if already current schema
+- [x] Preserve ExportedAt in migration — only set time.Now() if original is zero
+- [x] Validate input in MigrateReport — reject empty input and missing version
+- [x] Add TestMigrateReport_AlreadyCurrentVersion, PreservesExportedAt, EmptyInput, MissingVersion
+- [x] Add TestResolveServiceScope_ParentScopeService, GrandparentScopeService
+- [x] Add TestWriteMermaid_DuplicateEdges — verify deduplication of duplicate deps
+- [x] Add godoc to 7 exported methods in types.go
+- [x] Extract [root] to RootScopeName constant
+- [x] Handle writeToFile Close error properly
+- [x] Add Example_validate godoc example
+- [x] Update CHANGELOG.md, FEATURES.md, TODO_LIST.md
+
 ## Completed (2026-06-10 Session 5)
 
 - [x] Add Config.Validate() real checks — validates ContainerID for path separators (/ and \)

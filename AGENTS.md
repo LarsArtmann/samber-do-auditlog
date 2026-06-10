@@ -75,16 +75,20 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 
 - **Repo directory is `samber-do-metrics`** but `go.mod` says `samber-do-auditlog`. The module name is canonical.
 - **JSON tags use snake_case** (`scope_name`, `service_name`, etc.) via `tagliatelle` config set to `json: snake_case`. This is intentional for JSON API compatibility.
-- **`doc.go` and `plugin.go` both have package-level doc comments**, causing a `godoclint` warning about multiple godocs.
+- **`doc.go`** has the package-level doc comment. `plugin.go` has no package comment (the dual-comment issue was fixed).
 - **`Plugin.containerID` was removed** — containerID is stored only in `Recorder` (passed at construction via `NewRecorder`). `Plugin.Report()` calls parameterless `BuildReport()`.
 - **`Report.Services` is sorted** by (scope_name, service_name) for deterministic output across runs. Dependencies and dependents within each service are also sorted.
-- **`writeToFile()` helper** in `plugin.go` eliminates the duplicated create-defer-close pattern across all 3 export methods.
+- **`writeToFile()` helper** in `plugin.go` properly returns Close errors after write errors (write error takes priority).
 - **Test file uses external test package** (`auditlog_test`) — imports the package under test as `auditlog`.
 - **`example/` directory** is exempt from some lint rules (forbidigo, noinlineerr) since it's demo code.
-- **`html.templ`** uses `templ.JSONScript` to safely embed report JSON into the HTML page. The generated `html_templ.go` is excluded from lint via `_templ\.go$` pattern in `.golangci.yml`. Templ normalizes `<!DOCTYPE html>` to lowercase `<!doctype html>` — the HTML test uses case-insensitive comparison.
-- **`html_templ.go` is gitignored** — run `go generate ./...` before building. The `//go:generate templ generate` directive is in `html.go`.
-- **templ version mismatch** — go.mod has v0.3.1020 (latest published). Local generator is v0.3.1036 (unpublished). No action needed.
-- **Do NOT modularize** — Project is 1 package, ~1800 LOC. Too small for multi-module split. Revisit at 5+ packages.
+- **`html.templ` CSP meta tag** restricts to `inline styles/scripts + Google Fonts`. No `default-src` — blocks external resource loads.
+- **`html.templ` XSS escaping**: all user-controlled strings use `esc()` function. Dependencies use `esc(d.service_name)`. Status classes use `esc(s.status)`. Error messages in `data-error` attributes are escaped.
+- **`html.templ` Events tab**: `allEvents` array built from `report.events.map(...)` with type badges, provider badges, phase icons (▲/▾), duration, error tooltips. Filter chips use `data-type` attribute on rows.
+- **`RootScopeName` constant** (`"[root]"`) in `types.go` replaces the magic string. Used in `IsRoot()` and test struct literals (not in JSON strings).
+- **`MigrateReport` validation**: rejects empty input (`errMigrationEmptyInput`), missing version (`errMigrationMissingVersion`). Returns early if already at current schema. Preserves original `ExportedAt`.
+- **Fuzz tests**: 3 targets — `FuzzPluginHTML` (service names), `FuzzPluginHTML_ErrorMessages` (error strings), `FuzzPluginHTML_DepChain` (dependency names). Uses `stripScriptTags()` to avoid false positives from JSON inside `<script>` tags. Checks 6+ XSS vectors.
+- **`Config.Validate()`** validates ContainerID for path separators (`/` and `\`). Returns `errContainerIDPathSep` sentinel error wrapped with the offending value.
+- **Do NOT modularize** — Project is 1 package, ~2400 LOC. Too small for multi-module split. Revisit at 5+ packages.
 - **`ServiceStatus`** is computed in `buildServicesLocked` via `computeServiceStatus()`. Priority: invocation_error > shutdown_error > shutdown > active > registered. The HTML template uses `s.status` instead of deriving from individual fields.
 - **`buildScopeTreeLocked`** uses `sortedScopesLocked()` to iterate scopes deterministically (sorted by scope ID), since map iteration order is non-deterministic in Go.
 - **`newServiceRecordCore`** uses lazy deps map (`nil` until first dependency recorded). `buildDepsLocked` returns `nil` for services with no deps (no empty slice allocation).

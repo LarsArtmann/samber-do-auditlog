@@ -443,7 +443,7 @@ func TestPlugin_ScopeTree(t *testing.T) {
 	_ = do.MustInvokeNamed[*Database](child, "child-svc")
 
 	report := p.Report()
-	if report.ScopeTree.Name != "[root]" {
+	if report.ScopeTree.Name != auditlog.RootScopeName {
 		t.Errorf("root scope name: want [root], got %s", report.ScopeTree.Name)
 	}
 
@@ -1169,6 +1169,89 @@ func TestPlugin_WriteHTMLBuffer(t *testing.T) {
 
 	if !strings.Contains(html, "db") {
 		t.Error("expected 'db' service name in HTML output")
+	}
+}
+
+func TestWriteHTML_EventsTabContent(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	var buf bytes.Buffer
+
+	err := p.WriteHTML(&buf)
+	if err != nil {
+		t.Fatalf("WriteHTML failed: %v", err)
+	}
+
+	html := buf.String()
+	htmlLower := strings.ToLower(html)
+
+	if !strings.Contains(html, "events-tbody") {
+		t.Error("expected events-tbody element in HTML")
+	}
+
+	if !strings.Contains(html, "allEvents") {
+		t.Error("expected allEvents JS variable in HTML")
+	}
+
+	if !strings.Contains(html, "report.events.map") {
+		t.Error("expected report.events.map in allEvents construction")
+	}
+
+	if !strings.Contains(html, "data-type=") {
+		t.Error("expected data-type attribute on event rows for filtering")
+	}
+
+	if !strings.Contains(htmlLower, "event-badge") {
+		t.Error("expected event-badge CSS class for event type badges")
+	}
+}
+
+func TestWriteHTML_AllFiveTabs(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	var buf bytes.Buffer
+
+	err := p.WriteHTML(&buf)
+	if err != nil {
+		t.Fatalf("WriteHTML failed: %v", err)
+	}
+
+	html := buf.String()
+
+	tabs := []string{"services", "scopes", "graph", "timeline", "events"}
+	for _, tab := range tabs {
+		id := "tab-" + tab
+		if !strings.Contains(html, id) {
+			t.Errorf("expected %s tab content div in HTML", id)
+		}
+	}
+
+	if !strings.Contains(html, "services-tbody") {
+		t.Error("expected services-tbody in services tab")
+	}
+
+	if !strings.Contains(html, "scope-tree") {
+		t.Error("expected scope-tree element in scopes tab")
+	}
+
+	if !strings.Contains(html, "graph-container") {
+		t.Error("expected graph-container in graph tab")
+	}
+
+	if !strings.Contains(html, "timeline-container") {
+		t.Error("expected timeline-container in timeline tab")
+	}
+
+	if !strings.Contains(html, "events-tbody") {
+		t.Error("expected events-tbody in events tab")
 	}
 }
 
@@ -1988,7 +2071,7 @@ func TestServiceRef_String(t *testing.T) {
 		want string
 	}{
 		{auditlog.ServiceRef{ScopeName: "api", ServiceName: "db"}, "api/db"},
-		{auditlog.ServiceRef{ScopeName: "[root]", ServiceName: "db"}, "db"},
+		{auditlog.ServiceRef{ScopeName: auditlog.RootScopeName, ServiceName: "db"}, "db"},
 		{auditlog.ServiceRef{ScopeName: "", ServiceName: "db"}, "db"},
 	}
 	for _, tc := range tests {
@@ -2580,7 +2663,7 @@ func TestServiceRef_IsRoot(t *testing.T) {
 		want bool
 	}{
 		{"empty scope", auditlog.ServiceRef{ScopeName: "", ServiceName: "db"}, true},
-		{"root scope", auditlog.ServiceRef{ScopeName: "[root]", ServiceName: "db"}, true},
+		{"root scope", auditlog.ServiceRef{ScopeName: auditlog.RootScopeName, ServiceName: "db"}, true},
 		{"child scope", auditlog.ServiceRef{ScopeName: "child", ServiceName: "db"}, false},
 	}
 
@@ -3011,6 +3094,113 @@ func TestReport_ResolveServiceScope_NotFound(t *testing.T) {
 	}
 }
 
+func TestResolveServiceScope_ParentScopeService(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "root-db", "root-dsn")
+	_ = do.MustInvokeNamed[*Database](injector, "root-db")
+
+	child := injector.Scope("child")
+
+	scopeID, scopeName, found := p.Events()[0].ScopeID, p.Events()[0].ScopeName, true
+	_ = scopeID
+	_ = scopeName
+	_ = found
+
+	results := p.RecordHealthCheck(child)
+	if len(results) == 0 {
+		t.Error("expected health check results when resolving root service via child scope")
+	}
+
+	report := p.Report()
+
+	rootSvc := report.ServiceByRef(injector.ID(), "root-db")
+	if rootSvc == nil {
+		t.Fatal("root-db should exist in report")
+	}
+
+	if rootSvc.HealthCheckCount == 0 {
+		t.Error("root-db should have health check count from child scope resolution")
+	}
+}
+
+func TestResolveServiceScope_GrandparentScopeService(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "grandparent-db", "gp-dsn")
+	_ = do.MustInvokeNamed[*Database](injector, "grandparent-db")
+
+	child := injector.Scope("child")
+	grandchild := child.Scope("grandchild")
+
+	results := p.RecordHealthCheck(grandchild)
+	if len(results) == 0 {
+		t.Error("expected health check results when resolving grandparent service via grandchild scope")
+	}
+
+	report := p.Report()
+
+	gpSvc := report.ServiceByRef(injector.ID(), "grandparent-db")
+	if gpSvc == nil {
+		t.Fatal("grandparent-db should exist in report")
+	}
+
+	if gpSvc.HealthCheckCount == 0 {
+		t.Error("grandparent-db should have health check from grandchild scope resolution")
+	}
+}
+
+func TestWriteMermaid_DuplicateEdges(t *testing.T) {
+	report := auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: "test",
+		ExportedAt:  time.Now(),
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceRef: auditlog.ServiceRef{
+					ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc-a",
+				},
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
+				Dependencies: []auditlog.ServiceRef{
+					{ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc-b"},
+					{ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc-b"},
+				},
+			},
+			{
+				ServiceRef: auditlog.ServiceRef{
+					ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc-b",
+				},
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+
+	err := report.WriteMermaid(&buf)
+	if err != nil {
+		t.Fatalf("WriteMermaid: %v", err)
+	}
+
+	output := buf.String()
+	lines := strings.Split(output, "\n")
+	edgeCount := 0
+
+	for _, line := range lines {
+		if strings.Contains(line, "root_svc_a --> root_svc_b") {
+			edgeCount++
+		}
+	}
+
+	if edgeCount != 1 {
+		t.Errorf("expected exactly 1 deduplicated edge, got %d", edgeCount)
+	}
+}
+
 func TestReport_AllHealthChecksPassed_AllHealthy(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
@@ -3305,6 +3495,56 @@ func TestMigrateReport_EmptyScopeTree(t *testing.T) {
 	}
 }
 
+func TestMigrateReport_AlreadyCurrentVersion(t *testing.T) {
+	input := `{"version":"0.2.0","container_id":"test","exported_at":"2026-01-01T00:00:00Z","event_count":5,"service_count":2}`
+
+	report, err := auditlog.MigrateReport([]byte(input))
+	if err != nil {
+		t.Fatalf("MigrateReport: %v", err)
+	}
+
+	if report.Version != "0.2.0" {
+		t.Errorf("version should remain 0.2.0, got %s", report.Version)
+	}
+
+	if report.ContainerID != "test" {
+		t.Errorf("container_id: want test, got %s", report.ContainerID)
+	}
+}
+
+func TestMigrateReport_PreservesExportedAt(t *testing.T) {
+	originalTime := "2026-01-15T12:30:00Z"
+	input := `{"version":"0.1.0","exported_at":"` + originalTime + `"}`
+
+	report, err := auditlog.MigrateReport([]byte(input))
+	if err != nil {
+		t.Fatalf("MigrateReport: %v", err)
+	}
+
+	if report.ExportedAt.Format("2006-01-02") != "2026-01-15" {
+		t.Errorf("ExportedAt should be preserved from original, got %v", report.ExportedAt)
+	}
+}
+
+func TestMigrateReport_EmptyInput(t *testing.T) {
+	_, err := auditlog.MigrateReport([]byte{})
+	if err == nil {
+		t.Error("expected error for empty input")
+	}
+
+	_, err = auditlog.MigrateReport(nil)
+	if err == nil {
+		t.Error("expected error for nil input")
+	}
+}
+
+func TestMigrateReport_MissingVersion(t *testing.T) {
+	_, err := auditlog.MigrateReport([]byte(`{"container_id":"test"}`))
+	if err == nil {
+		t.Error("expected error for input without version field")
+	}
+}
+
 func TestPlugin_ProvideEager(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
@@ -3334,7 +3574,7 @@ func TestWriteMermaid_ExternalDependency(t *testing.T) {
 			{
 				ServiceRef: auditlog.ServiceRef{
 					ScopeID:     "root",
-					ScopeName:   "[root]",
+					ScopeName:   auditlog.RootScopeName,
 					ServiceName: "my-service",
 				},
 				Status:       auditlog.ServiceStatusActive,
@@ -3342,7 +3582,7 @@ func TestWriteMermaid_ExternalDependency(t *testing.T) {
 				Dependencies: []auditlog.ServiceRef{
 					{
 						ScopeID:     "root",
-						ScopeName:   "[root]",
+						ScopeName:   auditlog.RootScopeName,
 						ServiceName: "external-dep",
 					},
 				},

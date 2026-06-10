@@ -142,3 +142,15 @@ func ExampleReport_WriteMermaid() {
 
 	// Output: has header: true
 }
+
+func Example_validate() {
+	cfg := auditlog.Config{ContainerID: "my-app"}
+	fmt.Println("valid:", cfg.Validate())
+
+	cfg = auditlog.Config{ContainerID: "my/app"}
+	fmt.Println("invalid:", cfg.Validate() != nil)
+
+	// Output:
+	// valid: <nil>
+	// invalid: true
+}
