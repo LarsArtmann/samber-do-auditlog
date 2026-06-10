@@ -151,7 +151,17 @@ func inferServiceType(scope *do.Scope, serviceName string) ProviderType {
 // by calling do.ExplainInjector on each stored scope reference. Must be called
 // outside the recorder mutex to avoid deadlocking with samber/do's internal locks.
 func enrichCapabilities(scopes map[string]scopeMeta, services []ServiceInfo) {
+	// Sort scope iteration for deterministic output across runs.
+	sorted := make([]scopeMeta, 0, len(scopes))
 	for _, meta := range scopes {
+		sorted = append(sorted, meta)
+	}
+
+	slices.SortFunc(sorted, func(a, b scopeMeta) int {
+		return cmp.Compare(a.id, b.id)
+	})
+
+	for _, meta := range sorted {
 		if meta.ref == nil {
 			continue
 		}
