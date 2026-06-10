@@ -77,7 +77,7 @@ Requires Go 1.26+ and samber/do v2.
 package main
 
 import (
-    "log"
+    "os"
 
     "github.com/larsartmann/samber-do-auditlog"
     "github.com/samber/do/v2"
@@ -108,7 +108,7 @@ func main() {
     // 5. Filtered export — only lazy services in a specific scope
     plugin.ExportFilteredToFile("lazy.json",
         auditlog.WithServicesByType(auditlog.ProviderTypeLazy),
-        auditlog.WithScope(scopeID),
+        auditlog.WithScope("drivers"),
     )
 
     // 6. Mermaid dependency graph
@@ -125,7 +125,7 @@ Full snapshot: event timeline, service summaries, scope tree.
 
 ```json
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "container_id": "my-app",
   "exported_at": "2026-06-09T22:18:00Z",
   "service_count": 3,
@@ -233,6 +233,38 @@ plugin.ExportFilteredToFile("filtered.json",
 | `WithTimeRange(from, to)`      | Event timestamp range                                         |
 | `WithScope(scopeID)`           | Scope ID                                                      |
 
+## Health Checks
+
+samber/do v2 does not expose health-check hooks. do-auditlog wraps `injector.HealthCheckWithContext()` to record `EventTypeHealthCheck` events per service.
+
+```go
+err := plugin.RecordHealthCheckWithContext(ctx, injector)
+report := plugin.Report()
+if !report.HealthCheckSucceeded {
+    for _, svc := range report.UnhealthyServices() {
+        log.Printf("unhealthy: %s — %s", svc.ServiceName, *svc.HealthCheckError)
+    }
+}
+```
+
+Health check events are `PhaseAfter` only (there is no before-hook). Per-service timing is unavailable from the bulk API, so `DurationMs` is `nil` for health check events.
+
+## Real-Time Event Streaming
+
+Provide an `OnEvent` callback to react to events as they happen — no polling required.
+
+```go
+plugin := auditlog.New(auditlog.Config{
+    Enabled: true,
+    OnEvent: func(ev auditlog.Event) {
+        // Stream to Prometheus, OTel, a live dashboard, or custom tooling
+        log.Printf("event %d: %s %s", ev.Sequence, ev.EventType, ev.ServiceName)
+    },
+})
+```
+
+The callback is called **outside the mutex** on every event. Keep it fast — do not block the hot path.
+
 ## API Reference
 
 ### Plugin
@@ -254,6 +286,12 @@ plugin.ExportFilteredToFile("filtered.json",
 | `ExportEventsToNDJSON(path) error`            | NDJSON events to file.                                    |
 | `ExportToHTML(path) error`                    | HTML visualization to file.                               |
 | `ExportFilteredToFile(path, opts...) error`   | Filtered JSON report to file.                             |
+
+**Package-level**
+
+| Function | Description |
+| -------- | ----------- |
+| `MigrateReport(data []byte) ([]byte, error)` | Upgrade a v0.1.0 JSON report to the current schema. |
 
 ### Report
 
@@ -353,6 +391,8 @@ Report
     ├── services[]             string
     └── children[]             ScopeNode (recursive)
 ```
+
+> **Schema migration**: Reports exported with v0.1.0 can be upgraded to the current schema with `auditlog.MigrateReport(oldJSONBytes)`.
 
 ## License
 

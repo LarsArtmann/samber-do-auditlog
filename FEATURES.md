@@ -65,7 +65,7 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 | **Type helpers**                      | `ProviderType.IsKnown()`, `ServiceRef.IsRoot()`, `Event.HasError()`, `ServiceInfo.HasHealthError()`                   | ✓ `types.go`                                                      |
 | **EventsByRef**                       | Scoped event lookup by scope ID + service name                                                                        | ✓ `types.go:EventsByRef`                                          |
 | **Schema migration**                  | `MigrateReport([]byte)` upgrades v0.1.0 JSON → current schema, recomputes derived fields                              | ✓ `migration.go`                                                  |
-| **Godoc examples**                    | 6 runnable `Example*` functions for pkg.go.dev (New, Report, ExportToFile, Filtered, RecordHealthCheck, WriteMermaid) | ✓ `example_test.go`                                               |
+| **Godoc examples**                    | 7 runnable `Example*` functions for pkg.go.dev (New, Report, ExportToFile, Filtered, RecordHealthCheck, WriteMermaid, Validate) | ✓ `example_test.go`                                               |
 | **HTML fuzz test**                    | `FuzzPluginHTML` verifies templ XSS escaping with malicious service names                                             | ✓ `fuzz_test.go`                                                  |
 | **Iterative buildCapabilityMap**      | BFS queue replaces recursive `maps.Copy` for capability map construction                                              | ✓ `recorder.go:buildCapabilityMap`                                |
 | **Single-lock Recorder**              | 4 mutexes → 1 RWMutex + 2 atomics: 23% faster, 50% fewer allocs                                                       | ✓ `recorder.go:Recorder`                                          |
@@ -78,7 +78,6 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 | **writeToFile error handling**        | Close errors properly returned instead of silently discarded                                                          | ✓ `plugin.go:writeToFile`                                         |
 | **RootScopeName constant**            | `"[root]"` magic string replaced with named constant across production code                                          | ✓ `types.go:RootScopeName`                                        |
 | **Expanded godoc**                    | All exported methods documented: `Event.Is*`, `ServiceRef.String()`                                                   | ✓ `types.go`                                                      |
-| **Godoc examples (7)**                | Runnable `Example*` functions for pkg.go.dev                                                                         | ✓ `example_test.go`                                               |
 
 ---
 

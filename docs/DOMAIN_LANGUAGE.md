@@ -23,6 +23,10 @@ Every term below should mean the **same thing** to everyone who reads it.
 | Dependency     | A service that another service needs to function                      | A→B relationship             |
 | Dependent      | A service that depends on another service                             | Reverse of dependency        |
 | Scope Tree     | The hierarchical structure of scopes in the container                 | Visualization concept        |
+| Health Check   | A diagnostic check that verifies a service is operational             | Service lifecycle phase      |
+| Provider Type  | How a service was registered: lazy, eager, transient, or alias        | Service metadata             |
+| Service Status | Computed lifecycle state: registered, active, invocation_error, etc.  | Service metadata             |
+| Capability     | Whether a service implements Healthchecker or Shutdowner interfaces   | Service metadata             |
 | Report         | A consolidated snapshot of all captured events and service metadata   | Export output                |
 | Schema Version | The version of the report data format                                 | Forward compatibility        |
 
@@ -43,7 +47,8 @@ Every term below should mean the **same thing** to everyone who reads it.
 | Config        | Plugin configuration: Enabled flag, ContainerID          | Input to `New()`       |
 | EventType     | Enum: registration, invocation, shutdown                 | Event categorization   |
 | Phase         | Enum: before, after                                      | Event timing           |
-| DependencyRef | A lightweight reference to a service in a specific scope | Dependency graph edges |
+| ServiceRef    | A lightweight reference to a service in a specific scope | Dependency graph edges |
+| ReportOption  | A functional option for filtering reports                | Filter input           |
 | Report        | A complete, self-contained snapshot of all audit data    | Export payload         |
 
 ## Events
@@ -53,6 +58,7 @@ Every term below should mean the **same thing** to everyone who reads it.
 | Registration Event | Fired when a service provider is registered to the container | Before and after                    |
 | Invocation Event   | Fired when a service is resolved/created                     | Before and after, includes duration |
 | Shutdown Event     | Fired when a service is cleaned up during container shutdown | Before and after, includes duration |
+| Health Check Event | Fired after a health check is performed on a service         | After only, no duration             |
 
 ## Commands
 
@@ -64,6 +70,12 @@ Every term below should mean the **same thing** to everyone who reads it.
 | ExportToFile         | Write JSON report to a file path                       | Export command      |
 | ExportEventsToNDJSON | Write NDJSON event stream to a file path               | Export command      |
 | ExportToHTML         | Write self-contained HTML visualization to a file path | Export command      |
+| RecordHealthCheck    | Wrap injector health check with audit events           | Health command      |
+| RecordHealthCheckWithContext | Same as RecordHealthCheck with context support   | Health command      |
+| MigrateReport        | Upgrade a v0.1.0 JSON report to the current schema     | Migration command   |
+| WriteMermaid         | Export dependency graph as Mermaid flowchart           | Export command      |
+| Filtered             | Apply functional filter options to a Report            | Query command       |
+| ExportFilteredToFile | Write a filtered JSON report to a file path              | Export command      |
 
 ## Bounded Contexts
 
