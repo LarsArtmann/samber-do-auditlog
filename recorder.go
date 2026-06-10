@@ -160,13 +160,17 @@ func enrichCapabilities(scopes map[string]scopeMeta, services []ServiceInfo) {
 
 func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[string][2]bool {
 	result := make(map[string][2]bool)
+	queue := scopes
 
-	for _, s := range scopes {
-		for _, svc := range s.Services {
+	for len(queue) > 0 {
+		scope := queue[0]
+		queue = queue[1:]
+
+		for _, svc := range scope.Services {
 			result[svc.ServiceName] = [2]bool{svc.IsHealthchecker, svc.IsShutdowner}
 		}
 
-		maps.Copy(result, buildCapabilityMap(s.Children))
+		queue = append(queue, scope.Children...)
 	}
 
 	return result

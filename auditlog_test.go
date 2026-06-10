@@ -3029,3 +3029,151 @@ func TestReport_ServicesByScope_EmptyScope(t *testing.T) {
 		t.Errorf("expected 0 services for nonexistent scope, got %d", len(noServices))
 	}
 }
+
+func TestMigrateReport_FromV01(t *testing.T) {
+	v01JSON := `{
+		"version": "0.1.0",
+		"container_id": "test-app",
+		"exported_at": "2026-01-01T00:00:00Z",
+		"service_count": 2,
+		"event_count": 4,
+		"services": [
+			{
+				"service_name": "*main.DB",
+				"scope_id": "root-1",
+				"scope_name": "[root]",
+				"registered_at": "2026-01-01T00:00:01Z",
+				"invocation_count": 1,
+				"invocation_order": 1,
+				"first_build_duration_ms": 5.2,
+				"dependencies": [],
+				"dependents": [{"scope_id":"root-1","scope_name":"[root]","service_name":"*main.Server"}]
+			},
+			{
+				"service_name": "*main.Server",
+				"scope_id": "root-1",
+				"scope_name": "[root]",
+				"registered_at": "2026-01-01T00:00:02Z",
+				"invocation_count": 1,
+				"invocation_order": 2,
+				"first_build_duration_ms": 12.5,
+				"dependencies": [{"scope_id":"root-1","scope_name":"[root]","service_name":"*main.DB"}],
+				"dependents": []
+			}
+		],
+		"events": [
+			{"sequence":1,"timestamp":"2026-01-01T00:00:01Z","event_type":"registration","phase":"before","container_id":"test-app","scope_id":"root-1","scope_name":"[root]","service_name":"*main.DB"},
+			{"sequence":2,"timestamp":"2026-01-01T00:00:01Z","event_type":"registration","phase":"after","container_id":"test-app","scope_id":"root-1","scope_name":"[root]","service_name":"*main.DB"},
+			{"sequence":3,"timestamp":"2026-01-01T00:00:02Z","event_type":"invocation","phase":"before","container_id":"test-app","scope_id":"root-1","scope_name":"[root]","service_name":"*main.DB"},
+			{"sequence":4,"timestamp":"2026-01-01T00:00:02Z","event_type":"invocation","phase":"after","container_id":"test-app","scope_id":"root-1","scope_name":"[root]","duration_ms":5.2,"service_name":"*main.DB"}
+		],
+		"scope_tree": {
+			"id": "root-1",
+			"name": "[root]",
+			"services": ["*main.DB", "*main.Server"],
+			"children": []
+		}
+	}`
+
+	report, err := auditlog.MigrateReport([]byte(v01JSON))
+	if err != nil {
+		t.Fatalf("MigrateReport: %v", err)
+	}
+
+	if report.Version != auditlog.SchemaVersion {
+		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, report.Version)
+	}
+
+	if report.ContainerID != "test-app" {
+		t.Errorf("container_id: want test-app, got %s", report.ContainerID)
+	}
+
+	if report.ServiceCount != 2 {
+		t.Errorf("service_count: want 2, got %d", report.ServiceCount)
+	}
+
+	if report.EventCount != 4 {
+		t.Errorf("event_count: want 4, got %d", report.EventCount)
+	}
+
+	if report.ScopeCount != 1 {
+		t.Errorf("scope_count: want 1, got %d", report.ScopeCount)
+	}
+
+	if report.TotalBuildDurationMs != 17.7 {
+		t.Errorf("total_build_duration_ms: want 17.7, got %f", report.TotalBuildDurationMs)
+	}
+
+	if !report.ShutdownSucceeded {
+		t.Error("shutdown_succeeded: want true (no shutdown errors)")
+	}
+
+	if report.HealthCheckSucceeded {
+		t.Error("health_check_succeeded: want false (no health checks ran)")
+	}
+
+	for _, svc := range report.Services {
+		if svc.Status == "" {
+			t.Errorf("service %s has empty status", svc.ServiceName)
+		}
+	}
+}
+
+func TestMigrateReport_InvalidJSON(t *testing.T) {
+	_, err := auditlog.MigrateReport([]byte("not json"))
+	if err == nil {
+		t.Error("expected error for invalid JSON")
+	}
+}
+
+func TestMigrateReport_EmptyReport(t *testing.T) {
+	report, err := auditlog.MigrateReport([]byte(`{"version":"0.1.0"}`))
+	if err != nil {
+		t.Fatalf("MigrateReport: %v", err)
+	}
+
+	if report.Version != auditlog.SchemaVersion {
+		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, report.Version)
+	}
+
+	if report.ServiceCount != 0 {
+		t.Errorf("service_count: want 0, got %d", report.ServiceCount)
+	}
+}
+
+func TestMigrateReport_RoundTrip(t *testing.T) {
+	plugin := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(plugin.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	original := plugin.Report()
+
+	var buf bytes.Buffer
+
+	enc := json.NewEncoder(&buf)
+	enc.SetIndent("", "  ")
+
+	err := enc.Encode(original)
+	if err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+
+	migrated, err := auditlog.MigrateReport(buf.Bytes())
+	if err != nil {
+		t.Fatalf("MigrateReport: %v", err)
+	}
+
+	if migrated.Version != auditlog.SchemaVersion {
+		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, migrated.Version)
+	}
+
+	if migrated.ServiceCount != original.ServiceCount {
+		t.Errorf("service_count: want %d, got %d", original.ServiceCount, migrated.ServiceCount)
+	}
+
+	if migrated.EventCount != original.EventCount {
+		t.Errorf("event_count: want %d, got %d", original.EventCount, migrated.EventCount)
+	}
+}
