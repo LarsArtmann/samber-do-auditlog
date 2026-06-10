@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -2263,7 +2264,7 @@ func BenchmarkBuildReport(b *testing.B) {
 
 	b.ResetTimer()
 
-	for range b.N {
+	for b.Loop() {
 		_ = p.Report()
 	}
 }
@@ -2282,8 +2283,134 @@ func BenchmarkEnrichCapabilities(b *testing.B) {
 
 	b.ResetTimer()
 
-	for range b.N {
+	for b.Loop() {
 		_ = p.Report()
+	}
+}
+
+func BenchmarkHookOnAfterInvocation(b *testing.B) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		_, _ = do.InvokeNamed[*Database](injector, "db")
+	}
+}
+
+func BenchmarkHookRegistrationOnly(b *testing.B) {
+	b.ResetTimer()
+
+	for b.Loop() {
+		p := auditlog.New(auditlog.Config{Enabled: true})
+		injector := do.NewWithOpts(p.Opts())
+		do.ProvideValue(injector, &Database{URL: "test"})
+	}
+}
+
+func BenchmarkConcurrentInvocation(b *testing.B) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, _ = do.InvokeNamed[*Database](injector, "db")
+		}
+	})
+}
+
+func BenchmarkBuildReport_100Services(b *testing.B) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	for i := range 100 {
+		name := "svc-" + strconv.Itoa(i)
+		provideDB(injector, name, "test")
+		_ = do.MustInvokeNamed[*Database](injector, name)
+	}
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		_ = p.Report()
+	}
+}
+
+func BenchmarkBuildReport_500Services(b *testing.B) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	for i := range 500 {
+		name := "svc-" + strconv.Itoa(i)
+		provideDB(injector, name, "test")
+		_ = do.MustInvokeNamed[*Database](injector, name)
+	}
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		_ = p.Report()
+	}
+}
+
+func BenchmarkEventsCopy(b *testing.B) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	for i := range 50 {
+		name := "svc-" + strconv.Itoa(i)
+		provideDB(injector, name, "test")
+		_ = do.MustInvokeNamed[*Database](injector, name)
+	}
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		_ = p.Events()
+	}
+}
+
+func BenchmarkOnEventCallback(b *testing.B) {
+	var called atomic.Int64
+
+	p := auditlog.New(auditlog.Config{
+		Enabled: true,
+		OnEvent: func(_ auditlog.Event) { called.Add(1) },
+	})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		_, _ = do.InvokeNamed[*Database](injector, "db")
+	}
+}
+
+func BenchmarkHealthCheck(b *testing.B) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	for i := range 10 {
+		name := "healthy-" + strconv.Itoa(i)
+		provideHealthyDB(injector, name, "test")
+		_ = do.MustInvokeNamed[*HealthyDB](injector, name)
+	}
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		_ = p.RecordHealthCheck(injector)
 	}
 }
 
@@ -2500,5 +2627,252 @@ func TestServiceInfo_HasHealthError(t *testing.T) {
 
 	if !badSvc.HasHealthError() {
 		t.Error("unhealthy service should have health error")
+	}
+}
+
+func TestReport_FilteredByName(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	provideCache(injector, "cache")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvokeNamed[*Cache](injector, "cache")
+
+	filtered := p.Report().Filtered(auditlog.WithServicesByName("db"))
+
+	if len(filtered.Services) != 1 {
+		t.Fatalf("expected 1 service, got %d", len(filtered.Services))
+	}
+
+	if filtered.Services[0].ServiceName != "db" {
+		t.Errorf("service name: want db, got %s", filtered.Services[0].ServiceName)
+	}
+}
+
+func TestReport_FilteredByType(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	do.ProvideValue(injector, &Cache{})
+
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvoke[*Cache](injector)
+
+	filtered := p.Report().Filtered(auditlog.WithServicesByType(auditlog.ProviderTypeEager))
+
+	for _, svc := range filtered.Services {
+		if svc.ServiceType != auditlog.ProviderTypeEager {
+			t.Errorf("expected eager, got %s for %s", svc.ServiceType, svc.ServiceName)
+		}
+	}
+}
+
+func TestReport_FilteredByEventType(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	filtered := p.Report().Filtered(auditlog.WithEventsByType(auditlog.EventTypeInvocation))
+
+	for _, evt := range filtered.Events {
+		if evt.EventType != auditlog.EventTypeInvocation {
+			t.Errorf("expected invocation, got %s", evt.EventType)
+		}
+	}
+}
+
+func TestReport_FilteredByTimeRange(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+
+	from := report.Events[0].Timestamp.Add(-1 * time.Hour)
+	to := report.Events[0].Timestamp.Add(1 * time.Hour)
+
+	filtered := report.Filtered(auditlog.WithTimeRange(from, to))
+	if filtered.EventCount == 0 {
+		t.Error("expected events in time range")
+	}
+
+	filteredEmpty := report.Filtered(auditlog.WithTimeRange(
+		time.Now().Add(100*time.Hour),
+		time.Now().Add(200*time.Hour),
+	))
+	if filteredEmpty.EventCount != 0 {
+		t.Error("expected no events outside time range")
+	}
+}
+
+func TestReport_FilteredByScope(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	child := injector.Scope("child")
+
+	provideDB(injector, "root-svc", "test")
+	do.ProvideNamed(child, "child-svc", func(_ do.Injector) (*Database, error) {
+		return &Database{URL: "child"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*Database](injector, "root-svc")
+	_ = do.MustInvokeNamed[*Database](child, "child-svc")
+
+	filtered := p.Report().Filtered(auditlog.WithScope(child.ID()))
+	if len(filtered.Services) != 1 {
+		t.Fatalf("expected 1 child service, got %d", len(filtered.Services))
+	}
+
+	if filtered.Services[0].ServiceName != "child-svc" {
+		t.Errorf("service: want child-svc, got %s", filtered.Services[0].ServiceName)
+	}
+}
+
+func TestReport_FilteredCombined(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	provideCache(injector, "cache")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvokeNamed[*Cache](injector, "cache")
+
+	filtered := p.Report().Filtered(
+		auditlog.WithServicesByName("db"),
+		auditlog.WithEventsByType(auditlog.EventTypeInvocation),
+	)
+
+	if len(filtered.Services) != 1 {
+		t.Fatalf("expected 1 service, got %d", len(filtered.Services))
+	}
+
+	if filtered.Services[0].ServiceName != "db" {
+		t.Errorf("service name: want db, got %s", filtered.Services[0].ServiceName)
+	}
+
+	for _, evt := range filtered.Events {
+		if evt.EventType != auditlog.EventTypeInvocation {
+			t.Errorf("expected invocation, got %s", evt.EventType)
+		}
+	}
+}
+
+func TestPlugin_ReportFiltered(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	provideCache(injector, "cache")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvokeNamed[*Cache](injector, "cache")
+
+	filtered := p.ReportFiltered(auditlog.WithServicesByName("db"))
+
+	if len(filtered.Services) != 1 {
+		t.Fatalf("expected 1 service, got %d", len(filtered.Services))
+	}
+}
+
+func TestPlugin_ExportFilteredToFile(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	provideCache(injector, "cache")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvokeNamed[*Cache](injector, "cache")
+
+	dir := t.TempDir()
+	path := dir + "/filtered.json"
+
+	err := p.ExportFilteredToFile(path, auditlog.WithServicesByName("db"))
+	if err != nil {
+		t.Fatalf("ExportFilteredToFile: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile: %v", err)
+	}
+
+	var report map[string]any
+	if err := json.Unmarshal(data, &report); err != nil {
+		t.Fatalf("Unmarshal: %v", err)
+	}
+
+	services, ok := report["services"].([]any)
+	if !ok {
+		t.Fatal("services should be an array")
+	}
+
+	if len(services) != 1 {
+		t.Errorf("expected 1 service in file, got %d", len(services))
+	}
+}
+
+func TestReport_WriteMermaid(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+
+	do.ProvideNamed(injector, "user-svc", func(i do.Injector) (*UserService, error) {
+		db := do.MustInvokeNamed[*Database](i, "db")
+
+		return &UserService{DB: db}, nil
+	})
+
+	_ = do.MustInvokeNamed[*UserService](injector, "user-svc")
+
+	report := p.Report()
+
+	var buf bytes.Buffer
+
+	err := report.WriteMermaid(&buf)
+	if err != nil {
+		t.Fatalf("WriteMermaid: %v", err)
+	}
+
+	output := buf.String()
+
+	if !strings.Contains(output, "flowchart TD") {
+		t.Error("expected flowchart TD header")
+	}
+
+	if !strings.Contains(output, "-->") {
+		t.Error("expected dependency edge -->")
+	}
+}
+
+func TestReport_EventsByRef(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+
+	events := report.EventsByRef(injector.ID(), "db")
+	if len(events) == 0 {
+		t.Error("expected events for db in root scope")
+	}
+
+	for _, evt := range events {
+		if evt.ServiceName != "db" {
+			t.Errorf("expected db, got %s", evt.ServiceName)
+		}
+	}
+
+	noEvents := report.EventsByRef("nonexistent", "db")
+	if len(noEvents) != 0 {
+		t.Error("expected no events for nonexistent scope")
 	}
 }

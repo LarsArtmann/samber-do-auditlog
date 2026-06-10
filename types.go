@@ -282,3 +282,186 @@ func (r Report) UnhealthyServices() []ServiceInfo {
 
 	return unhealthy
 }
+
+// reportFilter holds parsed filter criteria for Report.Filtered.
+type reportFilter struct {
+	serviceNames map[string]struct{}
+	serviceTypes map[ProviderType]struct{}
+	eventTypes   map[EventType]struct{}
+	scopeIDs     map[string]struct{}
+	timeFrom     *time.Time
+	timeTo       *time.Time
+}
+
+// ReportOption is a functional option for filtering a Report.
+type ReportOption func(*reportFilter)
+
+// WithServicesByName filters the report to only include services with the given names.
+func WithServicesByName(names ...string) ReportOption {
+	return func(filter *reportFilter) {
+		if filter.serviceNames == nil {
+			filter.serviceNames = make(map[string]struct{}, len(names))
+		}
+
+		for _, name := range names {
+			filter.serviceNames[name] = struct{}{}
+		}
+	}
+}
+
+// WithServicesByType filters the report to only include services with the given provider type.
+func WithServicesByType(providerType ProviderType) ReportOption {
+	return func(filter *reportFilter) {
+		if filter.serviceTypes == nil {
+			filter.serviceTypes = make(map[ProviderType]struct{})
+		}
+
+		filter.serviceTypes[providerType] = struct{}{}
+	}
+}
+
+// WithEventsByType filters the report to only include events with the given event type.
+func WithEventsByType(eventType EventType) ReportOption {
+	return func(filter *reportFilter) {
+		if filter.eventTypes == nil {
+			filter.eventTypes = make(map[EventType]struct{})
+		}
+
+		filter.eventTypes[eventType] = struct{}{}
+	}
+}
+
+// WithTimeRange filters the report to only include events within the given time range.
+func WithTimeRange(from, to time.Time) ReportOption {
+	return func(filter *reportFilter) {
+		filter.timeFrom = &from
+		filter.timeTo = &to
+	}
+}
+
+// WithScope filters the report to only include services and events in the given scope.
+func WithScope(scopeID string) ReportOption {
+	return func(filter *reportFilter) {
+		if filter.scopeIDs == nil {
+			filter.scopeIDs = make(map[string]struct{})
+		}
+
+		filter.scopeIDs[scopeID] = struct{}{}
+	}
+}
+
+func newReportFilter(opts ...ReportOption) *reportFilter {
+	filter := &reportFilter{
+		serviceNames: nil,
+		serviceTypes: nil,
+		eventTypes:   nil,
+		scopeIDs:     nil,
+		timeFrom:     nil,
+		timeTo:       nil,
+	}
+
+	for _, opt := range opts {
+		opt(filter)
+	}
+
+	return filter
+}
+
+func (filter *reportFilter) matchService(svc ServiceInfo) bool {
+	if len(filter.serviceNames) > 0 {
+		if _, ok := filter.serviceNames[svc.ServiceName]; !ok {
+			return false
+		}
+	}
+
+	if len(filter.serviceTypes) > 0 {
+		if _, ok := filter.serviceTypes[svc.ServiceType]; !ok {
+			return false
+		}
+	}
+
+	if len(filter.scopeIDs) > 0 {
+		if _, ok := filter.scopeIDs[svc.ScopeID]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (filter *reportFilter) matchEvent(evt Event) bool {
+	if len(filter.eventTypes) > 0 {
+		if _, ok := filter.eventTypes[evt.EventType]; !ok {
+			return false
+		}
+	}
+
+	if len(filter.scopeIDs) > 0 {
+		if _, ok := filter.scopeIDs[evt.ScopeID]; !ok {
+			return false
+		}
+	}
+
+	if filter.timeFrom != nil && evt.Timestamp.Before(*filter.timeFrom) {
+		return false
+	}
+
+	if filter.timeTo != nil && evt.Timestamp.After(*filter.timeTo) {
+		return false
+	}
+
+	return true
+}
+
+// Filtered returns a new Report with the given filters applied.
+// Services and events that don't match any filter are removed.
+// Summary fields (counts, durations) are recomputed from the filtered data.
+func (r Report) Filtered(opts ...ReportOption) Report {
+	filter := newReportFilter(opts...)
+
+	filteredServices := make([]ServiceInfo, 0, len(r.Services))
+
+	for _, svc := range r.Services {
+		if filter.matchService(svc) {
+			filteredServices = append(filteredServices, svc)
+		}
+	}
+
+	filteredEvents := make([]Event, 0, len(r.Events))
+
+	for _, evt := range r.Events {
+		if filter.matchEvent(evt) {
+			filteredEvents = append(filteredEvents, evt)
+		}
+	}
+
+	return Report{
+		Version:                 r.Version,
+		ContainerID:             r.ContainerID,
+		ExportedAt:              r.ExportedAt,
+		EventCount:              len(filteredEvents),
+		ServiceCount:            len(filteredServices),
+		ScopeCount:              r.ScopeCount,
+		TotalBuildDurationMs:    sumBuildMs(filteredServices),
+		TotalShutdownDurationMs: sumShutdownMs(filteredServices),
+		ShutdownSucceeded:       noShutdownErrors(filteredServices),
+		HealthCheckSucceeded:    allHealthChecksPassed(filteredServices),
+		HealthCheckedCount:      countHealthChecked(filteredServices),
+		Events:                  filteredEvents,
+		Services:                filteredServices,
+		ScopeTree:               r.ScopeTree,
+	}
+}
+
+// EventsByRef returns all events for the given scope ID and service name.
+func (r Report) EventsByRef(scopeID, serviceName string) []Event {
+	var result []Event
+
+	for _, e := range r.Events {
+		if e.ScopeID == scopeID && e.ServiceName == serviceName {
+			result = append(result, e)
+		}
+	}
+
+	return result
+}

@@ -95,6 +95,11 @@ func (p *Plugin) Report() Report {
 	return p.recorder.BuildReport()
 }
 
+// ReportFiltered returns a filtered Report with the given options applied.
+func (p *Plugin) ReportFiltered(opts ...ReportOption) Report {
+	return p.Report().Filtered(opts...)
+}
+
 // WriteReportJSON writes the full Report as indented JSON to writer.
 func (p *Plugin) WriteReportJSON(writer io.Writer) error {
 	report := p.Report()
@@ -132,6 +137,23 @@ func (p *Plugin) ExportToFile(path string) error {
 // ExportEventsToNDJSON writes every captured event as a line-delimited JSON stream to path.
 func (p *Plugin) ExportEventsToNDJSON(path string) error {
 	return writeToFile(path, p.WriteEventsNDJSON)
+}
+
+// ExportFilteredToFile writes a filtered Report as indented JSON to path.
+func (p *Plugin) ExportFilteredToFile(path string, opts ...ReportOption) error {
+	filtered := p.ReportFiltered(opts...)
+
+	return writeToFile(path, func(w io.Writer) error {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+
+		err := enc.Encode(filtered)
+		if err != nil {
+			return fmt.Errorf("encode filtered report: %w", err)
+		}
+
+		return nil
+	})
 }
 
 // Events returns a defensive copy of all captured events.
