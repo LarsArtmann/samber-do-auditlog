@@ -677,13 +677,19 @@ func countHealthChecked(services []ServiceInfo) int {
 }
 
 func allHealthChecksPassed(services []ServiceInfo) bool {
+	checked := 0
+
 	for _, s := range services {
-		if s.HealthCheckCount > 0 && s.HealthCheckError != nil {
-			return false
+		if s.HealthCheckCount > 0 {
+			checked++
+
+			if s.HealthCheckError != nil {
+				return false
+			}
 		}
 	}
 
-	return true
+	return checked > 0
 }
 
 // RecordHealthCheck records a single health check result for a service.

@@ -1550,3 +1550,23 @@ func TestPlugin_HealthCheckReportSucceeded(t *testing.T) {
 		t.Errorf("unhealthy service: want cache, got %s", unhealthy[0].ServiceName)
 	}
 }
+
+func TestPlugin_HealthCheckSucceededFalseWhenNoChecks(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "test"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+	if report.HealthCheckSucceeded {
+		t.Error("HealthCheckSucceeded should be false when no health checks have been recorded")
+	}
+
+	if report.HealthCheckedCount != 0 {
+		t.Errorf("HealthCheckedCount: want 0, got %d", report.HealthCheckedCount)
+	}
+}
