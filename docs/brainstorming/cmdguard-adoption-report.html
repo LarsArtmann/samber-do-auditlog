@@ -1,0 +1,1445 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>cmdguard Adoption Report — samber-do-auditlog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,200..900;1,9..40,200..900&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-primary: #0a0a0b;
+        --bg-secondary: #111113;
+        --bg-card: #161618;
+        --bg-card-hover: #1c1c1f;
+        --bg-elevated: #1e1e21;
+        --border-subtle: #2a2a2e;
+        --border-medium: #3a3a3f;
+        --text-primary: #ececef;
+        --text-secondary: #9898a0;
+        --text-muted: #65656e;
+        --accent-pro: #34d399;
+        --accent-pro-dim: #065f46;
+        --accent-pro-bg: rgba(52, 211, 153, 0.06);
+        --accent-con: #f87171;
+        --accent-con-dim: #7f1d1d;
+        --accent-con-bg: rgba(248, 113, 113, 0.06);
+        --accent-neutral: #60a5fa;
+        --accent-neutral-dim: #1e3a5f;
+        --accent-neutral-bg: rgba(96, 165, 250, 0.06);
+        --accent-verdict: #f59e0b;
+        --accent-verdict-bg: rgba(245, 158, 11, 0.08);
+        --accent-verdict-border: rgba(245, 158, 11, 0.3);
+        --accent-verdict-glow: rgba(245, 158, 11, 0.15);
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --radius-lg: 16px;
+        --radius-xl: 24px;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+        --font-display: "Instrument Serif", Georgia, serif;
+        --font-body: "DM Sans", system-ui, sans-serif;
+        --font-mono: "JetBrains Mono", "Fira Code", monospace;
+      }
+
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body {
+        font-family: var(--font-body);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.65;
+        min-height: 100vh;
+      }
+
+      .noise-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.025;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        background-repeat: repeat;
+        background-size: 256px;
+      }
+
+      .page-wrapper {
+        position: relative;
+        z-index: 1;
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* ---- HERO ---- */
+      .hero {
+        padding: 80px 0 60px;
+        text-align: center;
+        position: relative;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border-medium), transparent);
+      }
+
+      .hero-eyebrow {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 24px;
+      }
+
+      .hero-title {
+        font-family: var(--font-display);
+        font-size: clamp(2.4rem, 5vw, 3.6rem);
+        font-weight: 400;
+        line-height: 1.15;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+      }
+
+      .hero-title em {
+        font-style: italic;
+        color: var(--accent-verdict);
+      }
+
+      .hero-sub {
+        font-size: 1.05rem;
+        color: var(--text-secondary);
+        max-width: 560px;
+        margin: 0 auto;
+        line-height: 1.7;
+      }
+
+      .hero-meta {
+        display: flex;
+        justify-content: center;
+        gap: 32px;
+        margin-top: 32px;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        letter-spacing: 0.02em;
+      }
+
+      .hero-meta span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .hero-meta .dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--border-medium);
+      }
+
+      /* ---- SECTIONS ---- */
+      .section {
+        padding: 48px 0;
+      }
+
+      .section-label {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+      }
+
+      .section-title {
+        font-family: var(--font-display);
+        font-size: 1.7rem;
+        font-weight: 400;
+        margin-bottom: 24px;
+        line-height: 1.3;
+      }
+
+      .section-body {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        line-height: 1.75;
+      }
+
+      .section-body p + p {
+        margin-top: 14px;
+      }
+
+      /* ---- PROJECT CARDS ---- */
+      .project-pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .project-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 28px 24px;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+      }
+
+      .project-card:hover {
+        border-color: var(--border-medium);
+        background: var(--bg-card-hover);
+      }
+
+      .project-card-name {
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+
+      .project-card-name.cmdguard {
+        color: var(--accent-neutral);
+      }
+
+      .project-card-name.auditlog {
+        color: var(--accent-verdict);
+      }
+
+      .project-card-tagline {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+        line-height: 1.5;
+      }
+
+      .project-card-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.78rem;
+      }
+
+      .stat-label {
+        color: var(--text-muted);
+      }
+
+      .stat-value {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--text-primary);
+        background: var(--bg-elevated);
+        padding: 2px 8px;
+        border-radius: var(--radius-sm);
+      }
+
+      /* ---- SCORE CARDS ---- */
+      .score-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        margin: 28px 0;
+      }
+
+      .score-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 20px 16px;
+        text-align: center;
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+      }
+
+      .score-card:hover {
+        border-color: var(--border-medium);
+        transform: translateY(-2px);
+      }
+
+      .score-card-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 10px;
+        font-weight: 500;
+      }
+
+      .score-card-value {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        line-height: 1;
+        margin-bottom: 6px;
+      }
+
+      .score-card-bar {
+        height: 3px;
+        border-radius: 2px;
+        background: var(--bg-elevated);
+        margin-top: 10px;
+        overflow: hidden;
+      }
+
+      .score-card-fill {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .score-low {
+        color: var(--accent-con);
+      }
+      .score-low .score-card-fill {
+        background: var(--accent-con);
+      }
+      .score-mid {
+        color: var(--accent-verdict);
+      }
+      .score-mid .score-card-fill {
+        background: var(--accent-verdict);
+      }
+      .score-high {
+        color: var(--accent-pro);
+      }
+      .score-high .score-card-fill {
+        background: var(--accent-pro);
+      }
+
+      /* ---- ARGUMENT TABLE ---- */
+      .argument-section {
+        margin-bottom: 20px;
+      }
+
+      .argument-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .argument-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      .argument-icon.pro {
+        background: var(--accent-pro-bg);
+        color: var(--accent-pro);
+        border: 1px solid rgba(52, 211, 153, 0.15);
+      }
+
+      .argument-icon.con {
+        background: var(--accent-con-bg);
+        color: var(--accent-con);
+        border: 1px solid rgba(248, 113, 113, 0.15);
+      }
+
+      .argument-title-text {
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+      }
+
+      .argument-count {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-left: auto;
+        letter-spacing: 0.04em;
+      }
+
+      .argument-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .argument-item {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        transition: border-color 0.2s;
+      }
+
+      .argument-item:hover {
+        border-color: var(--border-medium);
+      }
+
+      .argument-item-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px 20px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .argument-item-header:focus-visible {
+        outline: 2px solid var(--accent-neutral);
+        outline-offset: -2px;
+        border-radius: var(--radius-md);
+      }
+
+      .argument-num {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        padding-top: 3px;
+        flex-shrink: 0;
+        min-width: 18px;
+      }
+
+      .argument-item-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        line-height: 1.4;
+        flex: 1;
+      }
+
+      .argument-weight {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        padding: 2px 7px;
+        border-radius: 99px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        flex-shrink: 0;
+        align-self: center;
+      }
+
+      .weight-critical.pro {
+        background: var(--accent-pro-dim);
+        color: var(--accent-pro);
+      }
+
+      .weight-critical.con {
+        background: var(--accent-con-dim);
+        color: var(--accent-con);
+      }
+
+      .weight-strong.pro {
+        background: rgba(52, 211, 153, 0.1);
+        color: var(--accent-pro);
+      }
+
+      .weight-strong.con {
+        background: rgba(248, 113, 113, 0.1);
+        color: var(--accent-con);
+      }
+
+      .weight-moderate.pro {
+        background: rgba(52, 211, 153, 0.05);
+        color: rgba(52, 211, 153, 0.7);
+      }
+
+      .weight-moderate.con {
+        background: rgba(248, 113, 113, 0.05);
+        color: rgba(248, 113, 113, 0.7);
+      }
+
+      .argument-expand-icon {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        transition: transform 0.25s;
+        flex-shrink: 0;
+        align-self: center;
+      }
+
+      .argument-item.open .argument-expand-icon {
+        transform: rotate(180deg);
+      }
+
+      .argument-detail {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .argument-item.open .argument-detail {
+        max-height: 400px;
+      }
+
+      .argument-detail-inner {
+        padding: 0 20px 18px 50px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        line-height: 1.7;
+      }
+
+      .argument-detail-inner code {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        background: var(--bg-elevated);
+        padding: 1px 6px;
+        border-radius: 4px;
+        color: var(--text-primary);
+      }
+
+      /* ---- VERDICT ---- */
+      .verdict-section {
+        padding: 56px 0;
+      }
+
+      .verdict-card {
+        background: var(--bg-card);
+        border: 1px solid var(--accent-verdict-border);
+        border-radius: var(--radius-xl);
+        padding: 48px 40px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 80px var(--accent-verdict-glow);
+      }
+
+      .verdict-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--accent-verdict), transparent);
+      }
+
+      .verdict-stamp {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        padding: 6px 14px;
+        border-radius: var(--radius-sm);
+        margin-bottom: 24px;
+      }
+
+      .verdict-stamp.do-not {
+        color: var(--accent-con);
+        background: var(--accent-con-bg);
+        border: 1px solid rgba(248, 113, 113, 0.15);
+      }
+
+      .verdict-stamp.adopt {
+        color: var(--accent-pro);
+        background: var(--accent-pro-bg);
+        border: 1px solid rgba(52, 211, 153, 0.15);
+      }
+
+      .verdict-stamp.defer {
+        color: var(--accent-verdict);
+        background: var(--accent-verdict-bg);
+        border: 1px solid rgba(245, 158, 11, 0.15);
+      }
+
+      .verdict-headline {
+        font-family: var(--font-display);
+        font-size: clamp(1.6rem, 3vw, 2.2rem);
+        font-weight: 400;
+        line-height: 1.3;
+        margin-bottom: 20px;
+      }
+
+      .verdict-body {
+        font-size: 0.92rem;
+        color: var(--text-secondary);
+        line-height: 1.8;
+        max-width: 640px;
+      }
+
+      .verdict-body p + p {
+        margin-top: 14px;
+      }
+
+      .verdict-body strong {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      /* ---- FACTOR GRID ---- */
+      .factor-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin: 28px 0;
+      }
+
+      .factor-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 20px;
+      }
+
+      .factor-card-title {
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .factor-card-body {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
+
+      /* ---- VISUALIZATION BARS ---- */
+      .comparison-bars {
+        margin: 24px 0;
+      }
+
+      .comparison-row {
+        margin-bottom: 16px;
+      }
+
+      .comparison-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.78rem;
+        margin-bottom: 6px;
+      }
+
+      .comparison-label-name {
+        color: var(--text-secondary);
+      }
+
+      .comparison-label-value {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--text-muted);
+      }
+
+      .comparison-track {
+        height: 6px;
+        background: var(--bg-elevated);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .comparison-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .comparison-fill.pro {
+        background: var(--accent-pro);
+      }
+      .comparison-fill.con {
+        background: var(--accent-con);
+      }
+      .comparison-fill.neutral {
+        background: var(--accent-neutral);
+      }
+      .comparison-fill.verdict-color {
+        background: var(--accent-verdict);
+      }
+
+      /* ---- REVISIT CRITERIA ---- */
+      .revisit-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 28px;
+      }
+
+      .revisit-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .revisit-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
+
+      .revisit-list li::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent-verdict);
+        flex-shrink: 0;
+        margin-top: 8px;
+      }
+
+      /* ---- WEIGHTED SUMMARY ---- */
+      .weight-summary {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 0;
+        align-items: center;
+        margin: 32px 0;
+      }
+
+      .weight-bar-label {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+      }
+
+      .weight-bar-track {
+        height: 8px;
+        background: var(--bg-elevated);
+        border-radius: 4px;
+        margin: 0 16px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .weight-bar-fill-pro {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        background: var(--accent-pro);
+        border-radius: 4px;
+        transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .weight-bar-fill-con {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        background: var(--accent-con);
+        border-radius: 4px;
+        transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .weight-bar-center {
+        position: absolute;
+        left: 50%;
+        top: -2px;
+        width: 2px;
+        height: 12px;
+        background: var(--text-muted);
+        transform: translateX(-50%);
+      }
+
+      .weight-values {
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        margin-top: 6px;
+        padding: 0 16px;
+      }
+
+      /* ---- FOOTER ---- */
+      .report-footer {
+        padding: 40px 0;
+        border-top: 1px solid var(--border-subtle);
+        text-align: center;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        letter-spacing: 0.02em;
+      }
+
+      /* ---- RESPONSIVE ---- */
+      @media (max-width: 680px) {
+        .project-pair {
+          grid-template-columns: 1fr;
+        }
+        .score-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .factor-grid {
+          grid-template-columns: 1fr;
+        }
+        .hero {
+          padding: 48px 0 40px;
+        }
+        .verdict-card {
+          padding: 32px 24px;
+        }
+        .hero-meta {
+          flex-direction: column;
+          gap: 8px;
+        }
+      }
+
+      /* ---- ANIMATIONS ---- */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animate-in {
+        animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .animate-in {
+          animation: none;
+        }
+        .argument-detail {
+          transition: none;
+        }
+        .comparison-fill,
+        .weight-bar-fill-pro,
+        .weight-bar-fill-con,
+        .score-card-fill {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="noise-overlay"></div>
+
+    <div class="page-wrapper">
+      <!-- HERO -->
+      <header class="hero animate-in">
+        <div class="hero-eyebrow">Adoption Report &mdash; June 2026</div>
+        <h1 class="hero-title">Should <em>samber-do-auditlog</em><br />adopt cmdguard?</h1>
+        <p class="hero-sub">
+          A structured analysis of whether the CLI framework cmdguard should become a dependency of
+          the DI audit logging plugin.
+        </p>
+        <div class="hero-meta">
+          <span>samber-do-auditlog <span class="dot"></span> ALPHA</span>
+          <span>cmdguard v2.5.0 <span class="dot"></span> 364 tests</span>
+          <span>Same author <span class="dot"></span> Both use samber/do v2</span>
+        </div>
+      </header>
+
+      <!-- CONTEXT: THE TWO PROJECTS -->
+      <section class="section animate-in">
+        <div class="section-label">Context</div>
+        <h2 class="section-title">The two projects</h2>
+        <div class="project-pair">
+          <div class="project-card">
+            <div class="project-card-name cmdguard">cmdguard</div>
+            <div class="project-card-tagline">
+              Type-safe CLI framework wrapping Cobra with generics, struct-tag flags, DI via
+              samber/do, middleware, and 12 output formats.
+            </div>
+            <div class="project-card-stats">
+              <div class="stat-row">
+                <span class="stat-label">Package</span>
+                <span class="stat-value">pkg/cmdguard/v2</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">LOC</span>
+                <span class="stat-value">~6,500</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Dependencies</span>
+                <span class="stat-value">cobra, fang, huh, otel, go-output</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Test coverage</span>
+                <span class="stat-value">82.9%</span>
+              </div>
+            </div>
+          </div>
+          <div class="project-card">
+            <div class="project-card-name auditlog">samber-do-auditlog</div>
+            <div class="project-card-tagline">
+              Plugin for samber/do v2 that records DI lifecycle events with dependency graph
+              inference, timing, and HTML visualization.
+            </div>
+            <div class="project-card-stats">
+              <div class="stat-row">
+                <span class="stat-label">Package</span>
+                <span class="stat-value">auditlog</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">LOC</span>
+                <span class="stat-value">~1,800</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Dependencies</span>
+                <span class="stat-value">samber/do, templ</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Test coverage</span>
+                <span class="stat-value">~95%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="section-body">
+          <p>
+            Both projects share the same author, Go version (1.26.3), and a dependency on
+            <code>samber/do v2</code>. The question: should auditlog import cmdguard as a library
+            dependency for its own capabilities, or should it remain independent?
+          </p>
+        </div>
+      </section>
+
+      <!-- SCORING DIMENSIONS -->
+      <section class="section animate-in">
+        <div class="section-label">Scoring</div>
+        <h2 class="section-title">Dimension scores</h2>
+        <div class="score-grid">
+          <div class="score-card score-low">
+            <div class="score-card-label">Dependency Fit</div>
+            <div class="score-card-value">2/10</div>
+            <div class="score-card-bar"><div class="score-card-fill" style="width: 20%"></div></div>
+          </div>
+          <div class="score-card score-low">
+            <div class="score-card-label">API Alignment</div>
+            <div class="score-card-value">1/10</div>
+            <div class="score-card-bar"><div class="score-card-fill" style="width: 10%"></div></div>
+          </div>
+          <div class="score-card score-mid">
+            <div class="score-card-label">Ecosystem Synergy</div>
+            <div class="score-card-value">5/10</div>
+            <div class="score-card-bar"><div class="score-card-fill" style="width: 50%"></div></div>
+          </div>
+          <div class="score-card score-low">
+            <div class="score-card-label">Complexity Cost</div>
+            <div class="score-card-value">2/10</div>
+            <div class="score-card-bar"><div class="score-card-fill" style="width: 20%"></div></div>
+          </div>
+          <div class="score-card score-low">
+            <div class="score-card-label">Practical Gain</div>
+            <div class="score-card-value">1/10</div>
+            <div class="score-card-bar"><div class="score-card-fill" style="width: 10%"></div></div>
+          </div>
+        </div>
+        <div class="comparison-bars">
+          <div class="comparison-row">
+            <div class="comparison-label">
+              <span class="comparison-label-name"
+                >Dependency surface (auditlog: 2 deps &rarr; with cmdguard: 15+ deps)</span
+              >
+              <span class="comparison-label-value">+650%</span>
+            </div>
+            <div class="comparison-track">
+              <div class="comparison-fill con" style="width: 87%"></div>
+            </div>
+          </div>
+          <div class="comparison-row">
+            <div class="comparison-label">
+              <span class="comparison-label-name"
+                >API overlap (cmdguard solves CLI problems, auditlog is a DI plugin)</span
+              >
+              <span class="comparison-label-value">~0%</span>
+            </div>
+            <div class="comparison-track">
+              <div class="comparison-fill con" style="width: 5%"></div>
+            </div>
+          </div>
+          <div class="comparison-row">
+            <div class="comparison-label">
+              <span class="comparison-label-name">Code reuse potential</span>
+              <span class="comparison-label-value">~0 lines</span>
+            </div>
+            <div class="comparison-track">
+              <div class="comparison-fill con" style="width: 2%"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRO ARGUMENTS -->
+      <section class="section animate-in">
+        <div class="argument-section">
+          <div class="argument-header">
+            <div class="argument-icon pro">+</div>
+            <h3 class="argument-title-text">Arguments FOR</h3>
+            <span class="argument-count">4 arguments</span>
+          </div>
+          <div class="argument-list" id="pro-list">
+            <div class="argument-item" data-idx="p1">
+              <div class="argument-item-header" tabindex="0" role="button" aria-expanded="false">
+                <span class="argument-num">01</span>
+                <span class="argument-item-title"
+                  >Same author, aligned philosophy, no governance friction</span
+                >
+                <span class="argument-weight weight-moderate pro">MODERATE</span>
+                <span class="argument-expand-icon">&#9660;</span>
+              </div>
+              <div class="argument-detail">
+                <div class="argument-detail-inner">
+                  Both projects are by <code>larsartmann</code>, use Go 1.26.3, share the same build
+                  toolchain, and depend on <code>samber/do v2</code>. Version bumps, Go upgrades,
+                  and samber/do API changes can be coordinated without cross-org coordination. If
+                  cmdguard breaks something, you fix both yourself.
+                </div>
+              </div>
+            </div>
+
+            <div class="argument-item" data-idx="p2">
+              <div class="argument-item-header" tabindex="0" role="button" aria-expanded="false">
+                <span class="argument-num">02</span>
+                <span class="argument-item-title"
+                  >cmdguard's DI Scope wraps the same Injector auditlog hooks into</span
+                >
+                <span class="argument-weight weight-moderate pro">MODERATE</span>
+                <span class="argument-expand-icon">&#9660;</span>
+              </div>
+              <div class="argument-detail">
+                <div class="argument-detail-inner">
+                  cmdguard's <code>Scope</code> wraps <code>do.Injector</code> and provides
+                  <code>Provide</code>, <code>Invoke</code>, <code>Shutdown</code>,
+                  <code>HealthCheck</code>. If a consumer uses cmdguard to build their CLI, auditlog
+                  could theoretically detect that scope and attach automatically. However, this is a
+                  <em>consumer-level</em> integration, not a library-level dependency. auditlog
+                  doesn't need to import cmdguard to do this.
+                </div>
+              </div>
+            </div>
+
+            <div class="argument-item" data-idx="p3">
+              <div class="argument-item-header" tabindex="0" role="button" aria-expanded="false">
+                <span class="argument-num">03</span>
+                <span class="argument-item-title"
+                  >Rich output formats (12+) could enhance export options</span
+                >
+                <span class="argument-weight weight-moderate pro">MODERATE</span>
+                <span class="argument-expand-icon">&#9660;</span>
+              </div>
+              <div class="argument-detail">
+                <div class="argument-detail-inner">
+                  cmdguard integrates <code>go-output</code> for 12+ formats (JSON, CSV, YAML, D2,
+                  Mermaid, HTML, etc.). If auditlog ever wanted to export the services table as CSV
+                  or the dependency graph as D2/Mermaid text, cmdguard re-exports that capability.
+                  <br /><br />However, this was already analyzed and <strong>rejected</strong> in
+                  the <code>go-output-adoption.md</code> brainstorming document &mdash;
+                  <code>TableData</code> is <code>[][]string</code>, a fundamental mismatch for
+                  auditlog's rich domain structs. Importing cmdguard for this would add even more
+                  weight than go-output alone.
+                </div>
+              </div>
+            </div>
+
+            <div class="argument-item" data-idx="p4">
+              <div class="argument-item-header" tabindex="0" role="button" aria-expanded="false">
+                <span class="argument-num">04</span>
+                <span class="argument-item-title"
+                  >OpenTelemetry middleware for command-level tracing</span
+                >
+                <span class="argument-weight weight-moderate pro">MODERATE</span>
+                <span class="argument-expand-icon">&#9660;</span>
+              </div>
+              <div class="argument-detail">
+                <div class="argument-detail-inner">
+                  cmdguard has <code>TelemetryMiddleware</code> that creates OTel spans per command
+                  execution. If auditlog wanted to correlate DI lifecycle events with CLI command
+                  traces, both using OTel would be elegant. <br /><br />But auditlog is a
+                  <em>library plugin</em>, not a CLI application. It doesn't execute commands. The
+                  tracing correlation would happen at the <em>consumer</em> level &mdash; the
+                  consumer's CLI tool would use cmdguard's telemetry AND auditlog's events. Neither
+                  needs to import the other.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CON ARGUMENTS -->
+      <section class="section animate-in">
+        <div class="argument-section">
+          <div class="argument-header">
+            <div class="argument-icon con">&minus;</div>
+            <h3 class="argument-title-text">Arguments AGAINST</h3>
+            <span class="argument-count">7 arguments</span>
+          </div>
+          <div class="argument-list" id="con-list">
+            <div class="argument-item" data-idx="c1">
+              <div class="argument-item-header" tabindex="0" role="button" aria-expanded="false">
+                <span class="argument-num">01</span>
+                <span class="argument-item-title"
+                  >Zero API overlap &mdash; cmdguard solves CLI problems, auditlog is a DI
+                  plugin</span
+                >
+                <span class="argument-weight weight-critical con">CRITICAL</span>
+                <span class="argument-expand-icon">&#9660;</span>
+              </div>
+              <div class="argument-detail">
+                <div class="argument-detail-inner">
+                  cmdguard provides: <code>NewCLI[T]</code>, <code>NewCommand[T,F]</code>,
+                  struct-tag flag parsing, Cobra wiring, help rendering, shell completion, man
+                  pages, middleware chains, interactive prompts, styled error output.<br /><br />
+                  auditlog needs: <code>do.InjectorOpts</code> hooks, timestamped event recording,
+                  dependency graph inference, JSON/HTML export.<br /><br />
+                  These are <strong>completely disjoint problem domains</strong>. There is no
+                  function, type, or pattern in cmdguard that auditlog could call or reuse.
+                  Importing it would be like importing a web framework into a math library.
+                </div>
+              </div>
+            </div>
+
+            <div class="argument-item" data-idx="c2">
+              <div class="argument-item-header" tabindex="0" role="button" aria-expanded="false">
+                <span class="argument-num">02</span>
+                <span class="argument-item-title"
+                  >Dependency explosion: 2 deps &rarr; 15+ transitive deps</span
+                >
+                <span class="argument-weight weight-critical con">CRITICAL</span>
+                <span class="argument-expand-icon">&#9660;</span>
+              </div>
+              <div class="argument-detail">
+                <div class="argument-detail-inner">
+                  auditlog currently depends on <code>samber/do v2</code> and
+                  <code>a-h/templ</code> &mdash; 2 direct deps, ~3 transitive. That's it.<br /><br />
+                  cmdguard pulls in: <code>spf13/cobra</code>, <code>spf13/pflag</code>,
+                  <code>charm.land/fang</code>, <code>charm.land/huh</code>,
+                  <code>charm.lipgloss</code>, <code>charm.bubbletea</code>,
+                  <code>charm.bubbles</code>, <code>charm.glamour</code>, <code>go-output</code> (+
+                  7 sub-modules), <code>otel/trace</code>, <code>go-toml</code>, <code>yaml</code>,
+                  and ~25 more transitive deps.<br /><br />
+                  That's a <strong>+650% increase in dependency surface</strong> for zero functional
+                  gain. Every one of those deps is a supply-chain vector, a potential version
+                  conflict, and a compile-time cost &mdash; for nothing.
+                </div>
+              </div>
+            </div>
+
+            <div class="argument-item" data-idx="c3">
+              <div class="argument-item-header" tabindex="0" role="button" aria-expanded="false">
+                <span class="argument-num">03</span>
+                <span class="argument-item-title"
+                  >Violates auditlog's design principle: minimal, focused dependencies</span
+                >
+                <span class="argument-weight weight-strong con">STRONG</span>
+                <span class="argument-expand-icon">&#9660;</span>
+              </div>
+              <div class="argument-detail">
+                <div class="argument-detail-inner">
+                  The <code>.golangci.yml</code> has <code>depguard</code> configured to only allow
+                  <code>$gostd</code>, <code>samber</code>, <code>templ</code>, and
+                  <code>samber-do-auditlog</code>. This is intentional &mdash; auditlog is a focused
+                  plugin that should be cheap to adopt. Adding cmdguard would force opening depguard
+                  to allow <code>larsartmann/cmdguard</code> + all its transitive deps, weakening
+                  the supply-chain guardrail for zero benefit.
+                </div>
+              </div>
+            </div>
+
+            <div class="argument-item" data-idx="c4">
+              <div class="argument-item-header" tabindex="0" role="button" aria-expanded="false">
+                <span class="argument-num">04</span>
+                <span class="argument-item-title"
+                  >Cobra is CLI infrastructure &mdash; inappropriate for a DI plugin library</span
+                >
+                <span class="argument-weight weight-strong con">STRONG</span>
+                <span class="argument-expand-icon">&#9660;</span>
+              </div>
+              <div class="argument-detail">
+                <div class="argument-detail-inner">
+                  cmdguard's core dependency is <code>spf13/cobra</code>. Importing cmdguard
+                  transitively imports cobra into every binary that uses auditlog &mdash; even if
+                  that binary has no CLI at all (e.g., a long-running server using samber/do for
+                  DI).<br /><br />
+                  A DI audit plugin has no business pulling in a CLI command framework. Consumers
+                  who build CLIs can import cmdguard themselves. The dependency should flow:
+                  <code>consumer &rarr; cmdguard</code> and <code>consumer &rarr; auditlog</code>,
+                  not <code>auditlog &rarr; cmdguard</code>.
+                </div>
+              </div>
+            </div>
+
+            <div class="argument-item" data-idx="c5">
+              <div class="argument-item-header" tabindex="0" role="button" aria-expanded="false">
+                <span class="argument-num">05</span>
+                <span class="argument-item-title"
+                  >The "Scope" integration is consumer-level, not library-level</span
+                >
+                <span class="argument-weight weight-strong con">STRONG</span>
+                <span class="argument-expand-icon">&#9660;</span>
+              </div>
+              <div class="argument-detail">
+                <div class="argument-detail-inner">
+                  Both projects use <code>samber/do v2</code>. cmdguard's <code>Scope</code> wraps
+                  <code>do.Injector</code>. auditlog hooks into <code>do.InjectorOpts</code>. The
+                  natural integration point is:<br /><br />
+                  <code
+                    >consumer creates cmdguard CLI &rarr; gets Scope &rarr; passes Scope.Injector()
+                    to auditlog.New()</code
+                  ><br /><br />
+                  This works <strong>today</strong> without either library importing the other.
+                  auditlog accepts any <code>do.Injector</code>. cmdguard exposes
+                  <code>Scope.Injector()</code>. The integration is 3 lines of consumer code.
+                </div>
+              </div>
+            </div>
+
+            <div class="argument-item" data-idx="c6">
+              <div class="argument-item-header" tabindex="0" role="button" aria-expanded="false">
+                <span class="argument-num">06</span>
+                <span class="argument-item-title"
+                  >No code reuse, no type reuse, no pattern reuse</span
+                >
+                <span class="argument-weight weight-moderate con">MODERATE</span>
+                <span class="argument-expand-icon">&#9660;</span>
+              </div>
+              <div class="argument-detail">
+                <div class="argument-detail-inner">
+                  Scanning cmdguard's entire v2 package: no struct, interface, function, or type
+                  that auditlog could reuse. The generic <code>CLI[T]</code>,
+                  <code>Command[T,F]</code>, <code>Scope</code>, <code>FlagRegistry</code>,
+                  <code>BranchingFlowContext</code>, middleware chain &mdash; none apply to
+                  auditlog's domain (event recording, service aggregation, dependency inference,
+                  report generation).<br /><br />
+                  The only shared type is <code>do.Injector</code> &mdash; which comes from
+                  <code>samber/do</code>, not cmdguard.
+                </div>
+              </div>
+            </div>
+
+            <div class="argument-item" data-idx="c7">
+              <div class="argument-item-header" tabindex="0" role="button" aria-expanded="false">
+                <span class="argument-num">07</span>
+                <span class="argument-item-title"
+                  >Compiles and ships cobra/pflag to non-CLI consumers unnecessarily</span
+                >
+                <span class="argument-weight weight-moderate con">MODERATE</span>
+                <span class="argument-expand-icon">&#9660;</span>
+              </div>
+              <div class="argument-detail">
+                <div class="argument-detail-inner">
+                  auditlog is used by any Go application that uses samber/do for DI &mdash; servers,
+                  workers, batch processors, not just CLIs. Importing cmdguard would force every
+                  such consumer to compile cobra, pflag, fang, huh, bubbletea, glamour, and the
+                  entire TUI stack even though they have no terminal interaction. This is a
+                  significant compile-time and binary-size tax for zero utility.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- WEIGHTED SUMMARY -->
+      <section class="section animate-in">
+        <div class="section-label">Balance</div>
+        <h2 class="section-title">Weighted balance</h2>
+        <div class="weight-summary">
+          <div class="weight-bar-label" style="color: var(--accent-pro); text-align: right">
+            FOR &nbsp; 12pts
+          </div>
+          <div class="weight-bar-track">
+            <div class="weight-bar-center"></div>
+            <div class="weight-bar-fill-pro" style="width: 14%"></div>
+            <div class="weight-bar-fill-con" style="width: 82%"></div>
+          </div>
+          <div class="weight-bar-label" style="color: var(--accent-con)">68pts &nbsp; AGAINST</div>
+        </div>
+        <div class="weight-values">
+          <span>Moderate: 12</span>
+          <span>Weighted total (out of 160)</span>
+          <span>Critical: 40 + Strong: 28</span>
+        </div>
+      </section>
+
+      <!-- KEY FACTORS -->
+      <section class="section animate-in">
+        <div class="section-label">Analysis</div>
+        <h2 class="section-title">Key factors</h2>
+        <div class="factor-grid">
+          <div class="factor-card">
+            <div class="factor-card-title" style="color: var(--accent-con)">
+              <span>&#10005;</span> Domain mismatch
+            </div>
+            <div class="factor-card-body">
+              cmdguard is a CLI framework. auditlog is a DI observability plugin. They share
+              <code>samber/do</code> but operate at completely different abstraction levels. No
+              shared domain, no shared types, no shared problem.
+            </div>
+          </div>
+          <div class="factor-card">
+            <div class="factor-card-title" style="color: var(--accent-con)">
+              <span>&#10005;</span> Dependency cost
+            </div>
+            <div class="factor-card-body">
+              2 deps &rarr; 15+ deps. Cobra, fang, huh, bubbletea, glamour, otel, go-output &mdash;
+              an entire TUI+CLI+observability stack dragged into a DI plugin that exports JSON and
+              HTML.
+            </div>
+          </div>
+          <div class="factor-card">
+            <div class="factor-card-title" style="color: var(--accent-neutral)">
+              <span>&#9679;</span> Consumer-level integration
+            </div>
+            <div class="factor-card-body">
+              The natural bridge is consumer code: <code>auditlog.New()</code> +
+              <code>scope.Injector()</code> from cmdguard. Works today, no imports needed. This is
+              the correct layering.
+            </div>
+          </div>
+          <div class="factor-card">
+            <div class="factor-card-title" style="color: var(--accent-neutral)">
+              <span>&#9679;</span> Already rejected go-output
+            </div>
+            <div class="factor-card-body">
+              The <code>go-output-adoption.md</code> analysis rejected adding go-output for the same
+              reasons. cmdguard re-exports go-output, making it an even heavier version of an
+              already-rejected dependency.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VERDICT -->
+      <section class="verdict-section animate-in">
+        <div class="verdict-card">
+          <div class="verdict-stamp do-not">Verdict &mdash; Do Not Adopt</div>
+          <h2 class="verdict-headline">
+            cmdguard and auditlog are complementary tools<br />
+            for the same ecosystem, not dependencies of each other.
+          </h2>
+          <div class="verdict-body">
+            <p>
+              The correct relationship is <strong>horizontal</strong>, not vertical. A consumer
+              builds a CLI with cmdguard, wires samber/do for DI, and plugs in auditlog to observe
+              the container. Both libraries sit on <code>samber/do v2</code> as their shared
+              foundation. Neither should import the other.
+            </p>
+            <p>
+              Importing a CLI framework into a DI plugin is an architectural category error. It
+              would explode the dependency surface by <strong>650%</strong> for
+              <strong>zero lines of code reuse</strong>, violate auditlog's depguard policy, and
+              force every consumer &mdash; even non-CLI servers &mdash; to compile cobra, pflag, and
+              an entire TUI stack they don't need.
+            </p>
+            <p>
+              <strong>The right place for integration is consumer code.</strong> Three lines: create
+              the cmdguard scope, extract the injector, pass it to auditlog. Done.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- WHEN TO REVISIT -->
+      <section class="section animate-in">
+        <div class="section-label">Revisit</div>
+        <h2 class="section-title">When to revisit this decision</h2>
+        <div class="revisit-card">
+          <div class="section-body">
+            This decision is stable. Revisit <strong>only if</strong> one or more of these
+            conditions materialize:
+          </div>
+          <ul class="revisit-list">
+            <li>
+              cmdguard extracts its <code>Scope</code> DI layer into a standalone package without
+              cobra/fang/TUI deps, and auditlog needs it
+            </li>
+            <li>
+              auditlog adds CLI subcommands (e.g., <code>auditlog report</code>,
+              <code>auditlog serve</code>) and becomes a CLI tool itself &mdash; then cmdguard would
+              be a consumer dependency, not a library dependency
+            </li>
+            <li>
+              cmdguard adds an <em>auditlog integration module</em> (e.g.,
+              <code>cmdguard/auditlog</code>) that auto-attaches auditlog to scopes &mdash; this
+              would live in cmdguard's repo, not auditlog's
+            </li>
+            <li>
+              A shared <code>samber/do-ecosystem</code> utilities package emerges that both could
+              depend on without pulling in CLI or TUI deps
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="report-footer">
+        <p>Adoption report &middot; samber-do-auditlog &times; cmdguard &middot; June 2026</p>
+        <p style="margin-top: 4px">Generated for decision-making &middot; Not a living document</p>
+      </footer>
+    </div>
+
+    <script>
+      document.querySelectorAll(".argument-item-header").forEach(function (header) {
+        header.addEventListener("click", function () {
+          var item = this.closest(".argument-item");
+          var wasOpen = item.classList.contains("open");
+          item.classList.toggle("open");
+          this.setAttribute("aria-expanded", !wasOpen);
+        });
+        header.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            this.click();
+          }
+        });
+      });
+
+      var observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.style.animationDelay = "0.1s";
+              entry.target.classList.add("animate-in");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.1 },
+      );
+
+      document.querySelectorAll(".section, .verdict-section").forEach(function (el) {
+        observer.observe(el);
+      });
+    </script>
+  </body>
+</html>

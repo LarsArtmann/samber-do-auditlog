@@ -20,6 +20,9 @@ type Config struct {
 	Enabled bool
 	// ContainerID is an optional human-readable identifier for the injector.
 	ContainerID string
+	// OnEvent is called after each event is captured. Must not block.
+	// Called sequentially in hook order. Nil disables the callback.
+	OnEvent func(Event)
 }
 
 // defaultContainerID is used when Config.ContainerID is empty.
@@ -48,7 +51,7 @@ func New(config Config) *Plugin {
 	}
 
 	return &Plugin{
-		recorder: NewRecorder(config.ContainerID),
+		recorder: NewRecorder(config.ContainerID, config.OnEvent),
 		config:   config,
 	}
 }
