@@ -883,3 +883,109 @@ func BenchmarkHookOverhead_Registration(b *testing.B) {
 		provideDB(injector, "svc", "test")
 	}
 }
+
+func TestPlugin_RealWorldScenario(t *testing.T) {
+	plugin := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "my-app",
+	})
+	injector := do.NewWithOpts(plugin.Opts())
+
+	do.ProvideValue(injector, &Config{Port: 8080})
+
+	do.ProvideNamed(injector, "postgres", func(i do.Injector) (*Database, error) {
+		time.Sleep(1 * time.Millisecond)
+
+		return &Database{URL: "postgres://localhost"}, nil
+	})
+
+	do.ProvideNamed(injector, "redis", func(i do.Injector) (*Cache, error) {
+		time.Sleep(1 * time.Millisecond)
+
+		return &Cache{Entries: make(map[string]string)}, nil
+	})
+
+	do.ProvideNamed(injector, "users", func(i do.Injector) (*UserService, error) {
+		db := do.MustInvokeNamed[*Database](i, "postgres")
+		cache := do.MustInvokeNamed[*Cache](i, "redis")
+
+		return &UserService{DB: db, Cache: cache}, nil
+	})
+
+	do.ProvideNamed(injector, "http-server", func(i do.Injector) (*HTTPServer, error) {
+		users := do.MustInvokeNamed[*UserService](i, "users")
+
+		return &HTTPServer{Users: users}, nil
+	})
+
+	_, err := do.InvokeNamed[*HTTPServer](injector, "http-server")
+	if err != nil {
+		t.Fatalf("invoke failed: %v", err)
+	}
+
+	report := plugin.Report()
+
+	if report.ContainerID != "my-app" {
+		t.Errorf("container_id: want my-app, got %s", report.ContainerID)
+	}
+
+	if report.ServiceCount != 5 {
+		t.Errorf("service_count: want 5, got %d", report.ServiceCount)
+	}
+
+	svr := findServiceByName(t, report, "http-server")
+	if svr == nil {
+		t.Fatal("http-server not found")
+	}
+
+	if svr.Status != auditlog.ServiceStatusActive {
+		t.Errorf("http-server status: want active, got %s", svr.Status)
+	}
+
+	if len(svr.Dependencies) != 1 {
+		t.Errorf("http-server deps: want 1 (users), got %d", len(svr.Dependencies))
+	}
+
+	users := findServiceByName(t, report, "users")
+	if users == nil {
+		t.Fatal("users not found")
+	}
+
+	if len(users.Dependencies) != 2 {
+		t.Errorf("users deps: want 2 (postgres+redis), got %d: %v", len(users.Dependencies), users.Dependencies)
+	}
+
+	postgres := findServiceByName(t, report, "postgres")
+	if postgres == nil {
+		t.Fatal("postgres not found")
+	}
+
+	if len(postgres.Dependents) != 1 {
+		t.Errorf("postgres dependents: want 1 (users), got %d", len(postgres.Dependents))
+	}
+
+	_ = injector.Shutdown()
+
+	report = plugin.Report()
+
+	svr2 := findServiceByName(t, report, "http-server")
+	if svr2.Status != auditlog.ServiceStatusShutdown {
+		t.Errorf("after shutdown status: want shutdown, got %s", svr2.Status)
+	}
+
+	if svr2.ShutdownDurationMs == nil {
+		t.Error("expected ShutdownDurationMs to be set after shutdown")
+	}
+
+	_ = plugin.ExportToFile(t.TempDir() + "/report.json")
+	_ = plugin.ExportEventsToNDJSON(t.TempDir() + "/events.ndjson")
+	_ = plugin.ExportToHTML(t.TempDir() + "/report.html")
+}
+
+type HTTPServer struct {
+	Users *UserService
+}
+
+type Config struct {
+	Port int
+}
