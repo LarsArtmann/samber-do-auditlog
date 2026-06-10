@@ -54,6 +54,12 @@ type Event struct {
 	Error       *string   `json:"error,omitempty"`
 }
 
+func (e Event) IsRegistration() bool { return e.EventType == EventTypeRegistration }
+func (e Event) IsInvocation() bool   { return e.EventType == EventTypeInvocation }
+func (e Event) IsShutdown() bool     { return e.EventType == EventTypeShutdown }
+func (e Event) IsBefore() bool       { return e.Phase == PhaseBefore }
+func (e Event) IsAfter() bool        { return e.Phase == PhaseAfter }
+
 // ServiceInfo aggregates all observed data for a single service.
 type ServiceInfo struct {
 	ServiceRef
