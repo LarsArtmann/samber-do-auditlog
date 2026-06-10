@@ -25,6 +25,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `Report.ServiceByName(name)` — find service by exact name
 - `Report.EventsByType(t)` — filter events by EventType
 - `Report.FailedServices()` — all services with invocation or shutdown errors
+- `ProviderType` named type with `String()` and `Icon()` methods — represents the DI provider kind (lazy, eager, transient, alias)
+- `Event.ServiceType` field — provider type carried on every event
+- `IsHealthchecker`/`IsShutdowner` capability tracking via `do.ExplainInjector` in `BuildReport()`
+- `Config.Validate()` method for configuration validation
+- `enrichCapabilities()` and `buildCapabilityMap()` for capability detection outside the recorder mutex
+- Capability emojis in HTML: services table, scope tree, graph nodes, and timeline
+- Provider column in HTML Events tab
+- 62 total tests covering ProviderType, capabilities, Event.ServiceType, Config.Validate, and error paths
 - Comprehensive example (`example/main.go`) demonstrating 18 samber/do v2 features with self-checking feature checklist
 
 ### Changed

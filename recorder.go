@@ -144,30 +144,6 @@ func inferServiceType(scope *do.Scope, serviceName string) ProviderType {
 	return ProviderType(desc.ServiceType)
 }
 
-// inferCapabilities uses do.ExplainInjector to determine whether the service
-// implements Healthchecker or Shutdowner. It walks the DAG for the given scope
-// and returns (isHealthchecker, isShutdowner).
-func inferCapabilities(scope *do.Scope, serviceName string) (bool, bool) {
-	return findCapabilitiesInScopes(do.ExplainInjector(scope).DAG, serviceName)
-}
-
-// findCapabilitiesInScopes recursively searches the scope DAG for the service.
-func findCapabilitiesInScopes(scopes []do.ExplainInjectorScopeOutput, serviceName string) (bool, bool) {
-	for _, s := range scopes {
-		for _, svc := range s.Services {
-			if svc.ServiceName == serviceName {
-				return svc.IsHealthchecker, svc.IsShutdowner
-			}
-		}
-
-		if hc, sh := findCapabilitiesInScopes(s.Children, serviceName); hc || sh {
-			return hc, sh
-		}
-	}
-
-	return false, false
-}
-
 // enrichCapabilities populates IsHealthchecker and IsShutdowner on each ServiceInfo
 // by calling do.ExplainInjector on each stored scope reference. Must be called
 // outside the recorder mutex to avoid deadlocking with samber/do's internal locks.
@@ -201,9 +177,7 @@ func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[string][2]bo
 			result[svc.ServiceName] = [2]bool{svc.IsHealthchecker, svc.IsShutdowner}
 		}
 
-		for k, v := range buildCapabilityMap(s.Children) {
-			result[k] = v
-		}
+		
 	}
 
 	return result
