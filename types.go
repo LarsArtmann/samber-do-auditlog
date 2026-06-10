@@ -33,9 +33,9 @@ const (
 	ServiceStatusShutdownError   ServiceStatus = "shutdown_error"
 )
 
-// DependencyRef is a structured reference to another service for
-// dependency tracking and graph visualization.
-type DependencyRef struct {
+// ServiceRef identifies a service within a specific scope.
+// Embedded in Event and ServiceInfo for JSON flattening.
+type ServiceRef struct {
 	ScopeID     string `json:"scope_id"`
 	ScopeName   string `json:"scope_name"`
 	ServiceName string `json:"service_name"`
@@ -43,35 +43,33 @@ type DependencyRef struct {
 
 // Event is a single, timestamped observation from the DI container lifecycle.
 type Event struct {
+	ServiceRef
+
 	Sequence    int       `json:"sequence"`
 	Timestamp   time.Time `json:"timestamp"`
 	EventType   EventType `json:"event_type"`
 	Phase       Phase     `json:"phase"`
 	ContainerID string    `json:"container_id"`
-	ScopeID     string    `json:"scope_id"`
-	ScopeName   string    `json:"scope_name"`
-	ServiceName string    `json:"service_name"`
 	DurationMs  *float64  `json:"duration_ms,omitempty"`
 	Error       *string   `json:"error,omitempty"`
 }
 
 // ServiceInfo aggregates all observed data for a single service.
 type ServiceInfo struct {
-	ServiceName          string          `json:"service_name"`
-	ScopeID              string          `json:"scope_id"`
-	ScopeName            string          `json:"scope_name"`
-	Status               ServiceStatus   `json:"status"`
-	RegisteredAt         time.Time       `json:"registered_at"`
-	FirstInvokedAt       *time.Time      `json:"first_invoked_at,omitempty"`
-	InvocationCount      int             `json:"invocation_count"`
-	InvocationOrder      int             `json:"invocation_order"`
-	FirstBuildDurationMs *float64        `json:"first_build_duration_ms,omitempty"`
-	Dependencies         []DependencyRef `json:"dependencies,omitempty"`
-	Dependents           []DependencyRef `json:"dependents,omitempty"`
-	ShutdownAt           *time.Time      `json:"shutdown_at,omitempty"`
-	ShutdownDurationMs   *float64        `json:"shutdown_duration_ms,omitempty"`
-	ShutdownError        *string         `json:"shutdown_error,omitempty"`
-	InvocationError      *string         `json:"invocation_error,omitempty"`
+	ServiceRef
+
+	Status               ServiceStatus `json:"status"`
+	RegisteredAt         time.Time     `json:"registered_at"`
+	FirstInvokedAt       *time.Time    `json:"first_invoked_at,omitempty"`
+	InvocationCount      int           `json:"invocation_count"`
+	InvocationOrder      int           `json:"invocation_order"`
+	FirstBuildDurationMs *float64      `json:"first_build_duration_ms,omitempty"`
+	Dependencies         []ServiceRef  `json:"dependencies,omitempty"`
+	Dependents           []ServiceRef  `json:"dependents,omitempty"`
+	ShutdownAt           *time.Time    `json:"shutdown_at,omitempty"`
+	ShutdownDurationMs   *float64      `json:"shutdown_duration_ms,omitempty"`
+	ShutdownError        *string       `json:"shutdown_error,omitempty"`
+	InvocationError      *string       `json:"invocation_error,omitempty"`
 }
 
 // ScopeNode represents the scope hierarchy for visualization.
