@@ -203,6 +203,9 @@ type Report struct {
 	TotalBuildDurationMs    float64       `json:"total_build_duration_ms"`
 	TotalShutdownDurationMs float64       `json:"total_shutdown_duration_ms"`
 	ShutdownSucceeded       bool          `json:"shutdown_succeeded"`
+	// HealthCheckSucceeded is true when at least one service was health-checked
+	// and all passed. It is false when no health checks ran (HealthCheckedCount == 0)
+	// or when any service failed its check.
 	HealthCheckSucceeded    bool          `json:"health_check_succeeded"`
 	HealthCheckedCount      int           `json:"health_checked_count"`
 	Events                  []Event       `json:"events,omitempty"`

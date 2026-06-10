@@ -804,6 +804,9 @@ func countHealthChecked(services []ServiceInfo) int {
 	return count
 }
 
+// allHealthChecksPassed returns true only when at least one service was
+// health-checked AND none failed. Returns false when no health checks
+// ran — distinguish this case by checking HealthCheckedCount == 0.
 func allHealthChecksPassed(services []ServiceInfo) bool {
 	checked := 0
 
