@@ -24,8 +24,9 @@ type stackEntry struct {
 	start       time.Time
 }
 
-func (e stackEntry) key() string {
-	return e.scopeID + "/" + e.serviceName
+// serviceKey produces the canonical map key for a service within a scope.
+func serviceKey(scopeID, serviceName string) string {
+	return scopeID + "/" + serviceName
 }
 
 type serviceRecord struct {
@@ -42,10 +43,6 @@ type serviceRecord struct {
 	shutdownDurationMs   *float64
 	invocationError      *string
 	shutdownError        *string
-}
-
-func (r *serviceRecord) key() string {
-	return r.scopeID + "/" + r.serviceName
 }
 
 type scopeMeta struct {
@@ -125,7 +122,7 @@ func (r *Recorder) recordScope(scope *do.Scope) {
 
 // scopeKey produces the canonical map key for a service within a scope.
 func scopeKey(scope *do.Scope, serviceName string) string {
-	return scope.ID() + "/" + serviceName
+	return serviceKey(scope.ID(), serviceName)
 }
 
 // newEvent builds an Event struct with all fields initialized.
@@ -213,7 +210,7 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 	r.stackMu.Lock()
 	if len(r.stack) > 0 {
 		parent := r.stack[len(r.stack)-1]
-		parentKey := parent.key()
+		parentKey := serviceKey(parent.scopeID, parent.serviceName)
 
 		r.mu.Lock()
 		if rec, ok := r.services[parentKey]; ok {
@@ -438,7 +435,7 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 	for _, rec := range r.services {
 		deps := r.buildDepsLocked(rec)
 
-		key := rec.key()
+		key := serviceKey(rec.scopeID, rec.serviceName)
 		svcDependents := dependents[key]
 
 		sortDepRefs(svcDependents)
