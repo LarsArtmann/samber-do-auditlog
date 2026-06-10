@@ -225,50 +225,50 @@ plugin.ExportFilteredToFile("filtered.json",
 
 **Available filters:**
 
-| Option | Filters by |
-|-------|------------|
-| `WithServicesByName(names...)` | Service name(s) |
-| `WithServicesByType(type)` | Provider type (lazy, eager, transient, alias) |
-| `WithEventsByType(type)` | Event type (registration, invocation, shutdown, health_check) |
-| `WithTimeRange(from, to)` | Event timestamp range |
-| `WithScope(scopeID)` | Scope ID |
+| Option                         | Filters by                                                    |
+| ------------------------------ | ------------------------------------------------------------- |
+| `WithServicesByName(names...)` | Service name(s)                                               |
+| `WithServicesByType(type)`     | Provider type (lazy, eager, transient, alias)                 |
+| `WithEventsByType(type)`       | Event type (registration, invocation, shutdown, health_check) |
+| `WithTimeRange(from, to)`      | Event timestamp range                                         |
+| `WithScope(scopeID)`           | Scope ID                                                      |
 
 ## API Reference
 
 ### Plugin
 
-| Method | Description |
-|-------|-------------|
-| `New(config Config) *Plugin` | Create plugin. `ContainerID` defaults to `"default"`. |
-| `Opts() *do.InjectorOpts` | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`. |
-| `Report() Report` | In-memory snapshot. No I/O. |
-| `ReportFiltered(opts...) Report` | Filtered snapshot with functional options. |
-| `Events() []Event` | Defensive copy of raw event slice. |
-| `EventsCount() int` | Event count without copying. |
-| `RecordHealthCheck(injector)` | Wrap `injector.HealthCheck()` with audit events. |
-| `RecordHealthCheckWithContext(ctx, injector)` | Same with context. |
-| `WriteReportJSON(w) error` | Indented JSON to any `io.Writer`. |
-| `WriteEventsNDJSON(w) error` | NDJSON event stream to any `io.Writer`. |
-| `WriteHTML(w) error` | Self-contained HTML visualization to any `io.Writer`. |
-| `ExportToFile(path) error` | JSON report to file. |
-| `ExportEventsToNDJSON(path) error` | NDJSON events to file. |
-| `ExportToHTML(path) error` | HTML visualization to file. |
-| `ExportFilteredToFile(path, opts...) error` | Filtered JSON report to file. |
+| Method                                        | Description                                               |
+| --------------------------------------------- | --------------------------------------------------------- |
+| `New(config Config) *Plugin`                  | Create plugin. `ContainerID` defaults to `"default"`.     |
+| `Opts() *do.InjectorOpts`                     | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`. |
+| `Report() Report`                             | In-memory snapshot. No I/O.                               |
+| `ReportFiltered(opts...) Report`              | Filtered snapshot with functional options.                |
+| `Events() []Event`                            | Defensive copy of raw event slice.                        |
+| `EventsCount() int`                           | Event count without copying.                              |
+| `RecordHealthCheck(injector)`                 | Wrap `injector.HealthCheck()` with audit events.          |
+| `RecordHealthCheckWithContext(ctx, injector)` | Same with context.                                        |
+| `WriteReportJSON(w) error`                    | Indented JSON to any `io.Writer`.                         |
+| `WriteEventsNDJSON(w) error`                  | NDJSON event stream to any `io.Writer`.                   |
+| `WriteHTML(w) error`                          | Self-contained HTML visualization to any `io.Writer`.     |
+| `ExportToFile(path) error`                    | JSON report to file.                                      |
+| `ExportEventsToNDJSON(path) error`            | NDJSON events to file.                                    |
+| `ExportToHTML(path) error`                    | HTML visualization to file.                               |
+| `ExportFilteredToFile(path, opts...) error`   | Filtered JSON report to file.                             |
 
 ### Report
 
-| Method | Description |
-|-------|-------------|
-| `Filtered(opts...) Report` | New report with filters applied, counts recomputed. |
-| `ServiceByName(name) *ServiceInfo` | Lookup by service name. |
-| `ServiceByRef(scopeID, name) *ServiceInfo` | Lookup by scope + name. |
-| `ServicesByScope(scopeID) []ServiceInfo` | All services in a scope. |
-| `EventsByService(name) []Event` | All events for a service. |
-| `EventsByRef(scopeID, name) []Event` | All events for a scoped service. |
-| `EventsByType(type) []Event` | All events of a given type. |
-| `FailedServices() []ServiceInfo` | Services with invocation or shutdown errors. |
-| `UnhealthyServices() []ServiceInfo` | Services with health check errors. |
-| `WriteMermaid(w) error` | Mermaid flowchart to `io.Writer`. |
+| Method                                     | Description                                         |
+| ------------------------------------------ | --------------------------------------------------- |
+| `Filtered(opts...) Report`                 | New report with filters applied, counts recomputed. |
+| `ServiceByName(name) *ServiceInfo`         | Lookup by service name.                             |
+| `ServiceByRef(scopeID, name) *ServiceInfo` | Lookup by scope + name.                             |
+| `ServicesByScope(scopeID) []ServiceInfo`   | All services in a scope.                            |
+| `EventsByService(name) []Event`            | All events for a service.                           |
+| `EventsByRef(scopeID, name) []Event`       | All events for a scoped service.                    |
+| `EventsByType(type) []Event`               | All events of a given type.                         |
+| `FailedServices() []ServiceInfo`           | Services with invocation or shutdown errors.        |
+| `UnhealthyServices() []ServiceInfo`        | Services with health check errors.                  |
+| `WriteMermaid(w) error`                    | Mermaid flowchart to `io.Writer`.                   |
 
 ## How Dependency Tracking Works
 

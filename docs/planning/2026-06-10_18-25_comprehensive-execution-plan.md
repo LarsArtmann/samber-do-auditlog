@@ -28,23 +28,23 @@ Closing coverage on `migration.go` (55.6% → 90%+) and `computeServiceStatusFro
 
 Sorted by impact × urgency:
 
-| # | Task | Impact | Effort | Why |
-|---|------|--------|--------|-----|
-| 1 | Update TODO_LIST: mark 4 stale items done, add new completed items | HIGH | 15min | Prevents rework |
-| 2 | Update FEATURES.md: add migration, godoc examples, fuzz test, iterative BFS, single-lock | HIGH | 15min | Accurate feature inventory |
-| 3 | Update AGENTS.md: reflect current 94.3% coverage, 109 tests, migration.go, new files | MED | 15min | Session context accuracy |
-| 4 | Cover computeServiceStatusFromInfo (55.6% → 100%) | HIGH | 15min | New code, low coverage |
-| 5 | Cover countUniqueScopes (75% → 100%) | MED | 10min | Nested scope tree |
-| 6 | Cover inferServiceType (75% → 100%) | MED | 10min | Provider type detection |
-| 7 | Cover mermaidLabelForRef (0% → 100%) | MED | 5min | Last 0% function |
-| 8 | Cover WriteMermaid error path (84% → 100%) | MED | 10min | Export robustness |
-| 9 | Cover ExportFilteredToFile error path (87.5% → 100%) | LOW | 10min | Error handling |
-| 10 | Cover updateInvocationAggregate (84.6% → 95%+) | MED | 15min | Hot path coverage |
-| 11 | Cover RecordHealthCheckWithContext cancel (88.9% → 100%) | LOW | 10min | Context cancel path |
-| 12 | Cover enrichCapabilities nil-ref + empty scope (91.7% → 100%) | LOW | 10min | Edge case |
-| 13 | Cover ResolveServiceScope ancestor walking (90% → 100%) | LOW | 10min | Scope resolution |
-| 14 | Update docs/planning/execution-plan.md to reflect completed items | LOW | 10min | Planning accuracy |
-| 15 | Verify: full build + test + lint + coverage report | HIGH | 5min | Final gate |
+| #   | Task                                                                                     | Impact | Effort | Why                        |
+| --- | ---------------------------------------------------------------------------------------- | ------ | ------ | -------------------------- |
+| 1   | Update TODO_LIST: mark 4 stale items done, add new completed items                       | HIGH   | 15min  | Prevents rework            |
+| 2   | Update FEATURES.md: add migration, godoc examples, fuzz test, iterative BFS, single-lock | HIGH   | 15min  | Accurate feature inventory |
+| 3   | Update AGENTS.md: reflect current 94.3% coverage, 109 tests, migration.go, new files     | MED    | 15min  | Session context accuracy   |
+| 4   | Cover computeServiceStatusFromInfo (55.6% → 100%)                                        | HIGH   | 15min  | New code, low coverage     |
+| 5   | Cover countUniqueScopes (75% → 100%)                                                     | MED    | 10min  | Nested scope tree          |
+| 6   | Cover inferServiceType (75% → 100%)                                                      | MED    | 10min  | Provider type detection    |
+| 7   | Cover mermaidLabelForRef (0% → 100%)                                                     | MED    | 5min   | Last 0% function           |
+| 8   | Cover WriteMermaid error path (84% → 100%)                                               | MED    | 10min  | Export robustness          |
+| 9   | Cover ExportFilteredToFile error path (87.5% → 100%)                                     | LOW    | 10min  | Error handling             |
+| 10  | Cover updateInvocationAggregate (84.6% → 95%+)                                           | MED    | 15min  | Hot path coverage          |
+| 11  | Cover RecordHealthCheckWithContext cancel (88.9% → 100%)                                 | LOW    | 10min  | Context cancel path        |
+| 12  | Cover enrichCapabilities nil-ref + empty scope (91.7% → 100%)                            | LOW    | 10min  | Edge case                  |
+| 13  | Cover ResolveServiceScope ancestor walking (90% → 100%)                                  | LOW    | 10min  | Scope resolution           |
+| 14  | Update docs/planning/execution-plan.md to reflect completed items                        | LOW    | 10min  | Planning accuracy          |
+| 15  | Verify: full build + test + lint + coverage report                                       | HIGH   | 5min   | Final gate                 |
 
 ---
 
@@ -52,70 +52,70 @@ Sorted by impact × urgency:
 
 ### Wave A: Documentation (1% → 51% of value)
 
-| # | Micro-task | Est | File |
-|---|-----------|-----|------|
-| A1 | Mark TODO_LIST "Versioned report schema" as done | 2min | TODO_LIST.md |
-| A2 | Mark TODO_LIST "Document Recorder locking protocol" as done | 2min | TODO_LIST.md |
-| A3 | Mark TODO_LIST "Add runnable godoc examples" as done | 2min | TODO_LIST.md |
-| A4 | Mark TODO_LIST "buildCapabilityMap iterative" as done | 2min | TODO_LIST.md |
-| A5 | Mark TODO_LIST "Single-lock Recorder optimization" as done | 2min | TODO_LIST.md |
-| A6 | Mark TODO_LIST "Fuzz test for HTML template" as done | 2min | TODO_LIST.md |
-| A7 | Add "Schema migration (MigrateReport)" to P1 section or mark done | 2min | TODO_LIST.md |
-| A8 | Add completed section entry for session 3 work | 3min | TODO_LIST.md |
-| A9 | Add "Schema migration" to FEATURES.md DONE table | 2min | FEATURES.md |
-| A10 | Add "Godoc examples" to FEATURES.md DONE table | 2min | FEATURES.md |
-| A11 | Add "HTML fuzz test" to FEATURES.md DONE table | 2min | FEATURES.md |
-| A12 | Add "buildCapabilityMap iterative" to FEATURES.md DONE table | 2min | FEATURES.md |
-| A13 | Add "Single-lock optimization" to FEATURES.md DONE table | 2min | FEATURES.md |
-| A14 | Update FEATURES.md PLANNED: remove completed items | 3min | FEATURES.md |
-| A15 | Update FEATURES.md PARTIALLY DONE: schema migration now done | 2min | FEATURES.md |
-| A16 | Update AGENTS.md coverage to 94.3% | 2min | AGENTS.md |
-| A17 | Update AGENTS.md test count to 109 | 2min | AGENTS.md |
-| A18 | Add migration.go to AGENTS.md architecture section | 3min | AGENTS.md |
-| A19 | Add example_test.go and fuzz_test.go to AGENTS.md | 2min | AGENTS.md |
-| A20 | Update AGENTS.md locking protocol docs description | 2min | AGENTS.md |
-| A21 | Remove stale "4 mutexes" references from AGENTS.md | 3min | AGENTS.md |
+| #   | Micro-task                                                        | Est  | File         |
+| --- | ----------------------------------------------------------------- | ---- | ------------ |
+| A1  | Mark TODO_LIST "Versioned report schema" as done                  | 2min | TODO_LIST.md |
+| A2  | Mark TODO_LIST "Document Recorder locking protocol" as done       | 2min | TODO_LIST.md |
+| A3  | Mark TODO_LIST "Add runnable godoc examples" as done              | 2min | TODO_LIST.md |
+| A4  | Mark TODO_LIST "buildCapabilityMap iterative" as done             | 2min | TODO_LIST.md |
+| A5  | Mark TODO_LIST "Single-lock Recorder optimization" as done        | 2min | TODO_LIST.md |
+| A6  | Mark TODO_LIST "Fuzz test for HTML template" as done              | 2min | TODO_LIST.md |
+| A7  | Add "Schema migration (MigrateReport)" to P1 section or mark done | 2min | TODO_LIST.md |
+| A8  | Add completed section entry for session 3 work                    | 3min | TODO_LIST.md |
+| A9  | Add "Schema migration" to FEATURES.md DONE table                  | 2min | FEATURES.md  |
+| A10 | Add "Godoc examples" to FEATURES.md DONE table                    | 2min | FEATURES.md  |
+| A11 | Add "HTML fuzz test" to FEATURES.md DONE table                    | 2min | FEATURES.md  |
+| A12 | Add "buildCapabilityMap iterative" to FEATURES.md DONE table      | 2min | FEATURES.md  |
+| A13 | Add "Single-lock optimization" to FEATURES.md DONE table          | 2min | FEATURES.md  |
+| A14 | Update FEATURES.md PLANNED: remove completed items                | 3min | FEATURES.md  |
+| A15 | Update FEATURES.md PARTIALLY DONE: schema migration now done      | 2min | FEATURES.md  |
+| A16 | Update AGENTS.md coverage to 94.3%                                | 2min | AGENTS.md    |
+| A17 | Update AGENTS.md test count to 109                                | 2min | AGENTS.md    |
+| A18 | Add migration.go to AGENTS.md architecture section                | 3min | AGENTS.md    |
+| A19 | Add example_test.go and fuzz_test.go to AGENTS.md                 | 2min | AGENTS.md    |
+| A20 | Update AGENTS.md locking protocol docs description                | 2min | AGENTS.md    |
+| A21 | Remove stale "4 mutexes" references from AGENTS.md                | 3min | AGENTS.md    |
 
 ### Wave B: Coverage — migration.go (4% → 64% of value)
 
-| # | Micro-task | Est | Target |
-|---|-----------|-----|--------|
-| B1 | Test computeServiceStatusFromInfo: registered status | 3min | migration.go:56 |
-| B2 | Test computeServiceStatusFromInfo: active status | 3min | migration.go:56 |
-| B3 | Test computeServiceStatusFromInfo: invocation_error status | 3min | migration.go:56 |
-| B4 | Test computeServiceStatusFromInfo: shutdown status | 3min | migration.go:56 |
-| B5 | Test computeServiceStatusFromInfo: shutdown_error status | 3min | migration.go:56 |
-| B6 | Test countUniqueScopes: nested children | 3min | migration.go:46 |
-| B7 | Test countUniqueScopes: empty tree | 2min | migration.go:46 |
-| B8 | Test MigrateReport: service with existing status (no overwrite) | 3min | migration.go |
+| #   | Micro-task                                                      | Est  | Target          |
+| --- | --------------------------------------------------------------- | ---- | --------------- |
+| B1  | Test computeServiceStatusFromInfo: registered status            | 3min | migration.go:56 |
+| B2  | Test computeServiceStatusFromInfo: active status                | 3min | migration.go:56 |
+| B3  | Test computeServiceStatusFromInfo: invocation_error status      | 3min | migration.go:56 |
+| B4  | Test computeServiceStatusFromInfo: shutdown status              | 3min | migration.go:56 |
+| B5  | Test computeServiceStatusFromInfo: shutdown_error status        | 3min | migration.go:56 |
+| B6  | Test countUniqueScopes: nested children                         | 3min | migration.go:46 |
+| B7  | Test countUniqueScopes: empty tree                              | 2min | migration.go:46 |
+| B8  | Test MigrateReport: service with existing status (no overwrite) | 3min | migration.go    |
 
 ### Wave C: Coverage — recorder.go hot paths
 
-| # | Micro-task | Est | Target |
-|---|-----------|-----|--------|
-| C1 | Test inferServiceType: eager provider | 3min | recorder.go:141 |
-| C2 | Test inferServiceType: transient provider | 3min | recorder.go:141 |
-| C3 | Test inferServiceType: unknown provider | 3min | recorder.go:141 |
-| C4 | Test mermaidLabelForRef: dependency not in service list | 5min | mermaid.go:81 |
-| C5 | Test WriteMermaid: write error mid-line | 5min | mermaid.go:12 |
-| C6 | Test ExportFilteredToFile: permission denied path | 3min | plugin.go:143 |
-| C7 | Test updateInvocationAggregate: late registration | 5min | recorder.go:431 |
-| C8 | Test updateInvocationAggregate: error + duration | 5min | recorder.go:431 |
-| C9 | Test RecordHealthCheckWithContext: cancelled context | 5min | plugin.go:176 |
-| C10 | Test enrichCapabilities: nil ref skip | 5min | recorder.go:153 |
-| C11 | Test ResolveServiceScope: child scope ancestor walk | 5min | recorder.go:904 |
-| C12 | Test ResolveServiceScope: not found in any ancestor | 5min | recorder.go:904 |
+| #   | Micro-task                                              | Est  | Target          |
+| --- | ------------------------------------------------------- | ---- | --------------- |
+| C1  | Test inferServiceType: eager provider                   | 3min | recorder.go:141 |
+| C2  | Test inferServiceType: transient provider               | 3min | recorder.go:141 |
+| C3  | Test inferServiceType: unknown provider                 | 3min | recorder.go:141 |
+| C4  | Test mermaidLabelForRef: dependency not in service list | 5min | mermaid.go:81   |
+| C5  | Test WriteMermaid: write error mid-line                 | 5min | mermaid.go:12   |
+| C6  | Test ExportFilteredToFile: permission denied path       | 3min | plugin.go:143   |
+| C7  | Test updateInvocationAggregate: late registration       | 5min | recorder.go:431 |
+| C8  | Test updateInvocationAggregate: error + duration        | 5min | recorder.go:431 |
+| C9  | Test RecordHealthCheckWithContext: cancelled context    | 5min | plugin.go:176   |
+| C10 | Test enrichCapabilities: nil ref skip                   | 5min | recorder.go:153 |
+| C11 | Test ResolveServiceScope: child scope ancestor walk     | 5min | recorder.go:904 |
+| C12 | Test ResolveServiceScope: not found in any ancestor     | 5min | recorder.go:904 |
 
 ### Wave D: Final Verification
 
-| # | Micro-task | Est | Target |
-|---|-----------|-----|--------|
-| D1 | Run go build ./... | 1min | full project |
-| D2 | Run go test -timeout 60s -count=1 -cover ./... | 2min | full project |
-| D3 | Run golangci-lint run | 2min | full project |
-| D4 | Check coverage report for remaining gaps | 3min | coverage |
-| D5 | Verify no regressions in example_test.go | 2min | examples |
-| D6 | Update docs/planning/execution-plan.md status | 5min | planning |
+| #   | Micro-task                                     | Est  | Target       |
+| --- | ---------------------------------------------- | ---- | ------------ |
+| D1  | Run go build ./...                             | 1min | full project |
+| D2  | Run go test -timeout 60s -count=1 -cover ./... | 2min | full project |
+| D3  | Run golangci-lint run                          | 2min | full project |
+| D4  | Check coverage report for remaining gaps       | 3min | coverage     |
+| D5  | Verify no regressions in example_test.go       | 2min | examples     |
+| D6  | Update docs/planning/execution-plan.md status  | 5min | planning     |
 
 ---
 
@@ -154,20 +154,20 @@ graph TD
 
 ## Effort Summary
 
-| Wave | Tasks | Est. Time | Cumulative Coverage Gain |
-|------|-------|-----------|--------------------------|
-| A: Docs | 21 | 45min | 0% (documentation only) |
-| B: Migration coverage | 8 | 23min | +2-3% (migration.go → 90%+) |
-| C: Hot path coverage | 12 | 55min | +1-2% (recorder/mermaid/plugin) |
-| D: Verification | 6 | 15min | — (gate) |
-| **Total** | **47** | **~2.5h** | **94.3% → ~97%** |
+| Wave                  | Tasks  | Est. Time | Cumulative Coverage Gain        |
+| --------------------- | ------ | --------- | ------------------------------- |
+| A: Docs               | 21     | 45min     | 0% (documentation only)         |
+| B: Migration coverage | 8      | 23min     | +2-3% (migration.go → 90%+)     |
+| C: Hot path coverage  | 12     | 55min     | +1-2% (recorder/mermaid/plugin) |
+| D: Verification       | 6      | 15min     | — (gate)                        |
+| **Total**             | **47** | **~2.5h** | **94.3% → ~97%**                |
 
 ## Items Explicitly NOT Included
 
-| Item | Why |
-|------|-----|
-| PlantUML export | Deferred until users request it |
-| Prometheus/OTel | Out of scope per AGENTS.md |
-| Goroutine-local stacks | Requires samber/do API changes |
-| `interface{}` → `any` in test files | Test-only, no production impact |
-| `err113` in test files | Test-only, intentional for error simulation |
+| Item                                | Why                                         |
+| ----------------------------------- | ------------------------------------------- |
+| PlantUML export                     | Deferred until users request it             |
+| Prometheus/OTel                     | Out of scope per AGENTS.md                  |
+| Goroutine-local stacks              | Requires samber/do API changes              |
+| `interface{}` → `any` in test files | Test-only, no production impact             |
+| `err113` in test files              | Test-only, intentional for error simulation |

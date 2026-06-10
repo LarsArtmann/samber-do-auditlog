@@ -8,15 +8,15 @@
 
 ## TL;DR
 
-| Metric | Value | Trend |
-|--------|-------|-------|
-| Tests | 140 passing (133 unit + 6 examples + 1 fuzz) + 14 benchmarks | +31 from Session 3 |
-| Coverage | **95.1%** (library), 69.0% (total including example) | +0.8% |
-| Lint | **0 issues** (golangci-lint, 108 linters) | Stable |
-| Build | Clean (`go build`, `go vet`) | Stable |
-| LOC | 2,212 production, 3,339 test, 5,451 total | +155 prod, +160 test |
-| Files | 11 source files (8 prod + 3 generated/test) | Stable |
-| Open TODOs | 2 items (PlantUML export, Config.Validate) | From 8 |
+| Metric     | Value                                                        | Trend                |
+| ---------- | ------------------------------------------------------------ | -------------------- |
+| Tests      | 140 passing (133 unit + 6 examples + 1 fuzz) + 14 benchmarks | +31 from Session 3   |
+| Coverage   | **95.1%** (library), 69.0% (total including example)         | +0.8%                |
+| Lint       | **0 issues** (golangci-lint, 108 linters)                    | Stable               |
+| Build      | Clean (`go build`, `go vet`)                                 | Stable               |
+| LOC        | 2,212 production, 3,339 test, 5,451 total                    | +155 prod, +160 test |
+| Files      | 11 source files (8 prod + 3 generated/test)                  | Stable               |
+| Open TODOs | 2 items (PlantUML export, Config.Validate)                   | From 8               |
 
 ---
 
@@ -24,22 +24,22 @@
 
 ### Session 4 (this session, 19:10 CEST)
 
-| # | Task | Evidence |
-|---|------|----------|
-| 1 | Fix duplicate `TestPlugin_ProvideTransient` compile error | Renamed to `TestPlugin_ProvideTransientType` |
-| 2 | Fix service name lookup in `TestPlugin_ProvideEager` | Used `findServiceBySuffix` (full module path) |
-| 3 | Remove duplicate `TestWriteMermaid_WithDepsAndTypes` | `dupl` lint flagged; identical to existing test |
-| 4 | Fix stale "4-lock design" in FEATURES.md | Updated to single-lock description |
-| 5 | Add `TestMigrateReport_NestedScopes` | Covers `countUniqueScopes` with nested children |
-| 6 | Add `TestMigrateReport_EmptyScopeTree` | Covers `countUniqueScopes` with empty tree |
-| 7 | Add `TestMigrateReport_StatusComputation` | Table-driven: all 5 `computeServiceStatusFromInfo` branches |
-| 8 | Add `TestMigrateReport_PreservesExistingStatus` | Status guard in `MigrateReport` |
-| 9 | Add `TestPlugin_ProvideEager` | Covers `inferServiceType` for eager provider |
-| 10 | Add `TestPlugin_ProvideTransientType` | Covers `inferServiceType` for transient provider |
-| 11 | Update AGENTS.md coverage/test count | 95.1%, 140 tests |
-| 12 | Update TODO_LIST.md Session 4 section | All items documented |
-| 13 | Fix FEATURES.md stale claims | Concurrent-safe recording now single-lock |
-| 14 | All tests green, 0 lint issues | Verified end-to-end |
+| #   | Task                                                      | Evidence                                                    |
+| --- | --------------------------------------------------------- | ----------------------------------------------------------- |
+| 1   | Fix duplicate `TestPlugin_ProvideTransient` compile error | Renamed to `TestPlugin_ProvideTransientType`                |
+| 2   | Fix service name lookup in `TestPlugin_ProvideEager`      | Used `findServiceBySuffix` (full module path)               |
+| 3   | Remove duplicate `TestWriteMermaid_WithDepsAndTypes`      | `dupl` lint flagged; identical to existing test             |
+| 4   | Fix stale "4-lock design" in FEATURES.md                  | Updated to single-lock description                          |
+| 5   | Add `TestMigrateReport_NestedScopes`                      | Covers `countUniqueScopes` with nested children             |
+| 6   | Add `TestMigrateReport_EmptyScopeTree`                    | Covers `countUniqueScopes` with empty tree                  |
+| 7   | Add `TestMigrateReport_StatusComputation`                 | Table-driven: all 5 `computeServiceStatusFromInfo` branches |
+| 8   | Add `TestMigrateReport_PreservesExistingStatus`           | Status guard in `MigrateReport`                             |
+| 9   | Add `TestPlugin_ProvideEager`                             | Covers `inferServiceType` for eager provider                |
+| 10  | Add `TestPlugin_ProvideTransientType`                     | Covers `inferServiceType` for transient provider            |
+| 11  | Update AGENTS.md coverage/test count                      | 95.1%, 140 tests                                            |
+| 12  | Update TODO_LIST.md Session 4 section                     | All items documented                                        |
+| 13  | Fix FEATURES.md stale claims                              | Concurrent-safe recording now single-lock                   |
+| 14  | All tests green, 0 lint issues                            | Verified end-to-end                                         |
 
 ### Session 3 (earlier today)
 
@@ -86,19 +86,19 @@
 
 Nothing is half-built. Every feature that has been started is complete and working. The two items below are explicitly deferred, not incomplete:
 
-| Item | Status | Why Partial |
-|------|--------|-------------|
-| `Config.Validate()` | Always returns `nil` | API exists, documented as placeholder. Could validate ContainerID for path separators. |
-| `mermaidLabelForRef` coverage | 0.0% | Function exists and works but is unreachable through normal samber/do usage — only fires when a dependency ServiceRef doesn't appear in Services list. Test coverage would require crafting synthetic data. |
+| Item                          | Status               | Why Partial                                                                                                                                                                                                 |
+| ----------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Config.Validate()`           | Always returns `nil` | API exists, documented as placeholder. Could validate ContainerID for path separators.                                                                                                                      |
+| `mermaidLabelForRef` coverage | 0.0%                 | Function exists and works but is unreachable through normal samber/do usage — only fires when a dependency ServiceRef doesn't appear in Services list. Test coverage would require crafting synthetic data. |
 
 ---
 
 ## C) NOT STARTED 📋
 
-| # | Item | Priority | Effort | Impact |
-|---|------|----------|--------|--------|
-| 1 | PlantUML export | Future | Medium | Low — Mermaid already works |
-| 2 | Config.Validate real checks | Polish | Low | Low — no known bugs from missing validation |
+| #   | Item                        | Priority | Effort | Impact                                      |
+| --- | --------------------------- | -------- | ------ | ------------------------------------------- |
+| 1   | PlantUML export             | Future   | Medium | Low — Mermaid already works                 |
+| 2   | Config.Validate real checks | Polish   | Low    | Low — no known bugs from missing validation |
 
 Both are explicitly documented in TODO_LIST.md as future/polish items. No user requests for either.
 
@@ -119,13 +119,13 @@ Both are explicitly documented in TODO_LIST.md as future/polish items. No user r
 
 ### Close calls (already fixed):
 
-| What happened | How fixed | Commit |
-|---------------|-----------|--------|
-| Duplicate `TestPlugin_ProvideTransient` function name | Renamed to `TestPlugin_ProvideTransientType` | `e776f4a` |
-| `ServiceByName("*auditlog_test.Database")` failed — samber/do uses full module path | Changed to `findServiceBySuffix` | `e776f4a` |
-| Duplicate `TestWriteMermaid_WithDepsAndTypes` flagged by `dupl` lint | Removed — identical to existing test | `e776f4a` |
-| Stale "4-lock design" in FEATURES.md after Session 3 optimization | Updated to single-lock | `e776f4a` |
-| Edit tool ate 3 lines of context when renaming function | Restored setup lines (`p :=`, `injector :=`, `type token`) | `e776f4a` |
+| What happened                                                                       | How fixed                                                  | Commit    |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------- | --------- |
+| Duplicate `TestPlugin_ProvideTransient` function name                               | Renamed to `TestPlugin_ProvideTransientType`               | `e776f4a` |
+| `ServiceByName("*auditlog_test.Database")` failed — samber/do uses full module path | Changed to `findServiceBySuffix`                           | `e776f4a` |
+| Duplicate `TestWriteMermaid_WithDepsAndTypes` flagged by `dupl` lint                | Removed — identical to existing test                       | `e776f4a` |
+| Stale "4-lock design" in FEATURES.md after Session 3 optimization                   | Updated to single-lock                                     | `e776f4a` |
+| Edit tool ate 3 lines of context when renaming function                             | Restored setup lines (`p :=`, `injector :=`, `type token`) | `e776f4a` |
 
 ---
 
@@ -181,33 +181,33 @@ Both are explicitly documented in TODO_LIST.md as future/polish items. No user r
 
 Sorted by impact/effort ratio (Pareto principle):
 
-| # | Task | Impact | Effort | Category |
-|---|------|--------|--------|----------|
-| 1 | Push commit `e776f4a` to origin | High | Zero | Ops |
-| 2 | Add GitHub Actions CI (build, test, lint, race) | High | Low | DevEx |
-| 3 | Update CHANGELOG.md with Session 3-4 work | Medium | Low | Docs |
-| 4 | Update DOMAIN_LANGUAGE.md with new concepts | Medium | Low | Docs |
-| 5 | Add `go test -race` to CI | Medium | Low | Testing |
-| 6 | Test `mermaidLabelForRef` via MigrateReport with synthetic deps | Low | Low | Coverage |
-| 7 | Add Config.Validate real checks (ContainerID path separators) | Low | Low | Polish |
-| 8 | Split `recorder.go` into focused files | Medium | Medium | Architecture |
-| 9 | Split `types.go` — extract filter logic to `filter.go` | Low | Low | Architecture |
-| 10 | Add integration test with 10+ service DI graph | Medium | Medium | Testing |
-| 11 | Add benchmark for `WriteMermaid` with many services | Low | Low | Performance |
-| 12 | Add benchmark for `MigrateReport` with large JSON | Low | Low | Performance |
-| 13 | Document ADR: single-lock Recorder design decision | Medium | Low | Docs |
-| 14 | Document ADR: health check wrapper vs hooks | Low | Low | Docs |
-| 15 | Add Recorder interface for downstream mocking | Low | Medium | Architecture |
-| 16 | Add `//go:build ignore` or build tag for example | Low | Low | Polish |
-| 17 | Test `inferServiceType` `!ok` branch (scope closed) | Low | Medium | Coverage |
-| 18 | Add PlantUML export if users request it | Low | Medium | Feature |
-| 19 | Create `flake.nix` for reproducible builds | Medium | Medium | DevEx |
-| 20 | Add README.md section about performance characteristics | Low | Low | Docs |
-| 21 | Add contributing guide (CONTRIBUTING.md) | Low | Low | DevEx |
-| 22 | Add `golangci-lint` config validation to CI | Low | Zero | DevEx |
-| 23 | Add Go report card badge to README | Low | Zero | DevEx |
-| 24 | Test HTML export with 100+ services for perf | Low | Low | Performance |
-| 25 | Remove `mermaidLabelForRef` if provably dead code | Low | Low | Cleanup |
+| #   | Task                                                            | Impact | Effort | Category     |
+| --- | --------------------------------------------------------------- | ------ | ------ | ------------ |
+| 1   | Push commit `e776f4a` to origin                                 | High   | Zero   | Ops          |
+| 2   | Add GitHub Actions CI (build, test, lint, race)                 | High   | Low    | DevEx        |
+| 3   | Update CHANGELOG.md with Session 3-4 work                       | Medium | Low    | Docs         |
+| 4   | Update DOMAIN_LANGUAGE.md with new concepts                     | Medium | Low    | Docs         |
+| 5   | Add `go test -race` to CI                                       | Medium | Low    | Testing      |
+| 6   | Test `mermaidLabelForRef` via MigrateReport with synthetic deps | Low    | Low    | Coverage     |
+| 7   | Add Config.Validate real checks (ContainerID path separators)   | Low    | Low    | Polish       |
+| 8   | Split `recorder.go` into focused files                          | Medium | Medium | Architecture |
+| 9   | Split `types.go` — extract filter logic to `filter.go`          | Low    | Low    | Architecture |
+| 10  | Add integration test with 10+ service DI graph                  | Medium | Medium | Testing      |
+| 11  | Add benchmark for `WriteMermaid` with many services             | Low    | Low    | Performance  |
+| 12  | Add benchmark for `MigrateReport` with large JSON               | Low    | Low    | Performance  |
+| 13  | Document ADR: single-lock Recorder design decision              | Medium | Low    | Docs         |
+| 14  | Document ADR: health check wrapper vs hooks                     | Low    | Low    | Docs         |
+| 15  | Add Recorder interface for downstream mocking                   | Low    | Medium | Architecture |
+| 16  | Add `//go:build ignore` or build tag for example                | Low    | Low    | Polish       |
+| 17  | Test `inferServiceType` `!ok` branch (scope closed)             | Low    | Medium | Coverage     |
+| 18  | Add PlantUML export if users request it                         | Low    | Medium | Feature      |
+| 19  | Create `flake.nix` for reproducible builds                      | Medium | Medium | DevEx        |
+| 20  | Add README.md section about performance characteristics         | Low    | Low    | Docs         |
+| 21  | Add contributing guide (CONTRIBUTING.md)                        | Low    | Low    | DevEx        |
+| 22  | Add `golangci-lint` config validation to CI                     | Low    | Zero   | DevEx        |
+| 23  | Add Go report card badge to README                              | Low    | Zero   | DevEx        |
+| 24  | Test HTML export with 100+ services for perf                    | Low    | Low    | Performance  |
+| 25  | Remove `mermaidLabelForRef` if provably dead code               | Low    | Low    | Cleanup      |
 
 ---
 
@@ -227,33 +227,33 @@ If it's genuinely unreachable, it should be removed. If there's a valid use case
 
 ## File Inventory
 
-| File | Lines | Purpose | Coverage |
-|------|-------|---------|----------|
-| `recorder.go` | 938 | Core state machine, hooks, report building | 93-100% |
-| `types.go` | 467 | Domain types, Report methods, filter logic | 100% |
-| `plugin.go` | 216 | Public API, export methods, health check wrappers | 88-100% |
-| `example_test.go` | 144 | 6 godoc examples | N/A |
-| `mermaid.go` | 83 | Mermaid flowchart export | 0-100% (mermaidLabelForRef at 0%) |
-| `html_templ.go` | 89 | Generated templ HTML | 76.4% |
-| `migration.go` | 74 | Schema migration v0.1.0 → v0.2.0 | 100% |
-| `html.go` | 26 | HTML export entry points | 100% |
-| `fuzz_test.go` | 63 | HTML fuzz test | N/A |
-| `doc.go` | 12 | Package doc comment | N/A |
-| `auditlog_test.go` | 3,339 | 140 tests + 14 benchmarks | N/A |
+| File               | Lines | Purpose                                           | Coverage                          |
+| ------------------ | ----- | ------------------------------------------------- | --------------------------------- |
+| `recorder.go`      | 938   | Core state machine, hooks, report building        | 93-100%                           |
+| `types.go`         | 467   | Domain types, Report methods, filter logic        | 100%                              |
+| `plugin.go`        | 216   | Public API, export methods, health check wrappers | 88-100%                           |
+| `example_test.go`  | 144   | 6 godoc examples                                  | N/A                               |
+| `mermaid.go`       | 83    | Mermaid flowchart export                          | 0-100% (mermaidLabelForRef at 0%) |
+| `html_templ.go`    | 89    | Generated templ HTML                              | 76.4%                             |
+| `migration.go`     | 74    | Schema migration v0.1.0 → v0.2.0                  | 100%                              |
+| `html.go`          | 26    | HTML export entry points                          | 100%                              |
+| `fuzz_test.go`     | 63    | HTML fuzz test                                    | N/A                               |
+| `doc.go`           | 12    | Package doc comment                               | N/A                               |
+| `auditlog_test.go` | 3,339 | 140 tests + 14 benchmarks                         | N/A                               |
 
 ## Benchmark Results
 
-| Benchmark | ns/op | B/op | allocs/op |
-|-----------|-------|------|-----------|
-| Invocation (enabled) | 964 | 2,068 | 9 |
-| Invocation (disabled) | 113 | 96 | 4 |
-| Registration | 20,547 | 167,552 | 55 |
-| BuildReport | 33,399 | 83,177 | 102 |
-| EnrichCapabilities | 34,501 | 83,177 | 102 |
-| Concurrent invocation | 1,190 | 2,215 | 9 |
-| BuildReport 100 svcs | 88,366 | 167,895 | 159 |
-| BuildReport 500 svcs | 703,829 | 875,375 | 579 |
-| HealthCheck | 23,483 | 16,426 | 167 |
+| Benchmark             | ns/op   | B/op    | allocs/op |
+| --------------------- | ------- | ------- | --------- |
+| Invocation (enabled)  | 964     | 2,068   | 9         |
+| Invocation (disabled) | 113     | 96      | 4         |
+| Registration          | 20,547  | 167,552 | 55        |
+| BuildReport           | 33,399  | 83,177  | 102       |
+| EnrichCapabilities    | 34,501  | 83,177  | 102       |
+| Concurrent invocation | 1,190   | 2,215   | 9         |
+| BuildReport 100 svcs  | 88,366  | 167,895 | 159       |
+| BuildReport 500 svcs  | 703,829 | 875,375 | 579       |
+| HealthCheck           | 23,483  | 16,426  | 167       |
 
 ---
 

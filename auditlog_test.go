@@ -2935,7 +2935,8 @@ func TestPlugin_ExportFilteredToFile_BadPath(t *testing.T) {
 	provideDB(injector, "db", "test")
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 
-	err := p.ExportFilteredToFile("/nonexistent/dir/file.json",
+	err := p.ExportFilteredToFile(
+		"/nonexistent/dir/file.json",
 		auditlog.WithServicesByName("db"),
 	)
 	if err == nil {
