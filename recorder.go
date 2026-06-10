@@ -70,9 +70,24 @@ func newSequenceCounter() *atomic.Int64 {
 
 // Recorder captures DI lifecycle events in-memory with minimal overhead.
 //
-// All mutable state is protected by a single RWMutex (mu), which reduces lock
-// acquisition overhead from 2-4 acquisitions per hook to exactly 1. The
-// invocation counter uses an atomic, eliminating a separate mutex.
+// # Locking Protocol
+//
+// All mutable state is protected by a single sync.RWMutex (mu):
+//
+//	Write path:  mu.Lock()   — all hook methods (OnBefore*, OnAfter*, RecordHealthCheck)
+//	Read path:   mu.RLock()  — BuildReport, Events, EventsCount, ResolveServiceScope
+//
+// The invocation counter (invocationSeq) uses atomic.Int64, eliminating a separate mutex.
+// Sequence numbers use a separate per-recorder atomic.Int64, also lock-free.
+//
+// The onEvent callback is always called outside the lock to prevent user code from
+// blocking or deadlocking the recorder.
+//
+// # Critical: enrichCapabilities and do.ExplainInjector
+//
+// BuildReport copies the scopes map under mu.RLock, then releases the lock BEFORE calling
+// enrichCapabilities. This is mandatory because do.ExplainInjector acquires internal
+// samber/do locks that would deadlock if called from inside any hook (which holds mu).
 type Recorder struct {
 	mu       sync.RWMutex
 	events   []Event
