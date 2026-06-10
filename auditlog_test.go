@@ -1570,3 +1570,263 @@ func TestPlugin_HealthCheckSucceededFalseWhenNoChecks(t *testing.T) {
 		t.Errorf("HealthCheckedCount: want 0, got %d", report.HealthCheckedCount)
 	}
 }
+
+func TestPlugin_HealthCheckOnEventCallback(t *testing.T) {
+	var captured []auditlog.Event
+
+	p := auditlog.New(auditlog.Config{
+		Enabled: true,
+		OnEvent: func(e auditlog.Event) {
+			captured = append(captured, e)
+		},
+	})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: "test"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
+
+	_ = p.RecordHealthCheck(injector)
+
+	var healthCallbacks []auditlog.Event
+	for _, e := range captured {
+		if e.IsHealthCheck() {
+			healthCallbacks = append(healthCallbacks, e)
+		}
+	}
+
+	if len(healthCallbacks) != 1 {
+		t.Fatalf("expected 1 health check event via OnEvent, got %d", len(healthCallbacks))
+	}
+
+	evt := healthCallbacks[0]
+	if evt.EventType != auditlog.EventTypeHealthCheck {
+		t.Errorf("event type: want health_check, got %s", evt.EventType)
+	}
+
+	if evt.Phase != auditlog.PhaseAfter {
+		t.Errorf("phase: want after, got %s", evt.Phase)
+	}
+
+	if evt.ServiceName != "db" {
+		t.Errorf("service name: want db, got %s", evt.ServiceName)
+	}
+
+	if evt.Error != nil {
+		t.Errorf("expected no error for healthy service, got %s", *evt.Error)
+	}
+}
+
+func TestPlugin_HealthCheckPhaseIsAfterOnly(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: "test"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
+	_ = p.RecordHealthCheck(injector)
+
+	report := p.Report()
+	healthEvents := report.EventsByType(auditlog.EventTypeHealthCheck)
+
+	if len(healthEvents) != 1 {
+		t.Fatalf("expected 1 health check event, got %d", len(healthEvents))
+	}
+
+	if healthEvents[0].Phase != auditlog.PhaseAfter {
+		t.Errorf("health check events should always be PhaseAfter, got %s", healthEvents[0].Phase)
+	}
+
+	if healthEvents[0].DurationMs != nil {
+		t.Error("health check events should not have DurationMs (per-service timing unavailable)")
+	}
+}
+
+func TestPlugin_HealthCheckJSONExport(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: "test"}, nil
+	})
+	do.ProvideNamed(injector, "cache", func(i do.Injector) (*UnhealthyCache, error) {
+		return &UnhealthyCache{Reason: "down"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
+	_ = do.MustInvokeNamed[*UnhealthyCache](injector, "cache")
+
+	_ = p.RecordHealthCheck(injector)
+
+	var buf bytes.Buffer
+
+	err := p.WriteReportJSON(&buf)
+	if err != nil {
+		t.Fatalf("WriteReportJSON: %v", err)
+	}
+
+	var report map[string]interface{}
+
+	err = json.Unmarshal(buf.Bytes(), &report)
+	if err != nil {
+		t.Fatalf("json unmarshal: %v", err)
+	}
+
+	if report["health_check_succeeded"] != false {
+		t.Error("expected health_check_succeeded to be false")
+	}
+
+	services, ok := report["services"].([]interface{})
+	if !ok {
+		t.Fatal("services should be an array")
+	}
+
+	for _, svc := range services {
+		svcMap, ok := svc.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		name, _ := svcMap["service_name"].(string)
+		if name == "cache" {
+			if svcMap["health_check_error"] == nil {
+				t.Error("cache should have health_check_error in JSON export")
+			}
+		}
+	}
+}
+
+func TestPlugin_HealthCheckNDJSONExport(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: "test"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
+	_ = p.RecordHealthCheck(injector)
+
+	var buf bytes.Buffer
+
+	err := p.WriteEventsNDJSON(&buf)
+	if err != nil {
+		t.Fatalf("WriteEventsNDJSON: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
+	foundHealthCheck := false
+
+	for _, line := range lines {
+		var evt map[string]interface{}
+
+		err := json.Unmarshal([]byte(line), &evt)
+		if err != nil {
+			t.Fatalf("json unmarshal line: %v", err)
+		}
+
+		if evt["event_type"] == "health_check" {
+			foundHealthCheck = true
+
+			if evt["phase"] != "after" {
+				t.Errorf("health check event phase: want after, got %v", evt["phase"])
+			}
+
+			if _, ok := evt["duration_ms"]; ok {
+				t.Error("health check events should not have duration_ms in NDJSON export")
+			}
+		}
+	}
+
+	if !foundHealthCheck {
+		t.Error("expected at least one health_check event in NDJSON export")
+	}
+}
+
+func TestReport_ServiceByName(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+
+	svc := report.ServiceByName("db")
+	if svc == nil {
+		t.Fatal("expected to find db service")
+	}
+
+	if svc.ServiceName != "db" {
+		t.Errorf("service name: want db, got %s", svc.ServiceName)
+	}
+
+	if report.ServiceByName("nonexistent") != nil {
+		t.Error("expected nil for nonexistent service")
+	}
+}
+
+func TestReport_FailedServices(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	do.ProvideNamed(injector, "flaky", func(i do.Injector) (*Database, error) {
+		return nil, errors.New("connection refused")
+	})
+
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_, _ = do.InvokeNamed[*Database](injector, "flaky")
+
+	report := p.Report()
+	failed := report.FailedServices()
+	if len(failed) != 1 {
+		t.Fatalf("expected 1 failed service, got %d", len(failed))
+	}
+
+	if failed[0].ServiceName != "flaky" {
+		t.Errorf("failed service: want flaky, got %s", failed[0].ServiceName)
+	}
+}
+
+func TestServiceStatus_IsError(t *testing.T) {
+	tests := []struct {
+		status auditlog.ServiceStatus
+		want   bool
+	}{
+		{auditlog.ServiceStatusInvocationError, true},
+		{auditlog.ServiceStatusShutdownError, true},
+		{auditlog.ServiceStatusRegistered, false},
+		{auditlog.ServiceStatusActive, false},
+		{auditlog.ServiceStatusShutdown, false},
+	}
+	for _, tc := range tests {
+		t.Run(string(tc.status), func(t *testing.T) {
+			if tc.status.IsError() != tc.want {
+				t.Errorf("IsError() = %v, want %v", tc.status.IsError(), tc.want)
+			}
+		})
+	}
+}
+
+func TestServiceRef_String(t *testing.T) {
+	tests := []struct {
+		ref  auditlog.ServiceRef
+		want string
+	}{
+		{auditlog.ServiceRef{ScopeName: "api", ServiceName: "db"}, "api/db"},
+		{auditlog.ServiceRef{ScopeName: "[root]", ServiceName: "db"}, "db"},
+		{auditlog.ServiceRef{ScopeName: "", ServiceName: "db"}, "db"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.ref.String(), func(t *testing.T) {
+			if tc.ref.String() != tc.want {
+				t.Errorf("String() = %q, want %q", tc.ref.String(), tc.want)
+			}
+		})
+	}
+}

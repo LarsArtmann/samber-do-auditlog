@@ -145,6 +145,30 @@ func inferServiceType(scope *do.Scope, serviceName string) ProviderType {
 	return ProviderType(desc.ServiceType)
 }
 
+// inferCapabilities uses do.ExplainInjector to determine whether the service
+// implements Healthchecker or Shutdowner. It walks the DAG for the given scope
+// and returns (isHealthchecker, isShutdowner).
+func inferCapabilities(scope *do.Scope, serviceName string) (bool, bool) {
+	return findCapabilitiesInScopes(do.ExplainInjector(scope).DAG, serviceName)
+}
+
+// findCapabilitiesInScopes recursively searches the scope DAG for the service.
+func findCapabilitiesInScopes(scopes []do.ExplainInjectorScopeOutput, serviceName string) (bool, bool) {
+	for _, s := range scopes {
+		for _, svc := range s.Services {
+			if svc.ServiceName == serviceName {
+				return svc.IsHealthchecker, svc.IsShutdowner
+			}
+		}
+
+		if hc, sh := findCapabilitiesInScopes(s.Children, serviceName); hc || sh {
+			return hc, sh
+		}
+	}
+
+	return false, false
+}
+
 // newEvent builds an Event struct with all fields initialized.
 func newEvent(
 	seq int,
@@ -258,7 +282,9 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 
 	r.mu.Lock()
 	if _, ok := r.services[key]; !ok {
-		r.services[key] = newServiceRecord(scope, serviceName, now)
+		rec := newServiceRecord(scope, serviceName, now)
+		rec.isHealthchecker, rec.isShutdowner = inferCapabilities(scope, serviceName)
+		r.services[key] = rec
 	}
 	r.mu.Unlock()
 	r.addEvent(
