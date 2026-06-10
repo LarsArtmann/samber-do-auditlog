@@ -118,7 +118,8 @@ type Report struct {
 	ScopeTree               ScopeNode     `json:"scope_tree"`
 }
 
-// ServiceByName returns the first ServiceInfo matching the given service name suffix.
+// ServiceByName returns the first ServiceInfo matching the given exact service name.
+// Returns nil if no service matches.
 func (r Report) ServiceByName(name string) *ServiceInfo {
 	for i := range r.Services {
 		if r.Services[i].ServiceName == name {

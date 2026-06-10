@@ -20,6 +20,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `ServiceRef` type (renamed from `DependencyRef`) — embedded in `Event` and `ServiceInfo` for single source of truth on service identity. JSON output unchanged (embedded struct fields are flattened)
 - Event convenience methods: `IsRegistration()`, `IsInvocation()`, `IsShutdown()`, `IsBefore()`, `IsAfter()`
 - `Config.OnEvent` callback for real-time event streaming — called after each event is captured, outside the mutex, enabling live observability without polling
+- `ServiceRef.String()` — human-readable `"scope/name"` format for compact display
+- `ServiceStatus.IsError()` — `true` for invocation_error or shutdown_error
+- `Report.ServiceByName(name)` — find service by exact name
+- `Report.EventsByType(t)` — filter events by EventType
+- `Report.FailedServices()` — all services with invocation or shutdown errors
+- Comprehensive example (`example/main.go`) demonstrating 18 samber/do v2 features with self-checking feature checklist
 
 ### Changed
 
