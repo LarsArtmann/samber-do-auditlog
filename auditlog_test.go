@@ -2746,6 +2746,11 @@ func TestReport_FilteredByName(t *testing.T) {
 	if filtered.Services[0].ServiceName != "db" {
 		t.Errorf("service name: want db, got %s", filtered.Services[0].ServiceName)
 	}
+
+	// Scope tree should be pruned to only include the matching service.
+	if len(filtered.ScopeTree.Services) != 1 || filtered.ScopeTree.Services[0] != "db" {
+		t.Errorf("scope_tree services: want [db], got %v", filtered.ScopeTree.Services)
+	}
 }
 
 func TestReport_FilteredByType(t *testing.T) {
@@ -2830,6 +2835,19 @@ func TestReport_FilteredByScope(t *testing.T) {
 
 	if filtered.Services[0].ServiceName != "child-svc" {
 		t.Errorf("service: want child-svc, got %s", filtered.Services[0].ServiceName)
+	}
+
+	// Scope tree preserves hierarchy: root scope remains root, child is pruned to matching scope.
+	if filtered.ScopeCount != 2 {
+		t.Errorf("scope_count: want 2 (root + child), got %d", filtered.ScopeCount)
+	}
+
+	if len(filtered.ScopeTree.Children) != 1 {
+		t.Fatalf("scope_tree: expected 1 child, got %d", len(filtered.ScopeTree.Children))
+	}
+
+	if filtered.ScopeTree.Children[0].ID != child.ID() {
+		t.Errorf("scope_tree child: expected %s, got %s", child.ID(), filtered.ScopeTree.Children[0].ID)
 	}
 }
 

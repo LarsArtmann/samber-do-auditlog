@@ -432,6 +432,7 @@ func (filter *reportFilter) matchEvent(evt Event) bool {
 // Filtered returns a new Report with the given filters applied.
 // Services and events that don't match any filter are removed.
 // Summary fields (counts, durations) are recomputed from the filtered data.
+// The scope tree is pruned to only include scopes with matching services.
 func (r Report) Filtered(opts ...ReportOption) Report {
 	filter := newReportFilter(opts...)
 
@@ -451,13 +452,15 @@ func (r Report) Filtered(opts ...ReportOption) Report {
 		}
 	}
 
+	scopeTree, scopeCount := pruneScopeTree(r.ScopeTree, filteredServices)
+
 	return Report{
 		Version:                 r.Version,
 		ContainerID:             r.ContainerID,
 		ExportedAt:              r.ExportedAt,
 		EventCount:              len(filteredEvents),
 		ServiceCount:            len(filteredServices),
-		ScopeCount:              r.ScopeCount,
+		ScopeCount:              scopeCount,
 		TotalBuildDurationMs:    sumBuildMs(filteredServices),
 		TotalShutdownDurationMs: sumShutdownMs(filteredServices),
 		ShutdownSucceeded:       noShutdownErrors(filteredServices),
@@ -465,8 +468,58 @@ func (r Report) Filtered(opts ...ReportOption) Report {
 		HealthCheckedCount:      countHealthChecked(filteredServices),
 		Events:                  filteredEvents,
 		Services:                filteredServices,
-		ScopeTree:               r.ScopeTree,
+		ScopeTree:               scopeTree,
 	}
+}
+
+// pruneScopeTree rebuilds the scope tree from the original tree,
+// keeping only nodes that have at least one service in the filtered set.
+// Returns the pruned tree and the count of remaining scope nodes.
+func pruneScopeTree(original ScopeNode, filteredServices []ServiceInfo) (ScopeNode, int) {
+	allowed := make(map[string]map[string]struct{}, len(filteredServices))
+	for _, svc := range filteredServices {
+		if allowed[svc.ScopeID] == nil {
+			allowed[svc.ScopeID] = make(map[string]struct{})
+		}
+		allowed[svc.ScopeID][svc.ServiceName] = struct{}{}
+	}
+
+	pruned, count := pruneScopeTreeRecursive(original, allowed)
+
+	return pruned, count
+}
+
+func pruneScopeTreeRecursive(node ScopeNode, allowed map[string]map[string]struct{}) (ScopeNode, int) {
+	var filteredServices []string
+	if svcSet, ok := allowed[node.ID]; ok {
+		for _, name := range node.Services {
+			if _, has := svcSet[name]; has {
+				filteredServices = append(filteredServices, name)
+			}
+		}
+	}
+
+	var filteredChildren []ScopeNode
+	count := 0
+
+	for _, child := range node.Children {
+		prunedChild, childCount := pruneScopeTreeRecursive(child, allowed)
+		if childCount > 0 {
+			filteredChildren = append(filteredChildren, prunedChild)
+			count += childCount
+		}
+	}
+
+	if len(filteredServices) > 0 || count > 0 {
+		return ScopeNode{
+			ID:       node.ID,
+			Name:     node.Name,
+			Services: filteredServices,
+			Children: filteredChildren,
+		}, count + 1
+	}
+
+	return ScopeNode{}, 0
 }
 
 // EventsByRef returns all events for the given scope ID and service name.
