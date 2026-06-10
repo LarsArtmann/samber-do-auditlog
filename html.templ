@@ -608,6 +608,13 @@ templ reportHTML(report Report) {
 	  } else { tooltip.classList.remove('visible'); }
 	});
 
+	function capabilityIcons(s) {
+	  let icons = '';
+	  if (s.is_healthchecker) icons += ' \u{1FA80}';
+	  if (s.is_shutdowner) icons += ' \u{1D43B}';
+	  return icons;
+	}
+
 	function typeBadge(type) {
 	  if (!type || !typeIcons[type]) return '';
 	  return '<span class="type-badge '+type+'" title="'+esc(typeLabels[type]||type)+'">'+typeIcons[type]+' '+esc(typeLabels[type]||type)+'</span>';
@@ -689,13 +696,22 @@ templ reportHTML(report Report) {
 	    const svcDiv=document.createElement('div');
 	    svcDiv.className='scope-services';
 	    const svcTypeMap = {};
-	    report.services.forEach(s => { svcTypeMap[s.scope_id+'/'+s.service_name] = s.service_type; });
+	    const svcCapMap = {};
+	    report.services.forEach(s => {
+	      const key = s.scope_id+'/'+s.service_name;
+	      svcTypeMap[key] = s.service_type;
+	      let caps = '';
+	      if (s.is_healthchecker) caps += ' \u{1FA80}';
+	      if (s.is_shutdowner) caps += ' \u{1D43B}';
+	      svcCapMap[key] = caps;
+	    });
 	    svcs.forEach(name=>{
 	      const sp=document.createElement('span');
 	      sp.className='scope-svc';
 	      const t = svcTypeMap[node.id+'/'+name];
 	      const icon = t && typeIcons[t] ? '<span class="svc-icon">'+typeIcons[t]+'</span>' : '';
-	      sp.innerHTML=icon+esc(name);
+	      const caps = svcCapMap[node.id+'/'+name] || '';
+	      sp.innerHTML=icon+esc(name)+caps;
 	      svcDiv.appendChild(sp);
 	    });
 	    div.appendChild(svcDiv);
@@ -727,7 +743,7 @@ templ reportHTML(report Report) {
 	    const buildPct=s.first_build_duration_ms?((s.first_build_duration_ms/tlMax)*100).toFixed(1):0;
 	    const shutPct=s.shutdown_duration_ms?((s.shutdown_duration_ms/tlMax)*100).toFixed(1):0;
 	    return '<div class="timeline-row">'
-	      +'<div class="timeline-label">'+(icon?icon+' ':'')+s.invocation_order+'. '+esc(s.service_name)+'</div>'
+	      +'<div class="timeline-label">'+(icon?icon+' ':'')+s.invocation_order+'. '+esc(s.service_name)+capabilityIcons(s)+'</div>'
 	      +'<div class="timeline-track">'
 	      +(buildPct>0?'<div class="timeline-bar" style="width:'+buildPct+'%;background:var(--accent)" title="Build: '+(s.first_build_duration_ms||0).toFixed(3)+'ms"></div>':'')
 	      +(shutPct>0?'<div class="timeline-bar" style="width:'+shutPct+'%;background:var(--warning)" title="Shutdown: '+(s.shutdown_duration_ms||0).toFixed(3)+'ms"></div>':'')
