@@ -194,23 +194,23 @@ type ScopeNode struct {
 
 // Report is a consolidated, machine-readable snapshot of the audit log.
 type Report struct {
-	Version                 string        `json:"version"`
-	ContainerID             string        `json:"container_id"`
-	ExportedAt              time.Time     `json:"exported_at"`
-	EventCount              int           `json:"event_count"`
-	ServiceCount            int           `json:"service_count"`
-	ScopeCount              int           `json:"scope_count"`
-	TotalBuildDurationMs    float64       `json:"total_build_duration_ms"`
-	TotalShutdownDurationMs float64       `json:"total_shutdown_duration_ms"`
-	ShutdownSucceeded       bool          `json:"shutdown_succeeded"`
+	Version                 string    `json:"version"`
+	ContainerID             string    `json:"container_id"`
+	ExportedAt              time.Time `json:"exported_at"`
+	EventCount              int       `json:"event_count"`
+	ServiceCount            int       `json:"service_count"`
+	ScopeCount              int       `json:"scope_count"`
+	TotalBuildDurationMs    float64   `json:"total_build_duration_ms"`
+	TotalShutdownDurationMs float64   `json:"total_shutdown_duration_ms"`
+	ShutdownSucceeded       bool      `json:"shutdown_succeeded"`
 	// HealthCheckSucceeded is true when at least one service was health-checked
 	// and all passed. It is false when no health checks ran (HealthCheckedCount == 0)
 	// or when any service failed its check.
-	HealthCheckSucceeded    bool          `json:"health_check_succeeded"`
-	HealthCheckedCount      int           `json:"health_checked_count"`
-	Events                  []Event       `json:"events,omitempty"`
-	Services                []ServiceInfo `json:"services"`
-	ScopeTree               ScopeNode     `json:"scope_tree"`
+	HealthCheckSucceeded bool          `json:"health_check_succeeded"`
+	HealthCheckedCount   int           `json:"health_checked_count"`
+	Events               []Event       `json:"events,omitempty"`
+	Services             []ServiceInfo `json:"services"`
+	ScopeTree            ScopeNode     `json:"scope_tree"`
 }
 
 // ServiceByName returns the first ServiceInfo matching the given exact service name.
@@ -484,6 +484,7 @@ func pruneScopeTree(original ScopeNode, filteredServices []ServiceInfo) (ScopeNo
 		if allowed[svc.ScopeID] == nil {
 			allowed[svc.ScopeID] = make(map[string]struct{})
 		}
+
 		allowed[svc.ScopeID][svc.ServiceName] = struct{}{}
 	}
 
@@ -494,6 +495,7 @@ func pruneScopeTree(original ScopeNode, filteredServices []ServiceInfo) (ScopeNo
 
 func pruneScopeTreeRecursive(node ScopeNode, allowed map[string]map[string]struct{}) (ScopeNode, int) {
 	var filteredServices []string
+
 	if svcSet, ok := allowed[node.ID]; ok {
 		for _, name := range node.Services {
 			if _, has := svcSet[name]; has {
@@ -503,6 +505,7 @@ func pruneScopeTreeRecursive(node ScopeNode, allowed map[string]map[string]struc
 	}
 
 	var filteredChildren []ScopeNode
+
 	count := 0
 
 	for _, child := range node.Children {
@@ -522,7 +525,10 @@ func pruneScopeTreeRecursive(node ScopeNode, allowed map[string]map[string]struc
 		}, count + 1
 	}
 
-	return ScopeNode{}, 0
+	return ScopeNode{ //nolint:exhaustruct
+		ID:   "",
+		Name: "",
+	}, 0
 }
 
 // EventsByRef returns all events for the given scope ID and service name.
@@ -568,10 +574,16 @@ func (r Report) Index() ReportIndex {
 		idx.ByScope[svc.ScopeID] = append(idx.ByScope[svc.ScopeID], *svc)
 	}
 
-	for _, e := range r.Events {
-		idx.EventsByName[e.ServiceName] = append(idx.EventsByName[e.ServiceName], e)
-		idx.EventsByRef[serviceKey(e.ScopeID, e.ServiceName)] = append(idx.EventsByRef[serviceKey(e.ScopeID, e.ServiceName)], e)
-		idx.EventsByType[e.EventType] = append(idx.EventsByType[e.EventType], e)
+	for _, event := range r.Events {
+		idx.EventsByName[event.ServiceName] = append(
+			idx.EventsByName[event.ServiceName], event,
+		)
+		idx.EventsByRef[serviceKey(event.ScopeID, event.ServiceName)] = append(
+			idx.EventsByRef[serviceKey(event.ScopeID, event.ServiceName)], event,
+		)
+		idx.EventsByType[event.EventType] = append(
+			idx.EventsByType[event.EventType], event,
+		)
 	}
 
 	return idx
