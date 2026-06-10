@@ -33,6 +33,7 @@ type serviceRecord struct {
 	scopeID              string
 	scopeName            string
 	serviceName          string
+	serviceType          string
 	registeredAt         time.Time
 	firstInvokedAt       *time.Time
 	invocationCount      int
@@ -127,6 +128,17 @@ func scopeKey(scope *do.Scope, serviceName string) string {
 	return serviceKey(scope.ID(), serviceName)
 }
 
+// inferServiceType uses do.ExplainNamedService to determine the provider type
+// (lazy, eager, transient, alias). Returns empty string if the type cannot be determined.
+func inferServiceType(scope *do.Scope, serviceName string) string {
+	desc, ok := do.ExplainNamedService(scope, serviceName)
+	if !ok {
+		return ""
+	}
+
+	return string(desc.ServiceType)
+}
+
 // newEvent builds an Event struct with all fields initialized.
 func newEvent(
 	seq int,
@@ -161,6 +173,7 @@ func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *servi
 		scopeID:              scope.ID(),
 		scopeName:            scope.Name(),
 		serviceName:          serviceName,
+		serviceType:          inferServiceType(scope, serviceName),
 		registeredAt:         now,
 		firstInvokedAt:       nil,
 		invocationCount:      0,
@@ -455,6 +468,7 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 				ScopeName:   rec.scopeName,
 			},
 			Status:               computeServiceStatus(rec),
+			ServiceType:          rec.serviceType,
 			RegisteredAt:         rec.registeredAt,
 			FirstInvokedAt:       rec.firstInvokedAt,
 			InvocationCount:      rec.invocationCount,

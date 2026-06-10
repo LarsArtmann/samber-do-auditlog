@@ -159,7 +159,7 @@ A single, self-contained dark-themed HTML page. No external JS/CSS. Works offlin
 
 - **Stats cards** — services, events, scopes, dependency count
 - **Services table** — name, scope, invocation order, count, build time, deps, status
-- **Dependency graph** — force-directed SVG with interactive nodes
+- **Dependency graph** — Sugiyama layered DAG layout with pan/zoom and click-to-highlight
 - **Timeline** — horizontal bars showing relative build durations
 - **Events table** — full chronological log with sequence numbers
 

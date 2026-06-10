@@ -81,6 +81,7 @@ type ServiceInfo struct {
 	ServiceRef
 
 	Status               ServiceStatus `json:"status"`
+	ServiceType          string        `json:"service_type"`
 	RegisteredAt         time.Time     `json:"registered_at"`
 	FirstInvokedAt       *time.Time    `json:"first_invoked_at,omitempty"`
 	InvocationCount      int           `json:"invocation_count"`

@@ -96,7 +96,7 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - Benchmarks exist in the test file for performance measurement.
 - Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (clean and error), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations, ServiceStatus computation across all states, transient and value providers.
 - **Coverage: ~90%** of statements, 40 tests (library package).
-- **HTML visualization features**: 5-tab layout (Services/Scopes/Graph/Timeline/Events), services table with status badges + shutdown duration + reverse deps + search filter, collapsible scope tree, force-directed graph with status-colored nodes, dual build+shutdown timeline bars, event type filter chips, keyboard nav (1-5), responsive layout, footer with schema version.
+- **HTML visualization features**: 5-tab layout (Services/Scopes/Graph/Timeline/Events), services table with status badges + shutdown duration + reverse deps + search filter, collapsible scope tree, Sugiyama layered DAG graph with status-colored nodes + pan/zoom + click-to-highlight, dual build+shutdown timeline bars, event type filter chips, keyboard nav (1-5), responsive layout, footer with schema version.
 
 ---
 
