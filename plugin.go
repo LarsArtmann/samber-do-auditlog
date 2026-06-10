@@ -27,11 +27,8 @@ type Config struct {
 }
 
 // Validate returns an error if the config is invalid.
+// Currently always returns nil; reserved for future validation.
 func (c Config) Validate() error {
-	if c.OnEvent == nil {
-		return nil
-	}
-
 	return nil
 }
 
