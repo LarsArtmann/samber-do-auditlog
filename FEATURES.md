@@ -32,7 +32,7 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 | **Zero-cost disabled mode**           | `Enabled: false` → empty `InjectorOpts`, no hooks, no allocation                                                 | ✓ `plugin.go:68-71`                                               |
 | **Explicit enable override**          | `Config.Enabled: true` overrides env var                                                                         | ✓ `plugin.go:46-48`                                               |
 | **Container ID**                      | Human-readable identifier propagated to all events                                                               | ✓ `plugin.go:22-26`                                               |
-| **Concurrent-safe recording**         | 4-lock design: RWMutex for state, Mutex for stack, ordering, shutdown                                            | ✓ `recorder.go:59-76`                                             |
+| **Concurrent-safe recording**         | Single-lock design: 1 RWMutex + 2 atomics (seq, invocationOrder)                                                | ✓ `recorder.go:59-76`                                             |
 | **Deterministic report output**       | Services sorted by (scope_name, service_name), scope tree sorted by scope ID                                     | ✓ `recorder.go:429-434, sortedScopesLocked`                       |
 | **Transient provider support**        | Works with `do.ProvideTransient` — tracks multiple invocations                                                   | ✓ Tested: `TestPlugin_ProvideTransient`                           |
 | **Value provider support**            | Works with `do.ProvideValue`                                                                                     | ✓ Tested: `TestPlugin_ProvideValue`                               |
@@ -64,14 +64,12 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 | **Mermaid export**                    | Dependency graph as Mermaid flowchart via `Report.WriteMermaid(writer)`                                            | ✓ `mermaid.go`                                                     |
 | **Type helpers**                      | `ProviderType.IsKnown()`, `ServiceRef.IsRoot()`, `Event.HasError()`, `ServiceInfo.HasHealthError()`                | ✓ `types.go`                                                       |
 | **EventsByRef**                       | Scoped event lookup by scope ID + service name                                                                    | ✓ `types.go:EventsByRef`                                           |
-
----
-
-## PARTIALLY DONE
-
-| Feature              | What's Done                     | What's Missing                        |
-| -------------------- | ------------------------------- | ------------------------------------- |
-| **Schema migration** | `SchemaVersion` constant exists | No migration function for old exports |
+| **Schema migration**                  | `MigrateReport([]byte)` upgrades v0.1.0 JSON → current schema, recomputes derived fields                           | ✓ `migration.go`                                                    |
+| **Godoc examples**                    | 6 runnable `Example*` functions for pkg.go.dev (New, Report, ExportToFile, Filtered, RecordHealthCheck, WriteMermaid) | ✓ `example_test.go`                                              |
+| **HTML fuzz test**                    | `FuzzPluginHTML` verifies templ XSS escaping with malicious service names                                         | ✓ `fuzz_test.go`                                                    |
+| **Iterative buildCapabilityMap**      | BFS queue replaces recursive `maps.Copy` for capability map construction                                          | ✓ `recorder.go:buildCapabilityMap`                                  |
+| **Single-lock Recorder**              | 4 mutexes → 1 RWMutex + 2 atomics: 23% faster, 50% fewer allocs                                                 | ✓ `recorder.go:Recorder`                                            |
+| **Locking protocol docs**             | Comprehensive godoc on Recorder struct: write/read paths, deadlock risk, enrichCapabilities warning               | ✓ `recorder.go:71-90`                                               |
 
 ---
 
@@ -79,9 +77,7 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 
 | Feature                       | Description                                                            | Priority |
 | ----------------------------- | ---------------------------------------------------------------------- | -------- |
-| **Schema migration**          | Function for migrating old report exports                              | P3       |
 | **PlantUML export**           | Alternative diagram format                                             | Future   |
-| **Godoc examples**            | Runnable `Example*` functions for pkg.go.dev                           | P2       |
 
 ---
 

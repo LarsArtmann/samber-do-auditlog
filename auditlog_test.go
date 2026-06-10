@@ -3177,3 +3177,163 @@ func TestMigrateReport_RoundTrip(t *testing.T) {
 		t.Errorf("event_count: want %d, got %d", original.EventCount, migrated.EventCount)
 	}
 }
+
+func TestMigrateReport_NestedScopes(t *testing.T) {
+	v01JSON := `{
+		"version": "0.1.0",
+		"container_id": "test",
+		"scope_tree": {
+			"id": "root",
+			"name": "[root]",
+			"services": [],
+			"children": [
+				{"id":"child1","name":"child1","services":[],"children":[]},
+				{"id":"child2","name":"child2","services":[],"children":[
+					{"id":"grandchild","name":"grandchild","services":[],"children":[]}
+				]}
+			]
+		}
+	}`
+
+	report, err := auditlog.MigrateReport([]byte(v01JSON))
+	if err != nil {
+		t.Fatalf("MigrateReport: %v", err)
+	}
+
+	if report.ScopeCount != 4 {
+		t.Errorf("scope_count: want 4 (root + 2 children + 1 grandchild), got %d", report.ScopeCount)
+	}
+}
+
+func TestMigrateReport_StatusComputation(t *testing.T) {
+	now := time.Now().Format(time.RFC3339)
+
+	for _, tc := range []struct {
+		name    string
+		svcJSON string
+		status  auditlog.ServiceStatus
+	}{
+		{
+			"registered",
+			`{"service_name":"svc","scope_id":"r","scope_name":"[root]","registered_at":"` + now + `"}`,
+			auditlog.ServiceStatusRegistered,
+		},
+		{
+			"active",
+			`{"service_name":"svc","scope_id":"r","scope_name":"[root]","registered_at":"` + now + `","first_invoked_at":"` + now + `"}`,
+			auditlog.ServiceStatusActive,
+		},
+		{
+			"invocation_error",
+			`{"service_name":"svc","scope_id":"r","scope_name":"[root]","registered_at":"` + now + `","invocation_error":"fail"}`,
+			auditlog.ServiceStatusInvocationError,
+		},
+		{
+			"shutdown",
+			`{"service_name":"svc","scope_id":"r","scope_name":"[root]","registered_at":"` + now + `","shutdown_at":"` + now + `"}`,
+			auditlog.ServiceStatusShutdown,
+		},
+		{
+			"shutdown_error",
+			`{"service_name":"svc","scope_id":"r","scope_name":"[root]","registered_at":"` + now + `","shutdown_error":"leak"}`,
+			auditlog.ServiceStatusShutdownError,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			input := `{"version":"0.1.0","services":[` + tc.svcJSON + `]}`
+
+			report, err := auditlog.MigrateReport([]byte(input))
+			if err != nil {
+				t.Fatalf("MigrateReport: %v", err)
+			}
+
+			if len(report.Services) != 1 {
+				t.Fatalf("expected 1 service, got %d", len(report.Services))
+			}
+
+			if report.Services[0].Status != tc.status {
+				t.Errorf("status: want %s, got %s", tc.status, report.Services[0].Status)
+			}
+		})
+	}
+}
+
+func TestMigrateReport_PreservesExistingStatus(t *testing.T) {
+	input := `{
+		"version": "0.1.0",
+		"services": [
+			{"service_name":"svc","scope_id":"r","scope_name":"[root]","registered_at":"2026-01-01T00:00:00Z","status":"active"}
+		]
+	}`
+
+	report, err := auditlog.MigrateReport([]byte(input))
+	if err != nil {
+		t.Fatalf("MigrateReport: %v", err)
+	}
+
+	if report.Services[0].Status != auditlog.ServiceStatusActive {
+		t.Errorf("existing status should be preserved, got %s", report.Services[0].Status)
+	}
+}
+
+func TestMigrateReport_EmptyScopeTree(t *testing.T) {
+	input := `{"version":"0.1.0","scope_tree":{"id":"","name":"","services":null}}`
+
+	report, err := auditlog.MigrateReport([]byte(input))
+	if err != nil {
+		t.Fatalf("MigrateReport: %v", err)
+	}
+
+	if report.ScopeCount != 1 {
+		t.Errorf("scope_count: want 1 (empty root), got %d", report.ScopeCount)
+	}
+}
+
+func TestPlugin_ProvideEager(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	type eagerDB struct{ URL string }
+
+	do.ProvideValue(injector, &eagerDB{URL: "eager"})
+
+	report := p.Report()
+
+	svc := findServiceBySuffix(t, report, ".eagerDB")
+	if svc == nil {
+		t.Fatal("expected to find eagerDB service")
+	}
+
+	if svc.ServiceType != auditlog.ProviderTypeEager {
+		t.Errorf("service_type: want eager, got %q", svc.ServiceType)
+	}
+}
+
+func TestPlugin_ProvideTransientType(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	type transientToken struct{ Val int }
+
+	do.ProvideTransient(injector, func(_ do.Injector) (*transientToken, error) {
+		return &transientToken{}, nil
+	})
+
+	_ = do.MustInvoke[*transientToken](injector)
+	_ = do.MustInvoke[*transientToken](injector)
+
+	report := p.Report()
+
+	svc := findServiceBySuffix(t, report, ".transientToken")
+	if svc == nil {
+		t.Fatal("expected to find transientToken service")
+	}
+
+	if svc.ServiceType != auditlog.ProviderTypeTransient {
+		t.Errorf("service_type: want transient, got %q", svc.ServiceType)
+	}
+
+	if svc.InvocationCount != 2 {
+		t.Errorf("invocation_count: want 2, got %d", svc.InvocationCount)
+	}
+}

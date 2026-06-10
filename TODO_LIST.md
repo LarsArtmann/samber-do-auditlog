@@ -7,19 +7,11 @@ Last updated: 2026-06-10
 
 ## Priority 1 — Features (Future)
 
-- [ ] **Versioned report schema with migration** — `SchemaVersion` exists but has no migration function. Postpone until v1.0 planning.
 - [ ] **PlantUML export** — Only if users request it. Mermaid export already available.
-- [ ] **Fuzz test for HTML template** — Good security practice but templ provides escaping.
 
 ## Priority 2 — Polish
 
-- [ ] **Document Recorder locking protocol** — 4 mutexes, complex ordering. A doc block prevents future deadlocks.
-- [ ] **Add runnable godoc examples** — `example_test.go` with `Example*` functions for godoc.
-- [ ] **Refactor `buildCapabilityMap` to iterative** — Remove `//nolint:modernize` by replacing recursion with stack-based walk.
-
-## Priority 3 — Consider
-
-- [ ] **Single-lock Recorder optimization** — Experimental refactoring exists (uncommitted). Consolidate 4 mutexes to 1 RWMutex + atomic. Needs careful testing before merge.
+- [ ] **Add Config.Validate() real checks** — Currently always returns nil. Could validate ContainerID for path separators.
 
 ## Not Planned (Explicitly Rejected)
 
@@ -30,6 +22,29 @@ Last updated: 2026-06-10
 - **`encoding/json/v2` migration** — Current `encoding/json` works fine. Risk of breaking JSON output format for consumers.
 
 ---
+
+## Completed (2026-06-10 Session 4)
+
+- [x] Add TestMigrateReport_NestedScopes, TestMigrateReport_EmptyScopeTree (countUniqueScopes coverage)
+- [x] Add TestMigrateReport_StatusComputation (all 5 computeServiceStatusFromInfo branches)
+- [x] Add TestMigrateReport_PreservesExistingStatus (status guard in MigrateReport)
+- [x] Add TestPlugin_ProvideEager, TestPlugin_ProvideTransientType (inferServiceType coverage)
+- [x] Fix duplicate test function name (TestPlugin_ProvideTransient → TestPlugin_ProvideTransientType)
+- [x] Remove duplicate TestWriteMermaid_WithDepsAndTypes (dupl lint)
+- [x] Fix stale "4-lock design" claim in FEATURES.md → single-lock
+- [x] Refresh AGENTS.md, TODO_LIST.md, FEATURES.md for Session 4
+- [x] Coverage: 95.1%, 140 tests, 0 lint issues
+
+## Completed (2026-06-10 Session 3)
+
+- [x] Document Recorder single-lock protocol with deadlock risk warning
+- [x] Add 9 coverage gap tests (95.0% → 95.3%)
+- [x] Add 6 godoc examples (New, Report, ExportToFile, Filtered, RecordHealthCheck, WriteMermaid)
+- [x] Add HTML fuzz test (FuzzPluginHTML) verifying templ XSS escaping
+- [x] Add schema migration (MigrateReport v0.1.0 → v0.2.0) with 4 tests
+- [x] Refactor buildCapabilityMap from recursive to iterative (BFS queue)
+- [x] Single-lock Recorder optimization (4 mutexes → 1 RWMutex + 2 atomics, 23% faster, 50% fewer allocs)
+- [x] Push all commits to origin
 
 ## Completed (2026-06-10 Session 2)
 
