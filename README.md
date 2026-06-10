@@ -57,7 +57,7 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 | **Service types**        | Auto-detects lazy/eager/transient/alias via `do.ExplainNamedService`     |
 | **Timing**               | First build duration, shutdown duration, invocation count & order        |
 | **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events             |
-| **4 export formats**     | JSON · NDJSON · self-contained HTML · Mermaid flowchart                  |
+| **5 export formats**     | JSON · NDJSON · self-contained HTML · Mermaid · PlantUML               |
 | **Filtered reports**     | Functional options to slice by name, type, scope, event type, time range |
 | **~1μs overhead**        | In-memory capture, no I/O during container operation                     |
 | **Toggle on/off**        | `Enabled: false` → zero hooks, zero cost                                 |
@@ -195,6 +195,26 @@ flowchart TD
     root_*main.UserService --> root_*main.Database
 ```
 
+### PlantUML Component Diagram
+
+Writes a PlantUML component diagram. Paste it into any PlantUML renderer (GitHub with plugin, GitLab, IntelliJ, online editors).
+
+```go
+report := plugin.Report()
+report.WritePlantUML(os.Stdout)
+```
+
+```plantuml
+@startuml
+    component "*main.HTTPServer 🔄" as root__main_HTTPServer
+    component "*main.UserService 😴" as root__main_UserService
+    component "*main.Database 😴" as root__main_Database
+    root__main_HTTPServer --> root__main_UserService
+    root__main_HTTPServer --> root__main_Database
+    root__main_UserService --> root__main_Database
+@enduml
+```
+
 ### Filtered Reports
 
 Functional options let you slice the report before exporting. Filters compose — pass multiple options to intersect them.
@@ -307,6 +327,7 @@ The callback is called **outside the mutex** on every event. Keep it fast — do
 | `FailedServices() []ServiceInfo`           | Services with invocation or shutdown errors.        |
 | `UnhealthyServices() []ServiceInfo`        | Services with health check errors.                  |
 | `WriteMermaid(w) error`                    | Mermaid flowchart to `io.Writer`.                   |
+| `WritePlantUML(w) error`                   | PlantUML component diagram to `io.Writer`.          |
 
 ## How Dependency Tracking Works
 

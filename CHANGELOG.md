@@ -57,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Plugin.ReportFiltered**: convenience method for filtered reports
 - **ExportFilteredToFile**: write filtered JSON report to file
 - **Mermaid export**: `Report.WriteMermaid(writer)` for flowchart TD diagrams
+- **PlantUML export**: `Report.WritePlantUML(writer)` for component diagram output
 - **Type helpers**: `ProviderType.IsKnown()`, `ServiceRef.IsRoot()`, `Event.HasError()`, `ServiceInfo.HasHealthError()`
 - **Schema migration**: `MigrateReport([]byte)` upgrades v0.1.0 JSON to current schema
 - **Single-lock Recorder**: 4 mutexes → 1 `RWMutex` + 2 atomics; 23% faster, 50% fewer allocations

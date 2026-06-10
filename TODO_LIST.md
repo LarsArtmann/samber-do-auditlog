@@ -7,7 +7,7 @@ Last updated: 2026-06-10
 
 ## Priority 1 — Features (Future)
 
-- [ ] **PlantUML export** — Only if users request it. Mermaid export already available.
+_All items completed._
 
 ## Priority 2 — Polish
 
@@ -22,6 +22,18 @@ _All items completed._
 - **`encoding/json/v2` migration** — Current `encoding/json` works fine. Risk of breaking JSON output format for consumers.
 
 ---
+
+## Completed (This Session)
+
+- [x] **PlantUML export** — `Report.WritePlantUML(writer)` with component diagram syntax
+- [x] Consolidate `computeServiceStatus` split brain into single `deriveServiceStatus`
+- [x] Make `enrichCapabilities` deterministic with sorted scope iteration
+- [x] Refactor all hooks to use `newEventFromRef` consistently
+- [x] Add `Report.Index()` for O(1) report lookups
+- [x] Filter `ScopeTree` in `Report.Filtered` with pruned tree + recomputed `ScopeCount`
+- [x] Document `HealthCheckSucceeded` false-when-no-checks edge case
+- [x] Archive 35 stale session-specific docs into `docs/archive/`
+- [x] Improve all user-facing documentation (README, CONTRIBUTING, CHANGELOG, FEATURES, DOMAIN_LANGUAGE)
 
 ## Completed (2026-06-10 Session 6)
 

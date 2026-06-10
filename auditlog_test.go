@@ -2967,6 +2967,48 @@ func TestReport_WriteMermaid(t *testing.T) {
 	}
 }
 
+func TestReport_WritePlantUML(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+
+	do.ProvideNamed(injector, "user-svc", func(i do.Injector) (*UserService, error) {
+		db := do.MustInvokeNamed[*Database](i, "db")
+
+		return &UserService{DB: db}, nil
+	})
+
+	_ = do.MustInvokeNamed[*UserService](injector, "user-svc")
+
+	report := p.Report()
+
+	var buf bytes.Buffer
+
+	err := report.WritePlantUML(&buf)
+	if err != nil {
+		t.Fatalf("WritePlantUML: %v", err)
+	}
+
+	output := buf.String()
+
+	if !strings.Contains(output, "@startuml") {
+		t.Error("expected @startuml header")
+	}
+
+	if !strings.Contains(output, "@enduml") {
+		t.Error("expected @enduml footer")
+	}
+
+	if !strings.Contains(output, "component") {
+		t.Error("expected component declarations")
+	}
+
+	if !strings.Contains(output, "-->") {
+		t.Error("expected dependency edge -->")
+	}
+}
+
 func TestReport_EventsByRef(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
