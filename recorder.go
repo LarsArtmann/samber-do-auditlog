@@ -564,26 +564,31 @@ func errorToStringPtr(err error) *string {
 	return &msg
 }
 
-// computeServiceStatus derives the lifecycle status from a service record.
-// Invocation errors take priority over shutdown errors.
-func computeServiceStatus(rec *serviceRecord) ServiceStatus {
-	if rec.invocationError != nil {
+// deriveServiceStatus is the single source of truth for lifecycle status derivation.
+// Priority: invocation_error > shutdown_error > shutdown > active > registered.
+func deriveServiceStatus(invocationError, shutdownError *string, shutdownAt, firstInvokedAt *time.Time) ServiceStatus {
+	if invocationError != nil {
 		return ServiceStatusInvocationError
 	}
 
-	if rec.shutdownError != nil {
+	if shutdownError != nil {
 		return ServiceStatusShutdownError
 	}
 
-	if rec.shutdownAt != nil {
+	if shutdownAt != nil {
 		return ServiceStatusShutdown
 	}
 
-	if rec.firstInvokedAt != nil {
+	if firstInvokedAt != nil {
 		return ServiceStatusActive
 	}
 
 	return ServiceStatusRegistered
+}
+
+// computeServiceStatus derives the lifecycle status from a service record.
+func computeServiceStatus(rec *serviceRecord) ServiceStatus {
+	return deriveServiceStatus(rec.invocationError, rec.shutdownError, rec.shutdownAt, rec.firstInvokedAt)
 }
 
 // BuildReport assembles a machine-readable Report from all captured events.

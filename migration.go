@@ -75,21 +75,5 @@ func countUniqueScopes(node ScopeNode) int {
 }
 
 func computeServiceStatusFromInfo(svc ServiceInfo) ServiceStatus {
-	if svc.InvocationError != nil {
-		return ServiceStatusInvocationError
-	}
-
-	if svc.ShutdownError != nil {
-		return ServiceStatusShutdownError
-	}
-
-	if svc.ShutdownAt != nil {
-		return ServiceStatusShutdown
-	}
-
-	if svc.FirstInvokedAt != nil {
-		return ServiceStatusActive
-	}
-
-	return ServiceStatusRegistered
+	return deriveServiceStatus(svc.InvocationError, svc.ShutdownError, svc.ShutdownAt, svc.FirstInvokedAt)
 }
