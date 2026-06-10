@@ -629,6 +629,32 @@ func main() {
 		fmt.Printf("\n    └── %s (services: %v)", child.Name, child.Services)
 	}
 
+	// =================================================================
+	// DEMO: convenience methods on Report
+	// =================================================================
+
+	fmt.Println()
+	fmt.Println("  Convenience method demos:")
+
+	// ServiceByName — look up a specific service
+	if svc := rep.ServiceByName("*main.Database"); svc != nil && svc.FirstBuildDurationMs != nil {
+		fmt.Printf("    ServiceByName(\"*main.Database\"): status=%s, build=%.3fms\n",
+			svc.Status, *svc.FirstBuildDurationMs)
+	}
+
+	// EventsByType — filter events
+	shutdownEvents := rep.EventsByType(auditlog.EventTypeShutdown)
+	fmt.Printf("    EventsByType(shutdown): %d events\n", len(shutdownEvents))
+
+	// FailedServices — get all services with errors
+	failed := rep.FailedServices()
+	if len(failed) > 0 {
+		fmt.Printf("    FailedServices(): %d failures\n", len(failed))
+		for _, f := range failed {
+			fmt.Printf("      %s: %s\n", f.ServiceRef.String(), f.Status)
+		}
+	}
+
 	fmt.Println()
 
 	// =================================================================
@@ -711,17 +737,11 @@ func hasDepsSuffix(r auditlog.Report, suffix string) bool {
 }
 
 func hasInvocationError(r auditlog.Report) bool {
-	for _, s := range r.Services {
-		if s.InvocationError != nil {
-			return true
-		}
-	}
-
-	return false
+	return len(r.FailedServices()) > 0
 }
 
 func hasShutdownError(r auditlog.Report) bool {
-	for _, s := range r.Services {
+	for _, s := range r.FailedServices() {
 		if s.ShutdownError != nil {
 			return true
 		}
