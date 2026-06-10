@@ -11,6 +11,7 @@
 ## A. FULLY DONE
 
 ### Core Library (Production Code)
+
 - [x] **Plugin API** — `New(Config)`, `Opts()`, `Report()`, `Events()`, `EventsCount()`
 - [x] **Event capture** — Registration, Invocation, Shutdown, Health Check with timestamps + sequence numbers
 - [x] **Dependency inference** — Stack-based: push on before-hook, pop on after-hook, record edges
@@ -25,6 +26,7 @@
 - [x] **Concurrency model** — `RWMutex` for events/services/scopes, separate `Mutex` for stack and invocation order, atomic sequence counters
 
 ### Export Formats
+
 - [x] **JSON** — Full `Report` as indented JSON via `WriteReportJSON()` / `ExportToFile()`
 - [x] **NDJSON** — Line-delimited event stream via `WriteEventsNDJSON()` / `ExportEventsToNDJSON()`
 - [x] **HTML** — Self-contained single-file dashboard via `WriteHTML()` / `ExportToHTML()` with:
@@ -36,6 +38,7 @@
   - Dark observability dashboard aesthetic
 
 ### Query Methods (Added This Session)
+
 - [x] `Report.ServiceByName(name)` — First match by service name
 - [x] `Report.ServiceByRef(scopeID, name)` — Exact scoped lookup
 - [x] `Report.ServicesByScope(scopeID)` — All services in scope
@@ -47,6 +50,7 @@
 - [x] `ServiceInfo.Uptime()` — Time since registration
 
 ### Testing
+
 - [x] **71 tests passing** (69 unit + 2 benchmarks)
 - [x] **94.9% statement coverage** on library package
 - [x] **0 golangci-lint issues** (108 linters enabled, extremely strict config)
@@ -55,6 +59,7 @@
 - [x] Table-driven test patterns where applicable
 
 ### Code Quality
+
 - [x] `.golangci.yml` with 108 linters — exhaustruct, depguard (strict allowlist), err113, wsl_v5, nlreturn, modernize, ireturn, gosec, gocritic, etc.
 - [x] `serviceKey()` as single canonical key function
 - [x] `ServiceRef` embedded in `Event` and `ServiceInfo` for single source of truth
@@ -67,11 +72,13 @@
 ## B. PARTIALLY DONE
 
 ### Schema Versioning
+
 - **What exists**: `SchemaVersion = "0.2.0"` constant in `types.go`
 - **What's missing**: No migration function, no backward compatibility logic, no schema evolution strategy
 - **Impact**: Low — still ALPHA, no consumers yet. Can defer to v1.0.
 
 ### HTML Visualization
+
 - **What exists**: Full 5-tab interactive dashboard
 - **What could improve**:
   - No test coverage for the JS/visualization logic (only tests that HTML exports valid markup)
@@ -83,15 +90,18 @@
 ## C. NOT STARTED
 
 ### Priority 1: ReportOption Functional Options
+
 - Filter reports by service name, time range, event type, scope
 - This is the top TODO item — enables consumers to get targeted views without processing full reports
 
 ### Priority 2: Additional Export Formats
+
 - Mermaid diagram export (text-based dependency graph)
 - PlantUML export
 - Both are user-driven — no known consumers yet
 
 ### Other Not Started
+
 - **`newServiceRecordFromMeta` has 0% coverage** — only called when health checks discover services not yet registered through hooks. Path exists but no test exercises it.
 - **`ResolveServiceScope` has 90% coverage** — the ancestor-walking branch is untested
 - **`RecordHealthCheckWithContext` is untested with actual context** — all tests use `RecordHealthCheck` which delegates to `RecordHealthCheckWithContext(context.Background(), ...)`. No test passes a cancellable/timed-out context.
@@ -101,12 +111,14 @@
 ## D. TOTALLY FUCKED UP
 
 ### Nothing Is Broken
+
 - Build: clean
 - Tests: 71/71 pass
 - Lint: 0 issues
 - No known bugs or data corruption risks
 
 ### Near Misses (Fixed This Session)
+
 1. **buildCapabilityMap recursion was deleted as "dead code"** — This was a REAL BUG. Services in child scopes silently got `IsHealthchecker=false`. Fixed and tested.
 2. **3 lint issues found this session** — gocritic unlambda, ireturn on test helper, wsl violation in new test. All fixed.
 
@@ -154,48 +166,48 @@
 
 ### High Impact, Low Effort (Do First)
 
-| # | Task | Impact | Effort |
-|---|------|--------|--------|
-| 1 | **Push to origin** — 1 commit ahead | Critical | 0 |
-| 2 | **Cover `newServiceRecordFromMeta`** — 0% → ~100% | High | Low |
-| 3 | **Consolidate `newServiceRecord` / `newServiceRecordFromMeta`** — deduplicate | Medium | Low |
-| 4 | **Add `ProviderType.IsKnown()` method** | Medium | Low |
-| 5 | **Cover `ResolveServiceScope` ancestor-walking branch** | Medium | Low |
-| 6 | **Test `RecordHealthCheckWithContext` with cancellable context** | Medium | Low |
-| 7 | **Update AGENTS.md with new convenience methods** | Medium | Low |
+| #   | Task                                                                          | Impact   | Effort |
+| --- | ----------------------------------------------------------------------------- | -------- | ------ |
+| 1   | **Push to origin** — 1 commit ahead                                           | Critical | 0      |
+| 2   | **Cover `newServiceRecordFromMeta`** — 0% → ~100%                             | High     | Low    |
+| 3   | **Consolidate `newServiceRecord` / `newServiceRecordFromMeta`** — deduplicate | Medium   | Low    |
+| 4   | **Add `ProviderType.IsKnown()` method**                                       | Medium   | Low    |
+| 5   | **Cover `ResolveServiceScope` ancestor-walking branch**                       | Medium   | Low    |
+| 6   | **Test `RecordHealthCheckWithContext` with cancellable context**              | Medium   | Low    |
+| 7   | **Update AGENTS.md with new convenience methods**                             | Medium   | Low    |
 
 ### High Impact, Medium Effort (Do Next)
 
-| # | Task | Impact | Effort |
-|---|------|--------|--------|
-| 8 | **ReportOption functional options** — filter reports by service/time/event type/scope | Very High | Medium |
-| 9 | **Group health fields into `ServiceHealth` struct** in `serviceRecord` and `ServiceInfo` | Medium | Medium |
-| 10 | **Add `Event.RelativeTime() string`** — human-readable relative timestamps for events | Medium | Medium |
-| 11 | **Update TODO_LIST.md / FEATURES.md** — reflect current state | Medium | Low |
-| 12 | **Add `Report.EventsByRef(scopeID, serviceName)`** — scoped event lookup | Medium | Low |
+| #   | Task                                                                                     | Impact    | Effort |
+| --- | ---------------------------------------------------------------------------------------- | --------- | ------ |
+| 8   | **ReportOption functional options** — filter reports by service/time/event type/scope    | Very High | Medium |
+| 9   | **Group health fields into `ServiceHealth` struct** in `serviceRecord` and `ServiceInfo` | Medium    | Medium |
+| 10  | **Add `Event.RelativeTime() string`** — human-readable relative timestamps for events    | Medium    | Medium |
+| 11  | **Update TODO_LIST.md / FEATURES.md** — reflect current state                            | Medium    | Low    |
+| 12  | **Add `Report.EventsByRef(scopeID, serviceName)`** — scoped event lookup                 | Medium    | Low    |
 
 ### Medium Impact, Medium Effort
 
-| # | Task | Impact | Effort |
-|---|------|--------|--------|
-| 13 | **Add `Report.ServiceCount()` / `EventCount()` cached accessors** | Low | Low |
-| 14 | **Document locking protocol** on `Recorder` (4 mutexes) | Medium | Medium |
-| 15 | **Refactor `buildCapabilityMap`** — use iterative approach instead of recursion + nolint | Low | Medium |
-| 16 | **Add HTML export test that verifies health check data renders** | Medium | Low |
-| 17 | **Add example_test.go** with runnable examples for godoc | Medium | Medium |
+| #   | Task                                                                                     | Impact | Effort |
+| --- | ---------------------------------------------------------------------------------------- | ------ | ------ |
+| 13  | **Add `Report.ServiceCount()` / `EventCount()` cached accessors**                        | Low    | Low    |
+| 14  | **Document locking protocol** on `Recorder` (4 mutexes)                                  | Medium | Medium |
+| 15  | **Refactor `buildCapabilityMap`** — use iterative approach instead of recursion + nolint | Low    | Medium |
+| 16  | **Add HTML export test that verifies health check data renders**                         | Medium | Low    |
+| 17  | **Add example_test.go** with runnable examples for godoc                                 | Medium | Medium |
 
 ### Lower Priority, Higher Effort
 
-| # | Task | Impact | Effort |
-|---|------|--------|--------|
-| 18 | **Mermaid export** — text-based dependency graph | Medium | High |
-| 19 | **Schema migration function** — version compatibility | Medium | High |
-| 20 | **Fuzz test for HTML template rendering** | Low | Medium |
-| 21 | **Optimize Report query methods with pre-built indices** | Low | Medium |
-| 22 | **PlantUML export** | Low | High |
-| 23 | **Consider `iter.Seq` for event streaming** — Go 1.26 iterators | Low | Medium |
-| 24 | **Structured logging integration** — `slog.Handler` for events | Low | High |
-| 25 | **Benchmark with realistic workloads** — 1000+ services, deep scope trees | Low | Medium |
+| #   | Task                                                                      | Impact | Effort |
+| --- | ------------------------------------------------------------------------- | ------ | ------ |
+| 18  | **Mermaid export** — text-based dependency graph                          | Medium | High   |
+| 19  | **Schema migration function** — version compatibility                     | Medium | High   |
+| 20  | **Fuzz test for HTML template rendering**                                 | Low    | Medium |
+| 21  | **Optimize Report query methods with pre-built indices**                  | Low    | Medium |
+| 22  | **PlantUML export**                                                       | Low    | High   |
+| 23  | **Consider `iter.Seq` for event streaming** — Go 1.26 iterators           | Low    | Medium |
+| 24  | **Structured logging integration** — `slog.Handler` for events            | Low    | High   |
+| 25  | **Benchmark with realistic workloads** — 1000+ services, deep scope trees | Low    | Medium |
 
 ---
 
@@ -204,6 +216,7 @@
 **Should `ReportOption` filter in-place (modify the `Report`) or return a new filtered `Report`?**
 
 Arguments:
+
 - **In-place**: Avoids allocation, but mutates shared state. Dangerous if caller holds a reference.
 - **New value**: Safe, idiomatic Go, but copies slices. `Report` can be large with many events.
 
@@ -215,15 +228,15 @@ Also: should `ReportOption` be a functional option pattern (`func(*Report)` with
 
 ## Session Summary
 
-| Metric | Value |
-|--------|-------|
-| Tests | 71 passing, 0 failing |
-| Coverage (library) | 94.9% |
-| Coverage (total) | 61.4% |
-| Lint issues | 0 |
-| Build | Clean |
-| LOC (production) | ~1,720 (recorder 850 + types 264 + plugin 194 + html 26 + doc 12) |
-| LOC (test) | 2,288 |
-| LOC (example) | 787 |
-| Commits this session | 8 |
-| Commits ahead of origin | 1 |
+| Metric                  | Value                                                             |
+| ----------------------- | ----------------------------------------------------------------- |
+| Tests                   | 71 passing, 0 failing                                             |
+| Coverage (library)      | 94.9%                                                             |
+| Coverage (total)        | 61.4%                                                             |
+| Lint issues             | 0                                                                 |
+| Build                   | Clean                                                             |
+| LOC (production)        | ~1,720 (recorder 850 + types 264 + plugin 194 + html 26 + doc 12) |
+| LOC (test)              | 2,288                                                             |
+| LOC (example)           | 787                                                               |
+| Commits this session    | 8                                                                 |
+| Commits ahead of origin | 1                                                                 |

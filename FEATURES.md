@@ -53,11 +53,11 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 | **Health check report fields**        | `HealthCheckSucceeded`, `HealthCheckedCount` on Report; `UnhealthyServices()` convenience method                 | ✓ `types.go:Report`                                               |
 | **Health check scope resolution**     | `ResolveServiceScope()` handles both RootScope and child Scope ancestor lookup                                   | ✓ `recorder.go:ResolveServiceScope`                               |
 | **Health check HTML visualization**   | Health column in services table, health_check event badge (amber), filter chip, conditional stat card            | ✓ `html.templ`                                                    |
-| **Event.ServiceType**                 | ProviderType carried on every event, populated in newEvent/newEventFromRef                                        | ✓ `types.go:Event.ServiceType`                                    |
-| **Capability detection**              | `enrichCapabilities()` in BuildReport() populates IsHealthchecker/IsShutdowner via `do.ExplainInjector`           | ✓ `recorder.go:enrichCapabilities`                                |
-| **Config.Validate()**                 | Forward-compatible API placeholder for config validation                                                           | ✓ `plugin.go:Config.Validate`                                     |
-| **Provider column in Events tab**     | HTML Events tab shows provider type badge per event                                                               | ✓ `html.templ`                                                    |
-| **Zero golangci-lint issues**         | All 28 lint issues fixed across production code, tests, and example                                               | ✓ `.golangci.yml`                                                 |
+| **Event.ServiceType**                 | ProviderType carried on every event, populated in newEvent/newEventFromRef                                       | ✓ `types.go:Event.ServiceType`                                    |
+| **Capability detection**              | `enrichCapabilities()` in BuildReport() populates IsHealthchecker/IsShutdowner via `do.ExplainInjector`          | ✓ `recorder.go:enrichCapabilities`                                |
+| **Config.Validate()**                 | Forward-compatible API placeholder for config validation                                                         | ✓ `plugin.go:Config.Validate`                                     |
+| **Provider column in Events tab**     | HTML Events tab shows provider type badge per event                                                              | ✓ `html.templ`                                                    |
+| **Zero golangci-lint issues**         | All 28 lint issues fixed across production code, tests, and example                                              | ✓ `.golangci.yml`                                                 |
 
 ---
 
@@ -80,8 +80,8 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 
 ## NOT PLANNED (but worth considering)
 
-| Feature                                            | Why Not Now                                                         |
-| -------------------------------------------------- | ------------------------------------------------------------------- |
+| Feature                                            | Why Not Now                                                          |
+| -------------------------------------------------- | -------------------------------------------------------------------- |
 | **Multi-module split**                             | Project is too small (1 package, ~2400 LOC) — revisit at 5+ packages |
-| **External storage backends**                      | YAGNI — file/io.Writer exports are sufficient                       |
-| **Metrics integration (Prometheus/OpenTelemetry)** | Out of scope for audit logging — use EventHandler when available    |
+| **External storage backends**                      | YAGNI — file/io.Writer exports are sufficient                        |
+| **Metrics integration (Prometheus/OpenTelemetry)** | Out of scope for audit logging — use EventHandler when available     |

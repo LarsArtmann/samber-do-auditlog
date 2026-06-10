@@ -17,12 +17,12 @@ Executed comprehensive semantic code deduplication across the entire codebase. E
 
 ### Deduplication Refactoring
 
-| Metric | Before | After | Change |
-|---|---|---|---|
-| Clone groups at t=50 | 1 | 1 | 0 (intentional — different test scenarios) |
-| Clone groups at t=22 | 16 | **6** | **-62.5%** |
-| Clone groups at t=15 | 29 (101 clones) | **18** | **-38%** |
-| Production code clones at t=22 | 2 | **0** | **-100%** |
+| Metric                         | Before          | After  | Change                                     |
+| ------------------------------ | --------------- | ------ | ------------------------------------------ |
+| Clone groups at t=50           | 1               | 1      | 0 (intentional — different test scenarios) |
+| Clone groups at t=22           | 16              | **6**  | **-62.5%**                                 |
+| Clone groups at t=15           | 29 (101 clones) | **18** | **-38%**                                   |
+| Production code clones at t=22 | 2               | **0**  | **-100%**                                  |
 
 ### Extracted Helpers (Production)
 
@@ -31,15 +31,15 @@ Executed comprehensive semantic code deduplication across the entire codebase. E
 
 ### Extracted Helpers (Test)
 
-| Helper | Location | Replaced | Purpose |
-|---|---|---|---|
-| `provideHealthyDB(inj, name, dsn)` | `auditlog_test.go:774` | 11 inline patterns | HealthyDB registration |
-| `provideUnhealthyCache(inj, name, reason)` | `auditlog_test.go:780` | 4 inline patterns | UnhealthyCache registration |
-| `provideFailing(inj, name)` | `auditlog_test.go:786` | 2 inline patterns | Failing Database provider |
-| `provideCache(inj, name)` | `auditlog_test.go:791` | 2 inline patterns | Empty Cache registration |
-| `provideCrashing(inj, name)` | `auditlog_test.go:796` | 2 inline patterns | CrashingService registration |
-| `assertVersion(t, report)` | `auditlog_test.go:811` | 3 identical checks | SchemaVersion assertion |
-| `newPluginWithCapture()` | `auditlog_test.go:817` | 2 identical patterns | Plugin+OnEvent+Injector setup |
+| Helper                                     | Location               | Replaced             | Purpose                       |
+| ------------------------------------------ | ---------------------- | -------------------- | ----------------------------- |
+| `provideHealthyDB(inj, name, dsn)`         | `auditlog_test.go:774` | 11 inline patterns   | HealthyDB registration        |
+| `provideUnhealthyCache(inj, name, reason)` | `auditlog_test.go:780` | 4 inline patterns    | UnhealthyCache registration   |
+| `provideFailing(inj, name)`                | `auditlog_test.go:786` | 2 inline patterns    | Failing Database provider     |
+| `provideCache(inj, name)`                  | `auditlog_test.go:791` | 2 inline patterns    | Empty Cache registration      |
+| `provideCrashing(inj, name)`               | `auditlog_test.go:796` | 2 inline patterns    | CrashingService registration  |
+| `assertVersion(t, report)`                 | `auditlog_test.go:811` | 3 identical checks   | SchemaVersion assertion       |
+| `newPluginWithCapture()`                   | `auditlog_test.go:817` | 2 identical patterns | Plugin+OnEvent+Injector setup |
 
 ### Other Refactoring
 
@@ -60,13 +60,13 @@ Executed comprehensive semantic code deduplication across the entire codebase. E
 
 ### Remaining Clone Groups (t=22 — 6 groups, all test code)
 
-| Group | Lines | Assessment |
-|---|---|---|
-| `len(Dependencies) != N` | 241, 491, 1006 | Different N values, different error messages — Go test idiom |
-| `ProvideTransient`/`Provide` Database | 838, 1237, 1246 | Different registration types — testing each |
-| `ScopeTree.Children` len checks | 449, 1215 | Different counts (1 vs 2) — Go test idiom |
-| `Database{URL: "test"}` providers | Various | Different test functions, different assertions |
-| UserService provider (G4) | 204-221, 948-965 | **t=50 hit** — different service names (db/cache vs postgres/redis), different ContainerID, different assertions |
+| Group                                 | Lines            | Assessment                                                                                                       |
+| ------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `len(Dependencies) != N`              | 241, 491, 1006   | Different N values, different error messages — Go test idiom                                                     |
+| `ProvideTransient`/`Provide` Database | 838, 1237, 1246  | Different registration types — testing each                                                                      |
+| `ScopeTree.Children` len checks       | 449, 1215        | Different counts (1 vs 2) — Go test idiom                                                                        |
+| `Database{URL: "test"}` providers     | Various          | Different test functions, different assertions                                                                   |
+| UserService provider (G4)             | 204-221, 948-965 | **t=50 hit** — different service names (db/cache vs postgres/redis), different ContainerID, different assertions |
 
 **Verdict**: All remaining clones are Go test idioms — scalar assertions with different expected values, different test data, different scenarios. Extracting helpers would reduce readability without reducing maintenance burden.
 
@@ -76,11 +76,11 @@ Executed comprehensive semantic code deduplication across the entire codebase. E
 
 ### From TODO_LIST.md
 
-| Priority | Item | Status |
-|---|---|---|
-| P1 | `ReportOption` functional options for filtering | Not started |
-| P3 | Versioned report schema with migration | Not started |
-| P3 | Additional export formats (Mermaid, PlantUML) | Not started |
+| Priority | Item                                            | Status      |
+| -------- | ----------------------------------------------- | ----------- |
+| P1       | `ReportOption` functional options for filtering | Not started |
+| P3       | Versioned report schema with migration          | Not started |
+| P3       | Additional export formats (Mermaid, PlantUML)   | Not started |
 
 ### From FEATURES.md — Planned
 
@@ -175,6 +175,7 @@ Clean working tree. Clean build. Clean lint. All green.
 **The uncommitted test code at lines 2000+ of `auditlog_test.go` — is this work-in-progress that should be committed alongside its implementations, or abandoned test-first code that should be cleaned up?**
 
 These tests reference 7 methods that don't exist yet:
+
 - `Report.ServiceByRef(scopeID, serviceName)`
 - `Report.ServicesByScope(scopeID)`
 - `Report.EventsByService(serviceName)`
@@ -183,6 +184,7 @@ These tests reference 7 methods that don't exist yet:
 - Plus `strconv` import was missing (now added as dependency)
 
 The tests compile but the build is clean because Go only enforces type-checking at function level for test files. This is either intentional TDD work-in-progress, or leftover dead code that should be either:
+
 - **(a)** Implemented (items 2-6 above), or
 - **(b)** Removed until the features are properly planned
 
@@ -192,20 +194,20 @@ I need your direction on this before proceeding with implementing these methods.
 
 ## Codebase Metrics
 
-| Metric | Value |
-|---|---|
-| Source files | 7 (excl. generated `_templ.go`) |
-| Total LOC | 3,721 |
-| Production LOC | 1,344 (recorder + plugin + types + html) |
-| Test LOC | 2,288 |
-| Tests | 71 passing |
-| Coverage | 94.9% |
-| Lint issues | 0 |
-| Clone groups (t=22) | 6 (all test idioms) |
-| Clone groups (t=50) | 1 (intentional) |
-| Production clones | 0 |
-| Go version | 1.26.3 |
-| Dependencies | samber/do v2, a-h/templ |
+| Metric              | Value                                    |
+| ------------------- | ---------------------------------------- |
+| Source files        | 7 (excl. generated `_templ.go`)          |
+| Total LOC           | 3,721                                    |
+| Production LOC      | 1,344 (recorder + plugin + types + html) |
+| Test LOC            | 2,288                                    |
+| Tests               | 71 passing                               |
+| Coverage            | 94.9%                                    |
+| Lint issues         | 0                                        |
+| Clone groups (t=22) | 6 (all test idioms)                      |
+| Clone groups (t=50) | 1 (intentional)                          |
+| Production clones   | 0                                        |
+| Go version          | 1.26.3                                   |
+| Dependencies        | samber/do v2, a-h/templ                  |
 
 ---
 
