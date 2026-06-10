@@ -261,7 +261,8 @@ templ reportHTML(report Report) {
 	  const depsR=(s.dependents||[]).map(d=>'<span>'+d.service_name+'</span>').join(', ');
 	  const regAt=s.registered_at?new Date(s.registered_at).toLocaleTimeString():'';
 	  const invAt=s.first_invoked_at?new Date(s.first_invoked_at).toLocaleTimeString():'';
-	  const statusBadge='<span class="status-badge '+s.status+'"'+(s.invocation_error?' data-error="'+esc(s.invocation_error)+'"':'')+(s.shutdown_error?' data-error="'+esc(s.shutdown_error)+'"':'')+'>'+s.status.replace(/_/g,' ')+'</span>';
+	  const errMsgs=[s.invocation_error,s.shutdown_error].filter(Boolean).map(esc).join('\n');
+	  const statusBadge='<span class="status-badge '+s.status+'"'+(errMsgs?' data-error="'+errMsgs+'"':'')+'>'+s.status.replace(/_/g,' ')+'</span>';
 	  return '<tr data-search="'+esc(s.service_name.toLowerCase()+' '+s.scope_name)+'">'
 	    +'<td class="mono" title="Registered: '+regAt+(invAt?'\\nInvoked: '+invAt:'')+'">'+esc(s.service_name)+'</td>'
 	    +'<td>'+esc(s.scope_name)+'</td>'
