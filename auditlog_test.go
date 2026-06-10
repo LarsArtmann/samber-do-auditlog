@@ -134,6 +134,22 @@ func TestPlugin_RegistrationAndInvocation(t *testing.T) {
 		t.Errorf("event_count: want 4, got %d", report.EventCount)
 	}
 
+	if report.ScopeCount < 1 {
+		t.Errorf("scope_count: want >= 1, got %d", report.ScopeCount)
+	}
+
+	if report.TotalBuildDurationMs <= 0 {
+		t.Errorf("total_build_duration_ms: want > 0, got %f", report.TotalBuildDurationMs)
+	}
+
+	if report.TotalShutdownDurationMs != 0 {
+		t.Errorf("total_shutdown_duration_ms: want 0 (no shutdown), got %f", report.TotalShutdownDurationMs)
+	}
+
+	if !report.ShutdownSucceeded {
+		t.Error("shutdown_succeeded: want true (no shutdown errors)")
+	}
+
 	svc := report.Services[0]
 	if svc.ServiceName != "db" {
 		t.Errorf("service_name: want db, got %s", svc.ServiceName)

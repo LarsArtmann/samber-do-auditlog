@@ -84,12 +84,16 @@ type ScopeNode struct {
 
 // Report is a consolidated, machine-readable snapshot of the audit log.
 type Report struct {
-	Version      string        `json:"version"`
-	ContainerID  string        `json:"container_id"`
-	ExportedAt   time.Time     `json:"exported_at"`
-	EventCount   int           `json:"event_count"`
-	ServiceCount int           `json:"service_count"`
-	Events       []Event       `json:"events,omitempty"`
-	Services     []ServiceInfo `json:"services"`
-	ScopeTree    ScopeNode     `json:"scope_tree"`
+	Version                 string        `json:"version"`
+	ContainerID             string        `json:"container_id"`
+	ExportedAt              time.Time     `json:"exported_at"`
+	EventCount              int           `json:"event_count"`
+	ServiceCount            int           `json:"service_count"`
+	ScopeCount              int           `json:"scope_count"`
+	TotalBuildDurationMs    float64       `json:"total_build_duration_ms"`
+	TotalShutdownDurationMs float64       `json:"total_shutdown_duration_ms"`
+	ShutdownSucceeded       bool          `json:"shutdown_succeeded"`
+	Events                  []Event       `json:"events,omitempty"`
+	Services                []ServiceInfo `json:"services"`
+	ScopeTree               ScopeNode     `json:"scope_tree"`
 }

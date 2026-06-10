@@ -414,14 +414,18 @@ func (r *Recorder) BuildReport() Report {
 	scopeTree := r.buildScopeTreeLocked()
 
 	return Report{
-		Version:      SchemaVersion,
-		ContainerID:  r.containerID,
-		ExportedAt:   time.Now(),
-		EventCount:   len(r.events),
-		ServiceCount: len(services),
-		Events:       append([]Event(nil), r.events...),
-		Services:     services,
-		ScopeTree:    scopeTree,
+		Version:                 SchemaVersion,
+		ContainerID:             r.containerID,
+		ExportedAt:              time.Now(),
+		EventCount:              len(r.events),
+		ServiceCount:            len(services),
+		ScopeCount:              countScopesLocked(r.scopes),
+		TotalBuildDurationMs:    sumBuildDurationMs(services),
+		TotalShutdownDurationMs: sumShutdownDurationMs(services),
+		ShutdownSucceeded:       noShutdownErrors(services),
+		Events:                  append([]Event(nil), r.events...),
+		Services:                services,
+		ScopeTree:               scopeTree,
 	}
 }
 
@@ -595,6 +599,44 @@ func sortScopeNodes(nodes []ScopeNode) []ScopeNode {
 	}
 
 	return nodes
+}
+
+func countScopesLocked(scopes map[string]scopeMeta) int {
+	return len(scopes)
+}
+
+func sumBuildDurationMs(services []ServiceInfo) float64 {
+	total := 0.0
+
+	for _, s := range services {
+		if s.FirstBuildDurationMs != nil {
+			total += *s.FirstBuildDurationMs
+		}
+	}
+
+	return total
+}
+
+func sumShutdownDurationMs(services []ServiceInfo) float64 {
+	total := 0.0
+
+	for _, s := range services {
+		if s.ShutdownDurationMs != nil {
+			total += *s.ShutdownDurationMs
+		}
+	}
+
+	return total
+}
+
+func noShutdownErrors(services []ServiceInfo) bool {
+	for _, s := range services {
+		if s.ShutdownError != nil {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Events returns a defensive copy of all captured events.
