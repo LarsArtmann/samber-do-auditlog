@@ -36,6 +36,11 @@ const (
 	ServiceStatusShutdownError   ServiceStatus = "shutdown_error"
 )
 
+// IsError returns true if the service has an invocation or shutdown error.
+func (s ServiceStatus) IsError() bool {
+	return s == ServiceStatusInvocationError || s == ServiceStatusShutdownError
+}
+
 // ServiceRef identifies a service within a specific scope.
 // Embedded in Event and ServiceInfo for JSON flattening.
 type ServiceRef struct {
@@ -111,4 +116,39 @@ type Report struct {
 	Events                  []Event       `json:"events,omitempty"`
 	Services                []ServiceInfo `json:"services"`
 	ScopeTree               ScopeNode     `json:"scope_tree"`
+}
+
+// ServiceByName returns the first ServiceInfo matching the given service name suffix.
+func (r Report) ServiceByName(name string) *ServiceInfo {
+	for i := range r.Services {
+		if r.Services[i].ServiceName == name {
+			return &r.Services[i]
+		}
+	}
+
+	return nil
+}
+
+// EventsByType returns all events matching the given event type.
+func (r Report) EventsByType(t EventType) []Event {
+	var result []Event
+	for _, e := range r.Events {
+		if e.EventType == t {
+			result = append(result, e)
+		}
+	}
+
+	return result
+}
+
+// FailedServices returns all services with invocation or shutdown errors.
+func (r Report) FailedServices() []ServiceInfo {
+	var failed []ServiceInfo
+	for _, s := range r.Services {
+		if s.Status.IsError() {
+			failed = append(failed, s)
+		}
+	}
+
+	return failed
 }
