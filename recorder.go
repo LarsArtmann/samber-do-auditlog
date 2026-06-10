@@ -417,8 +417,8 @@ func (r *Recorder) BuildReport() Report {
 		EventCount:              len(r.events),
 		ServiceCount:            len(services),
 		ScopeCount:              len(r.scopes),
-		TotalBuildDurationMs:    sumBuildDurationMs(services),
-		TotalShutdownDurationMs: sumShutdownDurationMs(services),
+		TotalBuildDurationMs:    sumBuildMs(services),
+		TotalShutdownDurationMs: sumShutdownMs(services),
 		ShutdownSucceeded:       noShutdownErrors(services),
 		Events:                  append([]Event(nil), r.events...),
 		Services:                services,
@@ -598,28 +598,24 @@ func sortScopeNodes(nodes []ScopeNode) []ScopeNode {
 	return nodes
 }
 
-func sumBuildDurationMs(services []ServiceInfo) float64 {
+func sumDurationField(services []ServiceInfo, get func(ServiceInfo) *float64) float64 {
 	total := 0.0
 
 	for _, s := range services {
-		if s.FirstBuildDurationMs != nil {
-			total += *s.FirstBuildDurationMs
+		if v := get(s); v != nil {
+			total += *v
 		}
 	}
 
 	return total
 }
 
-func sumShutdownDurationMs(services []ServiceInfo) float64 {
-	total := 0.0
+func sumBuildMs(services []ServiceInfo) float64 {
+	return sumDurationField(services, func(s ServiceInfo) *float64 { return s.FirstBuildDurationMs })
+}
 
-	for _, s := range services {
-		if s.ShutdownDurationMs != nil {
-			total += *s.ShutdownDurationMs
-		}
-	}
-
-	return total
+func sumShutdownMs(services []ServiceInfo) float64 {
+	return sumDurationField(services, func(s ServiceInfo) *float64 { return s.ShutdownDurationMs })
 }
 
 func noShutdownErrors(services []ServiceInfo) bool {
