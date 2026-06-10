@@ -623,7 +623,7 @@ templ reportHTML(report Report) {
 	  const statusBadge='<span class="status-badge '+s.status+'"'+(errMsgs?' data-error="'+errMsgs+'"':'')+'>'+(statusIcons[s.status]||'')+' '+s.status.replace(/_/g,' ')+'</span>';
 	  const svcIcon = typeIcons[s.service_type] || '';
 	  return '<tr data-search="'+esc(s.service_name.toLowerCase()+' '+s.scope_name+' '+(s.service_type||''))+'">'
-	    +'<td class="mono" title="Registered: '+regAt+(invAt?'\nInvoked: '+invAt:'')+'">'+(svcIcon?svcIcon+' ':'')+esc(s.service_name)+'</td>'
+	    +'<td class="mono" title="Registered: '+regAt+(invAt?'\nInvoked: '+invAt:'')+'">'+(svcIcon?svcIcon+' ':'')+esc(s.service_name)+capabilityIcons(s)+'</td>'
 	    +'<td>'+typeBadge(s.service_type)+'</td>'
 	    +'<td>'+esc(s.scope_name)+'</td>'
 	    +'<td>'+statusBadge+'</td>'

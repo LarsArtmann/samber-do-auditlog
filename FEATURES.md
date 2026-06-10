@@ -46,6 +46,13 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 | **ServiceRef.String()**               | Human-readable `"scope/name"` format for compact display                                                         | ✓ `types.go:ServiceRef.String()`                               |
 | **ServiceStatus.IsError()**           | `true` for invocation_error or shutdown_error                                                                    | ✓ `types.go:ServiceStatus.IsError()`                           |
 | **Report convenience methods**        | `ServiceByName(name)`, `EventsByType(t)`, `FailedServices()` for querying report data                            | ✓ `types.go:Report methods`                                    |
+| **ProviderType**                      | Named type for service provider kinds (lazy, eager, transient, alias) with Icon() and String() methods           | ✓ `types.go:ProviderType`                                      |
+| **Health check auditing**             | `RecordHealthCheck()` / `RecordHealthCheckWithContext()` wraps injector health checks with audit events           | ✓ `plugin.go:RecordHealthCheck*`, `recorder.go:RecordHealthCheck` |
+| **Health check events**               | `EventTypeHealthCheck` with `IsHealthCheck()`, PhaseAfter only, no DurationMs (per-service timing unavailable)   | ✓ `types.go:EventTypeHealthCheck`                              |
+| **Health check service fields**       | `LastHealthCheckAt`, `HealthCheckError`, `HealthCheckCount` on ServiceInfo; `IsHealthchecker`, `IsShutdowner`    | ✓ `types.go:ServiceInfo`                                       |
+| **Health check report fields**        | `HealthCheckSucceeded`, `HealthCheckedCount` on Report; `UnhealthyServices()` convenience method                | ✓ `types.go:Report`                                            |
+| **Health check scope resolution**     | `ResolveServiceScope()` handles both RootScope and child Scope ancestor lookup                                  | ✓ `recorder.go:ResolveServiceScope`                            |
+| **Health check HTML visualization**   | Health column in services table, health_check event badge (amber), filter chip, conditional stat card           | ✓ `html.templ`                                                 |
 
 ---
 

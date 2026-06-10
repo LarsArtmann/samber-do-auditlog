@@ -53,6 +53,15 @@ Last updated: 2026-06-10
 - [x] Rename `DependencyRef` to `ServiceRef` and embed in `Event`/`ServiceInfo`
 - [x] Add Event convenience methods: `IsRegistration`, `IsInvocation`, `IsShutdown`, `IsBefore`, `IsAfter`
 - [x] Add `Config.OnEvent` callback for real-time event streaming
+- [x] Add health check auditing: EventTypeHealthCheck, RecordHealthCheck/RecordHealthCheckWithContext
+- [x] Add ProviderType named type with Icon()/String() methods
+- [x] Add IsHealthchecker/IsShutdowner fields to ServiceInfo
+- [x] Add health check HTML visualization (health column, event badge, stat card)
+- [x] Fix health check duration bug: remove misleading HealthCheckDurationMs (per-service timing unavailable)
+- [x] Fix HealthCheckSucceeded semantics: false when no health checks ran
+- [x] Refactor: extract newEventFromRef and newServiceRecordFromMeta helpers
+- [x] Add test coverage for convenience methods (ServiceByName, FailedServices, IsError, String)
+- [x] Add health check test coverage (OnEvent, phase, JSON/NDJSON export)
 
 ## Completed (Historical)
 
