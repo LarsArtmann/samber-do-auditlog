@@ -178,6 +178,10 @@ func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[string][2]bo
 		for _, svc := range s.Services {
 			result[svc.ServiceName] = [2]bool{svc.IsHealthchecker, svc.IsShutdowner}
 		}
+
+		for k, v := range buildCapabilityMap(s.Children) {
+			result[k] = v //nolint:modernize
+		}
 	}
 
 	return result

@@ -301,9 +301,7 @@ func TestPlugin_ShutdownError(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "leaky", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "leaky"}, nil
-	})
+	provideDB(injector, "leaky", "leaky")
 
 	_ = do.MustInvokeNamed[*Database](injector, "leaky")
 	_ = injector.Shutdown()
@@ -358,9 +356,7 @@ func TestPlugin_ProviderErrorStatus(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "failing", func(i do.Injector) (*Database, error) {
-		return nil, os.ErrNotExist
-	})
+	provideFailing(injector, "failing")
 
 	_, err := do.InvokeNamed[*Database](injector, "failing")
 	if err == nil {
@@ -536,9 +532,7 @@ func TestPlugin_ProviderError(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "failing", func(i do.Injector) (*Database, error) {
-		return nil, os.ErrNotExist
-	})
+	provideFailing(injector, "failing")
 
 	_, err := do.InvokeNamed[*Database](injector, "failing")
 	if err == nil {
@@ -736,9 +730,7 @@ func TestPlugin_ConcurrentInvocations(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "postgres://localhost"}, nil
-	})
+	provideDB(injector, "db", "postgres://localhost")
 
 	var wg sync.WaitGroup
 
@@ -768,6 +760,24 @@ func TestPlugin_ConcurrentInvocations(t *testing.T) {
 func provideDB(injector do.Injector, name, url string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*Database, error) {
 		return &Database{URL: url}, nil
+	})
+}
+
+func provideHealthyDB(injector do.Injector, name, dsn string) {
+	do.ProvideNamed(injector, name, func(_ do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: dsn}, nil
+	})
+}
+
+func provideUnhealthyCache(injector do.Injector, name, reason string) {
+	do.ProvideNamed(injector, name, func(_ do.Injector) (*UnhealthyCache, error) {
+		return &UnhealthyCache{Reason: reason}, nil
+	})
+}
+
+func provideFailing(injector do.Injector, name string) {
+	do.ProvideNamed(injector, name, func(_ do.Injector) (*Database, error) {
+		return nil, os.ErrNotExist
 	})
 }
 
@@ -1266,12 +1276,8 @@ func TestPlugin_CapabilityTracking(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "healthy-db", func(i do.Injector) (*HealthyDB, error) {
-		return &HealthyDB{DSN: "test"}, nil
-	})
-	do.ProvideNamed(injector, "plain", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "test"}, nil
-	})
+	provideHealthyDB(injector, "healthy-db", "test")
+	provideDB(injector, "plain", "test")
 	do.ProvideNamed(injector, "crashable", func(i do.Injector) (*CrashingService, error) {
 		return &CrashingService{}, nil
 	})
@@ -1482,9 +1488,7 @@ func TestPlugin_HealthCheckHealthy(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
-		return &HealthyDB{DSN: "postgres://localhost"}, nil
-	})
+	provideHealthyDB(injector, "db", "postgres://localhost")
 
 	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
 
@@ -1517,9 +1521,7 @@ func TestPlugin_HealthCheckUnhealthy(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "cache", func(i do.Injector) (*UnhealthyCache, error) {
-		return &UnhealthyCache{Reason: "connection lost"}, nil
-	})
+	provideUnhealthyCache(injector, "cache", "connection lost")
 
 	_ = do.MustInvokeNamed[*UnhealthyCache](injector, "cache")
 
@@ -1552,15 +1554,9 @@ func TestPlugin_HealthCheckMultipleServices(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
-		return &HealthyDB{DSN: "postgres://localhost"}, nil
-	})
-	do.ProvideNamed(injector, "cache", func(i do.Injector) (*UnhealthyCache, error) {
-		return &UnhealthyCache{Reason: "connection lost"}, nil
-	})
-	do.ProvideNamed(injector, "plain", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "test"}, nil
-	})
+	provideHealthyDB(injector, "db", "postgres://localhost")
+	provideUnhealthyCache(injector, "cache", "connection lost")
+	provideDB(injector, "plain", "test")
 
 	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
 	_ = do.MustInvokeNamed[*UnhealthyCache](injector, "cache")
@@ -1599,9 +1595,7 @@ func TestPlugin_HealthCheckDisabled(t *testing.T) {
 	p := auditlog.New(auditlog.Config{})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
-		return &HealthyDB{DSN: "test"}, nil
-	})
+	provideHealthyDB(injector, "db", "test")
 
 	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
 
@@ -1620,9 +1614,7 @@ func TestPlugin_HealthCheckCount(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
-		return &HealthyDB{DSN: "test"}, nil
-	})
+	provideHealthyDB(injector, "db", "test")
 
 	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
 
@@ -1650,9 +1642,7 @@ func TestPlugin_HealthCheckReport(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
-		return &HealthyDB{DSN: "test"}, nil
-	})
+	provideHealthyDB(injector, "db", "test")
 
 	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
 
@@ -1674,12 +1664,8 @@ func TestPlugin_HealthCheckWithScope(t *testing.T) {
 
 	child := injector.Scope("child")
 
-	do.ProvideNamed(injector, "root-db", func(i do.Injector) (*HealthyDB, error) {
-		return &HealthyDB{DSN: "root"}, nil
-	})
-	do.ProvideNamed(child, "child-db", func(i do.Injector) (*HealthyDB, error) {
-		return &HealthyDB{DSN: "child"}, nil
-	})
+	provideHealthyDB(injector, "root-db", "root")
+	provideHealthyDB(child, "child-db", "child")
 
 	_ = do.MustInvokeNamed[*HealthyDB](injector, "root-db")
 	_ = do.MustInvokeNamed[*HealthyDB](child, "child-db")
@@ -1714,9 +1700,7 @@ func TestPlugin_HealthCheckReportSucceeded(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "cache", func(i do.Injector) (*UnhealthyCache, error) {
-		return &UnhealthyCache{Reason: "down"}, nil
-	})
+	provideUnhealthyCache(injector, "cache", "down")
 
 	_ = do.MustInvokeNamed[*UnhealthyCache](injector, "cache")
 
@@ -1741,9 +1725,7 @@ func TestPlugin_HealthCheckSucceededFalseWhenNoChecks(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "test"}, nil
-	})
+	provideDB(injector, "db", "test")
 
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 
@@ -1768,9 +1750,7 @@ func TestPlugin_HealthCheckOnEventCallback(t *testing.T) {
 	})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
-		return &HealthyDB{DSN: "test"}, nil
-	})
+	provideHealthyDB(injector, "db", "test")
 
 	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
 
@@ -1810,9 +1790,7 @@ func TestPlugin_HealthCheckPhaseIsAfterOnly(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
-		return &HealthyDB{DSN: "test"}, nil
-	})
+	provideHealthyDB(injector, "db", "test")
 
 	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
 	_ = p.RecordHealthCheck(injector)
@@ -1837,12 +1815,8 @@ func TestPlugin_HealthCheckJSONExport(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
-		return &HealthyDB{DSN: "test"}, nil
-	})
-	do.ProvideNamed(injector, "cache", func(i do.Injector) (*UnhealthyCache, error) {
-		return &UnhealthyCache{Reason: "down"}, nil
-	})
+	provideHealthyDB(injector, "db", "test")
+	provideUnhealthyCache(injector, "cache", "down")
 
 	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
 	_ = do.MustInvokeNamed[*UnhealthyCache](injector, "cache")
@@ -1891,9 +1865,7 @@ func TestPlugin_HealthCheckNDJSONExport(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
-		return &HealthyDB{DSN: "test"}, nil
-	})
+	provideHealthyDB(injector, "db", "test")
 
 	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
 	_ = p.RecordHealthCheck(injector)
@@ -2028,5 +2000,82 @@ func TestConfig_Validate(t *testing.T) {
 	err = auditlog.Config{Enabled: true, OnEvent: func(e auditlog.Event) {}}.Validate()
 	if err != nil {
 		t.Errorf("valid config should pass, got: %v", err)
+	}
+}
+
+func TestProviderType_String(t *testing.T) {
+	tests := []struct {
+		pt   auditlog.ProviderType
+		want string
+	}{
+		{auditlog.ProviderTypeLazy, "lazy"},
+		{auditlog.ProviderTypeEager, "eager"},
+		{auditlog.ProviderTypeTransient, "transient"},
+		{auditlog.ProviderTypeAlias, "alias"},
+		{auditlog.ProviderType("unknown"), "unknown"},
+	}
+
+	for _, tc := range tests {
+		got := tc.pt.String()
+		if got != tc.want {
+			t.Errorf("ProviderType(%q).String() = %q, want %q", tc.pt, got, tc.want)
+		}
+	}
+}
+
+func TestReport_UnhealthyServices(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideHealthyDB(injector, "healthy-svc", "ok")
+	provideUnhealthyCache(injector, "sick-svc", "cache miss")
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "healthy-svc")
+	_ = do.MustInvokeNamed[*UnhealthyCache](injector, "sick-svc")
+
+	_ = p.RecordHealthCheck(injector)
+
+	report := p.Report()
+	unhealthy := report.UnhealthyServices()
+
+	if len(unhealthy) != 1 {
+		t.Fatalf("expected 1 unhealthy service, got %d", len(unhealthy))
+	}
+
+	if unhealthy[0].ServiceName != "sick-svc" {
+		t.Errorf("unhealthy service: want sick-svc, got %s", unhealthy[0].ServiceName)
+	}
+}
+
+func TestPlugin_CapabilityTrackingWithChildScopes(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideHealthyDB(injector, "root-healthy", "ok")
+
+	child := injector.Scope("child-scope")
+	provideHealthyDB(child, "child-healthy", "ok")
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "root-healthy")
+	_ = do.MustInvokeNamed[*HealthyDB](child, "child-healthy")
+
+	report := p.Report()
+
+	rootSvc := findServiceByName(t, report, "root-healthy")
+	if rootSvc == nil {
+		t.Fatal("root-healthy not found")
+	}
+
+	if !rootSvc.IsHealthchecker {
+		t.Error("root-healthy should be a healthchecker")
+	}
+
+	childSvc := findServiceByName(t, report, "child-healthy")
+	if childSvc == nil {
+		t.Fatal("child-healthy not found")
+	}
+
+	if !childSvc.IsHealthchecker {
+		t.Error("child-healthy should be a healthchecker")
 	}
 }
