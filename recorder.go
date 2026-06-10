@@ -419,7 +419,7 @@ func (r *Recorder) BuildReport() Report {
 		ExportedAt:              time.Now(),
 		EventCount:              len(r.events),
 		ServiceCount:            len(services),
-		ScopeCount:              countScopesLocked(r.scopes),
+		ScopeCount:              len(r.scopes),
 		TotalBuildDurationMs:    sumBuildDurationMs(services),
 		TotalShutdownDurationMs: sumShutdownDurationMs(services),
 		ShutdownSucceeded:       noShutdownErrors(services),
@@ -599,10 +599,6 @@ func sortScopeNodes(nodes []ScopeNode) []ScopeNode {
 	}
 
 	return nodes
-}
-
-func countScopesLocked(scopes map[string]scopeMeta) int {
-	return len(scopes)
 }
 
 func sumBuildDurationMs(services []ServiceInfo) float64 {
