@@ -23,6 +23,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `OnBeforeShutdown` now calls `recordScope` for consistency with other `OnBefore*` hooks
 - `buildScopeTreeLocked` now uses sorted scope iteration for deterministic output
 - HTML template now uses server-computed `s.status` instead of client-side derivation
+- Complete HTML visualization rewrite: services table with status badges, shutdown duration,
+  reverse dependencies, search filter, timestamps on hover; stats cards with schema version,
+  total build duration, error count; events table with full type names and filter chips;
+  dependency graph with status-colored nodes and SVG tooltips; scopes tab with collapsible
+  tree; timeline with dual build+shutdown bars; responsive layout, keyboard nav, footer
 - `stackEntry` and `serviceRecord` now have `key()` methods centralizing the scope/service key format
 - `OnBeforeInvocation` computes `depKey` before acquiring the stack lock
 

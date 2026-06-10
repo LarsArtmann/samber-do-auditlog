@@ -22,9 +22,12 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 | **Provider error capture** | Records invocation errors as string pointers in events and service info | ✓ `recorder.go:367-375` |
 | **JSON report export** | Full `Report` as indented JSON to `io.Writer` or file | ✓ `plugin.go:88-120` |
 | **NDJSON event stream** | Each event as a JSON line to `io.Writer` or file | ✓ `plugin.go:102-125` |
-| **Self-contained HTML visualization** | Dark-themed page with services table, dependency graph, timeline, events | ✓ `html.templ` |
-| **Dependency graph visualization** | Force-directed SVG graph with interactive nodes | ✓ `html.templ:212-327` |
-| **Timeline visualization** | Horizontal bar chart of build durations | ✓ `html.templ:197-210` |
+| **Self-contained HTML visualization** | Dark-themed page with services table, scopes tab, dependency graph, timeline, events, responsive layout | ✓ `html.templ` |
+| **Dependency graph visualization** | Force-directed SVG graph with status-colored nodes, tooltips, arrow endpoints at edges | ✓ `html.templ` |
+| **Timeline visualization** | Dual horizontal bar chart: build duration (blue) + shutdown duration (yellow) | ✓ `html.templ` |
+| **Scopes tree visualization** | Collapsible scope tree with service counts and name chips | ✓ `html.templ` |
+| **HTML search & filter** | Live search on services table, event type filter chips, keyboard tab navigation (1-5) | ✓ `html.templ` |
+| **Responsive HTML layout** | Mobile-friendly with media queries, footer with schema version | ✓ `html.templ` |
 | **Environment variable toggle** | `DO_AUDITLOG_ENABLED` = true/1/yes enables without code change | ✓ `plugin.go:56-64` |
 | **Zero-cost disabled mode** | `Enabled: false` → empty `InjectorOpts`, no hooks, no allocation | ✓ `plugin.go:68-71` |
 | **Explicit enable override** | `Config.Enabled: true` overrides env var | ✓ `plugin.go:46-48` |

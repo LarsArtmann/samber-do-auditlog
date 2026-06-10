@@ -44,6 +44,7 @@ Last updated: 2026-06-10
 - [x] Update CHANGELOG.md with actual development history
 - [x] Move `depKey` computation before lock in `OnBeforeInvocation`
 - [x] Comprehensive codebase analysis (code quality, naming, architecture, features)
+- [x] Complete HTML visualization rewrite (T2-T8): services table with status badges, shutdown duration, reverse deps, search; stats cards; events with filter chips; graph improvements; scopes tab; timeline dual bars; responsive UX
 
 ## Completed (Historical)
 
