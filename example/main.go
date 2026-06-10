@@ -768,7 +768,7 @@ func hasBuildDuration(r auditlog.Report) bool {
 }
 
 func hasServiceType(r auditlog.Report) bool {
-	types := map[string]bool{}
+	types := map[auditlog.ProviderType]bool{}
 
 	for _, s := range r.Services {
 		if s.ServiceType != "" {
@@ -776,5 +776,5 @@ func hasServiceType(r auditlog.Report) bool {
 		}
 	}
 
-	return types["eager"] && types["lazy"] && types["transient"]
+	return types[auditlog.ProviderTypeEager] && types[auditlog.ProviderTypeLazy] && types[auditlog.ProviderTypeTransient]
 }

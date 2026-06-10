@@ -33,7 +33,9 @@ type serviceRecord struct {
 	scopeID              string
 	scopeName            string
 	serviceName          string
-	serviceType          string
+	serviceType          ProviderType
+	isHealthchecker     bool
+	isShutdowner        bool
 	registeredAt         time.Time
 	firstInvokedAt       *time.Time
 	invocationCount      int
@@ -133,14 +135,14 @@ func scopeKey(scope *do.Scope, serviceName string) string {
 }
 
 // inferServiceType uses do.ExplainNamedService to determine the provider type
-// (lazy, eager, transient, alias). Returns empty string if the type cannot be determined.
-func inferServiceType(scope *do.Scope, serviceName string) string {
+// (lazy, eager, transient, alias). Returns empty string if unknown.
+func inferServiceType(scope *do.Scope, serviceName string) ProviderType {
 	desc, ok := do.ExplainNamedService(scope, serviceName)
 	if !ok {
 		return ""
 	}
 
-	return string(desc.ServiceType)
+	return ProviderType(desc.ServiceType)
 }
 
 // newEvent builds an Event struct with all fields initialized.
@@ -155,19 +157,32 @@ func newEvent(
 	dur *float64,
 	errStr *string,
 ) Event {
+	return newEventFromRef(seq, now, eventType, phase, ServiceRef{
+		ScopeID:     scope.ID(),
+		ScopeName:   scope.Name(),
+		ServiceName: serviceName,
+	}, containerID, dur, errStr)
+}
+
+func newEventFromRef(
+	seq int,
+	now time.Time,
+	eventType EventType,
+	phase Phase,
+	ref ServiceRef,
+	containerID string,
+	dur *float64,
+	errStr *string,
+) Event {
 	return Event{
 		Sequence:    seq,
 		Timestamp:   now,
 		EventType:   eventType,
 		Phase:       phase,
 		ContainerID: containerID,
-		ServiceRef: ServiceRef{
-			ScopeID:     scope.ID(),
-			ScopeName:   scope.Name(),
-			ServiceName: serviceName,
-		},
-		DurationMs: dur,
-		Error:      errStr,
+		ServiceRef:  ref,
+		DurationMs:  dur,
+		Error:       errStr,
 	}
 }
 
@@ -178,6 +193,32 @@ func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *servi
 		scopeName:            scope.Name(),
 		serviceName:          serviceName,
 		serviceType:          inferServiceType(scope, serviceName),
+		isHealthchecker:     false,
+		isShutdowner:        false,
+		registeredAt:         now,
+		firstInvokedAt:       nil,
+		invocationCount:      0,
+		invocationOrder:      0,
+		firstBuildDurationMs: nil,
+		dependencies:         make(map[string]struct{}),
+		shutdownAt:           nil,
+		shutdownDurationMs:   nil,
+		invocationError:      nil,
+		shutdownError:        nil,
+		lastHealthCheckAt:    nil,
+		healthCheckError:     nil,
+		healthCheckCount:     0,
+	}
+}
+
+func newServiceRecordFromMeta(scopeID, scopeName, serviceName string, now time.Time) *serviceRecord {
+	return &serviceRecord{
+		scopeID:              scopeID,
+		scopeName:            scopeName,
+		serviceName:          serviceName,
+		serviceType:          "",
+		isHealthchecker:     false,
+		isShutdowner:        false,
 		registeredAt:         now,
 		firstInvokedAt:       nil,
 		invocationCount:      0,
@@ -489,6 +530,8 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 			ShutdownDurationMs:    rec.shutdownDurationMs,
 			ShutdownError:         rec.shutdownError,
 			InvocationError:       rec.invocationError,
+			IsHealthchecker:       rec.isHealthchecker,
+			IsShutdowner:          rec.isShutdowner,
 			LastHealthCheckAt: rec.lastHealthCheckAt,
 			HealthCheckError:  rec.healthCheckError,
 			HealthCheckCount:  rec.healthCheckCount,
@@ -699,19 +742,11 @@ func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err
 
 	seq := r.nextSequence()
 
-	r.addEvent(Event{
-		Sequence:    seq,
-		Timestamp:   now,
-		EventType:   EventTypeHealthCheck,
-		Phase:       PhaseAfter,
-		ContainerID: r.containerID,
-		ServiceRef: ServiceRef{
-			ScopeID:     scopeID,
-			ScopeName:   scopeName,
-			ServiceName: serviceName,
-		},
-		Error: errStr,
-	})
+	r.addEvent(newEventFromRef(
+		seq, now, EventTypeHealthCheck, PhaseAfter,
+		ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
+		r.containerID, nil, errStr,
+	))
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -720,16 +755,7 @@ func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err
 
 	rec, ok := r.services[key]
 	if !ok {
-		rec = &serviceRecord{
-			scopeID:          scopeID,
-			scopeName:        scopeName,
-			serviceName:      serviceName,
-			serviceType:      "",
-			registeredAt:     now,
-			dependencies:     make(map[string]struct{}),
-			healthCheckError: nil,
-			healthCheckCount: 0,
-		}
+		rec = newServiceRecordFromMeta(scopeID, scopeName, serviceName, now)
 		r.services[key] = rec
 	}
 

@@ -26,6 +26,35 @@ const (
 	PhaseAfter  Phase = "after"
 )
 
+// ProviderType describes how a service was registered in the DI container.
+type ProviderType string
+
+const (
+	ProviderTypeLazy      ProviderType = "lazy"
+	ProviderTypeEager     ProviderType = "eager"
+	ProviderTypeTransient ProviderType = "transient"
+	ProviderTypeAlias     ProviderType = "alias"
+)
+
+// String returns the provider type name.
+func (p ProviderType) String() string { return string(p) }
+
+// Icon returns the samber/do canonical emoji for this provider type.
+func (p ProviderType) Icon() string {
+	switch p {
+	case ProviderTypeLazy:
+		return "\U0001F634"
+	case ProviderTypeEager:
+		return "\U0001F501"
+	case ProviderTypeTransient:
+		return "\U0001F3ED"
+	case ProviderTypeAlias:
+		return "\U0001F517"
+	default:
+		return ""
+	}
+}
+
 // ServiceStatus describes the lifecycle state of a service.
 type ServiceStatus string
 
@@ -83,7 +112,7 @@ type ServiceInfo struct {
 	ServiceRef
 
 	Status               ServiceStatus `json:"status"`
-	ServiceType          string        `json:"service_type"`
+	ServiceType          ProviderType  `json:"service_type"`
 	RegisteredAt         time.Time     `json:"registered_at"`
 	FirstInvokedAt       *time.Time    `json:"first_invoked_at,omitempty"`
 	InvocationCount      int           `json:"invocation_count"`
@@ -95,6 +124,8 @@ type ServiceInfo struct {
 	ShutdownDurationMs   *float64      `json:"shutdown_duration_ms,omitempty"`
 	ShutdownError        *string       `json:"shutdown_error,omitempty"`
 	InvocationError      *string       `json:"invocation_error,omitempty"`
+	IsHealthchecker      bool          `json:"is_healthchecker"`
+	IsShutdowner         bool          `json:"is_shutdowner"`
 
 	LastHealthCheckAt *time.Time `json:"last_health_check_at,omitempty"`
 	HealthCheckError  *string    `json:"health_check_error,omitempty"`
