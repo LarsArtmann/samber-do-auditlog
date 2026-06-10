@@ -39,6 +39,16 @@ const (
 // String returns the provider type name.
 func (p ProviderType) String() string { return string(p) }
 
+// IsKnown returns true if the provider type is a recognized value.
+func (p ProviderType) IsKnown() bool {
+	switch p {
+	case ProviderTypeLazy, ProviderTypeEager, ProviderTypeTransient, ProviderTypeAlias:
+		return true
+	default:
+		return false
+	}
+}
+
 // Icon returns the samber/do canonical emoji for this provider type.
 func (p ProviderType) Icon() string {
 	switch p {
@@ -80,11 +90,16 @@ type ServiceRef struct {
 }
 
 func (r ServiceRef) String() string {
-	if r.ScopeName != "" && r.ScopeName != "[root]" {
+	if !r.IsRoot() {
 		return fmt.Sprintf("%s/%s", r.ScopeName, r.ServiceName)
 	}
 
 	return r.ServiceName
+}
+
+// IsRoot returns true if the service belongs to the root scope.
+func (r ServiceRef) IsRoot() bool {
+	return r.ScopeName == "" || r.ScopeName == "[root]"
 }
 
 // Event is a single, timestamped observation from the DI container lifecycle.
@@ -107,6 +122,9 @@ func (e Event) IsShutdown() bool     { return e.EventType == EventTypeShutdown }
 func (e Event) IsHealthCheck() bool  { return e.EventType == EventTypeHealthCheck }
 func (e Event) IsBefore() bool       { return e.Phase == PhaseBefore }
 func (e Event) IsAfter() bool        { return e.Phase == PhaseAfter }
+
+// HasError returns true if the event recorded an error.
+func (e Event) HasError() bool { return e.Error != nil }
 
 // Duration returns the event duration in milliseconds, or 0 if unavailable.
 func (e Event) Duration() float64 {
@@ -146,6 +164,9 @@ type ServiceInfo struct {
 func (s ServiceInfo) Uptime() time.Duration {
 	return time.Since(s.RegisteredAt)
 }
+
+// HasHealthError returns true if the service has a health check error.
+func (s ServiceInfo) HasHealthError() bool { return s.HealthCheckError != nil }
 
 // ScopeNode represents the scope hierarchy for visualization.
 type ScopeNode struct {

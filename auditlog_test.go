@@ -2408,3 +2408,97 @@ func TestPlugin_EnrichCapabilitiesWithNilScopeRef(t *testing.T) {
 		t.Errorf("service name: want db, got %s", svc.ServiceName)
 	}
 }
+
+func TestProviderType_IsKnown(t *testing.T) {
+	tests := []struct {
+		pt   auditlog.ProviderType
+		want bool
+	}{
+		{auditlog.ProviderTypeLazy, true},
+		{auditlog.ProviderTypeEager, true},
+		{auditlog.ProviderTypeTransient, true},
+		{auditlog.ProviderTypeAlias, true},
+		{auditlog.ProviderType(""), false},
+		{auditlog.ProviderType("unknown"), false},
+	}
+
+	for _, tt := range tests {
+		t.Run(string(tt.pt), func(t *testing.T) {
+			if tt.pt.IsKnown() != tt.want {
+				t.Errorf("IsKnown() = %v, want %v", tt.pt.IsKnown(), tt.want)
+			}
+		})
+	}
+}
+
+func TestServiceRef_IsRoot(t *testing.T) {
+	tests := []struct {
+		name string
+		ref  auditlog.ServiceRef
+		want bool
+	}{
+		{"empty scope", auditlog.ServiceRef{ScopeName: "", ServiceName: "db"}, true},
+		{"root scope", auditlog.ServiceRef{ScopeName: "[root]", ServiceName: "db"}, true},
+		{"child scope", auditlog.ServiceRef{ScopeName: "child", ServiceName: "db"}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.ref.IsRoot() != tt.want {
+				t.Errorf("IsRoot() = %v, want %v", tt.ref.IsRoot(), tt.want)
+			}
+		})
+	}
+}
+
+func TestEvent_HasError(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "ok", "test")
+	provideFailing(injector, "fail")
+
+	_ = do.MustInvokeNamed[*Database](injector, "ok")
+	_, _ = do.InvokeNamed[*Database](injector, "fail")
+
+	report := p.Report()
+
+	for _, e := range report.Events {
+		if e.ServiceName == "fail" && e.IsAfter() && e.IsInvocation() && !e.HasError() {
+			t.Error("expected HasError for failing invocation")
+		}
+	}
+}
+
+func TestServiceInfo_HasHealthError(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideHealthyDB(injector, "ok", "test")
+	provideUnhealthyCache(injector, "bad", "broken")
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "ok")
+	_ = do.MustInvokeNamed[*UnhealthyCache](injector, "bad")
+
+	p.RecordHealthCheck(injector)
+
+	report := p.Report()
+
+	okSvc := findServiceByName(t, report, "ok")
+	if okSvc == nil {
+		t.Fatal("ok not found")
+	}
+
+	if okSvc.HasHealthError() {
+		t.Error("healthy service should not have health error")
+	}
+
+	badSvc := findServiceByName(t, report, "bad")
+	if badSvc == nil {
+		t.Fatal("bad not found")
+	}
+
+	if !badSvc.HasHealthError() {
+		t.Error("unhealthy service should have health error")
+	}
+}
