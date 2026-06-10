@@ -64,8 +64,10 @@ func (l *Logger) Printf(format string, args ...any) {
 }
 
 // Database implements do.ShutdownerWithError and do.Healthchecker.
-var _ do.ShutdownerWithError = (*Database)(nil)
-var _ do.Healthchecker = (*Database)(nil)
+var (
+	_ do.ShutdownerWithError = (*Database)(nil)
+	_ do.Healthchecker       = (*Database)(nil)
+)
 
 type Database struct {
 	DSN string
@@ -86,8 +88,10 @@ func (d *Database) Shutdown() error {
 }
 
 // Cache implements do.ShutdownerWithError and do.HealthcheckerWithContext.
-var _ do.ShutdownerWithError = (*Cache)(nil)
-var _ do.HealthcheckerWithContext = (*Cache)(nil)
+var (
+	_ do.ShutdownerWithError      = (*Cache)(nil)
+	_ do.HealthcheckerWithContext = (*Cache)(nil)
+)
 
 type Cache struct {
 	Healthy bool
@@ -195,12 +199,12 @@ func (m *MatchingEngine) Shutdown() error {
 // --- HTTP server (entry point) ---
 
 type HTTPServer struct {
-	Config  *AppConfig
-	Server  *ServerConfig
-	DB      *Database
-	Cache   *Cache
-	Notify  Notifier
-	Port    int
+	Config *AppConfig
+	Server *ServerConfig
+	DB     *Database
+	Cache  *Cache
+	Notify Notifier
+	Port   int
 }
 
 func (s *HTTPServer) ListenAndServe() error {
@@ -422,12 +426,12 @@ func main() {
 		notifier := do.MustInvoke[Notifier](i) // resolved via alias
 
 		return &HTTPServer{
-			Config:  cfg,
-			Server:  srvCfg,
-			DB:      db,
-			Cache:   cache,
-			Notify:  notifier,
-			Port:    cfg.Port,
+			Config: cfg,
+			Server: srvCfg,
+			DB:     db,
+			Cache:  cache,
+			Notify: notifier,
+			Port:   cfg.Port,
 		}, nil
 	})
 
@@ -592,7 +596,7 @@ func main() {
 
 	for _, s := range rep.Services {
 		fmt.Printf("    %-40s status=%-18s invoked=%d",
-			s.ServiceRef.String(), s.Status, s.InvocationCount)
+			s.String(), s.Status, s.InvocationCount)
 
 		if s.FirstBuildDurationMs != nil {
 			fmt.Printf(" build=%.3fms", *s.FirstBuildDurationMs)
@@ -650,8 +654,9 @@ func main() {
 	failed := rep.FailedServices()
 	if len(failed) > 0 {
 		fmt.Printf("    FailedServices(): %d failures\n", len(failed))
+
 		for _, f := range failed {
-			fmt.Printf("      %s: %s\n", f.ServiceRef.String(), f.Status)
+			fmt.Printf("      %s: %s\n", f.String(), f.Status)
 		}
 	}
 

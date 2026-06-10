@@ -104,23 +104,23 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 
 `example/main.go` demonstrates every major samber/do v2 feature with a ride-sharing domain model. 18 features verified by a self-checking feature checklist:
 
-| Feature | API |
-|---|---|
-| Container with hooks | `do.NewWithOpts(plugin.Opts())` |
-| Eager value injection | `do.ProvideValue`, `do.ProvideNamedValue` |
-| Lazy singletons | `do.Provide` |
-| Named services | `do.ProvideNamed`, `do.MustInvokeNamed` |
-| Transient providers | `do.ProvideTransient` |
-| Interface aliasing | `do.As[*EmailNotifier, Notifier]` |
-| Override (hot-swap) | `do.OverrideValue` |
-| Child scopes | `injector.Scope("drivers")` |
-| Cross-scope dependencies | MatchingEngine invokes from driver/passenger scopes |
-| Dependency graph | Auto-inferred from provider call chains |
-| Health checks | `do.Healthchecker`, `do.HealthcheckerWithContext` |
-| Graceful shutdown | `do.ShutdownerWithError`, `injector.Shutdown()` |
-| Invocation errors | `UnreliableService` provider returns error |
-| Shutdown errors | `LeakyService.Shutdown()` returns error |
-| Build duration | Millisecond-precision per service |
-| Scope tree | Root → 3 child scopes with service listings |
-| OnEvent callback | Real-time event streaming via `Config.OnEvent` |
-| Convenience methods | `Report.ServiceByName`, `EventsByType`, `FailedServices` |
+| Feature                  | API                                                      |
+| ------------------------ | -------------------------------------------------------- |
+| Container with hooks     | `do.NewWithOpts(plugin.Opts())`                          |
+| Eager value injection    | `do.ProvideValue`, `do.ProvideNamedValue`                |
+| Lazy singletons          | `do.Provide`                                             |
+| Named services           | `do.ProvideNamed`, `do.MustInvokeNamed`                  |
+| Transient providers      | `do.ProvideTransient`                                    |
+| Interface aliasing       | `do.As[*EmailNotifier, Notifier]`                        |
+| Override (hot-swap)      | `do.OverrideValue`                                       |
+| Child scopes             | `injector.Scope("drivers")`                              |
+| Cross-scope dependencies | MatchingEngine invokes from driver/passenger scopes      |
+| Dependency graph         | Auto-inferred from provider call chains                  |
+| Health checks            | `do.Healthchecker`, `do.HealthcheckerWithContext`        |
+| Graceful shutdown        | `do.ShutdownerWithError`, `injector.Shutdown()`          |
+| Invocation errors        | `UnreliableService` provider returns error               |
+| Shutdown errors          | `LeakyService.Shutdown()` returns error                  |
+| Build duration           | Millisecond-precision per service                        |
+| Scope tree               | Root → 3 child scopes with service listings              |
+| OnEvent callback         | Real-time event streaming via `Config.OnEvent`           |
+| Convenience methods      | `Report.ServiceByName`, `EventsByType`, `FailedServices` |
