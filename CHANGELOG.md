@@ -17,6 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `docs/DOMAIN_LANGUAGE.md` — filled with 17 project domain terms
 - Architecture diagrams (D2) for current and improved state
 - Architecture deepening opportunities HTML report
+- `ServiceRef` type (renamed from `DependencyRef`) — embedded in `Event` and `ServiceInfo` for single source of truth on service identity. JSON output unchanged (embedded struct fields are flattened)
+- Event convenience methods: `IsRegistration()`, `IsInvocation()`, `IsShutdown()`, `IsBefore()`, `IsAfter()`
+- `Config.OnEvent` callback for real-time event streaming — called after each event is captured, outside the mutex, enabling live observability without polling
 
 ### Changed
 
@@ -30,12 +33,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   tree; timeline with dual build+shutdown bars; responsive layout, keyboard nav, footer
 - `stackEntry` and `serviceRecord` now have `key()` methods centralizing the scope/service key format
 - `OnBeforeInvocation` computes `depKey` before acquiring the stack lock
+- Consolidated 3 key format implementations into single `serviceKey()` function, removing `stackEntry.key()` and `serviceRecord.key()` methods
+- Deduplicated `sumBuildDurationMs`/`sumShutdownDurationMs` into generic `sumDurationField()` with thin wrappers
+- Removed `countScopesLocked()` wrapper — inlined `len(r.scopes)` in `BuildReport()`
+- `DependencyRef` renamed to `ServiceRef` and embedded in `Event` and `ServiceInfo` (breaking change, pre-1.0)
 
 ### Fixed
 
 - Non-deterministic scope tree construction due to random map iteration order
 - Dead `classList &&` check in HTML template JavaScript
 - Test file used custom `contains`/`searchString` instead of `strings.Contains`
+- Error tooltip used `position:absolute` with viewport-relative coords — wrong position when scrolled (now `position:fixed`)
+- HTML `esc()` function did not escape `"` or `'` — broken `data-error` attributes on error messages containing quotes (now regex-based)
+- Status badge emitted duplicate `data-error` attributes when both invocation and shutdown errors exist — now concatenated into single attribute
 
 ## [0.1.0] - 2026-01-01
 

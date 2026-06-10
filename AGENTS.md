@@ -79,9 +79,11 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **`html_templ.go` is gitignored** — run `go generate ./...` before building. The `//go:generate templ generate` directive is in `html.go`.
 - **templ version mismatch** — go.mod has v0.3.1020 (latest published). Local generator is v0.3.1036 (unpublished). No action needed.
 - **Do NOT modularize** — Project is 1 package, ~1800 LOC. Too small for multi-module split. Revisit at 5+ packages.
-- **`ServiceStatus`** is computed in `buildServicesLocked` via `computeServiceStatus()`. Priority: invocation_error > shutdown_error > shutdown > active > registered. The HTML template now uses `s.status` instead of deriving from individual fields.
+- **`ServiceStatus`** is computed in `buildServicesLocked` via `computeServiceStatus()`. Priority: invocation_error > shutdown_error > shutdown > active > registered. The HTML template uses `s.status` instead of deriving from individual fields.
 - **`buildScopeTreeLocked`** uses `sortedScopesLocked()` to iterate scopes deterministically (sorted by scope ID), since map iteration order is non-deterministic in Go.
-- **`stackEntry.key()` and `serviceRecord.key()`** methods centralize the `scopeID + "/" + serviceName` key format.
+- **`serviceKey(scopeID, serviceName)`** is the single canonical function for the `scopeID + "/" + serviceName` key format. `scopeKey()` delegates to it.
+- **`ServiceRef`** (renamed from `DependencyRef`) is embedded in `Event` and `ServiceInfo` — single source of truth for service identity (ScopeID, ScopeName, ServiceName). JSON output is flat because Go flattens embedded struct fields.
+- **`Config.OnEvent`** callback is called after each event is captured, outside the mutex lock. Must not block. Enables real-time observability (Prometheus, OTel, live dashboards) without polling.
 
 ---
 
@@ -93,5 +95,5 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - `t.TempDir()` for file export tests.
 - Benchmarks exist in the test file for performance measurement.
 - Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (clean and error), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations, ServiceStatus computation across all states, transient and value providers.
-- **Coverage: ~95%** of statements, 36 tests.
+- **Coverage: ~90%** of statements, 35 tests (library package).
 - **HTML visualization features**: 5-tab layout (Services/Scopes/Graph/Timeline/Events), services table with status badges + shutdown duration + reverse deps + search filter, collapsible scope tree, force-directed graph with status-colored nodes, dual build+shutdown timeline bars, event type filter chips, keyboard nav (1-5), responsive layout, footer with schema version.

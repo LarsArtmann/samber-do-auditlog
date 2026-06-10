@@ -40,6 +40,9 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 | **Schema versioning**                 | `SchemaVersion` constant for forward compatibility                                                      | ✓ `types.go:6`                                                 |
 | **Defensive copies**                  | `Events()` and `Report()` return copies, not internal slices                                            | ✓ `recorder.go:544-550, 378-395`                               |
 | **Service lifecycle status**          | Computed `ServiceStatus` field: registered, active, invocation_error, shutdown, shutdown_error          | ✓ `types.go:ServiceStatus`, `recorder.go:computeServiceStatus` |
+| **ServiceRef type**                   | Embedded in `Event` and `ServiceInfo` — single source of truth for service identity (renamed from DependencyRef) | ✓ `types.go:ServiceRef` |
+| **Event convenience methods**         | `IsRegistration()`, `IsInvocation()`, `IsShutdown()`, `IsBefore()`, `IsAfter()`                         | ✓ `types.go:Event methods` |
+| **EventHandler callback**             | `Config.OnEvent func(Event)` for real-time event streaming, called outside mutex, nil = disabled         | ✓ `plugin.go:Config.OnEvent`, `recorder.go:addEvent` |
 
 ---
 
