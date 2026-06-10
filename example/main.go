@@ -75,7 +75,7 @@ type Database struct {
 
 func (d *Database) HealthCheck() error {
 	if d.DSN == "" {
-		return errors.New("database: no connection string")
+		return errDatabaseNoConn
 	}
 
 	return nil
@@ -89,6 +89,11 @@ func (d *Database) Shutdown() error {
 
 // Cache implements do.ShutdownerWithError and do.HealthcheckerWithContext.
 var (
+	errDatabaseNoConn = errors.New("database: no connection string")
+	errCacheUnhealthy = errors.New("cache: unhealthy")
+	errLeakyRelease   = errors.New("leaky: failed to release connection pool")
+	errUnreliableDep  = errors.New("unreliable: dependency 'payment-gateway' unavailable")
+
 	_ do.ShutdownerWithError      = (*Cache)(nil)
 	_ do.HealthcheckerWithContext = (*Cache)(nil)
 )
@@ -99,7 +104,7 @@ type Cache struct {
 
 func (c *Cache) HealthCheck(_ context.Context) error {
 	if !c.Healthy {
-		return errors.New("cache: unhealthy")
+		return errCacheUnhealthy
 	}
 
 	return nil
@@ -145,7 +150,7 @@ type RideRequest struct {
 	CreatedAt time.Time
 }
 
-var rideCounter atomic.Int64
+var rideCounter atomic.Int64 //nolint:gochecknoglobals
 
 // --- Named services: multiple instances of the same type ---
 
@@ -230,14 +235,14 @@ type UnreliableService struct {
 type LeakyService struct{}
 
 func (l *LeakyService) Shutdown() error {
-	return errors.New("leaky: failed to release connection pool")
+	return errLeakyRelease
 }
 
 // ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
-func main() {
+func main() { //nolint:gocognit,gocyclo,cyclop,maintidx
 	fmt.Println("=== samber/do v2 + audit-log — comprehensive demo ===")
 	fmt.Println()
 
@@ -310,8 +315,7 @@ func main() {
 	})
 
 	// Explicit alias: bind *EmailNotifier → Notifier interface
-	do.As[*EmailNotifier, Notifier](injector)
-
+	_ = do.As[*EmailNotifier, Notifier](injector)
 	// =================================================================
 	// 5. Transient provider — new instance every invocation
 	//    Demonstrates: ProvideTransient
@@ -443,7 +447,7 @@ func main() {
 
 	// This provider intentionally fails — the error is captured in the audit log
 	do.Provide(injector, func(i do.Injector) (*UnreliableService, error) {
-		return nil, errors.New("unreliable: dependency 'payment-gateway' unavailable")
+		return nil, errUnreliableDep
 	})
 
 	// This service shuts down with an error
@@ -553,7 +557,9 @@ func main() {
 
 	dir, err := os.MkdirTemp("", "auditlog-demo-*")
 	if err != nil {
-		log.Fatal(err)
+		cancel()
+
+		log.Fatal(err) //nolint:gocritic
 	}
 
 	if err := plugin.ExportToFile(dir + "/audit-report.json"); err != nil {
@@ -776,5 +782,6 @@ func hasServiceType(r auditlog.Report) bool {
 		}
 	}
 
-	return types[auditlog.ProviderTypeEager] && types[auditlog.ProviderTypeLazy] && types[auditlog.ProviderTypeTransient]
+	return types[auditlog.ProviderTypeEager] && types[auditlog.ProviderTypeLazy] &&
+		types[auditlog.ProviderTypeTransient]
 }
