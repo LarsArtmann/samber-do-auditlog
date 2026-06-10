@@ -15,6 +15,8 @@ templ reportHTML(report Report) {
 	    --text: #e6edf3;
 	    --text-muted: #8b949e;
 	    --accent: #58a6ff;
+	    --success: #3fb950;
+	    --warning: #d29922;
 	    --error: #f85149;
 	    --radius: 8px;
 	  }
@@ -28,25 +30,28 @@ templ reportHTML(report Report) {
 	    max-width: 1400px;
 	    margin: 0 auto;
 	  }
+	  @media (max-width: 768px) { body { padding: 1rem; } }
 	  h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-	  h2 { font-size: 1.2rem; margin: 2rem 0 1rem; color: var(--accent); }
-	  .subtitle { color: var(--text-muted); margin-bottom: 2rem; }
+	  .version { font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem; }
+	  .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem; }
 	  .stats {
 	    display: grid;
-	    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-	    gap: 1rem;
+	    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	    gap: 0.75rem;
 	    margin-bottom: 2rem;
 	  }
 	  .stat-card {
 	    background: var(--surface);
 	    border: 1px solid var(--border);
 	    border-radius: var(--radius);
-	    padding: 1rem;
+	    padding: 0.75rem 1rem;
 	  }
-	  .stat-card .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-	  .stat-card .value { font-size: 1.75rem; font-weight: 700; color: var(--accent); }
+	  .stat-card .label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+	  .stat-card .value { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+	  .stat-card.error .value { color: var(--error); }
+	  .stat-card.success .value { color: var(--success); }
 
-	  .tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+	  .tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; overflow-x: auto; }
 	  .tab {
 	    padding: 0.75rem 1.5rem;
 	    cursor: pointer;
@@ -58,21 +63,59 @@ templ reportHTML(report Report) {
 	    border-top: none;
 	    border-left: none;
 	    border-right: none;
+	    white-space: nowrap;
 	  }
 	  .tab:hover { color: var(--text); }
 	  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 	  .tab-content { display: none; }
 	  .tab-content.active { display: block; }
 
+	  .filter-bar { display: flex; gap: 0.5rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap; }
+	  .filter-bar input {
+	    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+	    color: var(--text); padding: 0.5rem 0.75rem; font-size: 0.85rem; flex: 1; min-width: 200px;
+	  }
+	  .filter-bar input::placeholder { color: var(--text-muted); }
+	  .filter-bar input:focus { outline: none; border-color: var(--accent); }
+	  .chip {
+	    padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.75rem; cursor: pointer;
+	    border: 1px solid var(--border); background: transparent; color: var(--text-muted);
+	    transition: all 0.15s;
+	  }
+	  .chip:hover { border-color: var(--accent); color: var(--text); }
+	  .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
 	  table { width: 100%; border-collapse: collapse; }
-	  th, td { text-align: left; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); }
-	  th { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+	  th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+	  th { color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; position: sticky; top: 0; background: var(--bg); }
 	  td { font-size: 0.85rem; }
 	  tr:hover td { background: var(--surface); }
 	  .has-error { color: var(--error); }
+	  .mono { font-family: 'SF Mono', Consolas, monospace; font-size: 0.8rem; }
 	  .deps-list { font-size: 0.8rem; color: var(--text-muted); }
 	  .deps-list span { color: var(--accent); }
-	  .mono { font-family: 'SF Mono', Consolas, monospace; font-size: 0.8rem; }
+	  .status-badge {
+	    display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.7rem;
+	    font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
+	  }
+	  .status-badge.registered { background: rgba(139,148,158,0.15); color: var(--text-muted); }
+	  .status-badge.active { background: rgba(63,185,80,0.15); color: var(--success); }
+	  .status-badge.shutdown { background: rgba(88,166,255,0.15); color: var(--accent); }
+	  .status-badge.invocation_error, .status-badge.shutdown_error { background: rgba(248,81,73,0.15); color: var(--error); cursor: help; }
+	  .event-badge {
+	    display: inline-block; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.7rem;
+	    font-weight: 600; font-family: monospace;
+	  }
+	  .event-badge.registration { background: rgba(88,166,255,0.15); color: var(--accent); }
+	  .event-badge.invocation { background: rgba(63,185,80,0.15); color: var(--success); }
+	  .event-badge.shutdown { background: rgba(210,153,34,0.15); color: var(--warning); }
+	  .table-wrap { overflow-x: auto; }
+	  .tooltip {
+	    display: none; position: absolute; background: #1c2128; border: 1px solid var(--border);
+	    border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--text);
+	    z-index: 100; max-width: 400px; word-break: break-word; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+	  }
+	  .tooltip.visible { display: block; }
 
 	  #graph-container {
 	    background: var(--surface);
@@ -86,39 +129,62 @@ templ reportHTML(report Report) {
 	  .graph-node { cursor: pointer; }
 	  .graph-node rect { rx: 6; ry: 6; stroke-width: 1.5; }
 	  .graph-node text { font-size: 11px; font-family: monospace; fill: var(--text); }
-	  .graph-edge line { stroke: var(--border); stroke-width: 1.5; }
 
-	  .timeline-bar { height: 4px; border-radius: 2px; transition: width 0.3s; }
-	  .timeline-row { display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0; }
+	  .timeline-bar { height: 6px; border-radius: 3px; transition: width 0.3s; }
+	  .timeline-row { display: flex; align-items: center; gap: 1rem; margin: 0.4rem 0; }
 	  .timeline-label { width: 200px; font-size: 0.8rem; font-family: monospace; text-align: right; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-	  .timeline-track { flex: 1; background: var(--surface); border-radius: 2px; height: 4px; position: relative; }
+	  .timeline-track { flex: 1; background: var(--surface); border-radius: 3px; height: 6px; position: relative; display: flex; gap: 2px; }
+
+	  .scope-tree { font-family: monospace; font-size: 0.85rem; }
+	  .scope-node { margin-left: 1.5rem; margin-top: 0.25rem; }
+	  .scope-node-header { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.75rem; border-radius: var(--radius); cursor: pointer; }
+	  .scope-node-header:hover { background: var(--surface); }
+	  .scope-node-header .scope-name { color: var(--accent); font-weight: 600; }
+	  .scope-node-header .scope-count { color: var(--text-muted); font-size: 0.75rem; }
+	  .scope-node-header .toggle { color: var(--text-muted); font-size: 0.7rem; width: 1rem; text-align: center; }
+	  .scope-children { border-left: 1px solid var(--border); margin-left: 0.75rem; }
+	  .scope-services { display: flex; flex-wrap: wrap; gap: 0.25rem; padding: 0.25rem 0 0.5rem 1.75rem; }
+	  .scope-svc { font-size: 0.75rem; padding: 0.15rem 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); }
+
+	  .footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.75rem; display: flex; justify-content: space-between; }
 	</style>
 		</head>
 		<body>
-			<h1>do-auditlog</h1>
+			<h1>do-auditlog <span class="version">v{ report.Version }</span></h1>
 			<p class="subtitle">Container <span class="mono" id="container-id"></span> &mdash; exported <span id="exported-at"></span></p>
 			<div class="stats" id="stats"></div>
 			<div class="tab-bar">
 				<button class="tab active" data-tab="services">Services</button>
+				<button class="tab" data-tab="scopes">Scopes</button>
 				<button class="tab" data-tab="graph">Dependency Graph</button>
 				<button class="tab" data-tab="timeline">Timeline</button>
 				<button class="tab" data-tab="events">Events</button>
 			</div>
 			<div class="tab-content active" id="tab-services">
+				<div class="filter-bar">
+					<input type="text" id="service-search" placeholder="Filter services..."/>
+				</div>
+				<div class="table-wrap">
 				<table>
 					<thead>
 						<tr>
 							<th>Service</th>
 							<th>Scope</th>
+							<th>Status</th>
 							<th>Order</th>
 							<th>Invocations</th>
 							<th>Build (ms)</th>
+							<th>Shutdown (ms)</th>
 							<th>Dependencies</th>
-							<th>Status</th>
+							<th>Dependents</th>
 						</tr>
 					</thead>
 					<tbody id="services-tbody"></tbody>
 				</table>
+				</div>
+			</div>
+			<div class="tab-content" id="tab-scopes">
+				<div class="scope-tree" id="scope-tree"></div>
 			</div>
 			<div class="tab-content" id="tab-graph">
 				<div id="graph-container"></div>
@@ -127,13 +193,17 @@ templ reportHTML(report Report) {
 				<div id="timeline-container"></div>
 			</div>
 			<div class="tab-content" id="tab-events">
+				<div class="filter-bar" id="event-filters"></div>
+				<div class="table-wrap">
 				<table>
 					<thead>
 						<tr><th>#</th><th>Time</th><th>Type</th><th>Phase</th><th>Scope</th><th>Service</th><th>Duration</th><th>Error</th></tr>
 					</thead>
 					<tbody id="events-tbody"></tbody>
 				</table>
+				</div>
 			</div>
+			<div id="error-tooltip" class="tooltip"></div>
 			@templ.JSONScript("report-data", report)
 			<script>
 	const report = JSON.parse(document.getElementById('report-data').textContent);
@@ -142,191 +212,268 @@ templ reportHTML(report Report) {
 	document.getElementById('exported-at').textContent = new Date(report.exported_at).toLocaleString();
 
 	// Stats
+	const errorCount = report.services.filter(s => s.status === 'invocation_error' || s.status === 'shutdown_error').length;
 	document.getElementById('stats').innerHTML = [
-	  {label: 'Services', value: report.service_count},
-	  {label: 'Events', value: report.event_count},
-	  {label: 'Scopes', value: countScopes(report.scope_tree)},
-	  {label: 'Dependencies', value: report.services.reduce((s, v) => s + (v.dependencies?.length || 0), 0)},
-	].map(s => '<div class="stat-card"><div class="label">'+s.label+'</div><div class="value">'+s.value+'</div></div>').join('');
+	  {label:'Services',value:report.service_count},
+	  {label:'Scopes',value:report.scope_count},
+	  {label:'Events',value:report.event_count},
+	  {label:'Dependencies',value:report.services.reduce((s,v)=>s+(v.dependencies?.length||0),0)},
+	  {label:'Total Build',value:report.total_build_duration_ms.toFixed(2)+'ms'},
+	  {label:'Errors',value:errorCount,cls:errorCount>0?'error':''},
+	].map(s=>'<div class="stat-card'+(s.cls?' '+s.cls:'')+'"><div class="label">'+s.label+'</div><div class="value">'+s.value+'</div></div>').join('');
 
-	function countScopes(node) { return 1 + (node.children || []).reduce((s, c) => s + countScopes(c), 0); }
-
-	// Tabs
-	document.querySelectorAll('.tab').forEach(tab => {
-	  tab.addEventListener('click', () => {
-	    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-	    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+	// Tabs + keyboard shortcuts
+	const tabs = {'1':'services','2':'scopes','3':'graph','4':'timeline','5':'events'};
+	document.querySelectorAll('.tab').forEach(tab=>{
+	  tab.addEventListener('click',()=>{
+	    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+	    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
 	    tab.classList.add('active');
-	    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-	    if (tab.dataset.tab === 'graph') renderGraph();
+	    document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+	    if(tab.dataset.tab==='graph')renderGraph();
 	  });
+	});
+	document.addEventListener('keydown',e=>{
+	  if(e.target.tagName==='INPUT')return;
+	  const tab=tabs[e.key];
+	  if(tab){const btn=document.querySelector('.tab[data-tab="'+tab+'"]');if(btn)btn.click();}
+	});
+
+	// Error tooltip
+	const tooltip=document.getElementById('error-tooltip');
+	document.addEventListener('click',e=>{
+	  const badge=e.target.closest('.status-badge.invocation_error,.status-badge.shutdown_error');
+	  if(badge){
+	    e.stopPropagation();
+	    const msg=badge.dataset.error;
+	    if(!msg)return;
+	    const r=badge.getBoundingClientRect();
+	    tooltip.textContent=msg;
+	    tooltip.style.left=r.left+'px';
+	    tooltip.style.top=(r.bottom+4)+'px';
+	    tooltip.classList.add('visible');
+	  } else { tooltip.classList.remove('visible'); }
 	});
 
 	// Services table
-	document.getElementById('services-tbody').innerHTML = report.services.map(s => {
-	  const deps = (s.dependencies||[]).map(d => '<span>'+d.service_name+'</span>').join(', ');
-	  const status = s.status === 'invocation_error' || s.status === 'shutdown_error'
-	                 ? '<span class="has-error">'+s.status.replace(/_/g,' ')+'</span>' : s.status.replace(/_/g,' ');
-	  return '<tr>'
-	    +'<td class="mono">'+esc(s.service_name)+'</td>'
+	const allServices = report.services.map(s => {
+	  const deps=(s.dependencies||[]).map(d=>'<span>'+d.service_name+'</span>').join(', ');
+	  const depsR=(s.dependents||[]).map(d=>'<span>'+d.service_name+'</span>').join(', ');
+	  const regAt=s.registered_at?new Date(s.registered_at).toLocaleTimeString():'';
+	  const invAt=s.first_invoked_at?new Date(s.first_invoked_at).toLocaleTimeString():'';
+	  const statusBadge='<span class="status-badge '+s.status+'"'+(s.invocation_error?' data-error="'+esc(s.invocation_error)+'"':'')+(s.shutdown_error?' data-error="'+esc(s.shutdown_error)+'"':'')+'>'+s.status.replace(/_/g,' ')+'</span>';
+	  return '<tr data-search="'+esc(s.service_name.toLowerCase()+' '+s.scope_name)+'">'
+	    +'<td class="mono" title="Registered: '+regAt+(invAt?'\\nInvoked: '+invAt:'')+'">'+esc(s.service_name)+'</td>'
 	    +'<td>'+esc(s.scope_name)+'</td>'
+	    +'<td>'+statusBadge+'</td>'
 	    +'<td>'+s.invocation_order+'</td>'
 	    +'<td>'+s.invocation_count+'</td>'
-	    +'<td>'+(s.first_build_duration_ms ? s.first_build_duration_ms.toFixed(3) : '&ndash;')+'</td>'
+	    +'<td>'+(s.first_build_duration_ms?s.first_build_duration_ms.toFixed(3):'&ndash;')+'</td>'
+	    +'<td>'+(s.shutdown_duration_ms?s.shutdown_duration_ms.toFixed(3):'&ndash;')+'</td>'
 	    +'<td class="deps-list">'+(deps||'&ndash;')+'</td>'
-	    +'<td>'+status+'</td>'
+	    +'<td class="deps-list">'+(depsR||'&ndash;')+'</td>'
 	    +'</tr>';
-	}).join('');
+	});
+	document.getElementById('services-tbody').innerHTML=allServices.join('');
+	document.getElementById('service-search').addEventListener('input',e=>{
+	  const q=e.target.value.toLowerCase();
+	  document.querySelectorAll('#services-tbody tr').forEach(tr=>{
+	    tr.style.display=tr.dataset.search.includes(q)?'':'none';
+	  });
+	});
 
 	// Events table
-	const etIcons = {registration:'reg',invocation:'inv',shutdown:'sht'};
-	document.getElementById('events-tbody').innerHTML = report.events.map(e => {
-	  return '<tr>'
+	const allEvents = report.events.map(e => {
+	  const badge='<span class="event-badge '+e.event_type+'">'+e.event_type+'</span>';
+	  return '<tr data-type="'+e.event_type+'">'
 	    +'<td class="mono">'+e.sequence+'</td>'
 	    +'<td class="mono">'+new Date(e.timestamp).toISOString().split('T')[1].slice(0,12)+'</td>'
-	    +'<td>'+etIcons[e.event_type]+'</td>'
+	    +'<td>'+badge+'</td>'
 	    +'<td>'+e.phase+'</td>'
 	    +'<td>'+esc(e.scope_name)+'</td>'
 	    +'<td class="mono">'+esc(e.service_name)+'</td>'
-	    +'<td>'+(e.duration_ms ? e.duration_ms.toFixed(3) : '')+'</td>'
-	    +'<td class="has-error">'+(e.error ? esc(e.error) : '')+'</td>'
+	    +'<td>'+(e.duration_ms?e.duration_ms.toFixed(3):'')+'</td>'
+	    +'<td class="has-error">'+(e.error?esc(e.error):'')+'</td>'
 	    +'</tr>';
-	}).join('');
+	});
+	document.getElementById('events-tbody').innerHTML=allEvents.join('');
+
+	// Event filters
+	const eventTypes=['all','registration','invocation','shutdown'];
+	document.getElementById('event-filters').innerHTML=eventTypes.map(t=>
+	  '<button class="chip'+(t==='all'?' active':'')+'" data-filter="'+t+'">'+t+'</button>'
+	).join('');
+	document.querySelectorAll('#event-filters .chip').forEach(btn=>{
+	  btn.addEventListener('click',()=>{
+	    document.querySelectorAll('#event-filters .chip').forEach(b=>b.classList.remove('active'));
+	    btn.classList.add('active');
+	    const f=btn.dataset.filter;
+	    document.querySelectorAll('#events-tbody tr').forEach(tr=>{
+	      tr.style.display=(f==='all'||tr.dataset.type===f)?'':'none';
+	    });
+	  });
+	});
+
+	// Scope tree
+	function renderScopeTree(node,container){
+	  const div=document.createElement('div');
+	  div.className='scope-node';
+	  const hdr=document.createElement('div');
+	  hdr.className='scope-node-header';
+	  const svcs=node.services||[];
+	  hdr.innerHTML='<span class="toggle">&#9662;</span><span class="scope-name">'+esc(node.name)+'</span><span class="scope-count">'+svcs.length+' service'+(svcs.length!==1?'s':'')+'</span>';
+	  div.appendChild(hdr);
+	  if(svcs.length){
+	    const svcDiv=document.createElement('div');
+	    svcDiv.className='scope-services';
+	    svcs.forEach(s=>{const sp=document.createElement('span');sp.className='scope-svc';sp.textContent=s;svcDiv.appendChild(sp);});
+	    div.appendChild(svcDiv);
+	  }
+	  if(node.children&&node.children.length){
+	    const childDiv=document.createElement('div');
+	    childDiv.className='scope-children';
+	    node.children.forEach(c=>renderScopeTree(c,childDiv));
+	    div.appendChild(childDiv);
+	  }
+	  hdr.addEventListener('click',()=>{
+	    const isCollapsed=hdr.querySelector('.toggle').textContent==='\u25B6';
+	    hdr.querySelector('.toggle').textContent=isCollapsed?'\u25B2':'\u25B6';
+	    Array.from(div.children).forEach(c=>{if(c!==hdr)c.style.display=isCollapsed?'':'none';});
+	  });
+	  container.appendChild(div);
+	}
+	renderScopeTree(report.scope_tree,document.getElementById('scope-tree'));
 
 	// Timeline
-	const maxDur = Math.max(...report.services.filter(s=>s.first_build_duration_ms).map(s=>s.first_build_duration_ms), 1);
-	document.getElementById('timeline-container').innerHTML = report.services
-	  .filter(s => s.first_build_duration_ms)
-	  .sort((a,b) => (b.first_build_duration_ms||0) - (a.first_build_duration_ms||0))
-	  .map(s => {
-	    const pct = ((s.first_build_duration_ms / maxDur) * 100).toFixed(1);
-	    const color = s.invocation_error ? 'var(--error)' : 'var(--accent)';
+	const buildMax=Math.max(...report.services.filter(s=>s.first_build_duration_ms).map(s=>s.first_build_duration_ms),1);
+	const shutMax=Math.max(...report.services.filter(s=>s.shutdown_duration_ms).map(s=>s.shutdown_duration_ms),1);
+	const tlMax=Math.max(buildMax,shutMax);
+	document.getElementById('timeline-container').innerHTML=report.services
+	  .filter(s=>s.first_build_duration_ms||s.shutdown_duration_ms)
+	  .sort((a,b)=>(b.first_build_duration_ms||0)-(a.first_build_duration_ms||0))
+	  .map(s=>{
+	    const buildPct=s.first_build_duration_ms?((s.first_build_duration_ms/tlMax)*100).toFixed(1):0;
+	    const shutPct=s.shutdown_duration_ms?((s.shutdown_duration_ms/tlMax)*100).toFixed(1):0;
 	    return '<div class="timeline-row">'
-	      +'<div class="timeline-label">'+esc(s.service_name)+'</div>'
-	      +'<div class="timeline-track"><div class="timeline-bar" style="width:'+pct+'%;background:'+color+'"></div></div>'
-	      +'<div style="width:80px;text-align:right;font-size:0.8rem">'+s.first_build_duration_ms.toFixed(2)+' ms</div>'
-	      +'</div>';
+	      +'<div class="timeline-label">'+s.invocation_order+'. '+esc(s.service_name)+'</div>'
+	      +'<div class="timeline-track">'
+	      +(buildPct>0?'<div class="timeline-bar" style="width:'+buildPct+'%;background:var(--accent)" title="Build: '+(s.first_build_duration_ms||0).toFixed(3)+'ms"></div>':'')
+	      +(shutPct>0?'<div class="timeline-bar" style="width:'+shutPct+'%;background:var(--warning)" title="Shutdown: '+(s.shutdown_duration_ms||0).toFixed(3)+'ms"></div>':'')
+	      +'</div>'
+	      +'<div style="width:100px;text-align:right;font-size:0.8rem;color:var(--text-muted)">'
+	      +(s.first_build_duration_ms?s.first_build_duration_ms.toFixed(2)+'ms':'')
+	      +(s.shutdown_duration_ms?' / '+s.shutdown_duration_ms.toFixed(2)+'ms':'')
+	      +'</div></div>';
 	  }).join('');
 
-	// Dependency Graph (D3-like force simulation via simple SVG)
-	function renderGraph() {
-	  const container = document.getElementById('graph-container');
-	  if (container.querySelector('svg')) return;
+	// Dependency Graph
+	function renderGraph(){
+	  const container=document.getElementById('graph-container');
+	  if(container.querySelector('svg'))return;
+	  const services=report.services;
+	  if(!services.length)return;
 
-	  const services = report.services;
-	  if (services.length === 0) return;
+	  const nameMap={};
+	  services.forEach((s,i)=>{nameMap[s.scope_id+'/'+s.service_name]=i;});
 
-	  const nameMap = {};
-	  services.forEach((s, i) => { nameMap[s.scope_id+'/'+s.service_name] = i; });
-
-	  const nodeColor = '#58a6ff';
-	  const W = container.clientWidth || 800;
-	  const H = 500;
-	  const nodes = services.map((s, i) => ({
-	    id: i, name: s.service_name,
-	    color: nodeColor,
-	    x: W/2 + (Math.random()-0.5)*300, y: H/2 + (Math.random()-0.5)*300,
-	    vx: 0, vy: 0
+	  const statusColors={active:'#3fb950',registered:'#8b949e',shutdown:'#58a6ff',invocation_error:'#f85149',shutdown_error:'#f85149'};
+	  const W=container.clientWidth||800;
+	  const H=500;
+	  const nodes=services.map((s,i)=>({
+	    id:i,name:s.service_name,status:s.status,
+	    color:statusColors[s.status]||'#58a6ff',
+	    x:W/2+(Math.random()-0.5)*300,y:H/2+(Math.random()-0.5)*300,
+	    vx:0,vy:0,
+	    invocation_count:s.invocation_count,
+	    build_ms:s.first_build_duration_ms
 	  }));
-	  const links = [];
-	  services.forEach((s, i) => {
-	    (s.dependencies||[]).forEach(d => {
-	      const key = d.scope_id+'/'+d.service_name;
-	      if (nameMap[key] !== undefined) links.push({source: nameMap[key], target: i});
+	  const links=[];
+	  services.forEach((s,i)=>{
+	    (s.dependencies||[]).forEach(d=>{
+	      const key=d.scope_id+'/'+d.service_name;
+	      if(nameMap[key]!==undefined)links.push({source:nameMap[key],target:i});
 	    });
 	  });
 
-	  // Simple force simulation
-	  for (let iter = 0; iter < 300; iter++) {
-	    // Repulsion
-	    for (let i = 0; i < nodes.length; i++) {
-	      for (let j = i+1; j < nodes.length; j++) {
-	        let dx = nodes[j].x - nodes[i].x;
-	        let dy = nodes[j].y - nodes[i].y;
-	        let dist = Math.sqrt(dx*dx + dy*dy) || 1;
-	        let force = 2000 / (dist * dist);
-	        nodes[i].vx -= dx/dist * force;
-	        nodes[i].vy -= dy/dist * force;
-	        nodes[j].vx += dx/dist * force;
-	        nodes[j].vy += dy/dist * force;
+	  for(let iter=0;iter<300;iter++){
+	    for(let i=0;i<nodes.length;i++){
+	      for(let j=i+1;j<nodes.length;j++){
+	        let dx=nodes[j].x-nodes[i].x,dy=nodes[j].y-nodes[i].y;
+	        let dist=Math.sqrt(dx*dx+dy*dy)||1;
+	        let force=2000/(dist*dist);
+	        nodes[i].vx-=dx/dist*force;nodes[i].vy-=dy/dist*force;
+	        nodes[j].vx+=dx/dist*force;nodes[j].vy+=dy/dist*force;
 	      }
 	    }
-	    // Attraction
-	    links.forEach(l => {
-	      let dx = nodes[l.target].x - nodes[l.source].x;
-	      let dy = nodes[l.target].y - nodes[l.source].y;
-	      let dist = Math.sqrt(dx*dx + dy*dy) || 1;
-	      let force = (dist - 100) * 0.05;
-	      nodes[l.source].vx += dx/dist * force;
-	      nodes[l.source].vy += dy/dist * force;
-	      nodes[l.target].vx -= dx/dist * force;
-	      nodes[l.target].vy -= dy/dist * force;
+	    links.forEach(l=>{
+	      let dx=nodes[l.target].x-nodes[l.source].x,dy=nodes[l.target].y-nodes[l.source].y;
+	      let dist=Math.sqrt(dx*dx+dy*dy)||1;
+	      let force=(dist-120)*0.05;
+	      nodes[l.source].vx+=dx/dist*force;nodes[l.source].vy+=dy/dist*force;
+	      nodes[l.target].vx-=dx/dist*force;nodes[l.target].vy-=dy/dist*force;
 	    });
-	    // Center gravity
-	    nodes.forEach(n => { n.vx += (W/2 - n.x)*0.01; n.vy += (H/2 - n.y)*0.01; });
-	    // Apply
-	    nodes.forEach(n => { n.vx *= 0.6; n.vy *= 0.6; n.x += n.vx; n.y += n.vy; n.x = Math.max(60, Math.min(W-60, n.x)); n.y = Math.max(20, Math.min(H-20, n.y)); });
+	    nodes.forEach(n=>{n.vx+=(W/2-n.x)*0.01;n.vy+=(H/2-n.y)*0.01;});
+	    nodes.forEach(n=>{n.vx*=0.6;n.vy*=0.6;n.x+=n.vx;n.y+=n.vy;n.x=Math.max(80,Math.min(W-80,n.x));n.y=Math.max(30,Math.min(H-30,n.y));});
 	  }
 
-	  const ns = 'http://www.w3.org/2000/svg';
-	  const svg = document.createElementNS(ns, 'svg');
-	  svg.setAttribute('viewBox', '0 0 '+W+' '+H);
+	  const ns='http://www.w3.org/2000/svg';
+	  const svg=document.createElementNS(ns,'svg');
+	  svg.setAttribute('viewBox','0 0 '+W+' '+H);
 
-	  // Arrow marker
-	  const defs = document.createElementNS(ns, 'defs');
-	  const marker = document.createElementNS(ns, 'marker');
-	  marker.setAttribute('id', 'arrow');
-	  marker.setAttribute('viewBox', '0 0 10 10');
-	  marker.setAttribute('refX', '10');
-	  marker.setAttribute('refY', '5');
-	  marker.setAttribute('markerWidth', '6');
-	  marker.setAttribute('markerHeight', '6');
-	  marker.setAttribute('orient', 'auto');
-	  const path = document.createElementNS(ns, 'path');
-	  path.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
-	  path.setAttribute('fill', '#30363d');
-	  marker.appendChild(path);
-	  defs.appendChild(marker);
-	  svg.appendChild(defs);
+	  const defs=document.createElementNS(ns,'defs');
+	  const marker=document.createElementNS(ns,'marker');
+	  marker.setAttribute('id','arrow');marker.setAttribute('viewBox','0 0 10 10');
+	  marker.setAttribute('refX','10');marker.setAttribute('refY','5');
+	  marker.setAttribute('markerWidth','6');marker.setAttribute('markerHeight','6');
+	  marker.setAttribute('orient','auto');
+	  const path=document.createElementNS(ns,'path');
+	  path.setAttribute('d','M 0 0 L 10 5 L 0 10 z');path.setAttribute('fill','#484f58');
+	  marker.appendChild(path);defs.appendChild(marker);svg.appendChild(defs);
 
-	  links.forEach(l => {
-	    const line = document.createElementNS(ns, 'line');
-	    line.setAttribute('x1', nodes[l.source].x);
-	    line.setAttribute('y1', nodes[l.source].y);
-	    line.setAttribute('x2', nodes[l.target].x);
-	    line.setAttribute('y2', nodes[l.target].y);
-	    line.setAttribute('stroke', '#30363d');
-	    line.setAttribute('stroke-width', '1.5');
-	    line.setAttribute('marker-end', 'url(#arrow)');
+	  links.forEach(l=>{
+	    const sn=nodes[l.source],tn=nodes[l.target];
+	    const dx=tn.x-sn.x,dy=tn.y-sn.y;
+	    const dist=Math.sqrt(dx*dx+dy*dy)||1;
+	    const tw=sn.name.length*7.5+16;
+	    const insetX=(dx/dist)*(tw/2+4),insetY=(dy/dist)*14;
+	    const line=document.createElementNS(ns,'line');
+	    line.setAttribute('x1',sn.x+insetX);line.setAttribute('y1',sn.y+insetY);
+	    line.setAttribute('x2',tn.x-insetX);line.setAttribute('y2',tn.y-insetY);
+	    line.setAttribute('stroke','#484f58');line.setAttribute('stroke-width','1.5');
+	    line.setAttribute('marker-end','url(#arrow)');
 	    svg.appendChild(line);
 	  });
 
-	  nodes.forEach(n => {
-	    const g = document.createElementNS(ns, 'g');
-	    g.setAttribute('transform', 'translate('+n.x+','+n.y+')');
+	  nodes.forEach(n=>{
+	    const g=document.createElementNS(ns,'g');
+	    g.setAttribute('transform','translate('+n.x+','+n.y+')');
 	    g.classList.add('graph-node');
-	    const rect = document.createElementNS(ns, 'rect');
-	    const tw = n.name.length * 7.5 + 16;
-	    rect.setAttribute('x', -tw/2);
-	    rect.setAttribute('y', -12);
-	    rect.setAttribute('width', tw);
-	    rect.setAttribute('height', 24);
-	    rect.setAttribute('fill', '#161b22');
-	    rect.setAttribute('stroke', n.color);
+	    const tw=n.name.length*7.5+16;
+	    const rect=document.createElementNS(ns,'rect');
+	    rect.setAttribute('x',-tw/2);rect.setAttribute('y',-14);
+	    rect.setAttribute('width',tw);rect.setAttribute('height',28);
+	    rect.setAttribute('fill','#161b22');rect.setAttribute('stroke',n.color);
 	    g.appendChild(rect);
-	    const text = document.createElementNS(ns, 'text');
-	    text.setAttribute('text-anchor', 'middle');
-	    text.setAttribute('dy', '4');
-	    text.textContent = n.name;
+	    const text=document.createElementNS(ns,'text');
+	    text.setAttribute('text-anchor','middle');text.setAttribute('dy','4');
+	    text.textContent=n.name;
 	    g.appendChild(text);
+
+	    const title=document.createElementNS(ns,'title');
+	    title.textContent=n.name+' | status: '+n.status+' | invocations: '+n.invocation_count+(n.build_ms?' | build: '+n.build_ms.toFixed(3)+'ms':'');
+	    g.appendChild(title);
+
 	    svg.appendChild(g);
 	  });
-
 	  container.appendChild(svg);
 	}
 
-	function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+	function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 	</script>
+			<div class="footer">
+				<span>Generated by <strong>do-auditlog</strong></span>
+				<span>Schema v{ report.Version }</span>
+			</div>
 		</body>
 	</html>
 }
