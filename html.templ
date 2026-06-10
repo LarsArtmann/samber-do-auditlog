@@ -124,11 +124,36 @@ templ reportHTML(report Report) {
 	    min-height: 500px;
 	    position: relative;
 	    overflow: hidden;
+	    cursor: grab;
 	  }
-	  #graph-container svg { width: 100%; height: 500px; }
+	  #graph-container:active { cursor: grabbing; }
+	  #graph-container svg { width: 100%; height: 100%; display: block; }
+	  .graph-controls {
+	    position: absolute; top: 0.5rem; right: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; z-index: 10;
+	  }
+	  .graph-controls button {
+	    background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+	    color: var(--text); width: 28px; height: 28px; cursor: pointer; font-size: 1rem;
+	    display: flex; align-items: center; justify-content: center; line-height: 1;
+	  }
+	  .graph-controls button:hover { border-color: var(--accent); color: var(--accent); }
+	  .graph-layer-label {
+	    fill: var(--text-muted); font-size: 10px; font-family: monospace; opacity: 0.6;
+	  }
 	  .graph-node { cursor: pointer; }
-	  .graph-node rect { rx: 6; ry: 6; stroke-width: 1.5; }
-	  .graph-node text { font-size: 11px; font-family: monospace; fill: var(--text); }
+	  .graph-node rect { rx: 6; ry: 6; stroke-width: 2; transition: stroke-width 0.15s, filter 0.15s; }
+	  .graph-node:hover rect { stroke-width: 3; filter: brightness(1.2); }
+	  .graph-node.highlighted rect { stroke-width: 3; filter: brightness(1.3); }
+	  .graph-node.dimmed { opacity: 0.25; }
+	  .graph-edge { transition: opacity 0.15s; }
+	  .graph-edge.dimmed { opacity: 0.1; }
+	  .graph-edge.highlighted { opacity: 1; }
+	  .graph-edge path { fill: none; stroke: #484f58; stroke-width: 1.5; }
+	  .graph-edge.highlighted path { stroke: var(--accent); stroke-width: 2; }
+	  .graph-info {
+	    position: absolute; bottom: 0.5rem; left: 0.5rem; font-size: 0.7rem; color: var(--text-muted);
+	    background: rgba(13,17,23,0.85); padding: 0.3rem 0.6rem; border-radius: 4px; pointer-events: none;
+	  }
 
 	  .timeline-bar { height: 6px; border-radius: 3px; transition: width 0.3s; }
 	  .timeline-row { display: flex; align-items: center; gap: 1rem; margin: 0.4rem 0; }
@@ -187,7 +212,14 @@ templ reportHTML(report Report) {
 				<div class="scope-tree" id="scope-tree"></div>
 			</div>
 			<div class="tab-content" id="tab-graph">
-				<div id="graph-container"></div>
+				<div id="graph-container">
+					<div class="graph-controls">
+						<button id="graph-zoom-in" title="Zoom in">+</button>
+						<button id="graph-zoom-out" title="Zoom out">&minus;</button>
+						<button id="graph-fit" title="Fit to view">&#8982;</button>
+					</div>
+					<div class="graph-info">Scroll to zoom &middot; Drag to pan &middot; Click node to highlight</div>
+				</div>
 			</div>
 			<div class="tab-content" id="tab-timeline">
 				<div id="timeline-container"></div>
@@ -370,7 +402,7 @@ templ reportHTML(report Report) {
 	// Dependency Graph
 	function renderGraph(){
 	  const container=document.getElementById('graph-container');
-	  if(container.querySelector('svg'))return;
+	  if(container.querySelector('svg.graph-layers'))return;
 	  const services=report.services;
 	  if(!services.length)return;
 
@@ -378,95 +410,250 @@ templ reportHTML(report Report) {
 	  services.forEach((s,i)=>{nameMap[s.scope_id+'/'+s.service_name]=i;});
 
 	  const statusColors={active:'#3fb950',registered:'#8b949e',shutdown:'#58a6ff',invocation_error:'#f85149',shutdown_error:'#f85149'};
-	  const W=container.clientWidth||800;
-	  const H=500;
-	  const nodes=services.map((s,i)=>({
-	    id:i,name:s.service_name,status:s.status,
+	  const nodeW=140,nodeH=34,nodeGapX=30,nodeGapY=60,padX=40,padY=40;
+	  const charW=7.5;
+
+	  const nodeData=services.map((s,i)=>({
+	    id:i, name:s.service_name, status:s.status,
 	    color:statusColors[s.status]||'#58a6ff',
-	    x:W/2+(Math.random()-0.5)*300,y:H/2+(Math.random()-0.5)*300,
-	    vx:0,vy:0,
 	    invocation_count:s.invocation_count,
-	    build_ms:s.first_build_duration_ms
+	    build_ms:s.first_build_duration_ms,
+	    scope_name:s.scope_name,
+	    w:Math.max(nodeW, s.service_name.length*charW+20), h:nodeH
 	  }));
-	  const links=[];
+
+	  const edges=[];
 	  services.forEach((s,i)=>{
 	    (s.dependencies||[]).forEach(d=>{
 	      const key=d.scope_id+'/'+d.service_name;
-	      if(nameMap[key]!==undefined)links.push({source:nameMap[key],target:i});
+	      if(nameMap[key]!==undefined)edges.push({source:nameMap[key],target:i});
 	    });
 	  });
 
-	  for(let iter=0;iter<300;iter++){
-	    for(let i=0;i<nodes.length;i++){
-	      for(let j=i+1;j<nodes.length;j++){
-	        let dx=nodes[j].x-nodes[i].x,dy=nodes[j].y-nodes[i].y;
-	        let dist=Math.sqrt(dx*dx+dy*dy)||1;
-	        let force=2000/(dist*dist);
-	        nodes[i].vx-=dx/dist*force;nodes[i].vy-=dy/dist*force;
-	        nodes[j].vx+=dx/dist*force;nodes[j].vy+=dy/dist*force;
-	      }
+	  // --- Sugiyama layered layout ---
+	  // Phase 1: Rank assignment (longest path from roots)
+	  const inDeg=new Array(nodeData.length).fill(0);
+	  const adj=new Array(nodeData.length).fill(null).map(()=>[]);
+	  edges.forEach(e=>{adj[e.source].push(e.target);inDeg[e.target]++;});
+	  const rank=new Array(nodeData.length).fill(0);
+	  const queue=[];
+	  nodeData.forEach((_,i)=>{if(inDeg[i]===0)queue.push(i);});
+	  const visited=new Set(queue);
+	  while(queue.length){
+	    const v=queue.shift();
+	    for(const u of adj[v]){
+	      rank[u]=Math.max(rank[u],rank[v]+1);
+	      visited.add(u);
+	      if(--inDeg[u]===0)queue.push(u);
 	    }
-	    links.forEach(l=>{
-	      let dx=nodes[l.target].x-nodes[l.source].x,dy=nodes[l.target].y-nodes[l.source].y;
-	      let dist=Math.sqrt(dx*dx+dy*dy)||1;
-	      let force=(dist-120)*0.05;
-	      nodes[l.source].vx+=dx/dist*force;nodes[l.source].vy+=dy/dist*force;
-	      nodes[l.target].vx-=dx/dist*force;nodes[l.target].vy-=dy/dist*force;
+	  }
+	  // Handle cycles: assign unvisited nodes to max+1
+	  let maxRank=0;
+	  nodeData.forEach((_,i)=>{if(!visited.has(i))rank[i]=0; maxRank=Math.max(maxRank,rank[i]);});
+
+	  // Group nodes by rank (layers)
+	  const layers=new Array(maxRank+1).fill(null).map(()=>[]);
+	  nodeData.forEach((_,i)=>layers[rank[i]].push(i));
+
+	  // Phase 2: Barycenter ordering to reduce edge crossings
+	  for(let r=1;r<layers.length;r++){
+	    const layer=layers[r];
+	    const bary=layer.map(v=>{
+	      const preds=edges.filter(e=>e.target===v).map(e=>e.source);
+	      if(!preds.length)return 0;
+	      const posMap={};
+	      layers[r-1].forEach((u,j)=>{posMap[u]=j;});
+	      return preds.reduce((s,p)=>s+(posMap[p]!==undefined?posMap[p]:0),0)/preds.length;
 	    });
-	    nodes.forEach(n=>{n.vx+=(W/2-n.x)*0.01;n.vy+=(H/2-n.y)*0.01;});
-	    nodes.forEach(n=>{n.vx*=0.6;n.vy*=0.6;n.x+=n.vx;n.y+=n.vy;n.x=Math.max(80,Math.min(W-80,n.x));n.y=Math.max(30,Math.min(H-30,n.y));});
+	    const indices=layer.map((_,i)=>i);
+	    indices.sort((a,b)=>bary[a]-bary[b]);
+	    layers[r]=indices.map(i=>layer[i]);
 	  }
 
+	  // Phase 3: Position assignment — center nodes within each layer
+	  const pos=new Array(nodeData.length).fill(0);
+	  layers.forEach(layer=>{
+	    const totalW=layer.reduce((s,v)=>s+nodeData[v].w,0)+(layer.length-1)*nodeGapX;
+	    let x=(totalW>0?-totalW/2:0);
+	    layer.forEach(v=>{
+	      pos[v]=x+nodeData[v].w/2;
+	      x+=nodeData[v].w+nodeGapX;
+	    });
+	  });
+
+	  // Compute SVG dimensions
+	  let totalW=0;
+	  layers.forEach(layer=>{
+	    const w=layer.reduce((s,v)=>s+nodeData[v].w,0)+(layer.length-1)*nodeGapX;
+	    if(w>totalW)totalW=w;
+	  });
+	  const totalH=(maxRank+1)*(nodeH+nodeGapY)-nodeGapY;
+	  const svgW=Math.max(totalW+padX*2,300);
+	  const svgH=totalH+padY*2;
+
+	  // Build SVG
 	  const ns='http://www.w3.org/2000/svg';
 	  const svg=document.createElementNS(ns,'svg');
-	  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+	  svg.classList.add('graph-layers');
+	  svg.setAttribute('viewBox',(-svgW/2)+' '+(-padY)+' '+svgW+' '+svgH);
+	  svg.style.height='500px';
 
+	  // Arrowhead marker
 	  const defs=document.createElementNS(ns,'defs');
 	  const marker=document.createElementNS(ns,'marker');
 	  marker.setAttribute('id','arrow');marker.setAttribute('viewBox','0 0 10 10');
 	  marker.setAttribute('refX','10');marker.setAttribute('refY','5');
 	  marker.setAttribute('markerWidth','6');marker.setAttribute('markerHeight','6');
 	  marker.setAttribute('orient','auto');
-	  const path=document.createElementNS(ns,'path');
-	  path.setAttribute('d','M 0 0 L 10 5 L 0 10 z');path.setAttribute('fill','#484f58');
-	  marker.appendChild(path);defs.appendChild(marker);svg.appendChild(defs);
+	  const arrowPath=document.createElementNS(ns,'path');
+	  arrowPath.setAttribute('d','M 0 0 L 10 5 L 0 10 z');arrowPath.setAttribute('fill','#484f58');
+	  marker.appendChild(arrowPath);
+	  defs.appendChild(marker);
+	  const markerHL=document.createElementNS(ns,'marker');
+	  markerHL.setAttribute('id','arrow-hl');markerHL.setAttribute('viewBox','0 0 10 10');
+	  markerHL.setAttribute('refX','10');markerHL.setAttribute('refY','5');
+	  markerHL.setAttribute('markerWidth','6');markerHL.setAttribute('markerHeight','6');
+	  markerHL.setAttribute('orient','auto');
+	  const arrowHLPath=document.createElementNS(ns,'path');
+	  arrowHLPath.setAttribute('d','M 0 0 L 10 5 L 0 10 z');arrowHLPath.setAttribute('fill','#58a6ff');
+	  markerHL.appendChild(arrowHLPath);
+	  defs.appendChild(markerHL);
+	  svg.appendChild(defs);
 
-	  links.forEach(l=>{
-	    const sn=nodes[l.source],tn=nodes[l.target];
-	    const dx=tn.x-sn.x,dy=tn.y-sn.y;
-	    const dist=Math.sqrt(dx*dx+dy*dy)||1;
-	    const tw=sn.name.length*7.5+16;
-	    const insetX=(dx/dist)*(tw/2+4),insetY=(dy/dist)*14;
-	    const line=document.createElementNS(ns,'line');
-	    line.setAttribute('x1',sn.x+insetX);line.setAttribute('y1',sn.y+insetY);
-	    line.setAttribute('x2',tn.x-insetX);line.setAttribute('y2',tn.y-insetY);
-	    line.setAttribute('stroke','#484f58');line.setAttribute('stroke-width','1.5');
-	    line.setAttribute('marker-end','url(#arrow)');
-	    svg.appendChild(line);
+	  // Layer labels (depth indicators)
+	  layers.forEach((layer,r)=>{
+	    if(layer.length===0)return;
+	    const label=document.createElementNS(ns,'text');
+	    label.classList.add('graph-layer-label');
+	    label.setAttribute('x',-svgW/2+8);
+	    label.setAttribute('y',r*(nodeH+nodeGapY)+nodeH/2+4);
+	    label.textContent='L'+r;
+	    svg.appendChild(label);
 	  });
 
-	  nodes.forEach(n=>{
+	  // Draw edges as smooth curves
+	  const edgeGroups={};
+	  edges.forEach(e=>{
+	    const sx=pos[e.source], sy=rank[e.source]*(nodeH+nodeGapY)+nodeH;
+	    const tx=pos[e.target], ty=rank[e.target]*(nodeH+nodeGapY);
+	    const my=(sy+ty)/2;
 	    const g=document.createElementNS(ns,'g');
-	    g.setAttribute('transform','translate('+n.x+','+n.y+')');
+	    g.classList.add('graph-edge');
+	    g.dataset.source=e.source;
+	    g.dataset.target=e.target;
+	    const p=document.createElementNS(ns,'path');
+	    p.setAttribute('d','M '+sx+' '+sy+' C '+sx+' '+my+', '+tx+' '+my+', '+tx+' '+ty);
+	    p.setAttribute('marker-end','url(#arrow)');
+	    g.appendChild(p);
+	    svg.appendChild(g);
+	    edgeGroups[e.source]=edgeGroups[e.source]||[];
+	    edgeGroups[e.source].push(g);
+	    edgeGroups[e.target]=edgeGroups[e.target]||[];
+	    edgeGroups[e.target].push(g);
+	  });
+
+	  // Draw nodes
+	  const nodeGroups={};
+	  nodeData.forEach((n,i)=>{
+	    const cx=pos[i], cy=rank[i]*(nodeH+nodeGapY);
+	    const g=document.createElementNS(ns,'g');
+	    g.setAttribute('transform','translate('+(cx-n.w/2)+','+cy+')');
 	    g.classList.add('graph-node');
-	    const tw=n.name.length*7.5+16;
+	    g.dataset.id=i;
 	    const rect=document.createElementNS(ns,'rect');
-	    rect.setAttribute('x',-tw/2);rect.setAttribute('y',-14);
-	    rect.setAttribute('width',tw);rect.setAttribute('height',28);
+	    rect.setAttribute('width',n.w);rect.setAttribute('height',n.h);
 	    rect.setAttribute('fill','#161b22');rect.setAttribute('stroke',n.color);
 	    g.appendChild(rect);
 	    const text=document.createElementNS(ns,'text');
-	    text.setAttribute('text-anchor','middle');text.setAttribute('dy','4');
+	    text.setAttribute('x',n.w/2);text.setAttribute('y',n.h/2);
+	    text.setAttribute('text-anchor','middle');text.setAttribute('dominant-baseline','central');
+	    text.setAttribute('font-size','11px');text.setAttribute('font-family','monospace');
+	    text.setAttribute('fill','#e6edf3');
 	    text.textContent=n.name;
 	    g.appendChild(text);
-
 	    const title=document.createElementNS(ns,'title');
-	    title.textContent=n.name+' | status: '+n.status+' | invocations: '+n.invocation_count+(n.build_ms?' | build: '+n.build_ms.toFixed(3)+'ms':'');
+	    title.textContent=n.name+' | '+n.scope_name+' | status: '+n.status+' | invocations: '+n.invocation_count+(n.build_ms?' | build: '+n.build_ms.toFixed(3)+'ms':'');
 	    g.appendChild(title);
-
 	    svg.appendChild(g);
+	    nodeGroups[i]=g;
 	  });
+
 	  container.appendChild(svg);
+
+	  // --- Pan & Zoom ---
+	  let vb={x:-svgW/2,y:-padY,w:svgW,h:svgH};
+	  function applyVB(){svg.setAttribute('viewBox',vb.x+' '+vb.y+' '+vb.w+' '+vb.h);}
+	  function zoomAt(cx,cy,factor){
+	    const nw=vb.w*factor, nh=vb.h*factor;
+	    vb.x=cx-(cx-vb.x)*factor;vb.y=cy-(cy-vb.y)*factor;
+	    vb.w=nw;vb.h=nh;applyVB();
+	  }
+	  svg.addEventListener('wheel',e=>{
+	    e.preventDefault();
+	    const rect=svg.getBoundingClientRect();
+	    const mx=vb.x+(e.clientX-rect.left)/rect.width*vb.w;
+	    const my=vb.y+(e.clientY-rect.top)/rect.height*vb.h;
+	    zoomAt(mx,my,e.deltaY>0?1.15:1/1.15);
+	  },{passive:false});
+	  let drag=null;
+	  svg.addEventListener('mousedown',e=>{if(e.button===0)drag={x:e.clientX,y:e.clientY,vx:vb.x,vy:vb.y};});
+	  window.addEventListener('mousemove',e=>{
+	    if(!drag)return;
+	    const rect=svg.getBoundingClientRect();
+	    vb.x=drag.vx-(e.clientX-drag.x)/rect.width*vb.w;
+	    vb.y=drag.vy-(e.clientY-drag.y)/rect.height*vb.h;
+	    applyVB();
+	  });
+	  window.addEventListener('mouseup',()=>{drag=null;});
+
+	  document.getElementById('graph-zoom-in').addEventListener('click',()=>{
+	    zoomAt(vb.x+vb.w/2,vb.y+vb.h/2,1/1.3);
+	  });
+	  document.getElementById('graph-zoom-out').addEventListener('click',()=>{
+	    zoomAt(vb.x+vb.w/2,vb.y+vb.h/2,1.3);
+	  });
+	  document.getElementById('graph-fit').addEventListener('click',()=>{
+	    vb={x:-svgW/2,y:-padY,w:svgW,h:svgH};applyVB();
+	  });
+
+	  // --- Highlight on click ---
+	  let selected=null;
+	  function clearHighlight(){
+	    Object.values(nodeGroups).forEach(g=>{g.classList.remove('highlighted','dimmed');});
+	    Object.values(edgeGroups).flat().forEach(g=>{g.classList.remove('highlighted','dimmed');});
+	    selected=null;
+	  }
+	  Object.entries(nodeGroups).forEach(([id,g])=>{
+	    g.addEventListener('click',e=>{
+	      e.stopPropagation();
+	      const nid=parseInt(id);
+	      if(selected===nid){clearHighlight();return;}
+	      selected=nid;
+	      // Find connected nodes
+	      const connected=new Set([nid]);
+	      edges.forEach(e=>{
+	        if(e.source===nid)connected.add(e.target);
+	        if(e.target===nid)connected.add(e.source);
+	      });
+	      Object.entries(nodeGroups).forEach(([oid,og])=>{
+	        og.classList.toggle('dimmed',!connected.has(parseInt(oid)));
+	        og.classList.toggle('highlighted',parseInt(oid)===nid);
+	      });
+	      (edgeGroups[nid]||[]).forEach(eg=>{
+	        eg.classList.add('highlighted');eg.classList.remove('dimmed');
+	        eg.querySelector('path').setAttribute('marker-end','url(#arrow-hl)');
+	      });
+	      Object.values(edgeGroups).flat().forEach(eg=>{
+	        if(!eg.classList.contains('highlighted')){
+	          eg.classList.add('dimmed');
+	          eg.querySelector('path').setAttribute('marker-end','url(#arrow)');
+	        }
+	      });
+	    });
+	  });
+	  svg.addEventListener('click',e=>{
+	    if(e.target===svg||e.target.classList.contains('graph-layer-label'))clearHighlight();
+	  });
 	}
 
 	function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
