@@ -96,10 +96,9 @@ type ServiceInfo struct {
 	ShutdownError        *string       `json:"shutdown_error,omitempty"`
 	InvocationError      *string       `json:"invocation_error,omitempty"`
 
-	LastHealthCheckAt     *time.Time `json:"last_health_check_at,omitempty"`
-	HealthCheckDurationMs *float64   `json:"health_check_duration_ms,omitempty"`
-	HealthCheckError      *string    `json:"health_check_error,omitempty"`
-	HealthCheckCount      int        `json:"health_check_count"`
+	LastHealthCheckAt *time.Time `json:"last_health_check_at,omitempty"`
+	HealthCheckError  *string    `json:"health_check_error,omitempty"`
+	HealthCheckCount  int        `json:"health_check_count"`
 }
 
 // ScopeNode represents the scope hierarchy for visualization.

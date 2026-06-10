@@ -45,8 +45,9 @@ type serviceRecord struct {
 	invocationError      *string
 	shutdownError        *string
 
-	healthCheckError *string
-	healthCheckCount int
+	lastHealthCheckAt *time.Time
+	healthCheckError  *string
+	healthCheckCount  int
 }
 
 type scopeMeta struct {
@@ -488,10 +489,9 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 			ShutdownDurationMs:    rec.shutdownDurationMs,
 			ShutdownError:         rec.shutdownError,
 			InvocationError:       rec.invocationError,
-			LastHealthCheckAt:     rec.lastHealthCheckAt,
-			HealthCheckDurationMs: rec.healthCheckDurationMs,
-			HealthCheckError:      rec.healthCheckError,
-			HealthCheckCount:      rec.healthCheckCount,
+			LastHealthCheckAt: rec.lastHealthCheckAt,
+			HealthCheckError:  rec.healthCheckError,
+			HealthCheckCount:  rec.healthCheckCount,
 		})
 	}
 

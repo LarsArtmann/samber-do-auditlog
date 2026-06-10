@@ -1325,10 +1325,6 @@ func TestPlugin_HealthCheckHealthy(t *testing.T) {
 	if svc.HealthCheckError != nil {
 		t.Errorf("expected no health check error, got %s", *svc.HealthCheckError)
 	}
-
-	if svc.HealthCheckDurationMs == nil {
-		t.Error("expected HealthCheckDurationMs to be set")
-	}
 }
 
 func TestPlugin_HealthCheckUnhealthy(t *testing.T) {
