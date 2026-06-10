@@ -2876,3 +2876,156 @@ func TestReport_EventsByRef(t *testing.T) {
 		t.Error("expected no events for nonexistent scope")
 	}
 }
+
+func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideValue(injector, &Database{URL: "test"})
+
+	do.ProvideNamed(injector, "usersvc", func(i do.Injector) (*UserService, error) {
+		return &UserService{
+			DB:    do.MustInvoke[*Database](i),
+			Cache: &Cache{},
+		}, nil
+	})
+
+	_ = do.MustInvokeNamed[*UserService](injector, "usersvc")
+
+	var buf bytes.Buffer
+
+	err := p.Report().WriteMermaid(&buf)
+	if err != nil {
+		t.Fatalf("WriteMermaid: %v", err)
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "flowchart TD") {
+		t.Error("expected flowchart header")
+	}
+
+	if !strings.Contains(output, "-->") {
+		t.Error("expected dependency edge")
+	}
+}
+
+type failWriter struct{}
+
+func (failWriter) Write(_ []byte) (int, error) {
+	return 0, os.ErrInvalid
+}
+
+func TestWriteMermaid_WriterError(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	err := p.Report().WriteMermaid(failWriter{})
+	if err == nil {
+		t.Error("expected error from failing writer")
+	}
+}
+
+func TestPlugin_ExportFilteredToFile_BadPath(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	err := p.ExportFilteredToFile("/nonexistent/dir/file.json",
+		auditlog.WithServicesByName("db"),
+	)
+	if err == nil {
+		t.Error("expected error for bad path")
+	}
+}
+
+func TestReport_FilteredTimeRangeNilChecks(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	from := time.Now().Add(-time.Hour)
+	to := time.Now().Add(time.Hour)
+
+	filtered := p.ReportFiltered(auditlog.WithTimeRange(from, to))
+	if filtered.EventCount == 0 {
+		t.Error("expected events in time range")
+	}
+
+	noEvents := p.ReportFiltered(auditlog.WithTimeRange(
+		time.Now().Add(-time.Hour),
+		time.Now().Add(-30*time.Minute),
+	))
+	if noEvents.EventCount != 0 {
+		t.Errorf("expected 0 events before container ran, got %d", noEvents.EventCount)
+	}
+}
+
+func TestReport_HealthCheckSucceeded_NoChecks(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideValue(injector, &Database{URL: "test"})
+	_ = do.MustInvoke[*Database](injector)
+
+	report := p.Report()
+	if report.HealthCheckSucceeded {
+		t.Error("expected false when no health checks ran")
+	}
+}
+
+func TestReport_ResolveServiceScope_NotFound(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideValue(injector, &Database{URL: "test"})
+	_ = do.MustInvoke[*Database](injector)
+
+	report := p.Report()
+
+	noEvents := report.EventsByRef("nonexistent-scope", "nonexistent")
+	if len(noEvents) != 0 {
+		t.Error("expected no events for nonexistent scope/service")
+	}
+}
+
+func TestReport_AllHealthChecksPassed_AllHealthy(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	type HealthySvc struct{}
+
+	do.ProvideNamed(injector, "healthy", func(_ do.Injector) (*HealthySvc, error) {
+		return &HealthySvc{}, nil
+	})
+
+	_ = do.MustInvokeNamed[*HealthySvc](injector, "healthy")
+
+	p.RecordHealthCheck(injector)
+
+	report := p.Report()
+	if !report.HealthCheckSucceeded {
+		t.Error("expected health checks to succeed")
+	}
+}
+
+func TestReport_ServicesByScope_EmptyScope(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+
+	noServices := report.ServicesByScope("nonexistent-scope")
+	if len(noServices) != 0 {
+		t.Errorf("expected 0 services for nonexistent scope, got %d", len(noServices))
+	}
+}

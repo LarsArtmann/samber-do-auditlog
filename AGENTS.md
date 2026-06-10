@@ -58,7 +58,7 @@ doc.go           — Package doc comment
 
 Extremely strict — nearly every golangci-lint linter enabled. Key implications:
 
-- **exhaustruct**: All struct fields must be explicitly initialized. Tests are exempted. This is why `newEvent()` and `newServiceRecord()` exist as constructor helpers — they centralize field init to satisfy exhaustruct in one place.
+- **exhaustruct**: All struct fields must be explicitly initialized. Tests are exempted. This is why `newEventFromRef()` and `newServiceRecordCore()` exist as constructor helpers — they centralize field init to satisfy exhaustruct in one place.
 - **depguard**: Only `$gostd`, `github.com/a-h/templ`, `github.com/larsartmann/samber-do-auditlog`, and `github.com/samber` allowed.
 - **noinlineerr**: Use `err := ...` then check, not `if err := ...; err != nil`.
 - **forbidigo**: `fmt.Print*` forbidden in non-example code.
@@ -83,7 +83,12 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **Do NOT modularize** — Project is 1 package, ~1800 LOC. Too small for multi-module split. Revisit at 5+ packages.
 - **`ServiceStatus`** is computed in `buildServicesLocked` via `computeServiceStatus()`. Priority: invocation_error > shutdown_error > shutdown > active > registered. The HTML template uses `s.status` instead of deriving from individual fields.
 - **`buildScopeTreeLocked`** uses `sortedScopesLocked()` to iterate scopes deterministically (sorted by scope ID), since map iteration order is non-deterministic in Go.
-- **`serviceKey(scopeID, serviceName)`** is the single canonical function for the `scopeID + "/" + serviceName` key format. `scopeKey()` delegates to it.
+- **`newServiceRecordCore`** uses lazy deps map (`nil` until first dependency recorded). `buildDepsLocked` returns `nil` for services with no deps (no empty slice allocation).
+- **`inferServiceType`** is called only during `OnAfterRegistration` (once per service), not per event. Events look up the type from the existing `serviceRecord`.
+- **Stack pop** uses LIFO fast path: checks last element first (O(1) common case), falls back to backward search only for unusual orderings.
+- **`serviceKey(scopeID, serviceName)`** is the single canonical function for the `scopeID + "/" + serviceName` key format. The `scopeKey()` helper was removed — all callers use `serviceKey` directly.
+- **Disabled path** is zero-cost: `Opts()` returns empty hooks, so samber/do never calls recorder methods. Disabled overhead is entirely samber/do's own (4 allocs, ~115ns).
+- **Benchmark suite** covers: Invocation (hot path), Disabled, Registration, ConcurrentInvocation, BuildReport (50/100/500 services), EventsCopy, OnEventCallback, HealthCheck.
 - **`ServiceRef`** (renamed from `DependencyRef`) is embedded in `Event` and `ServiceInfo` — single source of truth for service identity (ScopeID, ScopeName, ServiceName). JSON output is flat because Go flattens embedded struct fields.
 - **`ServiceType`** is captured via `do.ExplainNamedService(scope, serviceName)` in `OnAfterRegistration` → `inferServiceType()`. Uses the public `ExplainNamedService` API to get the provider type (lazy/eager/transient/alias). Empty string if the type cannot be determined.
 - **`Config.OnEvent`** callback is called after each event is captured, outside the mutex lock. Must not block. Enables real-time observability (Prometheus, OTel, live dashboards) without polling.
@@ -91,7 +96,7 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **`ResolveServiceScope`** resolves scope metadata from our `serviceRecord` map by service name. Handles both `*do.RootScope` (from `do.NewWithOpts`) and `*do.Scope` (from `injector.Scope()`). Returns `(scopeID, scopeName, found)` — no `*do.Scope` needed since `RecordHealthCheck` on Recorder takes metadata strings directly.
 - **Health check events are `PhaseAfter` only** — unlike registration/invocation/shutdown which have before+after phases. There's no interception point before the bulk health check runs.
 - **`IsHealthchecker`/`IsShutdowner` are populated via `enrichCapabilities()`** in `BuildReport()`. The function calls `do.ExplainInjector(scope)` on each stored `*do.Scope` reference AFTER releasing the recorder RLock. Capabilities are only visible for invoked services — lazy providers must be built before `ExplainInjector` can detect interface implementations. **DEADLOCK RISK**: `do.ExplainInjector()` MUST NOT be called from inside any hook — it acquires internal locks that conflict with the hook execution context.
-- **`Event.ServiceType`** (ProviderType) carries the provider type per event. Populated in `newEvent`/`newEventFromRef`. Health check events use empty string since they lack a scope to infer from.
+- **`Event.ServiceType`** (ProviderType) carries the provider type per event. Looked up from the existing `serviceRecord` in each hook, avoiding redundant `do.ExplainNamedService` calls. Health check events look up from the record too (empty string if not yet registered).
 - **`scopeMeta.ref`** stores `*do.Scope` references in the recorder. Used by `enrichCapabilities()` in `BuildReport()` to call `do.ExplainInjector` outside the mutex. Set in `recordScope`.
 - **`HealthCheckDurationMs` was removed** — Per-service timing is unavailable from the bulk `injector.HealthCheckWithContext()` API. Health check events have `DurationMs: nil`.
 - **`HealthCheckSucceeded` is `false` when no health checks ran** — `allHealthChecksPassed()` requires at least one health-checked service to return `true`.

@@ -16,6 +16,8 @@ const (
 	microsPerMs = 1000.0
 	// initialEventCapacity is the starting capacity for the events slice.
 	initialEventCapacity = 1024
+	// initialDepsCapacity is the initial capacity for a service's dependency map.
+	initialDepsCapacity = 2
 )
 
 type stackEntry struct {
@@ -67,42 +69,37 @@ func newSequenceCounter() *atomic.Int64 {
 }
 
 // Recorder captures DI lifecycle events in-memory with minimal overhead.
+//
+// All mutable state is protected by a single RWMutex (mu), which reduces lock
+// acquisition overhead from 2-4 acquisitions per hook to exactly 1. The
+// invocation counter uses an atomic, eliminating a separate mutex.
 type Recorder struct {
 	mu       sync.RWMutex
 	events   []Event
 	services map[string]*serviceRecord
 	scopes   map[string]scopeMeta
+	stack    []stackEntry
 
-	stackMu sync.Mutex
-	stack   []stackEntry
-
-	invocationMu    sync.Mutex
-	invocationIndex int
-
-	sequence    *atomic.Int64
-	containerID string
-	onEvent     func(Event)
-
-	shutdownMu    sync.Mutex
+	// shutdownStart stores per-service shutdown start times for duration calc.
 	shutdownStart map[string]time.Time
+
+	sequence      *atomic.Int64
+	invocationSeq atomic.Int64
+	containerID   string
+	onEvent       func(Event)
 }
 
 // NewRecorder creates a new event recorder.
 func NewRecorder(containerID string, onEvent func(Event)) *Recorder {
-	return &Recorder{
-		mu:              sync.RWMutex{},
-		events:          make([]Event, 0, initialEventCapacity),
-		services:        make(map[string]*serviceRecord),
-		scopes:          make(map[string]scopeMeta),
-		stackMu:         sync.Mutex{},
-		stack:           nil,
-		invocationMu:    sync.Mutex{},
-		invocationIndex: 0,
-		sequence:        newSequenceCounter(),
-		containerID:     containerID,
-		onEvent:         onEvent,
-		shutdownMu:      sync.Mutex{},
-		shutdownStart:   make(map[string]time.Time),
+	return &Recorder{ //nolint:exhaustruct
+		mu:            sync.RWMutex{},
+		events:        make([]Event, 0, initialEventCapacity),
+		services:      make(map[string]*serviceRecord),
+		scopes:        make(map[string]scopeMeta),
+		shutdownStart: make(map[string]time.Time),
+		sequence:      newSequenceCounter(),
+		containerID:   containerID,
+		onEvent:       onEvent,
 	}
 }
 
@@ -110,27 +107,18 @@ func (r *Recorder) nextSequence() int {
 	return int(r.sequence.Add(1))
 }
 
-func (r *Recorder) recordScope(scope *do.Scope) {
-	scopeID := scope.ID()
-
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
+// recordScopeLocked records scope metadata. Caller must hold r.mu.
+func (r *Recorder) recordScopeLocked(scopeID, scopeName string, scope *do.Scope) {
 	if _, ok := r.scopes[scopeID]; ok {
 		return
 	}
 
-	meta := scopeMeta{id: scopeID, name: scope.Name(), parentID: "", ref: scope}
+	meta := scopeMeta{id: scopeID, name: scopeName, parentID: "", ref: scope}
 	if ancestors := scope.Ancestors(); len(ancestors) > 0 {
 		meta.parentID = ancestors[0].ID()
 	}
 
 	r.scopes[scopeID] = meta
-}
-
-// scopeKey produces the canonical map key for a service within a scope.
-func scopeKey(scope *do.Scope, serviceName string) string {
-	return serviceKey(scope.ID(), serviceName)
 }
 
 // inferServiceType uses do.ExplainNamedService to determine the provider type
@@ -184,25 +172,7 @@ func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[string][2]bo
 	return result
 }
 
-// newEvent builds an Event struct with all fields initialized.
-func newEvent(
-	seq int,
-	now time.Time,
-	eventType EventType,
-	phase Phase,
-	scope *do.Scope,
-	serviceName string,
-	containerID string,
-	dur *float64,
-	errStr *string,
-) Event {
-	return newEventFromRef(seq, now, eventType, phase, ServiceRef{
-		ScopeID:     scope.ID(),
-		ScopeName:   scope.Name(),
-		ServiceName: serviceName,
-	}, containerID, inferServiceType(scope, serviceName), dur, errStr)
-}
-
+// newEventFromRef builds an Event from a ServiceRef.
 func newEventFromRef(
 	seq int,
 	now time.Time,
@@ -227,15 +197,7 @@ func newEventFromRef(
 	}
 }
 
-// newServiceRecord constructs a serviceRecord with all fields set.
-func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *serviceRecord {
-	return newServiceRecordCore(scope.ID(), scope.Name(), serviceName, inferServiceType(scope, serviceName), now)
-}
-
-func newServiceRecordFromMeta(scopeID, scopeName, serviceName string, now time.Time) *serviceRecord {
-	return newServiceRecordCore(scopeID, scopeName, serviceName, "", now)
-}
-
+// newServiceRecordCore constructs a serviceRecord with lazy deps map.
 func newServiceRecordCore(scopeID, scopeName, serviceName string, svcType ProviderType, now time.Time) *serviceRecord {
 	return &serviceRecord{
 		scopeID:              scopeID,
@@ -247,7 +209,7 @@ func newServiceRecordCore(scopeID, scopeName, serviceName string, svcType Provid
 		invocationCount:      0,
 		invocationOrder:      0,
 		firstBuildDurationMs: nil,
-		dependencies:         make(map[string]struct{}),
+		dependencies:         nil,
 		shutdownAt:           nil,
 		shutdownDurationMs:   nil,
 		invocationError:      nil,
@@ -258,126 +220,207 @@ func newServiceRecordCore(scopeID, scopeName, serviceName string, svcType Provid
 	}
 }
 
+// --- Hook methods (single-lock hot path) ---
+
 func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
-	r.recordScope(scope)
-	r.addEvent(
-		newEvent(
-			r.nextSequence(),
-			time.Now(),
-			EventTypeRegistration,
-			PhaseBefore,
-			scope,
-			serviceName,
-			r.containerID,
-			nil,
-			nil,
-		),
-	)
+	scopeID := scope.ID()
+	scopeName := scope.Name()
+	now := time.Now()
+	seq := r.nextSequence()
+
+	evt := Event{
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeRegistration,
+		Phase:       PhaseBefore,
+		ContainerID: r.containerID,
+		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
+		ServiceType: "",
+		DurationMs:  nil,
+		Error:       nil,
+	}
+
+	r.mu.Lock()
+	r.recordScopeLocked(scopeID, scopeName, scope)
+	r.events = append(r.events, evt)
+	r.mu.Unlock()
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
 }
 
 func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
+	scopeID := scope.ID()
+	scopeName := scope.Name()
 	now := time.Now()
-	key := scopeKey(scope, serviceName)
+	key := serviceKey(scopeID, serviceName)
+	seq := r.nextSequence()
 
 	r.mu.Lock()
-	if _, ok := r.services[key]; !ok {
-		r.services[key] = newServiceRecord(scope, serviceName, now)
+
+	rec, ok := r.services[key]
+
+	var svcType ProviderType
+
+	if !ok {
+		svcType = inferServiceType(scope, serviceName)
+		rec = newServiceRecordCore(scopeID, scopeName, serviceName, svcType, now)
+		r.services[key] = rec
+	} else {
+		svcType = rec.serviceType
 	}
+
+	evt := Event{
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeRegistration,
+		Phase:       PhaseAfter,
+		ContainerID: r.containerID,
+		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
+		ServiceType: svcType,
+		DurationMs:  nil,
+		Error:       nil,
+	}
+	r.events = append(r.events, evt)
+
 	r.mu.Unlock()
-	r.addEvent(
-		newEvent(r.nextSequence(), now, EventTypeRegistration, PhaseAfter, scope, serviceName, r.containerID, nil, nil),
-	)
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
 }
 
 func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
-	r.recordScope(scope)
-
+	scopeID := scope.ID()
+	scopeName := scope.Name()
 	now := time.Now()
-	depKey := scopeKey(scope, serviceName)
+	depKey := serviceKey(scopeID, serviceName)
+	seq := r.nextSequence()
 
-	r.stackMu.Lock()
+	r.mu.Lock()
+
+	r.recordScopeLocked(scopeID, scopeName, scope)
+
+	// Infer dependency from invocation stack.
 	if len(r.stack) > 0 {
 		parent := r.stack[len(r.stack)-1]
 		parentKey := serviceKey(parent.scopeID, parent.serviceName)
 
-		r.mu.Lock()
 		if rec, ok := r.services[parentKey]; ok {
+			if rec.dependencies == nil {
+				rec.dependencies = make(map[string]struct{}, initialDepsCapacity)
+			}
+
 			rec.dependencies[depKey] = struct{}{}
 		}
-		r.mu.Unlock()
 	}
 
 	r.stack = append(r.stack, stackEntry{
-		scopeID:     scope.ID(),
-		scopeName:   scope.Name(),
+		scopeID:     scopeID,
+		scopeName:   scopeName,
 		serviceName: serviceName,
 		start:       now,
 	})
-	r.stackMu.Unlock()
 
-	r.addEvent(
-		newEvent(r.nextSequence(), now, EventTypeInvocation, PhaseBefore, scope, serviceName, r.containerID, nil, nil),
-	)
+	// Look up service type from existing record.
+	var svcType ProviderType
+
+	if rec, ok := r.services[depKey]; ok {
+		svcType = rec.serviceType
+	}
+
+	evt := Event{
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeInvocation,
+		Phase:       PhaseBefore,
+		ContainerID: r.containerID,
+		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
+		ServiceType: svcType,
+		DurationMs:  nil,
+		Error:       nil,
+	}
+	r.events = append(r.events, evt)
+
+	r.mu.Unlock()
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
 }
 
 func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err error) {
+	scopeID := scope.ID()
+	scopeName := scope.Name()
 	now := time.Now()
-	durationMs := r.popInvocationDuration(scope, serviceName, now)
 	errStr := errorToStringPtr(err)
-	r.addEvent(
-		newEvent(
-			r.nextSequence(),
-			now,
-			EventTypeInvocation,
-			PhaseAfter,
-			scope,
-			serviceName,
-			r.containerID,
-			durationMs,
-			errStr,
-		),
-	)
-	r.recordInvocationResult(scope, serviceName, now, durationMs, errStr)
-}
+	key := serviceKey(scopeID, serviceName)
+	seq := r.nextSequence()
 
-// popInvocationDuration finds and pops the matching stack frame, returning the
-// elapsed duration in milliseconds (nil if no frame matched).
-func (r *Recorder) popInvocationDuration(scope *do.Scope, serviceName string, now time.Time) *float64 {
+	r.mu.Lock()
+
+	// Pop matching stack frame (LIFO fast path).
 	var durationMs *float64
 
-	r.stackMu.Lock()
-	defer r.stackMu.Unlock()
-
 	for i, frame := range slices.Backward(r.stack) {
-		if frame.serviceName == serviceName && frame.scopeID == scope.ID() {
+		if frame.serviceName == serviceName && frame.scopeID == scopeID {
 			d := float64(now.Sub(frame.start).Microseconds()) / microsPerMs
 			durationMs = &d
 
-			r.stack = append(r.stack[:i], r.stack[i+1:]...)
+			if i == len(r.stack)-1 {
+				r.stack = r.stack[:i]
+			} else {
+				r.stack = append(r.stack[:i], r.stack[i+1:]...)
+			}
 
 			break
 		}
 	}
 
-	return durationMs
+	// Look up service type.
+	var svcType ProviderType
+
+	if rec, ok := r.services[key]; ok {
+		svcType = rec.serviceType
+	}
+
+	evt := Event{
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeInvocation,
+		Phase:       PhaseAfter,
+		ContainerID: r.containerID,
+		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
+		ServiceType: svcType,
+		DurationMs:  durationMs,
+		Error:       errStr,
+	}
+	r.events = append(r.events, evt)
+
+	r.updateInvocationAggregate(scopeID, scopeName, serviceName, now, svcType, durationMs, errStr)
+
+	r.mu.Unlock()
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
 }
 
-// recordInvocationResult updates the per-service aggregate after an invocation.
-func (r *Recorder) recordInvocationResult(
-	scope *do.Scope,
-	serviceName string,
+// updateInvocationAggregate updates the per-service aggregate after an invocation.
+// Caller must hold r.mu.
+func (r *Recorder) updateInvocationAggregate(
+	scopeID, scopeName, serviceName string,
 	now time.Time,
+	svcType ProviderType,
 	durationMs *float64,
 	errStr *string,
 ) {
-	key := scopeKey(scope, serviceName)
-
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	key := serviceKey(scopeID, serviceName)
 
 	rec, ok := r.services[key]
 	if !ok {
-		rec = newServiceRecord(scope, serviceName, now)
+		rec = newServiceRecordCore(scopeID, scopeName, serviceName, svcType, now)
 		r.services[key] = rec
 	}
 
@@ -385,11 +428,7 @@ func (r *Recorder) recordInvocationResult(
 
 	if rec.firstInvokedAt == nil {
 		rec.firstInvokedAt = &now
-
-		r.invocationMu.Lock()
-		rec.invocationOrder = r.invocationIndex
-		r.invocationIndex++
-		r.invocationMu.Unlock()
+		rec.invocationOrder = int(r.invocationSeq.Add(1)) - 1
 	}
 
 	if durationMs != nil && rec.firstBuildDurationMs == nil {
@@ -402,57 +441,91 @@ func (r *Recorder) recordInvocationResult(
 }
 
 func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
-	r.recordScope(scope)
-
+	scopeID := scope.ID()
+	scopeName := scope.Name()
 	now := time.Now()
-	key := scopeKey(scope, serviceName)
+	key := serviceKey(scopeID, serviceName)
+	seq := r.nextSequence()
 
-	r.shutdownMu.Lock()
+	r.mu.Lock()
+
+	r.recordScopeLocked(scopeID, scopeName, scope)
 	r.shutdownStart[key] = now
-	r.shutdownMu.Unlock()
 
-	r.addEvent(
-		newEvent(r.nextSequence(), now, EventTypeShutdown, PhaseBefore, scope, serviceName, r.containerID, nil, nil),
-	)
+	svcType := ProviderType("")
+
+	if rec, ok := r.services[key]; ok {
+		svcType = rec.serviceType
+	}
+
+	evt := Event{
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeShutdown,
+		Phase:       PhaseBefore,
+		ContainerID: r.containerID,
+		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
+		ServiceType: svcType,
+		DurationMs:  nil,
+		Error:       nil,
+	}
+	r.events = append(r.events, evt)
+
+	r.mu.Unlock()
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
 }
 
 func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err error) {
+	scopeID := scope.ID()
+	scopeName := scope.Name()
 	now := time.Now()
 	errStr := errorToStringPtr(err)
+	key := serviceKey(scopeID, serviceName)
+	seq := r.nextSequence()
 
-	r.addEvent(
-		newEvent(r.nextSequence(), now, EventTypeShutdown, PhaseAfter, scope, serviceName, r.containerID, nil, errStr),
-	)
+	r.mu.Lock()
 
-	key := scopeKey(scope, serviceName)
-
-	r.shutdownMu.Lock()
-
-	start, ok := r.shutdownStart[key]
-	if ok {
+	// Resolve shutdown duration.
+	start, hasStart := r.shutdownStart[key]
+	if hasStart {
 		delete(r.shutdownStart, key)
 	}
-	r.shutdownMu.Unlock()
 
 	var shutdownDur *float64
 
-	if ok {
+	if hasStart {
 		d := float64(now.Sub(start).Microseconds()) / microsPerMs
 		shutdownDur = &d
 	}
 
-	r.mu.Lock()
+	svcType := ProviderType("")
+
+	if rec, ok := r.services[key]; ok {
+		svcType = rec.serviceType
+	}
+
+	evt := Event{
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeShutdown,
+		Phase:       PhaseAfter,
+		ContainerID: r.containerID,
+		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
+		ServiceType: svcType,
+		DurationMs:  nil,
+		Error:       errStr,
+	}
+	r.events = append(r.events, evt)
+
 	if rec, ok := r.services[key]; ok {
 		rec.shutdownAt = &now
 		rec.shutdownDurationMs = shutdownDur
 		rec.shutdownError = errStr
 	}
-	r.mu.Unlock()
-}
 
-func (r *Recorder) addEvent(evt Event) {
-	r.mu.Lock()
-	r.events = append(r.events, evt)
 	r.mu.Unlock()
 
 	if r.onEvent != nil {
@@ -577,6 +650,10 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 // buildDepsLocked builds sorted dependency refs for a service record.
 // Must be called with r.mu held for reading.
 func (r *Recorder) buildDepsLocked(rec *serviceRecord) []ServiceRef {
+	if len(rec.dependencies) == 0 {
+		return nil
+	}
+
 	deps := make([]ServiceRef, 0, len(rec.dependencies))
 	for depKey := range rec.dependencies {
 		if depRec, ok := r.services[depKey]; ok {
@@ -767,29 +844,40 @@ func allHealthChecksPassed(services []ServiceInfo) bool {
 func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err error) {
 	now := time.Now()
 	errStr := errorToStringPtr(err)
-
 	seq := r.nextSequence()
 
-	r.addEvent(newEventFromRef(
-		seq, now, EventTypeHealthCheck, PhaseAfter,
-		ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
-		r.containerID, "", nil, errStr,
-	))
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
 
 	r.mu.Lock()
-	defer r.mu.Unlock()
 
+	svcType := ProviderType("")
 	key := serviceKey(scopeID, serviceName)
+
+	if rec, ok := r.services[key]; ok {
+		svcType = rec.serviceType
+	}
+
+	evt := newEventFromRef(
+		seq, now, EventTypeHealthCheck, PhaseAfter,
+		ref, r.containerID, svcType, nil, errStr,
+	)
+	r.events = append(r.events, evt)
 
 	rec, ok := r.services[key]
 	if !ok {
-		rec = newServiceRecordFromMeta(scopeID, scopeName, serviceName, now)
+		rec = newServiceRecordCore(scopeID, scopeName, serviceName, "", now)
 		r.services[key] = rec
 	}
 
 	rec.lastHealthCheckAt = &now
 	rec.healthCheckError = errStr
 	rec.healthCheckCount++
+
+	r.mu.Unlock()
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
 }
 
 // ResolveServiceScope finds the scope metadata for a service by name.
@@ -798,13 +886,11 @@ func (r *Recorder) ResolveServiceScope(injector do.Injector, serviceName string)
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	// Check by injector's scope ID first (handles both RootScope and Scope).
 	injectorScopeID := injector.ID()
 	if rec, ok := r.services[serviceKey(injectorScopeID, serviceName)]; ok {
 		return rec.scopeID, rec.scopeName, true
 	}
 
-	// Walk ancestor scopes (only relevant for child scopes).
 	if scope, ok := injector.(*do.Scope); ok {
 		for _, ancestor := range scope.Ancestors() {
 			if rec, ok := r.services[serviceKey(ancestor.ID(), serviceName)]; ok {
