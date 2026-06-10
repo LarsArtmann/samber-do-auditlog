@@ -46,10 +46,11 @@ doc.go           — Package doc comment
 
 ### Concurrency Model
 
-- `Recorder.mu` (RWMutex) protects `events`, `services`, `scopes`
-- `Recorder.stackMu` (Mutex) protects the invocation stack
-- `Recorder.invocationMu` (Mutex) protects invocation ordering
-- Sequence numbers use per-recorder `atomic.Int64` (no global state)
+- **Single `sync.RWMutex` (`mu`)** protects all mutable state: `events`, `services`, `scopes`, `stack`, `shutdownStart`. This reduces lock acquisition overhead from 2–4 per hook to exactly 1.
+- `sequence` and `invocationSeq` are `atomic.Int64` — no mutex needed for counters.
+- Each hook acquires `mu` once, performs all mutations (scope recording, stack management, event append, service updates), then releases.
+- `onEvent` callback is always called outside the lock to avoid blocking the hot path.
+- `BuildReport()` uses `mu.RLock()` for reading — concurrent reads don't block each other.
 
 ---
 
@@ -96,6 +97,12 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **`HealthCheckSucceeded` is `false` when no health checks ran** — `allHealthChecksPassed()` requires at least one health-checked service to return `true`.
 - **`newEventFromRef()`** builds events from `ServiceRef` instead of `*do.Scope`. Used by `RecordHealthCheck` which doesn't have a scope object.
 - **`newServiceRecordFromMeta()`** builds `serviceRecord` from metadata strings (scopeID, scopeName, serviceName, now). Used when creating records for services discovered via health checks (not yet registered through hooks).
+- **`newServiceRecordCore`** uses lazy deps map (`nil` until first dependency recorded). `buildDepsLocked` returns `nil` for services with no deps (no empty slice allocation).
+- **`inferServiceType`** is called only during `OnAfterRegistration` (once per service), not per event. Events look up the type from the existing `serviceRecord`.
+- **Stack pop** uses LIFO fast path: checks last element first (O(1) common case), falls back to backward search only for unusual orderings.
+- **`serviceKey`** uses `scopeID + "/" + serviceName` concatenation — single allocation per key. Consider struct key if this becomes a bottleneck.
+- **Disabled path** is zero-cost: `Opts()` returns empty hooks, so samber/do never calls recorder methods. Disabled overhead is entirely samber/do's own (4 allocs, ~115ns).
+- **Benchmark suite** covers: Invocation (hot path), Disabled, Registration, ConcurrentInvocation, BuildReport (50/100/500 services), EventsCopy, OnEventCallback, HealthCheck.
 - **HTML redesign**: Dark observability dashboard aesthetic with JetBrains Mono + DM Sans fonts, color-coded type badges (purple=lazy, blue=eager, orange=transient, green=alias), animated tab transitions, stat cards with hover glow effects, and a legend showing type distribution counts.
 
 ---
@@ -108,7 +115,7 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - `t.TempDir()` for file export tests.
 - Benchmarks exist in the test file for performance measurement.
 - Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (clean and error), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations, ServiceStatus computation across all states, transient and value providers, health checks (healthy/unhealthy/multiple/disabled/count/report/scope/UnhealthyServices).
-- **Coverage: ~95%** of statements, 71 tests (library package) + 2 benchmarks.
+- **Coverage: ~96%** of statements, 90 tests (library package) + 2 benchmarks.
 - **HTML visualization features**: 5-tab layout (Services/Scopes/Graph/Timeline/Events), services table with type badges + status badges + shutdown duration + reverse deps + health column + search filter, collapsible scope tree with type emoji chips, Sugiyama layered DAG graph with type-colored nodes + pan/zoom + click-to-highlight, dual build+shutdown timeline bars with type icons, event type filter chips (registration/invocation/shutdown/health_check), keyboard nav (1-5), animated tab transitions, stat cards (including health checks when checked), responsive layout, footer with schema version.
 - **Service type tracking**: `ServiceInfo.ServiceType` field (JSON: `service_type`) populated from `do.ExplainNamedService`. Values: "lazy", "eager", "transient", "alias". Displayed with samber/do's canonical emojis throughout the HTML visualization.
 
@@ -138,6 +145,8 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 | Build duration           | Millisecond-precision per service                                                     |
 | Scope tree               | Root → 3 child scopes with service listings                                           |
 | OnEvent callback         | Real-time event streaming via `Config.OnEvent`                                        |
-| Convenience methods      | `Report.ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`          |
-| Event helpers            | `Event.Duration()`, `ServiceInfo.Uptime()`, `Plugin.EventsCount()`                    |
+| Convenience methods      | `Report.ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByType`, `FailedServices`, `UnhealthyServices` |
+| Event helpers             | `Event.Duration()`, `ServiceInfo.Uptime()`, `Plugin.EventsCount()`                                                             |
+| Report filtering          | `Report.Filtered(opts...)`, `Plugin.ReportFiltered(opts...)` with 5 filter options                                              |
+| Export enhancements       | `ExportFilteredToFile(path, opts...)`, `Report.WriteMermaid(writer)`                                                             |
 | Service type tracking    | Auto-detected via `do.ExplainNamedService`                                            |

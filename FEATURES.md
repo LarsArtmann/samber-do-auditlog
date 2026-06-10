@@ -58,6 +58,12 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 | **Config.Validate()**                 | Forward-compatible API placeholder for config validation                                                         | ✓ `plugin.go:Config.Validate`                                     |
 | **Provider column in Events tab**     | HTML Events tab shows provider type badge per event                                                              | ✓ `html.templ`                                                    |
 | **Zero golangci-lint issues**         | All 28 lint issues fixed across production code, tests, and example                                              | ✓ `.golangci.yml`                                                 |
+| **Report filtering**                  | `Report.Filtered(opts...)` with WithServicesByName, WithServicesByType, WithEventsByType, WithTimeRange, WithScope | ✓ `types.go:ReportOption`                                         |
+| **Plugin.ReportFiltered**             | Convenience method for filtered reports via Plugin                                                                | ✓ `plugin.go:ReportFiltered`                                      |
+| **ExportFilteredToFile**              | Write filtered JSON report to file                                                                                | ✓ `plugin.go:ExportFilteredToFile`                                 |
+| **Mermaid export**                    | Dependency graph as Mermaid flowchart via `Report.WriteMermaid(writer)`                                            | ✓ `mermaid.go`                                                     |
+| **Type helpers**                      | `ProviderType.IsKnown()`, `ServiceRef.IsRoot()`, `Event.HasError()`, `ServiceInfo.HasHealthError()`                | ✓ `types.go`                                                       |
+| **EventsByRef**                       | Scoped event lookup by scope ID + service name                                                                    | ✓ `types.go:EventsByRef`                                           |
 
 ---
 
@@ -73,8 +79,9 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 
 | Feature                       | Description                                                            | Priority |
 | ----------------------------- | ---------------------------------------------------------------------- | -------- |
-| **Report filtering**          | Functional options to filter report by service, time range, event type | P2       |
-| **Additional export formats** | Mermaid diagram, PlantUML                                              | Future   |
+| **Schema migration**          | Function for migrating old report exports                              | P3       |
+| **PlantUML export**           | Alternative diagram format                                             | Future   |
+| **Godoc examples**            | Runnable `Example*` functions for pkg.go.dev                           | P2       |
 
 ---
 

@@ -7,16 +7,19 @@ Last updated: 2026-06-10
 
 ## Priority 1 — Features (Future)
 
-- [ ] **Add `ReportOption` functional options** for filtering reports by service name, time range, event type. Enables efficient consumption for large containers. Currently `Report()` returns everything.
+- [ ] **Versioned report schema with migration** — `SchemaVersion` exists but has no migration function. Postpone until v1.0 planning.
+- [ ] **PlantUML export** — Only if users request it. Mermaid export already available.
+- [ ] **Fuzz test for HTML template** — Good security practice but templ provides escaping.
 
 ## Priority 2 — Polish
 
-- [x] **`Config.Validate() error`** — Added as forward-compatible API placeholder. Currently always returns nil.
+- [ ] **Document Recorder locking protocol** — 4 mutexes, complex ordering. A doc block prevents future deadlocks.
+- [ ] **Add runnable godoc examples** — `example_test.go` with `Example*` functions for godoc.
+- [ ] **Refactor `buildCapabilityMap` to iterative** — Remove `//nolint:modernize` by replacing recursion with stack-based walk.
 
 ## Priority 3 — Consider
 
-- [ ] **Versioned report schema with migration** — `SchemaVersion` exists but has no migration function. Postpone until v1.0 planning.
-- [ ] **Additional export formats** — Mermaid diagram, PlantUML. Only if users request them.
+- [ ] **Single-lock Recorder optimization** — Experimental refactoring exists (uncommitted). Consolidate 4 mutexes to 1 RWMutex + atomic. Needs careful testing before merge.
 
 ## Not Planned (Explicitly Rejected)
 
@@ -28,7 +31,26 @@ Last updated: 2026-06-10
 
 ---
 
-## Completed (2026-06-10)
+## Completed (2026-06-10 Session 2)
+
+- [x] Add ReportOption functional options: WithServicesByName, WithServicesByType, WithEventsByType, WithTimeRange, WithScope
+- [x] Add Report.Filtered(opts...) with recomputed summary fields
+- [x] Add Plugin.ReportFiltered(opts...) convenience method
+- [x] Add Plugin.ExportFilteredToFile(path, opts...) — filtered JSON export
+- [x] Add Report.WriteMermaid(writer) — Mermaid flowchart dependency graph
+- [x] Add Report.EventsByRef(scopeID, serviceName) — scoped event lookup
+- [x] Add ProviderType.IsKnown() method
+- [x] Add ServiceRef.IsRoot() method
+- [x] Add Event.HasError() method
+- [x] Add ServiceInfo.HasHealthError() method
+- [x] Consolidate newServiceRecord/newServiceRecordFromMeta into newServiceRecordCore
+- [x] Close 5 test coverage gaps (94.9% → 95.6%)
+- [x] Cover newServiceRecordFromMeta (0% → 100%)
+- [x] Cover RecordHealthCheckWithContext with real context
+- [x] Cover ResolveServiceScope ancestor-walking
+- [x] Cover enrichCapabilities nil-ref guard
+
+## Completed (2026-06-10 Session 1)
 
 - [x] Fill DOMAIN_LANGUAGE.md with actual domain terms
 - [x] Fix `OnBeforeShutdown` missing `recordScope` call

@@ -54,8 +54,11 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 | **Dependency graph**     | Infers which service resolved which, without accessing do's internal DAG |
 | **Reverse dependencies** | Every service knows who depends on it                                    |
 | **Scope tree**           | Full hierarchy with per-scope service lists                              |
+| **Service types**        | Auto-detects lazy/eager/transient/alias via `do.ExplainNamedService`     |
 | **Timing**               | First build duration, shutdown duration, invocation count & order        |
-| **3 export formats**     | JSON report · NDJSON stream · self-contained HTML                        |
+| **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events             |
+| **4 export formats**     | JSON · NDJSON · self-contained HTML · Mermaid flowchart                  |
+| **Filtered reports**     | Functional options to slice by name, type, scope, event type, time range |
 | **~1μs overhead**        | In-memory capture, no I/O during container operation                     |
 | **Toggle on/off**        | `Enabled: false` → zero hooks, zero cost                                 |
 | **Minimal deps**         | Only `samber/do/v2` + `a-h/templ` (HTML visualization)                   |
@@ -101,6 +104,16 @@ func main() {
     plugin.ExportToFile("audit.json")              // full report
     plugin.ExportEventsToNDJSON("events.ndjson")   // streaming format
     plugin.ExportToHTML("audit.html")              // open in browser
+
+    // 5. Filtered export — only lazy services in a specific scope
+    plugin.ExportFilteredToFile("lazy.json",
+        auditlog.WithServicesByType(auditlog.ProviderTypeLazy),
+        auditlog.WithScope(scopeID),
+    )
+
+    // 6. Mermaid dependency graph
+    report := plugin.Report()
+    report.WriteMermaid(os.Stdout)                 // paste into GitHub README
 }
 ```
 
@@ -157,28 +170,105 @@ A single, self-contained dark-themed HTML page. No external JS/CSS. Works offlin
 
 **What you get:**
 
-- **Stats cards** — services, events, scopes, dependency count
-- **Services table** — name, scope, invocation order, count, build time, deps, status
-- **Dependency graph** — Sugiyama layered DAG layout with pan/zoom and click-to-highlight
-- **Timeline** — horizontal bars showing relative build durations
-- **Events table** — full chronological log with sequence numbers
+- **Stats cards** — services, events, scopes, dependency count, health check status
+- **Services table** — name, type badge, scope, invocation order, count, build time, deps, status, health
+- **Scopes tab** — collapsible scope tree with type emoji chips
+- **Dependency graph** — Sugiyama layered DAG layout with type-colored nodes, pan/zoom, click-to-highlight
+- **Timeline** — dual build+shutdown horizontal bars with type icons
+- **Events table** — full chronological log with type filter chips and keyboard navigation
 
 Open the file in any browser. No server needed.
 
+### Mermaid Flowchart
+
+Writes a `flowchart TD` representing the dependency graph. Paste it into any Markdown file that renders Mermaid (GitHub, GitLab, Notion).
+
+```go
+report := plugin.Report()
+report.WriteMermaid(os.Stdout)
+```
+
+```mermaid
+flowchart TD
+    root_*main.HTTPServer --> root_*main.UserService
+    root_*main.HTTPServer --> root_*main.Database
+    root_*main.UserService --> root_*main.Database
+```
+
+### Filtered Reports
+
+Functional options let you slice the report before exporting. Filters compose — pass multiple options to intersect them.
+
+```go
+// Only invocation events in the last 5 minutes
+report := plugin.ReportFiltered(
+    auditlog.WithEventsByType(auditlog.EventTypeInvocation),
+    auditlog.WithTimeRange(time.Now().Add(-5*time.Minute), time.Now()),
+)
+
+// Only eager services
+report = plugin.ReportFiltered(
+    auditlog.WithServicesByType(auditlog.ProviderTypeEager),
+)
+
+// Only services named "*main.Database" in scope "drivers"
+report = plugin.ReportFiltered(
+    auditlog.WithServicesByName("*main.Database"),
+    auditlog.WithScope("drivers"),
+)
+
+// Export the filtered report
+plugin.ExportFilteredToFile("filtered.json",
+    auditlog.WithServicesByType(auditlog.ProviderTypeLazy),
+)
+```
+
+**Available filters:**
+
+| Option | Filters by |
+|-------|------------|
+| `WithServicesByName(names...)` | Service name(s) |
+| `WithServicesByType(type)` | Provider type (lazy, eager, transient, alias) |
+| `WithEventsByType(type)` | Event type (registration, invocation, shutdown, health_check) |
+| `WithTimeRange(from, to)` | Event timestamp range |
+| `WithScope(scopeID)` | Scope ID |
+
 ## API Reference
 
-| Method                             | Description                                               |
-| ---------------------------------- | --------------------------------------------------------- |
-| `New(config Config) *Plugin`       | Create plugin. `ContainerID` defaults to `"default"`.     |
-| `Opts() *do.InjectorOpts`          | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`. |
-| `Report() Report`                  | In-memory snapshot. No I/O.                               |
-| `WriteReportJSON(w) error`         | Indented JSON to any `io.Writer`.                         |
-| `WriteEventsNDJSON(w) error`       | NDJSON event stream to any `io.Writer`.                   |
-| `WriteHTML(w) error`               | Self-contained HTML visualization to any `io.Writer`.     |
-| `ExportToFile(path) error`         | JSON report to file.                                      |
-| `ExportEventsToNDJSON(path) error` | NDJSON events to file.                                    |
-| `ExportToHTML(path) error`         | HTML visualization to file.                               |
-| `Events() []Event`                 | Defensive copy of raw event slice.                        |
+### Plugin
+
+| Method | Description |
+|-------|-------------|
+| `New(config Config) *Plugin` | Create plugin. `ContainerID` defaults to `"default"`. |
+| `Opts() *do.InjectorOpts` | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`. |
+| `Report() Report` | In-memory snapshot. No I/O. |
+| `ReportFiltered(opts...) Report` | Filtered snapshot with functional options. |
+| `Events() []Event` | Defensive copy of raw event slice. |
+| `EventsCount() int` | Event count without copying. |
+| `RecordHealthCheck(injector)` | Wrap `injector.HealthCheck()` with audit events. |
+| `RecordHealthCheckWithContext(ctx, injector)` | Same with context. |
+| `WriteReportJSON(w) error` | Indented JSON to any `io.Writer`. |
+| `WriteEventsNDJSON(w) error` | NDJSON event stream to any `io.Writer`. |
+| `WriteHTML(w) error` | Self-contained HTML visualization to any `io.Writer`. |
+| `ExportToFile(path) error` | JSON report to file. |
+| `ExportEventsToNDJSON(path) error` | NDJSON events to file. |
+| `ExportToHTML(path) error` | HTML visualization to file. |
+| `ExportFilteredToFile(path, opts...) error` | Filtered JSON report to file. |
+
+### Report
+
+| Method | Description |
+|-------|-------------|
+| `Filtered(opts...) Report` | New report with filters applied, counts recomputed. |
+| `ServiceByName(name) *ServiceInfo` | Lookup by service name. |
+| `ServiceByRef(scopeID, name) *ServiceInfo` | Lookup by scope + name. |
+| `ServicesByScope(scopeID) []ServiceInfo` | All services in a scope. |
+| `EventsByService(name) []Event` | All events for a service. |
+| `EventsByRef(scopeID, name) []Event` | All events for a scoped service. |
+| `EventsByType(type) []Event` | All events of a given type. |
+| `FailedServices() []ServiceInfo` | Services with invocation or shutdown errors. |
+| `UnhealthyServices() []ServiceInfo` | Services with health check errors. |
+| `WriteMermaid(w) error` | Mermaid flowchart to `io.Writer`. |
 
 ## How Dependency Tracking Works
 
@@ -215,37 +305,53 @@ No file I/O happens during container operation. Export is a single `json.Marshal
 
 ```
 Report
-├── version             string (schema version, e.g. "0.1.0")
-├── container_id        string
-├── exported_at         time
-├── service_count       int
-├── event_count         int
-├── services[]          ServiceInfo
-│   ├── service_name    string
-│   ├── scope_id        string
-│   ├── scope_name      string
-│   ├── registered_at   time
-│   ├── invocation_order int
+├── version                    string (schema version, e.g. "0.2.0")
+├── container_id               string
+├── exported_at                time
+├── service_count              int
+├── event_count                int
+├── scope_count                int
+├── total_build_duration_ms    float64
+├── total_shutdown_duration_ms float64
+├── shutdown_succeeded         bool
+├── health_check_succeeded     bool
+├── health_checked_count       int
+├── services[]                 ServiceInfo
+│   ├── service_name           string
+│   ├── scope_id               string
+│   ├── scope_name             string
+│   ├── service_type           string (lazy, eager, transient, alias)
+│   ├── status                 string (registered, active, invocation_error, shutdown, shutdown_error)
+│   ├── registered_at          time
+│   ├── invocation_count       int
+│   ├── invocation_order       int
 │   ├── first_build_duration_ms float64
-│   ├── shutdown_duration_ms float64
-│   ├── invocation_error string (on failure)
-│   ├── shutdown_error   string (on failure)
-│   ├── dependencies[]  {scope_id, scope_name, service_name}
-│   └── dependents[]    {scope_id, scope_name, service_name}
-├── events[]            Event
-│   ├── sequence        int (monotonic)
-│   ├── timestamp       time
-│   ├── container_id    string
-│   ├── scope_id        string
-│   ├── event_type      registration | invocation | shutdown
-│   ├── phase           before | after
-│   ├── duration_ms     float64 (after-invocation/shutdown only)
-│   └── error           string (on failure only)
-└── scope_tree          ScopeNode
-    ├── id              string
-    ├── name            string
-    ├── services[]      string
-    └── children[]      ScopeNode (recursive)
+│   ├── shutdown_duration_ms   float64
+│   ├── invocation_error       string (on failure)
+│   ├── shutdown_error         string (on failure)
+│   ├── dependencies[]         {scope_id, scope_name, service_name}
+│   ├── dependents[]           {scope_id, scope_name, service_name}
+│   ├── health_check_count     int
+│   ├── health_check_error     string (on failure)
+│   ├── is_healthchecker       bool
+│   └── is_shutdowner          bool
+├── events[]                   Event
+│   ├── sequence               int (monotonic)
+│   ├── timestamp              time
+│   ├── container_id           string
+│   ├── scope_id               string
+│   ├── scope_name             string
+│   ├── service_name           string
+│   ├── service_type           string
+│   ├── event_type             registration | invocation | shutdown | health_check
+│   ├── phase                  before | after
+│   ├── duration_ms            float64 (after-invocation/shutdown only)
+│   └── error                  string (on failure only)
+└── scope_tree                 ScopeNode
+    ├── id                     string
+    ├── name                   string
+    ├── services[]             string
+    └── children[]             ScopeNode (recursive)
 ```
 
 ## License
