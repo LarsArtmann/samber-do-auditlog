@@ -139,6 +139,11 @@ func (p *Plugin) Events() []Event {
 	return p.recorder.Events()
 }
 
+// EventsCount returns the number of captured events without copying the slice.
+func (p *Plugin) EventsCount() int {
+	return p.recorder.EventsCount()
+}
+
 // RecordHealthCheckWithContext performs health checks on all services in the injector
 // and records the results as audit events. It wraps injector.HealthCheckWithContext(ctx)
 // with audit logging for each service result.

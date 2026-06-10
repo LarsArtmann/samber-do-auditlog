@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -179,9 +180,7 @@ func TestPlugin_InvocationOrder(t *testing.T) {
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "a", "a")
-	do.ProvideNamed(injector, "b", func(i do.Injector) (*Cache, error) {
-		return &Cache{}, nil
-	})
+	provideCache(injector, "b")
 
 	_ = do.MustInvokeNamed[*Database](injector, "a")
 	_ = do.MustInvokeNamed[*Cache](injector, "b")
@@ -336,9 +335,7 @@ func TestPlugin_ServiceStatus(t *testing.T) {
 		t.Errorf("active service status: want %s, got %s", auditlog.ServiceStatusActive, svc.Status)
 	}
 
-	do.ProvideNamed(injector, "idle", func(i do.Injector) (*Cache, error) {
-		return &Cache{}, nil
-	})
+	provideCache(injector, "idle")
 
 	report2 := p.Report()
 
@@ -781,6 +778,18 @@ func provideFailing(injector do.Injector, name string) {
 	})
 }
 
+func provideCache(injector do.Injector, name string) {
+	do.ProvideNamed(injector, name, func(_ do.Injector) (*Cache, error) {
+		return &Cache{}, nil
+	})
+}
+
+func provideCrashing(injector do.Injector, name string) {
+	do.ProvideNamed(injector, name, func(_ do.Injector) (*CrashingService, error) {
+		return &CrashingService{}, nil
+	})
+}
+
 func findServiceByName(t *testing.T, report auditlog.Report, name string) *auditlog.ServiceInfo {
 	t.Helper()
 
@@ -803,6 +812,19 @@ func findServiceBySuffix(t *testing.T, report auditlog.Report, suffix string) *a
 	}
 
 	return nil
+}
+
+func newPluginWithCapture() (*auditlog.Plugin, *[]auditlog.Event, do.Injector) { //nolint:ireturn
+	var captured []auditlog.Event
+
+	p := auditlog.New(auditlog.Config{
+		Enabled: true,
+		OnEvent: func(e auditlog.Event) {
+			captured = append(captured, e)
+		},
+	})
+
+	return p, &captured, do.NewWithOpts(p.Opts())
 }
 
 func TestPlugin_ProvideTransient(t *testing.T) {
@@ -1011,32 +1033,24 @@ func TestPlugin_RealWorldScenario(t *testing.T) {
 }
 
 func TestPlugin_EventHandler(t *testing.T) {
-	var captured []auditlog.Event
-
-	p := auditlog.New(auditlog.Config{
-		Enabled: true,
-		OnEvent: func(e auditlog.Event) {
-			captured = append(captured, e)
-		},
-	})
-	injector := do.NewWithOpts(p.Opts())
+	p, captured, injector := newPluginWithCapture()
 
 	provideDB(injector, "db", "postgres://localhost")
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 
-	if len(captured) == 0 {
+	if len(*captured) == 0 {
 		t.Fatal("expected events via OnEvent callback")
 	}
 
-	for _, e := range captured {
+	for _, e := range *captured {
 		if e.ContainerID != "default" {
 			t.Errorf("callback event container_id: want default, got %s", e.ContainerID)
 		}
 	}
 
 	report := p.Report()
-	if report.EventCount != len(captured) {
-		t.Errorf("event count mismatch: report=%d, callback=%d", report.EventCount, len(captured))
+	if report.EventCount != len(*captured) {
+		t.Errorf("event count mismatch: report=%d, callback=%d", report.EventCount, len(*captured))
 	}
 }
 
@@ -1202,52 +1216,56 @@ func TestPlugin_ScopeTreeWithMultipleChildren(t *testing.T) {
 }
 
 func TestPlugin_ServiceTypeCapture(t *testing.T) {
-	t.Run("eager", func(t *testing.T) {
-		p := auditlog.New(auditlog.Config{Enabled: true})
-		injector := do.NewWithOpts(p.Opts())
+	tests := []struct {
+		name     string
+		want     string
+		register func(do.Injector)
+	}{
+		{
+			name: "eager",
+			want: "eager",
+			register: func(i do.Injector) {
+				do.ProvideValue(i, &Database{URL: "test"})
+			},
+		},
+		{
+			name: "lazy",
+			want: "lazy",
+			register: func(i do.Injector) {
+				do.Provide(i, func(i do.Injector) (*Database, error) {
+					return &Database{URL: "test"}, nil
+				})
+			},
+		},
+		{
+			name: "transient",
+			want: "transient",
+			register: func(i do.Injector) {
+				do.ProvideTransient(i, func(i do.Injector) (*Database, error) {
+					return &Database{URL: "test"}, nil
+				})
+			},
+		},
+	}
 
-		do.ProvideValue(injector, &Database{URL: "test"})
-		_ = do.MustInvoke[*Database](injector)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := auditlog.New(auditlog.Config{Enabled: true})
+			injector := do.NewWithOpts(p.Opts())
 
-		report := p.Report()
-		if len(report.Services) != 1 {
-			t.Fatalf("expected 1 service, got %d", len(report.Services))
-		}
+			tt.register(injector)
+			_ = do.MustInvoke[*Database](injector)
 
-		if report.Services[0].ServiceType != "eager" {
-			t.Errorf("expected service_type=eager, got %q", report.Services[0].ServiceType)
-		}
-	})
+			report := p.Report()
+			if len(report.Services) != 1 {
+				t.Fatalf("expected 1 service, got %d", len(report.Services))
+			}
 
-	t.Run("lazy", func(t *testing.T) {
-		p := auditlog.New(auditlog.Config{Enabled: true})
-		injector := do.NewWithOpts(p.Opts())
-
-		do.Provide(injector, func(i do.Injector) (*Database, error) {
-			return &Database{URL: "test"}, nil
+			if report.Services[0].ServiceType != auditlog.ProviderType(tt.want) {
+				t.Errorf("expected service_type=%s, got %q", tt.want, report.Services[0].ServiceType)
+			}
 		})
-		_ = do.MustInvoke[*Database](injector)
-
-		report := p.Report()
-		if report.Services[0].ServiceType != "lazy" {
-			t.Errorf("expected service_type=lazy, got %q", report.Services[0].ServiceType)
-		}
-	})
-
-	t.Run("transient", func(t *testing.T) {
-		p := auditlog.New(auditlog.Config{Enabled: true})
-		injector := do.NewWithOpts(p.Opts())
-
-		do.ProvideTransient(injector, func(i do.Injector) (*Database, error) {
-			return &Database{URL: "test"}, nil
-		})
-		_ = do.MustInvoke[*Database](injector)
-
-		report := p.Report()
-		if report.Services[0].ServiceType != "transient" {
-			t.Errorf("expected service_type=transient, got %q", report.Services[0].ServiceType)
-		}
-	})
+	}
 }
 
 func TestProviderType_Icon(t *testing.T) {
@@ -1278,9 +1296,7 @@ func TestPlugin_CapabilityTracking(t *testing.T) {
 
 	provideHealthyDB(injector, "healthy-db", "test")
 	provideDB(injector, "plain", "test")
-	do.ProvideNamed(injector, "crashable", func(i do.Injector) (*CrashingService, error) {
-		return &CrashingService{}, nil
-	})
+	provideCrashing(injector, "crashable")
 
 	_ = do.MustInvokeNamed[*HealthyDB](injector, "healthy-db")
 	_ = do.MustInvokeNamed[*Database](injector, "plain")
@@ -1436,9 +1452,7 @@ func TestPlugin_ShutdownWithErrors(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "crash", func(i do.Injector) (*CrashingService, error) {
-		return &CrashingService{}, nil
-	})
+	provideCrashing(injector, "crash")
 
 	_ = do.MustInvokeNamed[*CrashingService](injector, "crash")
 	_ = injector.Shutdown()
@@ -1740,15 +1754,7 @@ func TestPlugin_HealthCheckSucceededFalseWhenNoChecks(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckOnEventCallback(t *testing.T) {
-	var captured []auditlog.Event
-
-	p := auditlog.New(auditlog.Config{
-		Enabled: true,
-		OnEvent: func(e auditlog.Event) {
-			captured = append(captured, e)
-		},
-	})
-	injector := do.NewWithOpts(p.Opts())
+	p, captured, injector := newPluginWithCapture()
 
 	provideHealthyDB(injector, "db", "test")
 
@@ -1758,7 +1764,7 @@ func TestPlugin_HealthCheckOnEventCallback(t *testing.T) {
 
 	var healthCallbacks []auditlog.Event
 
-	for _, e := range captured {
+	for _, e := range *captured {
 		if e.IsHealthCheck() {
 			healthCallbacks = append(healthCallbacks, e)
 		}
@@ -2077,5 +2083,204 @@ func TestPlugin_CapabilityTrackingWithChildScopes(t *testing.T) {
 
 	if !childSvc.IsHealthchecker {
 		t.Error("child-healthy should be a healthchecker")
+	}
+}
+
+func TestReport_ServiceByRef(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+	child := injector.Scope("child")
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "root-db"}, nil
+	})
+	do.ProvideNamed(child, "db", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "child-db"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvokeNamed[*Database](child, "db")
+
+	report := p.Report()
+
+	rootSvc := report.ServiceByRef(injector.ID(), "db")
+	if rootSvc == nil {
+		t.Fatal("root db not found by ref")
+	}
+
+	if rootSvc.ServiceName != "db" {
+		t.Errorf("root db name: want db, got %s", rootSvc.ServiceName)
+	}
+
+	childSvc := report.ServiceByRef(child.ID(), "db")
+	if childSvc == nil {
+		t.Fatal("child db not found by ref")
+	}
+
+	if childSvc.ServiceName != "db" {
+		t.Errorf("child db name: want db, got %s", childSvc.ServiceName)
+	}
+
+	if report.ServiceByRef("nonexistent", "db") != nil {
+		t.Error("expected nil for nonexistent scope")
+	}
+}
+
+func TestReport_ServicesByScope(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+	child := injector.Scope("child")
+
+	provideDB(injector, "root-svc", "test")
+	do.ProvideNamed(child, "child-svc", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "child"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*Database](injector, "root-svc")
+	_ = do.MustInvokeNamed[*Database](child, "child-svc")
+
+	report := p.Report()
+
+	rootServices := report.ServicesByScope(injector.ID())
+
+	if len(rootServices) < 1 {
+		t.Fatalf("expected at least 1 root service, got %d", len(rootServices))
+	}
+
+	childServices := report.ServicesByScope(child.ID())
+	if len(childServices) != 1 {
+		t.Fatalf("expected 1 child service, got %d", len(childServices))
+	}
+
+	if childServices[0].ServiceName != "child-svc" {
+		t.Errorf("child service: want child-svc, got %s", childServices[0].ServiceName)
+	}
+}
+
+func TestReport_EventsByService(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	do.ProvideNamed(injector, "cache", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "cache"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvokeNamed[*Database](injector, "cache")
+
+	report := p.Report()
+
+	dbEvents := report.EventsByService("db")
+
+	if len(dbEvents) == 0 {
+		t.Fatal("expected db events")
+	}
+
+	for _, e := range dbEvents {
+		if e.ServiceName != "db" {
+			t.Errorf("expected db event, got %s", e.ServiceName)
+		}
+	}
+}
+
+func TestEvent_Duration(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+
+	invocations := report.EventsByType(auditlog.EventTypeInvocation)
+	if len(invocations) == 0 {
+		t.Fatal("expected invocation events")
+	}
+
+	afterInv := invocations[len(invocations)-1]
+
+	d := afterInv.Duration()
+	if d < 0 {
+		t.Errorf("Duration() = %v, want >= 0", d)
+	}
+
+	beforeEvt := report.Events[0]
+	if beforeEvt.Duration() != 0 {
+		t.Errorf("Duration() on event with nil DurationMs = %v, want 0", beforeEvt.Duration())
+	}
+}
+
+func TestServiceInfo_Uptime(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+
+	db := findServiceByName(t, report, "db")
+	if db == nil {
+		t.Fatal("db not found")
+	}
+
+	uptime := db.Uptime()
+	if uptime < 0 {
+		t.Errorf("Uptime() = %v, want >= 0", uptime)
+	}
+}
+
+func TestPlugin_EventsCount(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	count := p.EventsCount()
+	if count == 0 {
+		t.Error("expected non-zero event count")
+	}
+
+	events := p.Events()
+	if count != len(events) {
+		t.Errorf("EventsCount() = %d, len(Events()) = %d", count, len(events))
+	}
+}
+
+func BenchmarkBuildReport(b *testing.B) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	for i := range 50 {
+		name := "svc-" + strconv.Itoa(i)
+		provideDB(injector, name, "test")
+		_ = do.MustInvokeNamed[*Database](injector, name)
+	}
+
+	b.ResetTimer()
+
+	for range b.N {
+		_ = p.Report()
+	}
+}
+
+func BenchmarkEnrichCapabilities(b *testing.B) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	for i := range 50 {
+		name := "svc-" + strconv.Itoa(i)
+		do.ProvideNamed(injector, name, func(i do.Injector) (*HealthyDB, error) {
+			return &HealthyDB{DSN: "test"}, nil
+		})
+		_ = do.MustInvokeNamed[*HealthyDB](injector, name)
+	}
+
+	b.ResetTimer()
+
+	for range b.N {
+		_ = p.Report()
 	}
 }

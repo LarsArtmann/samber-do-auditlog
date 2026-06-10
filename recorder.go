@@ -45,10 +45,9 @@ type serviceRecord struct {
 	shutdownDurationMs   *float64
 	invocationError      *string
 	shutdownError        *string
-
-	lastHealthCheckAt *time.Time
-	healthCheckError  *string
-	healthCheckCount  int
+	lastHealthCheckAt    *time.Time
+	healthCheckError     *string
+	healthCheckCount     int
 }
 
 type scopeMeta struct {
@@ -585,10 +584,7 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 	}
 
 	slices.SortFunc(services, func(a, b ServiceInfo) int {
-		return cmp.Or(
-			cmp.Compare(a.ScopeName, b.ScopeName),
-			cmp.Compare(a.ServiceName, b.ServiceName),
-		)
+		return compareByName(a.ServiceRef, b.ServiceRef)
 	})
 
 	return services
@@ -614,12 +610,14 @@ func (r *Recorder) buildDepsLocked(rec *serviceRecord) []ServiceRef {
 }
 
 func sortDepRefs(refs []ServiceRef) {
-	slices.SortFunc(refs, func(a, b ServiceRef) int {
-		return cmp.Or(
-			cmp.Compare(a.ScopeName, b.ScopeName),
-			cmp.Compare(a.ServiceName, b.ServiceName),
-		)
-	})
+	slices.SortFunc(refs, compareByName)
+}
+
+func compareByName(a, b ServiceRef) int {
+	return cmp.Or(
+		cmp.Compare(a.ScopeName, b.ScopeName),
+		cmp.Compare(a.ServiceName, b.ServiceName),
+	)
 }
 
 func buildDependentsMapLocked(services map[string]*serviceRecord) map[string][]ServiceRef {
@@ -840,4 +838,12 @@ func (r *Recorder) Events() []Event {
 	defer r.mu.RUnlock()
 
 	return append([]Event(nil), r.events...)
+}
+
+// EventsCount returns the number of captured events without copying the slice.
+func (r *Recorder) EventsCount() int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	return len(r.events)
 }

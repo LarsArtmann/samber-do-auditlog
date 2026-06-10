@@ -108,6 +108,15 @@ func (e Event) IsHealthCheck() bool  { return e.EventType == EventTypeHealthChec
 func (e Event) IsBefore() bool       { return e.Phase == PhaseBefore }
 func (e Event) IsAfter() bool        { return e.Phase == PhaseAfter }
 
+// Duration returns the event duration in milliseconds, or 0 if unavailable.
+func (e Event) Duration() float64 {
+	if e.DurationMs == nil {
+		return 0
+	}
+
+	return *e.DurationMs
+}
+
 // ServiceInfo aggregates all observed data for a single service.
 type ServiceInfo struct {
 	ServiceRef
@@ -131,6 +140,11 @@ type ServiceInfo struct {
 	LastHealthCheckAt *time.Time `json:"last_health_check_at,omitempty"`
 	HealthCheckError  *string    `json:"health_check_error,omitempty"`
 	HealthCheckCount  int        `json:"health_check_count"`
+}
+
+// Uptime returns the duration since the service was registered.
+func (s ServiceInfo) Uptime() time.Duration {
+	return time.Since(s.RegisteredAt)
 }
 
 // ScopeNode represents the scope hierarchy for visualization.
@@ -160,7 +174,7 @@ type Report struct {
 }
 
 // ServiceByName returns the first ServiceInfo matching the given exact service name.
-// Returns nil if no service matches.
+// Returns nil if no service matches. For scoped lookup, use ServiceByRef.
 func (r Report) ServiceByName(name string) *ServiceInfo {
 	for i := range r.Services {
 		if r.Services[i].ServiceName == name {
@@ -169,6 +183,44 @@ func (r Report) ServiceByName(name string) *ServiceInfo {
 	}
 
 	return nil
+}
+
+// ServiceByRef returns the ServiceInfo matching the given scope ID and service name.
+// Returns nil if no service matches.
+func (r Report) ServiceByRef(scopeID, serviceName string) *ServiceInfo {
+	for i := range r.Services {
+		if r.Services[i].ScopeID == scopeID && r.Services[i].ServiceName == serviceName {
+			return &r.Services[i]
+		}
+	}
+
+	return nil
+}
+
+// ServicesByScope returns all services in the given scope.
+func (r Report) ServicesByScope(scopeID string) []ServiceInfo {
+	var result []ServiceInfo
+
+	for _, s := range r.Services {
+		if s.ScopeID == scopeID {
+			result = append(result, s)
+		}
+	}
+
+	return result
+}
+
+// EventsByService returns all events for the given service name.
+func (r Report) EventsByService(serviceName string) []Event {
+	var result []Event
+
+	for _, e := range r.Events {
+		if e.ServiceName == serviceName {
+			result = append(result, e)
+		}
+	}
+
+	return result
 }
 
 // EventsByType returns all events matching the given event type.
