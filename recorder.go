@@ -2,6 +2,7 @@ package auditlog
 
 import (
 	"cmp"
+	"maps"
 	"slices"
 	"sync"
 	"sync/atomic"
@@ -172,12 +173,11 @@ func enrichCapabilities(scopes map[string]scopeMeta, services []ServiceInfo) {
 
 func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[string][2]bool {
 	result := make(map[string][2]bool)
+
 	for _, s := range scopes {
 		for _, svc := range s.Services {
 			result[svc.ServiceName] = [2]bool{svc.IsHealthchecker, svc.IsShutdowner}
 		}
-
-		
 	}
 
 	return result
@@ -515,9 +515,8 @@ func (r *Recorder) BuildReport() Report {
 	events := append([]Event(nil), r.events...)
 	scopeCount := len(r.scopes)
 	scopesCopy := make(map[string]scopeMeta, len(r.scopes))
-	for k, v := range r.scopes {
-		scopesCopy[k] = v
-	}
+	maps.Copy(scopesCopy, r.scopes)
+
 	r.mu.RUnlock()
 
 	enrichCapabilities(scopesCopy, services)
@@ -560,22 +559,24 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 				ScopeID:     rec.scopeID,
 				ScopeName:   rec.scopeName,
 			},
-			Status:                computeServiceStatus(rec),
-			ServiceType:           rec.serviceType,
-			RegisteredAt:          rec.registeredAt,
-			FirstInvokedAt:        rec.firstInvokedAt,
-			InvocationCount:       rec.invocationCount,
-			InvocationOrder:       rec.invocationOrder,
-			FirstBuildDurationMs:  rec.firstBuildDurationMs,
-			Dependencies:          deps,
-			Dependents:            svcDependents,
-			ShutdownAt:            rec.shutdownAt,
-			ShutdownDurationMs:    rec.shutdownDurationMs,
-			ShutdownError:         rec.shutdownError,
-			InvocationError:       rec.invocationError,
-			LastHealthCheckAt: rec.lastHealthCheckAt,
-			HealthCheckError:  rec.healthCheckError,
-			HealthCheckCount:  rec.healthCheckCount,
+			Status:               computeServiceStatus(rec),
+			ServiceType:          rec.serviceType,
+			RegisteredAt:         rec.registeredAt,
+			FirstInvokedAt:       rec.firstInvokedAt,
+			InvocationCount:      rec.invocationCount,
+			InvocationOrder:      rec.invocationOrder,
+			FirstBuildDurationMs: rec.firstBuildDurationMs,
+			Dependencies:         deps,
+			Dependents:           svcDependents,
+			ShutdownAt:           rec.shutdownAt,
+			ShutdownDurationMs:   rec.shutdownDurationMs,
+			ShutdownError:        rec.shutdownError,
+			InvocationError:      rec.invocationError,
+			IsHealthchecker:      false,
+			IsShutdowner:         false,
+			LastHealthCheckAt:    rec.lastHealthCheckAt,
+			HealthCheckError:     rec.healthCheckError,
+			HealthCheckCount:     rec.healthCheckCount,
 		})
 	}
 
