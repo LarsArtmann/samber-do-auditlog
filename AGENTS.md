@@ -95,5 +95,32 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - `t.TempDir()` for file export tests.
 - Benchmarks exist in the test file for performance measurement.
 - Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (clean and error), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations, ServiceStatus computation across all states, transient and value providers.
-- **Coverage: ~90%** of statements, 35 tests (library package).
+- **Coverage: ~90%** of statements, 40 tests (library package).
 - **HTML visualization features**: 5-tab layout (Services/Scopes/Graph/Timeline/Events), services table with status badges + shutdown duration + reverse deps + search filter, collapsible scope tree, force-directed graph with status-colored nodes, dual build+shutdown timeline bars, event type filter chips, keyboard nav (1-5), responsive layout, footer with schema version.
+
+---
+
+## Example
+
+`example/main.go` demonstrates every major samber/do v2 feature with a ride-sharing domain model. 18 features verified by a self-checking feature checklist:
+
+| Feature | API |
+|---|---|
+| Container with hooks | `do.NewWithOpts(plugin.Opts())` |
+| Eager value injection | `do.ProvideValue`, `do.ProvideNamedValue` |
+| Lazy singletons | `do.Provide` |
+| Named services | `do.ProvideNamed`, `do.MustInvokeNamed` |
+| Transient providers | `do.ProvideTransient` |
+| Interface aliasing | `do.As[*EmailNotifier, Notifier]` |
+| Override (hot-swap) | `do.OverrideValue` |
+| Child scopes | `injector.Scope("drivers")` |
+| Cross-scope dependencies | MatchingEngine invokes from driver/passenger scopes |
+| Dependency graph | Auto-inferred from provider call chains |
+| Health checks | `do.Healthchecker`, `do.HealthcheckerWithContext` |
+| Graceful shutdown | `do.ShutdownerWithError`, `injector.Shutdown()` |
+| Invocation errors | `UnreliableService` provider returns error |
+| Shutdown errors | `LeakyService.Shutdown()` returns error |
+| Build duration | Millisecond-precision per service |
+| Scope tree | Root → 3 child scopes with service listings |
+| OnEvent callback | Real-time event streaming via `Config.OnEvent` |
+| Convenience methods | `Report.ServiceByName`, `EventsByType`, `FailedServices` |
