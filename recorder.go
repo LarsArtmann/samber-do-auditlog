@@ -34,8 +34,6 @@ type serviceRecord struct {
 	scopeName            string
 	serviceName          string
 	serviceType          ProviderType
-	isHealthchecker     bool
-	isShutdowner        bool
 	registeredAt         time.Time
 	firstInvokedAt       *time.Time
 	invocationCount      int
@@ -56,6 +54,7 @@ type scopeMeta struct {
 	id       string
 	name     string
 	parentID string
+	ref      *do.Scope
 }
 
 // newSequenceCounter returns a fresh atomic counter for sequence generation.
@@ -121,7 +120,7 @@ func (r *Recorder) recordScope(scope *do.Scope) {
 		return
 	}
 
-	meta := scopeMeta{id: scopeID, name: scope.Name(), parentID: ""}
+	meta := scopeMeta{id: scopeID, name: scope.Name(), parentID: "", ref: scope}
 	if ancestors := scope.Ancestors(); len(ancestors) > 0 {
 		meta.parentID = ancestors[0].ID()
 	}
@@ -169,6 +168,47 @@ func findCapabilitiesInScopes(scopes []do.ExplainInjectorScopeOutput, serviceNam
 	return false, false
 }
 
+// enrichCapabilities populates IsHealthchecker and IsShutdowner on each ServiceInfo
+// by calling do.ExplainInjector on each stored scope reference. Must be called
+// outside the recorder mutex to avoid deadlocking with samber/do's internal locks.
+func enrichCapabilities(scopes map[string]scopeMeta, services []ServiceInfo) {
+	for _, meta := range scopes {
+		if meta.ref == nil {
+			continue
+		}
+
+		output := do.ExplainInjector(meta.ref)
+		svcMap := buildCapabilityMap(output.DAG)
+
+		for i := range services {
+			if services[i].ScopeID != meta.id {
+				continue
+			}
+
+			caps, ok := svcMap[services[i].ServiceName]
+			if ok {
+				services[i].IsHealthchecker = caps[0]
+				services[i].IsShutdowner = caps[1]
+			}
+		}
+	}
+}
+
+func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[string][2]bool {
+	result := make(map[string][2]bool)
+	for _, s := range scopes {
+		for _, svc := range s.Services {
+			result[svc.ServiceName] = [2]bool{svc.IsHealthchecker, svc.IsShutdowner}
+		}
+
+		for k, v := range buildCapabilityMap(s.Children) {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
 // newEvent builds an Event struct with all fields initialized.
 func newEvent(
 	seq int,
@@ -185,7 +225,7 @@ func newEvent(
 		ScopeID:     scope.ID(),
 		ScopeName:   scope.Name(),
 		ServiceName: serviceName,
-	}, containerID, dur, errStr)
+	}, containerID, inferServiceType(scope, serviceName), dur, errStr)
 }
 
 func newEventFromRef(
@@ -195,6 +235,7 @@ func newEventFromRef(
 	phase Phase,
 	ref ServiceRef,
 	containerID string,
+	svcType ProviderType,
 	dur *float64,
 	errStr *string,
 ) Event {
@@ -205,6 +246,7 @@ func newEventFromRef(
 		Phase:       phase,
 		ContainerID: containerID,
 		ServiceRef:  ref,
+		ServiceType: svcType,
 		DurationMs:  dur,
 		Error:       errStr,
 	}
@@ -217,8 +259,6 @@ func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *servi
 		scopeName:            scope.Name(),
 		serviceName:          serviceName,
 		serviceType:          inferServiceType(scope, serviceName),
-		isHealthchecker:     false,
-		isShutdowner:        false,
 		registeredAt:         now,
 		firstInvokedAt:       nil,
 		invocationCount:      0,
@@ -241,8 +281,6 @@ func newServiceRecordFromMeta(scopeID, scopeName, serviceName string, now time.T
 		scopeName:            scopeName,
 		serviceName:          serviceName,
 		serviceType:          "",
-		isHealthchecker:     false,
-		isShutdowner:        false,
 		registeredAt:         now,
 		firstInvokedAt:       nil,
 		invocationCount:      0,
@@ -282,9 +320,7 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 
 	r.mu.Lock()
 	if _, ok := r.services[key]; !ok {
-		rec := newServiceRecord(scope, serviceName, now)
-		rec.isHealthchecker, rec.isShutdowner = inferCapabilities(scope, serviceName)
-		r.services[key] = rec
+		r.services[key] = newServiceRecord(scope, serviceName, now)
 	}
 	r.mu.Unlock()
 	r.addEvent(
@@ -500,24 +536,31 @@ func computeServiceStatus(rec *serviceRecord) ServiceStatus {
 // BuildReport assembles a machine-readable Report from all captured events.
 func (r *Recorder) BuildReport() Report {
 	r.mu.RLock()
-	defer r.mu.RUnlock()
-
 	services := r.buildServicesLocked()
 	scopeTree := r.buildScopeTreeLocked()
+	events := append([]Event(nil), r.events...)
+	scopeCount := len(r.scopes)
+	scopesCopy := make(map[string]scopeMeta, len(r.scopes))
+	for k, v := range r.scopes {
+		scopesCopy[k] = v
+	}
+	r.mu.RUnlock()
+
+	enrichCapabilities(scopesCopy, services)
 
 	return Report{
 		Version:                 SchemaVersion,
 		ContainerID:             r.containerID,
 		ExportedAt:              time.Now(),
-		EventCount:              len(r.events),
+		EventCount:              len(events),
 		ServiceCount:            len(services),
-		ScopeCount:              len(r.scopes),
+		ScopeCount:              scopeCount,
 		TotalBuildDurationMs:    sumBuildMs(services),
 		TotalShutdownDurationMs: sumShutdownMs(services),
 		ShutdownSucceeded:       noShutdownErrors(services),
 		HealthCheckSucceeded:    allHealthChecksPassed(services),
 		HealthCheckedCount:      countHealthChecked(services),
-		Events:                  append([]Event(nil), r.events...),
+		Events:                  events,
 		Services:                services,
 		ScopeTree:               scopeTree,
 	}
@@ -556,8 +599,6 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 			ShutdownDurationMs:    rec.shutdownDurationMs,
 			ShutdownError:         rec.shutdownError,
 			InvocationError:       rec.invocationError,
-			IsHealthchecker:       rec.isHealthchecker,
-			IsShutdowner:          rec.isShutdowner,
 			LastHealthCheckAt: rec.lastHealthCheckAt,
 			HealthCheckError:  rec.healthCheckError,
 			HealthCheckCount:  rec.healthCheckCount,
@@ -771,7 +812,7 @@ func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err
 	r.addEvent(newEventFromRef(
 		seq, now, EventTypeHealthCheck, PhaseAfter,
 		ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
-		r.containerID, nil, errStr,
+		r.containerID, "", nil, errStr,
 	))
 
 	r.mu.Lock()

@@ -521,7 +521,7 @@ templ reportHTML(report Report) {
 				<div class="table-wrap">
 					<table>
 						<thead>
-							<tr><th>#</th><th>Time</th><th>Type</th><th>Phase</th><th>Scope</th><th>Service</th><th>Duration</th><th>Error</th></tr>
+							<tr><th>#</th><th>Time</th><th>Type</th><th>Provider</th><th>Phase</th><th>Scope</th><th>Service</th><th>Duration</th><th>Error</th></tr>
 						</thead>
 						<tbody id="events-tbody"></tbody>
 					</table>
@@ -624,8 +624,8 @@ templ reportHTML(report Report) {
 	const allServices = report.services.map(s => {
 	  const deps=(s.dependencies||[]).map(d=>'<span>'+d.service_name+'</span>').join(', ');
 	  const depsR=(s.dependents||[]).map(d=>'<span>'+d.service_name+'</span>').join(', ');
-	  const regAt=s.registered_at?new Date(s.registered_at).toLocaleTimeString():'';
-	  const invAt=s.first_invoked_at?new Date(s.first_invoked_at).toLocaleTimeString():'';
+	  const regAt=s.registered_offset_ns!=null?formatNs(s.registered_offset_ns):'';
+	  const invAt=s.first_invoked_offset_ns!=null?formatNs(s.first_invoked_offset_ns):'';
 	  const errMsgs=[s.invocation_error,s.shutdown_error].filter(Boolean).map(esc).join('\n');
 	  const statusBadge='<span class="status-badge '+s.status+'"'+(errMsgs?' data-error="'+errMsgs+'"':'')+'>'+(statusIcons[s.status]||'')+' '+s.status.replace(/_/g,' ')+'</span>';
 	  const svcIcon = typeIcons[s.service_type] || '';
@@ -652,19 +652,7 @@ templ reportHTML(report Report) {
 	});
 
 	// Events table
-	const allEvents = report.events.map(e => {
-	  const badge='<span class="event-badge '+e.event_type+'">'+e.event_type+'</span>';
-	  return '<tr data-type="'+e.event_type+'">'
-	    +'<td class="mono">'+e.sequence+'</td>'
-	    +'<td class="mono">'+new Date(e.timestamp).toISOString().split('T')[1].slice(0,12)+'</td>'
-	    +'<td>'+badge+'</td>'
-	    +'<td>'+e.phase+'</td>'
-	    +'<td>'+esc(e.scope_name)+'</td>'
-	    +'<td class="mono">'+esc(e.service_name)+'</td>'
-	    +'<td>'+(e.duration_ms?e.duration_ms.toFixed(3):'')+'</td>'
-	    +'<td class="has-error">'+(e.error?esc(e.error):'')+'</td>'
-	    +'</tr>';
-	});
+	
 	document.getElementById('events-tbody').innerHTML=allEvents.join('');
 
 	// Event filters
@@ -1029,6 +1017,14 @@ templ reportHTML(report Report) {
 	function esc(s){
 	  if(!s)return'';
 	  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+	}
+
+	function formatNs(ns){
+	  if(ns==null)return'';
+	  const ms=ns/1e6;
+	  if(ms<1)return ns.toFixed(0)+'ns';
+	  if(ms<1000)return ms.toFixed(2)+'ms';
+	  return (ms/1000).toFixed(2)+'s';
 	}
 	</script>
 			<div class="footer">

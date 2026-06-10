@@ -26,6 +26,15 @@ type Config struct {
 	OnEvent func(Event)
 }
 
+// Validate returns an error if the config is invalid.
+func (c Config) Validate() error {
+	if c.OnEvent == nil {
+		return nil
+	}
+
+	return nil
+}
+
 // defaultContainerID is used when Config.ContainerID is empty.
 const defaultContainerID = "default"
 

@@ -1240,6 +1240,184 @@ func TestPlugin_ServiceTypeCapture(t *testing.T) {
 	})
 }
 
+func TestProviderType_Icon(t *testing.T) {
+	tests := []struct {
+		pt auditlog.ProviderType
+	}{
+		{auditlog.ProviderTypeLazy},
+		{auditlog.ProviderTypeEager},
+		{auditlog.ProviderTypeTransient},
+		{auditlog.ProviderTypeAlias},
+	}
+	for _, tc := range tests {
+		icon := tc.pt.Icon()
+		if icon == "" {
+			t.Errorf("ProviderType(%q).Icon() returned empty string", tc.pt)
+		}
+	}
+
+	unknown := auditlog.ProviderType("unknown")
+	if icon := unknown.Icon(); icon != "" {
+		t.Errorf("unknown ProviderType.Icon() = %q, want empty", icon)
+	}
+}
+
+func TestPlugin_CapabilityTracking(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "healthy-db", func(i do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: "test"}, nil
+	})
+	do.ProvideNamed(injector, "plain", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "test"}, nil
+	})
+	do.ProvideNamed(injector, "crashable", func(i do.Injector) (*CrashingService, error) {
+		return &CrashingService{}, nil
+	})
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "healthy-db")
+	_ = do.MustInvokeNamed[*Database](injector, "plain")
+	_ = do.MustInvokeNamed[*CrashingService](injector, "crashable")
+
+	report := p.Report()
+
+	hdb := findServiceByName(t, report, "healthy-db")
+	if hdb == nil {
+		t.Fatal("healthy-db not found")
+	}
+
+	if !hdb.IsHealthchecker {
+		t.Error("healthy-db should be a healthchecker")
+	}
+
+	plain := findServiceByName(t, report, "plain")
+	if plain == nil {
+		t.Fatal("plain not found")
+	}
+
+	if plain.IsHealthchecker {
+		t.Error("plain should not be a healthchecker")
+	}
+
+	crash := findServiceByName(t, report, "crashable")
+	if crash == nil {
+		t.Fatal("crashable not found")
+	}
+
+	if !crash.IsShutdowner {
+		t.Error("crashable should be a shutdowner")
+	}
+}
+
+func TestReport_EventsByType(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+
+	regEvents := report.EventsByType(auditlog.EventTypeRegistration)
+	if len(regEvents) == 0 {
+		t.Error("expected registration events")
+	}
+
+	invEvents := report.EventsByType(auditlog.EventTypeInvocation)
+	if len(invEvents) == 0 {
+		t.Error("expected invocation events")
+	}
+
+	shutdownEvents := report.EventsByType(auditlog.EventTypeShutdown)
+	if len(shutdownEvents) != 0 {
+		t.Error("expected no shutdown events")
+	}
+}
+
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) {
+	return 0, errors.New("write failed")
+}
+
+func TestPlugin_WriteReportJSONErrorPath(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	err := p.WriteReportJSON(failingWriter{})
+	if err == nil {
+		t.Fatal("expected error from failing writer")
+	}
+}
+
+func TestPlugin_WriteEventsNDJSONErrorPath(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	err := p.WriteEventsNDJSON(failingWriter{})
+	if err == nil {
+		t.Fatal("expected error from failing writer")
+	}
+}
+
+func TestPlugin_WriteHTMLErrorPath(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	err := p.WriteHTML(failingWriter{})
+	if err == nil {
+		t.Fatal("expected error from failing writer")
+	}
+}
+
+func TestPlugin_ExportToFileInvalidPath(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	err := p.ExportToFile("/nonexistent/dir/report.json")
+	if err == nil {
+		t.Fatal("expected error for invalid path")
+	}
+}
+
+func TestPlugin_EventServiceType(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideValue(injector, &Database{URL: "test"})
+	_ = do.MustInvoke[*Database](injector)
+
+	report := p.Report()
+	if len(report.Events) == 0 {
+		t.Fatal("expected events")
+	}
+
+	hasType := false
+	for _, e := range report.Events {
+		if e.ServiceType == auditlog.ProviderTypeEager {
+			hasType = true
+			break
+		}
+	}
+
+	if !hasType {
+		t.Error("expected at least one event with eager service type")
+	}
+}
+
 func TestPlugin_ShutdownWithErrors(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
@@ -1828,5 +2006,16 @@ func TestServiceRef_String(t *testing.T) {
 				t.Errorf("String() = %q, want %q", tc.ref.String(), tc.want)
 			}
 		})
+	}
+}
+func TestConfig_Validate(t *testing.T) {
+	err := auditlog.Config{}.Validate()
+	if err != nil {
+		t.Errorf("empty config should be valid, got: %v", err)
+	}
+
+	err = auditlog.Config{Enabled: true, OnEvent: func(e auditlog.Event) {}}.Validate()
+	if err != nil {
+		t.Errorf("valid config should pass, got: %v", err)
 	}
 }
