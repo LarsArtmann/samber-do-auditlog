@@ -75,13 +75,14 @@ type Recorder struct {
 
 	sequence    *atomic.Int64
 	containerID string
+	onEvent     func(Event)
 
 	shutdownMu    sync.Mutex
 	shutdownStart map[string]time.Time
 }
 
 // NewRecorder creates a new event recorder.
-func NewRecorder(containerID string) *Recorder {
+func NewRecorder(containerID string, onEvent func(Event)) *Recorder {
 	return &Recorder{
 		mu:              sync.RWMutex{},
 		events:          make([]Event, 0, initialEventCapacity),
@@ -93,6 +94,7 @@ func NewRecorder(containerID string) *Recorder {
 		invocationIndex: 0,
 		sequence:        newSequenceCounter(),
 		containerID:     containerID,
+		onEvent:         onEvent,
 		shutdownMu:      sync.Mutex{},
 		shutdownStart:   make(map[string]time.Time),
 	}
@@ -364,10 +366,14 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 	r.mu.Unlock()
 }
 
-func (r *Recorder) addEvent(e Event) {
+func (r *Recorder) addEvent(evt Event) {
 	r.mu.Lock()
-	r.events = append(r.events, e)
+	r.events = append(r.events, evt)
 	r.mu.Unlock()
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
 }
 
 // errorToStringPtr converts an error to a heap-allocated string pointer.

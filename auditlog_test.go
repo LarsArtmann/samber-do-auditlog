@@ -998,6 +998,52 @@ func TestPlugin_RealWorldScenario(t *testing.T) {
 	_ = plugin.ExportToHTML(t.TempDir() + "/report.html")
 }
 
+func TestPlugin_EventHandler(t *testing.T) {
+	var captured []auditlog.Event
+
+	p := auditlog.New(auditlog.Config{
+		Enabled: true,
+		OnEvent: func(e auditlog.Event) {
+			captured = append(captured, e)
+		},
+	})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	if len(captured) == 0 {
+		t.Fatal("expected events via OnEvent callback")
+	}
+
+	for _, e := range captured {
+		if e.ContainerID != "default" {
+			t.Errorf("callback event container_id: want default, got %s", e.ContainerID)
+		}
+	}
+
+	report := p.Report()
+	if report.EventCount != len(captured) {
+		t.Errorf("event count mismatch: report=%d, callback=%d", report.EventCount, len(captured))
+	}
+}
+
+func TestPlugin_EventHandlerNil(t *testing.T) {
+	p := auditlog.New(auditlog.Config{
+		Enabled: true,
+		OnEvent: nil,
+	})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+	if report.EventCount == 0 {
+		t.Error("expected events even with nil OnEvent")
+	}
+}
+
 type HTTPServer struct {
 	Users *UserService
 }
