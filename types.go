@@ -1,6 +1,9 @@
 package auditlog
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // SchemaVersion is the current report schema version.
 const SchemaVersion = "0.1.0"
@@ -39,6 +42,14 @@ type ServiceRef struct {
 	ScopeID     string `json:"scope_id"`
 	ScopeName   string `json:"scope_name"`
 	ServiceName string `json:"service_name"`
+}
+
+func (r ServiceRef) String() string {
+	if r.ScopeName != "" && r.ScopeName != "[root]" {
+		return fmt.Sprintf("%s/%s", r.ScopeName, r.ServiceName)
+	}
+
+	return r.ServiceName
 }
 
 // Event is a single, timestamped observation from the DI container lifecycle.

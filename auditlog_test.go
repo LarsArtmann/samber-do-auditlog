@@ -3,6 +3,7 @@ package auditlog_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"strings"
 	"sync"
@@ -1050,4 +1051,158 @@ type HTTPServer struct {
 
 type Config struct {
 	Port int
+}
+
+type CrashingService struct{}
+
+var errConnectionReset = errors.New("connection reset")
+
+func (c *CrashingService) Shutdown() error {
+	return errConnectionReset
+}
+
+func TestEvent_ConvenienceMethods(t *testing.T) {
+	events := []struct {
+		event      auditlog.Event
+		wantReg    bool
+		wantInv    bool
+		wantShut   bool
+		wantBefore bool
+		wantAfter  bool
+	}{
+		{
+			event:   auditlog.Event{EventType: auditlog.EventTypeRegistration, Phase: auditlog.PhaseBefore},
+			wantReg: true, wantBefore: true,
+		},
+		{
+			event:   auditlog.Event{EventType: auditlog.EventTypeInvocation, Phase: auditlog.PhaseAfter},
+			wantInv: true, wantAfter: true,
+		},
+		{
+			event:    auditlog.Event{EventType: auditlog.EventTypeShutdown, Phase: auditlog.PhaseBefore},
+			wantShut: true, wantBefore: true,
+		},
+	}
+
+	for i, tc := range events {
+		if got := tc.event.IsRegistration(); got != tc.wantReg {
+			t.Errorf("case %d: IsRegistration() = %v, want %v", i, got, tc.wantReg)
+		}
+
+		if got := tc.event.IsInvocation(); got != tc.wantInv {
+			t.Errorf("case %d: IsInvocation() = %v, want %v", i, got, tc.wantInv)
+		}
+
+		if got := tc.event.IsShutdown(); got != tc.wantShut {
+			t.Errorf("case %d: IsShutdown() = %v, want %v", i, got, tc.wantShut)
+		}
+
+		if got := tc.event.IsBefore(); got != tc.wantBefore {
+			t.Errorf("case %d: IsBefore() = %v, want %v", i, got, tc.wantBefore)
+		}
+
+		if got := tc.event.IsAfter(); got != tc.wantAfter {
+			t.Errorf("case %d: IsAfter() = %v, want %v", i, got, tc.wantAfter)
+		}
+	}
+}
+
+func TestPlugin_WriteHTMLBuffer(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	var buf bytes.Buffer
+
+	err := p.WriteHTML(&buf)
+	if err != nil {
+		t.Fatalf("WriteHTML failed: %v", err)
+	}
+
+	html := buf.String()
+	if len(html) < 500 {
+		t.Errorf("HTML too small (%d bytes)", len(html))
+	}
+
+	if !strings.Contains(strings.ToLower(html), "<!doctype html>") {
+		t.Error("expected DOCTYPE in HTML output")
+	}
+
+	if !strings.Contains(html, "db") {
+		t.Error("expected 'db' service name in HTML output")
+	}
+}
+
+func TestPlugin_WriteReportJSONError(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	var buf bytes.Buffer
+
+	err := p.WriteReportJSON(&buf)
+	if err != nil {
+		t.Fatalf("WriteReportJSON failed: %v", err)
+	}
+
+	var report auditlog.Report
+	if err := json.Unmarshal(buf.Bytes(), &report); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+
+	if report.ServiceCount != 1 {
+		t.Errorf("expected 1 service, got %d", report.ServiceCount)
+	}
+}
+
+func TestPlugin_ScopeTreeWithMultipleChildren(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	child1 := injector.Scope("child-1")
+	child2 := injector.Scope("child-2")
+
+	provideDB(injector, "root-svc", "root")
+	provideDB(child1, "child1-svc", "child1")
+	provideDB(child2, "child2-svc", "child2")
+
+	_ = do.MustInvokeNamed[*Database](injector, "root-svc")
+	_ = do.MustInvokeNamed[*Database](child1, "child1-svc")
+	_ = do.MustInvokeNamed[*Database](child2, "child2-svc")
+
+	report := p.Report()
+
+	if len(report.ScopeTree.Children) != 2 {
+		t.Fatalf("expected 2 child scopes, got %d", len(report.ScopeTree.Children))
+	}
+}
+
+func TestPlugin_ShutdownWithErrors(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "crash", func(i do.Injector) (*CrashingService, error) {
+		return &CrashingService{}, nil
+	})
+
+	_ = do.MustInvokeNamed[*CrashingService](injector, "crash")
+	_ = injector.Shutdown()
+
+	report := p.Report()
+
+	if report.ShutdownSucceeded {
+		t.Error("expected ShutdownSucceeded=false when shutdown errors exist")
+	}
+
+	if len(report.Services) != 1 {
+		t.Fatalf("expected 1 service, got %d", len(report.Services))
+	}
+
+	if report.Services[0].ShutdownError == nil {
+		t.Error("expected shutdown error to be captured")
+	}
 }
