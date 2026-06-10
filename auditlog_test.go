@@ -2010,6 +2010,21 @@ func TestConfig_Validate(t *testing.T) {
 	if err != nil {
 		t.Errorf("valid config should pass, got: %v", err)
 	}
+
+	err = auditlog.Config{ContainerID: "my/app"}.Validate()
+	if err == nil {
+		t.Error("expected error for ContainerID with forward slash")
+	}
+
+	err = auditlog.Config{ContainerID: "my\\app"}.Validate()
+	if err == nil {
+		t.Error("expected error for ContainerID with backslash")
+	}
+
+	err = auditlog.Config{ContainerID: "my-app"}.Validate()
+	if err != nil {
+		t.Errorf("hyphenated ContainerID should be valid, got: %v", err)
+	}
 }
 
 func TestProviderType_String(t *testing.T) {
@@ -3307,6 +3322,52 @@ func TestPlugin_ProvideEager(t *testing.T) {
 
 	if svc.ServiceType != auditlog.ProviderTypeEager {
 		t.Errorf("service_type: want eager, got %q", svc.ServiceType)
+	}
+}
+
+func TestWriteMermaid_ExternalDependency(t *testing.T) {
+	report := auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: "test",
+		ExportedAt:  time.Now(),
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceRef: auditlog.ServiceRef{
+					ScopeID:     "root",
+					ScopeName:   "[root]",
+					ServiceName: "my-service",
+				},
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
+				Dependencies: []auditlog.ServiceRef{
+					{
+						ScopeID:     "root",
+						ScopeName:   "[root]",
+						ServiceName: "external-dep",
+					},
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+
+	err := report.WriteMermaid(&buf)
+	if err != nil {
+		t.Fatalf("WriteMermaid: %v", err)
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "flowchart TD") {
+		t.Error("expected flowchart header")
+	}
+
+	if !strings.Contains(output, "external-dep") {
+		t.Error("expected external-dep label in output")
+	}
+
+	if !strings.Contains(output, "-->") {
+		t.Error("expected dependency edge")
 	}
 }
 

@@ -11,7 +11,7 @@ Last updated: 2026-06-10
 
 ## Priority 2 — Polish
 
-- [ ] **Add Config.Validate() real checks** — Currently always returns nil. Could validate ContainerID for path separators.
+_All items completed._
 
 ## Not Planned (Explicitly Rejected)
 
@@ -22,6 +22,12 @@ Last updated: 2026-06-10
 - **`encoding/json/v2` migration** — Current `encoding/json` works fine. Risk of breaking JSON output format for consumers.
 
 ---
+
+## Completed (2026-06-10 Session 5)
+
+- [x] Add Config.Validate() real checks — validates ContainerID for path separators (/ and \)
+- [x] Add mermaidLabelForRef test coverage — synthetic Report with external dependency
+- [x] Update FEATURES.md, TODO_LIST.md for completed items
 
 ## Completed (2026-06-10 Session 4)
 

@@ -3,9 +3,11 @@ package auditlog
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/samber/do/v2"
 )
@@ -27,8 +29,16 @@ type Config struct {
 }
 
 // Validate returns an error if the config is invalid.
-// Currently always returns nil; reserved for future validation.
+//
+// Checks that ContainerID does not contain path separators ("/" or "\")
+// since it is used in file export paths and event metadata.
+var errContainerIDPathSep = errors.New("config.ContainerID must not contain path separators")
+
 func (c Config) Validate() error {
+	if strings.ContainsAny(c.ContainerID, "/\\") {
+		return fmt.Errorf("%w: %q", errContainerIDPathSep, c.ContainerID)
+	}
+
 	return nil
 }
 
