@@ -612,9 +612,7 @@ func TestPlugin_ReportVersion(t *testing.T) {
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 
 	report := p.Report()
-	if report.Version != auditlog.SchemaVersion {
-		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, report.Version)
-	}
+	assertVersion(t, report)
 }
 
 func TestPlugin_ScopeID(t *testing.T) {
@@ -677,9 +675,7 @@ func TestPlugin_WriteReportJSON(t *testing.T) {
 		t.Errorf("expected 1 service, got %d", report.ServiceCount)
 	}
 
-	if report.Version != auditlog.SchemaVersion {
-		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, report.Version)
-	}
+	assertVersion(t, report)
 }
 
 func TestPlugin_WriteEventsNDJSON(t *testing.T) {
@@ -714,9 +710,7 @@ func TestPlugin_EmptyReport(t *testing.T) {
 		t.Errorf("expected 0 services, got %d", report.ServiceCount)
 	}
 
-	if report.Version != auditlog.SchemaVersion {
-		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, report.Version)
-	}
+	assertVersion(t, report)
 
 	if report.ScopeTree.Name != "" && report.ScopeTree.ID != "" {
 		t.Error("expected empty scope tree for empty report")
@@ -812,6 +806,14 @@ func findServiceBySuffix(t *testing.T, report auditlog.Report, suffix string) *a
 	}
 
 	return nil
+}
+
+func assertVersion(t *testing.T, report auditlog.Report) {
+	t.Helper()
+
+	if report.Version != auditlog.SchemaVersion {
+		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, report.Version)
+	}
 }
 
 func newPluginWithCapture() (*auditlog.Plugin, *[]auditlog.Event, do.Injector) { //nolint:ireturn

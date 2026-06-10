@@ -108,7 +108,7 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - `t.TempDir()` for file export tests.
 - Benchmarks exist in the test file for performance measurement.
 - Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (clean and error), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations, ServiceStatus computation across all states, transient and value providers, health checks (healthy/unhealthy/multiple/disabled/count/report/scope/UnhealthyServices).
-- **Coverage: ~91%** of statements, 53 tests (library package).
+- **Coverage: ~95%** of statements, 71 tests (library package) + 2 benchmarks.
 - **HTML visualization features**: 5-tab layout (Services/Scopes/Graph/Timeline/Events), services table with type badges + status badges + shutdown duration + reverse deps + health column + search filter, collapsible scope tree with type emoji chips, Sugiyama layered DAG graph with type-colored nodes + pan/zoom + click-to-highlight, dual build+shutdown timeline bars with type icons, event type filter chips (registration/invocation/shutdown/health_check), keyboard nav (1-5), animated tab transitions, stat cards (including health checks when checked), responsive layout, footer with schema version.
 - **Service type tracking**: `ServiceInfo.ServiceType` field (JSON: `service_type`) populated from `do.ExplainNamedService`. Values: "lazy", "eager", "transient", "alias". Displayed with samber/do's canonical emojis throughout the HTML visualization.
 
@@ -138,5 +138,6 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 | Build duration           | Millisecond-precision per service                                                     |
 | Scope tree               | Root → 3 child scopes with service listings                                           |
 | OnEvent callback         | Real-time event streaming via `Config.OnEvent`                                        |
-| Convenience methods      | `Report.ServiceByName`, `EventsByType`, `FailedServices`                              |
+| Convenience methods      | `Report.ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`          |
+| Event helpers            | `Event.Duration()`, `ServiceInfo.Uptime()`, `Plugin.EventsCount()`                    |
 | Service type tracking    | Auto-detected via `do.ExplainNamedService`                                            |
