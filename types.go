@@ -481,3 +481,42 @@ func (r Report) EventsByRef(scopeID, serviceName string) []Event {
 
 	return result
 }
+
+// ReportIndex provides O(1) lookups into a Report.
+// Build it once with report.Index() and reuse it for multiple queries.
+type ReportIndex struct {
+	ByName       map[string]*ServiceInfo
+	ByRef        map[string]*ServiceInfo
+	ByScope      map[string][]ServiceInfo
+	EventsByName map[string][]Event
+	EventsByRef  map[string][]Event
+	EventsByType map[EventType][]Event
+}
+
+// Index builds a lookup index for O(1) report queries.
+// Useful when performing multiple lookups on the same report.
+func (r Report) Index() ReportIndex {
+	idx := ReportIndex{
+		ByName:       make(map[string]*ServiceInfo, len(r.Services)),
+		ByRef:        make(map[string]*ServiceInfo, len(r.Services)),
+		ByScope:      make(map[string][]ServiceInfo),
+		EventsByName: make(map[string][]Event),
+		EventsByRef:  make(map[string][]Event),
+		EventsByType: make(map[EventType][]Event),
+	}
+
+	for i := range r.Services {
+		svc := &r.Services[i]
+		idx.ByName[svc.ServiceName] = svc
+		idx.ByRef[serviceKey(svc.ScopeID, svc.ServiceName)] = svc
+		idx.ByScope[svc.ScopeID] = append(idx.ByScope[svc.ScopeID], *svc)
+	}
+
+	for _, e := range r.Events {
+		idx.EventsByName[e.ServiceName] = append(idx.EventsByName[e.ServiceName], e)
+		idx.EventsByRef[serviceKey(e.ScopeID, e.ServiceName)] = append(idx.EventsByRef[serviceKey(e.ScopeID, e.ServiceName)], e)
+		idx.EventsByType[e.EventType] = append(idx.EventsByType[e.EventType], e)
+	}
+
+	return idx
+}

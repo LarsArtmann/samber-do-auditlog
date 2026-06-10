@@ -3639,3 +3639,50 @@ func TestPlugin_ProvideTransientType(t *testing.T) {
 		t.Errorf("invocation_count: want 2, got %d", svc.InvocationCount)
 	}
 }
+
+func TestReport_Index(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	provideCache(injector, "cache")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvokeNamed[*Cache](injector, "cache")
+
+	report := p.Report()
+	idx := report.Index()
+
+	// ByName
+	if idx.ByName["db"] == nil {
+		t.Error("Index.ByName: expected 'db' service")
+	}
+
+	// ByRef
+	for i := range report.Services {
+		key := report.Services[i].ScopeID + "/" + report.Services[i].ServiceName
+		if idx.ByRef[key] == nil {
+			t.Errorf("Index.ByRef: expected %q", key)
+		}
+	}
+
+	// ByScope
+	rootScope := report.ScopeTree.ID
+	if len(idx.ByScope[rootScope]) == 0 {
+		t.Error("Index.ByScope: expected services in root scope")
+	}
+
+	// EventsByName
+	if len(idx.EventsByName["db"]) == 0 {
+		t.Error("Index.EventsByName: expected events for 'db'")
+	}
+
+	// EventsByRef
+	if len(idx.EventsByRef[rootScope+"/db"]) == 0 {
+		t.Error("Index.EventsByRef: expected events for root/db")
+	}
+
+	// EventsByType
+	if len(idx.EventsByType[auditlog.EventTypeRegistration]) == 0 {
+		t.Error("Index.EventsByType: expected registration events")
+	}
+}
