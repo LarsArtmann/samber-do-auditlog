@@ -1,136 +1,200 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Architecture Deepening Opportunities — samber-do-auditlog</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <style>
-        .card { transition: all 0.2s ease; }
-        .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .badge-strong { background: #dc2626; color: white; }
-        .badge-explore { background: #f59e0b; color: white; }
-        .badge-speculative { background: #6b7280; color: white; }
+      .card {
+        transition: all 0.2s ease;
+      }
+      .card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      .badge-strong {
+        background: #dc2626;
+        color: white;
+      }
+      .badge-explore {
+        background: #f59e0b;
+        color: white;
+      }
+      .badge-speculative {
+        background: #6b7280;
+        color: white;
+      }
     </style>
-</head>
-<body class="bg-gray-50 text-gray-900 max-w-6xl mx-auto p-8">
+  </head>
+  <body class="bg-gray-50 text-gray-900 max-w-6xl mx-auto p-8">
     <h1 class="text-3xl font-bold mb-2">Architecture Deepening Opportunities</h1>
     <p class="text-gray-500 mb-8">samber-do-auditlog — 2026-06-10</p>
 
     <div class="mb-8 p-4 bg-white rounded-lg border">
-        <h2 class="text-lg font-semibold mb-2">Summary</h2>
-        <p>3 candidates found. The codebase is already well-structured for its size (1 package, 1757 LOC). The opportunities below are <strong>forward-looking</strong> — they prepare the library for growth rather than fix current problems.</p>
+      <h2 class="text-lg font-semibold mb-2">Summary</h2>
+      <p>
+        3 candidates found. The codebase is already well-structured for its size (1 package, 1757
+        LOC). The opportunities below are <strong>forward-looking</strong> — they prepare the
+        library for growth rather than fix current problems.
+      </p>
     </div>
 
     <!-- Candidate 1 -->
     <div class="card bg-white rounded-lg border p-6 mb-6">
-        <div class="flex justify-between items-start mb-4">
-            <div>
-                <h3 class="text-xl font-bold">1. Report Filtering via Functional Options</h3>
-                <p class="text-sm text-gray-500">recorder.go, types.go</p>
-            </div>
-            <span class="badge-strong px-3 py-1 rounded-full text-sm font-medium">Strong</span>
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h3 class="text-xl font-bold">1. Report Filtering via Functional Options</h3>
+          <p class="text-sm text-gray-500">recorder.go, types.go</p>
         </div>
+        <span class="badge-strong px-3 py-1 rounded-full text-sm font-medium">Strong</span>
+      </div>
 
-        <div class="grid grid-cols-2 gap-6 mb-4">
-            <div>
-                <h4 class="font-semibold text-red-600 mb-2">Before</h4>
-                <div class="bg-gray-50 p-4 rounded text-sm font-mono">
-                    Report() → returns ALL data<br>
-                    No way to filter<br>
-                    Consumer must filter client-side
-                </div>
-            </div>
-            <div>
-                <h4 class="font-semibold text-green-600 mb-2">After</h4>
-                <div class="bg-gray-50 p-4 rounded text-sm font-mono">
-                    Report(opts...ReportOption)<br>
-                    WithServiceFilter("db")<br>
-                    WithTimeRange(from, to)<br>
-                    WithEventTypes(Invocation)
-                </div>
-            </div>
+      <div class="grid grid-cols-2 gap-6 mb-4">
+        <div>
+          <h4 class="font-semibold text-red-600 mb-2">Before</h4>
+          <div class="bg-gray-50 p-4 rounded text-sm font-mono">
+            Report() → returns ALL data<br />
+            No way to filter<br />
+            Consumer must filter client-side
+          </div>
         </div>
+        <div>
+          <h4 class="font-semibold text-green-600 mb-2">After</h4>
+          <div class="bg-gray-50 p-4 rounded text-sm font-mono">
+            Report(opts...ReportOption)<br />
+            WithServiceFilter("db")<br />
+            WithTimeRange(from, to)<br />
+            WithEventTypes(Invocation)
+          </div>
+        </div>
+      </div>
 
-        <p class="mb-2"><strong>Problem:</strong> As the library gets used in larger applications with hundreds of services, <code>Report()</code> will produce increasingly large payloads. Consumers who only need a subset must deserialize the full report and filter client-side.</p>
-        <p class="mb-2"><strong>Solution:</strong> Add <code>ReportOption</code> functional options to <code>Report()</code> and <code>BuildReport()</code>. The options pre-filter at the recorder level, avoiding unnecessary serialization.</p>
-        <p class="mb-2"><strong>Benefits:</strong> <em>Leverage</em> — one clean interface hides complex filtering. <em>Locality</em> — filtering logic lives in one place, not scattered across consumers.</p>
+      <p class="mb-2">
+        <strong>Problem:</strong> As the library gets used in larger applications with hundreds of
+        services, <code>Report()</code> will produce increasingly large payloads. Consumers who only
+        need a subset must deserialize the full report and filter client-side.
+      </p>
+      <p class="mb-2">
+        <strong>Solution:</strong> Add <code>ReportOption</code> functional options to
+        <code>Report()</code> and <code>BuildReport()</code>. The options pre-filter at the recorder
+        level, avoiding unnecessary serialization.
+      </p>
+      <p class="mb-2">
+        <strong>Benefits:</strong> <em>Leverage</em> — one clean interface hides complex filtering.
+        <em>Locality</em> — filtering logic lives in one place, not scattered across consumers.
+      </p>
     </div>
 
     <!-- Candidate 2 -->
     <div class="card bg-white rounded-lg border p-6 mb-6">
-        <div class="flex justify-between items-start mb-4">
-            <div>
-                <h3 class="text-xl font-bold">2. Real-time Event Streaming Callback</h3>
-                <p class="text-sm text-gray-500">plugin.go, recorder.go</p>
-            </div>
-            <span class="badge-explore px-3 py-1 rounded-full text-sm font-medium">Worth Exploring</span>
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h3 class="text-xl font-bold">2. Real-time Event Streaming Callback</h3>
+          <p class="text-sm text-gray-500">plugin.go, recorder.go</p>
         </div>
+        <span class="badge-explore px-3 py-1 rounded-full text-sm font-medium"
+          >Worth Exploring</span
+        >
+      </div>
 
-        <div class="grid grid-cols-2 gap-6 mb-4">
-            <div>
-                <h4 class="font-semibold text-red-600 mb-2">Before</h4>
-                <div class="bg-gray-50 p-4 rounded text-sm font-mono">
-                    Capture-only model<br>
-                    Export = batch operation<br>
-                    No real-time observability
-                </div>
-            </div>
-            <div>
-                <h4 class="font-semibold text-green-600 mb-2">After</h4>
-                <div class="bg-gray-50 p-4 rounded text-sm font-mono">
-                    Config.EventHandler func(Event)<br>
-                    Each event streams to handler<br>
-                    Enables live dashboards, logging
-                </div>
-            </div>
+      <div class="grid grid-cols-2 gap-6 mb-4">
+        <div>
+          <h4 class="font-semibold text-red-600 mb-2">Before</h4>
+          <div class="bg-gray-50 p-4 rounded text-sm font-mono">
+            Capture-only model<br />
+            Export = batch operation<br />
+            No real-time observability
+          </div>
         </div>
+        <div>
+          <h4 class="font-semibold text-green-600 mb-2">After</h4>
+          <div class="bg-gray-50 p-4 rounded text-sm font-mono">
+            Config.EventHandler func(Event)<br />
+            Each event streams to handler<br />
+            Enables live dashboards, logging
+          </div>
+        </div>
+      </div>
 
-        <p class="mb-2"><strong>Problem:</strong> The library captures events but only exposes them through batch export. Users who want real-time observability (e.g., logging each service invocation as it happens) must poll <code>Report()</code>.</p>
-        <p class="mb-2"><strong>Solution:</strong> Add an optional <code>EventHandler func(Event)</code> to <code>Config</code>. When set, each captured event is also forwarded to the handler. This is a thin seam — zero cost when not configured.</p>
-        <p class="mb-2"><strong>Benefits:</strong> Enables integration with logging/metrics systems without changing the export model. The <code>Recorder</code> deepens — more behavior behind the same interface.</p>
+      <p class="mb-2">
+        <strong>Problem:</strong> The library captures events but only exposes them through batch
+        export. Users who want real-time observability (e.g., logging each service invocation as it
+        happens) must poll <code>Report()</code>.
+      </p>
+      <p class="mb-2">
+        <strong>Solution:</strong> Add an optional <code>EventHandler func(Event)</code> to
+        <code>Config</code>. When set, each captured event is also forwarded to the handler. This is
+        a thin seam — zero cost when not configured.
+      </p>
+      <p class="mb-2">
+        <strong>Benefits:</strong> Enables integration with logging/metrics systems without changing
+        the export model. The <code>Recorder</code> deepens — more behavior behind the same
+        interface.
+      </p>
     </div>
 
     <!-- Candidate 3 -->
     <div class="card bg-white rounded-lg border p-6 mb-6">
-        <div class="flex justify-between items-start mb-4">
-            <div>
-                <h3 class="text-xl font-bold">3. Versioned Report Schema with Migration</h3>
-                <p class="text-sm text-gray-500">types.go, recorder.go</p>
-            </div>
-            <span class="badge-speculative px-3 py-1 rounded-full text-sm font-medium">Speculative</span>
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h3 class="text-xl font-bold">3. Versioned Report Schema with Migration</h3>
+          <p class="text-sm text-gray-500">types.go, recorder.go</p>
         </div>
+        <span class="badge-speculative px-3 py-1 rounded-full text-sm font-medium"
+          >Speculative</span
+        >
+      </div>
 
-        <div class="grid grid-cols-2 gap-6 mb-4">
-            <div>
-                <h4 class="font-semibold text-red-600 mb-2">Before</h4>
-                <div class="bg-gray-50 p-4 rounded text-sm font-mono">
-                    SchemaVersion = "0.1.0"<br>
-                    No migration path<br>
-                    Consumers break on change
-                </div>
-            </div>
-            <div>
-                <h4 class="font-semibold text-green-600 mb-2">After</h4>
-                <div class="bg-gray-50 p-4 rounded text-sm font-mono">
-                    Versioned schema types<br>
-                    Migrate(oldVersion, data) → Report<br>
-                    Backward-compatible consumers
-                </div>
-            </div>
+      <div class="grid grid-cols-2 gap-6 mb-4">
+        <div>
+          <h4 class="font-semibold text-red-600 mb-2">Before</h4>
+          <div class="bg-gray-50 p-4 rounded text-sm font-mono">
+            SchemaVersion = "0.1.0"<br />
+            No migration path<br />
+            Consumers break on change
+          </div>
         </div>
+        <div>
+          <h4 class="font-semibold text-green-600 mb-2">After</h4>
+          <div class="bg-gray-50 p-4 rounded text-sm font-mono">
+            Versioned schema types<br />
+            Migrate(oldVersion, data) → Report<br />
+            Backward-compatible consumers
+          </div>
+        </div>
+      </div>
 
-        <p class="mb-2"><strong>Problem:</strong> <code>SchemaVersion</code> exists but is only a string constant. If the report schema changes in v0.2.0, old exports become unparseable. This is acceptable for ALPHA but becomes a liability at v1.0.</p>
-        <p class="mb-2"><strong>Solution:</strong> Define a versioned schema contract. Add a <code>MigrateReport(version, data) (Report, error)</code> function that can upgrade old exports to the current schema.</p>
-        <p class="mb-2"><strong>Benefits:</strong> Long-term stability. Consumers can rely on the schema contract surviving version bumps. Postpones until v1.0 planning.</p>
+      <p class="mb-2">
+        <strong>Problem:</strong> <code>SchemaVersion</code> exists but is only a string constant.
+        If the report schema changes in v0.2.0, old exports become unparseable. This is acceptable
+        for ALPHA but becomes a liability at v1.0.
+      </p>
+      <p class="mb-2">
+        <strong>Solution:</strong> Define a versioned schema contract. Add a
+        <code>MigrateReport(version, data) (Report, error)</code> function that can upgrade old
+        exports to the current schema.
+      </p>
+      <p class="mb-2">
+        <strong>Benefits:</strong> Long-term stability. Consumers can rely on the schema contract
+        surviving version bumps. Postpones until v1.0 planning.
+      </p>
     </div>
 
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 class="text-lg font-bold text-blue-800 mb-2">Top Recommendation</h3>
-        <p><strong>Candidate #1 (Report Filtering)</strong> — tackle first. It's the highest leverage: a clean interface change that scales the library for real-world use without breaking existing consumers. The functional options pattern is idiomatic Go and well-understood by the ecosystem.</p>
-        <p class="mt-2">Candidate #2 (Event Streaming) is a close second — it complements #1 by adding real-time capability. Together they transform the library from "batch export tool" to "comprehensive DI observability layer".</p>
-        <p class="mt-2">Candidate #3 (Versioned Schema) should wait until v1.0 planning begins.</p>
+      <h3 class="text-lg font-bold text-blue-800 mb-2">Top Recommendation</h3>
+      <p>
+        <strong>Candidate #1 (Report Filtering)</strong> — tackle first. It's the highest leverage:
+        a clean interface change that scales the library for real-world use without breaking
+        existing consumers. The functional options pattern is idiomatic Go and well-understood by
+        the ecosystem.
+      </p>
+      <p class="mt-2">
+        Candidate #2 (Event Streaming) is a close second — it complements #1 by adding real-time
+        capability. Together they transform the library from "batch export tool" to "comprehensive
+        DI observability layer".
+      </p>
+      <p class="mt-2">Candidate #3 (Versioned Schema) should wait until v1.0 planning begins.</p>
     </div>
-</body>
+  </body>
 </html>

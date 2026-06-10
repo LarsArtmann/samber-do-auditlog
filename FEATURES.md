@@ -6,67 +6,67 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 
 ## DONE
 
-| Feature | Description | Verified |
-|---------|-------------|----------|
-| **Drop-in plugin setup** | `New(Config)` + `Opts()` → one-line integration with `do.NewWithOpts` | ✓ `plugin.go:41-81` |
-| **Service registration tracking** | Captures before/after registration events with timestamps | ✓ `recorder.go:169-198` |
-| **Service invocation tracking** | Captures before/after invocation events with timestamps, duration, errors | ✓ `recorder.go:200-310` |
-| **Shutdown tracking** | Captures before/after shutdown events with duration and errors | ✓ `recorder.go:312-357` |
-| **Dependency graph inference** | Stack-based: infers A→B when A is on-stack during B's before-hook | ✓ `recorder.go:204-216` |
-| **Reverse dependencies** | `Dependents` field computed at report time from forward deps | ✓ `recorder.go:467-483` |
-| **Scope tree** | Builds hierarchical scope tree with per-scope service lists | ✓ `recorder.go:485-542` |
-| **Scope tracking** | Records scope metadata (ID, name, parent) for all scopes | ✓ `recorder.go:100-117` |
-| **Monotonic sequence numbers** | Per-recorder atomic counter — no global state | ✓ `recorder.go:52-56, 96-98` |
-| **Build duration measurement** | Tracks first build duration in milliseconds for each service | ✓ `recorder.go:253-271` |
-| **Invocation ordering** | Global invocation order across all services | ✓ `recorder.go:294-301` |
-| **Provider error capture** | Records invocation errors as string pointers in events and service info | ✓ `recorder.go:367-375` |
-| **JSON report export** | Full `Report` as indented JSON to `io.Writer` or file | ✓ `plugin.go:88-120` |
-| **NDJSON event stream** | Each event as a JSON line to `io.Writer` or file | ✓ `plugin.go:102-125` |
-| **Self-contained HTML visualization** | Dark-themed page with services table, scopes tab, dependency graph, timeline, events, responsive layout | ✓ `html.templ` |
-| **Dependency graph visualization** | Force-directed SVG graph with status-colored nodes, tooltips, arrow endpoints at edges | ✓ `html.templ` |
-| **Timeline visualization** | Dual horizontal bar chart: build duration (blue) + shutdown duration (yellow) | ✓ `html.templ` |
-| **Scopes tree visualization** | Collapsible scope tree with service counts and name chips | ✓ `html.templ` |
-| **HTML search & filter** | Live search on services table, event type filter chips, keyboard tab navigation (1-5) | ✓ `html.templ` |
-| **Responsive HTML layout** | Mobile-friendly with media queries, footer with schema version | ✓ `html.templ` |
-| **Environment variable toggle** | `DO_AUDITLOG_ENABLED` = true/1/yes enables without code change | ✓ `plugin.go:56-64` |
-| **Zero-cost disabled mode** | `Enabled: false` → empty `InjectorOpts`, no hooks, no allocation | ✓ `plugin.go:68-71` |
-| **Explicit enable override** | `Config.Enabled: true` overrides env var | ✓ `plugin.go:46-48` |
-| **Container ID** | Human-readable identifier propagated to all events | ✓ `plugin.go:22-26` |
-| **Concurrent-safe recording** | 4-lock design: RWMutex for state, Mutex for stack, ordering, shutdown | ✓ `recorder.go:59-76` |
-| **Deterministic report output** | Services sorted by (scope_name, service_name), scope tree sorted by scope ID | ✓ `recorder.go:429-434, sortedScopesLocked` |
-| **Transient provider support** | Works with `do.ProvideTransient` — tracks multiple invocations | ✓ Tested: `TestPlugin_ProvideTransient` |
-| **Value provider support** | Works with `do.ProvideValue` | ✓ Tested: `TestPlugin_ProvideValue` |
-| **Named service support** | Works with `do.ProvideNamed` / `do.InvokeNamed` | ✓ Tested throughout |
-| **Schema versioning** | `SchemaVersion` constant for forward compatibility | ✓ `types.go:6` |
-| **Defensive copies** | `Events()` and `Report()` return copies, not internal slices | ✓ `recorder.go:544-550, 378-395` |
-| **Service lifecycle status** | Computed `ServiceStatus` field: registered, active, invocation_error, shutdown, shutdown_error | ✓ `types.go:ServiceStatus`, `recorder.go:computeServiceStatus` |
+| Feature                               | Description                                                                                             | Verified                                                       |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Drop-in plugin setup**              | `New(Config)` + `Opts()` → one-line integration with `do.NewWithOpts`                                   | ✓ `plugin.go:41-81`                                            |
+| **Service registration tracking**     | Captures before/after registration events with timestamps                                               | ✓ `recorder.go:169-198`                                        |
+| **Service invocation tracking**       | Captures before/after invocation events with timestamps, duration, errors                               | ✓ `recorder.go:200-310`                                        |
+| **Shutdown tracking**                 | Captures before/after shutdown events with duration and errors                                          | ✓ `recorder.go:312-357`                                        |
+| **Dependency graph inference**        | Stack-based: infers A→B when A is on-stack during B's before-hook                                       | ✓ `recorder.go:204-216`                                        |
+| **Reverse dependencies**              | `Dependents` field computed at report time from forward deps                                            | ✓ `recorder.go:467-483`                                        |
+| **Scope tree**                        | Builds hierarchical scope tree with per-scope service lists                                             | ✓ `recorder.go:485-542`                                        |
+| **Scope tracking**                    | Records scope metadata (ID, name, parent) for all scopes                                                | ✓ `recorder.go:100-117`                                        |
+| **Monotonic sequence numbers**        | Per-recorder atomic counter — no global state                                                           | ✓ `recorder.go:52-56, 96-98`                                   |
+| **Build duration measurement**        | Tracks first build duration in milliseconds for each service                                            | ✓ `recorder.go:253-271`                                        |
+| **Invocation ordering**               | Global invocation order across all services                                                             | ✓ `recorder.go:294-301`                                        |
+| **Provider error capture**            | Records invocation errors as string pointers in events and service info                                 | ✓ `recorder.go:367-375`                                        |
+| **JSON report export**                | Full `Report` as indented JSON to `io.Writer` or file                                                   | ✓ `plugin.go:88-120`                                           |
+| **NDJSON event stream**               | Each event as a JSON line to `io.Writer` or file                                                        | ✓ `plugin.go:102-125`                                          |
+| **Self-contained HTML visualization** | Dark-themed page with services table, scopes tab, dependency graph, timeline, events, responsive layout | ✓ `html.templ`                                                 |
+| **Dependency graph visualization**    | Force-directed SVG graph with status-colored nodes, tooltips, arrow endpoints at edges                  | ✓ `html.templ`                                                 |
+| **Timeline visualization**            | Dual horizontal bar chart: build duration (blue) + shutdown duration (yellow)                           | ✓ `html.templ`                                                 |
+| **Scopes tree visualization**         | Collapsible scope tree with service counts and name chips                                               | ✓ `html.templ`                                                 |
+| **HTML search & filter**              | Live search on services table, event type filter chips, keyboard tab navigation (1-5)                   | ✓ `html.templ`                                                 |
+| **Responsive HTML layout**            | Mobile-friendly with media queries, footer with schema version                                          | ✓ `html.templ`                                                 |
+| **Environment variable toggle**       | `DO_AUDITLOG_ENABLED` = true/1/yes enables without code change                                          | ✓ `plugin.go:56-64`                                            |
+| **Zero-cost disabled mode**           | `Enabled: false` → empty `InjectorOpts`, no hooks, no allocation                                        | ✓ `plugin.go:68-71`                                            |
+| **Explicit enable override**          | `Config.Enabled: true` overrides env var                                                                | ✓ `plugin.go:46-48`                                            |
+| **Container ID**                      | Human-readable identifier propagated to all events                                                      | ✓ `plugin.go:22-26`                                            |
+| **Concurrent-safe recording**         | 4-lock design: RWMutex for state, Mutex for stack, ordering, shutdown                                   | ✓ `recorder.go:59-76`                                          |
+| **Deterministic report output**       | Services sorted by (scope_name, service_name), scope tree sorted by scope ID                            | ✓ `recorder.go:429-434, sortedScopesLocked`                    |
+| **Transient provider support**        | Works with `do.ProvideTransient` — tracks multiple invocations                                          | ✓ Tested: `TestPlugin_ProvideTransient`                        |
+| **Value provider support**            | Works with `do.ProvideValue`                                                                            | ✓ Tested: `TestPlugin_ProvideValue`                            |
+| **Named service support**             | Works with `do.ProvideNamed` / `do.InvokeNamed`                                                         | ✓ Tested throughout                                            |
+| **Schema versioning**                 | `SchemaVersion` constant for forward compatibility                                                      | ✓ `types.go:6`                                                 |
+| **Defensive copies**                  | `Events()` and `Report()` return copies, not internal slices                                            | ✓ `recorder.go:544-550, 378-395`                               |
+| **Service lifecycle status**          | Computed `ServiceStatus` field: registered, active, invocation_error, shutdown, shutdown_error          | ✓ `types.go:ServiceStatus`, `recorder.go:computeServiceStatus` |
 
 ---
 
 ## PARTIALLY DONE
 
-| Feature | What's Done | What's Missing |
-|---------|-------------|----------------|
+| Feature              | What's Done                     | What's Missing                        |
+| -------------------- | ------------------------------- | ------------------------------------- |
 | **Schema migration** | `SchemaVersion` constant exists | No migration function for old exports |
 
 ---
 
 ## PLANNED
 
-| Feature | Description | Priority |
-|---------|-------------|----------|
-| **Report filtering** | Functional options to filter report by service, time range, event type | P2 |
-| **Event streaming callback** | `Config.EventHandler func(Event)` for real-time observability | P2 |
-| **Convenience methods on Event** | `IsRegistration()`, `IsInvocation()`, `IsShutdown()`, `IsBefore()`, `IsAfter()` | P3 |
-| **Config validation** | `Config.Validate() error` method | P3 |
-| **Additional export formats** | Mermaid diagram, PlantUML | Future |
+| Feature                          | Description                                                                     | Priority |
+| -------------------------------- | ------------------------------------------------------------------------------- | -------- |
+| **Report filtering**             | Functional options to filter report by service, time range, event type          | P2       |
+| **Event streaming callback**     | `Config.EventHandler func(Event)` for real-time observability                   | P2       |
+| **Convenience methods on Event** | `IsRegistration()`, `IsInvocation()`, `IsShutdown()`, `IsBefore()`, `IsAfter()` | P3       |
+| **Config validation**            | `Config.Validate() error` method                                                | P3       |
+| **Additional export formats**    | Mermaid diagram, PlantUML                                                       | Future   |
 
 ---
 
 ## NOT PLANNED (but worth considering)
 
-| Feature | Why Not Now |
-|---------|-------------|
-| **Multi-module split** | Project is too small (1 package, 1757 LOC) — revisit at 5+ packages |
-| **External storage backends** | YAGNI — file/io.Writer exports are sufficient |
-| **Metrics integration (Prometheus/OpenTelemetry)** | Out of scope for audit logging — use EventHandler when available |
+| Feature                                            | Why Not Now                                                         |
+| -------------------------------------------------- | ------------------------------------------------------------------- |
+| **Multi-module split**                             | Project is too small (1 package, 1757 LOC) — revisit at 5+ packages |
+| **External storage backends**                      | YAGNI — file/io.Writer exports are sufficient                       |
+| **Metrics integration (Prometheus/OpenTelemetry)** | Out of scope for audit logging — use EventHandler when available    |

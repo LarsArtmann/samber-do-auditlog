@@ -165,22 +165,22 @@ templ reportHTML(report Report) {
 					<input type="text" id="service-search" placeholder="Filter services..."/>
 				</div>
 				<div class="table-wrap">
-				<table>
-					<thead>
-						<tr>
-							<th>Service</th>
-							<th>Scope</th>
-							<th>Status</th>
-							<th>Order</th>
-							<th>Invocations</th>
-							<th>Build (ms)</th>
-							<th>Shutdown (ms)</th>
-							<th>Dependencies</th>
-							<th>Dependents</th>
-						</tr>
-					</thead>
-					<tbody id="services-tbody"></tbody>
-				</table>
+					<table>
+						<thead>
+							<tr>
+								<th>Service</th>
+								<th>Scope</th>
+								<th>Status</th>
+								<th>Order</th>
+								<th>Invocations</th>
+								<th>Build (ms)</th>
+								<th>Shutdown (ms)</th>
+								<th>Dependencies</th>
+								<th>Dependents</th>
+							</tr>
+						</thead>
+						<tbody id="services-tbody"></tbody>
+					</table>
 				</div>
 			</div>
 			<div class="tab-content" id="tab-scopes">
@@ -195,12 +195,12 @@ templ reportHTML(report Report) {
 			<div class="tab-content" id="tab-events">
 				<div class="filter-bar" id="event-filters"></div>
 				<div class="table-wrap">
-				<table>
-					<thead>
-						<tr><th>#</th><th>Time</th><th>Type</th><th>Phase</th><th>Scope</th><th>Service</th><th>Duration</th><th>Error</th></tr>
-					</thead>
-					<tbody id="events-tbody"></tbody>
-				</table>
+					<table>
+						<thead>
+							<tr><th>#</th><th>Time</th><th>Type</th><th>Phase</th><th>Scope</th><th>Service</th><th>Duration</th><th>Error</th></tr>
+						</thead>
+						<tbody id="events-tbody"></tbody>
+					</table>
 				</div>
 			</div>
 			<div id="error-tooltip" class="tooltip"></div>

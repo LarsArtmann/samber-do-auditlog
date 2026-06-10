@@ -7,72 +7,72 @@ Every term below should mean the **same thing** to everyone who reads it.
 
 ## Glossary
 
-| Term | Definition | Context |
-|------|-----------|---------|
-| Audit Log | The complete record of DI container lifecycle events | What this library produces |
-| Plugin | The top-level entry point that wires into samber/do hooks | `auditlog.New()` creates one |
-| Recorder | The internal state machine that captures and stores events | In-memory event capture |
-| Event | A single timestamped observation from the DI container | Core domain concept |
-| Service | A named dependency registered in the DI container | samber/do service |
-| Scope | A hierarchical context for service isolation | samber/do scope |
-| Container | The DI container (samber/do Injector) | Host for services |
-| Invocation | The act of resolving/creating a service instance | Service lifecycle phase |
-| Registration | The act of declaring a service provider to the container | Service lifecycle phase |
-| Shutdown | The act of cleaning up a service when the container shuts down | Service lifecycle phase |
-| Phase | Whether an event is the start (before) or end (after) of an operation | Event attribute |
-| Dependency | A service that another service needs to function | A→B relationship |
-| Dependent | A service that depends on another service | Reverse of dependency |
-| Scope Tree | The hierarchical structure of scopes in the container | Visualization concept |
-| Report | A consolidated snapshot of all captured events and service metadata | Export output |
-| Schema Version | The version of the report data format | Forward compatibility |
+| Term           | Definition                                                            | Context                      |
+| -------------- | --------------------------------------------------------------------- | ---------------------------- |
+| Audit Log      | The complete record of DI container lifecycle events                  | What this library produces   |
+| Plugin         | The top-level entry point that wires into samber/do hooks             | `auditlog.New()` creates one |
+| Recorder       | The internal state machine that captures and stores events            | In-memory event capture      |
+| Event          | A single timestamped observation from the DI container                | Core domain concept          |
+| Service        | A named dependency registered in the DI container                     | samber/do service            |
+| Scope          | A hierarchical context for service isolation                          | samber/do scope              |
+| Container      | The DI container (samber/do Injector)                                 | Host for services            |
+| Invocation     | The act of resolving/creating a service instance                      | Service lifecycle phase      |
+| Registration   | The act of declaring a service provider to the container              | Service lifecycle phase      |
+| Shutdown       | The act of cleaning up a service when the container shuts down        | Service lifecycle phase      |
+| Phase          | Whether an event is the start (before) or end (after) of an operation | Event attribute              |
+| Dependency     | A service that another service needs to function                      | A→B relationship             |
+| Dependent      | A service that depends on another service                             | Reverse of dependency        |
+| Scope Tree     | The hierarchical structure of scopes in the container                 | Visualization concept        |
+| Report         | A consolidated snapshot of all captured events and service metadata   | Export output                |
+| Schema Version | The version of the report data format                                 | Forward compatibility        |
 
 ## Entities
 
-| Term | Definition | Context |
-|------|-----------|---------|
-| Plugin | The user-facing object that wraps a Recorder and provides export methods | Created by `New()` |
-| Recorder | The internal state machine: event capture, dependency inference, aggregation | Created by `NewRecorder()` |
-| Event | A single lifecycle observation with sequence, timestamp, type, phase, scope, service | Immutable after creation |
-| ServiceInfo | Aggregated data for one service across its entire lifecycle | Computed at report time |
-| ScopeNode | A node in the scope hierarchy tree | Computed at report time |
+| Term        | Definition                                                                           | Context                    |
+| ----------- | ------------------------------------------------------------------------------------ | -------------------------- |
+| Plugin      | The user-facing object that wraps a Recorder and provides export methods             | Created by `New()`         |
+| Recorder    | The internal state machine: event capture, dependency inference, aggregation         | Created by `NewRecorder()` |
+| Event       | A single lifecycle observation with sequence, timestamp, type, phase, scope, service | Immutable after creation   |
+| ServiceInfo | Aggregated data for one service across its entire lifecycle                          | Computed at report time    |
+| ScopeNode   | A node in the scope hierarchy tree                                                   | Computed at report time    |
 
 ## Value Objects
 
-| Term | Definition | Context |
-|------|-----------|---------|
-| Config | Plugin configuration: Enabled flag, ContainerID | Input to `New()` |
-| EventType | Enum: registration, invocation, shutdown | Event categorization |
-| Phase | Enum: before, after | Event timing |
+| Term          | Definition                                               | Context                |
+| ------------- | -------------------------------------------------------- | ---------------------- |
+| Config        | Plugin configuration: Enabled flag, ContainerID          | Input to `New()`       |
+| EventType     | Enum: registration, invocation, shutdown                 | Event categorization   |
+| Phase         | Enum: before, after                                      | Event timing           |
 | DependencyRef | A lightweight reference to a service in a specific scope | Dependency graph edges |
-| Report | A complete, self-contained snapshot of all audit data | Export payload |
+| Report        | A complete, self-contained snapshot of all audit data    | Export payload         |
 
 ## Events
 
-| Term | Definition | Context |
-|------|-----------|---------|
-| Registration Event | Fired when a service provider is registered to the container | Before and after |
-| Invocation Event | Fired when a service is resolved/created | Before and after, includes duration |
-| Shutdown Event | Fired when a service is cleaned up during container shutdown | Before and after, includes duration |
+| Term               | Definition                                                   | Context                             |
+| ------------------ | ------------------------------------------------------------ | ----------------------------------- |
+| Registration Event | Fired when a service provider is registered to the container | Before and after                    |
+| Invocation Event   | Fired when a service is resolved/created                     | Before and after, includes duration |
+| Shutdown Event     | Fired when a service is cleaned up during container shutdown | Before and after, includes duration |
 
 ## Commands
 
-| Term | Definition | Context |
-|------|-----------|---------|
-| New | Create a new audit log plugin | Entry point |
-| Opts | Get DI container hook options | Wire into samber/do |
-| Report | Get a snapshot of all captured data | Read operation |
-| ExportToFile | Write JSON report to a file path | Export command |
-| ExportEventsToNDJSON | Write NDJSON event stream to a file path | Export command |
-| ExportToHTML | Write self-contained HTML visualization to a file path | Export command |
+| Term                 | Definition                                             | Context             |
+| -------------------- | ------------------------------------------------------ | ------------------- |
+| New                  | Create a new audit log plugin                          | Entry point         |
+| Opts                 | Get DI container hook options                          | Wire into samber/do |
+| Report               | Get a snapshot of all captured data                    | Read operation      |
+| ExportToFile         | Write JSON report to a file path                       | Export command      |
+| ExportEventsToNDJSON | Write NDJSON event stream to a file path               | Export command      |
+| ExportToHTML         | Write self-contained HTML visualization to a file path | Export command      |
 
 ## Bounded Contexts
 
-| Context | Description |
-|---------|-------------|
-| Capture | Hook callbacks, event recording, dependency inference (recorder.go) |
-| Aggregation | Building reports, scope trees, dependency graphs (recorder.go BuildReport*) |
-| Export | Formatting and writing: JSON, NDJSON, HTML (plugin.go, html.go) |
-| Configuration | Plugin setup, environment variable handling (plugin.go) |
+| Context       | Description                                                                  |
+| ------------- | ---------------------------------------------------------------------------- |
+| Capture       | Hook callbacks, event recording, dependency inference (recorder.go)          |
+| Aggregation   | Building reports, scope trees, dependency graphs (recorder.go BuildReport\*) |
+| Export        | Formatting and writing: JSON, NDJSON, HTML (plugin.go, html.go)              |
+| Configuration | Plugin setup, environment variable handling (plugin.go)                      |
 
 ---
 

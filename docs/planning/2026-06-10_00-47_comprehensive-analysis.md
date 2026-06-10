@@ -6,21 +6,22 @@
 
 ## Skill Results Summary
 
-| Skill | Result | Grade |
-|-------|--------|-------|
-| code-quality-scan | Build ✓, Vet ✓, Tests ✓, Lint: 0 issues, 1 minor clone pair | A |
-| naming-review | 0 honesty issues, 0 split brains, excellent naming | A |
-| full-code-review | 7 files reviewed, clean architecture, well-composed | A- |
-| architecture-review | Single package, correct for project size, clean data flow | A |
-| go-modularize | **Do NOT modularize** — 3/3 high signals against | N/A |
-| docs-freshness-check | DOMAIN_LANGUAGE.md is template, CHANGELOG.md stale | B- |
-| features-audit | See FEATURES.md | A- |
+| Skill                | Result                                                      | Grade |
+| -------------------- | ----------------------------------------------------------- | ----- |
+| code-quality-scan    | Build ✓, Vet ✓, Tests ✓, Lint: 0 issues, 1 minor clone pair | A     |
+| naming-review        | 0 honesty issues, 0 split brains, excellent naming          | A     |
+| full-code-review     | 7 files reviewed, clean architecture, well-composed         | A-    |
+| architecture-review  | Single package, correct for project size, clean data flow   | A     |
+| go-modularize        | **Do NOT modularize** — 3/3 high signals against            | N/A   |
+| docs-freshness-check | DOMAIN_LANGUAGE.md is template, CHANGELOG.md stale          | B-    |
+| features-audit       | See FEATURES.md                                             | A-    |
 
 ---
 
 ## Key Findings
 
 ### Strengths
+
 1. Clean, honest naming throughout — no lying names, no vague verbs
 2. Proper concurrency model with 4 separate locks for different concerns
 3. Zero-cost disabled mode — empty `InjectorOpts` when off
@@ -30,26 +31,26 @@
 
 ### Issues Found
 
-| # | Severity | File | Issue | Fix |
-|---|----------|------|-------|-----|
-| 1 | 🟡 Medium | `recorder.go:208` | `parentKey` duplicates `scopeKey()` logic | Use consistent key construction |
-| 2 | 🟡 Medium | `DOMAIN_LANGUAGE.md` | Template content, no actual domain terms | Fill with project vocabulary |
-| 3 | 🟡 Medium | `CHANGELOG.md` | Only "Initial release" entries | Update with actual development history |
-| 4 | 🔵 Low | `html.templ:157` | Dead `classList &&` check in JS | Remove |
-| 5 | 🔵 Low | `auditlog_test.go` | `contains()`/`searchString()` reimplement `strings.Contains` | Use stdlib |
-| 6 | 🔵 Low | No concurrent test | Recorder has 4 locks but no concurrent test | Add |
-| 7 | 🔵 Low | No empty container test | Edge case not covered | Add |
+| #   | Severity  | File                    | Issue                                                        | Fix                                    |
+| --- | --------- | ----------------------- | ------------------------------------------------------------ | -------------------------------------- |
+| 1   | 🟡 Medium | `recorder.go:208`       | `parentKey` duplicates `scopeKey()` logic                    | Use consistent key construction        |
+| 2   | 🟡 Medium | `DOMAIN_LANGUAGE.md`    | Template content, no actual domain terms                     | Fill with project vocabulary           |
+| 3   | 🟡 Medium | `CHANGELOG.md`          | Only "Initial release" entries                               | Update with actual development history |
+| 4   | 🔵 Low    | `html.templ:157`        | Dead `classList &&` check in JS                              | Remove                                 |
+| 5   | 🔵 Low    | `auditlog_test.go`      | `contains()`/`searchString()` reimplement `strings.Contains` | Use stdlib                             |
+| 6   | 🔵 Low    | No concurrent test      | Recorder has 4 locks but no concurrent test                  | Add                                    |
+| 7   | 🔵 Low    | No empty container test | Edge case not covered                                        | Add                                    |
 
 ### Architecture Recommendations (Future)
 
-| Priority | Recommendation | When |
-|----------|---------------|------|
-| P2 | Add `ReportOption` for filtering reports | When consumers need selective data |
-| P2 | Add `EventHandler` callback in Config | When real-time streaming is needed |
-| P3 | Add convenience methods on `Event` (`IsRegistration()`, etc.) | When API surface expands |
-| P3 | Add `Config.Validate() error` | When Config grows more options |
-| Future | Consider splitting Recorder into EventCollector + ServiceAggregator | When file exceeds 600 lines |
-| Future | Consider HTML visualization as sub-package | When more export formats added |
+| Priority | Recommendation                                                      | When                               |
+| -------- | ------------------------------------------------------------------- | ---------------------------------- |
+| P2       | Add `ReportOption` for filtering reports                            | When consumers need selective data |
+| P2       | Add `EventHandler` callback in Config                               | When real-time streaming is needed |
+| P3       | Add convenience methods on `Event` (`IsRegistration()`, etc.)       | When API surface expands           |
+| P3       | Add `Config.Validate() error`                                       | When Config grows more options     |
+| Future   | Consider splitting Recorder into EventCollector + ServiceAggregator | When file exceeds 600 lines        |
+| Future   | Consider HTML visualization as sub-package                          | When more export formats added     |
 
 ---
 
@@ -130,17 +131,17 @@ phase1 -> phase2 -> phase3
 
 ## Task Breakdown (15min each max)
 
-| # | Task | Effort | Priority | File |
-|---|------|--------|----------|------|
-| 1 | Fill DOMAIN_LANGUAGE.md | 10min | P0 | `docs/DOMAIN_LANGUAGE.md` |
-| 2 | Update CHANGELOG.md | 10min | P0 | `CHANGELOG.md` |
-| 3 | Fix parentKey in OnBeforeInvocation | 5min | P1 | `recorder.go` |
-| 4 | Remove dead classList check | 2min | P2 | `html.templ` |
-| 5 | Use strings.Contains in tests | 5min | P2 | `auditlog_test.go` |
-| 6 | Add concurrent Recorder test | 15min | P1 | `auditlog_test.go` |
-| 7 | Add empty container test | 10min | P2 | `auditlog_test.go` |
-| 8 | Create FEATURES.md | 15min | P1 | `FEATURES.md` |
-| 9 | Create TODO_LIST.md | 15min | P1 | `TODO_LIST.md` |
-| 10 | Generate D2 architecture diagrams | 15min | P2 | `docs/architecture-understanding/` |
-| 11 | Update AGENTS.md | 10min | P2 | `AGENTS.md` |
-| 12 | Verify docs freshness | 10min | P2 | All docs |
+| #   | Task                                | Effort | Priority | File                               |
+| --- | ----------------------------------- | ------ | -------- | ---------------------------------- |
+| 1   | Fill DOMAIN_LANGUAGE.md             | 10min  | P0       | `docs/DOMAIN_LANGUAGE.md`          |
+| 2   | Update CHANGELOG.md                 | 10min  | P0       | `CHANGELOG.md`                     |
+| 3   | Fix parentKey in OnBeforeInvocation | 5min   | P1       | `recorder.go`                      |
+| 4   | Remove dead classList check         | 2min   | P2       | `html.templ`                       |
+| 5   | Use strings.Contains in tests       | 5min   | P2       | `auditlog_test.go`                 |
+| 6   | Add concurrent Recorder test        | 15min  | P1       | `auditlog_test.go`                 |
+| 7   | Add empty container test            | 10min  | P2       | `auditlog_test.go`                 |
+| 8   | Create FEATURES.md                  | 15min  | P1       | `FEATURES.md`                      |
+| 9   | Create TODO_LIST.md                 | 15min  | P1       | `TODO_LIST.md`                     |
+| 10  | Generate D2 architecture diagrams   | 15min  | P2       | `docs/architecture-understanding/` |
+| 11  | Update AGENTS.md                    | 10min  | P2       | `AGENTS.md`                        |
+| 12  | Verify docs freshness               | 10min  | P2       | All docs                           |
