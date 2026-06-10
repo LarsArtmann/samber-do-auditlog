@@ -257,17 +257,8 @@ func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
 	now := time.Now()
 	seq := r.nextSequence()
 
-	evt := Event{
-		Sequence:    seq,
-		Timestamp:   now,
-		EventType:   EventTypeRegistration,
-		Phase:       PhaseBefore,
-		ContainerID: r.containerID,
-		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
-		ServiceType: "",
-		DurationMs:  nil,
-		Error:       nil,
-	}
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(seq, now, EventTypeRegistration, PhaseBefore, ref, r.containerID, "", nil, nil)
 
 	r.mu.Lock()
 	r.recordScopeLocked(scopeID, scopeName, scope)
@@ -300,17 +291,8 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 		svcType = rec.serviceType
 	}
 
-	evt := Event{
-		Sequence:    seq,
-		Timestamp:   now,
-		EventType:   EventTypeRegistration,
-		Phase:       PhaseAfter,
-		ContainerID: r.containerID,
-		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
-		ServiceType: svcType,
-		DurationMs:  nil,
-		Error:       nil,
-	}
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(seq, now, EventTypeRegistration, PhaseAfter, ref, r.containerID, svcType, nil, nil)
 	r.events = append(r.events, evt)
 
 	r.mu.Unlock()
@@ -359,17 +341,8 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 		svcType = rec.serviceType
 	}
 
-	evt := Event{
-		Sequence:    seq,
-		Timestamp:   now,
-		EventType:   EventTypeInvocation,
-		Phase:       PhaseBefore,
-		ContainerID: r.containerID,
-		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
-		ServiceType: svcType,
-		DurationMs:  nil,
-		Error:       nil,
-	}
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(seq, now, EventTypeInvocation, PhaseBefore, ref, r.containerID, svcType, nil, nil)
 	r.events = append(r.events, evt)
 
 	r.mu.Unlock()
@@ -414,17 +387,8 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 		svcType = rec.serviceType
 	}
 
-	evt := Event{
-		Sequence:    seq,
-		Timestamp:   now,
-		EventType:   EventTypeInvocation,
-		Phase:       PhaseAfter,
-		ContainerID: r.containerID,
-		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
-		ServiceType: svcType,
-		DurationMs:  durationMs,
-		Error:       errStr,
-	}
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(seq, now, EventTypeInvocation, PhaseAfter, ref, r.containerID, svcType, durationMs, errStr)
 	r.events = append(r.events, evt)
 
 	r.updateInvocationAggregate(scopeID, scopeName, serviceName, now, svcType, durationMs, errStr)
@@ -487,17 +451,8 @@ func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
 		svcType = rec.serviceType
 	}
 
-	evt := Event{
-		Sequence:    seq,
-		Timestamp:   now,
-		EventType:   EventTypeShutdown,
-		Phase:       PhaseBefore,
-		ContainerID: r.containerID,
-		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
-		ServiceType: svcType,
-		DurationMs:  nil,
-		Error:       nil,
-	}
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(seq, now, EventTypeShutdown, PhaseBefore, ref, r.containerID, svcType, nil, nil)
 	r.events = append(r.events, evt)
 
 	r.mu.Unlock()
@@ -536,17 +491,8 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 		svcType = rec.serviceType
 	}
 
-	evt := Event{
-		Sequence:    seq,
-		Timestamp:   now,
-		EventType:   EventTypeShutdown,
-		Phase:       PhaseAfter,
-		ContainerID: r.containerID,
-		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
-		ServiceType: svcType,
-		DurationMs:  nil,
-		Error:       errStr,
-	}
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(seq, now, EventTypeShutdown, PhaseAfter, ref, r.containerID, svcType, nil, errStr)
 	r.events = append(r.events, evt)
 
 	if rec, ok := r.services[key]; ok {
