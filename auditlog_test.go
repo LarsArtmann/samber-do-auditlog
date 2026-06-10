@@ -1335,10 +1335,16 @@ func TestReport_EventsByType(t *testing.T) {
 	}
 }
 
+// errWriteFailed is a static error for failingWriter.
+var errWriteFailed = errors.New("write failed")
+
+// errConnectionRefused is a static error for flaky provider tests.
+var errConnectionRefused = errors.New("connection refused")
+
 type failingWriter struct{}
 
 func (failingWriter) Write([]byte) (int, error) {
-	return 0, errors.New("write failed")
+	return 0, errWriteFailed
 }
 
 func TestPlugin_WriteReportJSONErrorPath(t *testing.T) {
@@ -1406,9 +1412,11 @@ func TestPlugin_EventServiceType(t *testing.T) {
 	}
 
 	hasType := false
+
 	for _, e := range report.Events {
 		if e.ServiceType == auditlog.ProviderTypeEager {
 			hasType = true
+
 			break
 		}
 	}
@@ -1769,6 +1777,7 @@ func TestPlugin_HealthCheckOnEventCallback(t *testing.T) {
 	_ = p.RecordHealthCheck(injector)
 
 	var healthCallbacks []auditlog.Event
+
 	for _, e := range captured {
 		if e.IsHealthCheck() {
 			healthCallbacks = append(healthCallbacks, e)
@@ -1847,7 +1856,7 @@ func TestPlugin_HealthCheckJSONExport(t *testing.T) {
 		t.Fatalf("WriteReportJSON: %v", err)
 	}
 
-	var report map[string]interface{}
+	var report map[string]any
 
 	err = json.Unmarshal(buf.Bytes(), &report)
 	if err != nil {
@@ -1858,13 +1867,13 @@ func TestPlugin_HealthCheckJSONExport(t *testing.T) {
 		t.Error("expected health_check_succeeded to be false")
 	}
 
-	services, ok := report["services"].([]interface{})
+	services, ok := report["services"].([]any)
 	if !ok {
 		t.Fatal("services should be an array")
 	}
 
 	for _, svc := range services {
-		svcMap, ok := svc.(map[string]interface{})
+		svcMap, ok := svc.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1900,7 +1909,7 @@ func TestPlugin_HealthCheckNDJSONExport(t *testing.T) {
 	foundHealthCheck := false
 
 	for _, line := range lines {
-		var evt map[string]interface{}
+		var evt map[string]any
 
 		err := json.Unmarshal([]byte(line), &evt)
 		if err != nil {
@@ -1954,13 +1963,14 @@ func TestReport_FailedServices(t *testing.T) {
 
 	provideDB(injector, "db", "test")
 	do.ProvideNamed(injector, "flaky", func(i do.Injector) (*Database, error) {
-		return nil, errors.New("connection refused")
+		return nil, errConnectionRefused
 	})
 
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 	_, _ = do.InvokeNamed[*Database](injector, "flaky")
 
 	report := p.Report()
+
 	failed := report.FailedServices()
 	if len(failed) != 1 {
 		t.Fatalf("expected 1 failed service, got %d", len(failed))
@@ -2008,6 +2018,7 @@ func TestServiceRef_String(t *testing.T) {
 		})
 	}
 }
+
 func TestConfig_Validate(t *testing.T) {
 	err := auditlog.Config{}.Validate()
 	if err != nil {
