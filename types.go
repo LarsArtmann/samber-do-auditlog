@@ -132,6 +132,7 @@ func (r Report) ServiceByName(name string) *ServiceInfo {
 // EventsByType returns all events matching the given event type.
 func (r Report) EventsByType(t EventType) []Event {
 	var result []Event
+
 	for _, e := range r.Events {
 		if e.EventType == t {
 			result = append(result, e)
@@ -144,6 +145,7 @@ func (r Report) EventsByType(t EventType) []Event {
 // FailedServices returns all services with invocation or shutdown errors.
 func (r Report) FailedServices() []ServiceInfo {
 	var failed []ServiceInfo
+
 	for _, s := range r.Services {
 		if s.Status.IsError() {
 			failed = append(failed, s)
