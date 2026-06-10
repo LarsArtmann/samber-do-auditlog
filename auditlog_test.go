@@ -2,6 +2,7 @@ package auditlog_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -1067,6 +1068,7 @@ func TestEvent_ConvenienceMethods(t *testing.T) {
 		wantReg    bool
 		wantInv    bool
 		wantShut   bool
+		wantHealth bool
 		wantBefore bool
 		wantAfter  bool
 	}{
@@ -1082,6 +1084,10 @@ func TestEvent_ConvenienceMethods(t *testing.T) {
 			event:    auditlog.Event{EventType: auditlog.EventTypeShutdown, Phase: auditlog.PhaseBefore},
 			wantShut: true, wantBefore: true,
 		},
+		{
+			event:      auditlog.Event{EventType: auditlog.EventTypeHealthCheck, Phase: auditlog.PhaseAfter},
+			wantHealth: true, wantAfter: true,
+		},
 	}
 
 	for i, tc := range events {
@@ -1095,6 +1101,10 @@ func TestEvent_ConvenienceMethods(t *testing.T) {
 
 		if got := tc.event.IsShutdown(); got != tc.wantShut {
 			t.Errorf("case %d: IsShutdown() = %v, want %v", i, got, tc.wantShut)
+		}
+
+		if got := tc.event.IsHealthCheck(); got != tc.wantHealth {
+			t.Errorf("case %d: IsHealthCheck() = %v, want %v", i, got, tc.wantHealth)
 		}
 
 		if got := tc.event.IsBefore(); got != tc.wantBefore {
@@ -1181,6 +1191,55 @@ func TestPlugin_ScopeTreeWithMultipleChildren(t *testing.T) {
 	}
 }
 
+func TestPlugin_ServiceTypeCapture(t *testing.T) {
+	t.Run("eager", func(t *testing.T) {
+		p := auditlog.New(auditlog.Config{Enabled: true})
+		injector := do.NewWithOpts(p.Opts())
+
+		do.ProvideValue(injector, &Database{URL: "test"})
+		_ = do.MustInvoke[*Database](injector)
+
+		report := p.Report()
+		if len(report.Services) != 1 {
+			t.Fatalf("expected 1 service, got %d", len(report.Services))
+		}
+
+		if report.Services[0].ServiceType != "eager" {
+			t.Errorf("expected service_type=eager, got %q", report.Services[0].ServiceType)
+		}
+	})
+
+	t.Run("lazy", func(t *testing.T) {
+		p := auditlog.New(auditlog.Config{Enabled: true})
+		injector := do.NewWithOpts(p.Opts())
+
+		do.Provide(injector, func(i do.Injector) (*Database, error) {
+			return &Database{URL: "test"}, nil
+		})
+		_ = do.MustInvoke[*Database](injector)
+
+		report := p.Report()
+		if report.Services[0].ServiceType != "lazy" {
+			t.Errorf("expected service_type=lazy, got %q", report.Services[0].ServiceType)
+		}
+	})
+
+	t.Run("transient", func(t *testing.T) {
+		p := auditlog.New(auditlog.Config{Enabled: true})
+		injector := do.NewWithOpts(p.Opts())
+
+		do.ProvideTransient(injector, func(i do.Injector) (*Database, error) {
+			return &Database{URL: "test"}, nil
+		})
+		_ = do.MustInvoke[*Database](injector)
+
+		report := p.Report()
+		if report.Services[0].ServiceType != "transient" {
+			t.Errorf("expected service_type=transient, got %q", report.Services[0].ServiceType)
+		}
+	})
+}
+
 func TestPlugin_ShutdownWithErrors(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
@@ -1204,5 +1263,294 @@ func TestPlugin_ShutdownWithErrors(t *testing.T) {
 
 	if report.Services[0].ShutdownError == nil {
 		t.Error("expected shutdown error to be captured")
+	}
+}
+
+// --- Health check test types ---
+
+type HealthyDB struct {
+	DSN string
+}
+
+var _ do.Healthchecker = (*HealthyDB)(nil)
+
+func (d *HealthyDB) HealthCheck() error {
+	return nil
+}
+
+type UnhealthyCache struct {
+	Reason string
+}
+
+var _ do.HealthcheckerWithContext = (*UnhealthyCache)(nil)
+
+var errCacheUnhealthy = errors.New("cache: unhealthy")
+
+func (c *UnhealthyCache) HealthCheck(_ context.Context) error {
+	return errCacheUnhealthy
+}
+
+// --- Health check tests ---
+
+func TestPlugin_HealthCheckHealthy(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: "postgres://localhost"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
+
+	results := p.RecordHealthCheck(injector)
+	if len(results) == 0 {
+		t.Fatal("expected health check results")
+	}
+
+	report := p.Report()
+
+	svc := findServiceByName(t, report, "db")
+	if svc == nil {
+		t.Fatal("db not found in report")
+	}
+
+	if svc.HealthCheckCount != 1 {
+		t.Errorf("health_check_count: want 1, got %d", svc.HealthCheckCount)
+	}
+
+	if svc.LastHealthCheckAt == nil {
+		t.Error("expected LastHealthCheckAt to be set")
+	}
+
+	if svc.HealthCheckError != nil {
+		t.Errorf("expected no health check error, got %s", *svc.HealthCheckError)
+	}
+
+	if svc.HealthCheckDurationMs == nil {
+		t.Error("expected HealthCheckDurationMs to be set")
+	}
+}
+
+func TestPlugin_HealthCheckUnhealthy(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "cache", func(i do.Injector) (*UnhealthyCache, error) {
+		return &UnhealthyCache{Reason: "connection lost"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*UnhealthyCache](injector, "cache")
+
+	results := p.RecordHealthCheck(injector)
+	if len(results) == 0 {
+		t.Fatal("expected health check results")
+	}
+
+	report := p.Report()
+
+	svc := findServiceByName(t, report, "cache")
+	if svc == nil {
+		t.Fatal("cache not found in report")
+	}
+
+	if svc.HealthCheckError == nil {
+		t.Error("expected health check error to be set")
+	}
+
+	if *svc.HealthCheckError != "cache: unhealthy" {
+		t.Errorf("health check error: want 'cache: unhealthy', got %s", *svc.HealthCheckError)
+	}
+
+	if report.HealthCheckSucceeded {
+		t.Error("HealthCheckSucceeded should be false when a service is unhealthy")
+	}
+}
+
+func TestPlugin_HealthCheckMultipleServices(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: "postgres://localhost"}, nil
+	})
+	do.ProvideNamed(injector, "cache", func(i do.Injector) (*UnhealthyCache, error) {
+		return &UnhealthyCache{Reason: "connection lost"}, nil
+	})
+	do.ProvideNamed(injector, "plain", func(i do.Injector) (*Database, error) {
+		return &Database{URL: "test"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
+	_ = do.MustInvokeNamed[*UnhealthyCache](injector, "cache")
+	_ = do.MustInvokeNamed[*Database](injector, "plain")
+
+	_ = p.RecordHealthCheck(injector)
+
+	report := p.Report()
+
+	db := findServiceByName(t, report, "db")
+	if db == nil {
+		t.Fatal("db not found")
+	}
+
+	if db.HealthCheckCount != 1 {
+		t.Errorf("db health_check_count: want 1, got %d", db.HealthCheckCount)
+	}
+
+	if db.HealthCheckError != nil {
+		t.Errorf("db should be healthy, got error: %s", *db.HealthCheckError)
+	}
+
+	cache := findServiceByName(t, report, "cache")
+	if cache == nil {
+		t.Fatal("cache not found")
+	}
+
+	if cache.HealthCheckError == nil {
+		t.Error("cache should be unhealthy")
+	}
+}
+
+func TestPlugin_HealthCheckDisabled(t *testing.T) {
+	t.Setenv(auditlog.EnvKeyEnabled, "")
+
+	p := auditlog.New(auditlog.Config{})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: "test"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
+
+	results := p.RecordHealthCheck(injector)
+	if len(results) == 0 {
+		t.Fatal("disabled plugin should still delegate to injector")
+	}
+
+	report := p.Report()
+	if report.EventCount != 0 {
+		t.Errorf("expected 0 events when disabled, got %d", report.EventCount)
+	}
+}
+
+func TestPlugin_HealthCheckCount(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: "test"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
+
+	_ = p.RecordHealthCheck(injector)
+	_ = p.RecordHealthCheck(injector)
+
+	report := p.Report()
+
+	svc := findServiceByName(t, report, "db")
+	if svc == nil {
+		t.Fatal("db not found")
+	}
+
+	if svc.HealthCheckCount != 2 {
+		t.Errorf("health_check_count: want 2, got %d", svc.HealthCheckCount)
+	}
+
+	healthEvents := report.EventsByType(auditlog.EventTypeHealthCheck)
+	if len(healthEvents) != 2 {
+		t.Errorf("expected 2 health check events, got %d", len(healthEvents))
+	}
+}
+
+func TestPlugin_HealthCheckReport(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "db", func(i do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: "test"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
+
+	_ = p.RecordHealthCheck(injector)
+	report := p.Report()
+
+	if !report.HealthCheckSucceeded {
+		t.Error("HealthCheckSucceeded should be true when all services are healthy")
+	}
+
+	if report.HealthCheckedCount != 1 {
+		t.Errorf("HealthCheckedCount: want 1, got %d", report.HealthCheckedCount)
+	}
+}
+
+func TestPlugin_HealthCheckWithScope(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	child := injector.Scope("child")
+
+	do.ProvideNamed(injector, "root-db", func(i do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: "root"}, nil
+	})
+	do.ProvideNamed(child, "child-db", func(i do.Injector) (*HealthyDB, error) {
+		return &HealthyDB{DSN: "child"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "root-db")
+	_ = do.MustInvokeNamed[*HealthyDB](child, "child-db")
+
+	results := p.RecordHealthCheck(child)
+	if len(results) == 0 {
+		t.Fatal("expected health check results from child scope")
+	}
+
+	report := p.Report()
+
+	rootSvc := findServiceByName(t, report, "root-db")
+	if rootSvc == nil {
+		t.Fatal("root-db not found")
+	}
+
+	if rootSvc.HealthCheckCount != 1 {
+		t.Errorf("root-db health_check_count: want 1, got %d", rootSvc.HealthCheckCount)
+	}
+
+	childSvc := findServiceByName(t, report, "child-db")
+	if childSvc == nil {
+		t.Fatal("child-db not found")
+	}
+
+	if childSvc.HealthCheckCount != 1 {
+		t.Errorf("child-db health_check_count: want 1, got %d", childSvc.HealthCheckCount)
+	}
+}
+
+func TestPlugin_HealthCheckReportSucceeded(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideNamed(injector, "cache", func(i do.Injector) (*UnhealthyCache, error) {
+		return &UnhealthyCache{Reason: "down"}, nil
+	})
+
+	_ = do.MustInvokeNamed[*UnhealthyCache](injector, "cache")
+
+	_ = p.RecordHealthCheck(injector)
+	report := p.Report()
+
+	if report.HealthCheckSucceeded {
+		t.Error("HealthCheckSucceeded should be false when a service is unhealthy")
+	}
+
+	unhealthy := report.UnhealthyServices()
+	if len(unhealthy) != 1 {
+		t.Fatalf("expected 1 unhealthy service, got %d", len(unhealthy))
+	}
+
+	if unhealthy[0].ServiceName != "cache" {
+		t.Errorf("unhealthy service: want cache, got %s", unhealthy[0].ServiceName)
 	}
 }

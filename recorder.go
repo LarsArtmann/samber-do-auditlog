@@ -44,6 +44,11 @@ type serviceRecord struct {
 	shutdownDurationMs   *float64
 	invocationError      *string
 	shutdownError        *string
+
+	lastHealthCheckAt     *time.Time
+	healthCheckDurationMs *float64
+	healthCheckError      *string
+	healthCheckCount      int
 }
 
 type scopeMeta struct {
@@ -170,20 +175,24 @@ func newEvent(
 // newServiceRecord constructs a serviceRecord with all fields set.
 func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *serviceRecord {
 	return &serviceRecord{
-		scopeID:              scope.ID(),
-		scopeName:            scope.Name(),
-		serviceName:          serviceName,
-		serviceType:          inferServiceType(scope, serviceName),
-		registeredAt:         now,
-		firstInvokedAt:       nil,
-		invocationCount:      0,
-		invocationOrder:      0,
-		firstBuildDurationMs: nil,
-		dependencies:         make(map[string]struct{}),
-		shutdownAt:           nil,
-		shutdownDurationMs:   nil,
-		invocationError:      nil,
-		shutdownError:        nil,
+		scopeID:               scope.ID(),
+		scopeName:             scope.Name(),
+		serviceName:           serviceName,
+		serviceType:           inferServiceType(scope, serviceName),
+		registeredAt:          now,
+		firstInvokedAt:        nil,
+		invocationCount:       0,
+		invocationOrder:       0,
+		firstBuildDurationMs:  nil,
+		dependencies:          make(map[string]struct{}),
+		shutdownAt:            nil,
+		shutdownDurationMs:    nil,
+		invocationError:       nil,
+		shutdownError:         nil,
+		lastHealthCheckAt:     nil,
+		healthCheckDurationMs: nil,
+		healthCheckError:      nil,
+		healthCheckCount:      0,
 	}
 }
 
@@ -441,6 +450,8 @@ func (r *Recorder) BuildReport() Report {
 		TotalBuildDurationMs:    sumBuildMs(services),
 		TotalShutdownDurationMs: sumShutdownMs(services),
 		ShutdownSucceeded:       noShutdownErrors(services),
+		HealthCheckSucceeded:    allHealthChecksPassed(services),
+		HealthCheckedCount:      countHealthChecked(services),
 		Events:                  append([]Event(nil), r.events...),
 		Services:                services,
 		ScopeTree:               scopeTree,
@@ -467,19 +478,23 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 				ScopeID:     rec.scopeID,
 				ScopeName:   rec.scopeName,
 			},
-			Status:               computeServiceStatus(rec),
-			ServiceType:          rec.serviceType,
-			RegisteredAt:         rec.registeredAt,
-			FirstInvokedAt:       rec.firstInvokedAt,
-			InvocationCount:      rec.invocationCount,
-			InvocationOrder:      rec.invocationOrder,
-			FirstBuildDurationMs: rec.firstBuildDurationMs,
-			Dependencies:         deps,
-			Dependents:           svcDependents,
-			ShutdownAt:           rec.shutdownAt,
-			ShutdownDurationMs:   rec.shutdownDurationMs,
-			ShutdownError:        rec.shutdownError,
-			InvocationError:      rec.invocationError,
+			Status:                computeServiceStatus(rec),
+			ServiceType:           rec.serviceType,
+			RegisteredAt:          rec.registeredAt,
+			FirstInvokedAt:        rec.firstInvokedAt,
+			InvocationCount:       rec.invocationCount,
+			InvocationOrder:       rec.invocationOrder,
+			FirstBuildDurationMs:  rec.firstBuildDurationMs,
+			Dependencies:          deps,
+			Dependents:            svcDependents,
+			ShutdownAt:            rec.shutdownAt,
+			ShutdownDurationMs:    rec.shutdownDurationMs,
+			ShutdownError:         rec.shutdownError,
+			InvocationError:       rec.invocationError,
+			LastHealthCheckAt:     rec.lastHealthCheckAt,
+			HealthCheckDurationMs: rec.healthCheckDurationMs,
+			HealthCheckError:      rec.healthCheckError,
+			HealthCheckCount:      rec.healthCheckCount,
 		})
 	}
 
@@ -650,6 +665,110 @@ func noShutdownErrors(services []ServiceInfo) bool {
 	}
 
 	return true
+}
+
+func countHealthChecked(services []ServiceInfo) int {
+	count := 0
+
+	for _, s := range services {
+		if s.HealthCheckCount > 0 {
+			count++
+		}
+	}
+
+	return count
+}
+
+func allHealthChecksPassed(services []ServiceInfo) bool {
+	for _, s := range services {
+		if s.HealthCheckCount > 0 && s.HealthCheckError != nil {
+			return false
+		}
+	}
+
+	return true
+}
+
+// RecordHealthCheck records a single health check result for a service.
+func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err error, durationMs float64) {
+	now := time.Now()
+	errStr := errorToStringPtr(err)
+
+	seq := r.nextSequence()
+
+	r.addEvent(Event{
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   EventTypeHealthCheck,
+		Phase:       PhaseAfter,
+		ContainerID: r.containerID,
+		ServiceRef: ServiceRef{
+			ScopeID:     scopeID,
+			ScopeName:   scopeName,
+			ServiceName: serviceName,
+		},
+		DurationMs: &durationMs,
+		Error:      errStr,
+	})
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	key := serviceKey(scopeID, serviceName)
+
+	rec, ok := r.services[key]
+	if !ok {
+		rec = &serviceRecord{
+			scopeID:               scopeID,
+			scopeName:             scopeName,
+			serviceName:           serviceName,
+			serviceType:           "",
+			registeredAt:          now,
+			firstInvokedAt:        nil,
+			invocationCount:       0,
+			invocationOrder:       0,
+			firstBuildDurationMs:  nil,
+			dependencies:          make(map[string]struct{}),
+			shutdownAt:            nil,
+			shutdownDurationMs:    nil,
+			invocationError:       nil,
+			shutdownError:         nil,
+			lastHealthCheckAt:     nil,
+			healthCheckDurationMs: nil,
+			healthCheckError:      nil,
+			healthCheckCount:      0,
+		}
+		r.services[key] = rec
+	}
+
+	rec.lastHealthCheckAt = &now
+	rec.healthCheckDurationMs = &durationMs
+	rec.healthCheckError = errStr
+	rec.healthCheckCount++
+}
+
+// ResolveServiceScope finds the scope metadata for a service by name.
+// Returns (scopeID, scopeName, true) if found, or ("", "", false) otherwise.
+func (r *Recorder) ResolveServiceScope(injector do.Injector, serviceName string) (string, string, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	// Check by injector's scope ID first (handles both RootScope and Scope).
+	injectorScopeID := injector.ID()
+	if rec, ok := r.services[serviceKey(injectorScopeID, serviceName)]; ok {
+		return rec.scopeID, rec.scopeName, true
+	}
+
+	// Walk ancestor scopes (only relevant for child scopes).
+	if scope, ok := injector.(*do.Scope); ok {
+		for _, ancestor := range scope.Ancestors() {
+			if rec, ok := r.services[serviceKey(ancestor.ID(), serviceName)]; ok {
+				return rec.scopeID, rec.scopeName, true
+			}
+		}
+	}
+
+	return "", "", false
 }
 
 // Events returns a defensive copy of all captured events.

@@ -42,6 +42,7 @@ doc.go           — Package doc comment
 3. Invocation stack (`Recorder.stack`) infers dependencies: if service A is on-stack when B's before-hook fires, A→B is a dependency
 4. `Report()` / `BuildReport()` assembles `ServiceInfo` slice (with forward + reverse deps), scope tree, and event stream
 5. Export methods serialize to JSON, NDJSON, or self-contained HTML
+6. Health checks: user calls `plugin.RecordHealthCheck[WithContext](injector)` instead of `injector.HealthCheck()` — wrapper records `EventTypeHealthCheck` events per service
 
 ### Concurrency Model
 
@@ -83,7 +84,13 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **`buildScopeTreeLocked`** uses `sortedScopesLocked()` to iterate scopes deterministically (sorted by scope ID), since map iteration order is non-deterministic in Go.
 - **`serviceKey(scopeID, serviceName)`** is the single canonical function for the `scopeID + "/" + serviceName` key format. `scopeKey()` delegates to it.
 - **`ServiceRef`** (renamed from `DependencyRef`) is embedded in `Event` and `ServiceInfo` — single source of truth for service identity (ScopeID, ScopeName, ServiceName). JSON output is flat because Go flattens embedded struct fields.
+- **`ServiceType`** is captured via `do.ExplainNamedService(scope, serviceName)` in `OnAfterRegistration` → `inferServiceType()`. Uses the public `ExplainNamedService` API to get the provider type (lazy/eager/transient/alias). Empty string if the type cannot be determined.
 - **`Config.OnEvent`** callback is called after each event is captured, outside the mutex lock. Must not block. Enables real-time observability (Prometheus, OTel, live dashboards) without polling.
+- **Health checks use a wrapper pattern**, not hooks. samber/do v2 has no `HookBeforeHealthCheck`/`HookAfterHealthCheck` in `InjectorOpts`. The plugin provides `RecordHealthCheck[WithContext](injector)` which wraps `injector.HealthCheckWithContext()`, records `EventTypeHealthCheck` events (PhaseAfter only), and updates `ServiceInfo` health fields. When disabled, delegates directly to the injector without recording.
+- **`ResolveServiceScope`** resolves scope metadata from our `serviceRecord` map by service name. Handles both `*do.RootScope` (from `do.NewWithOpts`) and `*do.Scope` (from `injector.Scope()`). Returns `(scopeID, scopeName, found)` — no `*do.Scope` needed since `RecordHealthCheck` on Recorder takes metadata strings directly.
+- **Health check events are `PhaseAfter` only** — unlike registration/invocation/shutdown which have before+after phases. There's no interception point before the bulk health check runs.
+- **HTML visualization uses samber/do's emoji set**: 😴 lazy, 🔁 eager, 🏭 transient, 🔗 alias. These appear in the services table (icon + type badge column), scope tree service chips, dependency graph node labels, and timeline labels. Status badges also use colored circle emojis: ⚪ registered, 🟢 active, 🔵 shutdown, 🔴 error.
+- **HTML redesign**: Dark observability dashboard aesthetic with JetBrains Mono + DM Sans fonts, color-coded type badges (purple=lazy, blue=eager, orange=transient, green=alias), animated tab transitions, stat cards with hover glow effects, and a legend showing type distribution counts.
 
 ---
 
@@ -94,33 +101,36 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - `t.Setenv()` for testing `DO_AUDITLOG_ENABLED` env var behavior.
 - `t.TempDir()` for file export tests.
 - Benchmarks exist in the test file for performance measurement.
-- Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (clean and error), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations, ServiceStatus computation across all states, transient and value providers.
-- **Coverage: ~90%** of statements, 40 tests (library package).
-- **HTML visualization features**: 5-tab layout (Services/Scopes/Graph/Timeline/Events), services table with status badges + shutdown duration + reverse deps + search filter, collapsible scope tree, Sugiyama layered DAG graph with status-colored nodes + pan/zoom + click-to-highlight, dual build+shutdown timeline bars, event type filter chips, keyboard nav (1-5), responsive layout, footer with schema version.
+- Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (clean and error), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations, ServiceStatus computation across all states, transient and value providers, health checks (healthy/unhealthy/multiple/disabled/count/report/scope/UnhealthyServices).
+- **Coverage: ~90%** of statements, 49 tests (library package).
+- **HTML visualization features**: 5-tab layout (Services/Scopes/Graph/Timeline/Events), services table with type badges + status badges + shutdown duration + reverse deps + health column + search filter, collapsible scope tree with type emoji chips, Sugiyama layered DAG graph with type-colored nodes + pan/zoom + click-to-highlight, dual build+shutdown timeline bars with type icons, event type filter chips (registration/invocation/shutdown/health_check), keyboard nav (1-5), animated tab transitions, stat cards (including health checks when checked), responsive layout, footer with schema version.
+- **Service type tracking**: `ServiceInfo.ServiceType` field (JSON: `service_type`) populated from `do.ExplainNamedService`. Values: "lazy", "eager", "transient", "alias". Displayed with samber/do's canonical emojis throughout the HTML visualization.
 
 ---
 
 ## Example
 
-`example/main.go` demonstrates every major samber/do v2 feature with a ride-sharing domain model. 18 features verified by a self-checking feature checklist:
+`example/main.go` demonstrates every major samber/do v2 feature with a ride-sharing domain model. 19 features verified by a self-checking feature checklist:
 
-| Feature                  | API                                                      |
-| ------------------------ | -------------------------------------------------------- |
-| Container with hooks     | `do.NewWithOpts(plugin.Opts())`                          |
-| Eager value injection    | `do.ProvideValue`, `do.ProvideNamedValue`                |
-| Lazy singletons          | `do.Provide`                                             |
-| Named services           | `do.ProvideNamed`, `do.MustInvokeNamed`                  |
-| Transient providers      | `do.ProvideTransient`                                    |
-| Interface aliasing       | `do.As[*EmailNotifier, Notifier]`                        |
-| Override (hot-swap)      | `do.OverrideValue`                                       |
-| Child scopes             | `injector.Scope("drivers")`                              |
-| Cross-scope dependencies | MatchingEngine invokes from driver/passenger scopes      |
-| Dependency graph         | Auto-inferred from provider call chains                  |
-| Health checks            | `do.Healthchecker`, `do.HealthcheckerWithContext`        |
-| Graceful shutdown        | `do.ShutdownerWithError`, `injector.Shutdown()`          |
-| Invocation errors        | `UnreliableService` provider returns error               |
-| Shutdown errors          | `LeakyService.Shutdown()` returns error                  |
-| Build duration           | Millisecond-precision per service                        |
-| Scope tree               | Root → 3 child scopes with service listings              |
-| OnEvent callback         | Real-time event streaming via `Config.OnEvent`           |
-| Convenience methods      | `Report.ServiceByName`, `EventsByType`, `FailedServices` |
+| Feature                  | API                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| Container with hooks     | `do.NewWithOpts(plugin.Opts())`                                                       |
+| Eager value injection    | `do.ProvideValue`, `do.ProvideNamedValue`                                             |
+| Lazy singletons          | `do.Provide`                                                                          |
+| Named services           | `do.ProvideNamed`, `do.MustInvokeNamed`                                               |
+| Transient providers      | `do.ProvideTransient`                                                                 |
+| Interface aliasing       | `do.As[*EmailNotifier, Notifier]`                                                     |
+| Override (hot-swap)      | `do.OverrideValue`                                                                    |
+| Child scopes             | `injector.Scope("drivers")`                                                           |
+| Cross-scope dependencies | MatchingEngine invokes from driver/passenger scopes                                   |
+| Dependency graph         | Auto-inferred from provider call chains                                               |
+| Health checks            | `do.Healthchecker`, `do.HealthcheckerWithContext`, `plugin.RecordHealthCheck*`        |
+| Health check audit       | `EventTypeHealthCheck`, `ServiceInfo.HealthCheckCount`, `Report.HealthCheckSucceeded` |
+| Graceful shutdown        | `do.ShutdownerWithError`, `injector.Shutdown()`                                       |
+| Invocation errors        | `UnreliableService` provider returns error                                            |
+| Shutdown errors          | `LeakyService.Shutdown()` returns error                                               |
+| Build duration           | Millisecond-precision per service                                                     |
+| Scope tree               | Root → 3 child scopes with service listings                                           |
+| OnEvent callback         | Real-time event streaming via `Config.OnEvent`                                        |
+| Convenience methods      | `Report.ServiceByName`, `EventsByType`, `FailedServices`                              |
+| Service type tracking    | Auto-detected via `do.ExplainNamedService`                                            |

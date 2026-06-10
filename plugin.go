@@ -1,10 +1,12 @@
 package auditlog
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/samber/do/v2"
 )
@@ -130,6 +132,47 @@ func (p *Plugin) ExportEventsToNDJSON(path string) error {
 // Events returns a defensive copy of all captured events.
 func (p *Plugin) Events() []Event {
 	return p.recorder.Events()
+}
+
+// RecordHealthCheckWithContext performs health checks on all services in the injector
+// and records the results as audit events. It wraps injector.HealthCheckWithContext(ctx)
+// with audit logging for each service result.
+//
+// When the plugin is disabled, it delegates directly to the injector without recording.
+//
+// Returns the same map[string]error as the underlying call (nil error = healthy).
+func (p *Plugin) RecordHealthCheckWithContext(ctx context.Context, injector do.Injector) map[string]error {
+	if !p.config.Enabled {
+		return injector.HealthCheckWithContext(ctx)
+	}
+
+	start := time.Now()
+	results := injector.HealthCheckWithContext(ctx)
+
+	for svcName, svcErr := range results {
+		elapsed := time.Since(start)
+		durationMs := float64(elapsed.Microseconds()) / microsPerMs
+
+		scopeID, scopeName, found := p.recorder.ResolveServiceScope(injector, svcName)
+		if !found {
+			continue
+		}
+
+		p.recorder.RecordHealthCheck(scopeID, scopeName, svcName, svcErr, durationMs)
+	}
+
+	return results
+}
+
+// RecordHealthCheck performs health checks on all services in the injector
+// and records the results as audit events. It wraps injector.HealthCheck()
+// with audit logging for each service result.
+//
+// When the plugin is disabled, it delegates directly to the injector without recording.
+//
+// Returns the same map[string]error as the underlying call (nil error = healthy).
+func (p *Plugin) RecordHealthCheck(injector do.Injector) map[string]error {
+	return p.RecordHealthCheckWithContext(context.Background(), injector)
 }
 
 // writeToFile creates a file at path and calls fn with the writer.

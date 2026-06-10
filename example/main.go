@@ -520,7 +520,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	health := injector.HealthCheckWithContext(ctx)
+	health := plugin.RecordHealthCheckWithContext(ctx, injector)
 	for svc, err := range health {
 		if err != nil {
 			fmt.Printf("  UNHEALTHY %s: %v\n", svc, err)
@@ -685,12 +685,14 @@ func main() {
 		{"Cross-scope dependencies", hasDepsSuffix(rep, "MatchingEngine")},
 		{"Dependency graph inference", hasDepsSuffix(rep, "HTTPServer")},
 		{"Health checks (Healthchecker interface)", len(health) > 0},
+		{"Health check audit events", rep.HealthCheckedCount > 0},
 		{"Graceful shutdown (ShutdownerWithError)", rep.ShutdownSucceeded == (len(report.Errors) == 0)},
 		{"Invocation errors captured", hasInvocationError(rep)},
 		{"Shutdown errors captured", hasShutdownError(rep)},
 		{"Build duration tracking", hasBuildDuration(rep)},
 		{"Scope tree hierarchy", len(rep.ScopeTree.Children) >= 3},
 		{"OnEvent callback", len(eventLog) > 0},
+		{"Service type tracking", hasServiceType(rep)},
 	}
 
 	allOK := true
@@ -763,4 +765,16 @@ func hasBuildDuration(r auditlog.Report) bool {
 	}
 
 	return false
+}
+
+func hasServiceType(r auditlog.Report) bool {
+	types := map[string]bool{}
+
+	for _, s := range r.Services {
+		if s.ServiceType != "" {
+			types[s.ServiceType] = true
+		}
+	}
+
+	return types["eager"] && types["lazy"] && types["transient"]
 }

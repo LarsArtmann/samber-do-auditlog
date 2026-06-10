@@ -6,7 +6,7 @@ import (
 )
 
 // SchemaVersion is the current report schema version.
-const SchemaVersion = "0.1.0"
+const SchemaVersion = "0.2.0"
 
 // EventType categorizes audit log events.
 type EventType string
@@ -15,6 +15,7 @@ const (
 	EventTypeRegistration EventType = "registration"
 	EventTypeInvocation   EventType = "invocation"
 	EventTypeShutdown     EventType = "shutdown"
+	EventTypeHealthCheck  EventType = "health_check"
 )
 
 // Phase indicates whether an event is the start or end of an operation.
@@ -73,6 +74,7 @@ type Event struct {
 func (e Event) IsRegistration() bool { return e.EventType == EventTypeRegistration }
 func (e Event) IsInvocation() bool   { return e.EventType == EventTypeInvocation }
 func (e Event) IsShutdown() bool     { return e.EventType == EventTypeShutdown }
+func (e Event) IsHealthCheck() bool  { return e.EventType == EventTypeHealthCheck }
 func (e Event) IsBefore() bool       { return e.Phase == PhaseBefore }
 func (e Event) IsAfter() bool        { return e.Phase == PhaseAfter }
 
@@ -93,6 +95,11 @@ type ServiceInfo struct {
 	ShutdownDurationMs   *float64      `json:"shutdown_duration_ms,omitempty"`
 	ShutdownError        *string       `json:"shutdown_error,omitempty"`
 	InvocationError      *string       `json:"invocation_error,omitempty"`
+
+	LastHealthCheckAt     *time.Time `json:"last_health_check_at,omitempty"`
+	HealthCheckDurationMs *float64   `json:"health_check_duration_ms,omitempty"`
+	HealthCheckError      *string    `json:"health_check_error,omitempty"`
+	HealthCheckCount      int        `json:"health_check_count"`
 }
 
 // ScopeNode represents the scope hierarchy for visualization.
@@ -114,6 +121,8 @@ type Report struct {
 	TotalBuildDurationMs    float64       `json:"total_build_duration_ms"`
 	TotalShutdownDurationMs float64       `json:"total_shutdown_duration_ms"`
 	ShutdownSucceeded       bool          `json:"shutdown_succeeded"`
+	HealthCheckSucceeded    bool          `json:"health_check_succeeded"`
+	HealthCheckedCount      int           `json:"health_checked_count"`
 	Events                  []Event       `json:"events,omitempty"`
 	Services                []ServiceInfo `json:"services"`
 	ScopeTree               ScopeNode     `json:"scope_tree"`
@@ -155,4 +164,17 @@ func (r Report) FailedServices() []ServiceInfo {
 	}
 
 	return failed
+}
+
+// UnhealthyServices returns all services with a health check error.
+func (r Report) UnhealthyServices() []ServiceInfo {
+	var unhealthy []ServiceInfo
+
+	for _, s := range r.Services {
+		if s.HealthCheckError != nil {
+			unhealthy = append(unhealthy, s)
+		}
+	}
+
+	return unhealthy
 }
