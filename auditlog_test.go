@@ -2286,3 +2286,125 @@ func BenchmarkEnrichCapabilities(b *testing.B) {
 		_ = p.Report()
 	}
 }
+
+func TestPlugin_HealthCheckDiscoversUnregisteredService(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideHealthyDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
+
+	p.RecordHealthCheck(injector)
+
+	report := p.Report()
+
+	dbSvc := findServiceByName(t, report, "db")
+	if dbSvc == nil {
+		t.Fatal("db not found in report")
+	}
+
+	if dbSvc.HealthCheckCount != 1 {
+		t.Errorf("health check count: want 1, got %d", dbSvc.HealthCheckCount)
+	}
+}
+
+func TestPlugin_HealthCheckWithContextCancelled(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideHealthyDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "db")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	results := p.RecordHealthCheckWithContext(ctx, injector)
+	_ = results
+
+	report := p.Report()
+
+	events := report.EventsByType(auditlog.EventTypeHealthCheck)
+	if len(events) == 0 {
+		t.Error("expected health check events even with cancelled context")
+	}
+}
+
+func TestPlugin_ResolveServiceScopeFromChildScope(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "root-db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "root-db")
+
+	child := injector.Scope("child")
+	provideDB(child, "child-db", "test")
+	_ = do.MustInvokeNamed[*Database](child, "child-db")
+
+	report := p.Report()
+
+	rootSvc := report.ServiceByRef(injector.ID(), "root-db")
+	if rootSvc == nil {
+		t.Fatal("root-db not found in root scope")
+	}
+
+	childSvc := report.ServiceByRef(child.ID(), "child-db")
+	if childSvc == nil {
+		t.Fatal("child-db not found in child scope")
+	}
+
+	results := p.RecordHealthCheck(child)
+	if len(results) == 0 {
+		t.Error("expected health check results from child scope")
+	}
+
+	report2 := p.Report()
+
+	childDbReport := report2.ServiceByRef(child.ID(), "child-db")
+	if childDbReport == nil {
+		t.Fatal("child-db not found after health check")
+	}
+
+	if childDbReport.HealthCheckCount == 0 {
+		t.Error("expected health check count > 0 for child-db")
+	}
+}
+
+func TestPlugin_RecordHealthCheckCreatesServiceFromMeta(t *testing.T) {
+	rec := auditlog.NewRecorder("test", nil)
+
+	rec.RecordHealthCheck("scope-1", "myscope", "discovered-svc", nil)
+
+	report := rec.BuildReport()
+
+	svc := report.ServiceByRef("scope-1", "discovered-svc")
+	if svc == nil {
+		t.Fatal("discovered-svc should exist via newServiceRecordFromMeta")
+	}
+
+	if svc.ServiceName != "discovered-svc" {
+		t.Errorf("service name: want discovered-svc, got %s", svc.ServiceName)
+	}
+
+	if svc.HealthCheckCount != 1 {
+		t.Errorf("health check count: want 1, got %d", svc.HealthCheckCount)
+	}
+}
+
+func TestPlugin_EnrichCapabilitiesWithNilScopeRef(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+
+	svc := findServiceByName(t, report, "db")
+	if svc == nil {
+		t.Fatal("db not found")
+	}
+
+	if svc.ServiceName != "db" {
+		t.Errorf("service name: want db, got %s", svc.ServiceName)
+	}
+}
