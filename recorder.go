@@ -45,10 +45,8 @@ type serviceRecord struct {
 	invocationError      *string
 	shutdownError        *string
 
-	lastHealthCheckAt     *time.Time
-	healthCheckDurationMs *float64
-	healthCheckError      *string
-	healthCheckCount      int
+	healthCheckError *string
+	healthCheckCount int
 }
 
 type scopeMeta struct {
@@ -175,24 +173,23 @@ func newEvent(
 // newServiceRecord constructs a serviceRecord with all fields set.
 func newServiceRecord(scope *do.Scope, serviceName string, now time.Time) *serviceRecord {
 	return &serviceRecord{
-		scopeID:               scope.ID(),
-		scopeName:             scope.Name(),
-		serviceName:           serviceName,
-		serviceType:           inferServiceType(scope, serviceName),
-		registeredAt:          now,
-		firstInvokedAt:        nil,
-		invocationCount:       0,
-		invocationOrder:       0,
-		firstBuildDurationMs:  nil,
-		dependencies:          make(map[string]struct{}),
-		shutdownAt:            nil,
-		shutdownDurationMs:    nil,
-		invocationError:       nil,
-		shutdownError:         nil,
-		lastHealthCheckAt:     nil,
-		healthCheckDurationMs: nil,
-		healthCheckError:      nil,
-		healthCheckCount:      0,
+		scopeID:              scope.ID(),
+		scopeName:            scope.Name(),
+		serviceName:          serviceName,
+		serviceType:          inferServiceType(scope, serviceName),
+		registeredAt:         now,
+		firstInvokedAt:       nil,
+		invocationCount:      0,
+		invocationOrder:      0,
+		firstBuildDurationMs: nil,
+		dependencies:         make(map[string]struct{}),
+		shutdownAt:           nil,
+		shutdownDurationMs:   nil,
+		invocationError:      nil,
+		shutdownError:        nil,
+		lastHealthCheckAt:    nil,
+		healthCheckError:     nil,
+		healthCheckCount:     0,
 	}
 }
 
@@ -690,7 +687,7 @@ func allHealthChecksPassed(services []ServiceInfo) bool {
 }
 
 // RecordHealthCheck records a single health check result for a service.
-func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err error, durationMs float64) {
+func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err error) {
 	now := time.Now()
 	errStr := errorToStringPtr(err)
 
@@ -707,8 +704,7 @@ func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err
 			ScopeName:   scopeName,
 			ServiceName: serviceName,
 		},
-		DurationMs: &durationMs,
-		Error:      errStr,
+		Error: errStr,
 	})
 
 	r.mu.Lock()
@@ -719,30 +715,19 @@ func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err
 	rec, ok := r.services[key]
 	if !ok {
 		rec = &serviceRecord{
-			scopeID:               scopeID,
-			scopeName:             scopeName,
-			serviceName:           serviceName,
-			serviceType:           "",
-			registeredAt:          now,
-			firstInvokedAt:        nil,
-			invocationCount:       0,
-			invocationOrder:       0,
-			firstBuildDurationMs:  nil,
-			dependencies:          make(map[string]struct{}),
-			shutdownAt:            nil,
-			shutdownDurationMs:    nil,
-			invocationError:       nil,
-			shutdownError:         nil,
-			lastHealthCheckAt:     nil,
-			healthCheckDurationMs: nil,
-			healthCheckError:      nil,
-			healthCheckCount:      0,
+			scopeID:          scopeID,
+			scopeName:        scopeName,
+			serviceName:      serviceName,
+			serviceType:      "",
+			registeredAt:     now,
+			dependencies:     make(map[string]struct{}),
+			healthCheckError: nil,
+			healthCheckCount: 0,
 		}
 		r.services[key] = rec
 	}
 
 	rec.lastHealthCheckAt = &now
-	rec.healthCheckDurationMs = &durationMs
 	rec.healthCheckError = errStr
 	rec.healthCheckCount++
 }

@@ -128,53 +128,53 @@
 
 ### High Impact, Low Effort (< 30 min each)
 
-| # | Task | Why |
-|---|------|-----|
-| 1 | Fix missing `<th>Health</th>` in services table | 🔴 Bug — table is misaligned |
-| 2 | Fix health check duration: store as batch total on Report, remove per-service misleading value | 🟡 Bug — data is wrong |
-| 3 | Add `service_type` to Event struct so Events tab can show type | Completes the feature |
-| 4 | Call `inferServiceType()` in RecordHealthCheck codepath | Fixes empty type edge case |
-| 5 | Add test for `Report.ServiceByName()` | Untested public API |
-| 6 | Add test for `Report.FailedServices()` | Untested public API |
-| 7 | Add test for `Report.UnhealthyServices()` | New method, should have dedicated test |
-| 8 | Fix gci formatting on recorder.go/types.go | Linter complaints |
+| #   | Task                                                                                           | Why                                    |
+| --- | ---------------------------------------------------------------------------------------------- | -------------------------------------- |
+| 1   | Fix missing `<th>Health</th>` in services table                                                | 🔴 Bug — table is misaligned           |
+| 2   | Fix health check duration: store as batch total on Report, remove per-service misleading value | 🟡 Bug — data is wrong                 |
+| 3   | Add `service_type` to Event struct so Events tab can show type                                 | Completes the feature                  |
+| 4   | Call `inferServiceType()` in RecordHealthCheck codepath                                        | Fixes empty type edge case             |
+| 5   | Add test for `Report.ServiceByName()`                                                          | Untested public API                    |
+| 6   | Add test for `Report.FailedServices()`                                                         | Untested public API                    |
+| 7   | Add test for `Report.UnhealthyServices()`                                                      | New method, should have dedicated test |
+| 8   | Fix gci formatting on recorder.go/types.go                                                     | Linter complaints                      |
 
 ### High Impact, Medium Effort (1-3 hours each)
 
-| # | Task | Why |
-|---|------|-----|
-| 9 | Define `ProviderType` named type with `String()` + `Icon()` methods | Type safety, better architecture |
-| 10 | Add type filter chips to Events tab (like event type filters) | UX completeness |
-| 11 | Add "type" column to Events table | Shows lazy/eager per event |
-| 12 | Use `do.ExplainInjector` bulk fetch instead of per-service `ExplainNamedService` | Performance + Healthchecker/Shutdowner metadata |
-| 13 | Add Healthchecker/Shutdowner capability tracking to ServiceInfo | Feature parity with samber/do's Explain output |
-| 14 | Add Healthchecker 🫀 / Shutdowner 🙅 emojis in HTML | Visual feature parity with samber/do |
-| 15 | Run `golangci-lint run` and fix all issues in auditlog package | Code quality |
+| #   | Task                                                                             | Why                                             |
+| --- | -------------------------------------------------------------------------------- | ----------------------------------------------- |
+| 9   | Define `ProviderType` named type with `String()` + `Icon()` methods              | Type safety, better architecture                |
+| 10  | Add type filter chips to Events tab (like event type filters)                    | UX completeness                                 |
+| 11  | Add "type" column to Events table                                                | Shows lazy/eager per event                      |
+| 12  | Use `do.ExplainInjector` bulk fetch instead of per-service `ExplainNamedService` | Performance + Healthchecker/Shutdowner metadata |
+| 13  | Add Healthchecker/Shutdowner capability tracking to ServiceInfo                  | Feature parity with samber/do's Explain output  |
+| 14  | Add Healthchecker 🫀 / Shutdowner 🙅 emojis in HTML                              | Visual feature parity with samber/do            |
+| 15  | Run `golangci-lint run` and fix all issues in auditlog package                   | Code quality                                    |
 
 ### Medium Impact, Low Effort (< 30 min each)
 
-| # | Task | Why |
-|---|------|-----|
-| 16 | Update FEATURES.md with health check + service type features | Documentation freshness |
-| 17 | Update TODO_LIST.md — mark done items, add new ones | Planning accuracy |
-| 18 | Add `doc.go` package examples (GoDoc) | API discoverability |
-| 19 | Add benchmark for `inferServiceType` overhead | Performance validation |
+| #   | Task                                                         | Why                     |
+| --- | ------------------------------------------------------------ | ----------------------- |
+| 16  | Update FEATURES.md with health check + service type features | Documentation freshness |
+| 17  | Update TODO_LIST.md — mark done items, add new ones          | Planning accuracy       |
+| 18  | Add `doc.go` package examples (GoDoc)                        | API discoverability     |
+| 19  | Add benchmark for `inferServiceType` overhead                | Performance validation  |
 
 ### Medium Impact, Medium Effort (1-3 hours each)
 
-| # | Task | Why |
-|---|------|-----|
-| 20 | Extract HTML template into partials (CSS block, JS blocks) | Maintainability |
-| 21 | Add `Config.Validate() error` method | Input validation |
-| 22 | Add `ReportOption` functional options | Report customization |
+| #   | Task                                                       | Why                  |
+| --- | ---------------------------------------------------------- | -------------------- |
+| 20  | Extract HTML template into partials (CSS block, JS blocks) | Maintainability      |
+| 21  | Add `Config.Validate() error` method                       | Input validation     |
+| 22  | Add `ReportOption` functional options                      | Report customization |
 
 ### Lower Priority
 
-| # | Task | Why |
-|---|------|-----|
-| 23 | Mermaid export format | Nice-to-have for markdown integration |
-| 24 | Versioned report schema with migration | Needed for v1.0 stability |
-| 25 | Consider `samber/lo` for slice helpers | Currently rejected but worth revisiting |
+| #   | Task                                   | Why                                     |
+| --- | -------------------------------------- | --------------------------------------- |
+| 23  | Mermaid export format                  | Nice-to-have for markdown integration   |
+| 24  | Versioned report schema with migration | Needed for v1.0 stability               |
+| 25  | Consider `samber/lo` for slice helpers | Currently rejected but worth revisiting |
 
 ---
 
@@ -194,13 +194,13 @@ I lean toward **option 1** (remove per-service, add batch total) because honesty
 
 ## Files Changed (Staged)
 
-| File | Lines Changed | Summary |
-|------|---------------|---------|
-| `AGENTS.md` | +60 -40 | Service type docs, HTML redesign docs, 19 features |
-| `auditlog_test.go` | +348 | Health check tests (8), service type tests (3), convenience method test |
-| `doc.go` | +2 -2 | Package doc update |
-| `example/main.go` | +16 -4 | `hasServiceType` helper + checklist entry |
-| `html.templ` | +832 rewrite | Full redesign with type badges, emojis, new fonts |
-| `plugin.go` | +43 | `RecordHealthCheck`, `RecordHealthCheckWithContext` |
-| `recorder.go` | +173 | Health check recording, `inferServiceType`, `ResolveServiceScope` |
-| `types.go` | +24 | `ServiceType`, health check fields on ServiceInfo/Report |
+| File               | Lines Changed | Summary                                                                 |
+| ------------------ | ------------- | ----------------------------------------------------------------------- |
+| `AGENTS.md`        | +60 -40       | Service type docs, HTML redesign docs, 19 features                      |
+| `auditlog_test.go` | +348          | Health check tests (8), service type tests (3), convenience method test |
+| `doc.go`           | +2 -2         | Package doc update                                                      |
+| `example/main.go`  | +16 -4        | `hasServiceType` helper + checklist entry                               |
+| `html.templ`       | +832 rewrite  | Full redesign with type badges, emojis, new fonts                       |
+| `plugin.go`        | +43           | `RecordHealthCheck`, `RecordHealthCheckWithContext`                     |
+| `recorder.go`      | +173          | Health check recording, `inferServiceType`, `ResolveServiceScope`       |
+| `types.go`         | +24           | `ServiceType`, health check fields on ServiceInfo/Report                |

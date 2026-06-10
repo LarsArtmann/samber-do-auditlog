@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 
 	"github.com/samber/do/v2"
 )
@@ -146,19 +145,15 @@ func (p *Plugin) RecordHealthCheckWithContext(ctx context.Context, injector do.I
 		return injector.HealthCheckWithContext(ctx)
 	}
 
-	start := time.Now()
 	results := injector.HealthCheckWithContext(ctx)
 
 	for svcName, svcErr := range results {
-		elapsed := time.Since(start)
-		durationMs := float64(elapsed.Microseconds()) / microsPerMs
-
 		scopeID, scopeName, found := p.recorder.ResolveServiceScope(injector, svcName)
 		if !found {
 			continue
 		}
 
-		p.recorder.RecordHealthCheck(scopeID, scopeName, svcName, svcErr, durationMs)
+		p.recorder.RecordHealthCheck(scopeID, scopeName, svcName, svcErr)
 	}
 
 	return results
