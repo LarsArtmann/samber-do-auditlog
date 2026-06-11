@@ -57,7 +57,7 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 | **Service types**        | Auto-detects lazy/eager/transient/alias via `do.ExplainNamedService`     |
 | **Timing**               | First build duration, shutdown duration, invocation count & order        |
 | **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events             |
-| **5 export formats**     | JSON · NDJSON · self-contained HTML · Mermaid · PlantUML               |
+| **5 export formats**     | JSON · NDJSON · self-contained HTML · Mermaid · PlantUML                 |
 | **Filtered reports**     | Functional options to slice by name, type, scope, event type, time range |
 | **~1μs overhead**        | In-memory capture, no I/O during container operation                     |
 | **Toggle on/off**        | `Enabled: false` → zero hooks, zero cost                                 |
@@ -309,8 +309,8 @@ The callback is called **outside the mutex** on every event. Keep it fast — do
 
 **Package-level**
 
-| Function | Description |
-| -------- | ----------- |
+| Function                                     | Description                                         |
+| -------------------------------------------- | --------------------------------------------------- |
 | `MigrateReport(data []byte) ([]byte, error)` | Upgrade a v0.1.0 JSON report to the current schema. |
 
 ### Report

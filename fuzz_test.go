@@ -146,7 +146,7 @@ func FuzzPluginHTML_DepChain(f *testing.F) {
 	})
 }
 
-func assertNoRawXSS(t *testing.T, output string, context string) {
+func assertNoRawXSS(t *testing.T, output, context string) {
 	t.Helper()
 
 	vectors := []string{

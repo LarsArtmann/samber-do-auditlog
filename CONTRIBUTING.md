@@ -109,7 +109,7 @@ If you add or change user-facing behavior, update:
 
 ## Commit Messages
 
-Write clear, imperative commit messages that explain *why*, not just *what*:
+Write clear, imperative commit messages that explain _why_, not just _what_:
 
 ```
 Add health check event support for samber/do v2

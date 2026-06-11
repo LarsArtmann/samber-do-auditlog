@@ -42,14 +42,14 @@ Every term below should mean the **same thing** to everyone who reads it.
 
 ## Value Objects
 
-| Term          | Definition                                               | Context                |
-| ------------- | -------------------------------------------------------- | ---------------------- |
-| Config        | Plugin configuration: Enabled flag, ContainerID          | Input to `New()`       |
-| EventType     | Enum: registration, invocation, shutdown                 | Event categorization   |
-| Phase         | Enum: before, after                                      | Event timing           |
-| ServiceRef    | A lightweight reference to a service in a specific scope | Dependency graph edges |
-| ReportOption  | A functional option for filtering reports                | Filter input           |
-| Report        | A complete, self-contained snapshot of all audit data    | Export payload         |
+| Term         | Definition                                               | Context                |
+| ------------ | -------------------------------------------------------- | ---------------------- |
+| Config       | Plugin configuration: Enabled flag, ContainerID          | Input to `New()`       |
+| EventType    | Enum: registration, invocation, shutdown                 | Event categorization   |
+| Phase        | Enum: before, after                                      | Event timing           |
+| ServiceRef   | A lightweight reference to a service in a specific scope | Dependency graph edges |
+| ReportOption | A functional option for filtering reports                | Filter input           |
+| Report       | A complete, self-contained snapshot of all audit data    | Export payload         |
 
 ## Events
 
@@ -62,20 +62,20 @@ Every term below should mean the **same thing** to everyone who reads it.
 
 ## Commands
 
-| Term                 | Definition                                             | Context             |
-| -------------------- | ------------------------------------------------------ | ------------------- |
-| New                  | Create a new audit log plugin                          | Entry point         |
-| Opts                 | Get DI container hook options                          | Wire into samber/do |
-| Report               | Get a snapshot of all captured data                    | Read operation      |
-| ExportToFile         | Write JSON report to a file path                       | Export command      |
-| ExportEventsToNDJSON | Write NDJSON event stream to a file path               | Export command      |
-| ExportToHTML         | Write self-contained HTML visualization to a file path | Export command      |
-| RecordHealthCheck    | Wrap injector health check with audit events           | Health command      |
-| RecordHealthCheckWithContext | Same as RecordHealthCheck with context support   | Health command      |
-| MigrateReport        | Upgrade a v0.1.0 JSON report to the current schema     | Migration command   |
-| WriteMermaid         | Export dependency graph as Mermaid flowchart           | Export command      |
-| Filtered             | Apply functional filter options to a Report            | Query command       |
-| ExportFilteredToFile | Write a filtered JSON report to a file path              | Export command      |
+| Term                         | Definition                                             | Context             |
+| ---------------------------- | ------------------------------------------------------ | ------------------- |
+| New                          | Create a new audit log plugin                          | Entry point         |
+| Opts                         | Get DI container hook options                          | Wire into samber/do |
+| Report                       | Get a snapshot of all captured data                    | Read operation      |
+| ExportToFile                 | Write JSON report to a file path                       | Export command      |
+| ExportEventsToNDJSON         | Write NDJSON event stream to a file path               | Export command      |
+| ExportToHTML                 | Write self-contained HTML visualization to a file path | Export command      |
+| RecordHealthCheck            | Wrap injector health check with audit events           | Health command      |
+| RecordHealthCheckWithContext | Same as RecordHealthCheck with context support         | Health command      |
+| MigrateReport                | Upgrade a v0.1.0 JSON report to the current schema     | Migration command   |
+| WriteMermaid                 | Export dependency graph as Mermaid flowchart           | Export command      |
+| Filtered                     | Apply functional filter options to a Report            | Query command       |
+| ExportFilteredToFile         | Write a filtered JSON report to a file path            | Export command      |
 
 ## Bounded Contexts
 
