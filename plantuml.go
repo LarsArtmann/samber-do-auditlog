@@ -24,7 +24,7 @@ func (r Report) WritePlantUML(writer io.Writer) error {
 		svcID := plantumlNodeID(svc.ScopeID, svc.ServiceName)
 
 		if _, ok := seen[svcID]; !ok {
-			label := plantumlLabel(svc)
+			label := serviceLabel(svc)
 
 			lines = append(lines, fmt.Sprintf(`    component "%s" as %s`, label, svcID))
 			seen[svcID] = struct{}{}
@@ -34,7 +34,7 @@ func (r Report) WritePlantUML(writer io.Writer) error {
 			depID := plantumlNodeID(dep.ScopeID, dep.ServiceName)
 
 			if _, ok := seen[depID]; !ok {
-				label := plantumlLabelForRef(dep)
+				label := serviceRefLabel(dep)
 
 				lines = append(lines, fmt.Sprintf(`    component "%s" as %s`, label, depID))
 				seen[depID] = struct{}{}
@@ -48,11 +48,9 @@ func (r Report) WritePlantUML(writer io.Writer) error {
 
 	unique := slices.Compact(lines)
 
-	for _, line := range unique {
-		_, err = fmt.Fprintln(writer, line)
-		if err != nil {
-			return fmt.Errorf("write plantuml line: %w", err)
-		}
+	err = writeSortedLines(writer, unique)
+	if err != nil {
+		return err
 	}
 
 	_, err = fmt.Fprintln(writer, "@enduml")
@@ -73,18 +71,4 @@ func plantumlNodeID(scopeID, serviceName string) string {
 		"[", "_",
 		"]", "_",
 	).Replace(scopeID + "_" + serviceName)
-}
-
-func plantumlLabel(svc ServiceInfo) string {
-	name := svc.ServiceName
-
-	if svc.ServiceType.IsKnown() {
-		name += " " + svc.ServiceType.Icon()
-	}
-
-	return name
-}
-
-func plantumlLabelForRef(ref ServiceRef) string {
-	return ref.ServiceName
 }

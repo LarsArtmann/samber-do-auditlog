@@ -23,7 +23,7 @@ func (r Report) WriteMermaid(writer io.Writer) error {
 		svcID := mermaidNodeID(svc.ScopeID, svc.ServiceName)
 
 		if _, ok := seen[svcID]; !ok {
-			label := mermaidLabel(svc)
+			label := serviceLabel(svc)
 
 			lines = append(lines, fmt.Sprintf("    %s[%s]", svcID, label))
 			seen[svcID] = struct{}{}
@@ -33,7 +33,7 @@ func (r Report) WriteMermaid(writer io.Writer) error {
 			depID := mermaidNodeID(dep.ScopeID, dep.ServiceName)
 
 			if _, ok := seen[depID]; !ok {
-				label := mermaidLabelForRef(dep)
+				label := serviceRefLabel(dep)
 
 				lines = append(lines, fmt.Sprintf("    %s[%s]", depID, label))
 				seen[depID] = struct{}{}
@@ -47,14 +47,7 @@ func (r Report) WriteMermaid(writer io.Writer) error {
 
 	unique := slices.Compact(lines)
 
-	for _, line := range unique {
-		_, err = fmt.Fprintln(writer, line)
-		if err != nil {
-			return fmt.Errorf("write mermaid line: %w", err)
-		}
-	}
-
-	return nil
+	return writeSortedLines(writer, unique)
 }
 
 func mermaidNodeID(scopeID, serviceName string) string {
@@ -66,18 +59,4 @@ func mermaidNodeID(scopeID, serviceName string) string {
 	).Replace(scopeID + "_" + serviceName)
 
 	return clean
-}
-
-func mermaidLabel(svc ServiceInfo) string {
-	name := svc.ServiceName
-
-	if svc.ServiceType.IsKnown() {
-		name += " " + svc.ServiceType.Icon()
-	}
-
-	return name
-}
-
-func mermaidLabelForRef(ref ServiceRef) string {
-	return ref.ServiceName
 }
