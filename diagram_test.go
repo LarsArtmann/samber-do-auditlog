@@ -1,0 +1,234 @@
+package auditlog_test
+
+import (
+	"bytes"
+	"os"
+	"strings"
+	"testing"
+	"time"
+
+	auditlog "github.com/larsartmann/samber-do-auditlog"
+	"github.com/samber/do/v2"
+)
+
+type failWriter struct{}
+
+func (failWriter) Write(_ []byte) (int, error) {
+	return 0, os.ErrInvalid
+}
+
+func TestReport_WriteMermaid(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+
+	do.ProvideNamed(injector, "user-svc", func(i do.Injector) (*UserService, error) {
+		db := do.MustInvokeNamed[*Database](i, "db")
+
+		return &UserService{DB: db}, nil
+	})
+
+	_ = do.MustInvokeNamed[*UserService](injector, "user-svc")
+
+	report := p.Report()
+
+	var buf bytes.Buffer
+
+	err := report.WriteMermaid(&buf)
+	if err != nil {
+		t.Fatalf("WriteMermaid: %v", err)
+	}
+
+	output := buf.String()
+
+	if !strings.Contains(output, "flowchart TD") {
+		t.Error("expected flowchart TD header")
+	}
+
+	if !strings.Contains(output, "-->") {
+		t.Error("expected dependency edge -->")
+	}
+}
+
+func TestReport_WritePlantUML(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+
+	do.ProvideNamed(injector, "user-svc", func(i do.Injector) (*UserService, error) {
+		db := do.MustInvokeNamed[*Database](i, "db")
+
+		return &UserService{DB: db}, nil
+	})
+
+	_ = do.MustInvokeNamed[*UserService](injector, "user-svc")
+
+	report := p.Report()
+
+	var buf bytes.Buffer
+
+	err := report.WritePlantUML(&buf)
+	if err != nil {
+		t.Fatalf("WritePlantUML: %v", err)
+	}
+
+	output := buf.String()
+
+	if !strings.Contains(output, "@startuml") {
+		t.Error("expected @startuml header")
+	}
+
+	if !strings.Contains(output, "@enduml") {
+		t.Error("expected @enduml footer")
+	}
+
+	if !strings.Contains(output, "component") {
+		t.Error("expected component declarations")
+	}
+
+	if !strings.Contains(output, "-->") {
+		t.Error("expected dependency edge -->")
+	}
+}
+
+func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	do.ProvideValue(injector, &Database{URL: "test"})
+
+	do.ProvideNamed(injector, "usersvc", func(i do.Injector) (*UserService, error) {
+		return &UserService{
+			DB:    do.MustInvoke[*Database](i),
+			Cache: &Cache{},
+		}, nil
+	})
+
+	_ = do.MustInvokeNamed[*UserService](injector, "usersvc")
+
+	var buf bytes.Buffer
+
+	err := p.Report().WriteMermaid(&buf)
+	if err != nil {
+		t.Fatalf("WriteMermaid: %v", err)
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "flowchart TD") {
+		t.Error("expected flowchart header")
+	}
+
+	if !strings.Contains(output, "-->") {
+		t.Error("expected dependency edge")
+	}
+}
+
+func TestWriteMermaid_WriterError(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	err := p.Report().WriteMermaid(failWriter{})
+	if err == nil {
+		t.Error("expected error from failing writer")
+	}
+}
+
+func TestWriteMermaid_DuplicateEdges(t *testing.T) {
+	report := auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: "test",
+		ExportedAt:  time.Now(),
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceRef: auditlog.ServiceRef{
+					ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc-a",
+				},
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
+				Dependencies: []auditlog.ServiceRef{
+					{ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc-b"},
+					{ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc-b"},
+				},
+			},
+			{
+				ServiceRef: auditlog.ServiceRef{
+					ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc-b",
+				},
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+
+	err := report.WriteMermaid(&buf)
+	if err != nil {
+		t.Fatalf("WriteMermaid: %v", err)
+	}
+
+	output := buf.String()
+	lines := strings.Split(output, "\n")
+	edgeCount := 0
+
+	for _, line := range lines {
+		if strings.Contains(line, "root_svc_a --> root_svc_b") {
+			edgeCount++
+		}
+	}
+
+	if edgeCount != 1 {
+		t.Errorf("expected exactly 1 deduplicated edge, got %d", edgeCount)
+	}
+}
+
+func TestWriteMermaid_ExternalDependency(t *testing.T) {
+	report := auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: "test",
+		ExportedAt:  time.Now(),
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceRef: auditlog.ServiceRef{
+					ScopeID:     "root",
+					ScopeName:   auditlog.RootScopeName,
+					ServiceName: "my-service",
+				},
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
+				Dependencies: []auditlog.ServiceRef{
+					{
+						ScopeID:     "root",
+						ScopeName:   auditlog.RootScopeName,
+						ServiceName: "external-dep",
+					},
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+
+	err := report.WriteMermaid(&buf)
+	if err != nil {
+		t.Fatalf("WriteMermaid: %v", err)
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "flowchart TD") {
+		t.Error("expected flowchart header")
+	}
+
+	if !strings.Contains(output, "external-dep") {
+		t.Error("expected external-dep label in output")
+	}
+
+	if !strings.Contains(output, "-->") {
+		t.Error("expected dependency edge")
+	}
+}

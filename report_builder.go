@@ -224,7 +224,6 @@ func sortScopeNodes(nodes []ScopeNode) []ScopeNode {
 	return nodes
 }
 
-
 // --- Capability enrichment (samber/do ExplainInjector) ---
 
 // enrichCapabilities populates IsHealthchecker and IsShutdowner on each ServiceInfo
