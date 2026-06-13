@@ -1,0 +1,340 @@
+package auditlog
+
+import (
+	"slices"
+	"time"
+
+	"github.com/samber/do/v2"
+)
+
+// --- Event/Record constructors (used by hooks and health check) ---
+
+// newEventFromRef builds an Event from a ServiceRef.
+func newEventFromRef(
+	seq int,
+	now time.Time,
+	eventType EventType,
+	phase Phase,
+	ref ServiceRef,
+	containerID string,
+	svcType ProviderType,
+	dur *float64,
+	errStr *string,
+) Event {
+	return Event{
+		Sequence:    seq,
+		Timestamp:   now,
+		EventType:   eventType,
+		Phase:       phase,
+		ContainerID: containerID,
+		ServiceRef:  ref,
+		ServiceType: svcType,
+		DurationMs:  dur,
+		Error:       errStr,
+	}
+}
+
+// newServiceRecordCore constructs a serviceRecord with lazy deps map.
+func newServiceRecordCore(scopeID, scopeName, serviceName string, svcType ProviderType, now time.Time) *serviceRecord {
+	return &serviceRecord{
+		scopeID:              scopeID,
+		scopeName:            scopeName,
+		serviceName:          serviceName,
+		serviceType:          svcType,
+		registeredAt:         now,
+		firstInvokedAt:       nil,
+		invocationCount:      0,
+		invocationOrder:      0,
+		firstBuildDurationMs: nil,
+		dependencies:         nil,
+		shutdownAt:           nil,
+		shutdownDurationMs:   nil,
+		invocationError:      nil,
+		shutdownError:        nil,
+		lastHealthCheckAt:    nil,
+		healthCheckError:     nil,
+		healthCheckCount:     0,
+	}
+}
+
+// errorToStringPtr converts an error to a heap-allocated string pointer.
+// Returns nil when err is nil so we don't emit empty error fields in events.
+func errorToStringPtr(err error) *string {
+	if err == nil {
+		return nil
+	}
+
+	msg := err.Error()
+
+	return &msg
+}
+
+// inferServiceType uses do.ExplainNamedService to determine the provider type
+// (lazy, eager, transient, alias). Returns empty string if unknown.
+func inferServiceType(scope *do.Scope, serviceName string) ProviderType {
+	desc, ok := do.ExplainNamedService(scope, serviceName)
+	if !ok {
+		return ""
+	}
+
+	return ProviderType(desc.ServiceType)
+}
+
+// --- Hook methods (single-lock hot path) ---
+
+func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
+	scopeID := scope.ID()
+	scopeName := scope.Name()
+	now := time.Now()
+	seq := r.nextSequence()
+
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(seq, now, EventTypeRegistration, PhaseBefore, ref, r.containerID, "", nil, nil)
+
+	r.mu.Lock()
+	r.recordScopeLocked(scopeID, scopeName, scope)
+	r.events = append(r.events, evt)
+	r.mu.Unlock()
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
+}
+
+func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
+	scopeID := scope.ID()
+	scopeName := scope.Name()
+	now := time.Now()
+	key := serviceKey(scopeID, serviceName)
+	seq := r.nextSequence()
+
+	r.mu.Lock()
+
+	rec, ok := r.services[key]
+
+	var svcType ProviderType
+
+	if !ok {
+		svcType = inferServiceType(scope, serviceName)
+		rec = newServiceRecordCore(scopeID, scopeName, serviceName, svcType, now)
+		r.services[key] = rec
+	} else {
+		svcType = rec.serviceType
+	}
+
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(seq, now, EventTypeRegistration, PhaseAfter, ref, r.containerID, svcType, nil, nil)
+	r.events = append(r.events, evt)
+
+	r.mu.Unlock()
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
+}
+
+func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
+	scopeID := scope.ID()
+	scopeName := scope.Name()
+	now := time.Now()
+	depKey := serviceKey(scopeID, serviceName)
+	seq := r.nextSequence()
+
+	r.mu.Lock()
+
+	r.recordScopeLocked(scopeID, scopeName, scope)
+
+	// Infer dependency from invocation stack.
+	if len(r.stack) > 0 {
+		parent := r.stack[len(r.stack)-1]
+		parentKey := serviceKey(parent.scopeID, parent.serviceName)
+
+		if rec, ok := r.services[parentKey]; ok {
+			if rec.dependencies == nil {
+				rec.dependencies = make(map[string]struct{}, initialDepsCapacity)
+			}
+
+			rec.dependencies[depKey] = struct{}{}
+		}
+	}
+
+	r.stack = append(r.stack, stackEntry{
+		scopeID:     scopeID,
+		scopeName:   scopeName,
+		serviceName: serviceName,
+		start:       now,
+	})
+
+	// Look up service type from existing record.
+	var svcType ProviderType
+
+	if rec, ok := r.services[depKey]; ok {
+		svcType = rec.serviceType
+	}
+
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(seq, now, EventTypeInvocation, PhaseBefore, ref, r.containerID, svcType, nil, nil)
+	r.events = append(r.events, evt)
+
+	r.mu.Unlock()
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
+}
+
+func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err error) {
+	scopeID := scope.ID()
+	scopeName := scope.Name()
+	now := time.Now()
+	errStr := errorToStringPtr(err)
+	key := serviceKey(scopeID, serviceName)
+	seq := r.nextSequence()
+
+	r.mu.Lock()
+
+	// Pop matching stack frame (LIFO fast path).
+	var durationMs *float64
+
+	for i, frame := range slices.Backward(r.stack) {
+		if frame.serviceName == serviceName && frame.scopeID == scopeID {
+			d := float64(now.Sub(frame.start).Microseconds()) / microsPerMs
+			durationMs = &d
+
+			if i == len(r.stack)-1 {
+				r.stack = r.stack[:i]
+			} else {
+				r.stack = append(r.stack[:i], r.stack[i+1:]...)
+			}
+
+			break
+		}
+	}
+
+	// Look up service type.
+	var svcType ProviderType
+
+	if rec, ok := r.services[key]; ok {
+		svcType = rec.serviceType
+	}
+
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(seq, now, EventTypeInvocation, PhaseAfter, ref, r.containerID, svcType, durationMs, errStr)
+	r.events = append(r.events, evt)
+
+	r.updateInvocationAggregate(scopeID, scopeName, serviceName, now, svcType, durationMs, errStr)
+
+	r.mu.Unlock()
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
+}
+
+// updateInvocationAggregate updates the per-service aggregate after an invocation.
+// Caller must hold r.mu.
+func (r *Recorder) updateInvocationAggregate(
+	scopeID, scopeName, serviceName string,
+	now time.Time,
+	svcType ProviderType,
+	durationMs *float64,
+	errStr *string,
+) {
+	key := serviceKey(scopeID, serviceName)
+
+	rec, ok := r.services[key]
+	if !ok {
+		rec = newServiceRecordCore(scopeID, scopeName, serviceName, svcType, now)
+		r.services[key] = rec
+	}
+
+	rec.invocationCount++
+
+	if rec.firstInvokedAt == nil {
+		rec.firstInvokedAt = &now
+		rec.invocationOrder = int(r.invocationSeq.Add(1)) - 1
+	}
+
+	if durationMs != nil && rec.firstBuildDurationMs == nil {
+		rec.firstBuildDurationMs = durationMs
+	}
+
+	if errStr != nil {
+		rec.invocationError = errStr
+	}
+}
+
+func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
+	scopeID := scope.ID()
+	scopeName := scope.Name()
+	now := time.Now()
+	key := serviceKey(scopeID, serviceName)
+	seq := r.nextSequence()
+
+	r.mu.Lock()
+
+	r.recordScopeLocked(scopeID, scopeName, scope)
+	r.shutdownStart[key] = now
+
+	svcType := ProviderType("")
+
+	if rec, ok := r.services[key]; ok {
+		svcType = rec.serviceType
+	}
+
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(seq, now, EventTypeShutdown, PhaseBefore, ref, r.containerID, svcType, nil, nil)
+	r.events = append(r.events, evt)
+
+	r.mu.Unlock()
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
+}
+
+func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err error) {
+	scopeID := scope.ID()
+	scopeName := scope.Name()
+	now := time.Now()
+	errStr := errorToStringPtr(err)
+	key := serviceKey(scopeID, serviceName)
+	seq := r.nextSequence()
+
+	r.mu.Lock()
+
+	// Resolve shutdown duration.
+	start, hasStart := r.shutdownStart[key]
+	if hasStart {
+		delete(r.shutdownStart, key)
+	}
+
+	var shutdownDur *float64
+
+	if hasStart {
+		d := float64(now.Sub(start).Microseconds()) / microsPerMs
+		shutdownDur = &d
+	}
+
+	svcType := ProviderType("")
+
+	if rec, ok := r.services[key]; ok {
+		svcType = rec.serviceType
+	}
+
+	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(seq, now, EventTypeShutdown, PhaseAfter, ref, r.containerID, svcType, nil, errStr)
+	r.events = append(r.events, evt)
+
+	if rec, ok := r.services[key]; ok {
+		rec.shutdownAt = &now
+		rec.shutdownDurationMs = shutdownDur
+		rec.shutdownError = errStr
+	}
+
+	r.mu.Unlock()
+
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
+}
