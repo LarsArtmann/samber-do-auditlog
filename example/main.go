@@ -160,15 +160,18 @@ func exportReports(plugin *auditlog.Plugin) {
 	if err := plugin.ExportToFile(tmpDir + "/audit-report.json"); err != nil {
 		log.Fatalf("JSON export failed: %v", err)
 	}
+
 	fmt.Println("  Written " + tmpDir + "/audit-report.json")
 
 	if err := plugin.ExportEventsToNDJSON(tmpDir + "/audit-events.ndjson"); err != nil {
 		log.Fatalf("NDJSON export failed: %v", err)
 	}
+
 	fmt.Println("  Written " + tmpDir + "/audit-events.ndjson")
 
 	if err := plugin.ExportToHTML(tmpDir + "/audit-report.html"); err != nil {
 		log.Fatalf("HTML export failed: %v", err)
 	}
+
 	fmt.Println("  Written " + tmpDir + "/audit-report.html")
 }

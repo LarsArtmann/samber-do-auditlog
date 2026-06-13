@@ -32,6 +32,7 @@ func (c *CrashingService) Shutdown() error {
 	return errConnectionReset
 }
 
+
 type HealthyDB struct {
 	DSN string
 }
@@ -41,6 +42,7 @@ var _ do.Healthchecker = (*HealthyDB)(nil)
 func (d *HealthyDB) HealthCheck() error {
 	return nil
 }
+
 
 type UnhealthyCache struct {
 	Reason string
@@ -56,6 +58,7 @@ func (c *UnhealthyCache) HealthCheck(_ context.Context) error {
 
 // --- Health check tests ---
 
+
 type HTTPServer struct {
 	Users *UserService
 }
@@ -64,7 +67,6 @@ type Config struct {
 	Port int
 }
 
-type CrashingService struct{}
 
 // --- Provider helpers ---
 func provideDB(injector do.Injector, name, url string) {
@@ -73,11 +75,13 @@ func provideDB(injector do.Injector, name, url string) {
 	})
 }
 
+
 func provideHealthyDB(injector do.Injector, name, dsn string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*HealthyDB, error) {
 		return &HealthyDB{DSN: dsn}, nil
 	})
 }
+
 
 func provideUnhealthyCache(injector do.Injector, name, reason string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*UnhealthyCache, error) {
@@ -85,11 +89,13 @@ func provideUnhealthyCache(injector do.Injector, name, reason string) {
 	})
 }
 
+
 func provideFailing(injector do.Injector, name string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*Database, error) {
 		return nil, os.ErrNotExist
 	})
 }
+
 
 func provideCache(injector do.Injector, name string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*Cache, error) {
@@ -97,11 +103,13 @@ func provideCache(injector do.Injector, name string) {
 	})
 }
 
+
 func provideCrashing(injector do.Injector, name string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*CrashingService, error) {
 		return &CrashingService{}, nil
 	})
 }
+
 
 func findServiceByName(t *testing.T, report auditlog.Report, name string) *auditlog.ServiceInfo {
 	t.Helper()
@@ -115,6 +123,7 @@ func findServiceByName(t *testing.T, report auditlog.Report, name string) *audit
 	return nil
 }
 
+
 func findServiceBySuffix(t *testing.T, report auditlog.Report, suffix string) *auditlog.ServiceInfo {
 	t.Helper()
 
@@ -127,6 +136,7 @@ func findServiceBySuffix(t *testing.T, report auditlog.Report, suffix string) *a
 	return nil
 }
 
+
 func assertVersion(t *testing.T, report auditlog.Report) {
 	t.Helper()
 
@@ -134,6 +144,7 @@ func assertVersion(t *testing.T, report auditlog.Report) {
 		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, report.Version)
 	}
 }
+
 
 func newPluginWithCapture() (*auditlog.Plugin, *[]auditlog.Event, do.Injector) { //nolint:ireturn
 	var captured []auditlog.Event
@@ -148,6 +159,8 @@ func newPluginWithCapture() (*auditlog.Plugin, *[]auditlog.Event, do.Injector) {
 	return p, &captured, do.NewWithOpts(p.Opts())
 }
 
+
+
 // --- Writer error types ---
 type failingWriter struct{}
 
@@ -155,8 +168,8 @@ func (failingWriter) Write([]byte) (int, error) {
 	return 0, errWriteFailed
 }
 
+
+
 // --- Error sentinels for writer tests ---
-var (
-	errWriteFailed       = errors.New("write failed")
-	errConnectionRefused = errors.New("connection refused")
-)
+var errWriteFailed = errors.New("write failed")
+var errConnectionRefused = errors.New("connection refused")

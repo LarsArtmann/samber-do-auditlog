@@ -62,6 +62,7 @@ func printSummary(report auditlog.Report, eventLog []string) {
 
 	failed := report.FailedServices()
 	fmt.Printf("    FailedServices(): %d failures\n", len(failed))
+
 	for _, f := range failed {
 		fmt.Printf("      %s: %s\n", f.ServiceName, f.Status)
 	}
@@ -69,6 +70,7 @@ func printSummary(report auditlog.Report, eventLog []string) {
 	if len(eventLog) > 0 {
 		fmt.Println()
 		fmt.Println("  OnEvent callback (invocations only):")
+
 		for _, name := range eventLog {
 			fmt.Println("    " + name)
 		}
