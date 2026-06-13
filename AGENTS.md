@@ -116,7 +116,7 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **`serviceKey`** uses `scopeID + "/" + serviceName` concatenation — single allocation per key. Consider struct key if this becomes a bottleneck.
 - **Disabled path** is zero-cost: `Opts()` returns empty hooks, so samber/do never calls recorder methods. Disabled overhead is entirely samber/do's own (4 allocs, ~115ns).
 - **Benchmark suite** covers: Invocation (hot path), Disabled, Registration, ConcurrentInvocation, BuildReport (50/100/500 services), EventsCopy, OnEventCallback, HealthCheck.
-- **HTML redesign**: Dark observability dashboard aesthetic with JetBrains Mono + DM Sans fonts, color-coded type badges (purple=lazy, blue=eager, orange=transient, green=alias), animated tab transitions, stat cards with hover glow effects, and a legend showing type distribution counts.
+- **HTML redesign**: Warm amber "Container Telemetry" aesthetic — phosphor amber (#e8a838) on dark charcoal (#14110d) palette, Space Grotesk + IBM Plex Mono fonts, **lifecycle waveform** signature element (plots all events as colored vertical marks on a timeline, height-encoded by duration, colored by type, errors in coral), color-coded type badges (purple=lazy, amber=eager, warm orange=transient, jade=alias), animated tab transitions, stat cards with hover accent bar, reduced-motion support, subtle warm radial glow on body background.
 
 ---
 

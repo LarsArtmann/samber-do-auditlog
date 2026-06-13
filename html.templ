@@ -9,37 +9,39 @@ templ reportHTML(report Report) {
 			<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; script-src 'unsafe-inline'; font-src https://fonts.gstatic.com;"/>
 			<title>do-auditlog: { report.ContainerID }</title>
 			<style>
-	  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+	  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 	  :root {
-	    --bg: #080c14;
-	    --bg-elevated: #0d1219;
-	    --surface: #131a24;
-	    --surface-hover: #1a2332;
-	    --border: #1e2d3d;
-	    --border-active: #2d4a6f;
-	    --text: #e2e8f0;
-	    --text-muted: #64748b;
-	    --text-dim: #475569;
-	    --accent: #38bdf8;
-	    --accent-dim: rgba(56,189,248,0.12);
-	    --success: #34d399;
-	    --success-dim: rgba(52,211,153,0.12);
-	    --warning: #fbbf24;
-	    --warning-dim: rgba(251,191,36,0.12);
-	    --error: #f87171;
-	    --error-dim: rgba(248,113,113,0.12);
-	    --lazy: #a78bfa;
-	    --eager: #38bdf8;
-	    --transient: #fb923c;
-	    --alias: #34d399;
-	    --radius: 10px;
+	    --bg: #14110d;
+	    --bg-elevated: #1c1812;
+	    --surface: #241f18;
+	    --surface-hover: #2c2620;
+	    --border: #2e2820;
+	    --border-active: #4a4030;
+	    --text: #ddd4c4;
+	    --text-muted: #9a8d78;
+	    --text-dim: #6b6155;
+	    --accent: #e8a838;
+	    --accent-dim: rgba(232,168,56,0.12);
+	    --success: #6fbf8e;
+	    --success-dim: rgba(111,191,142,0.12);
+	    --warning: #d4a843;
+	    --warning-dim: rgba(212,168,67,0.12);
+	    --error: #e07060;
+	    --error-dim: rgba(224,112,96,0.12);
+	    --info: #8ec5d4;
+	    --lazy: #9d8cd4;
+	    --eager: #e8a838;
+	    --transient: #d49060;
+	    --alias: #6fbf8e;
+	    --radius: 6px;
 	    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 	  }
 	  * { margin: 0; padding: 0; box-sizing: border-box; }
 	  body {
-	    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+	    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
 	    background: var(--bg);
+	    background-image: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(232,168,56,0.04), transparent);
 	    color: var(--text);
 	    line-height: 1.6;
 	    padding: 2rem;
@@ -60,7 +62,7 @@ templ reportHTML(report Report) {
 	    gap: 1rem;
 	  }
 	  .header-left h1 {
-	    font-family: 'JetBrains Mono', monospace;
+	    font-family: 'IBM Plex Mono', monospace;
 	    font-size: 1.35rem;
 	    font-weight: 700;
 	    letter-spacing: -0.02em;
@@ -77,7 +79,7 @@ templ reportHTML(report Report) {
 	    box-shadow: 0 0 8px var(--accent);
 	  }
 	  .version {
-	    font-family: 'JetBrains Mono', monospace;
+	    font-family: 'IBM Plex Mono', monospace;
 	    font-size: 0.7rem;
 	    color: var(--text-dim);
 	    background: var(--surface);
@@ -91,7 +93,7 @@ templ reportHTML(report Report) {
 	    color: var(--text-muted);
 	    font-size: 0.8rem;
 	    margin-top: 0.4rem;
-	    font-family: 'JetBrains Mono', monospace;
+	    font-family: 'IBM Plex Mono', monospace;
 	  }
 	  .subtitle .mono { color: var(--accent); }
 
@@ -149,7 +151,7 @@ templ reportHTML(report Report) {
 	    margin-bottom: 0.3rem;
 	  }
 	  .stat-card .value {
-	    font-family: 'JetBrains Mono', monospace;
+	    font-family: 'IBM Plex Mono', monospace;
 	    font-size: 1.6rem;
 	    font-weight: 700;
 	    color: var(--accent);
@@ -178,7 +180,7 @@ templ reportHTML(report Report) {
 	    font-weight: 500;
 	    background: none;
 	    white-space: nowrap;
-	    font-family: 'DM Sans', sans-serif;
+	    font-family: 'Space Grotesk', sans-serif;
 	  }
 	  .tab:hover { color: var(--text-muted); }
 	  .tab.active {
@@ -199,7 +201,7 @@ templ reportHTML(report Report) {
 	    font-size: 0.85rem;
 	    flex: 1;
 	    min-width: 200px;
-	    font-family: 'DM Sans', sans-serif;
+	    font-family: 'Space Grotesk', sans-serif;
 	    transition: border-color var(--transition), box-shadow var(--transition);
 	  }
 	  .filter-bar input::placeholder { color: var(--text-dim); }
@@ -214,7 +216,7 @@ templ reportHTML(report Report) {
 	    background: transparent;
 	    color: var(--text-muted);
 	    transition: all var(--transition);
-	    font-family: 'DM Sans', sans-serif;
+	    font-family: 'Space Grotesk', sans-serif;
 	    font-weight: 500;
 	  }
 	  .chip:hover { border-color: var(--accent); color: var(--text); }
@@ -237,7 +239,7 @@ templ reportHTML(report Report) {
 	  tr:hover td { background: var(--surface); }
 	  .has-error { color: var(--error); }
 	  .mono {
-	    font-family: 'JetBrains Mono', monospace;
+	    font-family: 'IBM Plex Mono', monospace;
 	    font-size: 0.8rem;
 	  }
 	  .deps-list { font-size: 0.8rem; color: var(--text-muted); }
@@ -251,13 +253,13 @@ templ reportHTML(report Report) {
 	    border-radius: 4px;
 	    font-size: 0.7rem;
 	    font-weight: 600;
-	    font-family: 'JetBrains Mono', monospace;
+	    font-family: 'IBM Plex Mono', monospace;
 	    text-transform: uppercase;
 	    letter-spacing: 0.03em;
 	  }
-	  .type-badge.lazy { background: rgba(167,139,250,0.12); color: var(--lazy); }
+	  .type-badge.lazy { background: rgba(157,140,212,0.12); color: var(--lazy); }
 	  .type-badge.eager { background: var(--accent-dim); color: var(--eager); }
-	  .type-badge.transient { background: rgba(251,146,60,0.12); color: var(--transient); }
+	  .type-badge.transient { background: rgba(212,144,96,0.12); color: var(--transient); }
 	  .type-badge.alias { background: var(--success-dim); color: var(--alias); }
 
 	  .status-badge {
@@ -271,7 +273,7 @@ templ reportHTML(report Report) {
 	    text-transform: uppercase;
 	    letter-spacing: 0.03em;
 	  }
-	  .status-badge.registered { background: rgba(100,116,139,0.12); color: var(--text-muted); }
+	  .status-badge.registered { background: rgba(154,141,120,0.12); color: var(--text-muted); }
 	  .status-badge.active { background: var(--success-dim); color: var(--success); }
 	  .status-badge.shutdown { background: var(--accent-dim); color: var(--accent); }
 	  .status-badge.invocation_error, .status-badge.shutdown_error {
@@ -283,12 +285,12 @@ templ reportHTML(report Report) {
 	    border-radius: 4px;
 	    font-size: 0.7rem;
 	    font-weight: 600;
-	    font-family: 'JetBrains Mono', monospace;
+	    font-family: 'IBM Plex Mono', monospace;
 	  }
 	  .event-badge.registration { background: var(--accent-dim); color: var(--accent); }
 	  .event-badge.invocation { background: var(--success-dim); color: var(--success); }
 	  .event-badge.shutdown { background: var(--warning-dim); color: var(--warning); }
-	  .event-badge.health_check { background: rgba(210,153,34,0.15); color: #e8b94a; }
+	  .event-badge.health_check { background: rgba(142,197,212,0.12); color: var(--info); }
 
 	  .table-wrap {
 	    overflow-x: auto;
@@ -308,7 +310,7 @@ templ reportHTML(report Report) {
 	    max-width: 400px;
 	    word-break: break-word;
 	    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-	    font-family: 'JetBrains Mono', monospace;
+	    font-family: 'IBM Plex Mono', monospace;
 	  }
 	  .tooltip.visible { display: block; }
 
@@ -348,7 +350,7 @@ templ reportHTML(report Report) {
 	    transition: all var(--transition);
 	  }
 	  .graph-controls button:hover { border-color: var(--accent); color: var(--accent); }
-	  .graph-layer-label { fill: var(--text-dim); font-size: 10px; font-family: 'JetBrains Mono', monospace; opacity: 0.5; }
+	  .graph-layer-label { fill: var(--text-dim); font-size: 10px; font-family: 'IBM Plex Mono', monospace; opacity: 0.5; }
 	  .graph-node { cursor: pointer; }
 	  .graph-node rect {
 	    rx: 8; ry: 8;
@@ -359,7 +361,7 @@ templ reportHTML(report Report) {
 	  .graph-node.highlighted rect { stroke-width: 3; filter: brightness(1.4); }
 	  .graph-node.dimmed { opacity: 0.2; }
 	  .graph-node text {
-	    font-family: 'JetBrains Mono', monospace;
+	    font-family: 'IBM Plex Mono', monospace;
 	    font-size: 11px;
 	    fill: var(--text);
 	  }
@@ -374,11 +376,11 @@ templ reportHTML(report Report) {
 	    left: 0.5rem;
 	    font-size: 0.7rem;
 	    color: var(--text-dim);
-	    background: rgba(8,12,20,0.85);
+	    background: rgba(20,17,13,0.85);
 	    padding: 0.35rem 0.7rem;
 	    border-radius: 6px;
 	    pointer-events: none;
-	    font-family: 'JetBrains Mono', monospace;
+	    font-family: 'IBM Plex Mono', monospace;
 	  }
 
 	  .timeline-bar { height: 8px; border-radius: 4px; transition: width 0.3s; }
@@ -395,7 +397,7 @@ templ reportHTML(report Report) {
 	  .timeline-label {
 	    width: 220px;
 	    font-size: 0.8rem;
-	    font-family: 'JetBrains Mono', monospace;
+	    font-family: 'IBM Plex Mono', monospace;
 	    text-align: right;
 	    flex-shrink: 0;
 	    overflow: hidden;
@@ -416,7 +418,7 @@ templ reportHTML(report Report) {
 	    gap: 2px;
 	  }
 
-	  .scope-tree { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+	  .scope-tree { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; }
 	  .scope-node { margin-left: 1.5rem; margin-top: 0.25rem; }
 	  .scope-node-header {
 	    display: flex;
@@ -448,6 +450,67 @@ templ reportHTML(report Report) {
 	  .scope-svc:hover { border-color: var(--accent); }
 	  .scope-svc .svc-icon { font-size: 0.85rem; }
 
+	  .waveform-section {
+	    display: flex;
+	    align-items: center;
+	    gap: 0.75rem;
+	    margin-bottom: 1.5rem;
+	    background: var(--bg-elevated);
+	    border: 1px solid var(--border);
+	    border-radius: var(--radius);
+	    padding: 0.6rem 0.85rem;
+	  }
+	  .waveform-label {
+	    font-family: 'IBM Plex Mono', monospace;
+	    font-size: 0.6rem;
+	    color: var(--text-dim);
+	    text-transform: uppercase;
+	    letter-spacing: 0.12em;
+	    white-space: nowrap;
+	    font-weight: 500;
+	  }
+	  .waveform {
+	    flex: 1;
+	    height: 44px;
+	    position: relative;
+	    overflow: hidden;
+	  }
+	  .waveform::after {
+	    content: '';
+	    position: absolute;
+	    bottom: 3px; left: 0; right: 0;
+	    height: 1px;
+	    background: var(--border);
+	  }
+	  .wf-event {
+	    position: absolute;
+	    bottom: 4px;
+	    width: 2px;
+	    border-radius: 1px;
+	    min-height: 3px;
+	    transition: opacity 0.15s;
+	  }
+	  .waveform:hover .wf-event { opacity: 0.6; }
+	  .waveform:hover .wf-event:hover { opacity: 1; transform: scaleY(1.15); }
+	  .waveform-legend {
+	    display: flex;
+	    gap: 0.45rem;
+	    align-items: center;
+	  }
+	  .wf-legend-item {
+	    display: flex;
+	    align-items: center;
+	    gap: 0.2rem;
+	    font-size: 0.6rem;
+	    color: var(--text-dim);
+	    font-family: 'IBM Plex Mono', monospace;
+	    white-space: nowrap;
+	  }
+	  .wf-legend-dot {
+	    width: 5px; height: 8px;
+	    border-radius: 1px;
+	  }
+
 	  .footer {
 	    margin-top: 3rem;
 	    padding-top: 1.2rem;
@@ -456,7 +519,10 @@ templ reportHTML(report Report) {
 	    font-size: 0.75rem;
 	    display: flex;
 	    justify-content: space-between;
-	    font-family: 'JetBrains Mono', monospace;
+	    font-family: 'IBM Plex Mono', monospace;
+	  }
+	  @media (prefers-reduced-motion: reduce) {
+	    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 	  }
 	</style>
 		</head>
@@ -468,6 +534,17 @@ templ reportHTML(report Report) {
 				</div>
 				<div class="legend" id="legend"></div>
 			</header>
+			<div class="waveform-section">
+				<span class="waveform-label">Lifecycle</span>
+				<div class="waveform" id="waveform"></div>
+				<div class="waveform-legend">
+					<span class="wf-legend-item"><span class="wf-legend-dot" style="background:var(--accent)"></span>reg</span>
+					<span class="wf-legend-item"><span class="wf-legend-dot" style="background:var(--success)"></span>invoke</span>
+					<span class="wf-legend-item"><span class="wf-legend-dot" style="background:var(--warning)"></span>shut</span>
+					<span class="wf-legend-item"><span class="wf-legend-dot" style="background:var(--info)"></span>health</span>
+					<span class="wf-legend-item"><span class="wf-legend-dot" style="background:var(--error)"></span>error</span>
+				</div>
+			</div>
 			<div class="stats" id="stats"></div>
 			<div class="tab-bar">
 				<button class="tab active" data-tab="services">Services</button>
@@ -562,6 +639,26 @@ templ reportHTML(report Report) {
 	  const count = typeCounts[k] || 0;
 	  return count > 0 ? '<div class="legend-item"><span class="icon">' + icon + '</span>' + typeLabels[k] + ' <span style="opacity:0.5">(' + count + ')</span></div>' : '';
 	}).join('');
+
+	// Lifecycle waveform
+	(function renderWaveform(){
+	  const events=report.events;
+	  if(!events||!events.length)return;
+	  const container=document.getElementById('waveform');
+	  const colors={registration:'var(--accent)',invocation:'var(--success)',shutdown:'var(--warning)',health_check:'var(--info)'};
+	  const ts=events.map(e=>new Date(e.timestamp).getTime());
+	  const minT=Math.min(...ts),maxT=Math.max(...ts),range=(maxT-minT)||1;
+	  const maxDur=Math.max(...events.filter(e=>e.duration_ms).map(e=>e.duration_ms),1);
+	  container.innerHTML=events.map(e=>{
+	    const t=new Date(e.timestamp).getTime();
+	    const pct=((t-minT)/range)*100;
+	    const color=e.error?'var(--error)':colors[e.event_type]||'var(--text-muted)';
+	    const dur=e.duration_ms||0;
+	    const h=dur>0?Math.max(4,(dur/maxDur)*28):4;
+	    const tip=e.event_type+(e.service_name?' '+e.service_name:'')+(e.phase?' '+e.phase:'')+(dur>0?' '+dur.toFixed(2)+'ms':'');
+	    return '<div class="wf-event" style="left:'+pct.toFixed(2)+'%;height:'+h.toFixed(0)+'px;background:'+color+'" title="'+esc(tip)+'"></div>';
+	  }).join('');
+	})();
 
 	// Stats
 	const errorCount = report.services.filter(s => s.status === 'invocation_error' || s.status === 'shutdown_error').length;
@@ -755,7 +852,7 @@ templ reportHTML(report Report) {
 	      +(buildPct>0?'<div class="timeline-bar" style="width:'+buildPct+'%;background:var(--accent)" title="Build: '+(s.first_build_duration_ms||0).toFixed(3)+'ms"></div>':'')
 	      +(shutPct>0?'<div class="timeline-bar" style="width:'+shutPct+'%;background:var(--warning)" title="Shutdown: '+(s.shutdown_duration_ms||0).toFixed(3)+'ms"></div>':'')
 	      +'</div>'
-	      +'<div style="width:120px;text-align:right;font-size:0.8rem;color:var(--text-muted);font-family:JetBrains Mono,monospace">'
+	      +'<div style="width:120px;text-align:right;font-size:0.8rem;color:var(--text-muted);font-family:IBM Plex Mono,monospace">'
 	      +(s.first_build_duration_ms?s.first_build_duration_ms.toFixed(2)+'ms':'')
 	      +(s.shutdown_duration_ms?' / '+s.shutdown_duration_ms.toFixed(2)+'ms':'')
 	      +'</div></div>';
