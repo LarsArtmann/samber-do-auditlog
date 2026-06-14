@@ -159,9 +159,10 @@ func assertNoRawXSS(t *testing.T, output, context string) {
 		}
 	}
 
-	// Check for javascript: and onerror= only in HTML portions (outside <script> blocks).
-	// Error messages like "javascript:alert(1)" are safely encoded inside JSON in <script> tags.
-	htmlOnly := stripScriptTags(output)
+	// Check for javascript: and onerror= only in HTML portions (outside JSON script blocks).
+	// Error messages like "javascript:alert(1)" are safely encoded inside JSON in script tags.
+	// templ's JSONScript escapes </ to prevent premature closing, so the data is inert.
+	htmlOnly := stripJSONScripts(output)
 
 	htmlVectors := []string{
 		"javascript:alert",
@@ -177,31 +178,35 @@ func assertNoRawXSS(t *testing.T, output, context string) {
 	}
 }
 
-func stripScriptTags(html string) string {
-	var b strings.Builder
+// stripJSONScripts removes all <script ... type="application/json">...</script>
+// blocks from the HTML output. These blocks contain report data as JSON
+// (including user-controlled strings), which is inert in the browser.
+// The remaining HTML is checked for unescaped XSS vectors.
+func stripJSONScripts(html string) string {
+	const marker = `type="application/json"`
 
-	inScript := false
-	i := 0
+	const closeTag = `</script>`
 
-	for i < len(html) {
-		if !inScript && strings.HasPrefix(html[i:], "<script") {
-			end := strings.Index(html[i:], "</script>")
-			if end >= 0 {
-				i += end + len("</script>")
-
-				continue
-			}
-
+	for {
+		idx := strings.Index(html, marker)
+		if idx < 0 {
 			break
 		}
 
-		if strings.HasPrefix(html[i:], "<script") {
-			inScript = true
+		// Backtrack to the opening <script tag.
+		scriptStart := strings.LastIndex(html[:idx], "<script")
+		if scriptStart < 0 {
+			break
 		}
 
-		b.WriteByte(html[i])
-		i++
+		closeIdx := strings.Index(html[scriptStart:], closeTag)
+		if closeIdx < 0 {
+			break
+		}
+
+		end := scriptStart + closeIdx + len(closeTag)
+		html = html[:scriptStart] + html[end:]
 	}
 
-	return b.String()
+	return html
 }

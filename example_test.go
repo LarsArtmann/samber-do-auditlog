@@ -128,7 +128,7 @@ func ExampleReport_WriteMermaid() {
 		return
 	}
 
-	fmt.Println("has header:", bytes.HasPrefix(buf.Bytes(), []byte("flowchart TD")))
+	fmt.Println("has header:", bytes.Contains(buf.Bytes(), []byte("flowchart TD")))
 
 	// Output: has header: true
 }

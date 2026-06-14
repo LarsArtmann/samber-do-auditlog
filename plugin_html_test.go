@@ -138,3 +138,50 @@ func TestWriteHTML_TypeMetadataInjected(t *testing.T) {
 	assertHTMLContains(t, html, "statuses")
 	assertHTMLContains(t, html, "events")
 }
+
+func TestWriteHTML_MultiServiceIntegration(t *testing.T) {
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+	child := injector.Scope("child-scope")
+
+	provideDB(injector, "db", "postgres://localhost")
+	provideCache(injector, "cache")
+	provideUserServiceWithDB(injector, "user-service", "db")
+	provideDB(child, "child-db", "postgres://child")
+
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvokeNamed[*Cache](injector, "cache")
+	_ = do.MustInvokeNamed[*UserService](injector, "user-service")
+	_ = do.MustInvokeNamed[*Database](child, "child-db")
+
+	var buf bytes.Buffer
+
+	err := p.WriteHTML(&buf)
+	if err != nil {
+		t.Fatalf("WriteHTML failed: %v", err)
+	}
+
+	html := buf.String()
+
+	for _, svc := range []string{"db", "cache", "user-service", "child-db"} {
+		assertHTMLContains(t, html, svc)
+	}
+
+	assertHTMLContains(t, html, "child-scope")
+	assertHTMLContains(t, html, "scope_count")
+
+	report := p.Report()
+	assertHTMLContains(t, html, report.ContainerID)
+
+	for _, tab := range []string{"tab-services", "tab-scopes", "tab-graph", "tab-timeline", "tab-events"} {
+		assertHTMLContains(t, html, tab)
+	}
+
+	assertHTMLContains(t, html, "services-tbody")
+	assertHTMLContains(t, html, "events-tbody")
+	assertHTMLContains(t, html, "scope-tree")
+	assertHTMLContains(t, html, "graph-container")
+	assertHTMLContains(t, html, "timeline-container")
+	assertHTMLContains(t, html, "event-filters")
+	assertHTMLContains(t, html, "service-search")
+}

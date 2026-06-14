@@ -89,7 +89,10 @@ func diagramNodeID(scopeID, serviceName string) string {
 
 type mermaidFormatter struct{}
 
-func (mermaidFormatter) Header() string { return "flowchart TD" }
+func (mermaidFormatter) Header() string {
+	return `%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#e8a838', 'primaryTextColor':'#14110d', 'primaryBorderColor':'#4a4030', 'lineColor':'#9a8d78', 'fontSize':'14px'}}}%%
+flowchart TD`
+}
 func (mermaidFormatter) Footer() string { return "" }
 func (mermaidFormatter) NodeID(scopeID, serviceName string) string {
 	return diagramNodeID(scopeID, serviceName)
@@ -105,7 +108,18 @@ func (mermaidFormatter) EdgeDecl(fromID, toID string) string {
 
 type plantumlFormatter struct{}
 
-func (plantumlFormatter) Header() string { return "@startuml" }
+func (plantumlFormatter) Header() string {
+	return `@startuml
+skinparam component {
+  BackgroundColor #e8a838
+  FontColor #14110d
+  BorderColor #4a4030
+}
+skinparam arrow {
+  Color #9a8d78
+}
+skinparam defaultTextAlignment left`
+}
 func (plantumlFormatter) Footer() string { return "@enduml" }
 func (plantumlFormatter) NodeID(scopeID, serviceName string) string {
 	return strings.NewReplacer(

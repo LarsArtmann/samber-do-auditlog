@@ -297,6 +297,12 @@ templ reportHTML(report Report) {
 	    border: 1px solid var(--border);
 	    border-radius: var(--radius);
 	  }
+	  .empty-state td {
+	    text-align: center;
+	    padding: 2rem;
+	    color: var(--text-muted);
+	    font-style: italic;
+	  }
 	  .tooltip {
 	    display: none;
 	    position: fixed;
@@ -587,6 +593,7 @@ templ reportHTML(report Report) {
 							</tr>
 						</thead>
 						<tbody id="services-tbody"></tbody>
+						<tbody id="services-empty" class="empty-state" style="display:none"><tr><td colspan="11">No services registered.</td></tr></tbody>
 					</table>
 				</div>
 			</div>
@@ -611,9 +618,10 @@ templ reportHTML(report Report) {
 				<div class="table-wrap">
 					<table>
 						<thead>
-							<tr><th>#</th><th>Time</th><th>Type</th><th>Provider</th><th>Phase</th><th>Scope</th><th>Service</th><th>Duration</th><th>Error</th></tr>
+							<tr><th scope="col">#</th><th scope="col">Time</th><th scope="col">Type</th><th scope="col">Provider</th><th scope="col">Phase</th><th scope="col">Scope</th><th scope="col">Service</th><th scope="col">Duration</th><th scope="col">Error</th></tr>
 						</thead>
 						<tbody id="events-tbody"></tbody>
+						<tbody id="events-empty" class="empty-state" style="display:none"><tr><td colspan="9">No events recorded.</td></tr></tbody>
 					</table>
 				</div>
 			</div>
@@ -744,11 +752,17 @@ templ reportHTML(report Report) {
 	    +'</tr>';
 	});
 	document.getElementById('services-tbody').innerHTML=allServices.join('');
+	document.getElementById('services-empty').style.display=allServices.length?'none':'';
+	let searchTimer;
 	document.getElementById('service-search').addEventListener('input',e=>{
-	  const q=e.target.value.toLowerCase();
-	  document.querySelectorAll('#services-tbody tr').forEach(tr=>{
-	    tr.style.display=tr.dataset.search.includes(q)?'':'none';
-	  });
+	  clearTimeout(searchTimer);
+	  const val=e.target.value;
+	  searchTimer=setTimeout(()=>{
+	    const q=val.toLowerCase();
+	    document.querySelectorAll('#services-tbody tr').forEach(tr=>{
+	      tr.style.display=tr.dataset.search.includes(q)?'':'none';
+	    });
+	  },150);
 	});
 
 	// Events table
@@ -771,16 +785,18 @@ templ reportHTML(report Report) {
 	    +'</tr>';
 	});
 	document.getElementById('events-tbody').innerHTML=allEvents.join('');
+	document.getElementById('events-empty').style.display=allEvents.length?'none':'';
 
 	// Event filters
 	const eventTypes=['all','registration','invocation','shutdown','health_check'];
 	document.getElementById('event-filters').innerHTML=eventTypes.map(t=>
-	  '<button class="chip'+(t==='all'?' active':'')+'" data-filter="'+t+'">'+t+'</button>'
+	  '<button class="chip'+(t==='all'?' active':'')+'" aria-pressed="'+(t==='all'?'true':'false')+'" aria-label="Filter by '+t+'" data-filter="'+t+'">'+t+'</button>'
 	).join('');
 	document.querySelectorAll('#event-filters .chip').forEach(btn=>{
 	  btn.addEventListener('click',()=>{
-	    document.querySelectorAll('#event-filters .chip').forEach(b=>b.classList.remove('active'));
+	    document.querySelectorAll('#event-filters .chip').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false');});
 	    btn.classList.add('active');
+	    btn.setAttribute('aria-pressed','true');
 	    const f=btn.dataset.filter;
 	    document.querySelectorAll('#events-tbody tr').forEach(tr=>{
 	      tr.style.display=(f==='all'||tr.dataset.type===f)?'':'none';

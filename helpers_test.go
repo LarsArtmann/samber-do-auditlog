@@ -100,7 +100,10 @@ func provideCacheWithSleep(injector do.Injector, name string) {
 }
 
 // provideUserServiceWithDB is a named *UserService provider that depends on a single *Database.
-func provideUserServiceWithDB(injector do.Injector, name, dbName string) {
+func provideUserServiceWithDB(
+	injector do.Injector,
+	name, dbName string, //nolint:unparam // dbName varies by test intent
+) {
 	do.ProvideNamed(injector, name, func(i do.Injector) (*UserService, error) {
 		db := do.MustInvokeNamed[*Database](i, dbName)
 
