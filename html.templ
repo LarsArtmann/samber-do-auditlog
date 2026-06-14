@@ -753,14 +753,40 @@ templ reportHTML(report Report) {
 	});
 	document.getElementById('services-tbody').innerHTML=allServices.join('');
 	document.getElementById('services-empty').style.display=allServices.length?'none':'';
+
+	// Services pagination: show first N, reveal rest on demand
+	const SVC_PAGE_SIZE=50;
+	const svcRows=[...document.querySelectorAll('#services-tbody tr')];
+	let svcExpanded=false;
+
+	if(svcRows.length>SVC_PAGE_SIZE){
+		svcRows.forEach((tr,i)=>{if(i>=SVC_PAGE_SIZE)tr.style.display='none';});
+		const svcWrap=document.querySelector('#tab-services .table-wrap');
+		const moreBar=document.createElement('div');
+		moreBar.id='svc-more-bar';
+		moreBar.style.cssText='text-align:center;padding:0.75rem';
+		moreBar.innerHTML='<button class="chip" id="show-more-svc">Showing '+SVC_PAGE_SIZE+' of '+svcRows.length+' — Show all</button>';
+		svcWrap.appendChild(moreBar);
+		document.getElementById('show-more-svc').addEventListener('click',()=>{
+			svcExpanded=true;
+			svcRows.forEach(tr=>{tr.style.display='';});
+			moreBar.remove();
+		});
+	}
 	let searchTimer;
 	document.getElementById('service-search').addEventListener('input',e=>{
 	  clearTimeout(searchTimer);
 	  const val=e.target.value;
 	  searchTimer=setTimeout(()=>{
 	    const q=val.toLowerCase();
-	    document.querySelectorAll('#services-tbody tr').forEach(tr=>{
-	      tr.style.display=tr.dataset.search.includes(q)?'':'none';
+	    const searching=q.length>0;
+	    svcRows.forEach((tr,i)=>{
+	      const matches=tr.dataset.search.includes(q);
+	      if(searching){
+	        tr.style.display=matches?'':'none';
+	      }else{
+	        tr.style.display=matches&&(svcExpanded||i<SVC_PAGE_SIZE)?'':'none';
+	      }
 	    });
 	  },150);
 	});
@@ -787,6 +813,26 @@ templ reportHTML(report Report) {
 	document.getElementById('events-tbody').innerHTML=allEvents.join('');
 	document.getElementById('events-empty').style.display=allEvents.length?'none':'';
 
+	// Events pagination: show first N, reveal rest on demand
+	const EVT_PAGE_SIZE=100;
+	const evtRows=[...document.querySelectorAll('#events-tbody tr')];
+	let evtExpanded=false;
+
+	if(evtRows.length>EVT_PAGE_SIZE){
+		evtRows.forEach((tr,i)=>{if(i>=EVT_PAGE_SIZE)tr.style.display='none';});
+		const evtWrap=document.querySelector('#tab-events .table-wrap');
+		const evtMoreBar=document.createElement('div');
+		evtMoreBar.id='evt-more-bar';
+		evtMoreBar.style.cssText='text-align:center;padding:0.75rem';
+		evtMoreBar.innerHTML='<button class="chip" id="show-more-evt">Showing '+EVT_PAGE_SIZE+' of '+evtRows.length+' — Show all</button>';
+		evtWrap.appendChild(evtMoreBar);
+		document.getElementById('show-more-evt').addEventListener('click',()=>{
+			evtExpanded=true;
+			evtRows.forEach(tr=>{tr.style.display='';});
+			evtMoreBar.remove();
+		});
+	}
+
 	// Event filters
 	const eventTypes=['all','registration','invocation','shutdown','health_check'];
 	document.getElementById('event-filters').innerHTML=eventTypes.map(t=>
@@ -798,8 +844,13 @@ templ reportHTML(report Report) {
 	    btn.classList.add('active');
 	    btn.setAttribute('aria-pressed','true');
 	    const f=btn.dataset.filter;
-	    document.querySelectorAll('#events-tbody tr').forEach(tr=>{
-	      tr.style.display=(f==='all'||tr.dataset.type===f)?'':'none';
+	    evtRows.forEach((tr,i)=>{
+	      const matches=f==='all'||tr.dataset.type===f;
+	      if(f!=='all'){
+	        tr.style.display=matches?'':'none';
+	      }else{
+	        tr.style.display=matches&&(evtExpanded||i<EVT_PAGE_SIZE)?'':'none';
+	      }
 	    });
 	  });
 	});
