@@ -93,7 +93,7 @@ func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
 
 	r.mu.Lock()
 	r.recordScopeLocked(scopeID, scopeName, scope)
-	r.events = append(r.events, evt)
+	r.appendEventLocked(evt)
 	r.mu.Unlock()
 
 	if r.onEvent != nil {
@@ -124,7 +124,7 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 
 	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
 	evt := newEventFromRef(seq, now, EventTypeRegistration, PhaseAfter, ref, r.containerID, svcType, nil, nil)
-	r.events = append(r.events, evt)
+	r.appendEventLocked(evt)
 
 	r.mu.Unlock()
 
@@ -174,7 +174,7 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 
 	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
 	evt := newEventFromRef(seq, now, EventTypeInvocation, PhaseBefore, ref, r.containerID, svcType, nil, nil)
-	r.events = append(r.events, evt)
+	r.appendEventLocked(evt)
 
 	r.mu.Unlock()
 
@@ -216,7 +216,7 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 
 	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
 	evt := newEventFromRef(seq, now, EventTypeInvocation, PhaseAfter, ref, r.containerID, svcType, durationMs, errStr)
-	r.events = append(r.events, evt)
+	r.appendEventLocked(evt)
 
 	r.updateInvocationAggregate(scopeID, scopeName, serviceName, now, svcType, durationMs, errStr)
 
@@ -276,7 +276,7 @@ func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
 
 	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
 	evt := newEventFromRef(seq, now, EventTypeShutdown, PhaseBefore, ref, r.containerID, svcType, nil, nil)
-	r.events = append(r.events, evt)
+	r.appendEventLocked(evt)
 
 	r.mu.Unlock()
 
@@ -312,7 +312,7 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 
 	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
 	evt := newEventFromRef(seq, now, EventTypeShutdown, PhaseAfter, ref, r.containerID, svcType, nil, errStr)
-	r.events = append(r.events, evt)
+	r.appendEventLocked(evt)
 
 	if rec, ok := r.services[key]; ok {
 		rec.shutdownAt = &now

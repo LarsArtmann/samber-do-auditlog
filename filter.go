@@ -162,6 +162,7 @@ func (r Report) Filtered(opts ...ReportOption) Report {
 		ShutdownSucceeded:       noShutdownErrors(filteredServices),
 		HealthCheckSucceeded:    allHealthChecksPassed(filteredServices),
 		HealthCheckedCount:      countHealthChecked(filteredServices),
+		DroppedEventCount:       r.DroppedEventCount,
 		Events:                  filteredEvents,
 		Services:                filteredServices,
 		ScopeTree:               scopeTree,

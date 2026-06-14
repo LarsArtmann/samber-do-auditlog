@@ -107,6 +107,11 @@ type Recorder struct {
 	invocationSeq atomic.Int64
 	containerID   string
 	onEvent       func(Event)
+
+	// maxEvents caps the events slice. When > 0, new events are dropped
+	// (counter incremented) after this many events are stored.
+	maxEvents      int
+	droppedEvents  atomic.Int64
 }
 
 // NewRecorder creates a new event recorder.
@@ -149,6 +154,23 @@ func (r *Recorder) serviceTypeForLocked(key svcKey) ProviderType {
 	}
 
 	return ""
+}
+
+// appendEventLocked appends an event to the events slice, respecting the MaxEvents cap.
+// When the cap is reached, the event is dropped and the dropped counter is incremented.
+// Caller must hold r.mu.
+func (r *Recorder) appendEventLocked(evt Event) {
+	if r.maxEvents > 0 && len(r.events) >= r.maxEvents {
+		r.droppedEvents.Add(1)
+		return
+	}
+
+	r.events = append(r.events, evt)
+}
+
+// DroppedEventCount returns the number of events dropped due to MaxEvents cap.
+func (r *Recorder) DroppedEventCount() int64 {
+	return r.droppedEvents.Load()
 }
 
 // Events returns a defensive copy of all captured events.

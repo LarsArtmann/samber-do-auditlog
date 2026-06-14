@@ -27,6 +27,15 @@ type Config struct {
 	// OnEvent is called after each event is captured. Must not block.
 	// Called sequentially in hook order. Nil disables the callback.
 	OnEvent func(Event)
+	// MaxEvents caps the number of events stored in memory. When 0 (default),
+	// events grow without bound. When > 0, the recorder stops appending new
+	// events after reaching the cap and increments DroppedEventCount.
+	// Use this to prevent OOM in long-running processes.
+	MaxEvents int
+	// InitialEventCapacity pre-allocates the events slice to avoid runtime
+	// growslice reallocations. When 0, defaults to 1024. Set this to the
+	// expected number of events for your workload to eliminate slice growth cost.
+	InitialEventCapacity int
 }
 
 // Validate returns an error if the config is invalid.
@@ -76,8 +85,16 @@ func New(config Config) (*Plugin, error) {
 		config.Enabled = envIsEnabled()
 	}
 
+	recorder := NewRecorder(config.ContainerID, config.OnEvent)
+	if config.MaxEvents > 0 {
+		recorder.maxEvents = config.MaxEvents
+	}
+	if config.InitialEventCapacity > 0 && len(recorder.events) == 0 {
+		recorder.events = make([]Event, 0, config.InitialEventCapacity)
+	}
+
 	return &Plugin{
-		recorder: NewRecorder(config.ContainerID, config.OnEvent),
+		recorder: recorder,
 		config:   config,
 	}, nil
 }
@@ -183,6 +200,11 @@ func (p *Plugin) Events() []Event {
 // EventsCount returns the number of captured events without copying the slice.
 func (p *Plugin) EventsCount() int {
 	return p.recorder.EventsCount()
+}
+
+// DroppedEventCount returns the number of events dropped due to Config.MaxEvents.
+func (p *Plugin) DroppedEventCount() int64 {
+	return p.recorder.DroppedEventCount()
 }
 
 // RecordHealthCheckWithContext performs health checks on all services in the injector

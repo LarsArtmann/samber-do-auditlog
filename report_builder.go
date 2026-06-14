@@ -35,6 +35,7 @@ func (r *Recorder) BuildReport() Report {
 		ShutdownSucceeded:       noShutdownErrors(services),
 		HealthCheckSucceeded:    allHealthChecksPassed(services),
 		HealthCheckedCount:      countHealthChecked(services),
+		DroppedEventCount:       r.droppedEvents.Load(),
 		Events:                  events,
 		Services:                services,
 		ScopeTree:               scopeTree,

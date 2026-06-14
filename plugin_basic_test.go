@@ -140,3 +140,60 @@ func TestNew_AcceptsValidConfig(t *testing.T) {
 		t.Fatal("expected non-nil plugin")
 	}
 }
+
+func TestPlugin_MaxEventsCap(t *testing.T) {
+	p := mustNew(auditlog.Config{Enabled: true, MaxEvents: 4})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	// provideDB generates 2 registration events (before + after).
+	// Each invoke generates 2 events (before + after invocation).
+	// With MaxEvents=4: registration(2) + invoke1(2) fills the cap.
+	// invoke2(2) and invoke3(2) are dropped → 4 dropped total.
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+	if report.EventCount > 4 {
+		t.Fatalf("expected at most 4 events, got %d", report.EventCount)
+	}
+
+	if report.DroppedEventCount != 4 {
+		t.Fatalf("expected 4 dropped events, got %d", report.DroppedEventCount)
+	}
+
+	dropped := p.DroppedEventCount()
+	if dropped != 4 {
+		t.Fatalf("Plugin.DroppedEventCount: expected 4, got %d", dropped)
+	}
+}
+
+func TestPlugin_MaxEventsZeroIsUnlimited(t *testing.T) {
+	p := mustNew(auditlog.Config{Enabled: true, MaxEvents: 0})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	for range 10 {
+		_ = do.MustInvokeNamed[*Database](injector, "db")
+	}
+
+	report := p.Report()
+	if report.DroppedEventCount != 0 {
+		t.Fatalf("expected 0 dropped events with MaxEvents=0, got %d", report.DroppedEventCount)
+	}
+}
+
+func TestPlugin_InitialEventCapacity(t *testing.T) {
+	p := mustNew(auditlog.Config{Enabled: true, InitialEventCapacity: 5000})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	// Should work fine — capacity is just a pre-allocation hint.
+	report := p.Report()
+	if report.EventCount == 0 {
+		t.Fatal("expected events with custom initial capacity")
+	}
+}

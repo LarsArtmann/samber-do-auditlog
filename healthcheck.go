@@ -31,7 +31,7 @@ func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err
 		seq, now, EventTypeHealthCheck, PhaseAfter,
 		ref, r.containerID, svcType, nil, errStr,
 	)
-	r.events = append(r.events, evt)
+	r.appendEventLocked(evt)
 
 	rec.lastHealthCheckAt = &now
 	rec.healthCheckError = errStr
