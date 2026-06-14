@@ -9,7 +9,7 @@ import (
 
 // registerServices wires the full ride-sharing domain model into the injector
 // and returns the named child scopes for cross-scope usage.
-func registerServices(injector do.Injector) (driverScope, passengerScope, matchingScope *do.Scope) {
+func registerServices(injector do.Injector) (*do.Scope, *do.Scope, *do.Scope) {
 	// 2. Eager value injection
 	do.ProvideValue(injector, &AppConfig{
 		AppName: "RideShare",
@@ -76,9 +76,9 @@ func registerServices(injector do.Injector) (driverScope, passengerScope, matchi
 	})
 
 	// 7. Scopes
-	driverScope = injector.Scope("drivers")
-	passengerScope = injector.Scope("passengers")
-	matchingScope = injector.Scope("matching")
+	driverScope := injector.Scope("drivers")
+	passengerScope := injector.Scope("passengers")
+	matchingScope := injector.Scope("matching")
 
 	do.Provide(driverScope, func(i do.Injector) (*DriverService, error) {
 		vehicle := do.MustInvokeNamed[*Vehicle](i, "vehicle.sedan")

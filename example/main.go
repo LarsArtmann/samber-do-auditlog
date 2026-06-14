@@ -32,7 +32,7 @@ import (
 	"github.com/samber/do/v2"
 )
 
-func main() { //nolint:gocognit,gocyclo,cyclop,maintidx
+func main() {
 	fmt.Println("=== samber/do v2 + audit-log — comprehensive demo ===")
 	fmt.Println()
 
@@ -49,7 +49,7 @@ func main() { //nolint:gocognit,gocyclo,cyclop,maintidx
 
 // setupPlugin creates the audit-log plugin and the DI container with an
 // OnEvent callback that records every successful invocation.
-func setupPlugin() (*auditlog.Plugin, do.Injector, []string) {
+func setupPlugin() (*auditlog.Plugin, do.Injector, []string) { //nolint:ireturn
 	var eventLog []string
 
 	plugin := auditlog.New(auditlog.Config{

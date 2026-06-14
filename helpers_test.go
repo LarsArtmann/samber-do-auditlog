@@ -11,7 +11,7 @@ import (
 	"github.com/samber/do/v2"
 )
 
-// --- Shared test types ---..
+// --- Shared test types ---.
 type Database struct {
 	URL string
 }
@@ -63,7 +63,8 @@ type HTTPServer struct {
 type Config struct {
 	Port int
 }
-// --- Provider helpers ---.-.
+
+// --- Provider helpers ---.
 func provideDB(injector do.Injector, name, url string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*Database, error) {
 		return &Database{URL: url}, nil
@@ -132,7 +133,7 @@ func assertVersion(t *testing.T, report auditlog.Report) {
 	}
 }
 
-func newPluginAndInjector() (*auditlog.Plugin, do.Injector) {
+func newPluginAndInjector() (*auditlog.Plugin, do.Injector) { //nolint:ireturn
 	p := auditlog.New(auditlog.Config{Enabled: true})
 
 	return p, do.NewWithOpts(p.Opts())
@@ -149,12 +150,18 @@ func newPluginWithCapture() (*auditlog.Plugin, *[]auditlog.Event, do.Injector) {
 	})
 
 	return p, &captured, do.NewWithOpts(p.Opts())
-}// --- Writer error types ---.--.
+}
+
+// --- Writer error types ---
+
 type failingWriter struct{}
 
 func (failingWriter) Write([]byte) (int, error) {
 	return 0, errWriteFailed
-// --- Error sentinels for writer tests ---.---.
+}
+
+// --- Error sentinels for writer tests ---
+
 var (
 	errWriteFailed       = errors.New("write failed")
 	errConnectionRefused = errors.New("connection refused")
