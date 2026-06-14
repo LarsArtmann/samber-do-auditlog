@@ -133,6 +133,16 @@ func (r *Recorder) recordScopeLocked(scopeID, scopeName string, scope *do.Scope)
 	r.scopes[scopeID] = meta
 }
 
+// serviceTypeForLocked returns the recorded provider type for a service, or empty if
+// the service has not been recorded yet. Caller must hold r.mu.
+func (r *Recorder) serviceTypeForLocked(key string) ProviderType {
+	if rec, ok := r.services[key]; ok {
+		return rec.serviceType
+	}
+
+	return ""
+}
+
 // Events returns a defensive copy of all captured events.
 func (r *Recorder) Events() []Event {
 	r.mu.RLock()

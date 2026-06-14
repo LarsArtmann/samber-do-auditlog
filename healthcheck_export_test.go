@@ -27,13 +27,7 @@ func TestPlugin_HealthCheckReportSucceeded(t *testing.T) {
 	}
 
 	unhealthy := report.UnhealthyServices()
-	if len(unhealthy) != 1 {
-		t.Fatalf("expected 1 unhealthy service, got %d", len(unhealthy))
-	}
-
-	if unhealthy[0].ServiceName != "cache" {
-		t.Errorf("unhealthy service: want cache, got %s", unhealthy[0].ServiceName)
-	}
+	assertUnhealthyServiceCount(t, unhealthy, "cache")
 }
 
 func TestPlugin_HealthCheckSucceededFalseWhenNoChecks(t *testing.T) {
@@ -49,9 +43,7 @@ func TestPlugin_HealthCheckSucceededFalseWhenNoChecks(t *testing.T) {
 		t.Error("HealthCheckSucceeded should be false when no health checks have been recorded")
 	}
 
-	if report.HealthCheckedCount != 0 {
-		t.Errorf("HealthCheckedCount: want 0, got %d", report.HealthCheckedCount)
-	}
+	assertIntField(t, "HealthCheckedCount", report.HealthCheckedCount, 0)
 }
 
 func TestPlugin_HealthCheckOnEventCallback(t *testing.T) {
@@ -84,9 +76,7 @@ func TestPlugin_HealthCheckOnEventCallback(t *testing.T) {
 		t.Errorf("phase: want after, got %s", evt.Phase)
 	}
 
-	if evt.ServiceName != "db" {
-		t.Errorf("service name: want db, got %s", evt.ServiceName)
-	}
+	assertStringField(t, "service name", evt.ServiceName, "db")
 
 	if evt.Error != nil {
 		t.Errorf("expected no error for healthy service, got %s", *evt.Error)

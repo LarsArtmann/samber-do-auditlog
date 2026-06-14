@@ -21,9 +21,7 @@ func TestReport_ServiceByName(t *testing.T) {
 		t.Fatal("expected to find db service")
 	}
 
-	if svc.ServiceName != "db" {
-		t.Errorf("service name: want db, got %s", svc.ServiceName)
-	}
+	assertStringField(t, "service name", svc.ServiceName, "db")
 
 	if report.ServiceByName("nonexistent") != nil {
 		t.Error("expected nil for nonexistent service")
@@ -35,12 +33,8 @@ func TestReport_ServiceByRef(t *testing.T) {
 	injector := do.NewWithOpts(p.Opts())
 	child := injector.Scope("child")
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "root-db"}, nil
-	})
-	do.ProvideNamed(child, "db", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "child-db"}, nil
-	})
+	provideDB(injector, "db", "root-db")
+	provideDB(child, "db", "child-db")
 
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 	_ = do.MustInvokeNamed[*Database](child, "db")
@@ -76,9 +70,7 @@ func TestReport_ServicesByScope(t *testing.T) {
 	child := injector.Scope("child")
 
 	provideDB(injector, "root-svc", "test")
-	do.ProvideNamed(child, "child-svc", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "child"}, nil
-	})
+	provideDB(child, "child-svc", "child")
 
 	_ = do.MustInvokeNamed[*Database](injector, "root-svc")
 	_ = do.MustInvokeNamed[*Database](child, "child-svc")
@@ -121,9 +113,7 @@ func TestReport_EventsByService(t *testing.T) {
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
-	do.ProvideNamed(injector, "cache", func(i do.Injector) (*Database, error) {
-		return &Database{URL: "cache"}, nil
-	})
+	provideDB(injector, "cache", "cache")
 
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 	_ = do.MustInvokeNamed[*Database](injector, "cache")
@@ -186,11 +176,7 @@ func TestReport_EventsByRef(t *testing.T) {
 		t.Error("expected events for db in root scope")
 	}
 
-	for _, evt := range events {
-		if evt.ServiceName != "db" {
-			t.Errorf("expected db, got %s", evt.ServiceName)
-		}
-	}
+	assertAllEventsForService(t, events, "db")
 
 	noEvents := report.EventsByRef("nonexistent", "db")
 	if len(noEvents) != 0 {
@@ -237,13 +223,7 @@ func TestReport_UnhealthyServices(t *testing.T) {
 	report := p.Report()
 	unhealthy := report.UnhealthyServices()
 
-	if len(unhealthy) != 1 {
-		t.Fatalf("expected 1 unhealthy service, got %d", len(unhealthy))
-	}
-
-	if unhealthy[0].ServiceName != "sick-svc" {
-		t.Errorf("unhealthy service: want sick-svc, got %s", unhealthy[0].ServiceName)
-	}
+	assertUnhealthyServiceCount(t, unhealthy, "sick-svc")
 }
 
 func TestReport_Index(t *testing.T) {

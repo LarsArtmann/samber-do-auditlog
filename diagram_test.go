@@ -22,12 +22,7 @@ func TestReport_WriteMermaid(t *testing.T) {
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
-
-	do.ProvideNamed(injector, "user-svc", func(i do.Injector) (*UserService, error) {
-		db := do.MustInvokeNamed[*Database](i, "db")
-
-		return &UserService{DB: db}, nil
-	})
+	provideUserServiceWithDB(injector, "user-svc", "db")
 
 	_ = do.MustInvokeNamed[*UserService](injector, "user-svc")
 
@@ -42,13 +37,8 @@ func TestReport_WriteMermaid(t *testing.T) {
 
 	output := buf.String()
 
-	if !strings.Contains(output, "flowchart TD") {
-		t.Error("expected flowchart TD header")
-	}
-
-	if !strings.Contains(output, "-->") {
-		t.Error("expected dependency edge -->")
-	}
+	assertStringContains(t, output, "flowchart TD")
+	assertStringContains(t, output, "-->")
 }
 
 func TestReport_WritePlantUML(t *testing.T) {
@@ -56,12 +46,7 @@ func TestReport_WritePlantUML(t *testing.T) {
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
-
-	do.ProvideNamed(injector, "user-svc", func(i do.Injector) (*UserService, error) {
-		db := do.MustInvokeNamed[*Database](i, "db")
-
-		return &UserService{DB: db}, nil
-	})
+	provideUserServiceWithDB(injector, "user-svc", "db")
 
 	_ = do.MustInvokeNamed[*UserService](injector, "user-svc")
 
@@ -76,21 +61,11 @@ func TestReport_WritePlantUML(t *testing.T) {
 
 	output := buf.String()
 
-	if !strings.Contains(output, "@startuml") {
-		t.Error("expected @startuml header")
-	}
+	assertStringContains(t, output, "@startuml")
+	assertStringContains(t, output, "@enduml")
+	assertStringContains(t, output, "component")
 
-	if !strings.Contains(output, "@enduml") {
-		t.Error("expected @enduml footer")
-	}
-
-	if !strings.Contains(output, "component") {
-		t.Error("expected component declarations")
-	}
-
-	if !strings.Contains(output, "-->") {
-		t.Error("expected dependency edge -->")
-	}
+	assertStringContains(t, output, "-->")
 }
 
 func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
@@ -116,13 +91,8 @@ func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
 	}
 
 	output := buf.String()
-	if !strings.Contains(output, "flowchart TD") {
-		t.Error("expected flowchart header")
-	}
-
-	if !strings.Contains(output, "-->") {
-		t.Error("expected dependency edge")
-	}
+	assertStringContains(t, output, "flowchart TD")
+	assertStringContains(t, output, "-->")
 }
 
 func TestWriteMermaid_WriterError(t *testing.T) {
@@ -220,15 +190,7 @@ func TestWriteMermaid_ExternalDependency(t *testing.T) {
 	}
 
 	output := buf.String()
-	if !strings.Contains(output, "flowchart TD") {
-		t.Error("expected flowchart header")
-	}
-
-	if !strings.Contains(output, "external-dep") {
-		t.Error("expected external-dep label in output")
-	}
-
-	if !strings.Contains(output, "-->") {
-		t.Error("expected dependency edge")
-	}
+	assertStringContains(t, output, "flowchart TD")
+	assertStringContains(t, output, "external-dep")
+	assertStringContains(t, output, "-->")
 }

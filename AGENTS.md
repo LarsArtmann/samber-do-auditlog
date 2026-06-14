@@ -112,6 +112,7 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **`newServiceRecordFromMeta()`** builds `serviceRecord` from metadata strings (scopeID, scopeName, serviceName, now). Used when creating records for services discovered via health checks (not yet registered through hooks).
 - **`newServiceRecordCore`** uses lazy deps map (`nil` until first dependency recorded). `buildDepsLocked` returns `nil` for services with no deps (no empty slice allocation).
 - **`inferServiceType`** is called only during `OnAfterRegistration` (once per service), not per event. Events look up the type from the existing `serviceRecord`.
+- **`serviceTypeForLocked()`** centralizes the `if rec, ok := r.services[key]; ok { svcType = rec.serviceType }` lookup used by all 3 hook handlers (invocation, shutdown-before, shutdown-after). Caller must hold `r.mu`.
 - **Stack pop** uses LIFO fast path: checks last element first (O(1) common case), falls back to backward search only for unusual orderings.
 - **`serviceKey`** uses `scopeID + "/" + serviceName` concatenation — single allocation per key. Consider struct key if this becomes a bottleneck.
 - **Disabled path** is zero-cost: `Opts()` returns empty hooks, so samber/do never calls recorder methods. Disabled overhead is entirely samber/do's own (4 allocs, ~115ns).
@@ -127,6 +128,11 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - `t.Setenv()` for testing `DO_AUDITLOG_ENABLED` env var behavior.
 - `t.TempDir()` for file export tests.
 - Benchmarks exist in the test file for performance measurement.
+- **Shared test helpers** in `helpers_test.go` (external test package `auditlog_test`):
+  - **Provider factories** — `provideDB`, `provideDBWithSleep`, `provideCacheWithSleep`, `provideCache`, `provideHealthyDB`, `provideUnhealthyCache`, `provideFailing`, `provideCrashing`, `provideString`, `provideUserServiceWithDB`, `provideUserServiceWithDeps`, `provideHTTPServerWithUsers`.
+  - **Service lookup** — `findServiceByName(t, report, name)`, `findServiceBySuffix(t, report, suffix)`.
+  - **Plugin construction** — `newPluginAndInjector()`, `newPluginAndInjectorWithID(id)`, `newPluginWithCapture()`.
+  - **Assertion helpers** — `assertVersion`, `assertIntField`, `assertStringField`, `assertContainerID`, `assertServiceCount`, `assertEventCount`, `assertDependenciesCount`, `assertServiceIntField`, `assertServiceInvocationCount`, `assertServiceHealthCheckCount`, `assertReportServiceCount`, `assertFilteredServiceCount`, `assertUnhealthyServiceCount`, `assertHTMLContains`, `assertStringContains`, `assertAllEventsOfType`, `assertAllEventsForService`, `assertErrorExpected`, `unmarshalJSONForTest`.
 - Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (clean and error), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations, ServiceStatus computation across all states, transient and value providers, health checks (healthy/unhealthy/multiple/disabled/count/report/scope/UnhealthyServices).
 - **Coverage: ~95%** of statements, 140 tests (133 unit + 6 examples + 1 fuzz) + 11 benchmarks.
 - **HTML visualization features**: 5-tab layout (Services/Scopes/Graph/Timeline/Events), services table with type badges + status badges + shutdown duration + reverse deps + health column + search filter, collapsible scope tree with type emoji chips, Sugiyama layered DAG graph with type-colored nodes + pan/zoom + click-to-highlight, dual build+shutdown timeline bars with type icons, event type filter chips (registration/invocation/shutdown/health_check), keyboard nav (1-5), animated tab transitions, stat cards (including health checks when checked), responsive layout, footer with schema version.

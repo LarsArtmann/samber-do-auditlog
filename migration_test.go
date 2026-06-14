@@ -60,25 +60,15 @@ func TestMigrateReport_FromV01(t *testing.T) {
 		t.Fatalf("MigrateReport: %v", err)
 	}
 
-	if report.Version != auditlog.SchemaVersion {
-		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, report.Version)
-	}
+	assertVersion(t, report)
 
-	if report.ContainerID != "test-app" {
-		t.Errorf("container_id: want test-app, got %s", report.ContainerID)
-	}
+	assertContainerID(t, report, "test-app")
 
-	if report.ServiceCount != 2 {
-		t.Errorf("service_count: want 2, got %d", report.ServiceCount)
-	}
+	assertServiceCount(t, report, 2)
 
-	if report.EventCount != 4 {
-		t.Errorf("event_count: want 4, got %d", report.EventCount)
-	}
+	assertEventCount(t, report, 4)
 
-	if report.ScopeCount != 1 {
-		t.Errorf("scope_count: want 1, got %d", report.ScopeCount)
-	}
+	assertIntField(t, "scope_count", report.ScopeCount, 1)
 
 	if report.TotalBuildDurationMs != 17.7 {
 		t.Errorf("total_build_duration_ms: want 17.7, got %f", report.TotalBuildDurationMs)
@@ -101,9 +91,7 @@ func TestMigrateReport_FromV01(t *testing.T) {
 
 func TestMigrateReport_InvalidJSON(t *testing.T) {
 	_, err := auditlog.MigrateReport([]byte("not json"))
-	if err == nil {
-		t.Error("expected error for invalid JSON")
-	}
+	assertErrorExpected(t, err, "for invalid JSON")
 }
 
 func TestMigrateReport_EmptyReport(t *testing.T) {
@@ -112,13 +100,9 @@ func TestMigrateReport_EmptyReport(t *testing.T) {
 		t.Fatalf("MigrateReport: %v", err)
 	}
 
-	if report.Version != auditlog.SchemaVersion {
-		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, report.Version)
-	}
+	assertVersion(t, report)
 
-	if report.ServiceCount != 0 {
-		t.Errorf("service_count: want 0, got %d", report.ServiceCount)
-	}
+	assertServiceCount(t, report, 0)
 }
 
 func TestMigrateReport_RoundTrip(t *testing.T) {
@@ -180,9 +164,7 @@ func TestMigrateReport_NestedScopes(t *testing.T) {
 		t.Fatalf("MigrateReport: %v", err)
 	}
 
-	if report.ScopeCount != 4 {
-		t.Errorf("scope_count: want 4 (root + 2 children + 1 grandchild), got %d", report.ScopeCount)
-	}
+	assertIntField(t, "scope_count", report.ScopeCount, 4)
 }
 
 func TestMigrateReport_StatusComputation(t *testing.T) {
@@ -227,9 +209,7 @@ func TestMigrateReport_StatusComputation(t *testing.T) {
 				t.Fatalf("MigrateReport: %v", err)
 			}
 
-			if len(report.Services) != 1 {
-				t.Fatalf("expected 1 service, got %d", len(report.Services))
-			}
+			assertReportServiceCount(t, report)
 
 			if report.Services[0].Status != tc.status {
 				t.Errorf("status: want %s, got %s", tc.status, report.Services[0].Status)
@@ -264,9 +244,7 @@ func TestMigrateReport_EmptyScopeTree(t *testing.T) {
 		t.Fatalf("MigrateReport: %v", err)
 	}
 
-	if report.ScopeCount != 1 {
-		t.Errorf("scope_count: want 1 (empty root), got %d", report.ScopeCount)
-	}
+	assertIntField(t, "scope_count", report.ScopeCount, 1)
 }
 
 func TestMigrateReport_AlreadyCurrentVersion(t *testing.T) {
@@ -281,9 +259,7 @@ func TestMigrateReport_AlreadyCurrentVersion(t *testing.T) {
 		t.Errorf("version should remain 0.2.0, got %s", report.Version)
 	}
 
-	if report.ContainerID != "test" {
-		t.Errorf("container_id: want test, got %s", report.ContainerID)
-	}
+	assertContainerID(t, report, "test")
 }
 
 func TestMigrateReport_PreservesExportedAt(t *testing.T) {
@@ -314,7 +290,5 @@ func TestMigrateReport_EmptyInput(t *testing.T) {
 
 func TestMigrateReport_MissingVersion(t *testing.T) {
 	_, err := auditlog.MigrateReport([]byte(`{"container_id":"test"}`))
-	if err == nil {
-		t.Error("expected error for input without version field")
-	}
+	assertErrorExpected(t, err, "for input without version field")
 }

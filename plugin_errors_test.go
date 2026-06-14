@@ -149,9 +149,7 @@ func TestPlugin_ProviderError(t *testing.T) {
 		t.Error("expected InvocationError to be set")
 	}
 
-	if svc.InvocationCount != 1 {
-		t.Errorf("invocation_count: want 1, got %d", svc.InvocationCount)
-	}
+	assertServiceInvocationCount(t, svc, 1)
 }
 
 func TestPlugin_ShutdownWithErrors(t *testing.T) {
@@ -169,9 +167,7 @@ func TestPlugin_ShutdownWithErrors(t *testing.T) {
 		t.Error("expected ShutdownSucceeded=false when shutdown errors exist")
 	}
 
-	if len(report.Services) != 1 {
-		t.Fatalf("expected 1 service, got %d", len(report.Services))
-	}
+	assertReportServiceCount(t, report)
 
 	if report.Services[0].ShutdownError == nil {
 		t.Error("expected shutdown error to be captured")

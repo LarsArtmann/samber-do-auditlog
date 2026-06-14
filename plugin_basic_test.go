@@ -36,9 +36,7 @@ func TestPlugin_EnvVarEnables(t *testing.T) {
 		t.Fatal("expected events when env var is set")
 	}
 
-	if report.ServiceCount != 1 {
-		t.Errorf("expected 1 service, got %d", report.ServiceCount)
-	}
+	assertServiceCount(t, report, 1)
 }
 
 func TestPlugin_EnvVarValues(t *testing.T) {
@@ -92,8 +90,7 @@ func TestPlugin_ExplicitEnabledOverridesEnv(t *testing.T) {
 }
 
 func TestPlugin_ContainerID(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true, ContainerID: "test-container"})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjectorWithID("test-container")
 
 	provideDB(injector, "db", "postgres://localhost")
 	_ = do.MustInvokeNamed[*Database](injector, "db")

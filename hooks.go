@@ -212,11 +212,7 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 	}
 
 	// Look up service type.
-	var svcType ProviderType
-
-	if rec, ok := r.services[key]; ok {
-		svcType = rec.serviceType
-	}
+	svcType := r.serviceTypeForLocked(key)
 
 	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
 	evt := newEventFromRef(seq, now, EventTypeInvocation, PhaseAfter, ref, r.containerID, svcType, durationMs, errStr)
@@ -276,11 +272,7 @@ func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
 	r.recordScopeLocked(scopeID, scopeName, scope)
 	r.shutdownStart[key] = now
 
-	svcType := ProviderType("")
-
-	if rec, ok := r.services[key]; ok {
-		svcType = rec.serviceType
-	}
+	svcType := r.serviceTypeForLocked(key)
 
 	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
 	evt := newEventFromRef(seq, now, EventTypeShutdown, PhaseBefore, ref, r.containerID, svcType, nil, nil)
@@ -316,11 +308,7 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 		shutdownDur = &d
 	}
 
-	svcType := ProviderType("")
-
-	if rec, ok := r.services[key]; ok {
-		svcType = rec.serviceType
-	}
+	svcType := r.serviceTypeForLocked(key)
 
 	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
 	evt := newEventFromRef(seq, now, EventTypeShutdown, PhaseAfter, ref, r.containerID, svcType, nil, errStr)

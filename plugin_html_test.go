@@ -35,9 +35,7 @@ func TestPlugin_ExportToHTML(t *testing.T) {
 		t.Error("expected DOCTYPE in HTML output")
 	}
 
-	if !strings.Contains(string(data), "db") {
-		t.Error("expected 'db' service name in HTML output")
-	}
+	assertHTMLContains(t, string(data), "db")
 }
 
 func TestPlugin_WriteHTMLBuffer(t *testing.T) {
@@ -63,9 +61,7 @@ func TestPlugin_WriteHTMLBuffer(t *testing.T) {
 		t.Error("expected DOCTYPE in HTML output")
 	}
 
-	if !strings.Contains(html, "db") {
-		t.Error("expected 'db' service name in HTML output")
-	}
+	assertHTMLContains(t, html, "db")
 }
 
 func TestWriteHTML_EventsTabContent(t *testing.T) {
@@ -85,25 +81,11 @@ func TestWriteHTML_EventsTabContent(t *testing.T) {
 	html := buf.String()
 	htmlLower := strings.ToLower(html)
 
-	if !strings.Contains(html, "events-tbody") {
-		t.Error("expected events-tbody element in HTML")
-	}
-
-	if !strings.Contains(html, "allEvents") {
-		t.Error("expected allEvents JS variable in HTML")
-	}
-
-	if !strings.Contains(html, "report.events.map") {
-		t.Error("expected report.events.map in allEvents construction")
-	}
-
-	if !strings.Contains(html, "data-type=") {
-		t.Error("expected data-type attribute on event rows for filtering")
-	}
-
-	if !strings.Contains(htmlLower, "event-badge") {
-		t.Error("expected event-badge CSS class for event type badges")
-	}
+	assertHTMLContains(t, html, "events-tbody")
+	assertHTMLContains(t, html, "allEvents")
+	assertHTMLContains(t, html, "report.events.map")
+	assertHTMLContains(t, html, "data-type=")
+	assertHTMLContains(t, htmlLower, "event-badge")
 }
 
 func TestWriteHTML_AllFiveTabs(t *testing.T) {
@@ -125,28 +107,12 @@ func TestWriteHTML_AllFiveTabs(t *testing.T) {
 	tabs := []string{"services", "scopes", "graph", "timeline", "events"}
 	for _, tab := range tabs {
 		id := "tab-" + tab
-		if !strings.Contains(html, id) {
-			t.Errorf("expected %s tab content div in HTML", id)
-		}
+		assertHTMLContains(t, html, id)
 	}
 
-	if !strings.Contains(html, "services-tbody") {
-		t.Error("expected services-tbody in services tab")
-	}
-
-	if !strings.Contains(html, "scope-tree") {
-		t.Error("expected scope-tree element in scopes tab")
-	}
-
-	if !strings.Contains(html, "graph-container") {
-		t.Error("expected graph-container in graph tab")
-	}
-
-	if !strings.Contains(html, "timeline-container") {
-		t.Error("expected timeline-container in timeline tab")
-	}
-
-	if !strings.Contains(html, "events-tbody") {
-		t.Error("expected events-tbody in events tab")
-	}
+	assertHTMLContains(t, html, "services-tbody")
+	assertHTMLContains(t, html, "scope-tree")
+	assertHTMLContains(t, html, "graph-container")
+	assertHTMLContains(t, html, "timeline-container")
+	assertHTMLContains(t, html, "events-tbody")
 }

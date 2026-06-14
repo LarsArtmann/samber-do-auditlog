@@ -63,45 +63,22 @@ func registerServices(injector do.Injector) (*do.Scope, *do.Scope, *do.Scope) {
 	})
 
 	// 6. Named services
-	do.ProvideNamed(injector, "vehicle.sedan", func(i do.Injector) (*Vehicle, error) {
-		return &Vehicle{Name: "Sedan", Capacity: 4, Active: true}, nil
-	})
-
-	do.ProvideNamed(injector, "vehicle.suv", func(i do.Injector) (*Vehicle, error) {
-		return &Vehicle{Name: "SUV", Capacity: 7, Active: true}, nil
-	})
-
-	do.ProvideNamed(injector, "vehicle.van", func(i do.Injector) (*Vehicle, error) {
-		return &Vehicle{Name: "Van", Capacity: 12, Active: true}, nil
-	})
+	provideVehicle(injector, "vehicle.sedan", 4)
+	provideVehicle(injector, "vehicle.suv", 7)
+	provideVehicle(injector, "vehicle.van", 12)
 
 	// 7. Scopes
 	driverScope := injector.Scope("drivers")
 	passengerScope := injector.Scope("passengers")
 	matchingScope := injector.Scope("matching")
 
-	do.Provide(driverScope, func(i do.Injector) (*DriverService, error) {
-		vehicle := do.MustInvokeNamed[*Vehicle](i, "vehicle.sedan")
-
-		return &DriverService{Name: "alice", Vehicle: vehicle}, nil
-	})
-
-	do.ProvideNamed(driverScope, "driver.bob", func(i do.Injector) (*DriverService, error) {
-		vehicle := do.MustInvokeNamed[*Vehicle](i, "vehicle.suv")
-
-		return &DriverService{Name: "bob", Vehicle: vehicle}, nil
-	})
-
-	do.ProvideNamed(passengerScope, "passenger.charlie", func(i do.Injector) (*PassengerService, error) {
-		return &PassengerService{Name: "charlie"}, nil
-	})
-
-	do.ProvideNamed(passengerScope, "passenger.dana", func(i do.Injector) (*PassengerService, error) {
-		return &PassengerService{Name: "dana"}, nil
-	})
+	provideDriverService(driverScope, "alice", "vehicle.sedan")
+	provideDriverService(driverScope, "driver.bob", "vehicle.suv")
+	providePassengerService(passengerScope, "passenger.charlie")
+	providePassengerService(passengerScope, "passenger.dana")
 
 	do.Provide(matchingScope, func(i do.Injector) (*MatchingEngine, error) {
-		alice := do.MustInvoke[*DriverService](driverScope)
+		alice := do.MustInvokeNamed[*DriverService](driverScope, "alice")
 		bob := do.MustInvokeNamed[*DriverService](driverScope, "driver.bob")
 
 		charlie := do.MustInvokeNamed[*PassengerService](passengerScope, "passenger.charlie")

@@ -19,13 +19,7 @@ func TestReport_FilteredByName(t *testing.T) {
 
 	filtered := p.Report().Filtered(auditlog.WithServicesByName("db"))
 
-	if len(filtered.Services) != 1 {
-		t.Fatalf("expected 1 service, got %d", len(filtered.Services))
-	}
-
-	if filtered.Services[0].ServiceName != "db" {
-		t.Errorf("service name: want db, got %s", filtered.Services[0].ServiceName)
-	}
+	assertFilteredServiceCount(t, filtered, "db")
 
 	// Scope tree should be pruned to only include the matching service.
 	if len(filtered.ScopeTree.Services) != 1 || filtered.ScopeTree.Services[0] != "db" {
@@ -61,11 +55,7 @@ func TestReport_FilteredByEventType(t *testing.T) {
 
 	filtered := p.Report().Filtered(auditlog.WithEventsByType(auditlog.EventTypeInvocation))
 
-	for _, evt := range filtered.Events {
-		if evt.EventType != auditlog.EventTypeInvocation {
-			t.Errorf("expected invocation, got %s", evt.EventType)
-		}
-	}
+	assertAllEventsOfType(t, filtered.Events, auditlog.EventTypeInvocation)
 }
 
 func TestReport_FilteredByTimeRange(t *testing.T) {
@@ -101,21 +91,13 @@ func TestReport_FilteredByScope(t *testing.T) {
 	child := injector.Scope("child")
 
 	provideDB(injector, "root-svc", "test")
-	do.ProvideNamed(child, "child-svc", func(_ do.Injector) (*Database, error) {
-		return &Database{URL: "child"}, nil
-	})
+	provideDB(child, "child-svc", "child")
 
 	_ = do.MustInvokeNamed[*Database](injector, "root-svc")
 	_ = do.MustInvokeNamed[*Database](child, "child-svc")
 
 	filtered := p.Report().Filtered(auditlog.WithScope(child.ID()))
-	if len(filtered.Services) != 1 {
-		t.Fatalf("expected 1 child service, got %d", len(filtered.Services))
-	}
-
-	if filtered.Services[0].ServiceName != "child-svc" {
-		t.Errorf("service: want child-svc, got %s", filtered.Services[0].ServiceName)
-	}
+	assertFilteredServiceCount(t, filtered, "child-svc")
 
 	// Scope tree preserves hierarchy: root scope remains root, child is pruned to matching scope.
 	if filtered.ScopeCount != 2 {
@@ -145,19 +127,9 @@ func TestReport_FilteredCombined(t *testing.T) {
 		auditlog.WithEventsByType(auditlog.EventTypeInvocation),
 	)
 
-	if len(filtered.Services) != 1 {
-		t.Fatalf("expected 1 service, got %d", len(filtered.Services))
-	}
+	assertFilteredServiceCount(t, filtered, "db")
 
-	if filtered.Services[0].ServiceName != "db" {
-		t.Errorf("service name: want db, got %s", filtered.Services[0].ServiceName)
-	}
-
-	for _, evt := range filtered.Events {
-		if evt.EventType != auditlog.EventTypeInvocation {
-			t.Errorf("expected invocation, got %s", evt.EventType)
-		}
-	}
+	assertAllEventsOfType(t, filtered.Events, auditlog.EventTypeInvocation)
 }
 
 func TestReport_FilteredTimeRangeNilChecks(t *testing.T) {
@@ -195,7 +167,5 @@ func TestPlugin_ReportFiltered(t *testing.T) {
 
 	filtered := p.ReportFiltered(auditlog.WithServicesByName("db"))
 
-	if len(filtered.Services) != 1 {
-		t.Fatalf("expected 1 service, got %d", len(filtered.Services))
-	}
+	assertFilteredServiceCount(t, filtered, "db")
 }

@@ -29,13 +29,9 @@ func TestPlugin_ExportToFile(t *testing.T) {
 	}
 
 	var report auditlog.Report
-	if err := json.Unmarshal(data, &report); err != nil {
-		t.Fatalf("unmarshal failed: %v", err)
-	}
+	unmarshalJSONForTest(t, data, &report, "unmarshal")
 
-	if report.ServiceCount != 1 {
-		t.Errorf("expected 1 service in exported report, got %d", report.ServiceCount)
-	}
+	assertServiceCount(t, report, 1)
 }
 
 func TestPlugin_ExportEventsToNDJSON(t *testing.T) {
@@ -87,9 +83,7 @@ func TestPlugin_WriteReportJSON(t *testing.T) {
 		t.Fatalf("unmarshal failed: %v", err)
 	}
 
-	if report.ServiceCount != 1 {
-		t.Errorf("expected 1 service, got %d", report.ServiceCount)
-	}
+	assertServiceCount(t, report, 1)
 
 	assertVersion(t, report)
 }
@@ -133,9 +127,7 @@ func TestPlugin_WriteReportJSONError(t *testing.T) {
 		t.Fatalf("unmarshal failed: %v", err)
 	}
 
-	if report.ServiceCount != 1 {
-		t.Errorf("expected 1 service, got %d", report.ServiceCount)
-	}
+	assertServiceCount(t, report, 1)
 }
 
 func TestPlugin_WriteReportJSONErrorPath(t *testing.T) {
@@ -213,9 +205,7 @@ func TestPlugin_ExportFilteredToFile(t *testing.T) {
 	}
 
 	var report map[string]any
-	if err := json.Unmarshal(data, &report); err != nil {
-		t.Fatalf("Unmarshal: %v", err)
-	}
+	unmarshalJSONForTest(t, data, &report, "Unmarshal")
 
 	services, ok := report["services"].([]any)
 	if !ok {

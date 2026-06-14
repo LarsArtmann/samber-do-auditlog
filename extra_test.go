@@ -2,7 +2,6 @@ package auditlog_test
 
 import (
 	"testing"
-	"time"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/samber/do/v2"
@@ -47,38 +46,14 @@ func TestPlugin_EventHandlerNil(t *testing.T) {
 }
 
 func TestPlugin_RealWorldScenario(t *testing.T) {
-	plugin := auditlog.New(auditlog.Config{
-		Enabled:     true,
-		ContainerID: "my-app",
-	})
-	injector := do.NewWithOpts(plugin.Opts())
+	plugin, injector := newPluginAndInjectorWithID("my-app")
 
 	do.ProvideValue(injector, &Config{Port: 8080})
 
-	do.ProvideNamed(injector, "postgres", func(i do.Injector) (*Database, error) {
-		time.Sleep(1 * time.Millisecond)
-
-		return &Database{URL: "postgres://localhost"}, nil
-	})
-
-	do.ProvideNamed(injector, "redis", func(i do.Injector) (*Cache, error) {
-		time.Sleep(1 * time.Millisecond)
-
-		return &Cache{Entries: make(map[string]string)}, nil
-	})
-
-	do.ProvideNamed(injector, "users", func(i do.Injector) (*UserService, error) {
-		db := do.MustInvokeNamed[*Database](i, "postgres")
-		cache := do.MustInvokeNamed[*Cache](i, "redis")
-
-		return &UserService{DB: db, Cache: cache}, nil
-	})
-
-	do.ProvideNamed(injector, "http-server", func(i do.Injector) (*HTTPServer, error) {
-		users := do.MustInvokeNamed[*UserService](i, "users")
-
-		return &HTTPServer{Users: users}, nil
-	})
+	provideDBWithSleep(injector, "postgres", "postgres://localhost")
+	provideCacheWithSleep(injector, "redis")
+	provideUserServiceWithDeps(injector, "users", "postgres", "redis")
+	provideHTTPServerWithUsers(injector, "http-server", "users")
 
 	_, err := do.InvokeNamed[*HTTPServer](injector, "http-server")
 	if err != nil {
@@ -87,13 +62,9 @@ func TestPlugin_RealWorldScenario(t *testing.T) {
 
 	report := plugin.Report()
 
-	if report.ContainerID != "my-app" {
-		t.Errorf("container_id: want my-app, got %s", report.ContainerID)
-	}
+	assertContainerID(t, report, "my-app")
 
-	if report.ServiceCount != 5 {
-		t.Errorf("service_count: want 5, got %d", report.ServiceCount)
-	}
+	assertServiceCount(t, report, 5)
 
 	svr := findServiceByName(t, report, "http-server")
 	if svr == nil {
@@ -113,9 +84,7 @@ func TestPlugin_RealWorldScenario(t *testing.T) {
 		t.Fatal("users not found")
 	}
 
-	if len(users.Dependencies) != 2 {
-		t.Errorf("users deps: want 2 (postgres+redis), got %d: %v", len(users.Dependencies), users.Dependencies)
-	}
+	assertDependenciesCount(t, users, 2)
 
 	postgres := findServiceByName(t, report, "postgres")
 	if postgres == nil {

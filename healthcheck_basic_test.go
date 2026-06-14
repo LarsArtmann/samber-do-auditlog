@@ -27,9 +27,7 @@ func TestPlugin_HealthCheckHealthy(t *testing.T) {
 		t.Fatal("db not found in report")
 	}
 
-	if svc.HealthCheckCount != 1 {
-		t.Errorf("health_check_count: want 1, got %d", svc.HealthCheckCount)
-	}
+	assertServiceHealthCheckCount(t, svc, 1)
 
 	if svc.LastHealthCheckAt == nil {
 		t.Error("expected LastHealthCheckAt to be set")
@@ -128,9 +126,7 @@ func TestPlugin_HealthCheckDisabled(t *testing.T) {
 	}
 
 	report := p.Report()
-	if report.EventCount != 0 {
-		t.Errorf("expected 0 events when disabled, got %d", report.EventCount)
-	}
+	assertEventCount(t, report, 0)
 }
 
 func TestPlugin_HealthCheckCount(t *testing.T) {
@@ -151,9 +147,7 @@ func TestPlugin_HealthCheckCount(t *testing.T) {
 		t.Fatal("db not found")
 	}
 
-	if svc.HealthCheckCount != 2 {
-		t.Errorf("health_check_count: want 2, got %d", svc.HealthCheckCount)
-	}
+	assertServiceHealthCheckCount(t, svc, 2)
 
 	healthEvents := report.EventsByType(auditlog.EventTypeHealthCheck)
 	if len(healthEvents) != 2 {
@@ -176,9 +170,7 @@ func TestPlugin_HealthCheckReport(t *testing.T) {
 		t.Error("HealthCheckSucceeded should be true when all services are healthy")
 	}
 
-	if report.HealthCheckedCount != 1 {
-		t.Errorf("HealthCheckedCount: want 1, got %d", report.HealthCheckedCount)
-	}
+	assertIntField(t, "HealthCheckedCount", report.HealthCheckedCount, 1)
 }
 
 func TestPlugin_HealthCheckWithScope(t *testing.T) {

@@ -3,15 +3,13 @@ package auditlog_test
 import (
 	"sync"
 	"testing"
-	"time"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/samber/do/v2"
 )
 
 func TestPlugin_RegistrationAndInvocation(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true, ContainerID: "test"})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjectorWithID("test")
 
 	provideDB(injector, "db", "postgres://localhost")
 
@@ -21,17 +19,11 @@ func TestPlugin_RegistrationAndInvocation(t *testing.T) {
 	}
 
 	report := p.Report()
-	if report.ContainerID != "test" {
-		t.Errorf("container_id: want test, got %s", report.ContainerID)
-	}
+	assertContainerID(t, report, "test")
 
-	if report.ServiceCount != 1 {
-		t.Errorf("service_count: want 1, got %d", report.ServiceCount)
-	}
+	assertServiceCount(t, report, 1)
 
-	if report.EventCount != 4 {
-		t.Errorf("event_count: want 4, got %d", report.EventCount)
-	}
+	assertEventCount(t, report, 4)
 
 	if report.ScopeCount < 1 {
 		t.Errorf("scope_count: want >= 1, got %d", report.ScopeCount)
@@ -50,13 +42,9 @@ func TestPlugin_RegistrationAndInvocation(t *testing.T) {
 	}
 
 	svc := report.Services[0]
-	if svc.ServiceName != "db" {
-		t.Errorf("service_name: want db, got %s", svc.ServiceName)
-	}
+	assertStringField(t, "service_name", svc.ServiceName, "db")
 
-	if svc.InvocationCount != 1 {
-		t.Errorf("invocation_count: want 1, got %d", svc.InvocationCount)
-	}
+	assertServiceInvocationCount(t, &svc, 1)
 
 	if svc.FirstInvokedAt == nil {
 		t.Error("expected FirstInvokedAt to be set")
@@ -97,24 +85,9 @@ func TestPlugin_DependencyTracking(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	do.ProvideNamed(injector, "db", func(i do.Injector) (*Database, error) {
-		time.Sleep(1 * time.Millisecond)
-
-		return &Database{URL: "postgres://localhost"}, nil
-	})
-
-	do.ProvideNamed(injector, "cache", func(i do.Injector) (*Cache, error) {
-		time.Sleep(1 * time.Millisecond)
-
-		return &Cache{Entries: make(map[string]string)}, nil
-	})
-
-	do.ProvideNamed(injector, "users", func(i do.Injector) (*UserService, error) {
-		db := do.MustInvokeNamed[*Database](i, "db")
-		cache := do.MustInvokeNamed[*Cache](i, "cache")
-
-		return &UserService{DB: db, Cache: cache}, nil
-	})
+	provideDBWithSleep(injector, "db", "postgres://localhost")
+	provideCacheWithSleep(injector, "cache")
+	provideUserServiceWithDeps(injector, "users", "db", "cache")
 
 	_, err := do.InvokeNamed[*UserService](injector, "users")
 	if err != nil {
@@ -134,9 +107,7 @@ func TestPlugin_DependencyTracking(t *testing.T) {
 		t.Fatal("users service not found in report")
 	}
 
-	if len(users.Dependencies) != 2 {
-		t.Errorf("users dependencies: want 2, got %d (%v)", len(users.Dependencies), users.Dependencies)
-	}
+	assertDependenciesCount(t, users, 2)
 
 	var db *auditlog.ServiceInfo
 
@@ -156,12 +127,7 @@ func TestPlugin_CachedInvocation(t *testing.T) {
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
-
-	do.ProvideNamed(injector, "users", func(i do.Injector) (*UserService, error) {
-		db := do.MustInvokeNamed[*Database](i, "db")
-
-		return &UserService{DB: db}, nil
-	})
+	provideUserServiceWithDB(injector, "users", "db")
 
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 	_ = do.MustInvokeNamed[*UserService](injector, "users")
@@ -176,9 +142,7 @@ func TestPlugin_CachedInvocation(t *testing.T) {
 		t.Fatal("users service not found")
 	}
 
-	if len(users.Dependencies) != 1 {
-		t.Errorf("users should have exactly 1 dependency (db), got %d: %v", len(users.Dependencies), users.Dependencies)
-	}
+	assertDependenciesCount(t, users, 1)
 
 	var db *auditlog.ServiceInfo
 
@@ -217,13 +181,9 @@ func TestPlugin_EmptyReport(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 
 	report := p.Report()
-	if report.EventCount != 0 {
-		t.Errorf("expected 0 events, got %d", report.EventCount)
-	}
+	assertEventCount(t, report, 0)
 
-	if report.ServiceCount != 0 {
-		t.Errorf("expected 0 services, got %d", report.ServiceCount)
-	}
+	assertServiceCount(t, report, 0)
 
 	assertVersion(t, report)
 
@@ -249,16 +209,12 @@ func TestPlugin_ConcurrentInvocations(t *testing.T) {
 	wg.Wait()
 
 	report := p.Report()
-	if report.ServiceCount != 1 {
-		t.Errorf("expected 1 service, got %d", report.ServiceCount)
-	}
+	assertServiceCount(t, report, 1)
 
 	svc := findServiceByName(t, report, "db")
 	if svc == nil {
 		t.Fatal("db not found")
 	}
 
-	if svc.InvocationCount != 10 {
-		t.Errorf("expected 10 invocations, got %d", svc.InvocationCount)
-	}
+	assertServiceInvocationCount(t, svc, 10)
 }

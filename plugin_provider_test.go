@@ -40,9 +40,7 @@ func TestPlugin_ServiceTypeCapture(t *testing.T) {
 			_ = do.MustInvoke[*Database](injector)
 
 			report := p.Report()
-			if len(report.Services) != 1 {
-				t.Fatalf("expected 1 service, got %d", len(report.Services))
-			}
+			assertReportServiceCount(t, report)
 
 			if report.Services[0].ServiceType != auditlog.ProviderType(tt.want) {
 				t.Errorf("expected service_type=%s, got %q", tt.want, report.Services[0].ServiceType)
@@ -223,9 +221,7 @@ func TestPlugin_ProvideTransient(t *testing.T) {
 		t.Fatal("expected Database service in report")
 	}
 
-	if svc.InvocationCount != 2 {
-		t.Errorf("expected 2 invocations for transient, got %d", svc.InvocationCount)
-	}
+	assertServiceInvocationCount(t, svc, 2)
 }
 
 func TestPlugin_ProvideTransientType(t *testing.T) {
@@ -252,9 +248,7 @@ func TestPlugin_ProvideTransientType(t *testing.T) {
 		t.Errorf("service_type: want transient, got %q", svc.ServiceType)
 	}
 
-	if svc.InvocationCount != 2 {
-		t.Errorf("invocation_count: want 2, got %d", svc.InvocationCount)
-	}
+	assertServiceInvocationCount(t, svc, 2)
 }
 
 func TestPlugin_ProvideValue(t *testing.T) {
@@ -303,9 +297,7 @@ func TestPlugin_EnrichCapabilitiesWithNilScopeRef(t *testing.T) {
 		t.Fatal("db not found")
 	}
 
-	if svc.ServiceName != "db" {
-		t.Errorf("service name: want db, got %s", svc.ServiceName)
-	}
+	assertStringField(t, "service name", svc.ServiceName, "db")
 }
 
 func TestPlugin_RecordHealthCheckCreatesServiceFromMeta(t *testing.T) {
@@ -320,11 +312,7 @@ func TestPlugin_RecordHealthCheckCreatesServiceFromMeta(t *testing.T) {
 		t.Fatal("discovered-svc should exist via newServiceRecordFromMeta")
 	}
 
-	if svc.ServiceName != "discovered-svc" {
-		t.Errorf("service name: want discovered-svc, got %s", svc.ServiceName)
-	}
+	assertStringField(t, "service name", svc.ServiceName, "discovered-svc")
 
-	if svc.HealthCheckCount != 1 {
-		t.Errorf("health check count: want 1, got %d", svc.HealthCheckCount)
-	}
+	assertServiceHealthCheckCount(t, svc, 1)
 }

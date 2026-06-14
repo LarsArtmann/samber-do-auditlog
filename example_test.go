@@ -10,12 +10,7 @@ import (
 )
 
 func ExampleNew() {
-	plugin := auditlog.New(auditlog.Config{
-		Enabled:     true,
-		ContainerID: "my-app",
-	})
-
-	injector := do.NewWithOpts(plugin.Opts())
+	plugin, injector := newPluginAndInjectorWithID("my-app")
 
 	do.ProvideValue(injector, "hello")
 
@@ -75,13 +70,8 @@ func ExampleReport_Filtered() {
 	plugin := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(plugin.Opts())
 
-	do.ProvideNamed(injector, "alpha", func(_ do.Injector) (string, error) {
-		return "a", nil
-	})
-
-	do.ProvideNamed(injector, "beta", func(_ do.Injector) (string, error) {
-		return "b", nil
-	})
+	provideString(injector, "alpha", "a")
+	provideString(injector, "beta", "b")
 
 	_ = do.MustInvokeNamed[string](injector, "alpha")
 	_ = do.MustInvokeNamed[string](injector, "beta")

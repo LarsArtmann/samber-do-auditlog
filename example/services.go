@@ -142,6 +142,13 @@ func (v *Vehicle) Shutdown() error {
 	return nil
 }
 
+// provideVehicle registers a named *Vehicle provider.
+func provideVehicle(injector do.Injector, name string, capacity int) {
+	do.ProvideNamed(injector, name, func(_ do.Injector) (*Vehicle, error) {
+		return &Vehicle{Name: name, Capacity: capacity, Active: true}, nil
+	})
+}
+
 // --- Scoped services: driver and passenger modules ---
 
 type DriverService struct {
@@ -155,6 +162,15 @@ func (d *DriverService) Shutdown() error {
 	return nil
 }
 
+// provideDriverService registers a *DriverService that pulls a named *Vehicle.
+func provideDriverService(injector do.Injector, driverName, vehicleName string) {
+	do.ProvideNamed(injector, driverName, func(i do.Injector) (*DriverService, error) {
+		vehicle := do.MustInvokeNamed[*Vehicle](i, vehicleName)
+
+		return &DriverService{Name: driverName, Vehicle: vehicle}, nil
+	})
+}
+
 type PassengerService struct {
 	Name string
 }
@@ -163,6 +179,13 @@ func (p *PassengerService) Shutdown() error {
 	fmt.Printf("  PassengerService(%s): logging out\n", p.Name)
 
 	return nil
+}
+
+// providePassengerService registers a named *PassengerService provider.
+func providePassengerService(injector do.Injector, name string) {
+	do.ProvideNamed(injector, name, func(_ do.Injector) (*PassengerService, error) {
+		return &PassengerService{Name: name}, nil
+	})
 }
 
 type MatchingEngine struct {

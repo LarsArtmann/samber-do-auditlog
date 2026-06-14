@@ -41,9 +41,7 @@ func FuzzPluginHTML(f *testing.F) {
 		plugin := auditlog.New(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(plugin.Opts())
 
-		do.ProvideNamed(injector, svcName, func(_ do.Injector) (string, error) {
-			return "val", nil
-		})
+		provideString(injector, svcName, "val")
 
 		_, err := do.InvokeNamed[string](injector, svcName)
 		if err != nil {
@@ -122,9 +120,7 @@ func FuzzPluginHTML_DepChain(f *testing.F) {
 		plugin := auditlog.New(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(plugin.Opts())
 
-		do.ProvideNamed(injector, depName, func(_ do.Injector) (string, error) {
-			return "dep-val", nil
-		})
+		provideString(injector, depName, "dep-val")
 
 		do.ProvideNamed(injector, "parent-svc", func(i do.Injector) (string, error) {
 			_, _ = do.InvokeNamed[string](i, depName)
