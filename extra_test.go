@@ -108,9 +108,17 @@ func TestPlugin_RealWorldScenario(t *testing.T) {
 		t.Error("expected ShutdownDurationMs to be set after shutdown")
 	}
 
-	_ = plugin.ExportToFile(t.TempDir() + "/report.json")
-	_ = plugin.ExportEventsToNDJSON(t.TempDir() + "/events.ndjson")
-	_ = plugin.ExportToHTML(t.TempDir() + "/report.html")
+	if err := plugin.ExportToFile(t.TempDir() + "/report.json"); err != nil {
+		t.Errorf("JSON export failed: %v", err)
+	}
+
+	if err := plugin.ExportEventsToNDJSON(t.TempDir() + "/events.ndjson"); err != nil {
+		t.Errorf("NDJSON export failed: %v", err)
+	}
+
+	if err := plugin.ExportToHTML(t.TempDir() + "/report.html"); err != nil {
+		t.Errorf("HTML export failed: %v", err)
+	}
 }
 
 func TestPlugin_EventsCount(t *testing.T) {

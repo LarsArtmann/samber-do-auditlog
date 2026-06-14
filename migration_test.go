@@ -3,6 +3,7 @@ package auditlog_test
 import (
 	"bytes"
 	"encoding/json"
+	"math"
 	"testing"
 	"time"
 
@@ -70,7 +71,7 @@ func TestMigrateReport_FromV01(t *testing.T) {
 
 	assertIntField(t, "scope_count", report.ScopeCount, 1)
 
-	if report.TotalBuildDurationMs != 17.7 {
+	if math.Abs(report.TotalBuildDurationMs-17.7) > 1e-9 {
 		t.Errorf("total_build_duration_ms: want 17.7, got %f", report.TotalBuildDurationMs)
 	}
 

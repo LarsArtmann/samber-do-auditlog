@@ -2,7 +2,6 @@ package auditlog_test
 
 import (
 	"bytes"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -10,12 +9,6 @@ import (
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/samber/do/v2"
 )
-
-type failWriter struct{}
-
-func (failWriter) Write(_ []byte) (int, error) {
-	return 0, os.ErrInvalid
-}
 
 func TestReport_WriteMermaid(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
@@ -102,7 +95,7 @@ func TestWriteMermaid_WriterError(t *testing.T) {
 	provideDB(injector, "db", "test")
 	_ = do.MustInvokeNamed[*Database](injector, "db")
 
-	err := p.Report().WriteMermaid(failWriter{})
+	err := p.Report().WriteMermaid(failingWriter{})
 	if err == nil {
 		t.Error("expected error from failing writer")
 	}

@@ -8,7 +8,9 @@ import (
 )
 
 // printSummary writes a human-readable summary of the audit report to stdout.
-func printSummary(report auditlog.Report, eventLog []string) {
+// eventLog is a pointer so the caller and the OnEvent closure share the same
+// slice header across append reallocations.
+func printSummary(report auditlog.Report, eventLog *[]string) {
 	fmt.Println()
 	fmt.Println("=== Audit Summary ===")
 
@@ -67,11 +69,11 @@ func printSummary(report auditlog.Report, eventLog []string) {
 		fmt.Printf("      %s: %s\n", f.ServiceName, f.Status)
 	}
 
-	if len(eventLog) > 0 {
+	if len(*eventLog) > 0 {
 		fmt.Println()
 		fmt.Println("  OnEvent callback (invocations only):")
 
-		for _, name := range eventLog {
+		for _, name := range *eventLog {
 			fmt.Println("    " + name)
 		}
 	}

@@ -37,9 +37,9 @@ func main() {
 	fmt.Println()
 
 	plugin, injector, eventLog := setupPlugin()
-	driverScope, passengerScope, matchingScope := registerServices(injector)
+	matchingScope := registerServices(injector)
 
-	runInvocations(injector, driverScope, passengerScope, matchingScope)
+	runInvocations(injector, matchingScope)
 	runHealthChecks(plugin, injector)
 	runShutdown(injector)
 	exportReports(plugin)
@@ -49,15 +49,18 @@ func main() {
 
 // setupPlugin creates the audit-log plugin and the DI container with an
 // OnEvent callback that records every successful invocation.
-func setupPlugin() (*auditlog.Plugin, do.Injector, []string) { //nolint:ireturn
-	var eventLog []string
+//
+// The event log is returned as a pointer so the closure and the caller share
+// the same slice header across append reallocations.
+func setupPlugin() (*auditlog.Plugin, do.Injector, *[]string) { //nolint:ireturn
+	eventLog := &[]string{}
 
 	plugin := auditlog.New(auditlog.Config{
 		Enabled:     true,
 		ContainerID: "ride-share-app",
 		OnEvent: func(e auditlog.Event) {
 			if e.IsAfter() && e.IsInvocation() {
-				eventLog = append(eventLog, e.ServiceName)
+				*eventLog = append(*eventLog, e.ServiceName)
 			}
 		},
 	})
@@ -68,7 +71,7 @@ func setupPlugin() (*auditlog.Plugin, do.Injector, []string) { //nolint:ireturn
 }
 
 // runInvocations triggers lazy construction of services and prints progress.
-func runInvocations(injector, driverScope, passengerScope, matchingScope do.Injector) {
+func runInvocations(injector, matchingScope do.Injector) {
 	fmt.Println("--- Invoking services ---")
 
 	server, err := do.Invoke[*HTTPServer](injector)

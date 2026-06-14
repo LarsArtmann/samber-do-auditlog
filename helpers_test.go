@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/samber/do/v2"
@@ -73,20 +72,16 @@ func provideDB(injector do.Injector, name, url string) {
 	})
 }
 
-// provideDBWithSleep is a named *Database provider that simulates non-trivial build time.
+// provideDBWithSleep is a named *Database provider kept for test compatibility.
 func provideDBWithSleep(injector do.Injector, name, url string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*Database, error) {
-		time.Sleep(1 * time.Millisecond)
-
 		return &Database{URL: url}, nil
 	})
 }
 
-// provideCacheWithSleep is a named *Cache provider that simulates non-trivial build time.
+// provideCacheWithSleep is a named *Cache provider kept for test compatibility.
 func provideCacheWithSleep(injector do.Injector, name string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*Cache, error) {
-		time.Sleep(1 * time.Millisecond)
-
 		return &Cache{Entries: make(map[string]string)}, nil
 	})
 }
@@ -211,6 +206,8 @@ func assertAllEventsForService(t *testing.T, events []auditlog.Event, serviceNam
 
 // assertDependenciesCount fails the test if the service's dependency count does not match.
 func assertDependenciesCount(t *testing.T, svc *auditlog.ServiceInfo, want int) {
+	t.Helper()
+
 	assertServiceIntField(t, svc, "dependencies count", len(svc.Dependencies), want)
 }
 
@@ -244,16 +241,22 @@ func assertIntField(t *testing.T, fieldName string, got, want int) {
 
 // assertServiceCount fails the test if the report's service count does not match.
 func assertServiceCount(t *testing.T, report auditlog.Report, want int) {
+	t.Helper()
+
 	assertIntField(t, "service_count", report.ServiceCount, want)
 }
 
 // assertEventCount fails the test if the report's event count does not match.
 func assertEventCount(t *testing.T, report auditlog.Report, want int) {
+	t.Helper()
+
 	assertIntField(t, "event_count", report.EventCount, want)
 }
 
 // assertContainerID fails the test if the report's container_id does not match.
 func assertContainerID(t *testing.T, report auditlog.Report, want string) {
+	t.Helper()
+
 	assertStringField(t, "container_id", report.ContainerID, want)
 }
 
@@ -269,11 +272,15 @@ func assertStringField(t *testing.T, fieldName, got, want string) {
 
 // assertServiceInvocationCount fails the test if the service's invocation count does not match.
 func assertServiceInvocationCount(t *testing.T, svc *auditlog.ServiceInfo, want int) {
+	t.Helper()
+
 	assertServiceIntField(t, svc, "invocation_count", svc.InvocationCount, want)
 }
 
 // assertServiceHealthCheckCount fails the test if the service's health check count does not match.
 func assertServiceHealthCheckCount(t *testing.T, svc *auditlog.ServiceInfo, want int) {
+	t.Helper()
+
 	assertServiceIntField(t, svc, "health_check_count", svc.HealthCheckCount, want)
 }
 

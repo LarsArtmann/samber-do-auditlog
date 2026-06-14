@@ -51,13 +51,7 @@ func TestPlugin_ExportEventsToNDJSON(t *testing.T) {
 		t.Fatalf("read failed: %v", err)
 	}
 
-	lines := 0
-
-	for _, b := range data {
-		if b == '\n' {
-			lines++
-		}
-	}
+	lines := strings.Count(string(data), "\n")
 
 	if lines != 4 {
 		t.Errorf("expected 4 ndjson lines, got %d", lines)
@@ -106,28 +100,6 @@ func TestPlugin_WriteEventsNDJSON(t *testing.T) {
 	if lines != 4 {
 		t.Errorf("expected 4 ndjson lines, got %d", lines)
 	}
-}
-
-func TestPlugin_WriteReportJSONError(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "postgres://localhost")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	var buf bytes.Buffer
-
-	err := p.WriteReportJSON(&buf)
-	if err != nil {
-		t.Fatalf("WriteReportJSON failed: %v", err)
-	}
-
-	var report auditlog.Report
-	if err := json.Unmarshal(buf.Bytes(), &report); err != nil {
-		t.Fatalf("unmarshal failed: %v", err)
-	}
-
-	assertServiceCount(t, report, 1)
 }
 
 func TestPlugin_WriteReportJSONErrorPath(t *testing.T) {

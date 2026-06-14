@@ -1,6 +1,8 @@
 package auditlog_test
 
 import (
+	"os"
+	"strings"
 	"testing"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
@@ -48,20 +50,20 @@ func TestPlugin_ShutdownTracking(t *testing.T) {
 	}
 }
 
-func TestPlugin_ShutdownError(t *testing.T) {
+func TestPlugin_ShutdownStatus(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	provideDB(injector, "leaky", "leaky")
+	provideDB(injector, "clean", "clean")
 
-	_ = do.MustInvokeNamed[*Database](injector, "leaky")
+	_ = do.MustInvokeNamed[*Database](injector, "clean")
 	_ = injector.Shutdown()
 
 	report := p.Report()
 
-	svc := findServiceByName(t, report, "leaky")
+	svc := findServiceByName(t, report, "clean")
 	if svc == nil {
-		t.Fatal("leaky service not found")
+		t.Fatal("clean service not found")
 	}
 
 	if svc.Status != auditlog.ServiceStatusShutdown {
@@ -147,6 +149,8 @@ func TestPlugin_ProviderError(t *testing.T) {
 
 	if svc.InvocationError == nil {
 		t.Error("expected InvocationError to be set")
+	} else if !strings.Contains(*svc.InvocationError, os.ErrNotExist.Error()) {
+		t.Errorf("invocation error should contain %q, got %q", os.ErrNotExist.Error(), *svc.InvocationError)
 	}
 
 	assertServiceInvocationCount(t, svc, 1)
@@ -159,7 +163,11 @@ func TestPlugin_ShutdownWithErrors(t *testing.T) {
 	provideCrashing(injector, "crash")
 
 	_ = do.MustInvokeNamed[*CrashingService](injector, "crash")
-	_ = injector.Shutdown()
+
+	err := injector.Shutdown()
+	if err == nil {
+		t.Fatal("expected shutdown error from crashing service")
+	}
 
 	report := p.Report()
 
@@ -167,11 +175,14 @@ func TestPlugin_ShutdownWithErrors(t *testing.T) {
 		t.Error("expected ShutdownSucceeded=false when shutdown errors exist")
 	}
 
-	assertReportServiceCount(t, report)
+	crash := findServiceByName(t, report, "crash")
+	if crash == nil {
+		t.Fatal("crash service not found in report")
+	}
 
-	if report.Services[0].ShutdownError == nil {
+	if crash.ShutdownError == nil {
 		t.Error("expected shutdown error to be captured")
+	} else if !strings.Contains(*crash.ShutdownError, errConnectionReset.Error()) {
+		t.Errorf("shutdown error should contain %q, got %q", errConnectionReset.Error(), *crash.ShutdownError)
 	}
 }
-
-// --- Health check test types ---

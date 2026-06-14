@@ -637,7 +637,7 @@ templ reportHTML(report Report) {
 	report.services.forEach(s => { if (s.service_type) typeCounts[s.service_type] = (typeCounts[s.service_type] || 0) + 1; });
 	document.getElementById('legend').innerHTML = Object.entries(typeIcons).map(([k, icon]) => {
 	  const count = typeCounts[k] || 0;
-	  return count > 0 ? '<div class="legend-item"><span class="icon">' + icon + '</span>' + typeLabels[k] + ' <span style="opacity:0.5">(' + count + ')</span></div>' : '';
+	  return count > 0 ? '<div class="legend-item"><span class="icon">' + icon + '</span>' + esc(typeLabels[k]) + ' <span style="opacity:0.5">(' + count + ')</span></div>' : '';
 	}).join('');
 
 	// Lifecycle waveform
@@ -715,7 +715,7 @@ templ reportHTML(report Report) {
 
 	function typeBadge(type) {
 	  if (!type || !typeIcons[type]) return '';
-	  return '<span class="type-badge '+type+'" title="'+esc(typeLabels[type]||type)+'">'+typeIcons[type]+' '+esc(typeLabels[type]||type)+'</span>';
+	  return '<span class="type-badge '+esc(type)+'" title="'+esc(typeLabels[type]||type)+'">'+typeIcons[type]+' '+esc(typeLabels[type]||type)+'</span>';
 	}
 
 	// Services table
@@ -725,7 +725,7 @@ templ reportHTML(report Report) {
 	  const regAt=s.registered_offset_ns!=null?formatNs(s.registered_offset_ns):'';
 	  const invAt=s.first_invoked_offset_ns!=null?formatNs(s.first_invoked_offset_ns):'';
 	  const errMsgs=[s.invocation_error,s.shutdown_error].filter(Boolean).map(esc).join('\n');
-	  const statusBadge='<span class="status-badge '+esc(s.status)+'"'+(errMsgs?' data-error="'+errMsgs+'"':'')+'>'+(statusIcons[s.status]||'')+' '+s.status.replace(/_/g,' ')+'</span>';
+	  const statusBadge='<span class="status-badge '+esc(s.status)+'"'+(errMsgs?' data-error="'+errMsgs+'"':'')+'>'+(statusIcons[s.status]||'')+' '+esc(s.status).replace(/_/g,' ')+'</span>';
 	  const svcIcon = typeIcons[s.service_type] || '';
 	  return '<tr data-search="'+esc(s.service_name.toLowerCase()+' '+s.scope_name+' '+(s.service_type||''))+'">'
 	    +'<td class="mono" title="Registered: '+regAt+(invAt?'\nInvoked: '+invAt:'')+'">'+(svcIcon?svcIcon+' ':'')+esc(s.service_name)+capabilityIcons(s)+'</td>'
@@ -753,11 +753,11 @@ templ reportHTML(report Report) {
 	const eventLabels={registration:'Registration',invocation:'Invocation',shutdown:'Shutdown',health_check:'Health'};
 	const allEvents = report.events.map(e => {
 	  const phase=e.phase==='before'?'\u25B4':'\u25BE';
-	  const evtBadge='<span class="event-badge '+e.event_type+'">'+(eventLabels[e.event_type]||e.event_type)+'</span>';
+	  const evtBadge='<span class="event-badge '+esc(e.event_type)+'">'+esc(eventLabels[e.event_type]||e.event_type)+'</span>';
 	  const svcIcon=typeIcons[e.service_type]||'';
 	  const dur=e.duration_ms!=null?e.duration_ms.toFixed(3)+'ms':'';
 	  const errTip=e.error?' data-error="'+esc(e.error)+'"':'';
-	  return '<tr data-type="'+e.event_type+'" class="'+(e.error?'has-error':'')+'">'
+	  return '<tr data-type="'+esc(e.event_type)+'" class="'+(e.error?'has-error':'')+'">'
 	    +'<td class="mono">'+e.sequence+'</td>'
 	    +'<td class="mono" title="'+esc(e.timestamp)+'">'+new Date(e.timestamp).toLocaleTimeString()+'</td>'
 	    +'<td>'+evtBadge+'</td>'

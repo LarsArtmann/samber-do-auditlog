@@ -11,6 +11,13 @@ import (
 	"github.com/samber/do/v2"
 )
 
+// healthySvc is a simple service that always passes health checks.
+type healthySvc struct{}
+
+var _ do.Healthchecker = (*healthySvc)(nil)
+
+func (healthySvc) HealthCheck() error { return nil }
+
 func TestPlugin_HealthCheckReportSucceeded(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
@@ -262,13 +269,11 @@ func TestReport_AllHealthChecksPassed_AllHealthy(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	type HealthySvc struct{}
-
-	do.ProvideNamed(injector, "healthy", func(_ do.Injector) (*HealthySvc, error) {
-		return &HealthySvc{}, nil
+	do.ProvideNamed(injector, "healthy", func(_ do.Injector) (*healthySvc, error) {
+		return &healthySvc{}, nil
 	})
 
-	_ = do.MustInvokeNamed[*HealthySvc](injector, "healthy")
+	_ = do.MustInvokeNamed[*healthySvc](injector, "healthy")
 
 	p.RecordHealthCheck(injector)
 

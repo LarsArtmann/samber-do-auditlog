@@ -8,8 +8,8 @@ import (
 )
 
 // registerServices wires the full ride-sharing domain model into the injector
-// and returns the named child scopes for cross-scope usage.
-func registerServices(injector do.Injector) (*do.Scope, *do.Scope, *do.Scope) {
+// and returns the matching scope for cross-scope usage.
+func registerServices(injector do.Injector) *do.Scope {
 	// 2. Eager value injection
 	do.ProvideValue(injector, &AppConfig{
 		AppName: "RideShare",
@@ -31,14 +31,11 @@ func registerServices(injector do.Injector) (*do.Scope, *do.Scope, *do.Scope) {
 		logger := do.MustInvoke[*Logger](i)
 
 		logger.Printf("connecting to database: %s", dsn)
-		time.Sleep(8 * time.Millisecond)
 
 		return &Database{DSN: dsn}, nil
 	})
 
 	do.Provide(injector, func(i do.Injector) (*Cache, error) {
-		time.Sleep(3 * time.Millisecond)
-
 		return &Cache{Healthy: true}, nil
 	})
 
@@ -130,5 +127,5 @@ func registerServices(injector do.Injector) (*do.Scope, *do.Scope, *do.Scope) {
 		return &LeakyService{}, nil
 	})
 
-	return driverScope, passengerScope, matchingScope
+	return matchingScope
 }

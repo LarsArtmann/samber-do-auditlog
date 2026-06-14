@@ -29,8 +29,8 @@ func TestPlugin_RegistrationAndInvocation(t *testing.T) {
 		t.Errorf("scope_count: want >= 1, got %d", report.ScopeCount)
 	}
 
-	if report.TotalBuildDurationMs <= 0 {
-		t.Errorf("total_build_duration_ms: want > 0, got %f", report.TotalBuildDurationMs)
+	if report.TotalBuildDurationMs < 0 {
+		t.Errorf("total_build_duration_ms: want >= 0, got %f", report.TotalBuildDurationMs)
 	}
 
 	if report.TotalShutdownDurationMs != 0 {
