@@ -1,17 +1,26 @@
 # TODO List
 
 Comprehensive list of improvement tasks, verified against actual code state.
-Last updated: 2026-06-10
+Last updated: 2026-06-14
 
 ---
 
 ## Priority 1 — Features (Future)
 
-_All items completed._
+- [ ] **Go enum metadata injection** — Inject TypeMetadata (icons, labels, colors) into HTML template via JSON to eliminate Go/JS split-brain for constants
+- [ ] **HTML accessibility polish** — aria-pressed on filter chips, scope=col on table headers, empty-state messages
+- [ ] **Debounced service search** — 150ms debounce on search input to reduce render thrashing
+- [ ] **Diagram theme styling** — Mermaid `%%{init}%%` and PlantUML skinparam directives for better visual defaults
+- [ ] **Touch event support** — pan/zoom for dependency graph on mobile devices
+- [ ] **Pagination for large reports** — "Show first N" + "Show more" for services/events tables
 
 ## Priority 2 — Polish
 
-_All items completed._
+- [ ] **Replace stripScriptTags** — use `template.HTML()` safe check instead of fragile hand-rolled HTML parser in fuzz tests
+- [ ] **HTML integration test** — realistic multi-service end-to-end test with dependency graph, scopes, events
+- [ ] **Security CI** — gosec and govulncheck integration
+- [ ] **Go Report Card badge** — add to README.md
+- [ ] **Archive cleanup** — prune stale files in `docs/archive/`
 
 ## Not Planned (Explicitly Rejected)
 
@@ -23,7 +32,16 @@ _All items completed._
 
 ---
 
-## Completed (This Session)
+## Completed (2026-06-14 Session — Comprehensive Review)
+
+- [x] **Wire `Config.Validate()` into `New()`** — Breaking change: `New()` returns `(*Plugin, error)`
+- [x] **Update all 17 test files** — `mustNew()` test helper replaces `auditlog.New()` direct calls
+- [x] **Update `example/main.go`** — handle error from `New()` with `log.Fatalf`
+- [x] **Harden CSP** — add `base-uri 'none'; frame-ancestors 'none'` to Content-Security-Policy meta tag
+- [x] **Fix keyboard nav** — exclude `TEXTAREA`, `SELECT`, `BUTTON` from tab-shortcut handler
+- [x] **Add `Report.Validate()`** — checks denormalized count fields match actual data (event, service, scope, health-checked counts)
+- [x] **Add 7 `TestReport_Validate*` tests** — consistent report, scopes+health, mismatch detection for all 4 counts, empty report
+- [x] **Shared diagram formatter** — `diagramFormatter` interface with Mermaid/PlantUML strategy pattern implementations
 
 - [x] **PlantUML export** — `Report.WritePlantUML(writer)` with component diagram syntax
 - [x] Consolidate `computeServiceStatus` split brain into single `deriveServiceStatus`

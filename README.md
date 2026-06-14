@@ -84,11 +84,14 @@ import (
 )
 
 func main() {
-    // 1. Create the plugin
-    plugin := auditlog.New(auditlog.Config{
+    // 1. Create the plugin (validates config, returns error on invalid input)
+    plugin, err := auditlog.New(auditlog.Config{
         Enabled:     true,           // flip to false in production
         ContainerID: "my-app",
     })
+    if err != nil {
+        panic(err)
+    }
 
     // 2. Pass options to the DI container
     injector := do.NewWithOpts(plugin.Opts())
@@ -289,11 +292,11 @@ The callback is called **outside the mutex** on every event. Keep it fast — do
 
 ### Plugin
 
-| Method                                        | Description                                               |
-| --------------------------------------------- | --------------------------------------------------------- |
-| `New(config Config) *Plugin`                  | Create plugin. `ContainerID` defaults to `"default"`.     |
-| `Opts() *do.InjectorOpts`                     | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`. |
-| `Report() Report`                             | In-memory snapshot. No I/O.                               |
+| Method                                            | Description                                               |
+| ------------------------------------------------- | --------------------------------------------------------- |
+| `New(config Config) (*Plugin, error)`             | Create plugin. Validates config, returns error if invalid. |
+| `Opts() *do.InjectorOpts`                         | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`. |
+| `Report() Report`                                 | In-memory snapshot. No I/O.                               |
 | `ReportFiltered(opts...) Report`              | Filtered snapshot with functional options.                |
 | `Events() []Event`                            | Defensive copy of raw event slice.                        |
 | `EventsCount() int`                           | Event count without copying.                              |
@@ -315,10 +318,12 @@ The callback is called **outside the mutex** on every event. Keep it fast — do
 
 ### Report
 
-| Method                                     | Description                                         |
-| ------------------------------------------ | --------------------------------------------------- |
-| `Filtered(opts...) Report`                 | New report with filters applied, counts recomputed. |
-| `ServiceByName(name) *ServiceInfo`         | Lookup by service name.                             |
+| Method                                     | Description                                               |
+| ------------------------------------------ | --------------------------------------------------------- |
+| `Filtered(opts...) Report`                 | New report with filters applied, counts recomputed.       |
+| `Validate() error`                         | Check denormalized counts match actual data.              |
+| `Index() ReportIndex`                      | Build O(1) lookup index for multiple queries.             |
+| `ServiceByName(name) *ServiceInfo`         | Lookup by service name.                                   |
 | `ServiceByRef(scopeID, name) *ServiceInfo` | Lookup by scope + name.                             |
 | `ServicesByScope(scopeID) []ServiceInfo`   | All services in a scope.                            |
 | `EventsByService(name) []Event`            | All events for a service.                           |

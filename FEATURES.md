@@ -79,14 +79,28 @@ Honest inventory of what samber-do-auditlog actually does, verified against the 
 | **writeToFile error handling**        | Close errors properly returned instead of silently discarded                                                                    | ✓ `plugin.go:writeToFile`                                         |
 | **RootScopeName constant**            | `"[root]"` magic string replaced with named constant across production code                                                     | ✓ `types.go:RootScopeName`                                        |
 | **Expanded godoc**                    | All exported methods documented: `Event.Is*`, `ServiceRef.String()`                                                             | ✓ `types.go`                                                      |
+| **Report.Validate()**                 | Checks denormalized count fields (`EventCount`, `ServiceCount`, `ScopeCount`, `HealthCheckedCount`) match actual data          | ✓ `report.go:Report.Validate`                                     |
+| **Shared diagram formatter**          | `diagramFormatter` interface with Mermaid/PlantUML strategy implementations — eliminates duplication                            | ✓ `diagram.go`                                                    |
+| **New() returns error**               | `New(Config) (*Plugin, error)` — validates config at construction time                                                          | ✓ `plugin.go:New`                                                 |
+| **Hardened CSP**                      | `base-uri 'none'; frame-ancestors 'none'` added to Content-Security-Policy meta tag                                             | ✓ `html.templ`                                                    |
+| **Keyboard nav accessibility**        | Tab shortcuts (1-5) exclude `TEXTAREA`, `SELECT`, `BUTTON` in addition to `INPUT`                                               | ✓ `html.templ`                                                    |
+| **Test helper `mustNew()`**            | Wraps `New()` and panics on error — clean test construction across all test files                                               | ✓ `helpers_test.go:mustNew`                                       |
 
 ---
 
 ## PLANNED
 
-| Feature             | Description                | Priority |
-| ------------------- | -------------------------- | -------- |
-| **PlantUML export** | Alternative diagram format | Future   |
+| Feature                              | Description                                                              | Priority |
+| ------------------------------------ | ------------------------------------------------------------------------ | -------- |
+| **Go enum metadata injection**       | Inject TypeMetadata JSON into HTML to eliminate Go/JS constant split-brain | High     |
+| **HTML accessibility polish**        | aria-pressed, scope=col, empty-state messages                            | Medium   |
+| **Debounced service search**         | 150ms debounce to reduce render thrashing                                | Medium   |
+| **Diagram theme styling**            | Mermaid `%%{init}%%` and PlantUML skinparam                              | Low      |
+| **Robust fuzz XSS checking**         | Replace hand-rolled `stripScriptTags` with `template.HTML()` safe check  | Medium   |
+| **HTML integration test**            | Realistic multi-service end-to-end test                                  | Medium   |
+| **Security CI**                      | gosec + govulncheck integration                                          | Medium   |
+| **Touch event support**              | Pan/zoom for dependency graph on mobile                                  | Low      |
+| **Pagination for large reports**     | "Show first N" + "Show more" for services/events tables                  | Low      |
 
 ---
 

@@ -1,6 +1,17 @@
 package auditlog
 
-import "time"
+import (
+	"errors"
+	"fmt"
+	"time"
+)
+
+var (
+	errReportEventCountMismatch    = errors.New("event_count does not match len(events)")
+	errReportServiceCountMismatch  = errors.New("service_count does not match len(services)")
+	errReportScopeCountMismatch    = errors.New("scope_count does not match scope tree")
+	errReportHealthCheckedMismatch = errors.New("health_checked_count does not match services with health checks")
+)
 
 // Report is a consolidated, machine-readable snapshot of the audit log.
 type Report struct {
@@ -21,6 +32,55 @@ type Report struct {
 	Events               []Event       `json:"events,omitempty"`
 	Services             []ServiceInfo `json:"services"`
 	ScopeTree            ScopeNode     `json:"scope_tree"`
+}
+
+// Validate checks internal consistency of the report: denormalized count fields
+// must match the actual slice/tree lengths. Returns nil if consistent, or an
+// error describing the first discrepancy found.
+func (r Report) Validate() error {
+	if r.EventCount != len(r.Events) {
+		return fmt.Errorf("%w: got %d, want %d", errReportEventCountMismatch, r.EventCount, len(r.Events))
+	}
+
+	if r.ServiceCount != len(r.Services) {
+		return fmt.Errorf("%w: got %d, want %d", errReportServiceCountMismatch, r.ServiceCount, len(r.Services))
+	}
+
+	treeLen := countScopeNodes(r.ScopeTree)
+	if r.ScopeCount != treeLen {
+		return fmt.Errorf("%w: got %d, want %d", errReportScopeCountMismatch, r.ScopeCount, treeLen)
+	}
+
+	healthChecked := 0
+
+	for _, svc := range r.Services {
+		if svc.HealthCheckCount > 0 {
+			healthChecked++
+		}
+	}
+
+	if r.HealthCheckedCount != healthChecked {
+		return fmt.Errorf("%w: got %d, want %d", errReportHealthCheckedMismatch, r.HealthCheckedCount, healthChecked)
+	}
+
+	return nil
+}
+
+// countScopeNodes counts all real scope nodes in the tree (root + recursive children).
+// A zero-value root (empty ID+Name, no children) counts as 0 — it represents
+// an empty report where buildScopeTreeLocked returns a default ScopeNode.
+func countScopeNodes(node ScopeNode) int {
+	if node.ID == "" && node.Name == "" && len(node.Children) == 0 {
+		return 0
+	}
+
+	count := 1
+
+	for _, child := range node.Children {
+		count += countScopeNodes(child)
+	}
+
+	return count
 }
 
 // ServiceByName returns the first ServiceInfo matching the given exact service name.

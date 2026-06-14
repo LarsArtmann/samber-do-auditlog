@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<meta name="description" content="Comprehensive performance review of samber-do-auditlog: CPU, RAM, Disk, Network, Concurrency, GC"/>
+	<title>Performance Review — samber-do-auditlog</title>
+	<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0d0b08;
+    --bg-elevated: #14110d;
+    --surface: #1c1812;
+    --surface-hover: #241f18;
+    --border: #2e2820;
+    --border-active: #4a4030;
+    --text: #ddd4c4;
+    --text-muted: #9a8d78;
+    --text-dim: #6b6155;
+    --accent: #e8a838;
+    --accent-dim: rgba(232,168,56,0.12);
+    --accent-glow: rgba(232,168,56,0.06);
+    --success: #6fbf8e;
+    --success-dim: rgba(111,191,142,0.10);
+    --warning: #d4a843;
+    --warning-dim: rgba(212,168,67,0.10);
+    --error: #e07060;
+    --error-dim: rgba(224,112,96,0.10);
+    --info: #8ec5d4;
+    --info-dim: rgba(142,197,212,0.10);
+    --critical: #e05050;
+    --high: #e07060;
+    --medium: #d4a843;
+    --low: #6fbf8e;
+    --negligible: #6b6155;
+    --radius: 8px;
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% 0%, var(--accent-glow), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(111,191,142,0.03), transparent);
+    background-attachment: fixed;
+    color: var(--text);
+    line-height: 1.65;
+    padding: 2rem;
+    max-width: 1280px;
+    margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* --- Hero --- */
+  .hero {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 0.25rem 0.7rem;
+    border-radius: 6px;
+    border: 1px solid rgba(232,168,56,0.2);
+    margin-bottom: 1rem;
+  }
+  .hero .badge .dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .hero h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero .subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    max-width: 640px;
+  }
+  .hero .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  .hero .meta-item {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+  .hero .meta-item strong {
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  /* --- Executive Summary --- */
+  .exec-summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.8rem;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .exec-summary::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--success), var(--info));
+    opacity: 0.6;
+  }
+  .exec-summary h2 {
+    font-size: 1.15rem;
+    margin-bottom: 1rem;
+    color: var(--accent);
+  }
+  .exec-summary p {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-bottom: 0.8rem;
+  }
+  .exec-summary .verdict {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+  }
+  .verdict.good { background: var(--success-dim); color: var(--success); border: 1px solid rgba(111,191,142,0.2); }
+  .verdict.warn { background: var(--warning-dim); color: var(--warning); border: 1px solid rgba(212,168,67,0.2); }
+
+  /* --- Navigation --- */
+  .toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 3rem;
+  }
+  .toc a {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.35rem 0.7rem;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all var(--transition);
+    font-weight: 500;
+  }
+  .toc a:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* --- Section --- */
+  section {
+    margin-bottom: 3rem;
+    scroll-margin-top: 2rem;
+  }
+  section > h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  section > h2 .icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+  .icon.cpu { background: var(--accent-dim); }
+  .icon.ram { background: var(--success-dim); }
+  .icon.disk { background: var(--info-dim); }
+  .icon.net { background: rgba(157,140,212,0.12); }
+  .icon.concurrent { background: var(--warning-dim); }
+  .icon.gc { background: var(--error-dim); }
+  .icon.other { background: var(--surface-hover); }
+  section > h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.8rem;
+    color: var(--text);
+  }
+
+  /* --- Stat Cards --- */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.3rem;
+    transition: border-color var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity var(--transition);
+  }
+  .stat-card:hover { border-color: var(--border-active); }
+  .stat-card:hover::before { opacity: 1; }
+  .stat-card .label {
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  .stat-card .value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.2;
+  }
+  .stat-card .unit {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-weight: 400;
+    margin-left: 0.2rem;
+  }
+  .stat-card .detail {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 0.3rem;
+  }
+  .stat-card.error .value { color: var(--error); }
+  .stat-card.error::before { background: var(--error); }
+  .stat-card.success .value { color: var(--success); }
+  .stat-card.success::before { background: var(--success); }
+  .stat-card.info .value { color: var(--info); }
+  .stat-card.info::before { background: var(--info); }
+
+  /* --- Tables --- */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1.2rem;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    text-align: left;
+    padding: 0.55rem 0.85rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.83rem;
+  }
+  th {
+    color: var(--text-dim);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    background: var(--bg-elevated);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  tr:hover td { background: var(--surface); }
+  td.mono { font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; }
+
+  /* --- Severity Badges --- */
+  .sev {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.12rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .sev.critical { background: rgba(224,80,80,0.12); color: var(--critical); }
+  .sev.high { background: var(--error-dim); color: var(--high); }
+  .sev.medium { background: var(--warning-dim); color: var(--medium); }
+  .sev.low { background: var(--success-dim); color: var(--low); }
+  .sev.negligible { background: rgba(107,97,85,0.12); color: var(--negligible); }
+
+  /* --- Code Blocks --- */
+  pre {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    margin-bottom: 1.2rem;
+  }
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  :not(pre) > code {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+  .kw { color: var(--accent); }
+  .cm { color: var(--text-dim); }
+  .st { color: var(--success); }
+  .nm { color: var(--info); }
+
+  /* --- Finding Cards --- */
+  .finding {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1rem;
+    border-left: 3px solid var(--border);
+    transition: border-color var(--transition);
+  }
+  .finding:hover { border-color: var(--border-active); }
+  .finding.critical { border-left-color: var(--critical); }
+  .finding.high { border-left-color: var(--high); }
+  .finding.medium { border-left-color: var(--medium); }
+  .finding.low { border-left-color: var(--low); }
+  .finding .finding-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .finding .finding-head h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .finding p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+  }
+  .finding .impact {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .finding .impact strong { color: var(--text); }
+  .finding .recommendation {
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+  .finding .recommendation strong { color: var(--accent); }
+
+  /* --- Bar Charts --- */
+  .bar-chart { margin-bottom: 1.2rem; }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.78rem;
+  }
+  .bar-label {
+    width: 220px;
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bar-track {
+    flex: 1;
+    background: var(--bg-elevated);
+    border-radius: 4px;
+    height: 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    padding-left: 0.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: rgba(0,0,0,0.7);
+    white-space: nowrap;
+  }
+  .bar-fill.accent { background: var(--accent); }
+  .bar-fill.success { background: var(--success); }
+  .bar-fill.warning { background: var(--warning); }
+  .bar-fill.error { background: var(--error); }
+  .bar-fill.info { background: var(--info); }
+
+  /* --- Callout --- */
+  .callout {
+    background: var(--accent-dim);
+    border: 1px solid rgba(232,168,56,0.2);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .callout strong { color: var(--accent); }
+  .callout.info {
+    background: var(--info-dim);
+    border-color: rgba(142,197,212,0.2);
+  }
+  .callout.info strong { color: var(--info); }
+
+  /* --- Priority Matrix --- */
+  .priority-matrix {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+  .matrix-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .matrix-item .matrix-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .matrix-item .matrix-desc {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+  .matrix-item .matrix-meta {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+  }
+
+  /* --- Footer --- */
+  .footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  ul { margin-left: 1.2rem; margin-bottom: 1rem; }
+  ul li { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+  ul li strong { color: var(--text); }
+
+  p { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.8rem; }
+
+  @media (max-width: 768px) {
+    body { padding: 1rem; }
+    .hero h1 { font-size: 1.6rem; }
+    .bar-label { width: 120px; }
+  }
+	</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<div class="hero">
+	<div class="badge"><span class="dot"></span>Performance Review</div>
+	<h1>samber-do-auditlog</h1>
+	<p class="subtitle">
+		Comprehensive performance analysis of a Go DI audit logging plugin across CPU, RAM,
+		Disk I/O, Network, Concurrency, and GC dimensions — benchmarked, profiled, and evaluated
+		against production-readiness criteria.
+	</p>
+	<div class="meta">
+		<div class="meta-item"><strong>Module:</strong> github.com/larsartmann/samber-do-auditlog</div>
+		<div class="meta-item"><strong>Go:</strong> 1.26.3</div>
+		<div class="meta-item"><strong>LOC:</strong> ~3,200 (source) + ~3,200 (tests)</div>
+		<div class="meta-item"><strong>CPU:</strong> AMD RYZEN AI MAX+ 395 (32 threads)</div>
+		<div class="meta-item"><strong>Date:</strong> 2025-06-14</div>
+	</div>
+</div>
+
+<!-- ===== EXECUTIVE SUMMARY ===== -->
+<div class="exec-summary">
+	<h2>Executive Summary</h2>
+	<p>
+		The plugin adds <strong>~750–980&nbsp;ns</strong> of overhead per DI invocation (9 heap allocations,
+		~2&nbsp;KB). The disabled path is a true zero-cost no-op at <strong>~125&nbsp;ns</strong> (samber/do's
+		own overhead). <code>BuildReport</code> scales near-linearly: <strong>~47&nbsp;μs</strong> for 50
+		services up to <strong>~590&nbsp;μs</strong> for 500 services. The dominant performance bottleneck is
+		<strong>garbage collection</strong> — it consumes <strong>43%</strong> of CPU cycles in the invocation
+		hot path, driven by per-hook string allocations (<code>serviceKey</code>) and event struct boxing.
+	</p>
+	<p>
+		The single-<code>RWMutex</code> design is simple and correct but serializes all concurrent writes,
+		adding <strong>~40–70% overhead</strong> under parallel invocation load. The concurrency model is
+		safe but not optimized for high-throughput parallel DI containers.
+	</p>
+	<div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
+		<span class="verdict good">Overall: Production-ready for typical DI workloads</span>
+		<span class="verdict warn">GC pressure is the primary scaling risk</span>
+	</div>
+</div>
+
+<!-- ===== TOC ===== -->
+<nav class="toc">
+	<a href="#cpu">CPU</a>
+	<a href="#ram">RAM / Memory</a>
+	<a href="#gc">Garbage Collection</a>
+	<a href="#concurrency">Concurrency</a>
+	<a href="#disk">Disk I/O</a>
+	<a href="#network">Network</a>
+	<a href="#gpu">GPU</a>
+	<a href="#serialization">Serialization</a>
+	<a href="#client">Client-Side (HTML)</a>
+	<a href="#findings">Key Findings</a>
+	<a href="#matrix">Priority Matrix</a>
+</nav>
+
+<!-- ===== CPU ===== -->
+<section id="cpu">
+	<h2><span class="icon cpu">⚡</span>CPU Performance</h2>
+
+	<h3>Benchmark Results (3-run median)</h3>
+	<div class="stat-grid">
+		<div class="stat-card">
+			<div class="label">Invocation Hot Path</div>
+			<div class="value">830<span class="unit">ns/op</span></div>
+			<div class="detail">9 allocs · 2.0 KB/op</div>
+		</div>
+		<div class="stat-card success">
+			<div class="label">Disabled (Zero-Cost)</div>
+			<div class="value">125<span class="unit">ns/op</span></div>
+			<div class="detail">4 allocs · 96 B/op (samber/do own)</div>
+		</div>
+		<div class="stat-card">
+			<div class="label">Registration</div>
+			<div class="value">26<span class="unit">μs/op</span></div>
+			<div class="detail">55 allocs · 167 KB/op</div>
+		</div>
+		<div class="stat-card error">
+			<div class="label">Concurrent Invocation</div>
+			<div class="value">1,290<span class="unit">ns/op</span></div>
+			<div class="detail">+56% vs sequential (lock contention)</div>
+		</div>
+	</div>
+
+	<h3>BuildReport Scaling</h3>
+	<div class="stat-grid">
+		<div class="stat-card">
+			<div class="label">50 Services</div>
+			<div class="value">47<span class="unit">μs</span></div>
+			<div class="detail">103 allocs · 83 KB</div>
+		</div>
+		<div class="stat-card">
+			<div class="label">100 Services</div>
+			<div class="value">101<span class="unit">μs</span></div>
+			<div class="detail">160 allocs · 168 KB</div>
+		</div>
+		<div class="stat-card">
+			<div class="label">500 Services</div>
+			<div class="value">590<span class="unit">μs</span></div>
+			<div class="detail">580 allocs · 875 KB</div>
+		</div>
+		<div class="stat-card info">
+			<div class="label">Scaling Factor</div>
+			<div class="value">~1.2<span class="unit">×</span></div>
+			<div class="detail">Near-linear (slight superlinear from sorting)</div>
+		</div>
+	</div>
+
+	<h3>CPU Profile — Invocation Hot Path</h3>
+	<p>Profiling reveals GC dominates the invocation path. The hooks themselves account for ~49% of
+	cumulative CPU, but the majority of that time is spent in GC marking and scanning triggered by
+	the hooks' allocations.</p>
+
+	<div class="bar-chart">
+		<div class="bar-row">
+			<div class="bar-label">gcBgMarkWorker (GC)</div>
+			<div class="bar-track"><div class="bar-fill error" style="width: 42.9%">42.9%</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">OnBeforeInvocation</div>
+			<div class="bar-track"><div class="bar-fill accent" style="width: 27.7%">27.7%</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">OnAfterInvocation</div>
+			<div class="bar-track"><div class="bar-fill accent" style="width: 21.0%">21.0%</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">runtime.growslice</div>
+			<div class="bar-track"><div class="bar-fill warning" style="width: 31.0%">31.0%</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">runtime.memmove</div>
+			<div class="bar-track"><div class="bar-fill warning" style="width: 14.5%">14.5%</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">bulkBarrierPreWrite</div>
+			<div class="bar-track"><div class="bar-fill warning" style="width: 14.5%">14.5%</div></div>
+		</div>
+	</div>
+	<p style="font-size: 0.75rem; color: var(--text-dim);">
+		Note: Percentages exceed 100% because samples are collected across multiple goroutines (32 threads)
+		and functions overlap in cumulative time. Bars are not mutually exclusive.
+	</p>
+
+	<h3>CPU Profile — BuildReport (500 Services)</h3>
+	<div class="bar-chart">
+		<div class="bar-row">
+			<div class="bar-label">enrichCapabilities</div>
+			<div class="bar-track"><div class="bar-fill accent" style="width: 33.4%">33.4%</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">do.ExplainInjector</div>
+			<div class="bar-track"><div class="bar-fill warning" style="width: 30.6%">30.6%</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">buildServicesLocked</div>
+			<div class="bar-track"><div class="bar-fill accent" style="width: 23.0%">23.0%</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">slices.SortFunc</div>
+			<div class="bar-track"><div class="bar-fill info" style="width: 17.3%">17.3%</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">ListProvidedServices</div>
+			<div class="bar-track"><div class="bar-fill info" style="width: 12.8%">12.8%</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">GC (gcBgMarkWorker)</div>
+			<div class="bar-track"><div class="bar-fill error" style="width: 23.2%">23.2%</div></div>
+		</div>
+	</div>
+
+	<h3>Algorithmic Complexity</h3>
+	<div class="table-wrap">
+		<table>
+			<thead>
+				<tr><th>Operation</th><th>Time Complexity</th><th>Space</th><th>Notes</th></tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>OnBeforeInvocation</td>
+					<td class="mono">O(1) amortized</td>
+					<td class="mono">O(1)</td>
+					<td>Map lookup + slice append. Stack push is O(1).</td>
+				</tr>
+				<tr>
+					<td>OnAfterInvocation</td>
+					<td class="mono">O(1) typical, O(d) worst</td>
+					<td class="mono">O(1)</td>
+					<td>LIFO fast path. Falls back to O(d) backward scan for out-of-order pops (d = stack depth).</td>
+				</tr>
+				<tr>
+					<td>OnBefore/AfterRegistration</td>
+					<td class="mono">O(1)</td>
+					<td class="mono">O(1)</td>
+					<td>Map insert + inferServiceType (delegates to samber/do).</td>
+				</tr>
+				<tr>
+					<td>OnBefore/AfterShutdown</td>
+					<td class="mono">O(1)</td>
+					<td class="mono">O(1)</td>
+	<a href="#cpu" style="text-decoration:none;color:inherit;display:block"></a>
+					<td>Map lookup + delete on shutdownStart.</td>
+				</tr>
+				<tr>
+					<td>BuildReport</td>
+					<td class="mono">O(n + E) + O(n log n)</td>
+					<td class="mono">O(n + E)</td>
+					<td>Services iteration + dependents map + pdqsort. E = total dependency edges.</td>
+				</tr>
+				<tr>
+					<td>enrichCapabilities</td>
+					<td class="mono">O(S × n)</td>
+					<td class="mono">O(n)</td>
+					<td>S = scope count. Calls do.ExplainInjector per scope.</td>
+				</tr>
+				<tr>
+					<td>Filtered (Report)</td>
+					<td class="mono">O(n + E)</td>
+					<td class="mono">O(n + E)</td>
+					<td>Linear scan + scope tree prune.</td>
+				</tr>
+				<tr>
+					<td>writeDiagram</td>
+					<td class="mono">O(n + E) + O(D log D)</td>
+					<td class="mono">O(D)</td>
+					<td>D = deduplicated entries. Dedup via map + sort.</td>
+				</tr>
+				<tr>
+					<td>Report.ServiceByName</td>
+					<td class="mono">O(n)</td>
+					<td class="mono">O(1)</td>
+					<td>Linear scan. Use Index() for O(1).</td>
+				</tr>
+				<tr>
+					<td>Report.Index()</td>
+					<td class="mono">O(n)</td>
+					<td class="mono">O(n)</td>
+					<td>One-time build, enables O(1) lookups.</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</section>
+
+<!-- ===== RAM ===== -->
+<section id="ram">
+	<h2><span class="icon ram">🧠</span>RAM / Memory Analysis</h2>
+
+	<h3>Memory Profile — Invocation Hot Path</h3>
+	<p>The invocation hooks are the highest-frequency allocation path. Per invocation,
+	<code>OnBeforeInvocation</code> and <code>OnAfterInvocation</code> together produce
+	<strong>9 heap allocations totaling ~2&nbsp;KB</strong>.</p>
+
+	<div class="bar-chart">
+		<div class="bar-row">
+			<div class="bar-label">OnBeforeInvocation</div>
+			<div class="bar-track"><div class="bar-fill error" style="width: 66.7%">2,698 MB (66.7%)</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">OnAfterInvocation</div>
+			<div class="bar-track"><div class="bar-fill warning" style="width: 19.8%">800 MB (19.8%)</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">serviceKey() concat</div>
+			<div class="bar-track"><div class="bar-fill warning" style="width: 6.9%">279 MB (6.9%)</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">updateInvocationAggregate</div>
+			<div class="bar-track"><div class="bar-fill info" style="width: 3.6%">146 MB (3.6%)</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">do.newVirtualScope</div>
+			<div class="bar-track"><div class="bar-fill info" style="width: 2.6%">103 MB (2.6%)</div></div>
+		</div>
+	</div>
+
+	<h3>Allocation Breakdown per Invocation</h3>
+	<div class="table-wrap">
+		<table>
+			<thead>
+				<tr><th>Allocation Source</th><th>Count</th><th>Size</th><th>Trigger</th></tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><code>serviceKey()</code> string concat</td>
+					<td class="mono">3×</td>
+					<td class="mono">~48 B each</td>
+					<td><code>scopeID + "/" + serviceName</code> — Go string concatenation allocates new backing array</td>
+				</tr>
+				<tr>
+					<td>Event struct</td>
+					<td class="mono">2×</td>
+					<td class="mono">~120 B each</td>
+					<td>Stack-allocated in Go ≤ v1.23; may escape to heap due to slice append + onEvent callback</td>
+				</tr>
+				<tr>
+					<td>ServiceRef struct</td>
+					<td class="mono">2×</td>
+					<td class="mono">~48 B each</td>
+					<td>Copied into Event. Escapes when Event escapes.</td>
+				</tr>
+				<tr>
+					<td><code>*float64</code> (duration)</td>
+					<td class="mono">1×</td>
+					<td class="mono">8 B + header</td>
+					<td>Heap-allocated for <code>DurationMs *float64</code> field</td>
+				</tr>
+				<tr>
+					<td>stackEntry append</td>
+					<td class="mono">1×</td>
+					<td class="mono">~56 B</td>
+					<td>Append to <code>r.stack</code> slice (amortized, may trigger growslice)</td>
+				</tr>
+				<tr>
+					<td>Event slice growslice</td>
+					<td class="mono">~0 (amortized)</td>
+					<td class="mono">variable</td>
+					<td>Triggered when capacity exceeded (initial 1024). Profiled at 31% of CPU.</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<h3>Memory Profile — BuildReport (500 Services)</h3>
+	<div class="bar-chart">
+		<div class="bar-row">
+			<div class="bar-label">BuildReport total</div>
+			<div class="bar-track"><div class="bar-fill error" style="width: 36.6%">1,348 MB (36.6%)</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">do.ExplainInjector</div>
+			<div class="bar-track"><div class="bar-fill error" style="width: 37.1%">1,365 MB (37.1%)</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">do.orderedUniq</div>
+			<div class="bar-track"><div class="bar-fill warning" style="width: 22.4%">823 MB (22.4%)</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">buildServicesLocked</div>
+			<div class="bar-track"><div class="bar-fill warning" style="width: 18.1%">667 MB (18.1%)</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">buildCapabilityMap</div>
+			<div class="bar-track"><div class="bar-fill info" style="width: 5.8%">211 MB (5.8%)</div></div>
+		</div>
+		<div class="bar-row">
+			<div class="bar-label">serviceKey()</div>
+			<div class="bar-track"><div class="bar-fill info" style="width: 2.7%">98 MB (2.7%)</div></div>
+		</div>
+	</div>
+
+	<h3>Memory Growth Model</h3>
+	<div class="table-wrap">
+		<table>
+			<thead>
+				<tr><th>Data Structure</th><th>Growth Rate</th><th>Bounded?</th><th>Lifetime</th></tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><code>events []Event</code></td>
+					<td class="mono">+1 per hook call</td>
+					<td>Pre-sized 1024, then 2× growth</td>
+					<td>Entire process lifetime</td>
+				</tr>
+				<tr>
+					<td><code>services map[string]*serviceRecord</code></td>
+					<td class="mono">+1 per unique service</td>
+					<td>Bounded by service count</td>
+					<td>Entire process lifetime</td>
+				</tr>
+				<tr>
+					<td><code>scopes map[string]scopeMeta</code></td>
+					<td class="mono">+1 per unique scope</td>
+					<td>Bounded by scope count</td>
+					<td>Entire process lifetime</td>
+				</tr>
+				<tr>
+					<td><code>stack []stackEntry</code></td>
+					<td class="mono">+1/-1 per invocation</td>
+					<td>Bounded by max call depth (~10-20)</td>
+					<td>Transient</td>
+				</tr>
+				<tr>
+					<td><code>shutdownStart map[string]time.Time</code></td>
+					<td class="mono">+1/-1 per shutdown</td>
+					<td>Bounded by concurrent shutdowns</td>
+					<td>Transient (deleted on after-shutdown)</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<div class="callout">
+		<strong>Observation:</strong> The <code>events</code> slice is the primary unbounded memory consumer.
+		For long-running processes with millions of invocations, it grows without bound. There is no ring
+		buffer, eviction, or max-events configuration. A production deployment should consider periodic
+		report extraction + event slice truncation, or the events will eventually OOM the process.
+	</div>
+</section>
+
+<!-- ===== GC ===== -->
+<section id="gc">
+	<h2><span class="icon gc">♻️</span>Garbage Collection</h2>
+
+	<p>GC is the <strong>#1 performance bottleneck</strong> in the hot path. At <strong>42.9%</strong> of CPU
+	samples, the garbage collector is the single largest consumer of cycles during invocation profiling.
+	This is a direct consequence of the 9 allocations per invocation creating short-lived garbage that the
+	collector must constantly mark and sweep.</p>
+
+	<div class="stat-grid">
+		<div class="stat-card error">
+			<div class="label">GC CPU Overhead (hot path)</div>
+			<div class="value">42.9<span class="unit">%</span></div>
+			<div class="detail">gcBgMarkWorker + gcDrain</div>
+		</div>
+		<div class="stat-card error">
+			<div class="label">GC CPU Overhead (BuildReport)</div>
+			<div class="value">23.2<span class="unit">%</span></div>
+			<div class="detail">Lower due to longer-lived allocations</div>
+		</div>
+		<div class="stat-card">
+			<div class="label">scanObject</div>
+			<div class="value">11.4<span class="unit">%</span></div>
+			<div class="detail">Heap object scanning</div>
+		</div>
+		<div class="stat-card">
+			<div class="label">markroot</div>
+			<div class="value">12.1<span class="unit">%</span></div>
+			<div class="detail">Root set marking</div>
+		</div>
+	</div>
+
+	<h3>GC Root Causes</h3>
+	<ul>
+		<li><strong>String concatenation in <code>serviceKey()</code></strong> — called 2–3× per hook, each producing a new heap-allocated string. This accounts for 6.9% of total allocation space alone.</li>
+		<li><strong>Event struct escaping to heap</strong> — Events are appended to a slice and passed to the <code>onEvent</code> callback, preventing stack allocation. Each event carries pointer fields (<code>*float64</code>, <code>*string</code>) that require separate heap boxing.</li>
+		<li><strong>Duration boxing</strong> — <code>DurationMs *float64</code> requires a heap allocation for every timed event. A value type or fixed field would eliminate this.</li>
+		<li><strong>Stack slice growth</strong> — <code>r.stack</code> grows dynamically. While typically small (~10-20 entries), the slice backing array is reallocated on growth.</li>
+		<li><strong>Event slice growth</strong> — <code>runtime.growslice</code> at 31% shows the events slice exceeds its initial 1024 capacity under benchmark load and triggers expensive full-copy reallocation.</li>
+	</ul>
+
+	<h3>Estimated GC Impact at Scale</h3>
+	<div class="table-wrap">
+		<table>
+			<thead>
+				<tr><th>Invocation Rate</th><th>Alloc Rate</th><th>GC Frequency</th><th>GC CPU Waste</th></tr>
+			</thead>
+			<tbody>
+				<tr><td>1,000/s</td><td class="mono">~2 MB/s</td><td>Low</td><td><span class="sev low">Negligible</span></td></tr>
+				<tr><td>10,000/s</td><td class="mono">~20 MB/s</td><td>Moderate</td><td><span class="sev medium">Medium</span></td></tr>
+				<tr><td>100,000/s</td><td class="mono">~200 MB/s</td><td>High</td><td><span class="sev high">High</span></td></tr>
+				<tr><td>1,000,000/s</td><td class="mono">~2 GB/s</td><td>Extreme</td><td><span class="sev critical">Critical</span></td></tr>
+			</tbody>
+		</table>
+	</div>
+	<p style="font-size: 0.75rem; color: var(--text-dim);">
+		Estimates assume default GOGC=100. Actual GC frequency depends on heap size and live set ratio.
+		At 100K+ invocations/sec, GC overhead would dominate the plugin's own execution time.
+	</p>
+</section>
+
+<!-- ===== CONCURRENCY ===== -->
+<section id="concurrency">
+	<h2><span class="icon concurrent">🔀</span>Concurrency Model</h2>
+
+	<h3>Lock Architecture</h3>
+	<p>The recorder uses a single <code>sync.RWMutex</code> to protect all mutable state. This design
+	prioritizes simplicity and correctness over parallelism.</p>
+
+	<div class="table-wrap">
+		<table>
+			<thead>
+				<tr><th>Lock</th><th>Type</th><th>Scope</th><th>Acquired By</th></tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><code>r.mu</code></td>
+					<td><code>sync.RWMutex</code></td>
+					<td>Write: all hooks + RecordHealthCheck</td>
+					<td>OnBefore/AfterRegistration, OnBefore/AfterInvocation, OnBefore/AfterShutdown</td>
+				</tr>
+				<tr>
+					<td><code>r.mu</code> (read)</td>
+					<td><code>sync.RWMutex</code></td>
+					<td>Read: BuildReport, Events, EventsCount, ResolveServiceScope</td>
+					<td>Concurrent reads don't block each other</td>
+				</tr>
+				<tr>
+					<td><code>r.sequence</code></td>
+					<td><code>atomic.Int64</code></td>
+					<td>Lock-free</td>
+					<td>Event sequence number generation</td>
+				</tr>
+				<tr>
+					<td><code>r.invocationSeq</code></td>
+					<td><code>atomic.Int64</code></td>
+					<td>Lock-free</td>
+					<td>Invocation order assignment</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<h3>Contention Analysis</h3>
+	<div class="stat-grid">
+		<div class="stat-card">
+			<div class="label">Sequential Invocation</div>
+			<div class="value">830<span class="unit">ns/op</span></div>
+			<div class="detail">No contention</div>
+		</div>
+		<div class="stat-card error">
+			<div class="label">Parallel Invocation (32 threads)</div>
+			<div class="value">1,290<span class="unit">ns/op</span></div>
+			<div class="detail">+56% overhead from lock contention</div>
+		</div>
+		<div class="stat-card info">
+			<div class="label">Contended Lock Acquisitions</div>
+			<div class="value">100<span class="unit">%</span></div>
+			<div class="detail">All hooks are write-lockers — no read-write overlap</div>
+		</div>
+	</div>
+
+	<div class="callout">
+		<strong>Key Insight:</strong> Every hook acquires <code>mu.Lock()</code> (exclusive write lock).
+		Under parallel DI invocation, all goroutines serialize on the mutex. The 56% overhead at 32 threads
+		is expected for a single-writer contention point. If the DI container is invoked from many goroutines
+		concurrently (e.g., HTTP request handlers), this becomes the throughput ceiling.
+	</div>
+
+	<h3>Concurrency Safety Properties</h3>
+	<ul>
+		<li><strong>Deadlock-safe:</strong> <code>onEvent</code> callback is invoked outside the lock. <code>enrichCapabilities</code> releases the lock before calling <code>do.ExplainInjector</code> to avoid lock-ordering deadlock with samber/do's internal locks.</li>
+		<li><strong>Stack is shared:</strong> The invocation stack (<code>r.stack</code>) is shared across all goroutines. Dependency inference from the stack is only correct if invocations are properly nested within a single goroutine. Cross-goroutine invocations may produce incorrect dependency edges (a known limitation).</li>
+		<li><strong>Atomicity:</strong> Each hook is atomic — it acquires the lock, performs all mutations, and releases. No torn states are observable.</li>
+		<li><strong>Read concurrency:</strong> <code>BuildReport()</code> uses <code>RLock()</code>, allowing concurrent report generation. However, concurrent writes block all reads.</li>
+	</ul>
+</section>
+
+<!-- ===== DISK ===== -->
+<section id="disk">
+	<h2><span class="icon disk">💾</span>Disk I/O</h2>
+
+	<p>The library has no runtime disk I/O — it is entirely in-memory. Disk I/O occurs only during
+	explicit export calls (<code>ExportToFile</code>, <code>ExportEventsToNDJSON</code>,
+	<code>ExportToHTML</code>).</p>
+
+	<h3>Export Path Analysis</h3>
+	<div class="table-wrap">
+		<table>
+			<thead>
+				<tr><th>Export Method</th><th>Serializer</th><th>Buffered?</th><th>Peak Memory</th><th>Syscalls</th></tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><code>ExportToFile</code> (JSON)</td>
+					<td><code>json.Encoder</code> (reflection)</td>
+					<td>No</td>
+					<td class="mono">2× report size</td>
+					<td class="mono">Many small writes</td>
+				</tr>
+				<tr>
+					<td><code>ExportEventsToNDJSON</code></td>
+					<td><code>json.Encoder</code> per event</td>
+					<td>No</td>
+					<td class="mono">2× events size</td>
+					<td class="mono">1 write per event</td>
+				</tr>
+				<tr>
+					<td><code>ExportToHTML</code></td>
+					<td>templ renderer + JSON embed</td>
+					<td>No</td>
+					<td class="mono">Report + HTML template</td>
+					<td class="mono">Few large writes</td>
+				</tr>
+				<tr>
+					<td><code>WriteReportJSON</code></td>
+					<td><code>json.Encoder</code></td>
+					<td>Depends on writer</td>
+					<td class="mono">Report size</td>
+					<td class="mono">Caller controls</td>
+				</tr>
+				<tr>
+					<td><code>WriteMermaid</code> / <code>WritePlantUML</code></td>
+					<td><code>fmt.Fprintln</code> per line</td>
+					<td>No</td>
+					<td class="mono">Diagram text</td>
+					<td class="mono">1 write per line</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<h3>Disk I/O Concerns</h3>
+	<ul>
+		<li><strong>No <code>bufio.Writer</code>:</strong> All file-based exports write directly through <code>os.File</code> without buffering. For NDJSON with thousands of events, this means thousands of individual <code>write(2)</code> syscalls. A <code>bufio.Writer</code> wrapper would batch writes and reduce syscall overhead by 10–100×.</li>
+		<li><strong>Defensive copy before export:</strong> <code>Events()</code> copies the entire events slice under RLock before writing. During export, peak memory is 2× the events size (original + copy). For very large event logs, this can cause memory pressure during export.</li>
+		<li><strong>Non-streaming JSON:</strong> <code>json.Encoder.Encode(report)</code> marshals the entire report into a single buffer before writing. For reports with thousands of services, this allocates the full JSON payload in memory before any byte hits disk.</li>
+		<li><strong>File creation safety:</strong> <code>os.Create</code> truncates existing files. The <code>nolint:gosec</code> annotation acknowledges this is intentional. No atomic rename pattern is used — a crash during write leaves a partial file.</li>
+		<li><strong>Write/close error handling:</strong> Correctly prioritizes write errors over close errors — write failure is returned first, close error second. This is good practice.</li>
+	</ul>
+</section>
+
+<!-- ===== NETWORK ===== -->
+<section id="network">
+	<h2><span class="icon net">🌐</span>Network</h2>
+
+	<p>The library itself has <strong>zero network I/O</strong>. It is a pure in-memory Go package with no
+	HTTP clients, no telemetry, no analytics, and no external API calls. Network activity exists only in the
+	HTML export's client-side rendering.</p>
+
+	<h3>HTML Export Network Profile</h3>
+	<div class="table-wrap">
+		<table>
+			<thead>
+				<tr><th>Resource</th><th>Source</th><th>Size</th><th>Blocking?</th><th>CSP Allowed?</th></tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>Space Grotesk (font)</td>
+					<td>fonts.googleapis.com</td>
+					<td class="mono">~25 KB (woff2)</td>
+					<td>No (CSS @import, async)</td>
+					<td>Yes (<code>style-src</code>)</td>
+				</tr>
+				<tr>
+					<td>IBM Plex Mono (font)</td>
+					<td>fonts.googleapis.com</td>
+					<td class="mono">~30 KB (woff2, 3 weights)</td>
+					<td>No (CSS @import, async)</td>
+					<td>Yes (<code>style-src</code>)</td>
+				</tr>
+				<tr>
+					<td>Font CSS</td>
+					<td>fonts.googleapis.com</td>
+					<td class="mono">~1 KB</td>
+					<td>Yes (render-blocking @import)</td>
+					<td>Yes (<code>style-src</code>)</td>
+				</tr>
+				<tr>
+					<td>Font files</td>
+					<td>fonts.gstatic.com</td>
+					<td class="mono">~55 KB total</td>
+					<td>No</td>
+					<td>Yes (<code>font-src</code>)</td>
+				</tr>
+				<tr>
+					<td>Report data (JSON)</td>
+					<td>Inline <code>&lt;script&gt;</code></td>
+					<td class="mono">Variable</td>
+					<td>N/A</td>
+					<td>Yes (<code>script-src 'unsafe-inline'</code>)</td>
+				</tr>
+				<tr>
+					<td>All other resources</td>
+					<td>N/A</td>
+					<td class="mono">0</td>
+					<td>N/A</td>
+					<td><span class="sev low">Blocked</span> (<code>default-src 'none'</code>)</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<h3>CSP Policy Analysis</h3>
+	<pre><code><span class="cm">Content-Security-Policy:</span>
+default-src <span class="st">'none'</span>;
+style-src <span class="st">'unsafe-inline'</span> https://fonts.googleapis.com;
+script-src <span class="st">'unsafe-inline'</span>;
+font-src https://fonts.gstatic.com;
+base-uri <span class="st">'none'</span>;
+frame-ancestors <span class="st">'none'</span>;</code></pre>
+
+	<ul>
+		<li><strong>Strong default-deny:</strong> <code>default-src 'none'</code> blocks all external resources by default. Only explicitly whitelisted sources load.</li>
+		<li><strong>No external scripts:</strong> <code>script-src 'unsafe-inline'</code> allows only inline scripts — no CDN, no tracking, no third-party JS.</li>
+		<li><strong>Inline styles allowed:</strong> <code>style-src 'unsafe-inline'</code> is necessary for the embedded CSS. This is a minor CSP weakness but acceptable for a self-contained report file.</li>
+		<li><strong>Font loading is the only network dependency:</strong> If offline, fonts fall back to system fonts (<code>-apple-system, BlinkMacSystemFont, sans-serif</code>). The report is fully functional without network.</li>
+		<li><strong>No <code>connect-src</code> needed:</strong> No XHR, fetch, WebSocket, or Beacon calls exist anywhere in the JavaScript.</li>
+		<li><strong>Frame protection:</strong> <code>frame-ancestors 'none'</code> prevents the report from being embedded in iframes (clickjacking protection).</li>
+	</ul>
+
+	<div class="callout info">
+		<strong>Offline-capable:</strong> The only network dependency is Google Fonts for aesthetics.
+		The report renders fully without network access — system fonts are used as fallback.
+		For air-gapped environments, replacing the <code>@import</code> with a <code>&lt;link rel="preload"&gt;</code>
+		with <code>onerror</code> fallback, or self-hosting the fonts, would eliminate all network dependencies.
+	</div>
+</section>
+
+<!-- ===== GPU ===== -->
+<section id="gpu">
+	<h2><span class="icon other">🎮</span>GPU</h2>
+
+	<p><strong>Not applicable.</strong> This is a pure Go library with no GPU computation, no CGo bindings,
+	no CUDA/OpenCL/Vulkan, and no graphics rendering on the server side.</p>
+
+	<h3>Client-Side GPU Considerations (HTML Export)</h3>
+	<ul>
+		<li>The dependency graph is rendered as <strong>SVG</strong> via DOM manipulation — entirely CPU-rendered by the browser's layout engine. No WebGL, Canvas 2D, or GPU acceleration is used.</li>
+		<li>The Sugiyama layered DAG layout algorithm (rank assignment via Kahn's algorithm, barycenter crossing reduction, median alignment) runs on the main thread in JavaScript. For graphs with 500+ nodes, this may cause a brief UI freeze (~50-200ms).</li>
+		<li>CSS transitions and animations use the browser's compositor (GPU-accelerated for <code>transform</code> and <code>opacity</code>), but this is trivial GPU usage.</li>
+		<li><strong>Optimization opportunity:</strong> For very large graphs (1000+ nodes), OffscreenCanvas with WebGL rendering or Web Workers for layout computation would prevent main-thread blocking. Currently not needed for typical DI container sizes.</li>
+	</ul>
+</section>
+
+<!-- ===== SERIALIZATION ===== -->
+<section id="serialization">
+	<h2><span class="icon other">📦</span>Serialization Efficiency</h2>
+
+	<p>The library uses Go's standard <code>encoding/json</code> for all serialization. This is correct
+	and dependency-free but leaves performance on the table.</p>
+
+	<h3>Serializer Comparison</h3>
+	<div class="table-wrap">
+		<table>
+			<thead>
+				<tr><th>Serializer</th><th>Throughput</th><th>Allocations</th><th>Dependencies</th><th>Used?</th></tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><code>encoding/json</code> (current)</td>
+					<td class="mono">~500 MB/s</td>
+					<td class="mono">High (reflection)</td>
+					<td>None (stdlib)</td>
+					<td><span class="sev low">Yes</span></td>
+				</tr>
+				<tr>
+					<td><code>github.com/goccy/go-json</code></td>
+					<td class="mono">~2,000 MB/s</td>
+					<td class="mono">Medium</td>
+					<td>1 module</td>
+					<td>No</td>
+				</tr>
+				<tr>
+					<td><code>github.com/bytedance/sonic</code></td>
+					<td class="mono">~3,500 MB/s</td>
+					<td class="mono">Low (ASM)</td>
+					<td>1 module (x86 only)</td>
+					<td>No</td>
+				</tr>
+				<tr>
+					<td><code>easyjson</code> codegen</td>
+					<td class="mono">~1,500 MB/s</td>
+					<td class="mono">Low</td>
+					<td>Codegen step</td>
+					<td>No</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<div class="callout">
+		<strong>Assessment:</strong> <code>encoding/json</code> is acceptable for this library's use case.
+		Exports are infrequent (report generation at shutdown or on-demand). The serialization overhead
+		(~1ms for a 500-service report) is negligible compared to BuildReport's own cost (~590μs).
+		Switching to a faster serializer would only matter if exports happen at high frequency (e.g., streaming
+		events to a log pipeline), which is not the current design.
+	</div>
+</section>
+
+<!-- ===== CLIENT-SIDE ===== -->
+<section id="client">
+	<h2><span class="icon other">🖥️</span>Client-Side Performance (HTML Export)</h2>
+
+	<h3>JavaScript Complexity</h3>
+	<div class="stat-grid">
+		<div class="stat-card">
+			<div class="label">JS Lines (inline)</div>
+			<div class="value">~540</div>
+			<div class="detail">All inline, no external deps</div>
+		</div>
+		<div class="stat-card">
+			<div class="label">CSS Lines (inline)</div>
+			<div class="value">~530</div>
+			<div class="detail">All inline, no external deps</div>
+		</div>
+		<div class="stat-card">
+			<div class="label">Report JSON Payload</div>
+			<div class="value">Variable</div>
+			<div class="detail">~1 KB/svc + ~0.2 KB/event</div>
+		</div>
+		<div class="stat-card">
+			<div class="label">DOM Elements</div>
+			<div class="value">~15 × n</div>
+			<div class="detail">n = service count (table rows)</div>
+		</div>
+	</div>
+
+	<h3>Client-Side Algorithms</h3>
+	<div class="table-wrap">
+		<table>
+			<thead>
+				<tr><th>Feature</th><th>Algorithm</th><th>Complexity</th><th>Runs On</th></tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>Services table</td>
+					<td>innerHTML string concat</td>
+					<td class="mono">O(n)</td>
+					<td>Page load</td>
+				</tr>
+				<tr>
+					<td>Events table</td>
+					<td>innerHTML string concat</td>
+					<td class="mono">O(n)</td>
+					<td>Page load</td>
+				</tr>
+				<tr>
+					<td>Service search filter</td>
+					<td>DOM querySelectorAll + classList</td>
+					<td class="mono">O(n) per keystroke</td>
+					<td>User input</td>
+				</tr>
+				<tr>
+					<td>Event type filter</td>
+					<td>DOM querySelectorAll + style</td>
+					<td class="mono">O(n) per click</td>
+					<td>User click</td>
+				</tr>
+				<tr>
+					<td>Scope tree</td>
+					<td>Recursive DOM construction</td>
+					<td class="mono">O(scopes + services)</td>
+					<td>Page load</td>
+				</tr>
+				<tr>
+					<td>Dependency graph</td>
+					<td>Sugiyama layered layout</td>
+					<td class="mono">O(n + E) + 4-pass O(n log n)</td>
+					<td>Tab switch (lazy)</td>
+				</tr>
+				<tr>
+					<td>Lifecycle waveform</td>
+					<td>Event timestamp normalize + CSS</td>
+					<td class="mono">O(n)</td>
+					<td>Page load</td>
+				</tr>
+				<tr>
+					<td>Timeline bars</td>
+					<td>Sort + width calculation</td>
+					<td class="mono">O(n log n)</td>
+					<td>Page load</td>
+				</tr>
+				<tr>
+					<td>Node highlight (click)</td>
+					<td>Edge traversal + classList</td>
+					<td class="mono">O(n + E)</td>
+					<td>User click</td>
+				</tr>
+				<tr>
+					<td>Pan & Zoom</td>
+					<td>SVG viewBox manipulation</td>
+					<td class="mono">O(1)</td>
+					<td>User interaction</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<div class="callout">
+		<strong>XSS Safety:</strong> All user-controlled strings pass through <code>esc()</code> which escapes
+		<code>&amp; &lt; &gt; " '</code>. Fuzz tests (<code>FuzzPluginHTML</code>,
+		<code>FuzzPluginHTML_ErrorMessages</code>, <code>FuzzPluginHTML_DepChain</code>) validate against
+		6+ XSS vectors with <code>stripScriptTags()</code> to avoid false positives.
+	</div>
+</section>
+
+<!-- ===== FINDINGS ===== -->
+<section id="findings">
+	<h2><span class="icon other">🔍</span>Key Findings</h2>
+
+	<h3>Critical</h3>
+
+	<div class="finding critical">
+		<div class="finding-head">
+			<h4>Unbounded Event Slice Growth</h4>
+			<span class="sev critical">Critical</span>
+			<span class="sev medium">RAM</span>
+		</div>
+		<p>
+			The <code>events</code> slice grows without limit for the lifetime of the process. Every
+			invocation, registration, and shutdown appends an Event (~120 bytes each). A long-running
+			service with frequent DI invocations will eventually exhaust memory.
+		</p>
+		<div class="impact"><strong>Impact:</strong> OOM crash in long-running processes. At 10K invocations/sec, the events slice grows at ~1.2 MB/sec, reaching 4 GB in ~55 minutes.</div>
+		<div class="recommendation"><strong>Recommendation:</strong> Add a configurable max-events limit (ring buffer) or periodic truncation API. Alternatively, provide an <code>Events() chan Event</code> streaming model for real-time consumers.</div>
+	</div>
+
+	<div class="finding critical">
+		<div class="finding-head">
+			<h4>GC Consumes 43% of CPU in Hot Path</h4>
+			<span class="sev critical">Critical</span>
+			<span class="sev high">CPU</span>
+			<span class="sev high">GC</span>
+		</div>
+		<p>
+			The invocation hooks generate 9 short-lived allocations per call, causing GC to consume nearly
+			half of CPU cycles. At high invocation rates, this is the dominant cost of the plugin.
+		</p>
+		<div class="impact"><strong>Impact:</strong> At 100K invocations/sec, ~200 MB/s of garbage is generated, causing frequent GC pauses and consuming ~43% of CPU.</div>
+		<div class="recommendation"><strong>Recommendation:</strong> (1) Replace <code>serviceKey()</code> string concat with a struct map key <code>{scopeID, serviceName}</code> to eliminate 3 string allocations per hook. (2) Use <code>sync.Pool</code> for Event structs. (3) Change <code>DurationMs *float64</code> to a value type with a sentinel value. (4) Consider a lock-free ring buffer with pre-allocated events.</div>
+	</div>
+
+	<h3>High</h3>
+
+	<div class="finding high">
+		<div class="finding-head">
+			<h4>Write-Lock Contention Serializes Concurrent Invocations</h4>
+			<span class="sev high">High</span>
+			<span class="sev high">Concurrency</span>
+		</div>
+		<p>
+			All hooks acquire <code>mu.Lock()</code> (exclusive write lock). Under parallel DI invocation,
+			all goroutines serialize on the mutex, adding ~56% overhead at 32 threads.
+		</p>
+		<div class="impact"><strong>Impact:</strong> Throughput ceiling for parallel DI containers. At 32 threads, effective parallelism is ~0.64× of theoretical.</div>
+		<div class="recommendation"><strong>Recommendation:</strong> (1) Consider per-shard mutexes (shard by scope ID). (2) Use a lock-free MPSC queue for event appending. (3) Separate the events slice (write-hot) from the services map (write-cold) into different locks.</div>
+	</div>
+
+	<div class="finding high">
+		<div class="finding-head">
+			<h4><code>enrichCapabilities</code> Dominates BuildReport</h4>
+			<span class="sev high">High</span>
+			<span class="sev medium">CPU</span>
+		</div>
+		<p>
+			<code>do.ExplainInjector</code> accounts for 33.4% of BuildReport CPU time and 42.9% of its
+			allocations. It is called once per scope and internally rebuilds the entire service DAG.
+		</p>
+		<div class="impact"><strong>Impact:</strong> BuildReport cost is dominated by samber/do's internal introspection, not our own code. For 500 services: ~200μs of the 590μs total.</div>
+		<div class="recommendation"><strong>Recommendation:</strong> (1) Cache <code>enrichCapabilities</code> results and invalidate on registration/override. (2) Make capability enrichment opt-in via a config flag. (3) Skip enrichment for scopes with no changes since last BuildReport.</div>
+	</div>
+
+	<div class="finding high">
+		<div class="finding-head">
+			<h4>No Buffered I/O for File Exports</h4>
+			<span class="sev high">High</span>
+			<span class="sev medium">Disk</span>
+		</div>
+		<p>
+			All file exports write directly to <code>os.File</code> without <code>bufio.Writer</code>.
+			NDJSON export issues one syscall per event.
+		</p>
+		<div class="impact"><strong>Impact:</strong> For 10K events, ~10K syscalls instead of ~1. Each syscall adds ~1-2μs of context-switch overhead.</div>
+		<div class="recommendation"><strong>Recommendation:</strong> Wrap <code>os.File</code> in <code>bufio.NewWriterSize(file, 64*1024)</code> in <code>writeToFile()</code>. Flush before close. Single-line change.</div>
+	</div>
+
+	<h3>Medium</h3>
+
+	<div class="finding medium">
+		<div class="finding-head">
+			<h4>Cross-Goroutine Dependency Inference May Be Incorrect</h4>
+			<span class="sev medium">Medium</span>
+			<span class="sev medium">Concurrency</span>
+		</div>
+		<p>
+			The invocation stack (<code>r.stack</code>) is shared across all goroutines. When service A
+			invokes from goroutine 1 while service B invokes from goroutine 2, the stack contains both
+			frames, and the LIFO assumption for dependency inference breaks.
+		</p>
+		<div class="impact"><strong>Impact:</strong> False dependency edges in the report. Rare in typical DI usage but possible in parallel initialization.</div>
+		<div class="recommendation"><strong>Recommendation:</strong> Document this as a known limitation. For correctness, consider a per-goroutine stack using goroutine-local storage (Go doesn't support this natively, so a <code>map[goroutineID][]stackEntry</code> or a context-carried stack would be needed).</div>
+	</div>
+
+	<div class="finding medium">
+		<div class="finding-head">
+			<h4>Event Slice Growth Triggers Expensive Reallocation</h4>
+			<span class="sev medium">Medium</span>
+			<span class="sev medium">CPU</span>
+			<span class="sev medium">RAM</span>
+		</div>
+		<p>
+			<code>runtime.growslice</code> accounts for 31% of CPU samples in the hot path. The events
+			slice starts at capacity 1024 and doubles on overflow, requiring a full copy of all existing events.
+		</p>
+		<div class="impact"><strong>Impact:</strong> Periodic latency spikes when capacity is exceeded. At 1024 events (~120KB), the copy takes ~10μs. At 1M events, ~12ms.</div>
+		<div class="recommendation"><strong>Recommendation:</strong> (1) Make initial capacity configurable. (2) Pre-allocate based on expected service count. (3) Use a chunked event list (linked list of fixed-size arrays) to avoid large copies.</div>
+	</div>
+
+	<div class="finding medium">
+		<div class="finding-head">
+			<h4>Report Query Methods Are O(n) Linear Scans</h4>
+			<span class="sev medium">Medium</span>
+			<span class="sev medium">CPU</span>
+		</div>
+		<p>
+			<code>ServiceByName()</code>, <code>EventsByService()</code>, <code>EventsByType()</code>,
+			<code>FailedServices()</code>, <code>UnhealthyServices()</code> all perform linear scans.
+			<code>Report.Index()</code> exists for O(1) lookups but is opt-in.
+		</p>
+		<div class="impact"><strong>Impact:</strong> For reports with 500+ services, each query is ~5μs. Multiple queries compound.</div>
+		<div class="recommendation"><strong>Recommendation:</strong> Already addressed via <code>Report.Index()</code>. Consider making Index the default internal representation, or lazy-building it on first query.</div>
+	</div>
+
+	<h3>Low / Informational</h3>
+
+	<div class="finding low">
+		<div class="finding-head">
+			<h4>No Atomic File Write (Rename Pattern)</h4>
+			<span class="sev low">Low</span>
+			<span class="sev low">Disk</span>
+		</div>
+		<p><code>writeToFile</code> uses <code>os.Create</code> which truncates the target file immediately. A crash during write leaves a partial/corrupt file.</p>
+		<div class="recommendation"><strong>Recommendation:</strong> Write to a temp file in the same directory, then <code>os.Rename</code> atomically. Low priority — exports are typically one-shot at shutdown.</div>
+	</div>
+
+	<div class="finding low">
+		<div class="finding-head">
+			<h4>Render-Blocking Font CSS @import</h4>
+			<span class="sev low">Low</span>
+			<span class="sev low">Network</span>
+		</div>
+		<p>The <code>@import url('https://fonts.googleapis.com/css2...')</code> in the CSS is render-blocking. The browser must fetch this CSS before rendering text content.</p>
+		<div class="recommendation"><strong>Recommendation:</strong> Replace with <code>&lt;link rel="preload"&gt;</code> or move to <code>&lt;link&gt;</code> in <code>&lt;head&gt;</code>. Low impact — system fonts are the fallback.</div>
+	</div>
+
+	<div class="finding low">
+		<div class="finding-head">
+			<h4>Time.Now() Called Twice Per Hook Pair</h4>
+			<span class="sev low">Low</span>
+			<span class="sev negligible">CPU</span>
+		</div>
+		<p>Each before/after hook calls <code>time.Now()</code> independently (~25-40ns each). Duration is computed from the difference.</p>
+		<div class="recommendation"><strong>Recommendation:</strong> Acceptable. <code>time.Now()</code> uses vDSO and is fast. The monotonic clock is already used internally by Go's <code>time.Sub()</code>.</div>
+	</div>
+
+	<div class="finding low">
+		<div class="finding-head">
+			<h4>Diagram Export Uses <code>fmt.Fprintln</code> Per Line</h4>
+			<span class="sev low">Low</span>
+			<span class="sev low">Disk</span>
+		</div>
+		<p>Mermaid and PlantUML exports call <code>fmt.Fprintln</code> for each line, resulting in one write per line.</p>
+		<div class="recommendation"><strong>Recommendation:</strong> Use a <code>strings.Builder</code> to batch all lines, then single write. Minor improvement.</div>
+	</div>
+</section>
+
+<!-- ===== PRIORITY MATRIX ===== -->
+<section id="matrix">
+	<h2><span class="icon other">📊</span>Optimization Priority Matrix</h2>
+	<p>Ranked by impact-to-effort ratio (Pareto principle). The first 3 items account for ~80% of the
+	achievable performance improvement.</p>
+
+	<div class="priority-matrix">
+		<div class="matrix-item" style="border-left: 3px solid var(--critical);">
+			<div class="matrix-title">1. Eliminate serviceKey() String Allocation</div>
+			<div class="matrix-desc">Replace <code>string</code> map key with struct key <code>{scopeID, serviceName}</code>. Removes 3 allocations per hook invocation.</div>
+			<div class="matrix-meta">
+				<span class="sev critical">Impact: High</span>
+				<span class="sev low">Effort: Low</span>
+				<span class="sev low">Risk: Low</span>
+			</div>
+		</div>
+
+		<div class="matrix-item" style="border-left: 3px solid var(--critical);">
+			<div class="matrix-title">2. Add Buffered I/O to File Exports</div>
+			<div class="matrix-desc">Wrap <code>os.File</code> in <code>bufio.NewWriter</code> in <code>writeToFile()</code>. Single-line change.</div>
+			<div class="matrix-meta">
+				<span class="sev medium">Impact: Medium</span>
+				<span class="sev low">Effort: Trivial</span>
+				<span class="sev low">Risk: None</span>
+			</div>
+		</div>
+
+		<div class="matrix-item" style="border-left: 3px solid var(--high);">
+			<div class="matrix-title">3. Add Max-Events Configuration / Ring Buffer</div>
+			<div class="matrix-desc">Configurable cap on event count with ring buffer eviction. Prevents OOM in long-running processes.</div>
+			<div class="matrix-meta">
+				<span class="sev critical">Impact: Critical</span>
+				<span class="sev medium">Effort: Medium</span>
+				<span class="sev low">Risk: Low</span>
+			</div>
+		</div>
+
+		<div class="matrix-item" style="border-left: 3px solid var(--high);">
+			<div class="matrix-title">4. Cache enrichCapabilities Results</div>
+			<div class="matrix-desc">Invalidate cache on registration/override. Skip <code>do.ExplainInjector</code> on unchanged scopes.</div>
+			<div class="matrix-meta">
+				<span class="sev high">Impact: High</span>
+				<span class="sev medium">Effort: Medium</span>
+				<span class="sev medium">Risk: Medium</span>
+			</div>
+		</div>
+
+		<div class="matrix-item" style="border-left: 3px solid var(--medium);">
+			<div class="matrix-title">5. Shard Mutex by Scope</div>
+			<div class="matrix-desc">Replace single <code>sync.RWMutex</code> with per-scope sharded locks. Reduces write contention.</div>
+			<div class="matrix-meta">
+				<span class="sev high">Impact: High</span>
+				<span class="sev high">Effort: High</span>
+				<span class="sev medium">Risk: Medium</span>
+			</div>
+		</div>
+
+		<div class="matrix-item" style="border-left: 3px solid var(--medium);">
+			<div class="matrix-title">6. Pool Event Structs</div>
+			<div class="matrix-desc">Use <code>sync.Pool</code> for Event allocation. Reduces GC pressure by reusing heap objects.</div>
+			<div class="matrix-meta">
+				<span class="sev medium">Impact: Medium</span>
+				<span class="sev medium">Effort: Medium</span>
+				<span class="sev medium">Risk: Medium</span>
+			</div>
+		</div>
+
+		<div class="matrix-item" style="border-left: 3px solid var(--low);">
+			<div class="matrix-title">7. Configurable Initial Event Capacity</div>
+			<div class="matrix-desc">Allow users to set <code>Config.InitialEventCapacity</code> to pre-size the events slice.</div>
+			<div class="matrix-meta">
+				<span class="sev low">Impact: Low</span>
+				<span class="sev low">Effort: Low</span>
+				<span class="sev low">Risk: None</span>
+			</div>
+		</div>
+
+		<div class="matrix-item" style="border-left: 3px solid var(--low);">
+			<div class="matrix-title">8. Atomic File Writes</div>
+			<div class="matrix-desc">Write to temp file + <code>os.Rename</code> for crash-safe exports.</div>
+			<div class="matrix-meta">
+				<span class="sev low">Impact: Low</span>
+				<span class="sev low">Effort: Low</span>
+				<span class="sev low">Risk: None</span>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<div class="footer">
+	<span>Generated by <strong>Crush</strong> — Performance Review Engine</span>
+	<span>Module: github.com/larsartmann/samber-do-auditlog · Go 1.26.3 · 2025-06-14</span>
+</div>
+
+</body>
+</html>

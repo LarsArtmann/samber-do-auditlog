@@ -6,14 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Breaking
+
+- **`New()` returns `(*Plugin, error)`**: `Config.Validate()` is now enforced at construction time. All callers must handle the error.
+
 ### Security
 
 - **Fix XSS in HTML dependency rendering**: `d.service_name` and `s.status` are now escaped via `esc()` before interpolation
 - **Add CSP meta tag**: `Content-Security-Policy` restricts the HTML page to inline styles/scripts and Google Fonts
+- **Harden CSP**: add `base-uri 'none'; frame-ancestors 'none'` to prevent base injection and clickjacking
 - **Expand fuzz coverage**: 3 fuzz targets covering malicious service names, error strings, and dependency chains with 6+ injection vector checks
 
 ### Fixed
 
+- **Keyboard nav exclusion**: tab-shortcut handler now excludes `TEXTAREA`, `SELECT`, and `BUTTON` in addition to `INPUT`
 - **Fix broken Events tab**: `allEvents` was referenced but undefined — the Events tab rendered nothing. Now shows full event table with sequence, timestamp, type badge, provider badge, phase icon, scope, service, duration, and error
 - **MigrateReport validation**: rejects empty input and missing version field; preserves original `ExportedAt`; passes through unchanged if already at current schema
 - **writeToFile error handling**: `Close()` errors are now returned properly instead of silently discarded
@@ -38,6 +44,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Report.Validate()**: checks internal consistency of denormalized count fields (`EventCount`, `ServiceCount`, `ScopeCount`, `HealthCheckedCount`) against actual slice/tree lengths
+- **Shared diagram formatter**: `diagramFormatter` interface with `mermaidFormatter`/`plantumlFormatter` implementations eliminates duplication between Mermaid and PlantUML export
+- **Test helper `mustNew()`**: wraps `New()` and panics on error for clean test construction
 - **ServiceStatus type**: computed lifecycle state (`registered`, `active`, `invocation_error`, `shutdown`, `shutdown_error`) on `ServiceInfo`
 - **Event convenience methods**: `IsRegistration()`, `IsInvocation()`, `IsShutdown()`, `IsBefore()`, `IsAfter()`
 - **ServiceRef.String()**: human-readable `"scope/name"` format

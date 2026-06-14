@@ -268,3 +268,111 @@ func TestReport_Index(t *testing.T) {
 		t.Error("Index.EventsByType: expected registration events")
 	}
 }
+
+func TestReport_Validate_ConsistentReport(t *testing.T) {
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	provideCache(injector, "cache")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvokeNamed[*Cache](injector, "cache")
+
+	report := p.Report()
+
+	if err := report.Validate(); err != nil {
+		t.Fatalf("expected valid report, got: %v", err)
+	}
+}
+
+func TestReport_Validate_WithScopesAndHealthChecks(t *testing.T) {
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+	child := injector.Scope("child")
+
+	provideHealthyDB(injector, "healthy-svc", "ok")
+	provideUnhealthyCache(child, "sick-svc", "down")
+
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "healthy-svc")
+	_ = do.MustInvokeNamed[*UnhealthyCache](child, "sick-svc")
+
+	_ = p.RecordHealthCheck(injector)
+
+	report := p.Report()
+
+	if err := report.Validate(); err != nil {
+		t.Fatalf("expected valid report with scopes+health, got: %v", err)
+	}
+}
+
+func TestReport_Validate_DetectsEventCountMismatch(t *testing.T) {
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+	report.EventCount = 999 // corrupt
+
+	if err := report.Validate(); err == nil {
+		t.Fatal("expected error for mismatched event_count")
+	}
+}
+
+func TestReport_Validate_DetectsServiceCountMismatch(t *testing.T) {
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+	report.ServiceCount = 999 // corrupt
+
+	if err := report.Validate(); err == nil {
+		t.Fatal("expected error for mismatched service_count")
+	}
+}
+
+func TestReport_Validate_DetectsScopeCountMismatch(t *testing.T) {
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	report := p.Report()
+	report.ScopeCount = 999 // corrupt
+
+	if err := report.Validate(); err == nil {
+		t.Fatal("expected error for mismatched scope_count")
+	}
+}
+
+func TestReport_Validate_DetectsHealthCheckedCountMismatch(t *testing.T) {
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideHealthyDB(injector, "healthy-svc", "ok")
+	_ = do.MustInvokeNamed[*HealthyDB](injector, "healthy-svc")
+	_ = p.RecordHealthCheck(injector)
+
+	report := p.Report()
+	report.HealthCheckedCount = 999 // corrupt
+
+	if err := report.Validate(); err == nil {
+		t.Fatal("expected error for mismatched health_checked_count")
+	}
+}
+
+func TestReport_Validate_EmptyReport(t *testing.T) {
+	p := mustNew(auditlog.Config{Enabled: true})
+	_ = do.NewWithOpts(p.Opts())
+
+	report := p.Report()
+
+	if err := report.Validate(); err != nil {
+		t.Fatalf("expected valid empty report, got: %v", err)
+	}
+}
