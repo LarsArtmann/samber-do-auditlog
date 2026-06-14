@@ -607,7 +607,7 @@ templ reportHTML(report Report) {
 						<button id="graph-zoom-out" title="Zoom out" aria-label="Zoom out">&minus;</button>
 						<button id="graph-fit" title="Fit to view" aria-label="Fit to view">&#8982;</button>
 					</div>
-					<div class="graph-info">Scroll to zoom &middot; Drag to pan &middot; Click node to highlight</div>
+					<div class="graph-info">Scroll/pinch to zoom &middot; Drag to pan &middot; Click node to highlight</div>
 				</div>
 			</div>
 			<div class="tab-content" id="tab-timeline" role="tabpanel" aria-labelledby="tab-btn-timeline">
@@ -1109,6 +1109,41 @@ templ reportHTML(report Report) {
 	    applyVB();
 	  });
 	  window.addEventListener('mouseup',()=>{drag=null;});
+
+	  // Touch support: 1-finger pan, 2-finger pinch-zoom
+	  let touchDrag=null;
+	  svg.addEventListener('touchstart',e=>{
+	    if(e.target.closest('.graph-node'))return;
+	    e.preventDefault();
+	    if(e.touches.length===1){
+	      touchDrag={x:e.touches[0].clientX,y:e.touches[0].clientY,vx:vb.x,vy:vb.y};
+	    }else if(e.touches.length===2){
+	      const dx=e.touches[0].clientX-e.touches[1].clientX;
+	      const dy=e.touches[0].clientY-e.touches[1].clientY;
+	      touchDrag={pinch:Math.hypot(dx,dy),vw:vb.w,vh:vb.h,cx:vb.x+vb.w/2,cy:vb.y+vb.h/2};
+	    }
+	  },{passive:false});
+	  svg.addEventListener('touchmove',e=>{
+	    if(!touchDrag)return;
+	    e.preventDefault();
+	    const rect=svg.getBoundingClientRect();
+	    if(e.touches.length===1&&touchDrag.vx!==undefined){
+	      vb.x=touchDrag.vx-(e.touches[0].clientX-touchDrag.x)/rect.width*vb.w;
+	      vb.y=touchDrag.vy-(e.touches[0].clientY-touchDrag.y)/rect.height*vb.h;
+	      applyVB();
+	    }else if(e.touches.length===2&&touchDrag.pinch){
+	      const dx=e.touches[0].clientX-e.touches[1].clientX;
+	      const dy=e.touches[0].clientY-e.touches[1].clientY;
+	      const dist=Math.hypot(dx,dy);
+	      const factor=touchDrag.pinch/dist;
+	      vb.w=Math.max(50,touchDrag.vw*factor);
+	      vb.h=Math.max(30,touchDrag.vh*factor);
+	      vb.x=touchDrag.cx-vb.w/2;
+	      vb.y=touchDrag.cy-vb.h/2;
+	      applyVB();
+	    }
+	  },{passive:false});
+	  svg.addEventListener('touchend',()=>{touchDrag=null;});
 
 	  document.getElementById('graph-zoom-in').addEventListener('click',()=>{zoomAt(vb.x+vb.w/2,vb.y+vb.h/2,1/1.4);});
 	  document.getElementById('graph-zoom-out').addEventListener('click',()=>{zoomAt(vb.x+vb.w/2,vb.y+vb.h/2,1.4);});
