@@ -313,6 +313,17 @@ templ reportHTML(report Report) {
 	    font-family: 'IBM Plex Mono', monospace;
 	  }
 	  .tooltip.visible { display: block; }
+	  .sr-only {
+	    position: absolute;
+	    width: 1px;
+	    height: 1px;
+	    padding: 0;
+	    margin: -1px;
+	    overflow: hidden;
+	    clip: rect(0, 0, 0, 0);
+	    white-space: nowrap;
+	    border: 0;
+	  }
 
 	  #graph-container {
 	    background: var(--bg-elevated);
@@ -546,16 +557,17 @@ templ reportHTML(report Report) {
 				</div>
 			</div>
 			<div class="stats" id="stats"></div>
-			<div class="tab-bar">
-				<button class="tab active" data-tab="services">Services</button>
-				<button class="tab" data-tab="scopes">Scopes</button>
-				<button class="tab" data-tab="graph">Dependency Graph</button>
-				<button class="tab" data-tab="timeline">Timeline</button>
-				<button class="tab" data-tab="events">Events</button>
+			<div class="tab-bar" role="tablist" aria-label="Report sections">
+				<button class="tab active" data-tab="services" role="tab" aria-selected="true" aria-controls="tab-services" id="tab-btn-services">Services</button>
+				<button class="tab" data-tab="scopes" role="tab" aria-selected="false" aria-controls="tab-scopes" id="tab-btn-scopes">Scopes</button>
+				<button class="tab" data-tab="graph" role="tab" aria-selected="false" aria-controls="tab-graph" id="tab-btn-graph">Dependency Graph</button>
+				<button class="tab" data-tab="timeline" role="tab" aria-selected="false" aria-controls="tab-timeline" id="tab-btn-timeline">Timeline</button>
+				<button class="tab" data-tab="events" role="tab" aria-selected="false" aria-controls="tab-events" id="tab-btn-events">Events</button>
 			</div>
-			<div class="tab-content active" id="tab-services">
+			<div class="tab-content active" id="tab-services" role="tabpanel" aria-labelledby="tab-btn-services">
 				<div class="filter-bar">
-					<input type="text" id="service-search" placeholder="Filter services..."/>
+					<label for="service-search" class="sr-only">Filter services by name</label>
+					<input type="text" id="service-search" placeholder="Filter services..." aria-label="Filter services by name"/>
 				</div>
 				<div class="table-wrap">
 					<table>
@@ -578,24 +590,24 @@ templ reportHTML(report Report) {
 					</table>
 				</div>
 			</div>
-			<div class="tab-content" id="tab-scopes">
+			<div class="tab-content" id="tab-scopes" role="tabpanel" aria-labelledby="tab-btn-scopes">
 				<div class="scope-tree" id="scope-tree"></div>
 			</div>
-			<div class="tab-content" id="tab-graph">
+			<div class="tab-content" id="tab-graph" role="tabpanel" aria-labelledby="tab-btn-graph">
 				<div id="graph-container">
 					<div class="graph-controls">
-						<button id="graph-zoom-in" title="Zoom in">+</button>
-						<button id="graph-zoom-out" title="Zoom out">&minus;</button>
-						<button id="graph-fit" title="Fit to view">&#8982;</button>
+						<button id="graph-zoom-in" title="Zoom in" aria-label="Zoom in">+</button>
+						<button id="graph-zoom-out" title="Zoom out" aria-label="Zoom out">&minus;</button>
+						<button id="graph-fit" title="Fit to view" aria-label="Fit to view">&#8982;</button>
 					</div>
 					<div class="graph-info">Scroll to zoom &middot; Drag to pan &middot; Click node to highlight</div>
 				</div>
 			</div>
-			<div class="tab-content" id="tab-timeline">
+			<div class="tab-content" id="tab-timeline" role="tabpanel" aria-labelledby="tab-btn-timeline">
 				<div id="timeline-container"></div>
 			</div>
-			<div class="tab-content" id="tab-events">
-				<div class="filter-bar" id="event-filters"></div>
+			<div class="tab-content" id="tab-events" role="tabpanel" aria-labelledby="tab-btn-events">
+				<div class="filter-bar" id="event-filters" role="group" aria-label="Filter events by type"></div>
 				<div class="table-wrap">
 					<table>
 						<thead>
@@ -677,9 +689,10 @@ templ reportHTML(report Report) {
 	const tabs = {'1':'services','2':'scopes','3':'graph','4':'timeline','5':'events'};
 	document.querySelectorAll('.tab').forEach(tab=>{
 	  tab.addEventListener('click',()=>{
-	    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+	    document.querySelectorAll('.tab').forEach(t=>{t.classList.remove('active');t.setAttribute('aria-selected','false');});
 	    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
 	    tab.classList.add('active');
+	    tab.setAttribute('aria-selected','true');
 	    document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
 	    if(tab.dataset.tab==='graph')renderGraph();
 	  });
