@@ -158,10 +158,6 @@ func TestReport_EventsByType(t *testing.T) {
 	}
 }
 
-// errWriteFailed is a static error for failingWriter.
-
-// errConnectionRefused is a static error for flaky provider tests.
-
 func TestReport_EventsByRef(t *testing.T) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())

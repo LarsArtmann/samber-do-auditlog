@@ -70,14 +70,7 @@ func WithScope(scopeID string) ReportOption {
 }
 
 func newReportFilter(opts ...ReportOption) *reportFilter {
-	filter := &reportFilter{
-		serviceNames: nil,
-		serviceTypes: nil,
-		eventTypes:   nil,
-		scopeIDs:     nil,
-		timeFrom:     nil,
-		timeTo:       nil,
-	}
+	filter := &reportFilter{} //nolint:exhaustruct
 
 	for _, opt := range opts {
 		opt(filter)

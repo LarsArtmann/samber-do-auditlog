@@ -272,6 +272,3 @@ func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[string][2]bo
 
 	return result
 }
-
-// Ensure time import is used (for BuildReport's time.Now call).
-var _ = time.Now

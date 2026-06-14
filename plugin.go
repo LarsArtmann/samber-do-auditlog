@@ -58,6 +58,10 @@ type Plugin struct {
 // without changing code. Explicitly setting Enabled to true overrides the env var.
 //
 // If ContainerID is empty it defaults to "default".
+//
+// Call Config.Validate() before New to check for invalid configuration.
+// New itself never panics on invalid input — it silently uses whatever
+// ContainerID is given.
 func New(config Config) *Plugin {
 	if config.ContainerID == "" {
 		config.ContainerID = defaultContainerID
