@@ -10,7 +10,7 @@ import (
 )
 
 func TestPlugin_ShutdownTracking(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -51,7 +51,7 @@ func TestPlugin_ShutdownTracking(t *testing.T) {
 }
 
 func TestPlugin_ShutdownStatus(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "clean", "clean")
@@ -72,7 +72,7 @@ func TestPlugin_ShutdownStatus(t *testing.T) {
 }
 
 func TestPlugin_ServiceStatus(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -104,7 +104,7 @@ func TestPlugin_ServiceStatus(t *testing.T) {
 }
 
 func TestPlugin_ProviderErrorStatus(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideFailing(injector, "failing")
@@ -127,7 +127,7 @@ func TestPlugin_ProviderErrorStatus(t *testing.T) {
 }
 
 func TestPlugin_ProviderError(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideFailing(injector, "failing")
@@ -157,7 +157,7 @@ func TestPlugin_ProviderError(t *testing.T) {
 }
 
 func TestPlugin_ShutdownWithErrors(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideCrashing(injector, "crash")

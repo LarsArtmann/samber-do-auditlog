@@ -11,7 +11,7 @@ import (
 )
 
 func TestReport_WriteMermaid(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -35,7 +35,7 @@ func TestReport_WriteMermaid(t *testing.T) {
 }
 
 func TestReport_WritePlantUML(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -64,7 +64,7 @@ func TestReport_WritePlantUML(t *testing.T) {
 }
 
 func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	do.ProvideValue(injector, &Database{URL: "test"})
@@ -93,7 +93,7 @@ func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
 }
 
 func TestWriteMermaid_WriterError(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -106,7 +106,7 @@ func TestWriteMermaid_WriterError(t *testing.T) {
 }
 
 func TestWritePlantUML_WriterError(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")

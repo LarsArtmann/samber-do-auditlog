@@ -11,7 +11,7 @@ import (
 )
 
 func BenchmarkHookOverhead_Invocation(b *testing.B) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -24,7 +24,7 @@ func BenchmarkHookOverhead_Invocation(b *testing.B) {
 }
 
 func BenchmarkHookOverhead_Disabled(b *testing.B) {
-	p := auditlog.New(auditlog.Config{Enabled: false})
+	p := mustNew(auditlog.Config{Enabled: false})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -40,14 +40,14 @@ func BenchmarkHookOverhead_Registration(b *testing.B) {
 	b.ResetTimer()
 
 	for b.Loop() {
-		p := auditlog.New(auditlog.Config{Enabled: true})
+		p := mustNew(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(p.Opts())
 		provideDB(injector, "svc", "test")
 	}
 }
 
 func BenchmarkHookOnAfterInvocation(b *testing.B) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -64,14 +64,14 @@ func BenchmarkHookRegistrationOnly(b *testing.B) {
 	b.ResetTimer()
 
 	for b.Loop() {
-		p := auditlog.New(auditlog.Config{Enabled: true})
+		p := mustNew(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(p.Opts())
 		do.ProvideValue(injector, &Database{URL: "test"})
 	}
 }
 
 func BenchmarkConcurrentInvocation(b *testing.B) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -89,7 +89,7 @@ func BenchmarkConcurrentInvocation(b *testing.B) {
 func BenchmarkBuildReport(b *testing.B) {
 	for _, count := range []int{50, 100, 500} {
 		b.Run(fmt.Sprintf("services=%d", count), func(b *testing.B) {
-			p := auditlog.New(auditlog.Config{Enabled: true})
+			p := mustNew(auditlog.Config{Enabled: true})
 			injector := do.NewWithOpts(p.Opts())
 
 			populateDBServices(injector, count)
@@ -104,7 +104,7 @@ func BenchmarkBuildReport(b *testing.B) {
 }
 
 func BenchmarkEnrichCapabilities(b *testing.B) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	for i := range 50 {
@@ -123,7 +123,7 @@ func BenchmarkEnrichCapabilities(b *testing.B) {
 }
 
 func BenchmarkEventsCopy(b *testing.B) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	populateDBServices(injector, 50)
@@ -138,7 +138,7 @@ func BenchmarkEventsCopy(b *testing.B) {
 func BenchmarkOnEventCallback(b *testing.B) {
 	var called atomic.Int64
 
-	p := auditlog.New(auditlog.Config{
+	p := mustNew(auditlog.Config{
 		Enabled: true,
 		OnEvent: func(_ auditlog.Event) { called.Add(1) },
 	})
@@ -154,7 +154,7 @@ func BenchmarkOnEventCallback(b *testing.B) {
 }
 
 func BenchmarkHealthCheck(b *testing.B) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	for i := range 10 {

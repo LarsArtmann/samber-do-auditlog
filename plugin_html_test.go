@@ -11,7 +11,7 @@ import (
 )
 
 func TestPlugin_ExportToHTML(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -39,7 +39,7 @@ func TestPlugin_ExportToHTML(t *testing.T) {
 }
 
 func TestPlugin_WriteHTMLBuffer(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -65,7 +65,7 @@ func TestPlugin_WriteHTMLBuffer(t *testing.T) {
 }
 
 func TestWriteHTML_EventsTabContent(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -89,7 +89,7 @@ func TestWriteHTML_EventsTabContent(t *testing.T) {
 }
 
 func TestWriteHTML_AllFiveTabs(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")

@@ -60,7 +60,7 @@ func TestPlugin_RegistrationAndInvocation(t *testing.T) {
 }
 
 func TestPlugin_InvocationOrder(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "a", "a")
@@ -82,7 +82,7 @@ func TestPlugin_InvocationOrder(t *testing.T) {
 }
 
 func TestPlugin_DependencyTracking(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDBWithSleep(injector, "db", "postgres://localhost")
@@ -123,7 +123,7 @@ func TestPlugin_DependencyTracking(t *testing.T) {
 }
 
 func TestPlugin_CachedInvocation(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -158,7 +158,7 @@ func TestPlugin_CachedInvocation(t *testing.T) {
 }
 
 func TestPlugin_EventSequenceNumbers(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -178,7 +178,7 @@ func TestPlugin_EventSequenceNumbers(t *testing.T) {
 }
 
 func TestPlugin_EmptyReport(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 
 	report := p.Report()
 	assertEventCount(t, report, 0)
@@ -193,7 +193,7 @@ func TestPlugin_EmptyReport(t *testing.T) {
 }
 
 func TestPlugin_ConcurrentInvocations(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")

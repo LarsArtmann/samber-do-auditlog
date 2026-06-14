@@ -8,7 +8,7 @@ import (
 )
 
 func TestReport_ServiceByName(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -29,7 +29,7 @@ func TestReport_ServiceByName(t *testing.T) {
 }
 
 func TestReport_ServiceByRef(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 	child := injector.Scope("child")
 
@@ -65,7 +65,7 @@ func TestReport_ServiceByRef(t *testing.T) {
 }
 
 func TestReport_ServicesByScope(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 	child := injector.Scope("child")
 
@@ -94,7 +94,7 @@ func TestReport_ServicesByScope(t *testing.T) {
 }
 
 func TestReport_ServicesByScope_EmptyScope(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -109,7 +109,7 @@ func TestReport_ServicesByScope_EmptyScope(t *testing.T) {
 }
 
 func TestReport_EventsByService(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -134,7 +134,7 @@ func TestReport_EventsByService(t *testing.T) {
 }
 
 func TestReport_EventsByType(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -159,7 +159,7 @@ func TestReport_EventsByType(t *testing.T) {
 }
 
 func TestReport_EventsByRef(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -181,7 +181,7 @@ func TestReport_EventsByRef(t *testing.T) {
 }
 
 func TestReport_FailedServices(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -205,7 +205,7 @@ func TestReport_FailedServices(t *testing.T) {
 }
 
 func TestReport_UnhealthyServices(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "healthy-svc", "ok")
@@ -223,7 +223,7 @@ func TestReport_UnhealthyServices(t *testing.T) {
 }
 
 func TestReport_Index(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")

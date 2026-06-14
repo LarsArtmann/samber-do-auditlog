@@ -18,32 +18,32 @@ Current state:
 
 These few fixes eliminate real bugs, security holes, and lint failure.
 
-| # | Task | Impact | Effort | Files |
-|---|------|--------|--------|-------|
-| 1 | Fix example `main.go` eventLog slice capture bug | Critical — demo is broken | 10 min | `example/main.go` |
-| 2 | Fix `TestReport_AllHealthChecksPassed_AllHealthy` (service lacks `HealthCheck()`) | Critical — test asserts wrong behavior | 10 min | `healthcheck_export_test.go` |
-| 3 | Fix `thelper` warnings so lint passes | Major — CI gate | 15 min | `helpers_test.go` |
-| 4 | Fix HTML XSS vectors (`status`, `event_type` injected unescaped) | Critical — security | 30 min | `html.templ`, `html_templ.go` |
+| #   | Task                                                                              | Impact                                 | Effort | Files                         |
+| --- | --------------------------------------------------------------------------------- | -------------------------------------- | ------ | ----------------------------- |
+| 1   | Fix example `main.go` eventLog slice capture bug                                  | Critical — demo is broken              | 10 min | `example/main.go`             |
+| 2   | Fix `TestReport_AllHealthChecksPassed_AllHealthy` (service lacks `HealthCheck()`) | Critical — test asserts wrong behavior | 10 min | `healthcheck_export_test.go`  |
+| 3   | Fix `thelper` warnings so lint passes                                             | Major — CI gate                        | 15 min | `helpers_test.go`             |
+| 4   | Fix HTML XSS vectors (`status`, `event_type` injected unescaped)                  | Critical — security                    | 30 min | `html.templ`, `html_templ.go` |
 
 ### 4% → 64% impact (do next)
 
-| # | Task | Impact | Effort | Files |
-|---|------|--------|--------|-------|
-| 5 | Deduplicate `failWriter` in `diagram_test.go` and use shared `failingWriter` | Major — split brain | 10 min | `diagram_test.go` |
-| 6 | Deduplicate mermaid/plantuml rendering logic | Major — DRY/complexity | 30 min | `mermaid.go`, `plantuml.go`, `export.go` |
-| 7 | Remove/rename duplicate/wasted tests in `plugin_export_test.go` | Major — test quality | 15 min | `plugin_export_test.go` |
-| 8 | Fix misnamed test `TestPlugin_ShutdownError` and strengthen provider-error assertions | Major — test honesty | 15 min | `plugin_errors_test.go` |
-| 9 | Rename `Example_validate` to `ExampleConfig_Validate` for godoc | Minor — docs | 5 min | `example_test.go` |
+| #   | Task                                                                                  | Impact                 | Effort | Files                                    |
+| --- | ------------------------------------------------------------------------------------- | ---------------------- | ------ | ---------------------------------------- |
+| 5   | Deduplicate `failWriter` in `diagram_test.go` and use shared `failingWriter`          | Major — split brain    | 10 min | `diagram_test.go`                        |
+| 6   | Deduplicate mermaid/plantuml rendering logic                                          | Major — DRY/complexity | 30 min | `mermaid.go`, `plantuml.go`, `export.go` |
+| 7   | Remove/rename duplicate/wasted tests in `plugin_export_test.go`                       | Major — test quality   | 15 min | `plugin_export_test.go`                  |
+| 8   | Fix misnamed test `TestPlugin_ShutdownError` and strengthen provider-error assertions | Major — test honesty   | 15 min | `plugin_errors_test.go`                  |
+| 9   | Rename `Example_validate` to `ExampleConfig_Validate` for godoc                       | Minor — docs           | 5 min  | `example_test.go`                        |
 
 ### 20% → 80% impact (do if time permits)
 
-| # | Task | Impact | Effort | Files |
-|---|------|--------|--------|-------|
-| 10 | Strengthen weak/vacuous assertions across test suite | Minor — test confidence | 30 min | multiple `*_test.go` |
-| 11 | Remove or consolidate `time.Sleep` in test helpers | Minor — speed/flakiness | 20 min | `helpers_test.go`, `plugin_lifecycle_test.go` |
-| 12 | Clean up example `register.go` unused scopes and demo sleeps | Minor — demo quality | 15 min | `example/register.go`, `example/main.go` |
-| 13 | Improve HTML accessibility (ARIA, labels, keyboard) | Minor — a11y | 30 min | `html.templ`, `html_templ.go` |
-| 14 | Address `auditlog_test.go` being an empty file with only package docs | Minor — housekeeping | 10 min | `auditlog_test.go` |
+| #   | Task                                                                  | Impact                  | Effort | Files                                         |
+| --- | --------------------------------------------------------------------- | ----------------------- | ------ | --------------------------------------------- |
+| 10  | Strengthen weak/vacuous assertions across test suite                  | Minor — test confidence | 30 min | multiple `*_test.go`                          |
+| 11  | Remove or consolidate `time.Sleep` in test helpers                    | Minor — speed/flakiness | 20 min | `helpers_test.go`, `plugin_lifecycle_test.go` |
+| 12  | Clean up example `register.go` unused scopes and demo sleeps          | Minor — demo quality    | 15 min | `example/register.go`, `example/main.go`      |
+| 13  | Improve HTML accessibility (ARIA, labels, keyboard)                   | Minor — a11y            | 30 min | `html.templ`, `html_templ.go`                 |
+| 14  | Address `auditlog_test.go` being an empty file with only package docs | Minor — housekeeping    | 10 min | `auditlog_test.go`                            |
 
 ## Execution D2 Graph
 

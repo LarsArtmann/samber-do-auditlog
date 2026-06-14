@@ -55,7 +55,7 @@ func main() {
 func setupPlugin() (*auditlog.Plugin, do.Injector, *[]string) { //nolint:ireturn
 	eventLog := &[]string{}
 
-	plugin := auditlog.New(auditlog.Config{
+	plugin, err := auditlog.New(auditlog.Config{
 		Enabled:     true,
 		ContainerID: "ride-share-app",
 		OnEvent: func(e auditlog.Event) {
@@ -64,6 +64,9 @@ func setupPlugin() (*auditlog.Plugin, do.Injector, *[]string) { //nolint:ireturn
 			}
 		},
 	})
+	if err != nil {
+		log.Fatalf("failed to create audit-log plugin: %v", err)
+	}
 
 	injector := do.NewWithOpts(plugin.Opts())
 

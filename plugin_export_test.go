@@ -12,7 +12,7 @@ import (
 )
 
 func TestPlugin_ExportToFile(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -35,7 +35,7 @@ func TestPlugin_ExportToFile(t *testing.T) {
 }
 
 func TestPlugin_ExportEventsToNDJSON(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -59,7 +59,7 @@ func TestPlugin_ExportEventsToNDJSON(t *testing.T) {
 }
 
 func TestPlugin_WriteReportJSON(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -83,7 +83,7 @@ func TestPlugin_WriteReportJSON(t *testing.T) {
 }
 
 func TestPlugin_WriteEventsNDJSON(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -103,7 +103,7 @@ func TestPlugin_WriteEventsNDJSON(t *testing.T) {
 }
 
 func TestPlugin_WriteReportJSONErrorPath(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -116,7 +116,7 @@ func TestPlugin_WriteReportJSONErrorPath(t *testing.T) {
 }
 
 func TestPlugin_WriteEventsNDJSONErrorPath(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -129,7 +129,7 @@ func TestPlugin_WriteEventsNDJSONErrorPath(t *testing.T) {
 }
 
 func TestPlugin_WriteHTMLErrorPath(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -142,7 +142,7 @@ func TestPlugin_WriteHTMLErrorPath(t *testing.T) {
 }
 
 func TestPlugin_ExportToFileInvalidPath(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -155,7 +155,7 @@ func TestPlugin_ExportToFileInvalidPath(t *testing.T) {
 }
 
 func TestPlugin_ExportFilteredToFile(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -190,7 +190,7 @@ func TestPlugin_ExportFilteredToFile(t *testing.T) {
 }
 
 func TestPlugin_ExportFilteredToFile_BadPath(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")

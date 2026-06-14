@@ -10,7 +10,7 @@ import (
 )
 
 func TestReport_FilteredByName(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -29,7 +29,7 @@ func TestReport_FilteredByName(t *testing.T) {
 }
 
 func TestReport_FilteredByType(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -50,7 +50,7 @@ func TestReport_FilteredByType(t *testing.T) {
 }
 
 func TestReport_FilteredByEventType(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -62,7 +62,7 @@ func TestReport_FilteredByEventType(t *testing.T) {
 }
 
 func TestReport_FilteredByTimeRange(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -88,7 +88,7 @@ func TestReport_FilteredByTimeRange(t *testing.T) {
 }
 
 func TestReport_FilteredByScope(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	child := injector.Scope("child")
@@ -117,7 +117,7 @@ func TestReport_FilteredByScope(t *testing.T) {
 }
 
 func TestReport_FilteredCombined(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -136,7 +136,7 @@ func TestReport_FilteredCombined(t *testing.T) {
 }
 
 func TestReport_FilteredTimeRangeNilChecks(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -160,7 +160,7 @@ func TestReport_FilteredTimeRangeNilChecks(t *testing.T) {
 }
 
 func TestPlugin_ReportFiltered(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")

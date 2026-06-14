@@ -23,7 +23,7 @@ func ExampleNew() {
 }
 
 func ExamplePlugin_Report() {
-	plugin := auditlog.New(auditlog.Config{Enabled: true})
+	plugin := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(plugin.Opts())
 
 	type reportConfig struct{ Val string }
@@ -45,7 +45,7 @@ func ExamplePlugin_Report() {
 }
 
 func ExamplePlugin_ExportToFile() {
-	plugin := auditlog.New(auditlog.Config{Enabled: true})
+	plugin := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(plugin.Opts())
 
 	do.ProvideValue(injector, 42.0)
@@ -67,7 +67,7 @@ func ExamplePlugin_ExportToFile() {
 }
 
 func ExampleReport_Filtered() {
-	plugin := auditlog.New(auditlog.Config{Enabled: true})
+	plugin := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(plugin.Opts())
 
 	provideString(injector, "alpha", "a")
@@ -86,7 +86,7 @@ func ExampleReport_Filtered() {
 }
 
 func ExamplePlugin_RecordHealthCheck() {
-	plugin := auditlog.New(auditlog.Config{Enabled: true})
+	plugin := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(plugin.Opts())
 
 	type dbConn struct{ Connected bool }
@@ -104,7 +104,7 @@ func ExamplePlugin_RecordHealthCheck() {
 }
 
 func ExampleReport_WriteMermaid() {
-	plugin := auditlog.New(auditlog.Config{Enabled: true})
+	plugin := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(plugin.Opts())
 
 	type appConfig struct{ Debug bool }

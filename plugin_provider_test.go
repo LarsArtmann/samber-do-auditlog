@@ -66,7 +66,7 @@ func newTransientDatabaseProvider() func(do.Injector) {
 }
 
 func TestPlugin_CapabilityTracking(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "healthy-db", "test")
@@ -108,7 +108,7 @@ func TestPlugin_CapabilityTracking(t *testing.T) {
 }
 
 func TestPlugin_CapabilityTrackingWithChildScopes(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "root-healthy", "ok")
@@ -141,7 +141,7 @@ func TestPlugin_CapabilityTrackingWithChildScopes(t *testing.T) {
 }
 
 func TestPlugin_EventServiceType(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	do.ProvideValue(injector, &Database{URL: "test"})
@@ -168,7 +168,7 @@ func TestPlugin_EventServiceType(t *testing.T) {
 }
 
 func TestPlugin_ProvideEager(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	type eagerDB struct{ URL string }
@@ -190,7 +190,7 @@ func TestPlugin_ProvideEager(t *testing.T) {
 func TestPlugin_ProvideTransient(t *testing.T) {
 	t.Parallel()
 
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	do.ProvideTransient(injector, func(i do.Injector) (*Database, error) {
@@ -225,7 +225,7 @@ func TestPlugin_ProvideTransient(t *testing.T) {
 }
 
 func TestPlugin_ProvideTransientType(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	type transientToken struct{ Val int }
@@ -254,7 +254,7 @@ func TestPlugin_ProvideTransientType(t *testing.T) {
 func TestPlugin_ProvideValue(t *testing.T) {
 	t.Parallel()
 
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	do.ProvideValue(injector, &Database{URL: "value://db"})
@@ -284,7 +284,7 @@ func TestPlugin_ProvideValue(t *testing.T) {
 }
 
 func TestPlugin_EnrichCapabilitiesWithNilScopeRef(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")

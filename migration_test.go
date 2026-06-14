@@ -107,7 +107,7 @@ func TestMigrateReport_EmptyReport(t *testing.T) {
 }
 
 func TestMigrateReport_RoundTrip(t *testing.T) {
-	plugin := auditlog.New(auditlog.Config{Enabled: true})
+	plugin := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(plugin.Opts())
 
 	provideDB(injector, "db", "test")

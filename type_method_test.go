@@ -63,7 +63,7 @@ func TestEvent_ConvenienceMethods(t *testing.T) {
 }
 
 func TestEvent_Duration(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -90,7 +90,7 @@ func TestEvent_Duration(t *testing.T) {
 }
 
 func TestEvent_HasError(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "ok", "test")
@@ -119,7 +119,7 @@ func TestEvent_HasError(t *testing.T) {
 }
 
 func TestServiceInfo_Uptime(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -139,7 +139,7 @@ func TestServiceInfo_Uptime(t *testing.T) {
 }
 
 func TestServiceInfo_HasHealthError(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "ok", "test")

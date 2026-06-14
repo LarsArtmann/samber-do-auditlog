@@ -38,7 +38,7 @@ func FuzzPluginHTML(f *testing.F) {
 			t.Skip()
 		}
 
-		plugin := auditlog.New(auditlog.Config{Enabled: true})
+		plugin := mustNew(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(plugin.Opts())
 
 		provideString(injector, svcName, "val")
@@ -79,7 +79,7 @@ func FuzzPluginHTML_ErrorMessages(f *testing.F) {
 			t.Skip()
 		}
 
-		plugin := auditlog.New(auditlog.Config{Enabled: true})
+		plugin := mustNew(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(plugin.Opts())
 
 		do.ProvideNamed(injector, "error-svc", func(_ do.Injector) (string, error) {
@@ -117,7 +117,7 @@ func FuzzPluginHTML_DepChain(f *testing.F) {
 			t.Skip()
 		}
 
-		plugin := auditlog.New(auditlog.Config{Enabled: true})
+		plugin := mustNew(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(plugin.Opts())
 
 		provideString(injector, depName, "dep-val")

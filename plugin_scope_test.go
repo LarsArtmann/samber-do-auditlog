@@ -8,7 +8,7 @@ import (
 )
 
 func TestPlugin_ScopeTree(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	child := injector.Scope("child")
@@ -40,7 +40,7 @@ func TestPlugin_ScopeTree(t *testing.T) {
 }
 
 func TestPlugin_ScopeID(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	child := injector.Scope("child")
@@ -77,7 +77,7 @@ func TestPlugin_ScopeID(t *testing.T) {
 }
 
 func TestPlugin_ScopeTreeWithMultipleChildren(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	child1 := injector.Scope("child-1")
@@ -97,7 +97,7 @@ func TestPlugin_ScopeTreeWithMultipleChildren(t *testing.T) {
 }
 
 func TestPlugin_ResolveServiceScopeFromChildScope(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "root-db", "test")
@@ -137,7 +137,7 @@ func TestPlugin_ResolveServiceScopeFromChildScope(t *testing.T) {
 }
 
 func TestReport_ResolveServiceScope_NotFound(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	do.ProvideValue(injector, &Database{URL: "test"})
@@ -152,7 +152,7 @@ func TestReport_ResolveServiceScope_NotFound(t *testing.T) {
 }
 
 func TestResolveServiceScope_ParentScopeService(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "root-db", "root-dsn")
@@ -183,7 +183,7 @@ func TestResolveServiceScope_ParentScopeService(t *testing.T) {
 }
 
 func TestResolveServiceScope_GrandparentScopeService(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "grandparent-db", "gp-dsn")

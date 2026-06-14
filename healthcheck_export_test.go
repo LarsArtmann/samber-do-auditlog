@@ -19,7 +19,7 @@ var _ do.Healthchecker = (*healthySvc)(nil)
 func (healthySvc) HealthCheck() error { return nil }
 
 func TestPlugin_HealthCheckReportSucceeded(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideUnhealthyCache(injector, "cache", "down")
@@ -38,7 +38,7 @@ func TestPlugin_HealthCheckReportSucceeded(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckSucceededFalseWhenNoChecks(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
@@ -91,7 +91,7 @@ func TestPlugin_HealthCheckOnEventCallback(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckPhaseIsAfterOnly(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "db", "test")
@@ -116,7 +116,7 @@ func TestPlugin_HealthCheckPhaseIsAfterOnly(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckJSONExport(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "db", "test")
@@ -166,7 +166,7 @@ func TestPlugin_HealthCheckJSONExport(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckNDJSONExport(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "db", "test")
@@ -211,7 +211,7 @@ func TestPlugin_HealthCheckNDJSONExport(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckDiscoversUnregisteredService(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "db", "test")
@@ -232,7 +232,7 @@ func TestPlugin_HealthCheckDiscoversUnregisteredService(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckWithContextCancelled(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "db", "test")
@@ -253,7 +253,7 @@ func TestPlugin_HealthCheckWithContextCancelled(t *testing.T) {
 }
 
 func TestReport_HealthCheckSucceeded_NoChecks(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	do.ProvideValue(injector, &Database{URL: "test"})
@@ -266,7 +266,7 @@ func TestReport_HealthCheckSucceeded_NoChecks(t *testing.T) {
 }
 
 func TestReport_AllHealthChecksPassed_AllHealthy(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	do.ProvideNamed(injector, "healthy", func(_ do.Injector) (*healthySvc, error) {

@@ -59,12 +59,16 @@ type Plugin struct {
 //
 // If ContainerID is empty it defaults to "default".
 //
-// Call Config.Validate() before New to check for invalid configuration.
-// New itself never panics on invalid input — it silently uses whatever
-// ContainerID is given.
-func New(config Config) *Plugin {
+// Returns an error if Config.Validate() fails (e.g., ContainerID contains
+// path separators).
+func New(config Config) (*Plugin, error) {
 	if config.ContainerID == "" {
 		config.ContainerID = defaultContainerID
+	}
+
+	err := config.Validate()
+	if err != nil {
+		return nil, err
 	}
 
 	if !config.Enabled {
@@ -74,7 +78,7 @@ func New(config Config) *Plugin {
 	return &Plugin{
 		recorder: NewRecorder(config.ContainerID, config.OnEvent),
 		config:   config,
-	}
+	}, nil
 }
 
 // envIsEnabled checks the DO_AUDITLOG_ENABLED environment variable.

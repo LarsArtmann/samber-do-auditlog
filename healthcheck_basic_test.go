@@ -8,7 +8,7 @@ import (
 )
 
 func TestPlugin_HealthCheckHealthy(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "db", "postgres://localhost")
@@ -39,7 +39,7 @@ func TestPlugin_HealthCheckHealthy(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckUnhealthy(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideUnhealthyCache(injector, "cache", "connection lost")
@@ -72,7 +72,7 @@ func TestPlugin_HealthCheckUnhealthy(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckMultipleServices(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "db", "postgres://localhost")
@@ -117,7 +117,7 @@ func TestPlugin_HealthCheckMultipleServices(t *testing.T) {
 func TestPlugin_HealthCheckDisabled(t *testing.T) {
 	t.Setenv(auditlog.EnvKeyEnabled, "")
 
-	p := auditlog.New(auditlog.Config{})
+	p := mustNew(auditlog.Config{})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "db", "test")
@@ -134,7 +134,7 @@ func TestPlugin_HealthCheckDisabled(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckCount(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "db", "test")
@@ -160,7 +160,7 @@ func TestPlugin_HealthCheckCount(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckReport(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideHealthyDB(injector, "db", "test")
@@ -178,7 +178,7 @@ func TestPlugin_HealthCheckReport(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckWithScope(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	child := injector.Scope("child")

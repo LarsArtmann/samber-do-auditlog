@@ -30,7 +30,7 @@ func TestPlugin_EventHandler(t *testing.T) {
 }
 
 func TestPlugin_EventHandlerNil(t *testing.T) {
-	p := auditlog.New(auditlog.Config{
+	p := mustNew(auditlog.Config{
 		Enabled: true,
 		OnEvent: nil,
 	})
@@ -122,7 +122,7 @@ func TestPlugin_RealWorldScenario(t *testing.T) {
 }
 
 func TestPlugin_EventsCount(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")

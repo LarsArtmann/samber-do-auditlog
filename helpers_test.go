@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -13,6 +14,18 @@ import (
 )
 
 // --- Shared test types ---.
+
+// mustNew is a test helper that wraps auditlog.New and panics on error.
+// Use in tests where the config is known to be valid.
+func mustNew(config auditlog.Config) *auditlog.Plugin {
+	p, err := auditlog.New(config)
+	if err != nil {
+		panic(fmt.Sprintf("auditlog.New failed: %v", err))
+	}
+
+	return p
+}
+
 type Database struct {
 	URL string
 }
@@ -351,13 +364,13 @@ func unmarshalJSONForTest(t *testing.T, data []byte, out any, op string) {
 }
 
 func newPluginAndInjector() (*auditlog.Plugin, do.Injector) { //nolint:ireturn
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 
 	return p, do.NewWithOpts(p.Opts())
 }
 
 func newPluginAndInjectorWithID(containerID string) (*auditlog.Plugin, do.Injector) { //nolint:ireturn
-	p := auditlog.New(auditlog.Config{Enabled: true, ContainerID: containerID})
+	p := mustNew(auditlog.Config{Enabled: true, ContainerID: containerID})
 
 	return p, do.NewWithOpts(p.Opts())
 }
@@ -365,7 +378,7 @@ func newPluginAndInjectorWithID(containerID string) (*auditlog.Plugin, do.Inject
 func newPluginWithCapture() (*auditlog.Plugin, *[]auditlog.Event, do.Injector) { //nolint:ireturn
 	var captured []auditlog.Event
 
-	p := auditlog.New(auditlog.Config{
+	p := mustNew(auditlog.Config{
 		Enabled: true,
 		OnEvent: func(e auditlog.Event) {
 			captured = append(captured, e)

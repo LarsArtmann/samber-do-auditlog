@@ -9,27 +9,27 @@
 
 ## Quick Metrics
 
-| Metric | Value |
-|--------|-------|
-| Source files (main pkg) | 19 |
-| Test files | 19 |
-| Example files | 4 |
-| Total `.go` files | 42 |
-| Source LOC (main pkg) | ~2,145 |
-| Total LOC (incl. tests) | ~6,974 |
-| Test functions (Test + Example + Fuzz) | 130 pass, 0 fail |
-| Benchmarks | 11 |
-| Exported functions/methods | 62 |
-| Exported types | 14 |
-| Lint issues | 0 (`golangci-lint run` clean) |
-| `go vet` | clean |
-| `go test -race` | pass |
-| go.mod direct dependencies | 2 (`samber/do/v2`, `a-h/templ`) |
-| golangci-lint linters enabled | 108 |
-| TODO/FIXME/HACK comments | 0 |
-| Features (DONE) | 72 |
-| Features (PLANNED) | 0 |
-| Features (NOT PLANNED) | 3 (rejected with rationale) |
+| Metric                                 | Value                           |
+| -------------------------------------- | ------------------------------- |
+| Source files (main pkg)                | 19                              |
+| Test files                             | 19                              |
+| Example files                          | 4                               |
+| Total `.go` files                      | 42                              |
+| Source LOC (main pkg)                  | ~2,145                          |
+| Total LOC (incl. tests)                | ~6,974                          |
+| Test functions (Test + Example + Fuzz) | 130 pass, 0 fail                |
+| Benchmarks                             | 11                              |
+| Exported functions/methods             | 62                              |
+| Exported types                         | 14                              |
+| Lint issues                            | 0 (`golangci-lint run` clean)   |
+| `go vet`                               | clean                           |
+| `go test -race`                        | pass                            |
+| go.mod direct dependencies             | 2 (`samber/do/v2`, `a-h/templ`) |
+| golangci-lint linters enabled          | 108                             |
+| TODO/FIXME/HACK comments               | 0                               |
+| Features (DONE)                        | 72                              |
+| Features (PLANNED)                     | 0                               |
+| Features (NOT PLANNED)                 | 3 (rejected with rationale)     |
 
 ---
 
@@ -37,12 +37,12 @@
 
 ### Session Work (2026-06-14 — 4 commits)
 
-| Commit | What |
-|--------|------|
+| Commit    | What                                                                                                                                                                                           |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `f14b94e` | **Bug fixes**: example eventLog slice capture bug, all-healthy health-check test, 6 thelper warnings, 5 HTML XSS vectors, diagram code deduplication, test sleep removal, float comparison fix |
-| `2d2704c` | **Dead code cleanup**: `var _ = time.Now` hack, orphaned comments, reportFilter nil ceremony, AGENTS.md architecture listing (19 files documented) |
-| `9b09e04` | **Test quality**: vacuous assertion fix (TestEvent_HasError), filter type assertion strengthened, PlantUML writer-error test added, diagram service name assertions |
-| `c1d8c4b` | **Accessibility**: ARIA tablist/tab/tabpanel roles, aria-selected sync, aria-label on graph buttons and search input, sr-only CSS class |
+| `2d2704c` | **Dead code cleanup**: `var _ = time.Now` hack, orphaned comments, reportFilter nil ceremony, AGENTS.md architecture listing (19 files documented)                                             |
+| `9b09e04` | **Test quality**: vacuous assertion fix (TestEvent_HasError), filter type assertion strengthened, PlantUML writer-error test added, diagram service name assertions                            |
+| `c1d8c4b` | **Accessibility**: ARIA tablist/tab/tabpanel roles, aria-selected sync, aria-label on graph buttons and search input, sr-only CSS class                                                        |
 
 ### Core Library — All Complete
 
@@ -74,28 +74,28 @@
 
 ## b) PARTIALLY DONE ⚠️
 
-| Item | Status | What Remains |
-|------|--------|--------------|
-| **HTML accessibility** | ~60% done | ARIA roles on tabs and labels done. Missing: `aria-pressed` on event filter chips, `scope="col"` on table headers, keyboard nav modifier key exclusion (TEXTAREA/SELECT/BUTTON) |
-| **HTML XSS hardening** | ~90% done | All known vectors from review fixed. Fuzz tests pass. Remaining: `stripScriptTags` helper in fuzz tests is hand-rolled and case-sensitive |
-| **JS/Go constant deduplication** | 0% — documented | `ProviderType`/`ServiceStatus`/`EventType` string values hardcoded in both Go and JS. No single source of truth. |
-| **AGENTS.md accuracy** | ~85% | Architecture listing updated. Some Gotchas entries reference old function names (`mermaidNodeID` renamed to `diagramNodeID`). |
+| Item                             | Status          | What Remains                                                                                                                                                                    |
+| -------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **HTML accessibility**           | ~60% done       | ARIA roles on tabs and labels done. Missing: `aria-pressed` on event filter chips, `scope="col"` on table headers, keyboard nav modifier key exclusion (TEXTAREA/SELECT/BUTTON) |
+| **HTML XSS hardening**           | ~90% done       | All known vectors from review fixed. Fuzz tests pass. Remaining: `stripScriptTags` helper in fuzz tests is hand-rolled and case-sensitive                                       |
+| **JS/Go constant deduplication** | 0% — documented | `ProviderType`/`ServiceStatus`/`EventType` string values hardcoded in both Go and JS. No single source of truth.                                                                |
+| **AGENTS.md accuracy**           | ~85%            | Architecture listing updated. Some Gotchas entries reference old function names (`mermaidNodeID` renamed to `diagramNodeID`).                                                   |
 
 ---
 
 ## c) NOT STARTED
 
-| Item | Impact | Effort |
-|------|--------|--------|
+| Item                                                                                                                                        | Impact                                  | Effort        |
+| ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------------- |
 | **Inject Go enum metadata into HTML** — eliminate JS/Go split brain by passing a `type_metadata` JSON block from Go into the templ template | High — eliminates 4+ hardcoded mappings | Medium (2-3h) |
-| **Virtual scrolling for large reports** — DOM renders ALL services/events at once | Medium — degrades with 500+ services | High (4-6h) |
-| **Debounced service search** — currently filters on every keystroke | Low — fine for typical use | Low (15 min) |
-| **`scope="col"` on all table headers** | Low — a11y polish | Low (10 min) |
-| **`aria-pressed` on event filter chips** | Low — a11y polish | Low (10 min) |
-| **Touch event support for graph pan/zoom** | Low — mobile only | Medium (1h) |
-| **CSP `base-uri`/`frame-ancestors` directives** | Low — defense in depth | Low (5 min) |
-| **Debounce graph rendering** — `renderGraph` called on every tab switch but bails if SVG exists | Low — already cached | — |
-| **README.md update** — reflect Mermaid/PlantUML/filtering additions | Medium — user-facing docs | Low (30 min) |
+| **Virtual scrolling for large reports** — DOM renders ALL services/events at once                                                           | Medium — degrades with 500+ services    | High (4-6h)   |
+| **Debounced service search** — currently filters on every keystroke                                                                         | Low — fine for typical use              | Low (15 min)  |
+| **`scope="col"` on all table headers**                                                                                                      | Low — a11y polish                       | Low (10 min)  |
+| **`aria-pressed` on event filter chips**                                                                                                    | Low — a11y polish                       | Low (10 min)  |
+| **Touch event support for graph pan/zoom**                                                                                                  | Low — mobile only                       | Medium (1h)   |
+| **CSP `base-uri`/`frame-ancestors` directives**                                                                                             | Low — defense in depth                  | Low (5 min)   |
+| **Debounce graph rendering** — `renderGraph` called on every tab switch but bails if SVG exists                                             | Low — already cached                    | —             |
+| **README.md update** — reflect Mermaid/PlantUML/filtering additions                                                                         | Medium — user-facing docs               | Low (30 min)  |
 
 ---
 
@@ -139,48 +139,48 @@ Nothing. All critical bugs from the review were fixed and verified. No regressio
 
 ### High Impact / Low Effort (do first)
 
-| # | Task | Impact | Effort |
-|---|------|--------|--------|
-| 1 | Add `aria-pressed` on event filter chips + `scope="col"` on table headers | a11y completeness | 15 min |
-| 2 | Add CSP `base-uri 'none'; frame-ancestors 'none'` | security hardening | 5 min |
-| 3 | Update FEATURES.md with diagram, a11y, and test quality work | docs freshness | 20 min |
-| 4 | Update TODO_LIST.md — mark all session items done | docs freshness | 10 min |
-| 5 | Update CHANGELOG.md with session commits | release tracking | 10 min |
-| 6 | Update README.md with Mermaid/PlantUML/filtering API docs | user-facing docs | 30 min |
-| 7 | Clean up stale Gotchas in AGENTS.md referencing old function names | accuracy | 15 min |
-| 8 | Add keyboard nav exclusion for TEXTAREA/SELECT/BUTTON | a11y correctness | 10 min |
+| #   | Task                                                                      | Impact             | Effort |
+| --- | ------------------------------------------------------------------------- | ------------------ | ------ |
+| 1   | Add `aria-pressed` on event filter chips + `scope="col"` on table headers | a11y completeness  | 15 min |
+| 2   | Add CSP `base-uri 'none'; frame-ancestors 'none'`                         | security hardening | 5 min  |
+| 3   | Update FEATURES.md with diagram, a11y, and test quality work              | docs freshness     | 20 min |
+| 4   | Update TODO_LIST.md — mark all session items done                         | docs freshness     | 10 min |
+| 5   | Update CHANGELOG.md with session commits                                  | release tracking   | 10 min |
+| 6   | Update README.md with Mermaid/PlantUML/filtering API docs                 | user-facing docs   | 30 min |
+| 7   | Clean up stale Gotchas in AGENTS.md referencing old function names        | accuracy           | 15 min |
+| 8   | Add keyboard nav exclusion for TEXTAREA/SELECT/BUTTON                     | a11y correctness   | 10 min |
 
 ### High Impact / Medium Effort
 
-| # | Task | Impact | Effort |
-|---|------|--------|--------|
-| 9 | Inject Go enum metadata into HTML template (eliminate JS/Go split brain) | architecture | 2-3h |
-| 10 | Add realistic multi-service HTML integration test | test confidence | 1h |
-| 11 | Add `Report.Validate()` method to enforce count consistency | type safety | 30 min |
-| 12 | Record benchmark baselines in CI | perf regression detection | 1h |
-| 13 | Replace `stripScriptTags` with proper HTML escaping test | test robustness | 30 min |
-| 14 | Add debounce to service search input | UX polish | 15 min |
-| 15 | Add empty-state messages ("No services", "No events") to HTML tables | UX polish | 30 min |
+| #   | Task                                                                     | Impact                    | Effort |
+| --- | ------------------------------------------------------------------------ | ------------------------- | ------ |
+| 9   | Inject Go enum metadata into HTML template (eliminate JS/Go split brain) | architecture              | 2-3h   |
+| 10  | Add realistic multi-service HTML integration test                        | test confidence           | 1h     |
+| 11  | Add `Report.Validate()` method to enforce count consistency              | type safety               | 30 min |
+| 12  | Record benchmark baselines in CI                                         | perf regression detection | 1h     |
+| 13  | Replace `stripScriptTags` with proper HTML escaping test                 | test robustness           | 30 min |
+| 14  | Add debounce to service search input                                     | UX polish                 | 15 min |
+| 15  | Add empty-state messages ("No services", "No events") to HTML tables     | UX polish                 | 30 min |
 
 ### Medium Impact / Low Effort
 
-| # | Task | Impact | Effort |
-|---|------|--------|--------|
-| 16 | Remove unused `errConnectionRefused` sentinel (or document it) | dead code | 5 min |
-| 17 | Clean up 34 archived docs in `docs/archive/` | repo hygiene | 30 min |
-| 18 | Pin `go.mod` to `go 1.26` (remove patch number) | consumer compat | 5 min |
-| 19 | Add `@startuml skinparam` directives for better PlantUML defaults | diagram polish | 15 min |
-| 20 | Add Mermaid theme styling | diagram polish | 15 min |
+| #   | Task                                                              | Impact          | Effort |
+| --- | ----------------------------------------------------------------- | --------------- | ------ |
+| 16  | Remove unused `errConnectionRefused` sentinel (or document it)    | dead code       | 5 min  |
+| 17  | Clean up 34 archived docs in `docs/archive/`                      | repo hygiene    | 30 min |
+| 18  | Pin `go.mod` to `go 1.26` (remove patch number)                   | consumer compat | 5 min  |
+| 19  | Add `@startuml skinparam` directives for better PlantUML defaults | diagram polish  | 15 min |
+| 20  | Add Mermaid theme styling                                         | diagram polish  | 15 min |
 
 ### Medium Impact / Higher Effort
 
-| # | Task | Impact | Effort |
-|---|------|--------|--------|
-| 21 | Add virtual scrolling/pagination for 500+ service reports | scalability | 4-6h |
-| 22 | Add touch event support for graph pan/zoom | mobile support | 1h |
-| 23 | Add `go report card` badge and fix any issues | community | 30 min |
-| 24 | Add `gosec` + `govulncheck` to CI pipeline | security CI | 1h |
-| 25 | Consider `samber/lo` for filter/find boilerplate reduction | code conciseness | 1h |
+| #   | Task                                                       | Impact           | Effort |
+| --- | ---------------------------------------------------------- | ---------------- | ------ |
+| 21  | Add virtual scrolling/pagination for 500+ service reports  | scalability      | 4-6h   |
+| 22  | Add touch event support for graph pan/zoom                 | mobile support   | 1h     |
+| 23  | Add `go report card` badge and fix any issues              | community        | 30 min |
+| 24  | Add `gosec` + `govulncheck` to CI pipeline                 | security CI      | 1h     |
+| 25  | Consider `samber/lo` for filter/find boilerplate reduction | code conciseness | 1h     |
 
 ---
 
@@ -194,6 +194,7 @@ Currently `New(config Config) *Plugin` is a single-return-value constructor that
 - **If we keep it as-is**: The validation is a ghost system — exists, tested, documented, but never automatically enforced. Users must remember to call `Validate()` before `New()`.
 
 I initially tried to make it return an error but reverted because of the 100+ call site breakage. Should I:
+
 1. Do the breaking change and update all call sites?
 2. Add a `MustNew(config Config) *Plugin` that panics on invalid config?
 3. Leave it as documented "call Validate() first" pattern?

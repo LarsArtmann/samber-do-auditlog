@@ -10,7 +10,7 @@ import (
 func TestPlugin_DisabledIsNoOp(t *testing.T) {
 	t.Setenv(auditlog.EnvKeyEnabled, "")
 
-	p := auditlog.New(auditlog.Config{})
+	p := mustNew(auditlog.Config{})
 	injector := do.NewWithOpts(p.Opts())
 
 	do.ProvideValue(injector, &Database{URL: "postgres://localhost"})
@@ -25,7 +25,7 @@ func TestPlugin_DisabledIsNoOp(t *testing.T) {
 func TestPlugin_EnvVarEnables(t *testing.T) {
 	t.Setenv(auditlog.EnvKeyEnabled, "true")
 
-	p := auditlog.New(auditlog.Config{})
+	p := mustNew(auditlog.Config{})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -56,7 +56,7 @@ func TestPlugin_EnvVarValues(t *testing.T) {
 		t.Run(tc.val, func(t *testing.T) {
 			t.Setenv(auditlog.EnvKeyEnabled, tc.val)
 
-			p := auditlog.New(auditlog.Config{})
+			p := mustNew(auditlog.Config{})
 			injector := do.NewWithOpts(p.Opts())
 
 			provideDB(injector, "db", "test")
@@ -77,7 +77,7 @@ func TestPlugin_EnvVarValues(t *testing.T) {
 func TestPlugin_ExplicitEnabledOverridesEnv(t *testing.T) {
 	t.Setenv(auditlog.EnvKeyEnabled, "")
 
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -108,7 +108,7 @@ func TestPlugin_ContainerID(t *testing.T) {
 }
 
 func TestPlugin_ReportVersion(t *testing.T) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
+	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -116,4 +116,27 @@ func TestPlugin_ReportVersion(t *testing.T) {
 
 	report := p.Report()
 	assertVersion(t, report)
+}
+
+func TestNew_RejectsInvalidContainerID(t *testing.T) {
+	_, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "has/slash",
+	})
+
+	assertErrorExpected(t, err, "ContainerID with path separator")
+}
+
+func TestNew_AcceptsValidConfig(t *testing.T) {
+	p, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "valid-id",
+	})
+	if err != nil {
+		t.Fatalf("expected no error for valid config, got: %v", err)
+	}
+
+	if p == nil {
+		t.Fatal("expected non-nil plugin")
+	}
 }
