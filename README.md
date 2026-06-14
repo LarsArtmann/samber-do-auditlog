@@ -420,6 +420,21 @@ Report
 
 > **Schema migration**: Reports exported with v0.1.0 can be upgraded to the current schema with `auditlog.MigrateReport(oldJSONBytes)`.
 
+## Security
+
+This project enforces security through:
+
+- **gosec** — security scanner integrated into golangci-lint (108 linters, 0 issues)
+- **CSP** — HTML output includes a strict Content-Security-Policy meta tag
+- **XSS hardening** — all user-controlled strings escaped via templ's context-aware auto-escaping
+- **Fuzz testing** — 3 fuzz targets verify XSS resilience against malicious service names, error messages, and dependency chains
+
+Recommended additional check:
+
+```bash
+govulncheck ./...  # requires: go install golang.org/x/vuln/cmd/govulncheck@latest
+```
+
 ## License
 
 [MIT](https://opensource.org/licenses/MIT)
