@@ -116,3 +116,25 @@ func TestWriteHTML_AllFiveTabs(t *testing.T) {
 	assertHTMLContains(t, html, "timeline-container")
 	assertHTMLContains(t, html, "events-tbody")
 }
+
+func TestWriteHTML_TypeMetadataInjected(t *testing.T) {
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	var buf bytes.Buffer
+
+	err := p.WriteHTML(&buf)
+	if err != nil {
+		t.Fatalf("WriteHTML failed: %v", err)
+	}
+
+	html := buf.String()
+
+	assertHTMLContains(t, html, "type-metadata")
+	assertHTMLContains(t, html, "providers")
+	assertHTMLContains(t, html, "statuses")
+	assertHTMLContains(t, html, "events")
+}

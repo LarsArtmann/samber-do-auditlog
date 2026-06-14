@@ -619,28 +619,16 @@ templ reportHTML(report Report) {
 			</div>
 			<div id="error-tooltip" class="tooltip"></div>
 			@templ.JSONScript("report-data", report)
+			@templ.JSONScript("type-metadata", BuildTypeMetadata())
 			<script>
 	const report = JSON.parse(document.getElementById('report-data').textContent);
+	const meta = JSON.parse(document.getElementById('type-metadata').textContent);
 
-	const typeIcons = {
-	  lazy: '\u{1F634}',
-	  eager: '\u{1F501}',
-	  transient: '\u{1F3ED}',
-	  alias: '\u{1F517}',
-	};
-	const typeLabels = {
-	  lazy: 'Lazy',
-	  eager: 'Eager',
-	  transient: 'Transient',
-	  alias: 'Alias',
-	};
-	const statusIcons = {
-	  registered: '\u26AA',
-	  active: '\u{1F7E2}',
-	  shutdown: '\u{1F535}',
-	  invocation_error: '\u{1F534}',
-	  shutdown_error: '\u{1F534}',
-	};
+	const typeIcons = Object.fromEntries(Object.entries(meta.providers).map(([k,v]) => [k, v.icon]));
+	const typeLabels = Object.fromEntries(Object.entries(meta.providers).map(([k,v]) => [k, v.label]));
+	const statusIcons = Object.fromEntries(Object.entries(meta.statuses).map(([k,v]) => [k, v.icon]));
+	const eventLabels = Object.fromEntries(Object.entries(meta.events).map(([k,v]) => [k, v.label]));
+	const eventColors = Object.fromEntries(Object.entries(meta.events).map(([k,v]) => [k, v.color]));
 
 	document.getElementById('container-id').textContent = report.container_id;
 	document.getElementById('exported-at').textContent = new Date(report.exported_at).toLocaleString();
@@ -657,7 +645,7 @@ templ reportHTML(report Report) {
 	  const events=report.events;
 	  if(!events||!events.length)return;
 	  const container=document.getElementById('waveform');
-	  const colors={registration:'var(--accent)',invocation:'var(--success)',shutdown:'var(--warning)',health_check:'var(--info)'};
+	  const colors=eventColors;
 	  const ts=events.map(e=>new Date(e.timestamp).getTime());
 	  const minT=Math.min(...ts),maxT=Math.max(...ts),range=(maxT-minT)||1;
 	  const maxDur=Math.max(...events.filter(e=>e.duration_ms).map(e=>e.duration_ms),1);
@@ -764,7 +752,6 @@ templ reportHTML(report Report) {
 	});
 
 	// Events table
-	const eventLabels={registration:'Registration',invocation:'Invocation',shutdown:'Shutdown',health_check:'Health'};
 	const allEvents = report.events.map(e => {
 	  const phase=e.phase==='before'?'\u25B4':'\u25BE';
 	  const evtBadge='<span class="event-badge '+esc(e.event_type)+'">'+esc(eventLabels[e.event_type]||e.event_type)+'</span>';
