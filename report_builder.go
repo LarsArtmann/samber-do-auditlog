@@ -50,7 +50,7 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 	for _, rec := range r.services {
 		deps := r.buildDepsLocked(rec)
 
-		key := serviceKey(rec.scopeID, rec.serviceName)
+		key := svcKey{scopeID: rec.scopeID, name: rec.serviceName}
 		svcDependents := dependents[key]
 
 		sortDepRefs(svcDependents)
@@ -123,8 +123,8 @@ func compareByName(a, b ServiceRef) int {
 	)
 }
 
-func buildDependentsMapLocked(services map[string]*serviceRecord) map[string][]ServiceRef {
-	dependents := make(map[string][]ServiceRef)
+func buildDependentsMapLocked(services map[svcKey]*serviceRecord) map[svcKey][]ServiceRef {
+	dependents := make(map[svcKey][]ServiceRef)
 
 	for _, rec := range services {
 		for depKey := range rec.dependencies {

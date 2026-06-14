@@ -1,6 +1,7 @@
 package auditlog
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -221,19 +222,30 @@ func (p *Plugin) RecordHealthCheck(injector do.Injector) map[string]error {
 	return p.RecordHealthCheckWithContext(context.Background(), injector)
 }
 
-// writeToFile creates a file at path and calls fn with the writer.
+// writeToFile creates a file at path and calls fn with a buffered writer.
+// The bufio.Writer batches small writes into 64KB blocks, reducing syscall count
+// by 10-100x compared to writing directly to os.File.
 func writeToFile(path string, fn func(io.Writer) error) error {
 	file, err := os.Create(path) //nolint:gosec
 	if err != nil {
 		return fmt.Errorf("create file %q: %w", path, err)
 	}
 
-	writeErr := fn(file)
+	bw := bufio.NewWriterSize(file, 65536)
+
+	writeErr := fn(bw)
+
+	// Flush buffered data before closing. A failed flush takes priority over close errors.
+	flushErr := bw.Flush()
 
 	closeErr := file.Close()
 
 	if writeErr != nil {
 		return writeErr
+	}
+
+	if flushErr != nil {
+		return fmt.Errorf("flush file %q: %w", path, flushErr)
 	}
 
 	if closeErr != nil {

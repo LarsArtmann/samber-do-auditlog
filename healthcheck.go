@@ -17,7 +17,7 @@ func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err
 	r.mu.Lock()
 
 	svcType := ProviderType("")
-	key := serviceKey(scopeID, serviceName)
+	key := svcKey{scopeID: scopeID, name: serviceName}
 
 	rec, ok := r.services[key]
 	if !ok {
@@ -51,13 +51,13 @@ func (r *Recorder) ResolveServiceScope(injector do.Injector, serviceName string)
 	defer r.mu.RUnlock()
 
 	injectorScopeID := injector.ID()
-	if rec, ok := r.services[serviceKey(injectorScopeID, serviceName)]; ok {
+	if rec, ok := r.services[svcKey{scopeID: injectorScopeID, name: serviceName}]; ok {
 		return rec.scopeID, rec.scopeName, true
 	}
 
 	if scope, ok := injector.(*do.Scope); ok {
 		for _, ancestor := range scope.Ancestors() {
-			if rec, ok := r.services[serviceKey(ancestor.ID(), serviceName)]; ok {
+			if rec, ok := r.services[svcKey{scopeID: ancestor.ID(), name: serviceName}]; ok {
 				return rec.scopeID, rec.scopeName, true
 			}
 		}

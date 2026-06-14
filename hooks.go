@@ -105,7 +105,7 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 	scopeID := scope.ID()
 	scopeName := scope.Name()
 	now := time.Now()
-	key := serviceKey(scopeID, serviceName)
+	key := svcKey{scopeID: scopeID, name: serviceName}
 	seq := r.nextSequence()
 
 	r.mu.Lock()
@@ -137,7 +137,7 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 	scopeID := scope.ID()
 	scopeName := scope.Name()
 	now := time.Now()
-	depKey := serviceKey(scopeID, serviceName)
+	depKey := svcKey{scopeID: scopeID, name: serviceName}
 	seq := r.nextSequence()
 
 	r.mu.Lock()
@@ -147,11 +147,11 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 	// Infer dependency from invocation stack.
 	if len(r.stack) > 0 {
 		parent := r.stack[len(r.stack)-1]
-		parentKey := serviceKey(parent.scopeID, parent.serviceName)
+		parentKey := svcKey{scopeID: parent.scopeID, name: parent.serviceName}
 
 		if rec, ok := r.services[parentKey]; ok {
 			if rec.dependencies == nil {
-				rec.dependencies = make(map[string]struct{}, initialDepsCapacity)
+				rec.dependencies = make(map[svcKey]struct{}, initialDepsCapacity)
 			}
 
 			rec.dependencies[depKey] = struct{}{}
@@ -188,7 +188,7 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 	scopeName := scope.Name()
 	now := time.Now()
 	errStr := errorToStringPtr(err)
-	key := serviceKey(scopeID, serviceName)
+	key := svcKey{scopeID: scopeID, name: serviceName}
 	seq := r.nextSequence()
 
 	r.mu.Lock()
@@ -236,7 +236,7 @@ func (r *Recorder) updateInvocationAggregate(
 	durationMs *float64,
 	errStr *string,
 ) {
-	key := serviceKey(scopeID, serviceName)
+	key := svcKey{scopeID: scopeID, name: serviceName}
 
 	rec, ok := r.services[key]
 	if !ok {
@@ -264,7 +264,7 @@ func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
 	scopeID := scope.ID()
 	scopeName := scope.Name()
 	now := time.Now()
-	key := serviceKey(scopeID, serviceName)
+	key := svcKey{scopeID: scopeID, name: serviceName}
 	seq := r.nextSequence()
 
 	r.mu.Lock()
@@ -290,7 +290,7 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 	scopeName := scope.Name()
 	now := time.Now()
 	errStr := errorToStringPtr(err)
-	key := serviceKey(scopeID, serviceName)
+	key := svcKey{scopeID: scopeID, name: serviceName}
 	seq := r.nextSequence()
 
 	r.mu.Lock()

@@ -24,7 +24,15 @@ type stackEntry struct {
 	start       time.Time
 }
 
-// serviceKey produces the canonical map key for a service within a scope.
+// svcKey is a zero-allocation map key for looking up services by scope + name.
+// Unlike a concatenated string key, it requires no heap allocation.
+type svcKey struct {
+	scopeID string
+	name    string
+}
+
+// serviceKey produces the canonical string key for a service within a scope.
+// Used only by public API surfaces (ReportIndex) that need string keys.
 func serviceKey(scopeID, serviceName string) string {
 	return scopeID + "/" + serviceName
 }
@@ -39,7 +47,7 @@ type serviceRecord struct {
 	invocationCount      int
 	invocationOrder      int
 	firstBuildDurationMs *float64
-	dependencies         map[string]struct{}
+	dependencies         map[svcKey]struct{}
 	shutdownAt           *time.Time
 	shutdownDurationMs   *float64
 	invocationError      *string
@@ -88,12 +96,12 @@ func newSequenceCounter() *atomic.Int64 {
 type Recorder struct {
 	mu       sync.RWMutex
 	events   []Event
-	services map[string]*serviceRecord
+	services map[svcKey]*serviceRecord
 	scopes   map[string]scopeMeta
 	stack    []stackEntry
 
 	// shutdownStart stores per-service shutdown start times for duration calc.
-	shutdownStart map[string]time.Time
+	shutdownStart map[svcKey]time.Time
 
 	sequence      *atomic.Int64
 	invocationSeq atomic.Int64
@@ -106,9 +114,9 @@ func NewRecorder(containerID string, onEvent func(Event)) *Recorder {
 	return &Recorder{ //nolint:exhaustruct
 		mu:            sync.RWMutex{},
 		events:        make([]Event, 0, initialEventCapacity),
-		services:      make(map[string]*serviceRecord),
+		services:      make(map[svcKey]*serviceRecord),
 		scopes:        make(map[string]scopeMeta),
-		shutdownStart: make(map[string]time.Time),
+		shutdownStart: make(map[svcKey]time.Time),
 		sequence:      newSequenceCounter(),
 		containerID:   containerID,
 		onEvent:       onEvent,
@@ -135,7 +143,7 @@ func (r *Recorder) recordScopeLocked(scopeID, scopeName string, scope *do.Scope)
 
 // serviceTypeForLocked returns the recorded provider type for a service, or empty if
 // the service has not been recorded yet. Caller must hold r.mu.
-func (r *Recorder) serviceTypeForLocked(key string) ProviderType {
+func (r *Recorder) serviceTypeForLocked(key svcKey) ProviderType {
 	if rec, ok := r.services[key]; ok {
 		return rec.serviceType
 	}
