@@ -17,34 +17,34 @@ The 4 critical oversized files flagged by the lint warning have been split into 
 
 ### File Splits (Source Code)
 
-| Original | New Files | Notes |
-|---|---|---|
-| `recorder.go` (902 lines) | `recorder.go` (150) + `hooks.go` (340) + `report_builder.go` (285) + `report_helpers.go` (95) + `healthcheck.go` (67) | All under 350 lines |
-| `example/main.go` (787 lines) | `example/main.go` (174) + `example/register.go` (157) + `example/services.go` (214) + `example/summary.go` (86) | Slim orchestrator + 3 focused helpers |
+| Original                      | New Files                                                                                                             | Notes                                 |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `recorder.go` (902 lines)     | `recorder.go` (150) + `hooks.go` (340) + `report_builder.go` (285) + `report_helpers.go` (95) + `healthcheck.go` (67) | All under 350 lines                   |
+| `example/main.go` (787 lines) | `example/main.go` (174) + `example/register.go` (157) + `example/services.go` (214) + `example/summary.go` (86)       | Slim orchestrator + 3 focused helpers |
 
 ### Test File Splits
 
 `auditlog_test.go` (3748 lines) was split into **14 focused test files** organized by feature area:
 
-| File | Lines | Coverage |
-|---|---|---|
-| `helpers_test.go` | 175 | Shared test types, provider helpers, writer types, error sentinels |
-| `plugin_basic_test.go` | 122 | Enabled/Disabled/Env var/ContainerID/Version |
-| `plugin_lifecycle_test.go` | 264 | Registration/Invocation/Order/Dependencies/Concurrent |
-| `plugin_errors_test.go` | 181 | Service status, provider errors, shutdown errors |
-| `plugin_export_test.go` | 244 | JSON/NDJSON/HTML export and writer errors |
-| `plugin_scope_test.go` | 214 | Scope tree, scope ID, resolve service scope |
-| `plugin_provider_test.go` | 323 | Service type capture, capability tracking |
-| `plugin_html_test.go` | 152 | HTML output structure and tab content |
-| `healthcheck_basic_test.go` | 220 | Core health check tests |
-| `healthcheck_export_test.go` | 289 | Health check reporting, callbacks, edge cases |
-| `type_method_test.go` | 311 | Event/ServiceInfo/ServiceRef/ServiceStatus methods |
-| `report_query_test.go` | 294 | ServiceBy*, EventsBy*, Failed, Unhealthy, Index |
-| `report_filter_test.go` | 201 | All Filtered* tests |
-| `diagram_test.go` | 234 | Mermaid and PlantUML output |
-| `migration_test.go` | 320 | MigrateReport tests |
-| `extra_test.go` | 163 | EventHandler, RealWorldScenario, EventsCount |
-| `benchmarks_test.go` | 208 | All benchmarks |
+| File                         | Lines | Coverage                                                           |
+| ---------------------------- | ----- | ------------------------------------------------------------------ |
+| `helpers_test.go`            | 175   | Shared test types, provider helpers, writer types, error sentinels |
+| `plugin_basic_test.go`       | 122   | Enabled/Disabled/Env var/ContainerID/Version                       |
+| `plugin_lifecycle_test.go`   | 264   | Registration/Invocation/Order/Dependencies/Concurrent              |
+| `plugin_errors_test.go`      | 181   | Service status, provider errors, shutdown errors                   |
+| `plugin_export_test.go`      | 244   | JSON/NDJSON/HTML export and writer errors                          |
+| `plugin_scope_test.go`       | 214   | Scope tree, scope ID, resolve service scope                        |
+| `plugin_provider_test.go`    | 323   | Service type capture, capability tracking                          |
+| `plugin_html_test.go`        | 152   | HTML output structure and tab content                              |
+| `healthcheck_basic_test.go`  | 220   | Core health check tests                                            |
+| `healthcheck_export_test.go` | 289   | Health check reporting, callbacks, edge cases                      |
+| `type_method_test.go`        | 311   | Event/ServiceInfo/ServiceRef/ServiceStatus methods                 |
+| `report_query_test.go`       | 294   | ServiceBy*, EventsBy*, Failed, Unhealthy, Index                    |
+| `report_filter_test.go`      | 201   | All Filtered\* tests                                               |
+| `diagram_test.go`            | 234   | Mermaid and PlantUML output                                        |
+| `migration_test.go`          | 320   | MigrateReport tests                                                |
+| `extra_test.go`              | 163   | EventHandler, RealWorldScenario, EventsCount                       |
+| `benchmarks_test.go`         | 208   | All benchmarks                                                     |
 
 The original `auditlog_test.go` is now **22 lines** of just package documentation listing all the split files.
 
@@ -81,13 +81,13 @@ Nothing. The splits are clean, all tests pass, no broken code paths.
 
 ### Code Quality
 
-| # | Issue | Impact | Recommended Action |
-|---|-------|--------|---------------------|
-| 1 | `mermaid.go` + `plantuml.go` are ~45 lines of copy-paste | Medium | Extract `writeDependencyGraph(w, format)` parameterized by format |
-| 2 | `mermaidNodeID` doesn't sanitize `*[]{}` | Medium (bug) | Port PlantUML's sanitizer to Mermaid |
-| 3 | `Config.Validate()` never called in `New()` | High (ghost system) | Change `New()` signature to return `(*Plugin, error)` |
-| 4 | `shutdownStart` map can leak entries on unmatched before/after | Low | Add eviction or use TTL |
-| 5 | `Uptime()` uses wall-clock `time.Since()` | Low (non-deterministic) | Compute from `RegisteredAt` to `ShutdownAt` |
+| #   | Issue                                                          | Impact                  | Recommended Action                                                |
+| --- | -------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------- |
+| 1   | `mermaid.go` + `plantuml.go` are ~45 lines of copy-paste       | Medium                  | Extract `writeDependencyGraph(w, format)` parameterized by format |
+| 2   | `mermaidNodeID` doesn't sanitize `*[]{}`                       | Medium (bug)            | Port PlantUML's sanitizer to Mermaid                              |
+| 3   | `Config.Validate()` never called in `New()`                    | High (ghost system)     | Change `New()` signature to return `(*Plugin, error)`             |
+| 4   | `shutdownStart` map can leak entries on unmatched before/after | Low                     | Add eviction or use TTL                                           |
+| 5   | `Uptime()` uses wall-clock `time.Since()`                      | Low (non-deterministic) | Compute from `RegisteredAt` to `ShutdownAt`                       |
 
 ### Process
 
@@ -152,15 +152,15 @@ I lean toward **B** (idiomatic Go `Must`/`New` pair, similar to `regexp.MustComp
 
 ## Metrics Summary
 
-| Metric | Before | After |
-|---|---|---|
-| Source files (excl. tests) | 11 | 17 (recorder split into 5, example split into 4) |
-| Test files | 3 (auditlog + example + fuzz) | 18 (14 split + helpers + benchmarks + extra) |
-| Largest source file (lines) | 902 (recorder.go) | 350 (max any file) |
-| Largest test file (lines) | 3748 (auditlog_test.go) | 323 (plugin_provider_test.go) |
-| Total tests | 130 | 130 (unchanged — same tests, different files) |
-| Test coverage | ~95% | ~95% (unchanged) |
-| All tests pass | ✓ | ✓ |
+| Metric                      | Before                        | After                                            |
+| --------------------------- | ----------------------------- | ------------------------------------------------ |
+| Source files (excl. tests)  | 11                            | 17 (recorder split into 5, example split into 4) |
+| Test files                  | 3 (auditlog + example + fuzz) | 18 (14 split + helpers + benchmarks + extra)     |
+| Largest source file (lines) | 902 (recorder.go)             | 350 (max any file)                               |
+| Largest test file (lines)   | 3748 (auditlog_test.go)       | 323 (plugin_provider_test.go)                    |
+| Total tests                 | 130                           | 130 (unchanged — same tests, different files)    |
+| Test coverage               | ~95%                          | ~95% (unchanged)                                 |
+| All tests pass              | ✓                             | ✓                                                |
 
 ## Git State
 

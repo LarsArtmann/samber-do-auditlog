@@ -1,6 +1,7 @@
 package auditlog_test
 
 import (
+	"fmt"
 	"strconv"
 	"sync/atomic"
 	"testing"
@@ -86,53 +87,19 @@ func BenchmarkConcurrentInvocation(b *testing.B) {
 }
 
 func BenchmarkBuildReport(b *testing.B) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	for _, count := range []int{50, 100, 500} {
+		b.Run(fmt.Sprintf("services=%d", count), func(b *testing.B) {
+			p := auditlog.New(auditlog.Config{Enabled: true})
+			injector := do.NewWithOpts(p.Opts())
 
-	for i := range 50 {
-		name := "svc-" + strconv.Itoa(i)
-		provideDB(injector, name, "test")
-		_ = do.MustInvokeNamed[*Database](injector, name)
-	}
+			populateDBServices(injector, count)
 
-	b.ResetTimer()
+			b.ResetTimer()
 
-	for b.Loop() {
-		_ = p.Report()
-	}
-}
-
-func BenchmarkBuildReport_100Services(b *testing.B) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	for i := range 100 {
-		name := "svc-" + strconv.Itoa(i)
-		provideDB(injector, name, "test")
-		_ = do.MustInvokeNamed[*Database](injector, name)
-	}
-
-	b.ResetTimer()
-
-	for b.Loop() {
-		_ = p.Report()
-	}
-}
-
-func BenchmarkBuildReport_500Services(b *testing.B) {
-	p := auditlog.New(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	for i := range 500 {
-		name := "svc-" + strconv.Itoa(i)
-		provideDB(injector, name, "test")
-		_ = do.MustInvokeNamed[*Database](injector, name)
-	}
-
-	b.ResetTimer()
-
-	for b.Loop() {
-		_ = p.Report()
+			for b.Loop() {
+				_ = p.Report()
+			}
+		})
 	}
 }
 
@@ -159,11 +126,7 @@ func BenchmarkEventsCopy(b *testing.B) {
 	p := auditlog.New(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	for i := range 50 {
-		name := "svc-" + strconv.Itoa(i)
-		provideDB(injector, name, "test")
-		_ = do.MustInvokeNamed[*Database](injector, name)
-	}
+	populateDBServices(injector, 50)
 
 	b.ResetTimer()
 
@@ -204,5 +167,13 @@ func BenchmarkHealthCheck(b *testing.B) {
 
 	for b.Loop() {
 		_ = p.RecordHealthCheck(injector)
+	}
+}
+
+func populateDBServices(injector do.Injector, count int) {
+	for i := range count {
+		name := "svc-" + strconv.Itoa(i)
+		provideDB(injector, name, "test")
+		_ = do.MustInvokeNamed[*Database](injector, name)
 	}
 }

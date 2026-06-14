@@ -11,7 +11,7 @@ import (
 	"github.com/samber/do/v2"
 )
 
-// --- Shared test types ---
+// --- Shared test types ---..
 type Database struct {
 	URL string
 }
@@ -32,7 +32,6 @@ func (c *CrashingService) Shutdown() error {
 	return errConnectionReset
 }
 
-
 type HealthyDB struct {
 	DSN string
 }
@@ -42,7 +41,6 @@ var _ do.Healthchecker = (*HealthyDB)(nil)
 func (d *HealthyDB) HealthCheck() error {
 	return nil
 }
-
 
 type UnhealthyCache struct {
 	Reason string
@@ -58,7 +56,6 @@ func (c *UnhealthyCache) HealthCheck(_ context.Context) error {
 
 // --- Health check tests ---
 
-
 type HTTPServer struct {
 	Users *UserService
 }
@@ -66,15 +63,12 @@ type HTTPServer struct {
 type Config struct {
 	Port int
 }
-
-
-// --- Provider helpers ---
+// --- Provider helpers ---.-.
 func provideDB(injector do.Injector, name, url string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*Database, error) {
 		return &Database{URL: url}, nil
 	})
 }
-
 
 func provideHealthyDB(injector do.Injector, name, dsn string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*HealthyDB, error) {
@@ -82,13 +76,11 @@ func provideHealthyDB(injector do.Injector, name, dsn string) {
 	})
 }
 
-
 func provideUnhealthyCache(injector do.Injector, name, reason string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*UnhealthyCache, error) {
 		return &UnhealthyCache{Reason: reason}, nil
 	})
 }
-
 
 func provideFailing(injector do.Injector, name string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*Database, error) {
@@ -96,20 +88,17 @@ func provideFailing(injector do.Injector, name string) {
 	})
 }
 
-
 func provideCache(injector do.Injector, name string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*Cache, error) {
 		return &Cache{}, nil
 	})
 }
 
-
 func provideCrashing(injector do.Injector, name string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*CrashingService, error) {
 		return &CrashingService{}, nil
 	})
 }
-
 
 func findServiceByName(t *testing.T, report auditlog.Report, name string) *auditlog.ServiceInfo {
 	t.Helper()
@@ -123,7 +112,6 @@ func findServiceByName(t *testing.T, report auditlog.Report, name string) *audit
 	return nil
 }
 
-
 func findServiceBySuffix(t *testing.T, report auditlog.Report, suffix string) *auditlog.ServiceInfo {
 	t.Helper()
 
@@ -136,7 +124,6 @@ func findServiceBySuffix(t *testing.T, report auditlog.Report, suffix string) *a
 	return nil
 }
 
-
 func assertVersion(t *testing.T, report auditlog.Report) {
 	t.Helper()
 
@@ -145,6 +132,11 @@ func assertVersion(t *testing.T, report auditlog.Report) {
 	}
 }
 
+func newPluginAndInjector() (*auditlog.Plugin, do.Injector) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+
+	return p, do.NewWithOpts(p.Opts())
+}
 
 func newPluginWithCapture() (*auditlog.Plugin, *[]auditlog.Event, do.Injector) { //nolint:ireturn
 	var captured []auditlog.Event
@@ -157,19 +149,13 @@ func newPluginWithCapture() (*auditlog.Plugin, *[]auditlog.Event, do.Injector) {
 	})
 
 	return p, &captured, do.NewWithOpts(p.Opts())
-}
-
-
-
-// --- Writer error types ---
+}// --- Writer error types ---.--.
 type failingWriter struct{}
 
 func (failingWriter) Write([]byte) (int, error) {
 	return 0, errWriteFailed
-}
-
-
-
-// --- Error sentinels for writer tests ---
-var errWriteFailed = errors.New("write failed")
-var errConnectionRefused = errors.New("connection refused")
+// --- Error sentinels for writer tests ---.---.
+var (
+	errWriteFailed       = errors.New("write failed")
+	errConnectionRefused = errors.New("connection refused")
+)

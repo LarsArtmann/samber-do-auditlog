@@ -231,14 +231,7 @@ func sortScopeNodes(nodes []ScopeNode) []ScopeNode {
 // outside the recorder mutex to avoid deadlocking with samber/do's internal locks.
 func enrichCapabilities(scopes map[string]scopeMeta, services []ServiceInfo) {
 	// Sort scope iteration for deterministic output across runs.
-	sorted := make([]scopeMeta, 0, len(scopes))
-	for _, meta := range scopes {
-		sorted = append(sorted, meta)
-	}
-
-	slices.SortFunc(sorted, func(a, b scopeMeta) int {
-		return cmp.Compare(a.id, b.id)
-	})
+	sorted := sortedScopesLocked(scopes)
 
 	for _, meta := range sorted {
 		if meta.ref == nil {

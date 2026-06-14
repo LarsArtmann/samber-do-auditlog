@@ -21,29 +21,20 @@ func TestPlugin_ServiceTypeCapture(t *testing.T) {
 			},
 		},
 		{
-			name: "lazy",
-			want: "lazy",
-			register: func(i do.Injector) {
-				do.Provide(i, func(i do.Injector) (*Database, error) {
-					return &Database{URL: "test"}, nil
-				})
-			},
+			name:     "lazy",
+			want:     "lazy",
+			register: newDatabaseProvider(),
 		},
 		{
-			name: "transient",
-			want: "transient",
-			register: func(i do.Injector) {
-				do.ProvideTransient(i, func(i do.Injector) (*Database, error) {
-					return &Database{URL: "test"}, nil
-				})
-			},
+			name:     "transient",
+			want:     "transient",
+			register: newTransientDatabaseProvider(),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := auditlog.New(auditlog.Config{Enabled: true})
-			injector := do.NewWithOpts(p.Opts())
+			p, injector := newPluginAndInjector()
 
 			tt.register(injector)
 			_ = do.MustInvoke[*Database](injector)
@@ -56,6 +47,22 @@ func TestPlugin_ServiceTypeCapture(t *testing.T) {
 			if report.Services[0].ServiceType != auditlog.ProviderType(tt.want) {
 				t.Errorf("expected service_type=%s, got %q", tt.want, report.Services[0].ServiceType)
 			}
+		})
+	}
+}
+
+func newDatabaseProvider() func(do.Injector) {
+	return func(i do.Injector) {
+		do.Provide(i, func(_ do.Injector) (*Database, error) {
+			return &Database{URL: "test"}, nil
+		})
+	}
+}
+
+func newTransientDatabaseProvider() func(do.Injector) {
+	return func(i do.Injector) {
+		do.ProvideTransient(i, func(_ do.Injector) (*Database, error) {
+			return &Database{URL: "test"}, nil
 		})
 	}
 }
