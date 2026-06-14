@@ -110,8 +110,8 @@ type Recorder struct {
 
 	// maxEvents caps the events slice. When > 0, new events are dropped
 	// (counter incremented) after this many events are stored.
-	maxEvents      int
-	droppedEvents  atomic.Int64
+	maxEvents     int
+	droppedEvents atomic.Int64
 }
 
 // NewRecorder creates a new event recorder.
@@ -162,6 +162,7 @@ func (r *Recorder) serviceTypeForLocked(key svcKey) ProviderType {
 func (r *Recorder) appendEventLocked(evt Event) {
 	if r.maxEvents > 0 && len(r.events) >= r.maxEvents {
 		r.droppedEvents.Add(1)
+
 		return
 	}
 

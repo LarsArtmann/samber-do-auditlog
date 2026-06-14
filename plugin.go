@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/samber/do/v2"
@@ -89,6 +90,7 @@ func New(config Config) (*Plugin, error) {
 	if config.MaxEvents > 0 {
 		recorder.maxEvents = config.MaxEvents
 	}
+
 	if config.InitialEventCapacity > 0 && len(recorder.events) == 0 {
 		recorder.events = make([]Event, 0, config.InitialEventCapacity)
 	}
@@ -247,32 +249,52 @@ func (p *Plugin) RecordHealthCheck(injector do.Injector) map[string]error {
 // writeToFile creates a file at path and calls fn with a buffered writer.
 // The bufio.Writer batches small writes into 64KB blocks, reducing syscall count
 // by 10-100x compared to writing directly to os.File.
+//
+// Writes are atomic: data is written to a temporary file in the same directory,
+// then atomically renamed to the final path. A crash during write leaves the
+// previous file (if any) intact rather than a partial file.
 func writeToFile(path string, fn func(io.Writer) error) error {
-	file, err := os.Create(path) //nolint:gosec
+	dir := filepath.Dir(path)
+
+	tmpFile, err := os.CreateTemp(dir, ".tmp-auditlog-*")
 	if err != nil {
-		return fmt.Errorf("create file %q: %w", path, err)
+		return fmt.Errorf("create temp file in %q: %w", dir, err)
 	}
 
-	bw := bufio.NewWriterSize(file, 65536)
+	tmpPath := tmpFile.Name()
+	cleanup := true
+
+	defer func() {
+		if cleanup {
+			_ = os.Remove(tmpPath)
+		}
+	}()
+
+	bw := bufio.NewWriterSize(tmpFile, 65536)
 
 	writeErr := fn(bw)
 
-	// Flush buffered data before closing. A failed flush takes priority over close errors.
 	flushErr := bw.Flush()
 
-	closeErr := file.Close()
+	closeErr := tmpFile.Close()
 
 	if writeErr != nil {
 		return writeErr
 	}
 
 	if flushErr != nil {
-		return fmt.Errorf("flush file %q: %w", path, flushErr)
+		return fmt.Errorf("flush temp file %q: %w", tmpPath, flushErr)
 	}
 
 	if closeErr != nil {
-		return fmt.Errorf("close file %q: %w", path, closeErr)
+		return fmt.Errorf("close temp file %q: %w", tmpPath, closeErr)
 	}
+
+	if err := os.Rename(tmpPath, path); err != nil {
+		return fmt.Errorf("rename %q → %q: %w", tmpPath, path, err)
+	}
+
+	cleanup = false
 
 	return nil
 }

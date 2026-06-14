@@ -25,13 +25,9 @@ type diagramEntry struct {
 
 // writeDiagram writes a dependency graph using the supplied formatter.
 // It deduplicates nodes and edges and sorts the output for stable,
-// deterministic reports.
+// deterministic reports. All lines are batched via strings.Builder and
+// written in a single io.Writer.Write call to minimize syscalls.
 func writeDiagram(writer io.Writer, report Report, formatter diagramFormatter) error {
-	_, err := fmt.Fprintln(writer, formatter.Header())
-	if err != nil {
-		return fmt.Errorf("write diagram header: %w", err)
-	}
-
 	seen := make(map[string]struct{})
 
 	var entries []diagramEntry
@@ -60,18 +56,26 @@ func writeDiagram(writer io.Writer, report Report, formatter diagramFormatter) e
 		return strings.Compare(a.key, b.key)
 	})
 
+	var sb strings.Builder
+	sb.Grow(len(entries) * 64)
+
+	sb.WriteString(formatter.Header())
+	sb.WriteByte('\n')
+
 	for _, entry := range entries {
-		_, err := fmt.Fprintln(writer, "    "+entry.line)
-		if err != nil {
-			return fmt.Errorf("write diagram line: %w", err)
-		}
+		sb.WriteString("    ")
+		sb.WriteString(entry.line)
+		sb.WriteByte('\n')
 	}
 
-	if formatter.Footer() != "" {
-		_, err = fmt.Fprintln(writer, formatter.Footer())
-		if err != nil {
-			return fmt.Errorf("write diagram footer: %w", err)
-		}
+	if footer := formatter.Footer(); footer != "" {
+		sb.WriteString(footer)
+		sb.WriteByte('\n')
+	}
+
+	_, err := writer.Write([]byte(sb.String()))
+	if err != nil {
+		return fmt.Errorf("write diagram: %w", err)
 	}
 
 	return nil

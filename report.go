@@ -27,14 +27,14 @@ type Report struct {
 	// HealthCheckSucceeded is true when at least one service was health-checked
 	// and all passed. It is false when no health checks ran (HealthCheckedCount == 0)
 	// or when any service failed its check.
-	HealthCheckSucceeded bool          `json:"health_check_succeeded"`
-	HealthCheckedCount   int           `json:"health_checked_count"`
+	HealthCheckSucceeded bool `json:"health_check_succeeded"`
+	HealthCheckedCount   int  `json:"health_checked_count"`
 	// DroppedEventCount is the number of events dropped due to Config.MaxEvents.
 	// Always 0 when MaxEvents is 0 (unlimited).
-	DroppedEventCount    int64         `json:"dropped_event_count"`
-	Events               []Event       `json:"events,omitempty"`
-	Services             []ServiceInfo `json:"services"`
-	ScopeTree            ScopeNode     `json:"scope_tree"`
+	DroppedEventCount int64         `json:"dropped_event_count"`
+	Events            []Event       `json:"events,omitempty"`
+	Services          []ServiceInfo `json:"services"`
+	ScopeTree         ScopeNode     `json:"scope_tree"`
 }
 
 // Validate checks internal consistency of the report: denormalized count fields

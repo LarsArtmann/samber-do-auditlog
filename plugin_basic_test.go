@@ -174,6 +174,7 @@ func TestPlugin_MaxEventsZeroIsUnlimited(t *testing.T) {
 	injector := do.NewWithOpts(p.Opts())
 
 	provideDB(injector, "db", "test")
+
 	for range 10 {
 		_ = do.MustInvokeNamed[*Database](injector, "db")
 	}
