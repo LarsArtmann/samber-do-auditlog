@@ -1,6 +1,7 @@
 package auditlog_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -39,10 +40,12 @@ func TestReport_FilteredByType(t *testing.T) {
 
 	filtered := p.Report().Filtered(auditlog.WithServicesByType(auditlog.ProviderTypeEager))
 
-	for _, svc := range filtered.Services {
-		if svc.ServiceType != auditlog.ProviderTypeEager {
-			t.Errorf("expected eager, got %s for %s", svc.ServiceType, svc.ServiceName)
-		}
+	if len(filtered.Services) != 1 {
+		t.Fatalf("expected 1 eager service, got %d", len(filtered.Services))
+	}
+
+	if !strings.Contains(filtered.Services[0].ServiceName, "Cache") {
+		t.Errorf("expected Cache in service name, got %s", filtered.Services[0].ServiceName)
 	}
 }
 

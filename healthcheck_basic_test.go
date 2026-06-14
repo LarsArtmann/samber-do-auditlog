@@ -106,7 +106,11 @@ func TestPlugin_HealthCheckMultipleServices(t *testing.T) {
 	}
 
 	if cache.HealthCheckError == nil {
-		t.Error("cache should be unhealthy")
+		t.Fatal("cache should be unhealthy")
+	}
+
+	if report.HealthCheckSucceeded {
+		t.Error("HealthCheckSucceeded should be false when a service is unhealthy")
 	}
 }
 

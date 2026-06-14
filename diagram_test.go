@@ -59,6 +59,8 @@ func TestReport_WritePlantUML(t *testing.T) {
 	assertStringContains(t, output, "component")
 
 	assertStringContains(t, output, "-->")
+	assertStringContains(t, output, "db")
+	assertStringContains(t, output, "user-svc")
 }
 
 func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
@@ -86,6 +88,8 @@ func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
 	output := buf.String()
 	assertStringContains(t, output, "flowchart TD")
 	assertStringContains(t, output, "-->")
+	assertStringContains(t, output, "Database")
+	assertStringContains(t, output, "usersvc")
 }
 
 func TestWriteMermaid_WriterError(t *testing.T) {
@@ -98,6 +102,19 @@ func TestWriteMermaid_WriterError(t *testing.T) {
 	err := p.Report().WriteMermaid(failingWriter{})
 	if err == nil {
 		t.Error("expected error from failing writer")
+	}
+}
+
+func TestWritePlantUML_WriterError(t *testing.T) {
+	p := auditlog.New(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	err := p.Report().WritePlantUML(failingWriter{})
+	if err == nil {
+		t.Fatal("expected error from failing writer")
 	}
 }
 

@@ -101,10 +101,20 @@ func TestEvent_HasError(t *testing.T) {
 
 	report := p.Report()
 
+	foundErrorEvent := false
+
 	for _, e := range report.Events {
-		if e.ServiceName == "fail" && e.IsAfter() && e.IsInvocation() && !e.HasError() {
-			t.Error("expected HasError for failing invocation")
+		if e.ServiceName == "fail" && e.IsAfter() && e.IsInvocation() {
+			if !e.HasError() {
+				t.Error("expected HasError for failing invocation")
+			}
+
+			foundErrorEvent = true
 		}
+	}
+
+	if !foundErrorEvent {
+		t.Fatal("expected at least one failing invocation event for 'fail' service")
 	}
 }
 
