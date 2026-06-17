@@ -22,7 +22,7 @@ Last updated: 2026-06-17
 
 ## Priority 3 — Developer Experience
 
-- [x] **`flake.nix` devShell** — pins Go 1.26.3, golangci-lint, govulncheck, templ, golines; documents the go.mod templ version pin (v0.3.1020) alongside nixpkgs (2026-06-17)
+- [x] **`flake.nix` devShell** — pins Go 1.26.4, golangci-lint, govulncheck, golines; documents the go.mod templ version pin (v0.3.1020) alongside nixpkgs (2026-06-17)
 - [x] **"Releasing" section in CONTRIBUTING.md** — documents tag → CHANGELOG → push → GitHub Release procedure + release-vs-schema-version distinction; also fixed stale `New()` example (2026-06-17)
 - [x] **pkg.go.dev badge** — already present in README; all 7 godoc examples verified passing (`go test -run Example`) (2026-06-17)
 - [x] **Benchmark baselines** — `BENCHMARKS.md` created with all 13 benchmarks (3 runs, median values) post-v0.0.3 for regression detection (2026-06-17)
@@ -43,6 +43,52 @@ Last updated: 2026-06-17
 - **`encoding/json/v2` migration** — Current `encoding/json` works fine. Risk of breaking JSON output format for consumers.
 
 ---
+
+## Future Priorities (from status audit Top-25)
+
+Sorted by impact × value ÷ effort.
+
+### Architecture
+
+- [ ] **Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` as distinct named string types. Compiler rejects accidental swaps; validation moves into constructors. Low effort, high safety.
+- [ ] **NDJSON import** — `ReadNDJSON(reader) (Report, error)`. Trivial now that `buildReportFromCore` centralizes construction.
+- [ ] **`Report` constructor validation** — `NewReport(...)` returns `(Report, error)` so invalid reports are unrepresentable. `Validate()` becomes a constructor check.
+- [ ] **Split `ServiceInfo` lifecycle concerns** — 19-field struct into `ServiceIdentity` / `ServiceLifecycle` / `ServiceHealth` / `ServiceGraph`. Breaking API change; decide before v0.1.0.
+- [ ] **JSON Schema generation** — Derive `schema.json` from `Report`/`Event`/`ServiceInfo` to avoid drift.
+
+### Features
+
+- [ ] **CSV/TSV export** — low effort, high value for data analysis workflows.
+- [ ] **CLI tool** for report conversion/export/visualization.
+- [ ] **WebSocket live stream** bridge for `OnEvent`.
+
+### Testing
+
+- [ ] **Property-based `Diff` tests** — random reports, assert `Diff(a,a)` empty + `Diff(a,b)`/`Diff(b,a)` symmetry.
+- [ ] **Property-based `MigrateReport` tests** — arbitrary JSON → migrate → validate round-trips.
+- [ ] **Fuzz filter inputs** — arbitrary `ReportOption` combinations.
+- [ ] **HTML golden-file test** — deterministic multi-service report → assert output matches committed golden file.
+
+### Release & CI
+
+- [ ] **v0.1.0 release** — project meets `STABILITY.md` criteria; blocked on JSON-schema-first decision.
+- [ ] **JSON Schema file** for the report format — biggest missing piece for report consumers.
+- [ ] **Prometheus exporter example** parallel to the OTel example.
+- [ ] **`actionlint`** in CI for workflow validation.
+- [ ] **`RELEASING.md`** or release checklist in CONTRIBUTING.md.
+- [ ] **Flake app for coverage gate** to replace inline shell in CI.
+
+---
+
+## Completed (2026-06-17 — Post-Remediation Consolidation)
+
+- [x] **Unified `Report` construction** — `buildReportFromCore()` + `finalizeDenormalized()` single path for `BuildReport`, `Filtered`, `MigrateReport`; eliminates 3-way duplication of 8 denormalized fields
+- [x] **`ServiceInfo.DeriveStatus()` public method** — canonical status derivation moved to a method on the type it operates on
+- [x] **Diagram special-char fuzz** — `FuzzDiagramSpecialChars` (5th fuzz target): Mermaid/PlantUML structural integrity under adversarial input
+- [x] **Nested scope tree fuzz** — `FuzzNestedScopeExport` (6th fuzz target): 500-level-deep scope trees through migration + export
+- [x] **`.gitattributes` for generated files** — `*_templ.go linguist-generated=true` prevents recurring `html_templ.go` format drift
+- [x] **Test parallelism** — `t.Parallel()` on all eligible tests (env-var and fixed-path tests excluded)
+- [x] **CHANGELOG/AGENTS/TODO docs sync** — refactor visibility, 6 fuzz targets, Go 1.26.4 everywhere
 
 ## Completed (2026-06-17 — v0.0.3 Release)
 
@@ -80,7 +126,7 @@ Last updated: 2026-06-17
 - [x] **Split monolithic `recorder.go`** — into `hooks.go`, `report.go`, `report_builder.go`, `report_helpers.go`, `service.go`, `event.go`, `export.go`, `healthcheck.go`, `filter.go`, `metadata.go`
 - [x] **Split `auditlog_test.go`** — into 14 feature-focused test files
 - [x] **Split `example/main.go`** — into `register.go`, `services.go`, `summary.go`
-- [x] **Pin Go 1.26.3** — in `go.mod` and `.golangci.yml`
+- [x] **Pin Go 1.26.4** — in `go.mod` and `.golangci.yml` (bumped from 1.26.3)
 
 ## Completed (2026-06-10 — Sessions 1–6)
 

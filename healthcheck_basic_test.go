@@ -8,6 +8,8 @@ import (
 )
 
 func TestPlugin_HealthCheckHealthy(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -39,6 +41,8 @@ func TestPlugin_HealthCheckHealthy(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckUnhealthy(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -72,6 +76,8 @@ func TestPlugin_HealthCheckUnhealthy(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckMultipleServices(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -134,6 +140,8 @@ func TestPlugin_HealthCheckDisabled(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckCount(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -160,6 +168,8 @@ func TestPlugin_HealthCheckCount(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckReport(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -178,6 +188,8 @@ func TestPlugin_HealthCheckReport(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckWithScope(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 

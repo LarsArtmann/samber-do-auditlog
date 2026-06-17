@@ -90,6 +90,8 @@ func TestPlugin_ExplicitEnabledOverridesEnv(t *testing.T) {
 }
 
 func TestPlugin_ContainerID(t *testing.T) {
+	t.Parallel()
+
 	p, injector := newPluginAndInjectorWithID("test-container")
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -108,6 +110,8 @@ func TestPlugin_ContainerID(t *testing.T) {
 }
 
 func TestPlugin_ReportVersion(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -119,6 +123,8 @@ func TestPlugin_ReportVersion(t *testing.T) {
 }
 
 func TestNew_RejectsInvalidContainerID(t *testing.T) {
+	t.Parallel()
+
 	_, err := auditlog.New(auditlog.Config{
 		Enabled:     true,
 		ContainerID: "has/slash",
@@ -128,6 +134,8 @@ func TestNew_RejectsInvalidContainerID(t *testing.T) {
 }
 
 func TestNew_AcceptsValidConfig(t *testing.T) {
+	t.Parallel()
+
 	p, err := auditlog.New(auditlog.Config{
 		Enabled:     true,
 		ContainerID: "valid-id",
@@ -142,6 +150,8 @@ func TestNew_AcceptsValidConfig(t *testing.T) {
 }
 
 func TestPlugin_MaxEventsCap(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true, MaxEvents: 4})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -170,6 +180,8 @@ func TestPlugin_MaxEventsCap(t *testing.T) {
 }
 
 func TestPlugin_MaxEventsZeroIsUnlimited(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true, MaxEvents: 0})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -186,6 +198,8 @@ func TestPlugin_MaxEventsZeroIsUnlimited(t *testing.T) {
 }
 
 func TestPlugin_InitialEventCapacity(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true, InitialEventCapacity: 5000})
 	injector := do.NewWithOpts(p.Opts())
 

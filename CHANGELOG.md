@@ -42,8 +42,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Capability map refactor**: `report_builder.go` replaced an opaque
   `map[string][2]bool` with a named `capabilityFlags{isHealthchecker,
 isShutdowner}` struct.
+- **Unified `Report` construction**: `BuildReport`, `Filtered`, and
+  `MigrateReport` now route through a single `buildReportFromCore()` +
+  `finalizeDenormalized()` path. The eight denormalized aggregate fields
+  (counts, durations, health/shutdown success) are derived in exactly one
+  place, making count/summary drift structurally impossible. Any future
+  Report construction path (e.g. NDJSON import) inherits correct aggregates
+  for free.
 
 ### Added
+
+- **`ServiceInfo.DeriveStatus() ServiceStatus`**: public method that computes
+  the canonical status from the service's error pointers and lifecycle
+  timestamps. Single source of truth for status derivation, reusable beyond
+  report building and migration.
 
 - **CI coverage gate** (`.github/workflows/ci.yml`): the test job now produces a
   coverage profile, excludes the `example/` demo package, and fails if production
@@ -72,6 +84,12 @@ isShutdowner}` struct.
 
 ### Tests
 
+- `FuzzDiagramSpecialChars`: fifth fuzz target — seeds Mermaid and PlantUML
+  exporters with special characters (`]`, `"`, `-->`, `@enduml`, `%%`, pipes,
+  newlines, 500-char strings) and verifies structural integrity.
+- `FuzzNestedScopeExport`: sixth fuzz target — generates scope trees up to 500
+  levels deep, normalizes via `MigrateReport`, exports to JSON + Mermaid +
+  PlantUML. Guards against stack overflow in recursive tree walkers.
 - `FuzzMigrateReport`: fourth fuzz target — arbitrary JSON → migrate → validate,
   with a re-migration round-trip property and seven seed corpora.
 - `BuildTypeMetadata` unit tests covering every provider/status/event emoji,

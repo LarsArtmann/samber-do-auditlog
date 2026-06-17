@@ -39,8 +39,8 @@ hooks.go            — Hook methods + constructors (newEventFromRef, newService
 types.go            — Domain enums: EventType, Phase, ProviderType, ServiceStatus, ServiceRef
 metadata.go         — TypeMetadata struct + BuildTypeMetadata() — Go enum display metadata for HTML
 event.go            — Event type + convenience methods (IsRegistration, Duration, etc.)
-service.go          — ServiceInfo, ScopeNode types + methods (Uptime, HasHealthError)
-report.go           — Report type + Validate() + query methods (ServiceByName, EventsByType, Index, WriteNDJSON, WriteJSON, etc.)
+service.go          — ServiceInfo, ScopeNode types + methods (Uptime, HasHealthError, DeriveStatus)
+report.go           — Report type + Validate() + query methods (ServiceByName, EventsByType, Index, WriteNDJSON, WriteJSON, etc.) + buildReportFromCore/finalizeDenormalized (unified construction)
 diff.go             — Report.Diff(other) + DiffResult/ServiceDiff types
 report_builder.go   — BuildReport assembly: services, scope tree, capability enrichment
 report_helpers.go   — Report aggregate helpers (sumBuildMs, deriveServiceStatus, etc.)
@@ -118,7 +118,8 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **Fuzz tests**: 3 targets — `FuzzPluginHTML` (service names), `FuzzPluginHTML_ErrorMessages` (error strings), `FuzzPluginHTML_DepChain` (dependency names). Uses `stripScriptTags()` to avoid false positives from JSON inside `<script>` tags. Checks 6+ XSS vectors.
 - **`Config.Validate()`** validates ContainerID for path separators (`/` and `\`). Returns `errContainerIDPathSep` sentinel error wrapped with the offending value.
 - **Do NOT modularize** — Project is 1 package, ~2400 LOC. Too small for multi-module split. Revisit at 5+ packages.
-- **`ServiceStatus`** is computed in `buildServicesLocked` via `computeServiceStatus()`. Priority: invocation_error > shutdown_error > shutdown > active > registered. The HTML template uses `s.status` instead of deriving from individual fields.
+- **`ServiceStatus`** is computed in `buildServicesLocked` via `computeServiceStatus()`. Priority: invocation_error > shutdown_error > shutdown > active > registered. The HTML template uses `s.status` instead of deriving from individual fields. The canonical public derivation entry point is `ServiceInfo.DeriveStatus()` — a method on the type it operates on, reusable beyond report building.
+- **`buildReportFromCore()` is the single Report construction path** — `BuildReport`, `Filtered`, and `MigrateReport` all route through `buildReportFromCore()` + `finalizeDenormalized()`. The eight denormalized aggregate fields (EventCount, ServiceCount, ScopeCount, TotalBuildDurationMs, TotalShutdownDurationMs, ShutdownSucceeded, HealthCheckSucceeded, HealthCheckedCount) are derived in exactly one place. **Critical invariant**: any new Report construction path MUST use `buildReportFromCore()` — never hand-compute aggregates, or they will drift from the underlying data and fail `Validate()`.
 - **`buildScopeTreeLocked`** uses `sortedScopesLocked()` to iterate scopes deterministically (sorted by scope ID), since map iteration order is non-deterministic in Go.
 - **`newServiceRecordCore`** uses lazy deps map (`nil` until first dependency recorded). `buildDepsLocked` returns `nil` for services with no deps (no empty slice allocation).
 - **`inferServiceType`** is called only during `OnAfterRegistration` (once per service), not per event. Events look up the type from the existing `serviceRecord`.

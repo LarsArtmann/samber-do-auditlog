@@ -3,3 +3,7 @@
 reports/** linguist-generated
 # Exclude from language statistics
 docs/status/*.md linguist-documentation
+# Mark templ-generated files as generated: hides them from diffs, language
+# stats, and signals editors/CI to skip formatting. Prevents the recurring
+# html_templ.go format drift that breaks the stale-generation CI check.
+*_templ.go linguist-generated=true
