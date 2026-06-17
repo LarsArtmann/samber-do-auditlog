@@ -134,26 +134,26 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ### Testing / Infrastructure
 
-| Feature                      | Description                                                                                        | Verified                   |
-| ---------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------- |
-| **GitHub Actions CI**        | `go vet`, `go build`, race-detector tests, golangci-lint, govulncheck, generated-code drift checks | `.github/workflows/ci.yml` |
-| **golangci-lint config**     | `.golangci.yml` defines lint rules for the project                                                 | `.golangci.yml`            |
-| **Generated-code check**     | CI runs `go generate ./...` and fails on drift, ensuring `html_templ.go` stays in sync             | `.github/workflows/ci.yml` |
-| **templ code generation**    | `//go:generate go tool templ generate` in `html.go` produces `html_templ.go`                       | `html.go`, `html_templ.go` |
+| Feature                      | Description                                                                                                                | Verified                   |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| **GitHub Actions CI**        | `go vet`, `go build`, race-detector tests, golangci-lint, govulncheck, generated-code drift checks                         | `.github/workflows/ci.yml` |
+| **golangci-lint config**     | `.golangci.yml` defines lint rules for the project                                                                         | `.golangci.yml`            |
+| **Generated-code check**     | CI runs `go generate ./...` and fails on drift, ensuring `html_templ.go` stays in sync                                     | `.github/workflows/ci.yml` |
+| **templ code generation**    | `//go:generate go tool templ generate` in `html.go` produces `html_templ.go`                                               | `html.go`, `html_templ.go` |
 | **Fuzz tests**               | 3 targets: HTML XSS (service names, error messages, dep chains), `MigrateReport` integrity, Mermaid/PlantUML special chars | `fuzz_test.go`             |
-| **Benchmark tests**          | Performance benchmarks for hot paths                                                               | `benchmarks_test.go`       |
-| **Example tests**            | Runnable `Example*` functions for pkg.go.dev                                                       | `example_test.go`          |
-| **Defensive-copy accessors** | `Plugin.Events()` and `Recorder.Events()` return copied slices; `EventsCount()` avoids copying     | `plugin.go`, `recorder.go` |
-| **Dropped-event counter**    | `Plugin.DroppedEventCount()` / `Recorder.DroppedEventCount()`                                      | `plugin.go`, `recorder.go` |
-| **Test parallelism**         | 152 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially | all `*_test.go`             |
-| **Type metadata assertions** | `TestBuildTypeMetadata` directly asserts provider/status icons, labels, and colors                 | `metadata_test.go`         |
+| **Benchmark tests**          | Performance benchmarks for hot paths                                                                                       | `benchmarks_test.go`       |
+| **Example tests**            | Runnable `Example*` functions for pkg.go.dev                                                                               | `example_test.go`          |
+| **Defensive-copy accessors** | `Plugin.Events()` and `Recorder.Events()` return copied slices; `EventsCount()` avoids copying                             | `plugin.go`, `recorder.go` |
+| **Dropped-event counter**    | `Plugin.DroppedEventCount()` / `Recorder.DroppedEventCount()`                                                              | `plugin.go`, `recorder.go` |
+| **Test parallelism**         | 152 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                        | all `*_test.go`            |
+| **Type metadata assertions** | `TestBuildTypeMetadata` directly asserts provider/status icons, labels, and colors                                         | `metadata_test.go`         |
 
 ---
 
 ## PARTIALLY FUNCTIONAL
 
-| Feature            | Description                                                                                                                       | Status            |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| Feature            | Description                                                                                                                     | Status            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
 | **Filter fuzzing** | `MigrateReport`, HTML XSS, and Mermaid/PlantUML special chars are fuzzed; arbitrary `ReportOption` filter combinations are not. | Could be expanded |
 
 ---

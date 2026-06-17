@@ -35,35 +35,35 @@ Verified against actual code this session, not against docs.
 
 ### Core Library (production code — 3,128 LOC across 20 `.go` files)
 
-| Area | Status | Evidence |
-|------|--------|----------|
-| **Plugin lifecycle** | ✅ | `New(Config)` returns `(*Plugin, error)`, validates `Config`, emits `*do.InjectorOpts` via `Opts()` |
-| **Event capture** | ✅ | Registration, invocation, shutdown (before+after), health-check (after) — all timestamped with sequence numbers |
-| **Stack-based dependency inference** | ✅ | LIFO fast-path in `recorder.go`; forward + reverse deps computed and sorted |
-| **Single-lock concurrency** | ✅ | One `sync.RWMutex` + two `atomic.Int64`; `onEvent` callback fired outside the lock |
-| **Memory-bounded capture** | ✅ | `MaxEvents` cap + `InitialEventCapacity` + `DroppedEventCount()`; 50-goroutine stress test proves `stored+dropped==total` under `-race` |
-| **Unified report construction** | ✅ | `buildReportFromCore()` + `finalizeDenormalized()` is the single path for `BuildReport`/`Filtered`/`MigrateReport` — 8 denormalized fields derived in one place |
-| **Report validation** | ✅ | `Report.Validate()` asserts denormalized counts match data; sentinel errors with `%w` wrapping |
-| **Report queries** | ✅ | `ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByType`, `FailedServices`, `UnhealthyServices`, `Index()` (O(1)) |
-| **Report filtering** | ✅ | `Filtered(opts...)` + 5 filter options + `Plugin.ReportFiltered` + `ExportFilteredToFile` |
-| **Report diffing** | ✅ | `Report.Diff(other)` → `DiffResult` with added/removed/changed services |
-| **Exports** | ✅ | JSON, NDJSON (`WriteNDJSON`), Mermaid, PlantUML, self-contained HTML (warm-amber 5-tab viz with lifecycle waveform, Sugiyama DAG graph, touch pan/zoom) |
-| **Atomic file writes** | ✅ | Temp-file + `os.Rename`; rename-failure + write-error paths tested |
-| **Schema migration** | ✅ | `MigrateReport` v0.1.0 → v0.2.0; round-trip tested; input validation; version guard; `ExportedAt` preserved |
-| **Health-check auditing** | ✅ | `RecordHealthCheck[WithContext]` wrapper; `EventTypeHealthCheck` events; capability enrichment via `do.ExplainInjector` (called outside lock — deadlock-safe) |
-| **Service-type tracking** | ✅ | `ServiceType` (lazy/eager/transient/alias) via `do.ExplainNamedService`; TypeMetadata injected into HTML |
-| **Real-time streaming** | ✅ | `Config.OnEvent` callback for Prometheus/OTel bridges (OTel example in `docs/examples/`) |
-| **XSS hardening** | ✅ | `esc()` on all user strings; `stripJSONScripts` for fuzz target sanity; CSP with `base-uri 'none'; frame-ancestors 'none'` |
+| Area                                 | Status | Evidence                                                                                                                                                        |
+| ------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Plugin lifecycle**                 | ✅     | `New(Config)` returns `(*Plugin, error)`, validates `Config`, emits `*do.InjectorOpts` via `Opts()`                                                             |
+| **Event capture**                    | ✅     | Registration, invocation, shutdown (before+after), health-check (after) — all timestamped with sequence numbers                                                 |
+| **Stack-based dependency inference** | ✅     | LIFO fast-path in `recorder.go`; forward + reverse deps computed and sorted                                                                                     |
+| **Single-lock concurrency**          | ✅     | One `sync.RWMutex` + two `atomic.Int64`; `onEvent` callback fired outside the lock                                                                              |
+| **Memory-bounded capture**           | ✅     | `MaxEvents` cap + `InitialEventCapacity` + `DroppedEventCount()`; 50-goroutine stress test proves `stored+dropped==total` under `-race`                         |
+| **Unified report construction**      | ✅     | `buildReportFromCore()` + `finalizeDenormalized()` is the single path for `BuildReport`/`Filtered`/`MigrateReport` — 8 denormalized fields derived in one place |
+| **Report validation**                | ✅     | `Report.Validate()` asserts denormalized counts match data; sentinel errors with `%w` wrapping                                                                  |
+| **Report queries**                   | ✅     | `ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByType`, `FailedServices`, `UnhealthyServices`, `Index()` (O(1))                  |
+| **Report filtering**                 | ✅     | `Filtered(opts...)` + 5 filter options + `Plugin.ReportFiltered` + `ExportFilteredToFile`                                                                       |
+| **Report diffing**                   | ✅     | `Report.Diff(other)` → `DiffResult` with added/removed/changed services                                                                                         |
+| **Exports**                          | ✅     | JSON, NDJSON (`WriteNDJSON`), Mermaid, PlantUML, self-contained HTML (warm-amber 5-tab viz with lifecycle waveform, Sugiyama DAG graph, touch pan/zoom)         |
+| **Atomic file writes**               | ✅     | Temp-file + `os.Rename`; rename-failure + write-error paths tested                                                                                              |
+| **Schema migration**                 | ✅     | `MigrateReport` v0.1.0 → v0.2.0; round-trip tested; input validation; version guard; `ExportedAt` preserved                                                     |
+| **Health-check auditing**            | ✅     | `RecordHealthCheck[WithContext]` wrapper; `EventTypeHealthCheck` events; capability enrichment via `do.ExplainInjector` (called outside lock — deadlock-safe)   |
+| **Service-type tracking**            | ✅     | `ServiceType` (lazy/eager/transient/alias) via `do.ExplainNamedService`; TypeMetadata injected into HTML                                                        |
+| **Real-time streaming**              | ✅     | `Config.OnEvent` callback for Prometheus/OTel bridges (OTel example in `docs/examples/`)                                                                        |
+| **XSS hardening**                    | ✅     | `esc()` on all user strings; `stripJSONScripts` for fuzz target sanity; CSP with `base-uri 'none'; frame-ancestors 'none'`                                      |
 
 ### Testing (5,781 LOC across 24 test files)
 
-| Metric | Value |
-|--------|-------|
-| Test functions | 146 |
-| Benchmarks | 11 (Invocation, Disabled, Registration, ConcurrentInvocation, BuildReport 50/100/500, EventsCopy, OnEventCallback, HealthCheck) |
-| Fuzz targets | 3 — `FuzzPluginHTML`, `FuzzMigrateReport`, `FuzzDiagramSpecialChars` |
-| Godoc examples | 7 (pkg.go.dev) |
-| `t.Parallel()` calls | 152 (~97% of eligible tests; only 5 remain sequential — all `t.Setenv()` env-var tests) |
+| Metric               | Value                                                                                                                           |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Test functions       | 146                                                                                                                             |
+| Benchmarks           | 11 (Invocation, Disabled, Registration, ConcurrentInvocation, BuildReport 50/100/500, EventsCopy, OnEventCallback, HealthCheck) |
+| Fuzz targets         | 3 — `FuzzPluginHTML`, `FuzzMigrateReport`, `FuzzDiagramSpecialChars`                                                            |
+| Godoc examples       | 7 (pkg.go.dev)                                                                                                                  |
+| `t.Parallel()` calls | 152 (~97% of eligible tests; only 5 remain sequential — all `t.Setenv()` env-var tests)                                         |
 
 ### CI & Release Infrastructure
 
@@ -77,12 +77,12 @@ Verified against actual code this session, not against docs.
 
 ## b) PARTIALLY DONE
 
-| Item | State | Reality |
-|------|-------|---------|
-| **`html_templ.go` drift cycle** | Fixed-but-unpushed | Commit `3e8931b` (prior session) commits the generator's canonical single-line imports, matching what the `stale-generation` CI job produces. This should break the recurring drift, **but it is not yet on `origin/master`**, so CI has not confirmed it. |
-| **Documentation accuracy** | Partially stale | `AGENTS.md`, `FEATURES.md`, and `TODO_LIST.md` each carry factual inaccuracies (see section d). The _code_ is correct; the _docs describing the code_ have not kept pace. |
-| **`flake.nix` description string** | Stale (cosmetic) | Says "Go 1.26.3" in a comment; `go.mod` requires `1.26.4`. DevShell self-upgrades via `GOTOOLCHAIN=auto`, so it works — but the string lies. |
-| **govulncheck locally** | CI-only | `govulncheck` is not installed in this devShell (only in CI). Local security scans are not possible without `nix develop`. |
+| Item                               | State              | Reality                                                                                                                                                                                                                                                    |
+| ---------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`html_templ.go` drift cycle**    | Fixed-but-unpushed | Commit `3e8931b` (prior session) commits the generator's canonical single-line imports, matching what the `stale-generation` CI job produces. This should break the recurring drift, **but it is not yet on `origin/master`**, so CI has not confirmed it. |
+| **Documentation accuracy**         | Partially stale    | `AGENTS.md`, `FEATURES.md`, and `TODO_LIST.md` each carry factual inaccuracies (see section d). The _code_ is correct; the _docs describing the code_ have not kept pace.                                                                                  |
+| **`flake.nix` description string** | Stale (cosmetic)   | Says "Go 1.26.3" in a comment; `go.mod` requires `1.26.4`. DevShell self-upgrades via `GOTOOLCHAIN=auto`, so it works — but the string lies.                                                                                                               |
+| **govulncheck locally**            | CI-only            | `govulncheck` is not installed in this devShell (only in CI). Local security scans are not possible without `nix develop`.                                                                                                                                 |
 
 ---
 
@@ -115,6 +115,7 @@ Honest call-out. Nothing here is catastrophic or broken — but these are **trus
 > **Fuzz coverage** | All fuzz targets test HTML XSS; no fuzzing of `MigrateReport`, Mermaid/PlantUML special characters, nested scopes, or filters.
 
 **Both statements are false:**
+
 - Test parallelism is **~97%** — 152 `t.Parallel()` calls; only 5 sequential tests remain (all `t.Setenv()`).
 - Fuzz coverage now includes `FuzzMigrateReport` and `FuzzDiagramSpecialChars`. Only 1 of 3 fuzz targets is HTML-XSS-only.
 
@@ -164,33 +165,33 @@ Beyond fixing section (d), structural improvements worth pursuing:
 
 Sorted by impact × value ÷ effort. Items marked ⚠️ are doc-trust fixes from section (d) — they are cheap and high-trust.
 
-| #  | Task | Category | Effort | Why |
-|----|------|----------|--------|-----|
-| 1  | ⚠️ **Fix `FEATURES.md` PARTIALLY FUNCTIONAL section** — move parallelism + fuzz to DONE with real numbers | Doc-trust | XS | Worst credibility issue in repo; verifiably false |
-| 2  | ⚠️ **Fix `TODO_LIST.md` fuzz-target completion notes** — 5th/6th → actual 3 | Doc-trust | XS | Checklist lists non-existent shipped work |
-| 3  | ⚠️ **Fix `AGENTS.md` metrics** — 167 tests, 3128 LOC | Doc-trust | XS | Wrong numbers seed wrong mental models |
-| 4  | ⚠️ **Push `3e8931b` to origin/master** (after user approval) | Release | XS | Remote is behind intended state |
-| 5  | **Decide v0.1.0: ship-now vs JSON-schema-first** | Product | S | Unblocks ~6 downstream items |
-| 6  | **JSON Schema file** for the report format | Feature | M | Biggest missing artifact for consumers |
-| 7  | **NDJSON import** (`ReadNDJSON`) | Feature | S | Trivial via `buildReportFromCore` |
-| 8  | **Property-based `Diff` tests** (symmetry + round-trip) | Testing | S | Hardens the most-used query API |
-| 9  | **Property-based `MigrateReport` tests** | Testing | S | Guards schema-evolution invariants |
-| 10 | **`Report` constructor validation** (`NewReport(...) (Report, error)`) | Architecture | M | Makes invalid reports unrepresentable |
-| 11 | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`) | Architecture | M | Compiler rejects accidental swaps |
-| 12 | **HTML golden-file test** (deterministic multi-service report) | Testing | S | Catches viz regressions silently |
-| 13 | **Docs-freshness CI gate** (assert counts match `grep`) | CI | S | Prevents recurrence of #1–#3 |
-| 14 | **Pre-commit hook: `go generate` must be no-op** | DX | S | Kills the html_templ.go whack-a-mole permanently |
-| 15 | **Fix `flake.nix` "Go 1.26.3" description string** | DX | XS | Cosmetic lie |
-| 16 | **CSV/TSV export** | Feature | S | High value for data-analysis workflows |
-| 17 | **CLI tool** for report conversion/export/viz | Feature | M | Standalone binary, broad reach |
-| 18 | **`actionlint` in CI** | CI | XS | Validates workflow YAML |
-| 19 | **Prometheus exporter example** (parallel to OTel) | DX | S | OnEvent bridge reference |
-| 20 | **Fuzz filter inputs** (arbitrary `ReportOption` combos) | Testing | S | Untested combinatorial surface |
-| 21 | **WebSocket live stream** bridge for `OnEvent` | Feature | M | Real-time dashboards |
-| 22 | **Split `ServiceInfo`** into Identity/Lifecycle/Health/Graph | Architecture | L | Breaking; decide before v0.1.0 |
-| 23 | **`govulncheck` in local devShell** (not only CI) | DX | XS | Local security scanning |
-| 24 | **Rolling `CURRENT.md` status** + archive old daily reports | Doc hygiene | S | 3 same-day cross-referencing reports is confusing |
-| 25 | **v0.1.0 release** (tag + GitHub Release + schema) | Release | M | The keystone — depends on #5 |
+| #   | Task                                                                                                      | Category     | Effort | Why                                               |
+| --- | --------------------------------------------------------------------------------------------------------- | ------------ | ------ | ------------------------------------------------- |
+| 1   | ⚠️ **Fix `FEATURES.md` PARTIALLY FUNCTIONAL section** — move parallelism + fuzz to DONE with real numbers | Doc-trust    | XS     | Worst credibility issue in repo; verifiably false |
+| 2   | ⚠️ **Fix `TODO_LIST.md` fuzz-target completion notes** — 5th/6th → actual 3                               | Doc-trust    | XS     | Checklist lists non-existent shipped work         |
+| 3   | ⚠️ **Fix `AGENTS.md` metrics** — 167 tests, 3128 LOC                                                      | Doc-trust    | XS     | Wrong numbers seed wrong mental models            |
+| 4   | ⚠️ **Push `3e8931b` to origin/master** (after user approval)                                              | Release      | XS     | Remote is behind intended state                   |
+| 5   | **Decide v0.1.0: ship-now vs JSON-schema-first**                                                          | Product      | S      | Unblocks ~6 downstream items                      |
+| 6   | **JSON Schema file** for the report format                                                                | Feature      | M      | Biggest missing artifact for consumers            |
+| 7   | **NDJSON import** (`ReadNDJSON`)                                                                          | Feature      | S      | Trivial via `buildReportFromCore`                 |
+| 8   | **Property-based `Diff` tests** (symmetry + round-trip)                                                   | Testing      | S      | Hardens the most-used query API                   |
+| 9   | **Property-based `MigrateReport` tests**                                                                  | Testing      | S      | Guards schema-evolution invariants                |
+| 10  | **`Report` constructor validation** (`NewReport(...) (Report, error)`)                                    | Architecture | M      | Makes invalid reports unrepresentable             |
+| 11  | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`)                                           | Architecture | M      | Compiler rejects accidental swaps                 |
+| 12  | **HTML golden-file test** (deterministic multi-service report)                                            | Testing      | S      | Catches viz regressions silently                  |
+| 13  | **Docs-freshness CI gate** (assert counts match `grep`)                                                   | CI           | S      | Prevents recurrence of #1–#3                      |
+| 14  | **Pre-commit hook: `go generate` must be no-op**                                                          | DX           | S      | Kills the html_templ.go whack-a-mole permanently  |
+| 15  | **Fix `flake.nix` "Go 1.26.3" description string**                                                        | DX           | XS     | Cosmetic lie                                      |
+| 16  | **CSV/TSV export**                                                                                        | Feature      | S      | High value for data-analysis workflows            |
+| 17  | **CLI tool** for report conversion/export/viz                                                             | Feature      | M      | Standalone binary, broad reach                    |
+| 18  | **`actionlint` in CI**                                                                                    | CI           | XS     | Validates workflow YAML                           |
+| 19  | **Prometheus exporter example** (parallel to OTel)                                                        | DX           | S      | OnEvent bridge reference                          |
+| 20  | **Fuzz filter inputs** (arbitrary `ReportOption` combos)                                                  | Testing      | S      | Untested combinatorial surface                    |
+| 21  | **WebSocket live stream** bridge for `OnEvent`                                                            | Feature      | M      | Real-time dashboards                              |
+| 22  | **Split `ServiceInfo`** into Identity/Lifecycle/Health/Graph                                              | Architecture | L      | Breaking; decide before v0.1.0                    |
+| 23  | **`govulncheck` in local devShell** (not only CI)                                                         | DX           | XS     | Local security scanning                           |
+| 24  | **Rolling `CURRENT.md` status** + archive old daily reports                                               | Doc hygiene  | S      | 3 same-day cross-referencing reports is confusing |
+| 25  | **v0.1.0 release** (tag + GitHub Release + schema)                                                        | Release      | M      | The keystone — depends on #5                      |
 
 ---
 
@@ -198,9 +199,10 @@ Sorted by impact × value ÷ effort. Items marked ⚠️ are doc-trust fixes fro
 
 > **Is `v0.1.0` a "ship now, schema later" release or a "JSON Schema first, then tag" release?**
 
-This is the single decision that shapes the priority of at least six items above (#5, #6, #10, #11, #22, #25). The library already satisfies every criterion in `STABILITY.md`; the code is green; the only thing standing between the current state and a `v0.1.0` tag is whether the report's JSON shape should be frozen into a published `schema.json` *before* the tag (so consumers can codegen against a stable contract) or whether we tag now and publish the schema as a fast-follow.
+This is the single decision that shapes the priority of at least six items above (#5, #6, #10, #11, #22, #25). The library already satisfies every criterion in `STABILITY.md`; the code is green; the only thing standing between the current state and a `v0.1.0` tag is whether the report's JSON shape should be frozen into a published `schema.json` _before_ the tag (so consumers can codegen against a stable contract) or whether we tag now and publish the schema as a fast-follow.
 
 I cannot resolve this because it is a product/intent question, not a technical one:
+
 - **Ship-now** maximizes momentum and signals stability, but risks a schema change after consumers have integrated.
 - **Schema-first** gives consumers a machine-readable contract and makes the 0.x→1.0 promise credible, but delays the tag and forces decisions about `ServiceInfo` splitting (#22) now rather than later.
 

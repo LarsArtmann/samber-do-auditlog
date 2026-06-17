@@ -8,13 +8,13 @@
 
 ## TL;DR
 
-| Candidate adoption | Verdict | Why |
-| ------------------ | ------- | --- |
-| Replace Mermaid export with `go-output/graph` | **NO** | Breaking output format (markdown-fenced, pink theme, no warm-amber directive), loses edge dedup, +11 external modules for ~60 LOC saved |
-| Replace PlantUML export with `go-output/plantuml` | **NO** | Same regression class; different skinparam; no dedup |
-| Replace JSON/NDJSON with `go-output/serialization` | **NO** | `encoding/json` is already optimal; serialization drags in `go-faster/yaml` + `go-toml/v2` transitively |
-| Add new formats (DOT, D2, CSV, YAML) | **DEFER** | Real capabilities but dep cost disproportionate for a deliberately lean single-package plugin |
-| Fix the diagram **escaping bug** exposed by this review | **YES — locally** | Confirmed malformed output today; fix with a few inline lines, zero new dependencies |
+| Candidate adoption                                      | Verdict           | Why                                                                                                                                     |
+| ------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Replace Mermaid export with `go-output/graph`           | **NO**            | Breaking output format (markdown-fenced, pink theme, no warm-amber directive), loses edge dedup, +11 external modules for ~60 LOC saved |
+| Replace PlantUML export with `go-output/plantuml`       | **NO**            | Same regression class; different skinparam; no dedup                                                                                    |
+| Replace JSON/NDJSON with `go-output/serialization`      | **NO**            | `encoding/json` is already optimal; serialization drags in `go-faster/yaml` + `go-toml/v2` transitively                                 |
+| Add new formats (DOT, D2, CSV, YAML)                    | **DEFER**         | Real capabilities but dep cost disproportionate for a deliberately lean single-package plugin                                           |
+| Fix the diagram **escaping bug** exposed by this review | **YES — locally** | Confirmed malformed output today; fix with a few inline lines, zero new dependencies                                                    |
 
 ---
 
@@ -41,6 +41,7 @@ External dependencies today: **only `samber/do/v2` and `a-h/templ`**. `depguard`
 Same dependency graph (`user-svc → db`) rendered by both:
 
 **Current auditlog Mermaid:**
+
 ```
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#e8a838', ...}}}%%
 flowchart TD
@@ -50,6 +51,7 @@ flowchart TD
 ```
 
 **`go-output/graph` MermaidRenderer:**
+
 ````
 ```mermaid
 flowchart TD
@@ -63,6 +65,7 @@ flowchart TD
 ````
 
 Differences that make a swap a **breaking change**:
+
 1. Markdown code fence (` ```mermaid `) vs raw flowchart.
 2. **Pink** `classDef` (`#f9f`) vs the warm-amber `%%{init}%%` theme — a deliberate design-coherence regression (see AGENTS.md "Diagram themes").
 3. No provider-type icons (😴/⚡) in labels.
@@ -70,15 +73,15 @@ Differences that make a swap a **breaking change**:
 
 ## 4. Evidence: dependency cost
 
-| Option | External modules added | Notable dragged-in deps |
-| ------ | ---------------------- | ----------------------- |
-| `graph` + `plantuml` | **11** + 6 larsartmann submodules | `go-faster/yaml`, `go-toml/v2`, `segmentio/asm`, `go.uber.org/multierr`, `davecgh/go-spew`, `golang.org/x/exp` |
-| `serialization` (JSON/NDJSON) | **7**+ | `go-faster/yaml`, `go-toml/v2`, `jx` |
-| `escape` only | **0** | none |
+| Option                        | External modules added            | Notable dragged-in deps                                                                                        |
+| ----------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `graph` + `plantuml`          | **11** + 6 larsartmann submodules | `go-faster/yaml`, `go-toml/v2`, `segmentio/asm`, `go.uber.org/multierr`, `davecgh/go-spew`, `golang.org/x/exp` |
+| `serialization` (JSON/NDJSON) | **7**+                            | `go-faster/yaml`, `go-toml/v2`, `jx`                                                                           |
+| `escape` only                 | **0**                             | none                                                                                                           |
 
 Measured via `go list -m all` on a scratch module. The graph module transitively pulls the root module, whose `go.mod` requires `serialization`/`delimited` — so even a "diagram-only" adoption bloats the module graph with YAML/TOML libraries the plugin never uses.
 
-For a plugin whose entire value proposition is *minimal-overhead DI observability*, adding 11 modules to render formats it already has is disproportionate.
+For a plugin whose entire value proposition is _minimal-overhead DI observability_, adding 11 modules to render formats it already has is disproportionate.
 
 ## 5. Evidence: a real bug this review surfaced
 
@@ -114,16 +117,16 @@ root_evil]"svc[evil]"svc]
 
 Every fix was verified by reading the committed source code, not just the appendix claims:
 
-| # | Issue | Claim | Verified |
-|---|-------|-------|----------|
-| C1 | GraphStyle ignored | Mermaid emits per-node `style <id> fill:...,stroke:...`; PlantUML emits inline `#[fill;line:stroke]` | ✅ `graph/mermaid.go:120-151`, `plantuml/plantuml.go:57,91-107` |
-| C2 | No edge dedup | `DedupEdges()` method on `GraphRendererState`, opt-in | ✅ `graph.go:157-181` |
-| C3 | Markdown fence locked | `SetCodeFence(bool)` on `MermaidRenderer`, default `true` | ✅ `graph/mermaid.go:42-60` |
-| C4 | Root pulls YAML/TOML | `serialization` removed from root `go.mod` `require` block | ✅ `go.mod` — only in `replace` (local dev) |
-| I5 | SlugifyID gaps | Now replaces `. * [ ] { } ( )` in addition to `␣ - /` | ✅ `escape/escape.go:70-81` |
-| I6 | Hardcoded DOT attrs | `SetRankDir(RankDir)`, `SetSplines(SplineStyle)`, `SetNodeSep`, `SetRankSep` + typed enums | ✅ `graph/dot.go:44-98`, `graph/dot_enum.go` |
-| I7 | No io.Writer for diagrams | Already supported via `StreamingRendererFromRenderer()` adapter | ✅ `streaming.go:24` |
-| N8 | No stability promise | ADR 006 documents stable vs experimental tiers | ✅ `docs/adr/006-api-stability.md` |
+| #   | Issue                     | Claim                                                                                                | Verified                                                        |
+| --- | ------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| C1  | GraphStyle ignored        | Mermaid emits per-node `style <id> fill:...,stroke:...`; PlantUML emits inline `#[fill;line:stroke]` | ✅ `graph/mermaid.go:120-151`, `plantuml/plantuml.go:57,91-107` |
+| C2  | No edge dedup             | `DedupEdges()` method on `GraphRendererState`, opt-in                                                | ✅ `graph.go:157-181`                                           |
+| C3  | Markdown fence locked     | `SetCodeFence(bool)` on `MermaidRenderer`, default `true`                                            | ✅ `graph/mermaid.go:42-60`                                     |
+| C4  | Root pulls YAML/TOML      | `serialization` removed from root `go.mod` `require` block                                           | ✅ `go.mod` — only in `replace` (local dev)                     |
+| I5  | SlugifyID gaps            | Now replaces `. * [ ] { } ( )` in addition to `␣ - /`                                                | ✅ `escape/escape.go:70-81`                                     |
+| I6  | Hardcoded DOT attrs       | `SetRankDir(RankDir)`, `SetSplines(SplineStyle)`, `SetNodeSep`, `SetRankSep` + typed enums           | ✅ `graph/dot.go:44-98`, `graph/dot_enum.go`                    |
+| I7  | No io.Writer for diagrams | Already supported via `StreamingRendererFromRenderer()` adapter                                      | ✅ `streaming.go:24`                                            |
+| N8  | No stability promise      | ADR 006 documents stable vs experimental tiers                                                       | ✅ `docs/adr/006-api-stability.md`                              |
 
 ### Dependency tree re-measured
 
