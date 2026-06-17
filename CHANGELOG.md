@@ -92,13 +92,14 @@ isShutdowner}` struct.
 
 ### Tests
 
-- `FuzzDiagramSpecialChars`: fifth fuzz target — seeds Mermaid and PlantUML
+- `FuzzDiagramSpecialChars`: third fuzz target — seeds Mermaid and PlantUML
   exporters with special characters (`]`, `"`, `-->`, `@enduml`, `%%`, pipes,
   newlines, 500-char strings) and verifies structural integrity.
-- `FuzzNestedScopeExport`: sixth fuzz target — generates scope trees up to 500
+- `TestNestedScopeExport` (table-driven): generates scope trees up to 500
   levels deep, normalizes via `MigrateReport`, exports to JSON + Mermaid +
-  PlantUML. Guards against stack overflow in recursive tree walkers.
-- `FuzzMigrateReport`: fourth fuzz target — arbitrary JSON → migrate → validate,
+  PlantUML. Guards against stack overflow in recursive tree walkers. (Planned
+  as a fuzz target; consolidated to the 3 fuzz targets above during the buildflow.)
+- `FuzzMigrateReport`: second fuzz target — arbitrary JSON → migrate → validate,
   with a re-migration round-trip property and seven seed corpora.
 - `BuildTypeMetadata` unit tests covering every provider/status/event emoji,
   label, and color.

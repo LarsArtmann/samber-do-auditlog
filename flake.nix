@@ -1,5 +1,5 @@
 {
-  description = "DevShell for samber-do-auditlog — Go 1.26.3, golangci-lint, govulncheck";
+  description = "DevShell for samber-do-auditlog — Go 1.26.4, golangci-lint, govulncheck";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -16,7 +16,7 @@
       {
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            # Core toolchain — pinned to match go.mod (Go 1.26.3).
+            # Core toolchain — pinned to match go.mod (Go 1.26.4).
             go_1_26
 
             # Linting and analysis.

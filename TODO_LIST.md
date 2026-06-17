@@ -84,11 +84,11 @@ Sorted by impact × value ÷ effort.
 
 - [x] **Unified `Report` construction** — `buildReportFromCore()` + `finalizeDenormalized()` single path for `BuildReport`, `Filtered`, `MigrateReport`; eliminates 3-way duplication of 8 denormalized fields
 - [x] **`ServiceInfo.DeriveStatus()` public method** — canonical status derivation moved to a method on the type it operates on
-- [x] **Diagram special-char fuzz** — `FuzzDiagramSpecialChars` (5th fuzz target): Mermaid/PlantUML structural integrity under adversarial input
-- [x] **Nested scope tree fuzz** — `FuzzNestedScopeExport` (6th fuzz target): 500-level-deep scope trees through migration + export
+- [x] **Diagram special-char fuzz** — `FuzzDiagramSpecialChars` (3rd fuzz target): Mermaid/PlantUML structural integrity under adversarial input
+- [x] **Nested scope tree coverage** — `TestNestedScopeExport` (table-driven): deep scope trees through migration + export. Originally planned as a fuzz target; consolidated to 3 fuzz targets total during the buildflow.
 - [x] **`.gitattributes` for generated files** — `*_templ.go linguist-generated=true` prevents recurring `html_templ.go` format drift
 - [x] **Test parallelism** — `t.Parallel()` on all eligible tests (env-var and fixed-path tests excluded)
-- [x] **CHANGELOG/AGENTS/TODO docs sync** — refactor visibility, 6 fuzz targets, Go 1.26.4 everywhere
+- [x] **CHANGELOG/AGENTS/TODO docs sync** — refactor visibility, 3 fuzz targets, Go 1.26.4 everywhere
 
 ## Completed (2026-06-17 — v0.0.3 Release)
 
