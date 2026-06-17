@@ -12,7 +12,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No changes yet._
+### Added
+
+- **CI pipeline** (`.github/workflows/ci.yml`): four parallel jobs — test (with
+  `-race`), lint (golangci-lint v2.12.2), vulnerability scan (govulncheck), and
+  stale-generation check (catches `html_templ.go` drift).
+- **`Report.WriteNDJSON(writer)`**: streams events as NDJSON directly from the
+  report without a defensive copy.
+- **`Report.WriteJSON(writer)`**: writes the full report as indented JSON.
+- **`Report.Diff(other Report) DiffResult`**: structural comparison of two
+  reports (added/removed/changed services, event count delta).
+- **`flake.nix` devShell**: pins Go 1.26.3, golangci-lint, govulncheck, templ,
+  golines for contributor reproducibility.
+- **`BENCHMARKS.md`**: post-v0.0.3 baseline of all 13 benchmarks for regression
+  detection.
+- **`STABILITY.md`**: 0.x API stability promise (stable vs evolving vs internal).
+- **OTel reference example** (`docs/examples/otel-bridge.md`): shows how to
+  bridge `Config.OnEvent` to OpenTelemetry spans without adding a dependency.
+- **"Releasing" section** in `CONTRIBUTING.md` documenting the release procedure
+  and the release-vs-schema-version distinction.
+
+### Tests
+
+- `deriveServiceStatus` exhaustive 16-case property test (all 2^4 input
+  combinations + priority ordering).
+- `MaxEvents` concurrency stress test (50 goroutines, 20x repeat, `-race`).
+- Atomic-write crash path tests (rename failure + write error cleanup).
+- Migration full round-trip test (v0.2.0 → downgrade → migrate → assert
+  equality).
+- Diff tests (identical, added/removed, changed, new-error).
 
 ## [0.0.3] - 2026-06-17
 

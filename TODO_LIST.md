@@ -29,10 +29,10 @@ Last updated: 2026-06-17
 
 ## Priority 4 — Future API Exploration
 
-- [ ] **Streaming NDJSON export** — `Report.WriteNDJSON` currently materializes all events; a streaming `io.Reader` could serve very large reports without forcing MaxEvents drops
-- [ ] **`Report.Diff(other Report)`** — useful for regression-testing DI graphs across deploys
-- [ ] **OpenTelemetry reference example** — a docs-only example showing how to bridge `Config.OnEvent` to OTel spans (not a dependency)
-- [ ] **0.x stability promise** — document what the API stability contract is for pre-1.0 consumers, given `New()` already broke in v0.0.3
+- [x] **Streaming NDJSON export** — `Report.WriteNDJSON(writer)` added: streams events directly from the report's Events slice without defensive copy. Also added `Report.WriteJSON(writer)` (2026-06-17)
+- [x] **`Report.Diff(other Report)`** — implemented in `diff.go` returning `DiffResult` with added/removed/changed services + event count delta. Tested with 5 test cases (2026-06-17)
+- [x] **OpenTelemetry reference example** — `docs/examples/otel-bridge.md` shows how to bridge `Config.OnEvent` to OTel spans without adding a dependency (2026-06-17)
+- [x] **0.x stability promise** — `STABILITY.md` documents stable vs evolving vs internal API surfaces, JSON schema versioning, and what "breaking" means in 0.x (2026-06-17)
 
 ## Not Planned (Explicitly Rejected)
 
