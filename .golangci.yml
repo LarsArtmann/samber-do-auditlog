@@ -183,8 +183,9 @@ linters:
         - disabled: true
           name: package-comments
     tagliatelle:
-      rules:
-        json: snake_case
+      case:
+        rules:
+          json: snake
     testifylint:
       disable:
         - go-require
