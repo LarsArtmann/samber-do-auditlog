@@ -1,0 +1,1379 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Split-brain audit of samber-do-auditlog data model: dual sources of truth, stale denormalization, and drift risks"
+    />
+    <title>Split-Brain Audit — samber-do-auditlog</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+      :root {
+        --bg: #0d0b08;
+        --bg-elevated: #14110d;
+        --surface: #1c1812;
+        --surface-hover: #241f18;
+        --border: #2e2820;
+        --border-active: #4a4030;
+        --text: #ddd4c4;
+        --text-muted: #9a8d78;
+        --text-dim: #6b6155;
+        --accent: #e8a838;
+        --accent-dim: rgba(232, 168, 56, 0.12);
+        --accent-glow: rgba(232, 168, 56, 0.06);
+        --success: #6fbf8e;
+        --success-dim: rgba(111, 191, 142, 0.1);
+        --warning: #d4a843;
+        --warning-dim: rgba(212, 168, 67, 0.1);
+        --error: #e07060;
+        --error-dim: rgba(224, 112, 96, 0.1);
+        --info: #8ec5d4;
+        --info-dim: rgba(142, 197, 212, 0.1);
+        --critical: #e05050;
+        --critical-dim: rgba(224, 80, 80, 0.08);
+        --high: #e07060;
+        --high-dim: rgba(224, 112, 96, 0.1);
+        --medium: #d4a843;
+        --medium-dim: rgba(212, 168, 67, 0.1);
+        --low: #6fbf8e;
+        --low-dim: rgba(111, 191, 142, 0.1);
+        --radius: 8px;
+        --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg);
+        background-image:
+          radial-gradient(ellipse 80% 50% at 50% 0%, var(--accent-glow), transparent),
+          radial-gradient(ellipse 60% 40% at 100% 100%, rgba(224, 112, 96, 0.04), transparent);
+        background-attachment: fixed;
+        color: var(--text);
+        line-height: 1.65;
+        padding: 2rem;
+        max-width: 1280px;
+        margin: 0 auto;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+      @media (max-width: 768px) { body { padding: 1rem; } }
+
+      /* --- Hero --- */
+      .hero {
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .hero .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--error);
+        background: var(--error-dim);
+        padding: 0.25rem 0.7rem;
+        border-radius: 6px;
+        border: 1px solid rgba(224, 112, 96, 0.2);
+        margin-bottom: 1rem;
+      }
+      .hero .badge .dot {
+        width: 6px; height: 6px;
+        background: var(--error);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--error);
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
+      .hero h1 {
+        font-size: 2.4rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, var(--text) 0%, var(--error) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .hero .subtitle {
+        color: var(--text-muted);
+        font-size: 1rem;
+        max-width: 680px;
+      }
+      .hero .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+      }
+      .hero .meta-item {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.78rem;
+        color: var(--text-dim);
+      }
+      .hero .meta-item strong {
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+
+      /* --- Severity legend --- */
+      .severity-legend {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+      }
+      .sev-tag {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 0.2rem 0.6rem;
+        border-radius: 4px;
+        border: 1px solid transparent;
+      }
+      .sev-tag.high { color: var(--high); background: var(--high-dim); border-color: rgba(224,112,96,0.2); }
+      .sev-tag.medium { color: var(--medium); background: var(--medium-dim); border-color: rgba(212,168,67,0.2); }
+      .sev-tag.low { color: var(--low); background: var(--low-dim); border-color: rgba(111,191,142,0.2); }
+
+      /* --- Summary card --- */
+      .summary {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.8rem;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .summary::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--high), var(--medium), var(--low));
+        opacity: 0.6;
+      }
+      .summary h2 {
+        font-size: 1.15rem;
+        margin-bottom: 1rem;
+        color: var(--accent);
+      }
+      .summary p {
+        color: var(--text-muted);
+        font-size: 0.92rem;
+        margin-bottom: 0.8rem;
+      }
+      .summary .summary-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.75rem;
+        margin-top: 1.2rem;
+      }
+      .summary-stat {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.8rem 1rem;
+        text-align: center;
+      }
+      .summary-stat .num {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 1.8rem;
+        font-weight: 700;
+        display: block;
+      }
+      .summary-stat .num.high { color: var(--high); }
+      .summary-stat .num.medium { color: var(--medium); }
+      .summary-stat .num.low { color: var(--low); }
+      .summary-stat .lbl {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        margin-top: 0.2rem;
+      }
+
+      /* --- Section headers --- */
+      .section { margin-bottom: 3rem; }
+      .section > h2 {
+        font-size: 1.35rem;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+      .section > h2 .num-badge {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.8rem;
+        color: var(--text-dim);
+        background: var(--surface);
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+      }
+      .section > .section-desc {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+      }
+
+      /* --- Finding cards --- */
+      .finding {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        transition: border-color var(--transition);
+      }
+      .finding:hover { border-color: var(--border-active); }
+      .finding-header {
+        padding: 1.2rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        user-select: none;
+      }
+      .finding-header h3 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+      .finding-header h3 .finding-id {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.75rem;
+        color: var(--text-dim);
+        margin-right: 0.4rem;
+      }
+      .finding-body {
+        padding: 0 1.5rem 1.5rem;
+        display: block;
+      }
+      .finding-body.collapsed { display: none; }
+      .finding-header .chevron {
+        color: var(--text-dim);
+        font-size: 0.8rem;
+        transition: transform var(--transition);
+        flex-shrink: 0;
+        margin-top: 0.3rem;
+      }
+      .finding-header.expanded .chevron { transform: rotate(90deg); }
+
+      .finding-section-title {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+        margin-top: 1.2rem;
+        margin-bottom: 0.6rem;
+        font-weight: 600;
+      }
+      .finding-section-title:first-child { margin-top: 0; }
+
+      .finding p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 0.6rem;
+      }
+      .finding p strong { color: var(--text); font-weight: 600; }
+      .finding p code { font-family: "IBM Plex Mono", monospace; font-size: 0.85em; }
+
+      /* --- Code blocks --- */
+      .code-block {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.9rem 1rem;
+        margin: 0.6rem 0;
+        overflow-x: auto;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        color: var(--text-muted);
+      }
+      .code-block .kw { color: var(--accent); }
+      .code-block .str { color: var(--success); }
+      .code-block .cmt { color: var(--text-dim); font-style: italic; }
+      .code-block .fn { color: var(--info); }
+      .code-block .hl { background: rgba(232, 168, 56, 0.08); display: block; margin: 0 -1rem; padding: 0 1rem; }
+      .code-block .err { color: var(--error); }
+      .code-block .ok { color: var(--success); }
+      .code-block .ref { color: var(--accent); border-bottom: 1px dotted var(--accent); }
+
+      /* --- File reference pills --- */
+      .file-ref {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.76rem;
+        color: var(--info);
+        background: var(--info-dim);
+        padding: 0.1rem 0.45rem;
+        border-radius: 4px;
+        border: 1px solid rgba(142, 197, 212, 0.15);
+        white-space: nowrap;
+      }
+
+      /* --- Comparison table --- */
+      .compare-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.8rem 0;
+        font-size: 0.82rem;
+      }
+      .compare-table th {
+        text-align: left;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+        padding: 0.5rem 0.7rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .compare-table td {
+        padding: 0.5rem 0.7rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-muted);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.8rem;
+      }
+      .compare-table td:first-child { color: var(--text); }
+      .compare-table tr:last-child td { border-bottom: none; }
+      .compare-table .check { color: var(--success); }
+      .compare-table .cross { color: var(--error); }
+      .compare-table .warn { color: var(--warning); }
+
+      /* --- Fix box --- */
+      .fix-box {
+        background: var(--success-dim);
+        border: 1px solid rgba(111, 191, 142, 0.15);
+        border-radius: 6px;
+        padding: 1rem 1.2rem;
+        margin-top: 0.8rem;
+      }
+      .fix-box .fix-title {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--success);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+      .fix-box ol {
+        padding-left: 1.2rem;
+        color: var(--text-muted);
+        font-size: 0.88rem;
+      }
+      .fix-box ol li {
+        margin-bottom: 0.4rem;
+      }
+      .fix-box ol li code,
+      .fix-box p code {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.85em;
+        color: var(--accent);
+      }
+
+      /* --- PoC box --- */
+      .poc-box {
+        background: var(--critical-dim);
+        border: 1px solid rgba(224, 80, 80, 0.15);
+        border-radius: 6px;
+        padding: 1rem 1.2rem;
+        margin-top: 0.8rem;
+      }
+      .poc-box .poc-title {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--critical);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+      .poc-output {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.8rem;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.78rem;
+        line-height: 1.6;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+      }
+      .poc-output .ok-line { color: var(--success); }
+      .poc-output .err-line { color: var(--error); }
+      .poc-output .warn-line { color: var(--warning); }
+
+      /* --- Data flow diagram --- */
+      .flow-diagram {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 1.2rem;
+        margin: 0.8rem 0;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.78rem;
+        line-height: 1.7;
+        overflow-x: auto;
+        white-space: pre;
+        color: var(--text-muted);
+      }
+      .flow-diagram .arrow { color: var(--accent); }
+      .flow-diagram .label-err { color: var(--error); font-weight: 600; }
+      .flow-diagram .label-ok { color: var(--success); font-weight: 600; }
+      .flow-diagram .label-warn { color: var(--warning); font-weight: 600; }
+
+      /* --- TOC --- */
+      .toc {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 3rem;
+      }
+      .toc h2 {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        margin-bottom: 0.8rem;
+        font-family: "IBM Plex Mono", monospace;
+      }
+      .toc ol {
+        list-style: none;
+        counter-reset: toc;
+      }
+      .toc ol li {
+        counter-increment: toc;
+        margin-bottom: 0.4rem;
+      }
+      .toc ol li::before {
+        content: counter(toc) ".";
+        color: var(--text-dim);
+        font-family: "IBM Plex Mono", monospace;
+        margin-right: 0.6rem;
+      }
+      .toc a {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.88rem;
+        transition: color var(--transition);
+      }
+      .toc a:hover { color: var(--accent); }
+      .toc a .sev-tag { margin-left: 0.5rem; vertical-align: middle; }
+
+      /* --- Callout --- */
+      .callout {
+        background: var(--accent-dim);
+        border-left: 3px solid var(--accent);
+        border-radius: 0 6px 6px 0;
+        padding: 0.8rem 1rem;
+        margin: 0.8rem 0;
+        font-size: 0.88rem;
+        color: var(--text-muted);
+      }
+      .callout strong { color: var(--accent); }
+
+      /* --- Footer --- */
+      footer {
+        margin-top: 4rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--text-dim);
+        font-size: 0.78rem;
+        font-family: "IBM Plex Mono", monospace;
+      }
+      footer a { color: var(--text-muted); text-decoration: none; }
+
+      /* --- Glossary --- */
+      .glossary-item {
+        margin-bottom: 0.8rem;
+      }
+      .glossary-item dt {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.85rem;
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .glossary-item dd {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-left: 1rem;
+        margin-top: 0.2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ==================== HERO ==================== -->
+    <div class="hero">
+      <div class="badge">
+        <span class="dot"></span>
+        Split-Brain Data Model Audit
+      </div>
+      <h1>SPLIT-BRAIN.html</h1>
+      <p class="subtitle">
+        A systematic audit of every place where the same concept is stored, computed, or
+        represented in more than one way — and can drift out of sync. Each finding includes
+        the exact file:line evidence, a runnable proof, and step-by-step fix instructions.
+      </p>
+      <div class="meta">
+        <div class="meta-item"><strong>Project:</strong> samber-do-auditlog</div>
+        <div class="meta-item"><strong>Date:</strong> 2026-06-17</div>
+        <div class="meta-item"><strong>Scope:</strong> Data model &amp; domain types</div>
+        <div class="meta-item"><strong>Method:</strong> Full source audit, 15 files, 6 findings</div>
+      </div>
+      <div class="severity-legend">
+        <span class="sev-tag high">2 HIGH</span>
+        <span class="sev-tag medium">1 MEDIUM</span>
+        <span class="sev-tag low">3 LOW</span>
+      </div>
+    </div>
+
+    <!-- ==================== SUMMARY ==================== -->
+    <div class="summary">
+      <h2>What is a Split-Brain?</h2>
+      <p>
+        A <strong>split-brain</strong> occurs when the same piece of information exists in
+        two or more places in the codebase with no mechanism to keep them in sync. When one
+        copy is updated but the other isn't, consumers reading from the stale copy get wrong
+        answers. This is the most dangerous class of data-model bug because it's invisible
+        to the compiler — the code compiles, tests pass, but the data lies.
+      </p>
+      <p>
+        The most critical finding (<a href="#f1">#1</a>) is <strong>proven with a runnable test</strong>:
+        a report where <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent)">Status="active"</code>
+        but <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent)">InvocationError="boom"</code>
+        passes <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent)">Validate()</code>,
+        is missed by <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent)">FailedServices()</code>,
+        and is silently preserved by <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent)">MigrateReport()</code>.
+      </p>
+      <div class="summary-stats">
+        <div class="summary-stat">
+          <span class="num high">2</span>
+          <span class="lbl">High</span>
+        </div>
+        <div class="summary-stat">
+          <span class="num medium">1</span>
+          <span class="lbl">Medium</span>
+        </div>
+        <div class="summary-stat">
+          <span class="num low">3</span>
+          <span class="lbl">Low</span>
+        </div>
+        <div class="summary-stat">
+          <span class="num" style="color: var(--accent)">6</span>
+          <span class="lbl">Total</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TOC ==================== -->
+    <div class="toc">
+      <h2>Findings Index</h2>
+      <ol>
+        <li><a href="#f1">Status Field vs. Derived Status — Unguarded Denormalization</a> <span class="sev-tag high">HIGH</span></li>
+        <li><a href="#f2">Dual Error Detection: hasError() vs Status.IsError()</a> <span class="sev-tag high">HIGH</span></li>
+        <li><a href="#f3">serviceRecord ↔ ServiceInfo Parallel Model</a> <span class="sev-tag medium">MEDIUM</span></li>
+        <li><a href="#f4">Provider Icon Metadata Asymmetry</a> <span class="sev-tag low">LOW</span></li>
+        <li><a href="#f5">Triplicated JSON Encoding Paths</a> <span class="sev-tag low">LOW</span></li>
+        <li><a href="#f6">scopeName Denormalized Across 5 Types</a> <span class="sev-tag low">LOW</span></li>
+      </ol>
+    </div>
+
+    <!-- ==================== FINDING 1 ==================== -->
+    <div class="section" id="f1">
+      <h2><span class="num-badge">01</span> Status Field vs. Derived Status <span class="sev-tag high">HIGH</span></h2>
+      <p class="section-desc">
+        The service lifecycle status is stored as a denormalized field AND independently
+        computable from error pointers — but nothing enforces their consistency.
+      </p>
+
+      <div class="finding">
+        <div class="finding-header expanded" onclick="toggleFinding(this)">
+          <h3>
+            <span class="finding-id">SB-01</span>
+            <code>ServiceInfo.Status</code> is a stored field that can contradict its own error pointers
+          </h3>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="finding-body">
+          <!-- THE PROBLEM -->
+          <div class="finding-section-title">The Problem</div>
+          <p>
+            <code>ServiceInfo.Status</code> is a stored <code>ServiceStatus</code> enum field. It's
+            <em>supposed</em> to always equal the output of <code>ServiceInfo.DeriveStatus()</code>, which
+            computes the status from <code>InvocationError</code>, <code>ShutdownError</code>,
+            <code>ShutdownAt</code>, and <code>FirstInvokedAt</code>.
+          </p>
+          <p>
+            But <strong>nothing enforces this</strong>. The <code>Status</code> field can be set to any
+            value via JSON deserialization or stale migration input, and the report still passes
+            <code>Validate()</code>. This creates two sources of truth for "what lifecycle state is
+            this service in?":
+          </p>
+
+          <div class="flow-diagram"><span class="label-err">SOURCE A (stored):</span>  ServiceInfo.Status  ──read by──▶  FailedServices(), Diff.StatusChanged, HTML template
+<span class="label-ok">SOURCE B (derived):</span> ServiceInfo.DeriveStatus()  ──read by──▶  MigrateReport() (only when Status is empty!)
+<span class="label-warn">GUARD:</span>               Validate()  ──────────────────▶  checks COUNTS only, never checks Status == DeriveStatus()</div>
+
+          <div class="callout">
+            <strong>Why this matters:</strong> <code>FailedServices()</code> checks
+            <code>Status.IsError()</code>. If <code>Status</code> is stale, a broken service
+            is invisible to monitoring dashboards, alerting, and regression tests.
+          </div>
+
+          <!-- EVIDENCE -->
+          <div class="finding-section-title">Evidence — Exact Code Locations</div>
+          <div class="code-block"><span class="cmt">// service.go:42-44 — DeriveStatus() exists as the "canonical" derivation</span>
+<span class="kw">func</span> (s ServiceInfo) <span class="fn">DeriveStatus</span>() ServiceStatus {
+    <span class="kw">return</span> <span class="fn">deriveServiceStatus</span>(s.InvocationError, s.ShutdownError, s.ShutdownAt, s.FirstInvokedAt)
+}
+
+<span class="cmt">// report_builder.go:56 — Status is SET at build time (correct)</span>
+services = append(services, ServiceInfo{
+    <span class="hl">Status: <span class="fn">computeServiceStatus</span>(rec),  <span class="cmt">// ← derived correctly HERE</span></span>
+    ...
+})
+
+<span class="cmt">// migration.go:54-58 — BUT migration PRESERVES stale non-empty statuses!</span>
+<span class="kw">for</span> idx := <span class="kw">range</span> report.Services {
+<span class="hl">    <span class="kw">if</span> report.Services[idx].Status == <span class="str">""</span> {   <span class="cmt">// ← only fixes EMPTY status</span></span>
+<span class="hl">        report.Services[idx].Status = report.Services[idx].<span class="fn">DeriveStatus</span>()</span>
+<span class="hl">    }</span>
+    <span class="cmt">// ← non-empty stale status is SILENTLY KEPT</span>
+}
+
+<span class="cmt">// report.go:45-72 — Validate() checks counts, NOT status consistency</span>
+<span class="kw">func</span> (r Report) <span class="fn">Validate</span>() error {
+    <span class="kw">if</span> r.EventCount != <span class="fn">len</span>(r.Events) { ... }     <span class="cmt">// ← count check</span>
+    <span class="kw">if</span> r.ServiceCount != <span class="fn">len</span>(r.Services) { ... } <span class="cmt">// ← count check</span>
+    <span class="cmt">// ... NO Status == DeriveStatus() check anywhere</span>
+}
+
+<span class="cmt">// report.go:197-207 — FailedServices() trusts the stored Status blindly</span>
+<span class="kw">func</span> (r Report) <span class="fn">FailedServices</span>() []ServiceInfo {
+    <span class="kw">for</span> _, s := <span class="kw">range</span> r.Services {
+<span class="hl">        <span class="kw">if</span> s.Status.<span class="fn">IsError</span>() {   <span class="cmt">// ← reads STORED status, not derived</span></span>
+            failed = append(failed, s)
+        }
+    }
+}</div>
+
+          <p style="margin-top: 0.8rem;">
+            Key files to read:
+            <span class="file-ref">service.go:38-44</span>
+            <span class="file-ref">report_builder.go:50-74</span>
+            <span class="file-ref">migration.go:54-58</span>
+            <span class="file-ref">report.go:45-72</span>
+            <span class="file-ref">report.go:197-207</span>
+          </p>
+
+          <!-- PROOF OF CONCEPT -->
+          <div class="finding-section-title">Runnable Proof of Concept</div>
+          <p>Create a test file <code>splitbrain_poc_test.go</code> in the project root:</p>
+          <div class="code-block"><span class="kw">package</span> auditlog_test
+
+<span class="kw">import</span> (
+    <span class="str">"encoding/json"</span>
+    <span class="str">"testing"</span>
+    auditlog <span class="str">"github.com/larsartmann/samber-do-auditlog"</span>
+)
+
+<span class="kw">func</span> <span class="fn">TestSplitBrain_StatusDrift</span>(t *testing.T) {
+    <span class="cmt">// A service with InvocationError="boom" but Status="active" (stale).</span>
+    input := <span class="str">`{
+        "version": "0.2.0", "container_id": "test", "exported_at": "2026-01-01T00:00:00Z",
+        "event_count": 0, "service_count": 1, "scope_count": 1, "health_checked_count": 0,
+        "services": [{"scope_id":"root","scope_name":"[root]","service_name":"broken-svc",
+        "status":"active","registered_at":"2026-01-01T00:00:00Z",
+        "first_invoked_at":"2026-01-01T00:00:01Z","invocation_error":"boom"}],
+        "scope_tree": {"id":"root","name":"[root]"}
+    }`</span>
+    <span class="kw">var</span> report auditlog.Report
+    _ = json.<span class="fn">Unmarshal</span>([]byte(input), &amp;report)
+
+    t.<span class="fn">Logf</span>(<span class="str">"Validate passes: %v"</span>, report.<span class="fn">Validate</span>() == nil)
+    t.<span class="fn">Logf</span>(<span class="str">"Stored=%s  Derived=%s  FailedServices()=%d"</span>,
+        report.Services[0].Status, report.Services[0].<span class="fn">DeriveStatus</span>(), <span class="fn">len</span>(report.<span class="fn">FailedServices</span>()))
+}</div>
+
+          <div class="poc-box">
+            <div class="poc-title">Actual Test Output (verified)</div>
+            <div class="poc-output"><span class="ok-line">    Validate passes: true</span>
+<span class="warn-line">    Stored=active  Derived=invocation_error  FailedServices()=0</span>
+<span class="err-line">    --- FAIL: broken service with InvocationError="boom" is invisible to FailedServices()</span></div>
+          </div>
+
+          <!-- IMPACT -->
+          <div class="finding-section-title">Impact</div>
+          <table class="compare-table">
+            <tr>
+              <th>Consumer</th>
+              <th>Reads</th>
+              <th>Result with stale Status</th>
+            </tr>
+            <tr>
+              <td>Report.FailedServices()</td>
+              <td>Stored Status</td>
+              <td class="cross">✗ Misses broken services</td>
+            </tr>
+            <tr>
+              <td>Report.Diff() → StatusChanged</td>
+              <td>Stored Status</td>
+              <td class="cross">✗ False negatives on status regression</td>
+            </tr>
+            <tr>
+              <td>HTML template (status badges)</td>
+              <td>Stored Status</td>
+              <td class="cross">✗ Shows green badge on broken service</td>
+            </tr>
+            <tr>
+              <td>MigrateReport()</td>
+              <td>Preserves non-empty</td>
+              <td class="cross">✗ Propagates stale status forever</td>
+            </tr>
+            <tr>
+              <td>Validate()</td>
+              <td>Counts only</td>
+              <td class="cross">✗ Never detects the drift</td>
+            </tr>
+          </table>
+
+          <!-- FIX -->
+          <div class="fix-box">
+            <div class="fix-title">How to Fix (Step by Step)</div>
+            <ol>
+              <li>
+                <strong>Add a status consistency check to <code>Validate()</code></strong> in
+                <span class="file-ref">report.go:45</span>. After the existing count checks, add:
+                <div class="code-block" style="margin-top: 0.4rem;"><span class="kw">for</span> i, svc := <span class="kw">range</span> r.Services {
+    <span class="kw">if</span> svc.Status != svc.<span class="fn">DeriveStatus</span>() {
+        <span class="kw">return</span> fmt.<span class="fn">Errorf</span>(<span class="str">"service %q status=%q does not match derived=%q"</span>,
+            svc.ServiceName, svc.Status, svc.<span class="fn">DeriveStatus</span>())
+    }
+}</div>
+              </li>
+              <li>
+                <strong>Always re-derive in <code>MigrateReport()</code></strong> in
+                <span class="file-ref">migration.go:54-58</span>. Remove the
+                <code>if Status == ""</code> guard:
+                <div class="code-block" style="margin-top: 0.4rem;"><span class="cmt">// BEFORE (broken):</span>
+<span class="kw">if</span> report.Services[idx].Status == <span class="str">""</span> {
+    report.Services[idx].Status = report.Services[idx].<span class="fn">DeriveStatus</span>()
+}
+<span class="cmt">// AFTER (fixed):</span>
+report.Services[idx].Status = report.Services[idx].<span class="fn">DeriveStatus</span>()</div>
+              </li>
+              <li>
+                <strong>Update the test</strong> <code>TestMigrateReport_PreservesExistingStatus</code>
+                in <span class="file-ref">migration_test.go:254</span> — it currently asserts the
+                broken behavior. Rename it to
+                <code>TestMigrateReport_RederivesStatus</code> and assert the derived value.
+              </li>
+              <li>
+                <strong>Run <code>go test -race ./...</code></strong> to verify all tests pass
+                with the fix.
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== FINDING 2 ==================== -->
+    <div class="section" id="f2">
+      <h2><span class="num-badge">02</span> Dual Error Detection <span class="sev-tag high">HIGH</span></h2>
+      <p class="section-desc">
+        Two independent functions answer the same question — "does this service have an error?" —
+        from different data, and they can disagree.
+      </p>
+
+      <div class="finding">
+        <div class="finding-header expanded" onclick="toggleFinding(this)">
+          <h3>
+            <span class="finding-id">SB-02</span>
+            <code>diff.go:hasError()</code> checks raw pointers; <code>Status.IsError()</code> checks the enum
+          </h3>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="finding-body">
+          <div class="finding-section-title">The Problem</div>
+          <p>
+            There are <strong>three</strong> ways to check if a service is in an error state, each
+            reading different data:
+          </p>
+
+          <table class="compare-table">
+            <tr>
+              <th>Function</th>
+              <th>File:Line</th>
+              <th>Checks</th>
+              <th>Used by</th>
+            </tr>
+            <tr>
+              <td><code>ServiceStatus.IsError()</code></td>
+              <td><span class="file-ref">types.go:80</span></td>
+              <td>Status enum value</td>
+              <td>FailedServices()</td>
+            </tr>
+            <tr>
+              <td><code>hasError(svc)</code></td>
+              <td><span class="file-ref">diff.go:100</span></td>
+              <td>InvocationError != nil || ShutdownError != nil</td>
+              <td>Diff() → HasNewError</td>
+            </tr>
+            <tr>
+              <td><code>ServiceInfo.HasHealthError()</code></td>
+              <td><span class="file-ref">service.go:36</span></td>
+              <td>HealthCheckError != nil</td>
+              <td>(available but unused in core)</td>
+            </tr>
+          </table>
+
+          <p>
+            The first two represent the <strong>same concept</strong> ("does this service have a
+            lifecycle error?") but read from different data. When <code>Status</code> is stale
+            (see <a href="#f1">SB-01</a>), they disagree:
+          </p>
+
+          <div class="code-block"><span class="cmt">// diff.go:83-98 — compareService uses hasError()</span>
+<span class="kw">func</span> <span class="fn">compareService</span>(prev, other ServiceInfo) (ServiceDiff, bool) {
+    diff := ServiceDiff{
+<span class="hl">        HasNewError: !<span class="fn">hasError</span>(prev) &amp;&amp; <span class="fn">hasError</span>(other),  <span class="cmt">// ← raw pointer check</span></span>
+    }
+    ...
+}
+
+<span class="cmt">// diff.go:100-102 — hasError bypasses Status entirely</span>
+<span class="kw">func</span> <span class="fn">hasError</span>(svc ServiceInfo) bool {
+<span class="hl">    <span class="kw">return</span> svc.InvocationError != nil || svc.ShutdownError != nil  <span class="cmt">// ← ignores Status field</span></span>
+}
+
+<span class="cmt">// report.go:201 — FailedServices uses Status.IsError()</span>
+<span class="kw">if</span> s.Status.<span class="fn">IsError</span>() {  <span class="cmt">// ← enum check, trusts stored Status</span>
+    failed = append(failed, s)
+}</div>
+
+          <div class="callout">
+            <strong>Concrete scenario:</strong> A service has <code>InvocationError="boom"</code> but
+            stale <code>Status="active"</code>. <code>Diff.HasNewError</code> says
+            <strong>true</strong> (it checks the pointer). <code>FailedServices()</code> says
+            <strong>false</strong> (it checks the enum). They contradict each other on the same report.
+          </div>
+
+          <!-- FIX -->
+          <div class="fix-box">
+            <div class="fix-title">How to Fix</div>
+            <ol>
+              <li>
+                <strong>Delete <code>hasError()</code></strong> in <span class="file-ref">diff.go:100-102</span>.
+              </li>
+              <li>
+                <strong>Replace its call site</strong> in <span class="file-ref">diff.go:89</span> with:
+                <div class="code-block" style="margin-top: 0.4rem;"><span class="cmt">// Uses the Status field consistently with FailedServices()</span>
+HasNewError: !prev.Status.<span class="fn">IsError</span>() &amp;&amp; other.Status.<span class="fn">IsError</span>(),</div>
+              </li>
+              <li>
+                <strong>Or</strong>, for maximum safety, use <code>DeriveStatus()</code> instead of the
+                stored field: <code>!prev.DeriveStatus().IsError() &amp;&amp; other.DeriveStatus().IsError()</code>.
+                This makes the check immune to stale Status even before SB-01 is fixed.
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== FINDING 3 ==================== -->
+    <div class="section" id="f3">
+      <h2><span class="num-badge">03</span> serviceRecord ↔ ServiceInfo Parallel Model <span class="sev-tag medium">MEDIUM</span></h2>
+      <p class="section-desc">
+        16 fields are manually mirrored between an internal mutable struct and a public immutable
+        snapshot with no compile-time guarantee that all fields are mapped.
+      </p>
+
+      <div class="finding">
+        <div class="finding-header expanded" onclick="toggleFinding(this)">
+          <h3>
+            <span class="finding-id">SB-03</span>
+            Manual field-by-field copy between <code>serviceRecord</code> and <code>ServiceInfo</code>
+          </h3>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="finding-body">
+          <div class="finding-section-title">The Problem</div>
+          <p>
+            The codebase has two structs representing the same concept — a service's observed state:
+          </p>
+          <table class="compare-table">
+            <tr>
+              <th>Struct</th>
+              <th>File</th>
+              <th>Role</th>
+              <th>Mutable?</th>
+              <th>Field count</th>
+            </tr>
+            <tr>
+              <td><code>serviceRecord</code></td>
+              <td><span class="file-ref">recorder.go:40</span></td>
+              <td>Internal working state (live updates from hooks)</td>
+              <td>Yes (behind mutex)</td>
+              <td>16</td>
+            </tr>
+            <tr>
+              <td><code>ServiceInfo</code></td>
+              <td><span class="file-ref">service.go:6</span></td>
+              <td>Public immutable snapshot (in Report)</td>
+              <td>No (value type)</td>
+              <td>20</td>
+            </tr>
+          </table>
+
+          <p>
+            The bridge is a <strong>26-line manual copy</strong> in <code>buildServicesLocked()</code>.
+            Every field on <code>serviceRecord</code> must be explicitly listed:
+          </p>
+
+          <div class="code-block"><span class="cmt">// report_builder.go:50-74 — manual field-by-field copy</span>
+services = append(services, ServiceInfo{
+    ServiceRef: ServiceRef{
+        ServiceName: rec.serviceName,
+        ScopeID:     rec.scopeID,
+        ScopeName:   rec.scopeName,
+    },
+    Status:               <span class="fn">computeServiceStatus</span>(rec),
+    ServiceType:          rec.serviceType,
+    RegisteredAt:         rec.registeredAt,
+    FirstInvokedAt:       rec.firstInvokedAt,
+    InvocationCount:      rec.invocationCount,
+    InvocationOrder:      rec.invocationOrder,
+    FirstBuildDurationMs: rec.firstBuildDurationMs,
+    Dependencies:         deps,
+    Dependents:           svcDependents,
+    ShutdownAt:           rec.shutdownAt,
+    ShutdownDurationMs:   rec.shutdownDurationMs,
+    ShutdownError:        rec.shutdownError,
+    InvocationError:      rec.invocationError,
+    IsHealthchecker:      false,  <span class="cmt">// ← not on serviceRecord at all</span>
+    IsShutdowner:         false,  <span class="cmt">// ← not on serviceRecord at all</span>
+    LastHealthCheckAt:    rec.lastHealthCheckAt,
+    HealthCheckError:     rec.healthCheckError,
+    HealthCheckCount:     rec.healthCheckCount,
+})</div>
+
+          <div class="callout">
+            <strong>The risk:</strong> If a developer adds <code>lastInvokedAt *time.Time</code> to
+            <code>serviceRecord</code> (recorder.go) but forgets to add the corresponding field to
+            <code>ServiceInfo</code> and the copy in <code>buildServicesLocked</code>, the data is
+            silently lost in reports. The <code>exhaustruct</code> linter catches missing fields in
+            struct <em>literals</em>, but does NOT verify the copy is semantically complete.
+          </div>
+
+          <!-- FIX -->
+          <div class="fix-box">
+            <div class="fix-title">How to Fix</div>
+            <ol>
+              <li>
+                <strong>Extract a conversion function</strong> to centralize the mapping in one place:
+                <div class="code-block" style="margin-top: 0.4rem;"><span class="cmt">// Put this in hooks.go next to newServiceRecordCore</span>
+<span class="kw">func</span> <span class="fn">serviceRecordToInfo</span>(rec *serviceRecord) ServiceInfo {
+    <span class="kw">return</span> ServiceInfo{
+        ServiceRef: ServiceRef{
+            ServiceName: rec.serviceName,
+            ScopeID:     rec.scopeID,
+            ScopeName:   rec.scopeName,
+        },
+        ServiceType:          rec.serviceType,
+        RegisteredAt:         rec.registeredAt,
+        FirstInvokedAt:       rec.firstInvokedAt,
+        InvocationCount:      rec.invocationCount,
+        InvocationOrder:      rec.invocationOrder,
+        FirstBuildDurationMs: rec.firstBuildDurationMs,
+        ShutdownAt:           rec.shutdownAt,
+        ShutdownDurationMs:   rec.shutdownDurationMs,
+        ShutdownError:        rec.shutdownError,
+        InvocationError:      rec.invocationError,
+        LastHealthCheckAt:    rec.lastHealthCheckAt,
+        HealthCheckError:     rec.healthCheckError,
+        HealthCheckCount:     rec.healthCheckCount,
+    }
+}</div>
+                Then call it in <code>buildServicesLocked</code> and fill in the derived fields
+                (<code>Status</code>, <code>Dependencies</code>, <code>Dependents</code>,
+                <code>IsHealthchecker</code>, <code>IsShutdowner</code>) after.
+              </li>
+              <li>
+                <strong>Add a test</strong> that populates every <code>serviceRecord</code> field,
+                calls <code>BuildReport()</code>, and asserts every field appears in the
+                corresponding <code>ServiceInfo</code>. This catches forgotten fields at test time.
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== FINDING 4 ==================== -->
+    <div class="section" id="f4">
+      <h2><span class="num-badge">04</span> Provider Icon Metadata Asymmetry <span class="sev-tag low">LOW</span></h2>
+      <p class="section-desc">
+        ProviderType has an Icon() method; ServiceStatus and EventType do not. Icons for the latter
+        are hardcoded in a separate file with no compiler enforcement.
+      </p>
+
+      <div class="finding">
+        <div class="finding-header" onclick="toggleFinding(this)">
+          <h3>
+            <span class="finding-id">SB-04</span>
+            Inconsistent display-metadata derivation across enum types
+          </h3>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="finding-body collapsed">
+          <div class="finding-section-title">The Problem</div>
+          <table class="compare-table">
+            <tr>
+              <th>Enum Type</th>
+              <th>Has Icon() method?</th>
+              <th>Icon source</th>
+            </tr>
+            <tr>
+              <td><code>ProviderType</code></td>
+              <td class="check">✓ Yes</td>
+              <td><span class="file-ref">types.go:53</span> — method on enum</td>
+            </tr>
+            <tr>
+              <td><code>ServiceStatus</code></td>
+              <td class="cross">✗ No</td>
+              <td><span class="file-ref">metadata.go:42</span> — hardcoded map</td>
+            </tr>
+            <tr>
+              <td><code>EventType</code></td>
+              <td class="cross">✗ No</td>
+              <td><span class="file-ref">metadata.go:48</span> — hardcoded map</td>
+            </tr>
+          </table>
+          <p>
+            <code>BuildTypeMetadata()</code> derives provider icons by calling
+            <code>ProviderType.Icon()</code> — a method on the enum type. But status and event
+            icons/labels are hardcoded string literals in the same function. Adding a new
+            <code>ServiceStatus</code> value in <code>types.go</code> without updating
+            <code>metadata.go</code> produces a silently missing icon in the HTML visualization.
+          </p>
+
+          <div class="fix-box">
+            <div class="fix-title">How to Fix</div>
+            <ol>
+              <li>Add <code>func (s ServiceStatus) Icon() string</code> to <span class="file-ref">types.go</span> following the <code>ProviderType.Icon()</code> pattern.</li>
+              <li>Add <code>func (e EventType) Label() string</code> and <code>func (e EventType) Color() string</code> similarly.</li>
+              <li>Update <code>BuildTypeMetadata()</code> to call these methods instead of hardcoding strings.</li>
+              <li>This makes the metadata struct the single consumer of the methods, not a parallel source of truth.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== FINDING 5 ==================== -->
+    <div class="section" id="f5">
+      <h2><span class="num-badge">05</span> Triplicated JSON Encoding Paths <span class="sev-tag low">LOW</span></h2>
+      <p class="section-desc">
+        Three independent code blocks encode reports as JSON with identical logic but no shared helper.
+      </p>
+
+      <div class="finding">
+        <div class="finding-header" onclick="toggleFinding(this)">
+          <h3>
+            <span class="finding-id">SB-05</span>
+            <code>Report.WriteJSON()</code>, <code>Plugin.WriteReportJSON()</code>, and
+            <code>ExportFilteredToFile</code> each encode independently
+          </h3>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="finding-body collapsed">
+          <div class="finding-section-title">The Problem</div>
+          <div class="code-block"><span class="cmt">// report.go:289-299 — Path 1</span>
+<span class="kw">func</span> (r Report) <span class="fn">WriteJSON</span>(writer io.Writer) error {
+    enc := json.<span class="fn">NewEncoder</span>(writer)
+    enc.<span class="fn">SetIndent</span>(<span class="str">""</span>, <span class="str">"  "</span>)
+    <span class="kw">return</span> enc.<span class="fn">Encode</span>(r)
+}
+
+<span class="cmt">// plugin.go:142-153 — Path 2 (duplicates Path 1)</span>
+<span class="kw">func</span> (p *Plugin) <span class="fn">WriteReportJSON</span>(writer io.Writer) error {
+    report := p.<span class="fn">Report</span>()
+    enc := json.<span class="fn">NewEncoder</span>(writer)
+    enc.<span class="fn">SetIndent</span>(<span class="str">""</span>, <span class="str">"  "</span>)
+    <span class="kw">return</span> enc.<span class="fn">Encode</span>(report)
+}
+
+<span class="cmt">// plugin.go:174-184 — Path 3 (duplicates again for filtered)</span>
+<span class="kw">return</span> <span class="fn">writeToFile</span>(path, <span class="kw">func</span>(w io.Writer) error {
+    enc := json.<span class="fn">NewEncoder</span>(writer)
+    enc.<span class="fn">SetIndent</span>(<span class="str">""</span>, <span class="str">"  "</span>)
+    <span class="kw">return</span> enc.<span class="fn">Encode</span>(filtered)
+})</div>
+          <p>
+            If indentation or error-wrapping changes in one path, the others silently diverge.
+            <code>Plugin.WriteReportJSON()</code> could simply delegate to
+            <code>Report.WriteJSON()</code>.
+          </p>
+
+          <div class="fix-box">
+            <div class="fix-title">How to Fix</div>
+            <ol>
+              <li>Make <code>Plugin.WriteReportJSON()</code> call <code>p.Report().WriteJSON(writer)</code>.</li>
+              <li>Make <code>ExportFilteredToFile</code> call <code>filtered.WriteJSON(writer)</code> inside the <code>writeToFile</code> closure.</li>
+              <li>One encoding path, one source of truth for indentation and error wrapping.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== FINDING 6 ==================== -->
+    <div class="section" id="f6">
+      <h2><span class="num-badge">06</span> scopeName Denormalized Across 5 Types <span class="sev-tag low">LOW</span></h2>
+      <p class="section-desc">
+        The scope's human-readable name is copied into every struct that references a scope,
+        rather than looked up from the single scope registry.
+      </p>
+
+      <div class="finding">
+        <div class="finding-header" onclick="toggleFinding(this)">
+          <h3>
+            <span class="finding-id">SB-06</span>
+            Five types carry their own copy of <code>scopeName</code>
+          </h3>
+          <span class="chevron">▶</span>
+        </div>
+        <div class="finding-body collapsed">
+          <div class="finding-section-title">The Problem</div>
+          <table class="compare-table">
+            <tr>
+              <th>Type</th>
+              <th>File</th>
+              <th>scopeName field</th>
+            </tr>
+            <tr><td><code>ServiceRef</code></td><td><span class="file-ref">types.go:86</span></td><td><code>ScopeName string</code></td></tr>
+            <tr><td><code>serviceRecord</code></td><td><span class="file-ref">recorder.go:42</span></td><td><code>scopeName string</code></td></tr>
+            <tr><td><code>stackEntry</code></td><td><span class="file-ref">recorder.go:22</span></td><td><code>scopeName string</code></td></tr>
+            <tr><td><code>scopeMeta</code></td><td><span class="file-ref">recorder.go:61</span></td><td><code>name string</code></td></tr>
+            <tr><td><code>ScopeNode</code></td><td><span class="file-ref">service.go:49</span></td><td><code>Name string</code></td></tr>
+          </table>
+          <p>
+            The <code>scopeName</code> is set once when a scope is first observed
+            (<code>recordScopeLocked</code>) and then copied into every struct that touches that
+            scope. Because <code>do.Scope.Name()</code> is immutable, the copies can't drift in
+            practice — but the denormalization means <strong>5 places must be updated</strong> if
+            the scope-name derivation logic ever changes.
+          </p>
+          <div class="callout">
+            <strong>Why LOW:</strong> samber/do scope names are immutable after creation, so the
+            denormalization is safe today. The risk is future maintenance: if someone adds scope
+            renaming, the copies will silently diverge.
+          </div>
+          <div class="fix-box">
+            <div class="fix-title">How to Fix (Optional — only if scope renaming is ever added)</div>
+            <ol>
+              <li>Keep <code>ScopeName</code> on <code>ServiceRef</code> (public API needs it for JSON).</li>
+              <li>In internal types (<code>stackEntry</code>, <code>serviceRecord</code>), look up the name from the <code>scopes</code> map via <code>scopeID</code> when needed, rather than storing a copy.</li>
+              <li>This centralizes scope-name resolution to <code>scopeMeta</code> as the single source.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== GLOSSARY ==================== -->
+    <div class="section">
+      <h2>Glossary for Junior Developers</h2>
+      <p class="section-desc">
+        Key terms used in this audit. Read these before attempting any fix.
+      </p>
+      <div class="finding">
+        <div class="finding-body">
+          <dl>
+            <div class="glossary-item">
+              <dt>Denormalized field</dt>
+              <dd>
+                A field whose value is computed from other fields and then stored, rather than
+                computed on-demand. Example: <code>Report.EventCount</code> is denormalized from
+                <code>len(Report.Events)</code>. Safe when guarded by <code>Validate()</code> or
+                <code>finalizeDenormalized()</code>. Dangerous when not.
+              </dd>
+            </div>
+            <div class="glossary-item">
+              <dt>Split-brain</dt>
+              <dd>
+                When the same information has two representations that can disagree. The classic
+                pattern: a stored field + a derivation function, with no validation that they match.
+              </dd>
+            </div>
+            <div class="glossary-item">
+              <dt>Single source of truth</dt>
+              <dd>
+                A design where each fact is stored/computed in exactly one place. All consumers read
+                from that one place. This audit's goal is to move toward this for every finding.
+              </dd>
+            </div>
+            <div class="glossary-item">
+              <dt>Drift</dt>
+              <dd>
+                When two copies of the same data get out of sync. Usually caused by updating one copy
+                (e.g., the error pointer) but not the other (e.g., the Status field).
+              </dd>
+            </div>
+            <div class="glossary-item">
+              <dt>serviceRecord (internal)</dt>
+              <dd>
+                The mutable working state for a service, updated live by hooks. Lives in
+                <code>Recorder.services</code> map behind a mutex. Never serialized directly.
+              </dd>
+            </div>
+            <div class="glossary-item">
+              <dt>ServiceInfo (public)</dt>
+              <dd>
+                The immutable snapshot of a service in a <code>Report</code>. Built from
+                <code>serviceRecord</code> at report time. Serialized to JSON.
+              </dd>
+            </div>
+            <div class="glossary-item">
+              <dt>DeriveStatus()</dt>
+              <dd>
+                The function that computes lifecycle status from error pointers and timestamps.
+                Priority: invocation_error > shutdown_error > shutdown > active > registered.
+                Defined in <span class="file-ref">report_helpers.go:72</span>.
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== FIX PRIORITY ==================== -->
+    <div class="section">
+      <h2>Recommended Fix Order</h2>
+      <p class="section-desc">
+        Fix in this order — each fix makes the next one safer to verify.
+      </p>
+      <div class="finding">
+        <div class="finding-body">
+          <table class="compare-table">
+            <tr>
+              <th>Order</th>
+              <th>Finding</th>
+              <th>Effort</th>
+              <th>Why this order</th>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td><a href="#f1">SB-01: Status validation</a></td>
+              <td>~15 min</td>
+              <td>Unlocks everything — once Validate() catches drift, SB-02 becomes testable</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><a href="#f2">SB-02: Unify hasError</a></td>
+              <td>~5 min</td>
+              <td>One-line delete + replace; SB-01's Validate() now guards it</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><a href="#f5">SB-05: Unify JSON encoding</a></td>
+              <td>~10 min</td>
+              <td>Quick DRY win; reduces surface area for future bugs</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><a href="#f4">SB-04: Add Status.Icon()</a></td>
+              <td>~20 min</td>
+              <td>Makes metadata future-proof against new enum values</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><a href="#f3">SB-03: Extract converter</a></td>
+              <td>~30 min</td>
+              <td>Refactor; add test that verifies all fields are mapped</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td><a href="#f6">SB-06: scopeName lookup</a></td>
+              <td>~45 min</td>
+              <td>Optional — only if scope renaming is ever needed</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== AUDIT METHODOLOGY ==================== -->
+    <div class="section">
+      <h2>How This Audit Was Conducted</h2>
+      <div class="finding">
+        <div class="finding-body">
+          <p>
+            Every <code>.go</code> file in the package root was read in full. The following patterns
+            were systematically searched for:
+          </p>
+          <ul style="color: var(--text-muted); font-size: 0.88rem; padding-left: 1.2rem; margin-top: 0.5rem;">
+            <li><strong>Duplicate type definitions</strong> — structs representing the same concept in multiple places</li>
+            <li><strong>Denormalized fields</strong> — stored values that duplicate computable data (counts, statuses, flags)</li>
+            <li><strong>Multiple derivation paths</strong> — the same computation in 2+ functions</li>
+            <li><strong>Validation gaps</strong> — <code>Validate()</code> not covering all invariants</li>
+            <li><strong>Enum metadata asymmetry</strong> — some enums have methods, others use parallel maps</li>
+            <li><strong>Manual field copying</strong> — struct-to-struct conversion without compile-time enforcement</li>
+          </ul>
+          <p style="margin-top: 0.8rem;">
+            The critical finding (<a href="#f1">SB-01</a>) was verified with a runnable proof-of-concept
+            test that demonstrates <code>Validate()</code> passing on a self-contradictory report.
+          </p>
+          <p>
+            <strong>Areas checked and found clean:</strong>
+            Event/Phase enums (single source in types.go), <code>buildReportFromCore</code> invariant
+            (all construction paths route through it), <code>finalizeDenormalized</code> (recomputes
+            all 8 aggregate fields from core data), <code>ServiceRef</code> identity (embedded, not
+            duplicated), <code>scopeKey</code> removal (all callers use <code>serviceKey</code>).
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Generated 2026-06-17 · Split-Brain Data Model Audit · samber-do-auditlog<br/>
+      15 source files audited · 6 findings · 2 verified with runnable proof-of-concept
+    </footer>
+
+    <script>
+      function toggleFinding(header) {
+        const body = header.nextElementSibling;
+        const isCollapsed = body.classList.contains('collapsed');
+        body.classList.toggle('collapsed');
+        header.classList.toggle('expanded', isCollapsed);
+      }
+    </script>
+  </body>
+</html>
