@@ -32,13 +32,13 @@ All verification gates green: build ✅, vet ✅, race tests ✅ (95.3% coverage
 
 ### Immediate Follow-Up Items (all 5 complete)
 
-| # | Task | File(s) | Details |
-|---|------|---------|---------|
-| 1 | **`.gitattributes` for generated files** | `.gitattributes` | Added `*_templ.go linguist-generated=true`. Prevents the recurring `html_templ.go` format drift (the #1 "TOTALLY FUCKED UP" item from the previous report). GitHub will now hide the generated file from diffs and language stats. |
-| 2 | **CHANGELOG entries** | `CHANGELOG.md` | Added: unified Report construction (Changed), `ServiceInfo.DeriveStatus()` public method (Added), 5th+6th fuzz targets → corrected to reflect the 3-target consolidation (Tests). |
-| 3 | **TODO_LIST.md sync** | `TODO_LIST.md` | Fixed Go 1.26.3→1.26.4 in flake.nix description. Added "Post-Remediation Consolidation" completed section (6 items). Added "Future Priorities" section with 16 open tasks from the Top-25 audit, organized by category (Architecture, Features, Testing, Release & CI). |
-| 4 | **AGENTS.md Gotcha** | `AGENTS.md` | Added `buildReportFromCore` Gotcha documenting the critical invariant. Updated `ServiceStatus` gotcha to mention `DeriveStatus()`. Updated file-listing descriptions for `report.go` and `service.go`. |
-| 5 | **Test parallelism** | `plugin_basic_test.go`, `healthcheck_basic_test.go` | 13 additional `t.Parallel()` calls. Only 5 tests remain sequential (all use `t.Setenv()`). Total: **152 parallel calls** across 24 test files. |
+| #   | Task                                     | File(s)                                             | Details                                                                                                                                                                                                                                                                 |
+| --- | ---------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **`.gitattributes` for generated files** | `.gitattributes`                                    | Added `*_templ.go linguist-generated=true`. Prevents the recurring `html_templ.go` format drift (the #1 "TOTALLY FUCKED UP" item from the previous report). GitHub will now hide the generated file from diffs and language stats.                                      |
+| 2   | **CHANGELOG entries**                    | `CHANGELOG.md`                                      | Added: unified Report construction (Changed), `ServiceInfo.DeriveStatus()` public method (Added), 5th+6th fuzz targets → corrected to reflect the 3-target consolidation (Tests).                                                                                       |
+| 3   | **TODO_LIST.md sync**                    | `TODO_LIST.md`                                      | Fixed Go 1.26.3→1.26.4 in flake.nix description. Added "Post-Remediation Consolidation" completed section (6 items). Added "Future Priorities" section with 16 open tasks from the Top-25 audit, organized by category (Architecture, Features, Testing, Release & CI). |
+| 4   | **AGENTS.md Gotcha**                     | `AGENTS.md`                                         | Added `buildReportFromCore` Gotcha documenting the critical invariant. Updated `ServiceStatus` gotcha to mention `DeriveStatus()`. Updated file-listing descriptions for `report.go` and `service.go`.                                                                  |
+| 5   | **Test parallelism**                     | `plugin_basic_test.go`, `healthcheck_basic_test.go` | 13 additional `t.Parallel()` calls. Only 5 tests remain sequential (all use `t.Setenv()`). Total: **152 parallel calls** across 24 test files.                                                                                                                          |
 
 ### `html_templ.go` Canonical Restore
 
@@ -60,12 +60,12 @@ Working tree: 7 files modified (uncommitted)
 
 ## b) PARTIALLY DONE
 
-| Item | Status | Notes |
-|------|--------|-------|
-| **AGENTS.md metrics accuracy** | Partially stale | The Gotchas and file-listing sections are updated, but the "Testing Patterns" section still says "153 top-level test functions" and "6 fuzz targets" — should be 146 tests and 3 fuzz targets. The Testing Patterns duplication policy section also still references "3 fuzz targets" in a different context. |
-| **`flake.nix` description** | Stale | Says "Go 1.26.3" but `go.mod` says `1.26.4`. DevShell works due to `GOTOOLCHAIN=auto` self-upgrade. Cosmetic lie. |
-| **CHANGELOG fuzz count** | Corrected this session | Now accurately describes the 3-target consolidation and explains _why_ (buildflow 120s timeout). |
-| **Test parallelism** | ~97% complete | 152 `t.Parallel()` calls. 5 tests remain sequential (4 env-var tests in `plugin_basic_test.go`, 1 env-var test in `healthcheck_basic_test.go`). These genuinely cannot be parallelized — `t.Setenv()` mutates process-global state. |
+| Item                           | Status                 | Notes                                                                                                                                                                                                                                                                                                         |
+| ------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **AGENTS.md metrics accuracy** | Partially stale        | The Gotchas and file-listing sections are updated, but the "Testing Patterns" section still says "153 top-level test functions" and "6 fuzz targets" — should be 146 tests and 3 fuzz targets. The Testing Patterns duplication policy section also still references "3 fuzz targets" in a different context. |
+| **`flake.nix` description**    | Stale                  | Says "Go 1.26.3" but `go.mod` says `1.26.4`. DevShell works due to `GOTOOLCHAIN=auto` self-upgrade. Cosmetic lie.                                                                                                                                                                                             |
+| **CHANGELOG fuzz count**       | Corrected this session | Now accurately describes the 3-target consolidation and explains _why_ (buildflow 120s timeout).                                                                                                                                                                                                              |
+| **Test parallelism**           | ~97% complete          | 152 `t.Parallel()` calls. 5 tests remain sequential (4 env-var tests in `plugin_basic_test.go`, 1 env-var test in `healthcheck_basic_test.go`). These genuinely cannot be parallelized — `t.Setenv()` mutates process-global state.                                                                           |
 
 ---
 
@@ -105,6 +105,7 @@ All verification gates pass. No regressions. The recurring `html_templ.go` drift
 ### 🟡 Stale metrics in AGENTS.md
 
 The AGENTS.md "Testing Patterns" section still claims:
+
 - "153 top-level test functions" → actual: **146** (dropped after fuzz consolidation merged some tests)
 - "6 fuzz targets" → actual: **3** (consolidated for buildflow 120s timeout)
 - "~95% coverage, 234 total cases" → actual: 95.3%, 167 total functions (146 tests + 11 benchmarks + 7 examples + 3 fuzz)
@@ -211,15 +212,15 @@ The question is: **is the struct split worth the API churn, or is the current fl
 
 ## Files Changed This Session
 
-| File                        | Change                                                                            | Status     |
-| --------------------------- | --------------------------------------------------------------------------------- | ---------- |
-| `.gitattributes`            | +`*_templ.go linguist-generated=true` — permanent fix for html_templ.go drift     | Uncommitted |
-| `html_templ.go`             | Restored canonical `go generate` output (single-line imports)                     | Uncommitted |
-| `CHANGELOG.md`              | +unified Report construction, +`DeriveStatus()`, corrected fuzz target count      | Uncommitted |
+| File                        | Change                                                                                | Status      |
+| --------------------------- | ------------------------------------------------------------------------------------- | ----------- |
+| `.gitattributes`            | +`*_templ.go linguist-generated=true` — permanent fix for html_templ.go drift         | Uncommitted |
+| `html_templ.go`             | Restored canonical `go generate` output (single-line imports)                         | Uncommitted |
+| `CHANGELOG.md`              | +unified Report construction, +`DeriveStatus()`, corrected fuzz target count          | Uncommitted |
 | `TODO_LIST.md`              | Fixed Go version refs, +post-remediation completed section, +16 future-priority tasks | Uncommitted |
-| `AGENTS.md`                 | +`buildReportFromCore` Gotcha, +`DeriveStatus()` mention, updated file descriptions | Uncommitted |
-| `plugin_basic_test.go`      | +7 `t.Parallel()` calls (4 env-var tests excluded)                                | Uncommitted |
-| `healthcheck_basic_test.go` | +6 `t.Parallel()` calls (1 env-var test excluded)                                 | Uncommitted |
+| `AGENTS.md`                 | +`buildReportFromCore` Gotcha, +`DeriveStatus()` mention, updated file descriptions   | Uncommitted |
+| `plugin_basic_test.go`      | +7 `t.Parallel()` calls (4 env-var tests excluded)                                    | Uncommitted |
+| `healthcheck_basic_test.go` | +6 `t.Parallel()` calls (1 env-var test excluded)                                     | Uncommitted |
 
 ---
 
