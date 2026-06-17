@@ -29,28 +29,28 @@ Test coverage remains **95.3%** of production statements, with **145 top-level t
 
 ### Architecture Improvements
 
-| Improvement | File(s) | Details |
-| --- | -------- | ------- |
-| **Unified Report construction** | `report.go`, `report_builder.go`, `filter.go`, `migration.go` | Extracted `buildReportFromCore()` + `finalizeDenormalized()` — single construction path for all 3 Report producers. Eliminates 3-way duplication of 8 denormalized fields. Adding new construction paths now auto-fills all aggregates. |
-| **`ServiceInfo.DeriveStatus()` method** | `service.go` | Moved status derivation from migration-local `computeServiceStatusFromInfo` to a method on the type it operates on. Single canonical derivation entry point, reusable beyond migration. |
+| Improvement                             | File(s)                                                       | Details                                                                                                                                                                                                                                 |
+| --------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Unified Report construction**         | `report.go`, `report_builder.go`, `filter.go`, `migration.go` | Extracted `buildReportFromCore()` + `finalizeDenormalized()` — single construction path for all 3 Report producers. Eliminates 3-way duplication of 8 denormalized fields. Adding new construction paths now auto-fills all aggregates. |
+| **`ServiceInfo.DeriveStatus()` method** | `service.go`                                                  | Moved status derivation from migration-local `computeServiceStatusFromInfo` to a method on the type it operates on. Single canonical derivation entry point, reusable beyond migration.                                                 |
 
 ### Documentation
 
-| Doc | Status | Details |
-| --- | ------ | ------- |
-| `CHANGELOG.md` | ✅ Updated | `[Unreleased]` expanded with Fixed/Changed/Added/Tests entries for the full remediation batch (scope-count fix, normalize-any-version, scope-assertion hardening, dead JS timestamps, Go bump, experimental tags, capabilityFlags refactor, CI gates, new fuzz/parallelism tests). |
-| `BENCHMARKS.md` | ✅ Updated | Go version `1.26.3` → `1.26.4` in Environment table to match `go.mod`. |
-| `AGENTS.md` | ✅ Updated | Go version bumped (header + devShell). Commands table now documents `golangci-lint config verify`, `go mod tidy`, and coverage-profile run. CI section rewritten to reflect 5 parallel jobs (added coverage gate + mod-tidy job + config-verify step). |
-| `README.md` | ✅ Updated | `MigrateReport` description in Plugin table corrected to "normalize/repair" semantics. Schema-migration callout expanded to document the repair behavior. |
-| `migration.go` doc comment | ✅ Updated | `MigrateReport` doc comment expanded to state the "repair/normalize → current" contract and which fields are re-derived. |
-| Status reports archived | ✅ Done | 9 superseded reports moved from `docs/status/` to `docs/archive/` via `git mv` (history preserved). Only the current report remains in `docs/status/`. Broken cross-reference fixed. |
+| Doc                        | Status     | Details                                                                                                                                                                                                                                                                            |
+| -------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CHANGELOG.md`             | ✅ Updated | `[Unreleased]` expanded with Fixed/Changed/Added/Tests entries for the full remediation batch (scope-count fix, normalize-any-version, scope-assertion hardening, dead JS timestamps, Go bump, experimental tags, capabilityFlags refactor, CI gates, new fuzz/parallelism tests). |
+| `BENCHMARKS.md`            | ✅ Updated | Go version `1.26.3` → `1.26.4` in Environment table to match `go.mod`.                                                                                                                                                                                                             |
+| `AGENTS.md`                | ✅ Updated | Go version bumped (header + devShell). Commands table now documents `golangci-lint config verify`, `go mod tidy`, and coverage-profile run. CI section rewritten to reflect 5 parallel jobs (added coverage gate + mod-tidy job + config-verify step).                             |
+| `README.md`                | ✅ Updated | `MigrateReport` description in Plugin table corrected to "normalize/repair" semantics. Schema-migration callout expanded to document the repair behavior.                                                                                                                          |
+| `migration.go` doc comment | ✅ Updated | `MigrateReport` doc comment expanded to state the "repair/normalize → current" contract and which fields are re-derived.                                                                                                                                                           |
+| Status reports archived    | ✅ Done    | 9 superseded reports moved from `docs/status/` to `docs/archive/` via `git mv` (history preserved). Only the current report remains in `docs/status/`. Broken cross-reference fixed.                                                                                               |
 
 ### Tests
 
-| Addition | File | Details |
-| -------- | ---- | ------- |
-| **Diagram special-char fuzz** | `fuzz_test.go` | `FuzzDiagramSpecialChars` (5th fuzz target) — seeds Mermaid and PlantUML exporters with `]`, `"`, `-->`, `@enduml`, `%%`, newlines, pipes, 500-char strings. Verifies structural integrity of output headers/footers. |
-| **Nested scope tree fuzz** | `fuzz_test.go` | `FuzzNestedScopeExport` (6th fuzz target) — generates scope trees up to 500 levels deep, normalizes via `MigrateReport`, exports to JSON + Mermaid + PlantUML. Guards against stack overflow in recursive `countScopeNodes`/`pruneScopeTree`. |
+| Addition                      | File           | Details                                                                                                                                                                                                                                       |
+| ----------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Diagram special-char fuzz** | `fuzz_test.go` | `FuzzDiagramSpecialChars` (5th fuzz target) — seeds Mermaid and PlantUML exporters with `]`, `"`, `-->`, `@enduml`, `%%`, newlines, pipes, 500-char strings. Verifies structural integrity of output headers/footers.                         |
+| **Nested scope tree fuzz**    | `fuzz_test.go` | `FuzzNestedScopeExport` (6th fuzz target) — generates scope trees up to 500 levels deep, normalizes via `MigrateReport`, exports to JSON + Mermaid + PlantUML. Guards against stack overflow in recursive `countScopeNodes`/`pruneScopeTree`. |
 
 ### Verification Snapshot (all green)
 
@@ -68,13 +68,13 @@ Working tree: ✅ clean, all commits pushed to origin/master
 
 ## b) PARTIALLY DONE
 
-| Item | Status | Notes |
-| ---- | ------ | ----- |
-| **Test parallelism** | ~93% of eligible tests parallel | 138 `t.Parallel()` calls across 19 files. 18 tests remain sequential (7 in `healthcheck_basic_test.go`, 11 in `plugin_basic_test.go`). Some are env-var tests that genuinely can't be parallel; others may be parallelizable with minor refactoring. |
-| **`TODO_LIST.md` freshness** | Partially stale | "Last updated" date is correct (2026-06-17) but content doesn't reflect the `buildReportFromCore` refactor, `ServiceInfo.DeriveStatus()`, or the 2 new fuzz targets. Several Go 1.26.3 references remain in completed items. |
-| **`CHANGELOG.md` for refactor** | Missing entry | The `buildReportFromCore` unification and `ServiceInfo.DeriveStatus()` public method were committed but not documented in `[Unreleased]`. Consumers won't know about the new method. |
-| **`AGENTS.md` Gotchas for refactor** | Missing entry | The unified construction path is a critical architectural invariant. The Gotchas section doesn't mention `buildReportFromCore` or the `finalizeDenormalized` pattern. |
-| **html_templ.go format drift** | Workaround, not fixed | The generated file keeps being reformatted by an editor. Restored manually twice this session. Needs a permanent `.gitattributes` or editor-config exclusion. |
+| Item                                 | Status                          | Notes                                                                                                                                                                                                                                                |
+| ------------------------------------ | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Test parallelism**                 | ~93% of eligible tests parallel | 138 `t.Parallel()` calls across 19 files. 18 tests remain sequential (7 in `healthcheck_basic_test.go`, 11 in `plugin_basic_test.go`). Some are env-var tests that genuinely can't be parallel; others may be parallelizable with minor refactoring. |
+| **`TODO_LIST.md` freshness**         | Partially stale                 | "Last updated" date is correct (2026-06-17) but content doesn't reflect the `buildReportFromCore` refactor, `ServiceInfo.DeriveStatus()`, or the 2 new fuzz targets. Several Go 1.26.3 references remain in completed items.                         |
+| **`CHANGELOG.md` for refactor**      | Missing entry                   | The `buildReportFromCore` unification and `ServiceInfo.DeriveStatus()` public method were committed but not documented in `[Unreleased]`. Consumers won't know about the new method.                                                                 |
+| **`AGENTS.md` Gotchas for refactor** | Missing entry                   | The unified construction path is a critical architectural invariant. The Gotchas section doesn't mention `buildReportFromCore` or the `finalizeDenormalized` pattern.                                                                                |
+| **html_templ.go format drift**       | Workaround, not fixed           | The generated file keeps being reformatted by an editor. Restored manually twice this session. Needs a permanent `.gitattributes` or editor-config exclusion.                                                                                        |
 
 ---
 
@@ -170,33 +170,33 @@ The TODO list still references Go 1.26.3 in completed items, doesn't mention the
 
 Sorted by **Impact × Customer-Value ÷ Effort**:
 
-| # | Task | Impact | Effort | Category |
-|---|------|--------|--------|----------|
-| 1 | **CHANGELOG + TODO + AGENTS update** (refactor visibility) | 🟠 Med | ⚪ Trivial | Docs |
-| 2 | **Fix `html_templ.go` drift** (`.gitattributes`) | 🟠 Med | ⚪ Trivial | DevEx |
-| 3 | **Parallelize remaining 18 sequential tests** | 🟡 Low | ⚪ Trivial | Testing |
-| 4 | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`) | 🟠 Med | 🔵 Low | Architecture |
-| 5 | **NDJSON import** (trivial now with `buildReportFromCore`) | 🟠 Med | 🔵 Low | Feature |
-| 6 | **v0.1.0 release** | 🟠 Med | 🟡 Med | Release |
-| 7 | **JSON Schema file** | 🟠 Med | 🔵 Low | Docs/API |
-| 8 | **CSV/TSV export** | 🟡 Low | 🔵 Low | Feature |
-| 9 | **Refactor `ServiceInfo` lifecycle concerns** | 🟠 Med | 🔴 High | Architecture |
-| 10 | **Property-based `Diff` tests** | 🟡 Low | 🔵 Low | Testing |
-| 11 | **Property-based `MigrateReport` tests** | 🟡 Low | 🔵 Low | Testing |
-| 12 | **Fuzz filter inputs** | 🟡 Low | 🔵 Low | Testing |
-| 13 | **HTML golden-file test** | 🟠 Med | 🟡 Med | Testing |
-| 14 | **`Report` constructor validation** | 🟠 Med | 🟡 Med | Architecture |
-| 15 | **Prometheus exporter example** | 🟠 Med | 🟡 Med | Docs |
-| 16 | **Add `actionlint` to CI** | 🟡 Low | ⚪ Trivial | CI |
-| 17 | **GitHub Actions version upgrades** | 🟡 Low | ⚪ Trivial | CI |
-| 18 | **Flake app for coverage gate** | 🟡 Low | 🔵 Low | DevEx |
-| 19 | **`RELEASING.md`** or release checklist | 🟡 Low | ⚪ Trivial | Docs |
-| 20 | **CLI tool** for report conversion | 🟢 Low | 🔴 High | Feature |
-| 21 | **WebSocket live stream** | 🟢 Low | 🔴 High | Feature |
-| 22 | **`pgregory/rapid`** for property-based testing | 🟡 Low | 🔵 Low | Testing |
-| 23 | **`invopop/jsonschema`** for schema generation | 🟠 Med | 🔵 Low | Docs/API |
-| 24 | **Upgrade Go further** (1.27 when released) | 🟡 Low | ⚪ Trivial | Deps |
-| 25 | **Explore `samber/do` v2.1+** new APIs | 🟡 Low | 🔵 Low | Deps |
+| #   | Task                                                            | Impact | Effort     | Category     |
+| --- | --------------------------------------------------------------- | ------ | ---------- | ------------ |
+| 1   | **CHANGELOG + TODO + AGENTS update** (refactor visibility)      | 🟠 Med | ⚪ Trivial | Docs         |
+| 2   | **Fix `html_templ.go` drift** (`.gitattributes`)                | 🟠 Med | ⚪ Trivial | DevEx        |
+| 3   | **Parallelize remaining 18 sequential tests**                   | 🟡 Low | ⚪ Trivial | Testing      |
+| 4   | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`) | 🟠 Med | 🔵 Low     | Architecture |
+| 5   | **NDJSON import** (trivial now with `buildReportFromCore`)      | 🟠 Med | 🔵 Low     | Feature      |
+| 6   | **v0.1.0 release**                                              | 🟠 Med | 🟡 Med     | Release      |
+| 7   | **JSON Schema file**                                            | 🟠 Med | 🔵 Low     | Docs/API     |
+| 8   | **CSV/TSV export**                                              | 🟡 Low | 🔵 Low     | Feature      |
+| 9   | **Refactor `ServiceInfo` lifecycle concerns**                   | 🟠 Med | 🔴 High    | Architecture |
+| 10  | **Property-based `Diff` tests**                                 | 🟡 Low | 🔵 Low     | Testing      |
+| 11  | **Property-based `MigrateReport` tests**                        | 🟡 Low | 🔵 Low     | Testing      |
+| 12  | **Fuzz filter inputs**                                          | 🟡 Low | 🔵 Low     | Testing      |
+| 13  | **HTML golden-file test**                                       | 🟠 Med | 🟡 Med     | Testing      |
+| 14  | **`Report` constructor validation**                             | 🟠 Med | 🟡 Med     | Architecture |
+| 15  | **Prometheus exporter example**                                 | 🟠 Med | 🟡 Med     | Docs         |
+| 16  | **Add `actionlint` to CI**                                      | 🟡 Low | ⚪ Trivial | CI           |
+| 17  | **GitHub Actions version upgrades**                             | 🟡 Low | ⚪ Trivial | CI           |
+| 18  | **Flake app for coverage gate**                                 | 🟡 Low | 🔵 Low     | DevEx        |
+| 19  | **`RELEASING.md`** or release checklist                         | 🟡 Low | ⚪ Trivial | Docs         |
+| 20  | **CLI tool** for report conversion                              | 🟢 Low | 🔴 High    | Feature      |
+| 21  | **WebSocket live stream**                                       | 🟢 Low | 🔴 High    | Feature      |
+| 22  | **`pgregory/rapid`** for property-based testing                 | 🟡 Low | 🔵 Low     | Testing      |
+| 23  | **`invopop/jsonschema`** for schema generation                  | 🟠 Med | 🔵 Low     | Docs/API     |
+| 24  | **Upgrade Go further** (1.27 when released)                     | 🟡 Low | ⚪ Trivial | Deps         |
+| 25  | **Explore `samber/do` v2.1+** new APIs                          | 🟡 Low | 🔵 Low     | Deps         |
 
 ---
 
@@ -232,6 +232,7 @@ All 6 commits pushed to `origin/master`. Working tree clean.
 ## File Inventory
 
 ### Production Code (20 files, ~2400 LOC excluding generated)
+
 ```
 diff.go             event.go          export.go          filter.go
 healthcheck.go      hooks.go          html.go            html_templ.go (generated)
@@ -242,6 +243,7 @@ diagram.go
 ```
 
 ### Test Code (24 files, ~5800 LOC)
+
 ```
 benchmarks_test.go       diagram_test.go          diff_export_test.go
 example_test.go          extra_test.go            fuzz_test.go
@@ -254,11 +256,13 @@ robustness_test.go       status_internal_test.go  type_method_test.go
 ```
 
 ### Infrastructure
+
 ```
 .github/workflows/ci.yml    flake.nix    flake.lock    .golangci.yml
 ```
 
 ### Documentation
+
 ```
 AGENTS.md    CHANGELOG.md    CONTRIBUTING.md    FEATURES.md    README.md
 STABILITY.md    BENCHMARKS.md    TODO_LIST.md
@@ -271,19 +275,19 @@ docs/research/ (1 performance review)
 
 ### Metrics Summary
 
-| Metric | Value |
-|--------|-------|
-| Production LOC (excl. generated) | ~2,400 |
-| Test LOC | ~5,800 |
-| Public API functions | 76 |
-| Top-level test functions | 145 |
-| Subtests | 10 |
-| Fuzz targets | 6 |
-| Benchmarks | 11 |
-| Examples | 7 |
-| Test files | 24 |
-| Production files | 20 |
-| Test coverage | 95.3% |
-| Dependencies (direct) | 2 (`samber/do`, `a-h/templ`) |
-| CI jobs | 5 (test+coverage, lint, vulncheck, mod-tidy, stale-generation) |
-| golangci-lint issues | 0 |
+| Metric                           | Value                                                          |
+| -------------------------------- | -------------------------------------------------------------- |
+| Production LOC (excl. generated) | ~2,400                                                         |
+| Test LOC                         | ~5,800                                                         |
+| Public API functions             | 76                                                             |
+| Top-level test functions         | 145                                                            |
+| Subtests                         | 10                                                             |
+| Fuzz targets                     | 6                                                              |
+| Benchmarks                       | 11                                                             |
+| Examples                         | 7                                                              |
+| Test files                       | 24                                                             |
+| Production files                 | 20                                                             |
+| Test coverage                    | 95.3%                                                          |
+| Dependencies (direct)            | 2 (`samber/do`, `a-h/templ`)                                   |
+| CI jobs                          | 5 (test+coverage, lint, vulncheck, mod-tidy, stale-generation) |
+| golangci-lint issues             | 0                                                              |

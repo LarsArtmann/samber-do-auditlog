@@ -13,3 +13,5 @@ reports/
 *_templ.go
 # Test coverage
 /coverage
+# Nix build output
+/result

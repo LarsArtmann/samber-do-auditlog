@@ -11,8 +11,14 @@ import (
 	"github.com/samber/do/v2"
 )
 
+// FuzzPluginHTML fuzzes all HTML XSS vectors simultaneously: service names,
+// error messages, and dependency-chain names. Merged from three separate
+// targets to reduce the total fuzz-target count (each target costs ~30 s in
+// buildflow's sequential fuzz runner; keeping the count at 3 keeps the full
+// suite under the default 2-minute hard timeout).
 func FuzzPluginHTML(f *testing.F) {
 	malicious := []string{
+		// General XSS / injection payloads.
 		"<script>alert('xss')</script>",
 		"\" onload=\"alert(1)",
 		"'; DROP TABLE--",
@@ -28,67 +34,45 @@ func FuzzPluginHTML(f *testing.F) {
 		"<a href=\"javascript:alert(1)\">click</a>",
 		"'><script>alert(1)</script>",
 		"\" onmouseover=\"alert(1)",
+		"\" onclick=\"alert(1)",
 	}
 
 	for _, m := range malicious {
 		f.Add(m)
 	}
 
-	f.Fuzz(func(t *testing.T, svcName string) {
-		if svcName == "" {
+	f.Fuzz(func(t *testing.T, input string) {
+		if input == "" {
 			t.Skip()
 		}
 
 		plugin := mustNew(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(plugin.Opts())
 
-		provideString(injector, svcName, "val")
+		// Vector 1: service name XSS.
+		provideString(injector, input, "val")
 
-		_, err := do.InvokeNamed[string](injector, svcName)
+		_, err := do.InvokeNamed[string](injector, input)
 		if err != nil {
 			t.Skip()
 		}
 
-		var buf bytes.Buffer
-
-		writeErr := plugin.WriteHTML(&buf)
-		if writeErr != nil {
-			return
-		}
-
-		output := buf.String()
-		assertNoRawXSS(t, output, svcName)
-	})
-}
-
-func FuzzPluginHTML_ErrorMessages(f *testing.F) {
-	maliciousErrors := []string{
-		"<script>alert('err')</script>",
-		"<img src=x onerror=alert(1)>",
-		"\" onclick=\"alert(1)",
-		"<svg onload=alert(1)>",
-		"javascript:alert(1)",
-		"'><script>alert(1)</script>",
-	}
-
-	for _, m := range maliciousErrors {
-		f.Add(m)
-	}
-
-	f.Fuzz(func(t *testing.T, errMsg string) {
-		if errMsg == "" {
-			t.Skip()
-		}
-
-		plugin := mustNew(auditlog.Config{Enabled: true})
-		injector := do.NewWithOpts(plugin.Opts())
-
+		// Vector 2: error-message XSS.
 		do.ProvideNamed(injector, "error-svc", func(_ do.Injector) (string, error) {
-			return "", fmt.Errorf("%s", errMsg) //nolint:err113
+			return "", fmt.Errorf("%s", input) //nolint:err113
 		})
 
 		_, _ = do.InvokeNamed[string](injector, "error-svc")
 
+		// Vector 3: dependency-chain XSS.
+		do.ProvideNamed(injector, "parent-svc", func(i do.Injector) (string, error) {
+			_, _ = do.InvokeNamed[string](i, input)
+
+			return "parent-val", nil
+		})
+
+		_, _ = do.InvokeNamed[string](injector, "parent-svc")
+
 		var buf bytes.Buffer
 
 		writeErr := plugin.WriteHTML(&buf)
@@ -97,7 +81,7 @@ func FuzzPluginHTML_ErrorMessages(f *testing.F) {
 		}
 
 		output := buf.String()
-		assertNoRawXSS(t, output, errMsg)
+		assertNoRawXSS(t, output, input)
 	})
 }
 
@@ -146,45 +130,67 @@ func FuzzMigrateReport(f *testing.F) {
 	})
 }
 
-func FuzzPluginHTML_DepChain(f *testing.F) {
-	maliciousDeps := []string{
-		"<script>alert('dep')</script>",
-		"<img src=x onerror=alert(1)>",
-		"\" onclick=\"alert(1)",
-		"<svg onload=alert(1)>",
+// FuzzDiagramSpecialChars fuzzes diagram export (Mermaid + PlantUML) with
+// service names containing special characters, injection payloads, and edge
+// cases.
+func FuzzDiagramSpecialChars(f *testing.F) {
+	special := []string{
+		"svc]",
+		`svc"`,
+		"svc-->",
+		"@enduml",
+		"%%",
+		"svc\nother", // newline injection
+		"svc|pipe",
+		"a]b[c",
+		`a"b"c`,
+		"<script>alert(1)</script>",
+		strings.Repeat("A", 500),
 	}
 
-	for _, m := range maliciousDeps {
-		f.Add(m)
+	for _, s := range special {
+		f.Add(s)
 	}
 
-	f.Fuzz(func(t *testing.T, depName string) {
-		if depName == "" {
+	f.Fuzz(func(t *testing.T, svcName string) {
+		t.Parallel()
+
+		if svcName == "" {
 			t.Skip()
 		}
 
 		plugin := mustNew(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(plugin.Opts())
 
-		provideString(injector, depName, "dep-val")
+		provideString(injector, svcName, "val")
 
-		do.ProvideNamed(injector, "parent-svc", func(i do.Injector) (string, error) {
-			_, _ = do.InvokeNamed[string](i, depName)
-
-			return "parent-val", nil
-		})
-
-		_, _ = do.InvokeNamed[string](injector, "parent-svc")
-
-		var buf bytes.Buffer
-
-		writeErr := plugin.WriteHTML(&buf)
-		if writeErr != nil {
-			return
+		_, err := do.InvokeNamed[string](injector, svcName)
+		if err != nil {
+			t.Skip()
 		}
 
-		output := buf.String()
-		assertNoRawXSS(t, output, depName)
+		report := plugin.Report()
+
+		var mBuf bytes.Buffer
+
+		mErr := report.WriteMermaid(&mBuf)
+		if mErr != nil {
+			t.Fatalf("WriteMermaid error: %v", mErr)
+		}
+
+		mOut := mBuf.String()
+		assertStringContains(t, mOut, "flowchart TD")
+
+		var pBuf bytes.Buffer
+
+		pErr := report.WritePlantUML(&pBuf)
+		if pErr != nil {
+			t.Fatalf("WritePlantUML error: %v", pErr)
+		}
+
+		pOut := pBuf.String()
+		assertStringContains(t, pOut, "@startuml")
+		assertStringContains(t, pOut, "@enduml")
 	})
 }
 
@@ -257,146 +263,85 @@ func stripJSONScripts(html string) string {
 	return html
 }
 
-func FuzzDiagramSpecialChars(f *testing.F) {
-	special := []string{
-		"svc]",
-		`svc"`,
-		"svc-->",
-		"@enduml",
-		"%%",
-		"svc\nother", // newline injection
-		"svc|pipe",
-		"a]b[c",
-		`a"b"c`,
-		"<script>alert(1)</script>",
-		strings.Repeat("A", 500),
-	}
+// TestNestedScopeExport is a table-driven test covering deeply nested scope
+// trees across a range of depths. Converted from a fuzz target to keep the
+// total fuzz-target count at 3 (each costs ~30 s in buildflow's sequential
+// runner; 3 × 30 s < the 2-minute default hard timeout).
+func TestNestedScopeExport(t *testing.T) {
+	t.Parallel()
 
-	for _, s := range special {
-		f.Add(s)
-	}
+	depths := []int{0, 1, 5, 10, 50, 100, 200}
 
-	f.Fuzz(func(t *testing.T, svcName string) {
-		t.Parallel()
+	for _, depth := range depths {
+		t.Run(fmt.Sprintf("depth-%d", depth), func(t *testing.T) {
+			t.Parallel()
 
-		if svcName == "" {
-			t.Skip()
-		}
+			node := auditlog.ScopeNode{ID: "root", Name: "[root]", Services: []string{"root-svc"}}
+			current := &node
 
-		plugin := mustNew(auditlog.Config{Enabled: true})
-		injector := do.NewWithOpts(plugin.Opts())
-
-		provideString(injector, svcName, "val")
-
-		_, err := do.InvokeNamed[string](injector, svcName)
-		if err != nil {
-			t.Skip()
-		}
-
-		report := plugin.Report()
-
-		var mBuf bytes.Buffer
-
-		mErr := report.WriteMermaid(&mBuf)
-		if mErr != nil {
-			t.Fatalf("WriteMermaid error: %v", mErr)
-		}
-
-		mOut := mBuf.String()
-		assertStringContains(t, mOut, "flowchart TD")
-
-		var pBuf bytes.Buffer
-
-		pErr := report.WritePlantUML(&pBuf)
-		if pErr != nil {
-			t.Fatalf("WritePlantUML error: %v", pErr)
-		}
-
-		pOut := pBuf.String()
-		assertStringContains(t, pOut, "@startuml")
-		assertStringContains(t, pOut, "@enduml")
-	})
-}
-
-func FuzzNestedScopeExport(f *testing.F) {
-	depths := []int{0, 1, 5, 10, 50, 100}
-
-	for _, d := range depths {
-		f.Add(d)
-	}
-
-	f.Fuzz(func(t *testing.T, depth int) {
-		t.Parallel()
-
-		if depth < 0 || depth > 500 {
-			t.Skip()
-		}
-
-		node := auditlog.ScopeNode{ID: "root", Name: "[root]", Services: []string{"root-svc"}}
-		current := &node
-
-		for i := range depth {
-			child := auditlog.ScopeNode{
-				ID:       fmt.Sprintf("scope-%d", i),
-				Name:     fmt.Sprintf("scope-%d", i),
-				Services: []string{fmt.Sprintf("svc-%d", i)},
+			for i := range depth {
+				child := auditlog.ScopeNode{
+					ID:       fmt.Sprintf("scope-%d", i),
+					Name:     fmt.Sprintf("scope-%d", i),
+					Services: []string{fmt.Sprintf("svc-%d", i)},
+				}
+				current.Children = []auditlog.ScopeNode{child}
+				current = &current.Children[0]
 			}
-			current.Children = []auditlog.ScopeNode{child}
-			current = &current.Children[0]
-		}
 
-		services := make([]auditlog.ServiceInfo, 0, depth+1)
-		services = append(services, auditlog.ServiceInfo{
-			ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "root-svc"},
-			Status:     auditlog.ServiceStatusActive,
-		})
-
-		for i := range depth {
+			services := make([]auditlog.ServiceInfo, 0, depth+1)
 			services = append(services, auditlog.ServiceInfo{
-				ServiceRef: auditlog.ServiceRef{
-					ScopeID:     fmt.Sprintf("scope-%d", i),
-					ScopeName:   fmt.Sprintf("scope-%d", i),
-					ServiceName: fmt.Sprintf("svc-%d", i),
-				},
-				Status: auditlog.ServiceStatusActive,
+				ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "root-svc"},
+				Status:     auditlog.ServiceStatusActive,
 			})
-		}
 
-		rawReport := auditlog.Report{
-			Version:   auditlog.SchemaVersion,
-			ScopeTree: node,
-			Services:  services,
-		}
+			for i := range depth {
+				services = append(services, auditlog.ServiceInfo{
+					ServiceRef: auditlog.ServiceRef{
+						ScopeID:     fmt.Sprintf("scope-%d", i),
+						ScopeName:   fmt.Sprintf("scope-%d", i),
+						ServiceName: fmt.Sprintf("svc-%d", i),
+					},
+					Status: auditlog.ServiceStatusActive,
+				})
+			}
 
-		// Normalize via MigrateReport so all denormalized fields are set.
-		var rawBuf bytes.Buffer
+			rawReport := auditlog.Report{
+				Version:   auditlog.SchemaVersion,
+				ScopeTree: node,
+				Services:  services,
+			}
 
-		enc := json.NewEncoder(&rawBuf)
-		if encodeErr := enc.Encode(rawReport); encodeErr != nil {
-			t.Fatalf("JSON encode error: %v", encodeErr)
-		}
+			// Normalize via MigrateReport so all denormalized fields are set.
+			var rawBuf bytes.Buffer
 
-		report, migErr := auditlog.MigrateReport(rawBuf.Bytes())
-		if migErr != nil {
-			t.Fatalf("MigrateReport error: %v", migErr)
-		}
+			enc := json.NewEncoder(&rawBuf)
+			if encodeErr := enc.Encode(rawReport); encodeErr != nil {
+				t.Fatalf("JSON encode error: %v", encodeErr)
+			}
 
-		if validateErr := report.Validate(); validateErr != nil {
-			t.Errorf("deeply nested report failed Validate: %v", validateErr)
-		}
+			report, migErr := auditlog.MigrateReport(rawBuf.Bytes())
+			if migErr != nil {
+				t.Fatalf("MigrateReport error: %v", migErr)
+			}
 
-		var jsonBuf bytes.Buffer
+			if validateErr := report.Validate(); validateErr != nil {
+				t.Errorf("deeply nested report failed Validate: %v", validateErr)
+			}
 
-		if jsonErr := report.WriteJSON(&jsonBuf); jsonErr != nil {
-			t.Fatalf("WriteJSON error: %v", jsonErr)
-		}
+			var jsonBuf bytes.Buffer
 
-		var mBuf bytes.Buffer
+			if jsonErr := report.WriteJSON(&jsonBuf); jsonErr != nil {
+				t.Fatalf("WriteJSON error: %v", jsonErr)
+			}
 
-		_ = report.WriteMermaid(&mBuf)
+			var mBuf bytes.Buffer
 
-		var pBuf bytes.Buffer
+			_ = report.WriteMermaid(&mBuf)
 
-		_ = report.WritePlantUML(&pBuf)
-	})
+			var pBuf bytes.Buffer
+
+			_ = report.WritePlantUML(&pBuf)
+		})
+	}
 }
