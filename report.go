@@ -1,8 +1,10 @@
 package auditlog
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 )
 
@@ -231,4 +233,33 @@ func (r Report) Index() ReportIndex {
 	}
 
 	return idx
+}
+
+// WriteNDJSON streams every event in the report as a line-delimited JSON
+// object (NDJSON). Unlike Plugin.WriteEventsNDJSON, this operates directly on
+// the already-materialized Report.Events slice without a defensive copy.
+func (r Report) WriteNDJSON(writer io.Writer) error {
+	enc := json.NewEncoder(writer)
+
+	for _, event := range r.Events {
+		err := enc.Encode(event)
+		if err != nil {
+			return fmt.Errorf("encode event %d: %w", event.Sequence, err)
+		}
+	}
+
+	return nil
+}
+
+// WriteJSON writes the full report as indented JSON to the writer.
+func (r Report) WriteJSON(writer io.Writer) error {
+	enc := json.NewEncoder(writer)
+	enc.SetIndent("", "  ")
+
+	err := enc.Encode(r)
+	if err != nil {
+		return fmt.Errorf("encode report: %w", err)
+	}
+
+	return nil
 }
