@@ -1,7 +1,7 @@
 version: "2"
 run:
   timeout: 5m
-  go: 1.26.4
+  go: 1.26.3
   allow-parallel-runners: true
   allow-serial-runners: true
   issues-exit-code: 1
