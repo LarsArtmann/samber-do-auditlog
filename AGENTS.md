@@ -15,7 +15,7 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | `go test -run TestPlugin_DisabledIsNoOp` | Run single test                                  |
 | `go vet ./...`                           | Static analysis                                  |
 | `golangci-lint run`                      | Full lint (heavy config, see below)              |
-| `go run example/main.go`                 | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
+| `go run ./example`                       | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
 
 No flake.nix, no Makefile, no justfile. Standard Go toolchain only.
 
@@ -161,7 +161,7 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 
 ## Example
 
-`example/main.go` demonstrates every major samber/do v2 feature with a ride-sharing domain model. 19 features verified by a self-checking feature checklist:
+The `example/` package (split across `main.go`, `register.go`, `services.go`, and `summary.go`) demonstrates every major samber/do v2 feature with a ride-sharing domain model. 19 features verified by a self-checking feature checklist:
 
 | Feature                  | API                                                                                                                                 |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
