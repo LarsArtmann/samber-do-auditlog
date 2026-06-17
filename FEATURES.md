@@ -1,113 +1,179 @@
 # Features
 
-Honest inventory of what samber-do-auditlog actually does, verified against the code.
+Honest inventory of what `samber-do-auditlog` actually does, verified against the code. Status labels mean exactly what they say — no "planned" item here is already implemented.
 
 ---
 
-## DONE
+## FULLY FUNCTIONAL
 
-| Feature                               | Description                                                                                                                     | Verified                                                          |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| **Drop-in plugin setup**              | `New(Config)` + `Opts()` → one-line integration with `do.NewWithOpts`                                                           | ✓ `plugin.go:41-81`                                               |
-| **Service registration tracking**     | Captures before/after registration events with timestamps                                                                       | ✓ `recorder.go:169-198`                                           |
-| **Service invocation tracking**       | Captures before/after invocation events with timestamps, duration, errors                                                       | ✓ `recorder.go:200-310`                                           |
-| **Shutdown tracking**                 | Captures before/after shutdown events with duration and errors                                                                  | ✓ `recorder.go:312-357`                                           |
-| **Dependency graph inference**        | Stack-based: infers A→B when A is on-stack during B's before-hook                                                               | ✓ `recorder.go:204-216`                                           |
-| **Reverse dependencies**              | `Dependents` field computed at report time from forward deps                                                                    | ✓ `recorder.go:467-483`                                           |
-| **Scope tree**                        | Builds hierarchical scope tree with per-scope service lists                                                                     | ✓ `recorder.go:485-542`                                           |
-| **Scope tracking**                    | Records scope metadata (ID, name, parent) for all scopes                                                                        | ✓ `recorder.go:100-117`                                           |
-| **Monotonic sequence numbers**        | Per-recorder atomic counter — no global state                                                                                   | ✓ `recorder.go:52-56, 96-98`                                      |
-| **Build duration measurement**        | Tracks first build duration in milliseconds for each service                                                                    | ✓ `recorder.go:253-271`                                           |
-| **Invocation ordering**               | Global invocation order across all services                                                                                     | ✓ `recorder.go:294-301`                                           |
-| **Provider error capture**            | Records invocation errors as string pointers in events and service info                                                         | ✓ `recorder.go:367-375`                                           |
-| **JSON report export**                | Full `Report` as indented JSON to `io.Writer` or file                                                                           | ✓ `plugin.go:88-120`                                              |
-| **NDJSON event stream**               | Each event as a JSON line to `io.Writer` or file                                                                                | ✓ `plugin.go:102-125`                                             |
-| **Self-contained HTML visualization** | Dark-themed page with services table, scopes tab, dependency graph, timeline, events, responsive layout                         | ✓ `html.templ`                                                    |
-| **Dependency graph visualization**    | Sugiyama layered DAG layout with barycenter crossing reduction, cubic Bézier edges, pan/zoom, click-to-highlight                | ✓ `html.templ`                                                    |
-| **Timeline visualization**            | Dual horizontal bar chart: build duration (blue) + shutdown duration (yellow)                                                   | ✓ `html.templ`                                                    |
-| **Scopes tree visualization**         | Collapsible scope tree with service counts and name chips                                                                       | ✓ `html.templ`                                                    |
-| **HTML search & filter**              | Live search on services table, event type filter chips, keyboard tab navigation (1-5)                                           | ✓ `html.templ`                                                    |
-| **Responsive HTML layout**            | Mobile-friendly with media queries, footer with schema version                                                                  | ✓ `html.templ`                                                    |
-| **Environment variable toggle**       | `DO_AUDITLOG_ENABLED` = true/1/yes enables without code change                                                                  | ✓ `plugin.go:56-64`                                               |
-| **Zero-cost disabled mode**           | `Enabled: false` → empty `InjectorOpts`, no hooks, no allocation                                                                | ✓ `plugin.go:68-71`                                               |
-| **Explicit enable override**          | `Config.Enabled: true` overrides env var                                                                                        | ✓ `plugin.go:46-48`                                               |
-| **Container ID**                      | Human-readable identifier propagated to all events                                                                              | ✓ `plugin.go:22-26`                                               |
-| **Concurrent-safe recording**         | Single-lock design: 1 RWMutex + 2 atomics (seq, invocationOrder)                                                                | ✓ `recorder.go:59-76`                                             |
-| **Deterministic report output**       | Services sorted by (scope_name, service_name), scope tree sorted by scope ID                                                    | ✓ `recorder.go:429-434, sortedScopesLocked`                       |
-| **Transient provider support**        | Works with `do.ProvideTransient` — tracks multiple invocations                                                                  | ✓ Tested: `TestPlugin_ProvideTransient`                           |
-| **Value provider support**            | Works with `do.ProvideValue`                                                                                                    | ✓ Tested: `TestPlugin_ProvideValue`                               |
-| **Named service support**             | Works with `do.ProvideNamed` / `do.InvokeNamed`                                                                                 | ✓ Tested throughout                                               |
-| **Schema versioning**                 | `SchemaVersion` constant for forward compatibility                                                                              | ✓ `types.go:6`                                                    |
-| **Defensive copies**                  | `Events()` and `Report()` return copies, not internal slices                                                                    | ✓ `recorder.go:544-550, 378-395`                                  |
-| **Service lifecycle status**          | Computed `ServiceStatus` field: registered, active, invocation_error, shutdown, shutdown_error                                  | ✓ `types.go:ServiceStatus`, `recorder.go:computeServiceStatus`    |
-| **ServiceRef type**                   | Embedded in `Event` and `ServiceInfo` — single source of truth for service identity (renamed from DependencyRef)                | ✓ `types.go:ServiceRef`                                           |
-| **Event convenience methods**         | `IsRegistration()`, `IsInvocation()`, `IsShutdown()`, `IsBefore()`, `IsAfter()`                                                 | ✓ `types.go:Event methods`                                        |
-| **EventHandler callback**             | `Config.OnEvent func(Event)` for real-time event streaming, called outside mutex, nil = disabled                                | ✓ `plugin.go:Config.OnEvent`, `recorder.go:addEvent`              |
-| **ServiceRef.String()**               | Human-readable `"scope/name"` format for compact display                                                                        | ✓ `types.go:ServiceRef.String()`                                  |
-| **ServiceStatus.IsError()**           | `true` for invocation_error or shutdown_error                                                                                   | ✓ `types.go:ServiceStatus.IsError()`                              |
-| **Report convenience methods**        | `ServiceByName(name)`, `EventsByType(t)`, `FailedServices()` for querying report data                                           | ✓ `types.go:Report methods`                                       |
-| **ProviderType**                      | Named type for service provider kinds (lazy, eager, transient, alias) with Icon() and String() methods                          | ✓ `types.go:ProviderType`                                         |
-| **Health check auditing**             | `RecordHealthCheck()` / `RecordHealthCheckWithContext()` wraps injector health checks with audit events                         | ✓ `plugin.go:RecordHealthCheck*`, `recorder.go:RecordHealthCheck` |
-| **Health check events**               | `EventTypeHealthCheck` with `IsHealthCheck()`, PhaseAfter only, no DurationMs (per-service timing unavailable)                  | ✓ `types.go:EventTypeHealthCheck`                                 |
-| **Health check service fields**       | `LastHealthCheckAt`, `HealthCheckError`, `HealthCheckCount` on ServiceInfo; `IsHealthchecker`, `IsShutdowner`                   | ✓ `types.go:ServiceInfo`                                          |
-| **Health check report fields**        | `HealthCheckSucceeded`, `HealthCheckedCount` on Report; `UnhealthyServices()` convenience method                                | ✓ `types.go:Report`                                               |
-| **Health check scope resolution**     | `ResolveServiceScope()` handles both RootScope and child Scope ancestor lookup                                                  | ✓ `recorder.go:ResolveServiceScope`                               |
-| **Health check HTML visualization**   | Health column in services table, health_check event badge (amber), filter chip, conditional stat card                           | ✓ `html.templ`                                                    |
-| **Event.ServiceType**                 | ProviderType carried on every event, populated in newEvent/newEventFromRef                                                      | ✓ `types.go:Event.ServiceType`                                    |
-| **Capability detection**              | `enrichCapabilities()` in BuildReport() populates IsHealthchecker/IsShutdowner via `do.ExplainInjector`                         | ✓ `recorder.go:enrichCapabilities`                                |
-| **Config.Validate()**                 | Validates ContainerID for path separators (`/` and `\`), returns static sentinel error                                          | ✓ `plugin.go:Config.Validate`                                     |
-| **Provider column in Events tab**     | HTML Events tab shows provider type badge per event                                                                             | ✓ `html.templ`                                                    |
-| **Zero golangci-lint issues**         | All 28 lint issues fixed across production code, tests, and example                                                             | ✓ `.golangci.yml`                                                 |
-| **Report filtering**                  | `Report.Filtered(opts...)` with WithServicesByName, WithServicesByType, WithEventsByType, WithTimeRange, WithScope              | ✓ `types.go:ReportOption`                                         |
-| **Plugin.ReportFiltered**             | Convenience method for filtered reports via Plugin                                                                              | ✓ `plugin.go:ReportFiltered`                                      |
-| **ExportFilteredToFile**              | Write filtered JSON report to file                                                                                              | ✓ `plugin.go:ExportFilteredToFile`                                |
-| **Mermaid export**                    | Dependency graph as Mermaid flowchart via `Report.WriteMermaid(writer)`                                                         | ✓ `mermaid.go`                                                    |
-| **PlantUML export**                   | Dependency graph as PlantUML component diagram via `Report.WritePlantUML(writer)`                                               | ✓ `plantuml.go`                                                   |
-| **Type helpers**                      | `ProviderType.IsKnown()`, `ServiceRef.IsRoot()`, `Event.HasError()`, `ServiceInfo.HasHealthError()`                             | ✓ `types.go`                                                      |
-| **EventsByRef**                       | Scoped event lookup by scope ID + service name                                                                                  | ✓ `types.go:EventsByRef`                                          |
-| **Schema migration**                  | `MigrateReport([]byte)` upgrades v0.1.0 JSON → current schema, recomputes derived fields                                        | ✓ `migration.go`                                                  |
-| **Godoc examples**                    | 7 runnable `Example*` functions for pkg.go.dev (New, Report, ExportToFile, Filtered, RecordHealthCheck, WriteMermaid, Validate) | ✓ `example_test.go`                                               |
-| **HTML fuzz test**                    | `FuzzPluginHTML` verifies templ XSS escaping with malicious service names                                                       | ✓ `fuzz_test.go`                                                  |
-| **Iterative buildCapabilityMap**      | BFS queue replaces recursive `maps.Copy` for capability map construction                                                        | ✓ `recorder.go:buildCapabilityMap`                                |
-| **Single-lock Recorder**              | 4 mutexes → 1 RWMutex + 2 atomics: 23% faster, 50% fewer allocs                                                                 | ✓ `recorder.go:Recorder`                                          |
-| **Locking protocol docs**             | Comprehensive godoc on Recorder struct: write/read paths, deadlock risk, enrichCapabilities warning                             | ✓ `recorder.go:71-90`                                             |
-| **Events tab rendering**              | Full event table with sequence, timestamp, type badge, provider badge, phase icon, scope, service, duration, error              | ✓ `html.templ`                                                    |
-| **HTML CSP meta tag**                 | `Content-Security-Policy` restricts to inline styles/scripts and Google Fonts                                                   | ✓ `html.templ`                                                    |
-| **XSS-hardened HTML**                 | All user-controlled strings escaped via `esc()` including dependency names, status classes, error messages                      | ✓ `html.templ`                                                    |
-| **Expanded fuzz tests**               | 3 fuzz targets: service names, error messages, dependency chains with 6+ XSS vector checks                                      | ✓ `fuzz_test.go`                                                  |
-| **Migration input validation**        | `MigrateReport` rejects empty input, missing version; preserves ExportedAt; version guard for current schema                    | ✓ `migration.go`                                                  |
-| **writeToFile error handling**        | Close errors properly returned instead of silently discarded                                                                    | ✓ `plugin.go:writeToFile`                                         |
-| **RootScopeName constant**            | `"[root]"` magic string replaced with named constant across production code                                                     | ✓ `types.go:RootScopeName`                                        |
-| **Expanded godoc**                    | All exported methods documented: `Event.Is*`, `ServiceRef.String()`                                                             | ✓ `types.go`                                                      |
-| **Report.Validate()**                 | Checks denormalized count fields (`EventCount`, `ServiceCount`, `ScopeCount`, `HealthCheckedCount`) match actual data           | ✓ `report.go:Report.Validate`                                     |
-| **Shared diagram formatter**          | `diagramFormatter` interface with Mermaid/PlantUML strategy implementations — eliminates duplication                            | ✓ `diagram.go`                                                    |
-| **New() returns error**               | `New(Config) (*Plugin, error)` — validates config at construction time                                                          | ✓ `plugin.go:New`                                                 |
-| **Hardened CSP**                      | `base-uri 'none'; frame-ancestors 'none'` added to Content-Security-Policy meta tag                                             | ✓ `html.templ`                                                    |
-| **Keyboard nav accessibility**        | Tab shortcuts (1-5) exclude `TEXTAREA`, `SELECT`, `BUTTON` in addition to `INPUT`                                               | ✓ `html.templ`                                                    |
-| **Test helper `mustNew()`**           | Wraps `New()` and panics on error — clean test construction across all test files                                               | ✓ `helpers_test.go:mustNew`                                       |
+### Core Plugin / Container Integration
+
+| Feature | Description | Verified |
+| ------- | ----------- | -------- |
+| **Plugin constructor** | `New(Config) (*Plugin, error)` validates config, applies env-var enablement, initializes recorder | `plugin.go` (`New`) |
+| **Injector options generation** | `Opts()` returns `*do.InjectorOpts` wiring all six lifecycle hooks into samber/do v2 | `plugin.go` (`Opts`) |
+| **Environment-variable enablement** | `DO_AUDITLOG_ENABLED` (`true`/`1`/`yes`) enables logging without code change | `plugin.go` (`EnvKeyEnabled`, `envIsEnabled`) |
+| **Explicit enable override** | `Config.Enabled: true` bypasses the env-var check | `plugin.go` (`New`) |
+| **Zero-cost disabled mode** | When disabled, `Opts()` returns empty hooks and `RecordHealthCheck*` delegates directly to the injector | `plugin.go` (`Opts`, `RecordHealthCheck*`) |
+| **Container ID** | Human-readable identifier propagated to events, report, and HTML title | `plugin.go` (`Config.ContainerID`) |
+| **Config validation** | Rejects `ContainerID` values containing `/` or `\` path separators | `plugin.go` (`Config.Validate`) |
+| **Real-time event callback** | `Config.OnEvent func(Event)` streams every captured event outside the recorder lock | `plugin.go`, `recorder.go` |
+| **In-memory event cap** | `Config.MaxEvents` caps stored events and exposes a drop counter | `plugin.go`, `recorder.go` |
+| **Initial event capacity** | `Config.InitialEventCapacity` pre-allocates the events slice | `plugin.go`, `recorder.go` |
+
+### Lifecycle Event Recording
+
+| Feature | Description | Verified |
+| ------- | ----------- | -------- |
+| **Registration events** | `before`/`after` registration for every service | `hooks.go` (`OnBeforeRegistration`, `OnAfterRegistration`) |
+| **Invocation events** | `before`/`after` invocation with duration and errors | `hooks.go` (`OnBeforeInvocation`, `OnAfterInvocation`) |
+| **Shutdown events** | `before`/`after` shutdown with duration and errors | `hooks.go` (`OnBeforeShutdown`, `OnAfterShutdown`) |
+| **Health-check events** | Per-service `health_check`/`after` events | `healthcheck.go` (`RecordHealthCheck`) |
+| **Event type enum** | `registration`, `invocation`, `shutdown`, `health_check` | `types.go` (`EventType`) |
+| **Phase enum** | `before`, `after` | `types.go` (`Phase`) |
+| **Provider type enum** | `lazy`, `eager`, `transient`, `alias` with `String()`, `IsKnown()`, `Icon()` | `types.go` (`ProviderType`) |
+| **Service status enum** | `registered`, `active`, `invocation_error`, `shutdown`, `shutdown_error` with `IsError()` | `types.go` (`ServiceStatus`) |
+| **Service reference identity** | `ServiceRef` embeds scope ID/name + service name; provides `String()` and `IsRoot()` | `types.go` (`ServiceRef`) |
+| **Sequence numbers** | Per-recorder atomic counter; no global state | `recorder.go` |
+| **Invocation ordering** | Global invocation order counter stored per service | `hooks.go`, `recorder.go` |
+| **Build duration tracking** | First-build duration in milliseconds per service | `hooks.go` |
+| **Shutdown duration tracking** | Shutdown duration in milliseconds per service | `hooks.go` |
+| **Error capture** | Invocation/shutdown/health errors stored as `*string` in events and service records | `hooks.go`, `healthcheck.go` |
+| **Dependency graph inference** | Stack-based: if A is on-stack when B is invoked, A depends on B | `hooks.go` |
+| **Reverse dependencies** | `Dependents` field computed at report time from forward deps | `report_builder.go` |
+| **Scope tracking** | Records scope ID, name, parent ID, and reference for all scopes | `recorder.go` (`recordScopeLocked`) |
+| **Capability detection** | `IsHealthchecker`/`IsShutdowner` populated via `do.ExplainInjector` | `report_builder.go` (`enrichCapabilities`) |
+| **Scope resolution for health checks** | `ResolveServiceScope` handles root scope and ancestor lookup | `healthcheck.go` (`ResolveServiceScope`) |
+| **Concurrent-safe recording** | Single `sync.RWMutex` plus atomic counters; callbacks invoked outside the lock | `recorder.go` |
+| **Deterministic output** | Services sorted by (scope_name, service_name); scope tree sorted by scope ID | `report_builder.go` |
+
+### Report Model
+
+| Feature | Description | Verified |
+| ------- | ----------- | -------- |
+| **Report struct** | Consolidated snapshot with version, container ID, counts, durations, success flags, events, services, scope tree | `report.go` |
+| **Schema version** | Current report schema is `"0.2.0"` | `types.go` (`SchemaVersion`) |
+| **Service info aggregate** | Per-service rollup of status, type, timings, deps, dependents, errors, health | `service.go` (`ServiceInfo`) |
+| **Scope tree** | Hierarchical `ScopeNode` with services and children | `service.go` (`ScopeNode`) |
+| **Report validation** | Checks denormalized counts match actual slice/tree lengths | `report.go` (`Report.Validate`) |
+| **Report indexing** | `Report.Index()` builds O(1) lookups by name, ref, scope, events | `report.go` (`Index`) |
+| **Report convenience queries** | `ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByRef`, `EventsByType`, `FailedServices`, `UnhealthyServices` | `report.go` |
+| **Event convenience helpers** | `IsRegistration`, `IsInvocation`, `IsShutdown`, `IsHealthCheck`, `IsBefore`, `IsAfter`, `HasError`, `Duration` | `event.go` |
+| **Service info helpers** | `Uptime()`, `HasHealthError()` | `service.go` |
+| **Report diff** | `Report.Diff(other)` returns added/removed/changed services and event-count delta | `diff.go` |
+
+### Report Filtering
+
+| Feature | Description | Verified |
+| ------- | ----------- | -------- |
+| **Filtered report** | `Report.Filtered(opts...)` returns a new report with matching services/events and recomputed aggregates | `filter.go` |
+| **Filter by service name** | `WithServicesByName(names...)` | `filter.go` |
+| **Filter by provider type** | `WithServicesByType(providerType)` | `filter.go` |
+| **Filter by event type** | `WithEventsByType(eventType)` | `filter.go` |
+| **Filter by time range** | `WithTimeRange(from, to)` | `filter.go` |
+| **Filter by scope** | `WithScope(scopeID)` | `filter.go` |
+| **Pruned scope tree** | Filtered reports keep only scopes with at least one matching service | `filter.go` |
+| **Plugin filtered report** | `Plugin.ReportFiltered(opts...)` | `plugin.go` |
+
+### Export Formats
+
+| Feature | Description | Verified |
+| ------- | ----------- | -------- |
+| **JSON report to writer** | `Plugin.WriteReportJSON(writer)` | `plugin.go` |
+| **NDJSON event stream to writer** | `Plugin.WriteEventsNDJSON(writer)` | `plugin.go` |
+| **JSON report to file** | `Plugin.ExportToFile(path)` | `plugin.go` |
+| **NDJSON events to file** | `Plugin.ExportEventsToNDJSON(path)` | `plugin.go` |
+| **Filtered JSON report to file** | `Plugin.ExportFilteredToFile(path, opts...)` | `plugin.go` |
+| **Report JSON writer** | `Report.WriteJSON(writer)` | `report.go` |
+| **Report NDJSON writer** | `Report.WriteNDJSON(writer)` | `report.go` |
+| **Atomic file writes** | File exports write to temp file and rename for crash safety | `plugin.go` (`writeToFile`) |
+| **Mermaid diagram export** | `Report.WriteMermaid(writer)` outputs a themed flowchart | `mermaid.go`, `diagram.go` |
+| **PlantUML diagram export** | `Report.WritePlantUML(writer)` outputs a styled component diagram | `plantuml.go`, `diagram.go` |
+| **Shared diagram formatter** | `diagramFormatter` interface drives Mermaid/PlantUML with deduplicated, sorted output | `diagram.go` |
+| **Self-contained HTML export** | `Plugin.ExportToHTML(path)` and `Plugin.WriteHTML(w)` render a single-file report | `html.go`, `html.templ` |
+
+### HTML Visualization
+
+| Feature | Description | Verified |
+| ------- | ----------- | -------- |
+| **Dark-themed dashboard** | Custom CSS color scheme, IBM Plex Mono / Space Grotesk typography | `html.templ` |
+| **Header with metadata** | Container ID, schema version, export timestamp | `html.templ` |
+| **Stats cards** | Services, scopes, events, dependencies, total build, errors, health-check summary | `html.templ` |
+| **Lifecycle waveform** | Event timeline strip colored by event type, height scaled by duration | `html.templ` |
+| **Services table** | Columns for service, type, scope, status, order, invocations, build/shutdown ms, deps, dependents, health | `html.templ` |
+| **Scopes tree** | Collapsible tree with service counts and provider icons | `html.templ` |
+| **Dependency graph** | Sugiyama layered DAG layout with barycenter crossing reduction, cubic Bézier edges, pan/zoom/fit, click-to-highlight, mouse wheel and touch support | `html.templ` |
+| **Timeline tab** | Dual horizontal bar chart of build vs shutdown durations | `html.templ` |
+| **Events table** | Event list with sequence, time, type badge, provider badge, phase, scope, service, duration, error | `html.templ` |
+| **Live service search** | Debounced filter on service name/scope/type | `html.templ` |
+| **Event type filter chips** | All / registration / invocation / shutdown / health_check buttons | `html.templ` |
+| **Keyboard navigation** | Number keys 1-5 switch tabs; ignored when focus is in form controls | `html.templ` |
+| **Pagination** | "Show first N" with "Show all" button for services (50) and events (100) | `html.templ` |
+| **Error tooltips** | Click error status badges to show the full error message | `html.templ` |
+| **Type metadata injection** | `BuildTypeMetadata()` JSON is injected into the page as the single source of truth for icons and labels | `metadata.go`, `html.templ` |
+| **Responsive layout** | Mobile-friendly padding, media queries, reduced-motion support | `html.templ` |
+| **Content Security Policy** | CSP meta tag with `base-uri 'none'`, `frame-ancestors 'none'`, and inline style/script allowances | `html.templ` |
+| **XSS hardening** | All user-controlled strings escaped via `esc()` before DOM insertion | `html.templ` |
+
+### Schema Migration
+
+| Feature | Description | Verified |
+| ------- | ----------- | -------- |
+| **Report migration** | `MigrateReport([]byte)` upgrades older JSON reports to current schema, recomputing derived fields and status | `migration.go` |
+| **Status derivation from legacy data** | Computes service status when missing from imported reports | `migration.go`, `report_helpers.go` |
+
+### Health Checks
+
+| Feature | Description | Verified |
+| ------- | ----------- | -------- |
+| **Health-check wrapper methods** | `Plugin.RecordHealthCheck(injector)` and `RecordHealthCheckWithContext(ctx, injector)` | `plugin.go` |
+| **Health-check event recording** | `Recorder.RecordHealthCheck` emits `EventTypeHealthCheck` events and updates per-service health state | `healthcheck.go` |
+| **Health-check report fields** | `Report.HealthCheckSucceeded`, `HealthCheckedCount`, `DroppedEventCount` | `report.go` |
+| **Health-check service fields** | `ServiceInfo.LastHealthCheckAt`, `HealthCheckError`, `HealthCheckCount`, `HasHealthError()` | `service.go` |
+| **Unhealthy service lookup** | `Report.UnhealthyServices()` | `report.go` |
+
+### Testing / Infrastructure
+
+| Feature | Description | Verified |
+| ------- | ----------- | -------- |
+| **GitHub Actions CI** | `go vet`, `go build`, race-detector tests, golangci-lint, govulncheck, generated-code drift checks | `.github/workflows/ci.yml` |
+| **golangci-lint config** | `.golangci.yml` defines lint rules for the project | `.golangci.yml` |
+| **Generated-code check** | CI runs `go generate ./...` and fails on drift, ensuring `html_templ.go` stays in sync | `.github/workflows/ci.yml` |
+| **templ code generation** | `//go:generate go tool templ generate` in `html.go` produces `html_templ.go` | `html.go`, `html_templ.go` |
+| **Fuzz tests** | XSS fuzz targets for HTML output (service names, error messages, dependency chains) | `fuzz_test.go` |
+| **Benchmark tests** | Performance benchmarks for hot paths | `benchmarks_test.go` |
+| **Example tests** | Runnable `Example*` functions for pkg.go.dev | `example_test.go` |
+| **Defensive-copy accessors** | `Plugin.Events()` and `Recorder.Events()` return copied slices; `EventsCount()` avoids copying | `plugin.go`, `recorder.go` |
+| **Dropped-event counter** | `Plugin.DroppedEventCount()` / `Recorder.DroppedEventCount()` | `plugin.go`, `recorder.go` |
 
 ---
 
-## PLANNED
+## PARTIALLY FUNCTIONAL
 
-| Feature                          | Description                                                                | Priority |
-| -------------------------------- | -------------------------------------------------------------------------- | -------- |
-| **Go enum metadata injection**   | Inject TypeMetadata JSON into HTML to eliminate Go/JS constant split-brain | High     |
-| **HTML accessibility polish**    | aria-pressed, scope=col, empty-state messages                              | Medium   |
-| **Debounced service search**     | 150ms debounce to reduce render thrashing                                  | Medium   |
-| **Diagram theme styling**        | Mermaid `%%{init}%%` and PlantUML skinparam                                | Low      |
-| **Robust fuzz XSS checking**     | Replace hand-rolled `stripScriptTags` with `template.HTML()` safe check    | Medium   |
-| **HTML integration test**        | Realistic multi-service end-to-end test                                    | Medium   |
-| **Security CI**                  | gosec + govulncheck integration                                            | Medium   |
-| **Touch event support**          | Pan/zoom for dependency graph on mobile                                    | Low      |
-| **Pagination for large reports** | "Show first N" + "Show more" for services/events tables                    | Low      |
+| Feature | Description | Status |
+| ------- | ----------- | ------ |
+| **Test parallelism** | Only ~15% of tests use `t.Parallel()`; the rest run sequentially. Suite is ~1s, so not a bottleneck yet. | Could be expanded |
+| **Fuzz coverage** | All fuzz targets test HTML XSS; no fuzzing of `MigrateReport`, Mermaid/PlantUML special characters, nested scopes, or filters. | Could be expanded |
+| **Metadata testing** | `BuildTypeMetadata()` is exercised indirectly by HTML tests; individual emoji/label/color values are not directly asserted. | Could be expanded |
 
 ---
 
-## NOT PLANNED (but worth considering)
+## WORTH CONSIDERING
 
-| Feature                                            | Why Not Now                                                          |
-| -------------------------------------------------- | -------------------------------------------------------------------- |
-| **Multi-module split**                             | Project is too small (1 package, ~2400 LOC) — revisit at 5+ packages |
-| **External storage backends**                      | YAGNI — file/io.Writer exports are sufficient                        |
-| **Metrics integration (Prometheus/OpenTelemetry)** | Out of scope for audit logging — use EventHandler when available     |
+| Feature | Why Not Now |
+| ------- | ----------- |
+| **External storage backends** | File/`io.Writer` exports are sufficient for current scope |
+| **Prometheus / OpenTelemetry metrics integration** | Users can derive metrics via `Config.OnEvent`; OTel bridge example exists |
+| **Multi-module repository split** | Project is one package (~3,000 LOC); revisit at 5+ packages |
+| **gosec static analysis in CI** | Security linting alongside existing govulncheck |
+| **CSV / TSV export** | Tabular export of services or events for spreadsheets |
+| **CLI tool** | Stand-alone binary to convert/export/visualize saved reports |
+| **NDJSON import** | Enable loading events back from NDJSON for diffing across time |
+| **JSON Schema file** | Machine-readable schema for the report format |
+| **Property-based testing** | `rapid`/`gopter` tests for `Diff`, `MigrateReport`, filter round-trips |
+| **WebSocket live stream** | Bridge `OnEvent` to real-time dashboards |
+| **v0.1.0 release** | Project meets `STABILITY.md` criteria for a first stable-ish tag |
+
+---
+
+*Last verified against the codebase on 2026-06-17.*

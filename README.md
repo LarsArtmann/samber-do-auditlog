@@ -278,13 +278,16 @@ Health check events are `PhaseAfter` only (there is no before-hook). Per-service
 Provide an `OnEvent` callback to react to events as they happen — no polling required.
 
 ```go
-plugin := auditlog.New(auditlog.Config{
+plugin, err := auditlog.New(auditlog.Config{
     Enabled: true,
     OnEvent: func(ev auditlog.Event) {
         // Stream to Prometheus, OTel, a live dashboard, or custom tooling
         log.Printf("event %d: %s %s", ev.Sequence, ev.EventType, ev.ServiceName)
     },
 })
+if err != nil {
+    log.Fatalf("create auditlog plugin: %v", err)
+}
 ```
 
 The callback is called **outside the mutex** on every event. Keep it fast — do not block the hot path.
@@ -313,9 +316,9 @@ The callback is called **outside the mutex** on every event. Keep it fast — do
 
 **Package-level**
 
-| Function                                     | Description                                         |
-| -------------------------------------------- | --------------------------------------------------- |
-| `MigrateReport(data []byte) ([]byte, error)` | Upgrade a v0.1.0 JSON report to the current schema. |
+| Function                                    | Description                                         |
+| ------------------------------------------- | --------------------------------------------------- |
+| `MigrateReport(data []byte) (Report, error)` | Upgrade a v0.1.0 JSON report to the current schema. |
 
 ### Report
 
@@ -332,8 +335,11 @@ The callback is called **outside the mutex** on every event. Keep it fast — do
 | `EventsByType(type) []Event`               | All events of a given type.                         |
 | `FailedServices() []ServiceInfo`           | Services with invocation or shutdown errors.        |
 | `UnhealthyServices() []ServiceInfo`        | Services with health check errors.                  |
+| `WriteJSON(w) error`                       | Indented JSON report to `io.Writer`.                |
+| `WriteNDJSON(w) error`                     | NDJSON event stream to `io.Writer`.                 |
 | `WriteMermaid(w) error`                    | Mermaid flowchart to `io.Writer`.                   |
 | `WritePlantUML(w) error`                   | PlantUML component diagram to `io.Writer`.          |
+| `Diff(other Report) DiffResult`            | Structural comparison between two reports.          |
 
 ## How Dependency Tracking Works
 
@@ -357,12 +363,12 @@ The reverse graph (`Dependents`) is computed at report time from the forward dep
 Benchmarks from a real run (AMD Ryzen AI MAX+ 395):
 
 ```
-BenchmarkHookOverhead_Invocation    ~1,305 ns/op    7 allocs    (enabled)
-BenchmarkHookOverhead_Disabled       ~252 ns/op    4 allocs    (disabled)
-BenchmarkHookOverhead_Registration  ~26,519 ns/op   49 allocs    (full container)
+BenchmarkHookOverhead_Invocation    ~1,658 ns/op    6 allocs    (enabled)
+BenchmarkHookOverhead_Disabled       ~113 ns/op    4 allocs    (disabled)
+BenchmarkHookOverhead_Registration  ~21,982 ns/op   54 allocs    (full container)
 ```
 
-**Overhead: ~1μs per cached invocation** when enabled. Zero cost when disabled.
+**Overhead: ~1.7μs per cached invocation** when enabled. Zero cost when disabled.
 
 No file I/O happens during container operation. Export is a single `json.Marshal` or line iteration — you pay the cost only when you need the data.
 
