@@ -8,20 +8,21 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 
 ## Commands
 
-| Command                                  | Purpose                                                       |
-| ---------------------------------------- | ------------------------------------------------------------- |
-| `go generate ./...`                      | Regenerate templ (and any other generated code)               |
-| `go test ./...`                          | Run all tests                                                 |
-| `go test -race ./...`                    | Run all tests with race detector (CI uses this)               |
+| Command               | Purpose                                         |
+| --------------------- | ----------------------------------------------- |
+| `go generate ./...`   | Regenerate templ (and any other generated code) |
+| `go test ./...`       | Run all tests                                   |
+| `go test -race ./...` | Run all tests with race detector (CI uses this) |
+
 | `go test -race -coverprofile=cover.out \\
-  -covermode=atomic ./...`                | Run tests with coverage (CI gate: ≥95% of non-`example/` code) |
-| `go test -run TestPlugin_DisabledIsNoOp` | Run single test                                               |
-| `go vet ./...`                           | Static analysis                                               |
-| `golangci-lint config verify`            | Validate the lint config (CI runs this before `lint run`)     |
-| `golangci-lint run`                      | Full lint (heavy config, see below)                           |
-| `go mod tidy`                            | Sync `go.sum` (CI `mod-tidy` job fails on drift)              |
-| `nix develop`                            | Enter devShell (Go 1.26.4, templ, golangci-lint, govulncheck) |
-| `go run ./example`                       | Run the example (set `DO_AUDITLOG_ENABLED=true`)              |
+  -covermode=atomic ./...` | Run tests with coverage (CI gate: ≥95% of non-`example/` code) |
+| `go test -run TestPlugin_DisabledIsNoOp` | Run single test |
+| `go vet ./...` | Static analysis |
+| `golangci-lint config verify` | Validate the lint config (CI runs this before `lint run`) |
+| `golangci-lint run` | Full lint (heavy config, see below) |
+| `go mod tidy` | Sync `go.sum` (CI `mod-tidy` job fails on drift) |
+| `nix develop` | Enter devShell (Go 1.26.4, templ, golangci-lint, govulncheck) |
+| `go run ./example` | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
 
 A `flake.nix` devShell is available for Nix users. No Makefile, no justfile.
 

@@ -20,64 +20,64 @@ The templ CLI was just migrated to Go's `tool` directive this session, eliminati
 
 ### Production Code
 
-| Feature | Status | Details |
-|---------|--------|---------|
-| Core plugin lifecycle | ✅ Complete | `New(Config) (*Plugin, error)`, `Opts()`, `Report()`, `Events()`, `EventsCount()` |
-| Event recording | ✅ Complete | Registration, invocation, shutdown, health-check events with timestamps, phases, durations |
-| Dependency graph inference | ✅ Complete | Invocation-stack-based dependency detection (A→B if A on-stack when B starts) |
-| Service type tracking | ✅ Complete | Provider types (lazy/eager/transient/alias) via `do.ExplainNamedService` |
-| Capability tracking | ✅ Complete | `IsHealthchecker`/`IsShutdowner` via `do.ExplainInjector` (outside mutex to avoid deadlock) |
-| Service status computation | ✅ Complete | Priority: invocation_error > shutdown_error > shutdown > active > registered |
-| Scope tree | ✅ Complete | Root + child scopes with deterministic sorting |
-| Health check recording | ✅ Complete | Wrapper pattern (`RecordHealthCheck[WithContext]`), `EventTypeHealthCheck` events |
-| Config: MaxEvents | ✅ Complete | Ring-buffer event dropping with `DroppedEventCount()` |
-| Config: OnEvent callback | ✅ Complete | Real-time event streaming, called outside mutex |
-| Config: Validate() | ✅ Complete | ContainerID path-separator check, sentinel errors |
+| Feature                    | Status      | Details                                                                                     |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------- |
+| Core plugin lifecycle      | ✅ Complete | `New(Config) (*Plugin, error)`, `Opts()`, `Report()`, `Events()`, `EventsCount()`           |
+| Event recording            | ✅ Complete | Registration, invocation, shutdown, health-check events with timestamps, phases, durations  |
+| Dependency graph inference | ✅ Complete | Invocation-stack-based dependency detection (A→B if A on-stack when B starts)               |
+| Service type tracking      | ✅ Complete | Provider types (lazy/eager/transient/alias) via `do.ExplainNamedService`                    |
+| Capability tracking        | ✅ Complete | `IsHealthchecker`/`IsShutdowner` via `do.ExplainInjector` (outside mutex to avoid deadlock) |
+| Service status computation | ✅ Complete | Priority: invocation_error > shutdown_error > shutdown > active > registered                |
+| Scope tree                 | ✅ Complete | Root + child scopes with deterministic sorting                                              |
+| Health check recording     | ✅ Complete | Wrapper pattern (`RecordHealthCheck[WithContext]`), `EventTypeHealthCheck` events           |
+| Config: MaxEvents          | ✅ Complete | Ring-buffer event dropping with `DroppedEventCount()`                                       |
+| Config: OnEvent callback   | ✅ Complete | Real-time event streaming, called outside mutex                                             |
+| Config: Validate()         | ✅ Complete | ContainerID path-separator check, sentinel errors                                           |
 
 ### Report & Export
 
-| Feature | Status | Details |
-|---------|--------|---------|
-| Report assembly | ✅ Complete | `BuildReport()` with services, scope tree, capabilities, event stream |
-| Report.Validate() | ✅ Complete | Denormalized count checks with sentinel errors |
-| Report query methods | ✅ Complete | `ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByType`, `FailedServices`, `UnhealthyServices`, `Index` |
-| Report filtering | ✅ Complete | `Filtered(opts...)` with 5 filter options (by name, scope, type, status, service-type) |
-| Report.Diff() | ✅ Complete | Structural comparison (added/removed/changed services, event count delta) |
-| Report.WriteJSON() | ✅ Complete | Indented JSON to writer |
-| Report.WriteNDJSON() | ✅ Complete | Streaming events to writer |
-| Report.WriteMermaid() | ✅ Complete | Flowchart diagram with theme |
-| Report.WritePlantUML() | ✅ Complete | Component diagram with skinparams |
-| ExportToHTML / WriteHTML | ✅ Complete | Self-contained HTML with 5-tab layout, CSP-hardened |
-| ExportToJSON / WriteJSON | ✅ Complete | |
-| ExportToNDJSON / WriteEventsNDJSON | ✅ Complete | |
-| ExportFilteredToFile | ✅ Complete | Filtered export to file |
-| Schema migration | ✅ Complete | `MigrateReport` v0.1.0 → v0.2.0 with validation |
+| Feature                            | Status      | Details                                                                                                                               |
+| ---------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Report assembly                    | ✅ Complete | `BuildReport()` with services, scope tree, capabilities, event stream                                                                 |
+| Report.Validate()                  | ✅ Complete | Denormalized count checks with sentinel errors                                                                                        |
+| Report query methods               | ✅ Complete | `ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByType`, `FailedServices`, `UnhealthyServices`, `Index` |
+| Report filtering                   | ✅ Complete | `Filtered(opts...)` with 5 filter options (by name, scope, type, status, service-type)                                                |
+| Report.Diff()                      | ✅ Complete | Structural comparison (added/removed/changed services, event count delta)                                                             |
+| Report.WriteJSON()                 | ✅ Complete | Indented JSON to writer                                                                                                               |
+| Report.WriteNDJSON()               | ✅ Complete | Streaming events to writer                                                                                                            |
+| Report.WriteMermaid()              | ✅ Complete | Flowchart diagram with theme                                                                                                          |
+| Report.WritePlantUML()             | ✅ Complete | Component diagram with skinparams                                                                                                     |
+| ExportToHTML / WriteHTML           | ✅ Complete | Self-contained HTML with 5-tab layout, CSP-hardened                                                                                   |
+| ExportToJSON / WriteJSON           | ✅ Complete |                                                                                                                                       |
+| ExportToNDJSON / WriteEventsNDJSON | ✅ Complete |                                                                                                                                       |
+| ExportFilteredToFile               | ✅ Complete | Filtered export to file                                                                                                               |
+| Schema migration                   | ✅ Complete | `MigrateReport` v0.1.0 → v0.2.0 with validation                                                                                       |
 
 ### Infrastructure
 
-| Feature | Status | Details |
-|---------|--------|---------|
-| CI pipeline | ✅ Complete | 4 jobs: test (-race), lint, vulncheck, stale-generation |
+| Feature              | Status      | Details                                                         |
+| -------------------- | ----------- | --------------------------------------------------------------- |
+| CI pipeline          | ✅ Complete | 4 jobs: test (-race), lint, vulncheck, stale-generation         |
 | Templ tool directive | ✅ Complete | `go tool templ generate` via go.mod — no external binary needed |
-| flake.nix devShell | ✅ Complete | Go 1.26.3, golangci-lint, govulncheck, golines |
-| BENCHMARKS.md | ✅ Complete | 13 benchmark cases baselined (3 runs each, median) |
-| STABILITY.md | ✅ Complete | 0.x API stability promise (stable/evolving/internal surfaces) |
-| CONTRIBUTING.md | ✅ Complete | Setup, testing, code style, releasing guide |
-| OTel bridge example | ✅ Complete | `docs/examples/otel-bridge.md` reference implementation |
-| fuzz tests | ✅ Complete | 3 XSS fuzz targets for HTML export |
+| flake.nix devShell   | ✅ Complete | Go 1.26.3, golangci-lint, govulncheck, golines                  |
+| BENCHMARKS.md        | ✅ Complete | 13 benchmark cases baselined (3 runs each, median)              |
+| STABILITY.md         | ✅ Complete | 0.x API stability promise (stable/evolving/internal surfaces)   |
+| CONTRIBUTING.md      | ✅ Complete | Setup, testing, code style, releasing guide                     |
+| OTel bridge example  | ✅ Complete | `docs/examples/otel-bridge.md` reference implementation         |
+| fuzz tests           | ✅ Complete | 3 XSS fuzz targets for HTML export                              |
 
 ### Testing
 
-| Metric | Value |
-|--------|-------|
-| Top-level test functions | 153 |
-| Total test cases (incl. subtests) | 234 |
-| Test files | 22 |
-| Coverage | **95.3%** of statements |
-| Benchmark cases | 13 (11 functions) |
-| Fuzz targets | 3 |
-| Example functions | 7 |
-| Race detector | ✅ CI uses `-race` flag |
+| Metric                            | Value                   |
+| --------------------------------- | ----------------------- |
+| Top-level test functions          | 153                     |
+| Total test cases (incl. subtests) | 234                     |
+| Test files                        | 22                      |
+| Coverage                          | **95.3%** of statements |
+| Benchmark cases                   | 13 (11 functions)       |
+| Fuzz targets                      | 3                       |
+| Example functions                 | 7                       |
+| Race detector                     | ✅ CI uses `-race` flag |
 
 ---
 
@@ -85,17 +85,17 @@ The templ CLI was just migrated to Go's `tool` directive this session, eliminati
 
 ### 1. Documentation Freshness — **~60% accurate**
 
-| Document | Accuracy | Key Issues |
-|----------|----------|------------|
-| `CHANGELOG.md` | ✅ 95% | Accurate and well-maintained. Minor stale test count in [0.0.1] |
-| `CONTRIBUTING.md` | ✅ 95% | Accurate after templ tool migration update |
-| `STABILITY.md` | ✅ 95% | Correct, marks new APIs as "evolving" |
-| `BENCHMARKS.md` | ✅ 90% | Internally accurate, but conflicts with README's performance section |
-| `AGENTS.md` | 🟡 70% | Duplicate bullet points (6 items listed twice), stale `newServiceRecordFromMeta()` ref, wrong test breakdown |
-| `README.md` | 🟡 60% | **Non-compiling example** (`New()` return value not handled), stale benchmark numbers, missing new API methods |
-| `FEATURES.md` | 🔴 25% | **Almost entirely stale** — 8 of 9 "planned" items are done; missing many completed features; wrong line refs |
-| `TODO_LIST.md` | 🟡 70% | All items ticked, but stale LOC count, inconsistent benchmark count |
-| `docs/DOMAIN_LANGUAGE.md` | 🟡 50% | References split-apart `recorder.go`, missing new commands |
+| Document                  | Accuracy | Key Issues                                                                                                     |
+| ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------- |
+| `CHANGELOG.md`            | ✅ 95%   | Accurate and well-maintained. Minor stale test count in [0.0.1]                                                |
+| `CONTRIBUTING.md`         | ✅ 95%   | Accurate after templ tool migration update                                                                     |
+| `STABILITY.md`            | ✅ 95%   | Correct, marks new APIs as "evolving"                                                                          |
+| `BENCHMARKS.md`           | ✅ 90%   | Internally accurate, but conflicts with README's performance section                                           |
+| `AGENTS.md`               | 🟡 70%   | Duplicate bullet points (6 items listed twice), stale `newServiceRecordFromMeta()` ref, wrong test breakdown   |
+| `README.md`               | 🟡 60%   | **Non-compiling example** (`New()` return value not handled), stale benchmark numbers, missing new API methods |
+| `FEATURES.md`             | 🔴 25%   | **Almost entirely stale** — 8 of 9 "planned" items are done; missing many completed features; wrong line refs  |
+| `TODO_LIST.md`            | 🟡 70%   | All items ticked, but stale LOC count, inconsistent benchmark count                                            |
+| `docs/DOMAIN_LANGUAGE.md` | 🟡 50%   | References split-apart `recorder.go`, missing new commands                                                     |
 
 ### 2. Test Parallelism — **~15% of tests use t.Parallel()**
 
@@ -104,6 +104,7 @@ Only `status_internal_test.go`, `diff_export_test.go`, `plugin_provider_test.go`
 ### 3. Fuzz Coverage — **HTML-only, 3 targets**
 
 All fuzz targets test XSS in HTML export. No fuzzing of:
+
 - `MigrateReport([]byte)` — arbitrary JSON input (prime fuzz target)
 - Service names in Mermaid/PlantUML output (special characters)
 - Deeply nested scope trees
@@ -139,6 +140,7 @@ These are features and improvements that have been discussed but never attempted
 ### 🔴 1. CI Was Failing on Every Push (3 distinct bugs, now fixed)
 
 **Root causes (all fixed this session):**
+
 1. `tagliatelle` config used v1 schema (`rules.json: snake_case`) instead of v2 (`case.rules.json: snake`) — `golangci-lint run` silently accepted invalid config.
 2. `golangci-lint-action@v6` incompatible with golangci-lint v2 — needs v7.
 3. `//go:generate templ generate` used system PATH binary (Nix v0.3.1036) instead of go.mod-pinned v0.3.1020.
@@ -225,33 +227,33 @@ The PLANNED section lists 8 of 9 items as "not started" when they are actually *
 
 Sorted by `Impact × Customer-Value ÷ Effort`:
 
-| # | Task | Impact | Effort | Category |
-|---|------|--------|--------|----------|
-| 1 | **Fix scope-counting bug** — unify `countUniqueScopes`/`countScopeNodes`, add `Validate()` to empty-report test | 🔴 High | 🔵 Low | Bug fix |
-| 2 | **Remove dead `formatNs()` JS** or implement offset timestamps in backend | 🔴 High | 🔵 Low | Bug fix |
-| 3 | **Remove stale `~/go/bin/templ`** binary — eliminates future drift | 🟠 Med | ⚪ Trivial | DevX |
-| 4 | **Rebuild FEATURES.md** from actual code (features-audit skill) | 🟠 Med | 🔵 Low | Docs |
-| 5 | **Fix README non-compiling example** — `New()` error handling | 🟠 Med | ⚪ Trivial | Docs |
-| 6 | **Deduplicate AGENTS.md** — remove 6 duplicate bullets, stale refs | 🟡 Low | ⚪ Trivial | Docs |
-| 7 | **Add `golangci-lint config verify`** to CI and CONTRIBUTING.md | 🟠 Med | ⚪ Trivial | CI |
-| 8 | **Add coverage gate to CI** — fail if < 95% | 🟠 Med | ⚪ Trivial | CI |
-| 9 | **Add `go mod tidy` check to CI** | 🟡 Low | ⚪ Trivial | CI |
-| 10 | **Fix fragile type assertion** in `ResolveServiceScope` (healthcheck.go:58) | 🟠 Med | 🔵 Low | Bug fix |
-| 11 | **Sync README benchmark numbers** with BENCHMARKS.md | 🟡 Low | ⚪ Trivial | Docs |
-| 12 | **Add `MigrateReport` fuzz target** | 🟠 Med | 🔵 Low | Testing |
-| 13 | **Add direct `BuildTypeMetadata` tests** | 🟡 Low | 🔵 Low | Testing |
-| 14 | **Replace magic `[2]bool`** with named struct in capability enrichment | 🟡 Low | 🔵 Low | Code quality |
-| 15 | **Add `t.Parallel()` to independent tests** | 🟡 Low | 🟡 Med | Testing |
-| 16 | **Update `docs/DOMAIN_LANGUAGE.md`** — fix file refs, add new commands | 🟡 Low | 🔵 Low | Docs |
-| 17 | **Set `go 1.26.4` in go.mod** — patched version via auto-toolchain | 🟡 Low | ⚪ Trivial | DevX |
-| 18 | **Add missing API methods to README tables** (WriteNDJSON, WriteJSON, Diff) | 🟡 Low | ⚪ Trivial | Docs |
-| 19 | **Review experimental build tags** in .golangci.yml | 🟡 Low | 🔵 Low | Config |
-| 20 | **Test `NewRecorder()` directly** | 🟢 Low | 🔵 Low | Testing |
-| 21 | **Add Prometheus exporter example** (parallel to OTel example) | 🟢 Low | 🟡 Med | Docs |
-| 22 | **JSON Schema file** for the report format | 🟡 Low | 🟡 Med | Docs |
-| 23 | **Property-based tests** for Diff, MigrateReport, filter round-trips | 🟢 Low | 🟠 High | Testing |
-| 24 | **NDJSON import** — enable loading events back from NDJSON | 🟢 Low | 🔴 High | Feature |
-| 25 | **v0.1.0 release** — project meets STABILITY.md criteria | 🟠 Med | 🟡 Med | Release |
+| #   | Task                                                                                                            | Impact  | Effort     | Category     |
+| --- | --------------------------------------------------------------------------------------------------------------- | ------- | ---------- | ------------ |
+| 1   | **Fix scope-counting bug** — unify `countUniqueScopes`/`countScopeNodes`, add `Validate()` to empty-report test | 🔴 High | 🔵 Low     | Bug fix      |
+| 2   | **Remove dead `formatNs()` JS** or implement offset timestamps in backend                                       | 🔴 High | 🔵 Low     | Bug fix      |
+| 3   | **Remove stale `~/go/bin/templ`** binary — eliminates future drift                                              | 🟠 Med  | ⚪ Trivial | DevX         |
+| 4   | **Rebuild FEATURES.md** from actual code (features-audit skill)                                                 | 🟠 Med  | 🔵 Low     | Docs         |
+| 5   | **Fix README non-compiling example** — `New()` error handling                                                   | 🟠 Med  | ⚪ Trivial | Docs         |
+| 6   | **Deduplicate AGENTS.md** — remove 6 duplicate bullets, stale refs                                              | 🟡 Low  | ⚪ Trivial | Docs         |
+| 7   | **Add `golangci-lint config verify`** to CI and CONTRIBUTING.md                                                 | 🟠 Med  | ⚪ Trivial | CI           |
+| 8   | **Add coverage gate to CI** — fail if < 95%                                                                     | 🟠 Med  | ⚪ Trivial | CI           |
+| 9   | **Add `go mod tidy` check to CI**                                                                               | 🟡 Low  | ⚪ Trivial | CI           |
+| 10  | **Fix fragile type assertion** in `ResolveServiceScope` (healthcheck.go:58)                                     | 🟠 Med  | 🔵 Low     | Bug fix      |
+| 11  | **Sync README benchmark numbers** with BENCHMARKS.md                                                            | 🟡 Low  | ⚪ Trivial | Docs         |
+| 12  | **Add `MigrateReport` fuzz target**                                                                             | 🟠 Med  | 🔵 Low     | Testing      |
+| 13  | **Add direct `BuildTypeMetadata` tests**                                                                        | 🟡 Low  | 🔵 Low     | Testing      |
+| 14  | **Replace magic `[2]bool`** with named struct in capability enrichment                                          | 🟡 Low  | 🔵 Low     | Code quality |
+| 15  | **Add `t.Parallel()` to independent tests**                                                                     | 🟡 Low  | 🟡 Med     | Testing      |
+| 16  | **Update `docs/DOMAIN_LANGUAGE.md`** — fix file refs, add new commands                                          | 🟡 Low  | 🔵 Low     | Docs         |
+| 17  | **Set `go 1.26.4` in go.mod** — patched version via auto-toolchain                                              | 🟡 Low  | ⚪ Trivial | DevX         |
+| 18  | **Add missing API methods to README tables** (WriteNDJSON, WriteJSON, Diff)                                     | 🟡 Low  | ⚪ Trivial | Docs         |
+| 19  | **Review experimental build tags** in .golangci.yml                                                             | 🟡 Low  | 🔵 Low     | Config       |
+| 20  | **Test `NewRecorder()` directly**                                                                               | 🟢 Low  | 🔵 Low     | Testing      |
+| 21  | **Add Prometheus exporter example** (parallel to OTel example)                                                  | 🟢 Low  | 🟡 Med     | Docs         |
+| 22  | **JSON Schema file** for the report format                                                                      | 🟡 Low  | 🟡 Med     | Docs         |
+| 23  | **Property-based tests** for Diff, MigrateReport, filter round-trips                                            | 🟢 Low  | 🟠 High    | Testing      |
+| 24  | **NDJSON import** — enable loading events back from NDJSON                                                      | 🟢 Low  | 🔴 High    | Feature      |
+| 25  | **v0.1.0 release** — project meets STABILITY.md criteria                                                        | 🟠 Med  | 🟡 Med     | Release      |
 
 ---
 
@@ -287,6 +289,7 @@ CI:          🔴 stale-generation job failing on commit 30a4fac → FIXED in 53
 ## File Inventory
 
 ### Production Code (20 files, 3,087 LOC)
+
 ```
 diff.go             event.go          export.go          filter.go
 healthcheck.go      hooks.go          html.go            html_templ.go (generated)
@@ -296,6 +299,7 @@ report_helpers.go   service.go        types.go           doc.go
 ```
 
 ### Test Code (22 files, 5,229 LOC)
+
 ```
 benchmarks_test.go       diagram_test.go          diff_export_test.go
 example_test.go          extra_test.go            fuzz_test.go
@@ -308,11 +312,13 @@ type_method_test.go
 ```
 
 ### Infrastructure
+
 ```
 .github/workflows/ci.yml    flake.nix    flake.lock    .golangci.yml
 ```
 
 ### Documentation
+
 ```
 AGENTS.md    CHANGELOG.md    CONTRIBUTING.md    FEATURES.md    README.md
 STABILITY.md    BENCHMARKS.md    TODO_LIST.md

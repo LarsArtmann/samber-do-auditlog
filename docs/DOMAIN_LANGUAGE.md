@@ -42,14 +42,14 @@ Every term below should mean the **same thing** to everyone who reads it.
 
 ## Value Objects
 
-| Term         | Definition                                               | Context                |
-| ------------ | -------------------------------------------------------- | ---------------------- |
+| Term         | Definition                                                                           | Context                |
+| ------------ | ------------------------------------------------------------------------------------ | ---------------------- |
 | Config       | Plugin configuration: Enabled, ContainerID, OnEvent, MaxEvents, InitialEventCapacity | Input to `New()`       |
-| EventType    | Enum: registration, invocation, shutdown, health_check   | Event categorization   |
-| Phase        | Enum: before, after                                      | Event timing           |
-| ServiceRef   | A lightweight reference to a service in a specific scope | Dependency graph edges |
-| ReportOption | A functional option for filtering reports                | Filter input           |
-| Report       | A complete, self-contained snapshot of all audit data    | Export payload         |
+| EventType    | Enum: registration, invocation, shutdown, health_check                               | Event categorization   |
+| Phase        | Enum: before, after                                                                  | Event timing           |
+| ServiceRef   | A lightweight reference to a service in a specific scope                             | Dependency graph edges |
+| ReportOption | A functional option for filtering reports                                            | Filter input           |
+| Report       | A complete, self-contained snapshot of all audit data                                | Export payload         |
 
 ## Events
 
@@ -62,42 +62,42 @@ Every term below should mean the **same thing** to everyone who reads it.
 
 ## Commands
 
-| Term                         | Definition                                             | Context             |
-| ---------------------------- | ------------------------------------------------------ | ------------------- |
-| New                          | Create a new audit log plugin                          | Entry point         |
-| Opts                         | Get DI container hook options                          | Wire into samber/do |
-| Report                       | Get a snapshot of all captured data                    | Read operation      |
-| ReportFiltered               | Get a filtered snapshot of captured data               | Read operation      |
-| WriteReportJSON              | Write indented JSON report to an io.Writer             | Export command      |
-| WriteEventsNDJSON            | Write NDJSON event stream to an io.Writer              | Export command      |
-| WriteHTML                    | Write self-contained HTML visualization to an io.Writer| Export command      |
-| ExportToFile                 | Write JSON report to a file path                       | Export command      |
-| ExportEventsToNDJSON         | Write NDJSON event stream to a file path               | Export command      |
-| ExportToHTML                 | Write self-contained HTML visualization to a file path | Export command      |
-| ExportFilteredToFile         | Write a filtered JSON report to a file path            | Export command      |
-| RecordHealthCheck            | Wrap injector health check with audit events           | Health command      |
-| RecordHealthCheckWithContext | Same as RecordHealthCheck with context support         | Health command      |
-| Events                       | Defensive copy of captured events                      | Read operation      |
-| EventsCount                  | Count of captured events                               | Read operation      |
-| DroppedEventCount            | Count of events dropped due to MaxEvents               | Read operation      |
-| MigrateReport                | Upgrade a v0.1.0 JSON report to the current schema     | Migration command   |
-| Filtered                     | Apply functional filter options to a Report            | Query command       |
-| Validate                     | Check report denormalized counts match actual data     | Validation command  |
-| Index                        | Build O(1) lookup index for report queries             | Query command       |
-| Diff                         | Compare two reports structurally                       | Query command       |
-| WriteJSON                    | Write indented JSON report to an io.Writer             | Export command      |
-| WriteNDJSON                  | Write NDJSON event stream to an io.Writer              | Export command      |
-| WriteMermaid                 | Export dependency graph as Mermaid flowchart           | Export command      |
-| WritePlantUML                | Export dependency graph as PlantUML component diagram  | Export command      |
+| Term                         | Definition                                              | Context             |
+| ---------------------------- | ------------------------------------------------------- | ------------------- |
+| New                          | Create a new audit log plugin                           | Entry point         |
+| Opts                         | Get DI container hook options                           | Wire into samber/do |
+| Report                       | Get a snapshot of all captured data                     | Read operation      |
+| ReportFiltered               | Get a filtered snapshot of captured data                | Read operation      |
+| WriteReportJSON              | Write indented JSON report to an io.Writer              | Export command      |
+| WriteEventsNDJSON            | Write NDJSON event stream to an io.Writer               | Export command      |
+| WriteHTML                    | Write self-contained HTML visualization to an io.Writer | Export command      |
+| ExportToFile                 | Write JSON report to a file path                        | Export command      |
+| ExportEventsToNDJSON         | Write NDJSON event stream to a file path                | Export command      |
+| ExportToHTML                 | Write self-contained HTML visualization to a file path  | Export command      |
+| ExportFilteredToFile         | Write a filtered JSON report to a file path             | Export command      |
+| RecordHealthCheck            | Wrap injector health check with audit events            | Health command      |
+| RecordHealthCheckWithContext | Same as RecordHealthCheck with context support          | Health command      |
+| Events                       | Defensive copy of captured events                       | Read operation      |
+| EventsCount                  | Count of captured events                                | Read operation      |
+| DroppedEventCount            | Count of events dropped due to MaxEvents                | Read operation      |
+| MigrateReport                | Upgrade a v0.1.0 JSON report to the current schema      | Migration command   |
+| Filtered                     | Apply functional filter options to a Report             | Query command       |
+| Validate                     | Check report denormalized counts match actual data      | Validation command  |
+| Index                        | Build O(1) lookup index for report queries              | Query command       |
+| Diff                         | Compare two reports structurally                        | Query command       |
+| WriteJSON                    | Write indented JSON report to an io.Writer              | Export command      |
+| WriteNDJSON                  | Write NDJSON event stream to an io.Writer               | Export command      |
+| WriteMermaid                 | Export dependency graph as Mermaid flowchart            | Export command      |
+| WritePlantUML                | Export dependency graph as PlantUML component diagram   | Export command      |
 
 ## Bounded Contexts
 
-| Context       | Description                                                                  |
-| ------------- | ---------------------------------------------------------------------------- |
-| Capture       | Hook callbacks, event recording, dependency inference (hooks.go, recorder.go) |
-| Aggregation   | Building reports, scope trees, dependency graphs (report_builder.go)         |
+| Context       | Description                                                                                                                        |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Capture       | Hook callbacks, event recording, dependency inference (hooks.go, recorder.go)                                                      |
+| Aggregation   | Building reports, scope trees, dependency graphs (report_builder.go)                                                               |
 | Export        | Formatting and writing: JSON, NDJSON, HTML, Mermaid, PlantUML (plugin.go, html.go, report.go, mermaid.go, plantuml.go, diagram.go) |
-| Configuration | Plugin setup, environment variable handling (plugin.go)                      |
+| Configuration | Plugin setup, environment variable handling (plugin.go)                                                                            |
 
 ---
 

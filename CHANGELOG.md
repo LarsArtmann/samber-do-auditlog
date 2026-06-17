@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   helper; migration now reuses `countScopeNodes`, so an empty scope tree reports
   `scope_count: 0` instead of `1` and matches `Report.Validate()`.
 - **`MigrateReport` normalizes current-schema reports too**: previously it only
-  upgraded v0.1.0 input. It now re-derives every denormalized field for *any*
+  upgraded v0.1.0 input. It now re-derives every denormalized field for _any_
   input version, so stale or hand-edited current-schema reports also pass
   `Validate()`. The implied contract shifts from "upgrade old → current" to
   "repair/normalize → current".
@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (notably `goexperiment.jsonv2`) that contradicted the stdlib-only policy.
 - **Capability map refactor**: `report_builder.go` replaced an opaque
   `map[string][2]bool` with a named `capabilityFlags{isHealthchecker,
-  isShutdowner}` struct.
+isShutdowner}` struct.
 
 ### Added
 

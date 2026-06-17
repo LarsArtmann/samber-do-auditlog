@@ -316,8 +316,8 @@ The callback is called **outside the mutex** on every event. Keep it fast — do
 
 **Package-level**
 
-| Function                                    | Description                                         |
-| ------------------------------------------- | --------------------------------------------------- |
+| Function                                     | Description                                                                                                                          |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `MigrateReport(data []byte) (Report, error)` | Normalize/repair a JSON report to the current schema (upgrades v0.1.0 and re-derives all denormalized fields for any input version). |
 
 ### Report

@@ -19,7 +19,7 @@ The remaining risk is that a large, uncommitted changeset now exists on disk. It
 3. **Did not archive old status reports** — `docs/status/` is accumulating files; older reports should move to `docs/archive/`.
 4. **Coverage gate script in CI is shell-heavy** — It works, but a small Go program or `Makefile` target would be more portable. The project deliberately avoids Makefiles, so a flake-app or script would be the right replacement.
 5. **`t.Parallel()` additions are broad rather than surgical** — Most independent tests are now parallel, but the env-var tests had to be excluded, and the diff is noisy.
-6. **`MigrateReport` behavior changed subtly** — It now normalizes *any* input version, not just v0.1.0. This is a user-visible semantic change and should be documented more prominently.
+6. **`MigrateReport` behavior changed subtly** — It now normalizes _any_ input version, not just v0.1.0. This is a user-visible semantic change and should be documented more prominently.
 7. **No JSON Schema yet** — The audit listed it; it is still the biggest missing piece for report consumers.
 8. **Type models remain mostly unchanged** — `ServiceInfo` is still a wide aggregate; stronger types for lifecycle states could reduce runtime validation.
 
@@ -29,62 +29,62 @@ The remaining risk is that a large, uncommitted changeset now exists on disk. It
 
 ### Bug Fixes
 
-| Fix | File(s) | Details |
-| --- | ------- | ------- |
-| **Scope-counting bug** | `migration.go`, `migration_test.go` | Removed `countUniqueScopes`; `MigrateReport` now uses `countScopeNodes` for consistent empty-tree semantics. Added `Validate()` to `TestMigrateReport_EmptyReport`. Updated `TestMigrateReport_EmptyScopeTree` expectation to 0. |
-| **Dead JS timestamps** | `html.templ`, `html_templ.go` | Replaced non-existent `registered_offset_ns`/`first_invoked_offset_ns` references with real `registered_at`/`first_invoked_at` ISO timestamps in the services table tooltip. Removed unused `formatNs()` function. |
-| **Fragile type assertion** | `healthcheck.go` | Replaced `injector.(*do.Scope)` with `scopeAncestorWalker` interface assertion; works with `*do.RootScope`, `*do.Scope`, and future wrappers. |
-| **Current-schema normalization** | `migration.go` | `MigrateReport` now re-derives all denormalized fields for any input version, so stale or hand-edited current-schema reports also pass `Validate()`. |
-| **Magic tuple refactor** | `report_builder.go` | Replaced `map[string][2]bool` capability map with named `capabilityFlags{isHealthchecker, isShutdowner}` struct. |
+| Fix                              | File(s)                             | Details                                                                                                                                                                                                                          |
+| -------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Scope-counting bug**           | `migration.go`, `migration_test.go` | Removed `countUniqueScopes`; `MigrateReport` now uses `countScopeNodes` for consistent empty-tree semantics. Added `Validate()` to `TestMigrateReport_EmptyReport`. Updated `TestMigrateReport_EmptyScopeTree` expectation to 0. |
+| **Dead JS timestamps**           | `html.templ`, `html_templ.go`       | Replaced non-existent `registered_offset_ns`/`first_invoked_offset_ns` references with real `registered_at`/`first_invoked_at` ISO timestamps in the services table tooltip. Removed unused `formatNs()` function.               |
+| **Fragile type assertion**       | `healthcheck.go`                    | Replaced `injector.(*do.Scope)` with `scopeAncestorWalker` interface assertion; works with `*do.RootScope`, `*do.Scope`, and future wrappers.                                                                                    |
+| **Current-schema normalization** | `migration.go`                      | `MigrateReport` now re-derives all denormalized fields for any input version, so stale or hand-edited current-schema reports also pass `Validate()`.                                                                             |
+| **Magic tuple refactor**         | `report_builder.go`                 | Replaced `map[string][2]bool` capability map with named `capabilityFlags{isHealthchecker, isShutdowner}` struct.                                                                                                                 |
 
 ### Documentation
 
-| Doc | Status | Details |
-| --- | ------ | ------- |
-| `FEATURES.md` | ✅ Rebuilt | Honest inventory with FULLY FUNCTIONAL / PARTIALLY FUNCTIONAL / WORTH CONSIDERING sections, no false "planned" items. |
-| `README.md` | ✅ Fixed | `New()` error handling in example, benchmark numbers synced with `BENCHMARKS.md`, corrected `MigrateReport` signature, added `WriteJSON`/`WriteNDJSON`/`Diff` to Report table. |
-| `AGENTS.md` | ✅ Deduplicated | Removed duplicate `newServiceRecordCore`, `inferServiceType`, `Stack pop`, `serviceKey`, `Disabled path`, `Benchmark suite` bullets; removed stale `newServiceRecordFromMeta()` reference; updated test count. |
-| `docs/DOMAIN_LANGUAGE.md` | ✅ Updated | File references corrected; added `ReportFiltered`, `WriteReportJSON`, `WriteEventsNDJSON`, `WriteHTML`, `Events`, `EventsCount`, `DroppedEventCount`, `Validate`, `Index`, `Diff`, `WriteJSON`, `WriteNDJSON`, `WritePlantUML`; updated Bounded Contexts. |
-| `CONTRIBUTING.md` | ✅ Updated | Added `golangci-lint config verify` step. |
+| Doc                       | Status          | Details                                                                                                                                                                                                                                                   |
+| ------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FEATURES.md`             | ✅ Rebuilt      | Honest inventory with FULLY FUNCTIONAL / PARTIALLY FUNCTIONAL / WORTH CONSIDERING sections, no false "planned" items.                                                                                                                                     |
+| `README.md`               | ✅ Fixed        | `New()` error handling in example, benchmark numbers synced with `BENCHMARKS.md`, corrected `MigrateReport` signature, added `WriteJSON`/`WriteNDJSON`/`Diff` to Report table.                                                                            |
+| `AGENTS.md`               | ✅ Deduplicated | Removed duplicate `newServiceRecordCore`, `inferServiceType`, `Stack pop`, `serviceKey`, `Disabled path`, `Benchmark suite` bullets; removed stale `newServiceRecordFromMeta()` reference; updated test count.                                            |
+| `docs/DOMAIN_LANGUAGE.md` | ✅ Updated      | File references corrected; added `ReportFiltered`, `WriteReportJSON`, `WriteEventsNDJSON`, `WriteHTML`, `Events`, `EventsCount`, `DroppedEventCount`, `Validate`, `Index`, `Diff`, `WriteJSON`, `WriteNDJSON`, `WritePlantUML`; updated Bounded Contexts. |
+| `CONTRIBUTING.md`         | ✅ Updated      | Added `golangci-lint config verify` step.                                                                                                                                                                                                                 |
 
 ### CI / DevEx
 
-| Improvement | File | Details |
-| ----------- | ---- | ------- |
-| **Config verify** | `.github/workflows/ci.yml` | New lint step `golangci-lint config verify` runs before `golangci-lint run`. |
-| **Coverage gate** | `.github/workflows/ci.yml` | Test job now produces a coverage profile, excludes `example/`, and fails if production coverage drops below 95%. |
-| **`go mod tidy` check** | `.github/workflows/ci.yml` | New `mod-tidy` job runs `go mod tidy` and fails on drift. |
-| **Go version bump** | `go.mod`, `.golangci.yml` | `go 1.26.3` → `go 1.26.4`; toolchain and CI aligned. |
-| **Experimental build tags removed** | `.golangci.yml` | Removed `goexperiment.*` build tags (especially `goexperiment.jsonv2`) that contradicted project policy. |
-| **Stale templ binary removed** | `~/go/bin/templ` | Deleted; `go tool templ generate` via go.mod `tool` directive is now the only source of templ. |
+| Improvement                         | File                       | Details                                                                                                          |
+| ----------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Config verify**                   | `.github/workflows/ci.yml` | New lint step `golangci-lint config verify` runs before `golangci-lint run`.                                     |
+| **Coverage gate**                   | `.github/workflows/ci.yml` | Test job now produces a coverage profile, excludes `example/`, and fails if production coverage drops below 95%. |
+| **`go mod tidy` check**             | `.github/workflows/ci.yml` | New `mod-tidy` job runs `go mod tidy` and fails on drift.                                                        |
+| **Go version bump**                 | `go.mod`, `.golangci.yml`  | `go 1.26.3` → `go 1.26.4`; toolchain and CI aligned.                                                             |
+| **Experimental build tags removed** | `.golangci.yml`            | Removed `goexperiment.*` build tags (especially `goexperiment.jsonv2`) that contradicted project policy.         |
+| **Stale templ binary removed**      | `~/go/bin/templ`           | Deleted; `go tool templ generate` via go.mod `tool` directive is now the only source of templ.                   |
 
 ### Tests
 
-| Addition | File | Details |
-| -------- | ---- | ------- |
-| **MigrateReport fuzz** | `fuzz_test.go` | `FuzzMigrateReport` targets arbitrary JSON; validates migrated report and re-migration round-trip. |
-| **TypeMetadata tests** | `metadata_test.go` | Direct assertions for every provider/status/event emoji, label, and color. |
-| **NewRecorder test** | `recorder_internal_test.go` | Verifies constructor initializes container ID, callback, zero counts, and produces a valid empty report. |
-| **Test parallelism** | 15 test files | Added `t.Parallel()` to ~120 independent top-level tests and ~33 subtests; env-var tests excluded. |
+| Addition               | File                        | Details                                                                                                  |
+| ---------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **MigrateReport fuzz** | `fuzz_test.go`              | `FuzzMigrateReport` targets arbitrary JSON; validates migrated report and re-migration round-trip.       |
+| **TypeMetadata tests** | `metadata_test.go`          | Direct assertions for every provider/status/event emoji, label, and color.                               |
+| **NewRecorder test**   | `recorder_internal_test.go` | Verifies constructor initializes container ID, callback, zero counts, and produces a valid empty report. |
+| **Test parallelism**   | 15 test files               | Added `t.Parallel()` to ~120 independent top-level tests and ~33 subtests; env-var tests excluded.       |
 
 ### Code Generation
 
-| Item | Status |
-| ---- | ------ |
+| Item            | Status                                                                           |
+| --------------- | -------------------------------------------------------------------------------- |
 | `html_templ.go` | Regenerated from `html.templ` using `go tool templ generate`; matches CI output. |
 
 ---
 
 ## b) PARTIALLY DONE
 
-| Item | Status | Notes |
-| ---- | ------ | ----- |
-| **Test parallelism** | ~85% of eligible tests parallel | Env-var tests and fixed-path error tests cannot use `t.Parallel()`; remaining sequential tests are safe but not parallel. |
-| **Status-report archive** | Not done | Older status reports in `docs/status/` should move to `docs/archive/`. |
-| **CHANGELOG.md update** | Not done | No entry yet for this remediation batch. |
-| **AGENTS.md command updates** | Not done | New CI commands (`golangci-lint config verify`, coverage gate script) not yet reflected in AGENTS.md Commands table. |
-| **BENCHMARKS.md Go version** | Not done | Still lists Go 1.26.3 in Environment table after go.mod bump. |
-| **Commit discipline** | Not done | All changes are still in the working tree; need to be split into logical commits. |
+| Item                          | Status                          | Notes                                                                                                                     |
+| ----------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Test parallelism**          | ~85% of eligible tests parallel | Env-var tests and fixed-path error tests cannot use `t.Parallel()`; remaining sequential tests are safe but not parallel. |
+| **Status-report archive**     | Not done                        | Older status reports in `docs/status/` should move to `docs/archive/`.                                                    |
+| **CHANGELOG.md update**       | Not done                        | No entry yet for this remediation batch.                                                                                  |
+| **AGENTS.md command updates** | Not done                        | New CI commands (`golangci-lint config verify`, coverage gate script) not yet reflected in AGENTS.md Commands table.      |
+| **BENCHMARKS.md Go version**  | Not done                        | Still lists Go 1.26.3 in Environment table after go.mod bump.                                                             |
+| **Commit discipline**         | Not done                        | All changes are still in the working tree; need to be split into logical commits.                                         |
 
 ---
 
@@ -154,7 +154,7 @@ The `awk` coverage comparison and `grep -v '/example/'` filtering works but is h
    - `ServiceLifecycle` (registered/invoked/shutdown timestamps + errors)
    - `ServiceHealth` (last check + error + count)
    - `ServiceGraph` (dependencies + dependents)
-   This would make `deriveServiceStatus` and report building more explicit.
+     This would make `deriveServiceStatus` and report building more explicit.
 8. **Make `Report` immutable-ish** — `Filtered` already returns a copy; `Validate` could be part of a constructor that returns `(Report, error)` to make invalid reports unrepresentable.
 9. **Add JSON Schema generation** — Derive `schema.json` from `Report`, `Event`, `ServiceInfo`, etc. via reflection or a small generator. This avoids drift.
 10. **Use `encoding/json/v2`** only if/when it lands in stdlib; until then, keep current `encoding/json`. Do not introduce experimental JSON packages.
@@ -189,33 +189,33 @@ The `awk` coverage comparison and `grep -v '/example/'` filtering works but is h
 
 Sorted by **Impact × Customer-Value ÷ Effort**:
 
-| # | Task | Impact | Effort | Category |
-|---|------|--------|--------|----------|
-| 1 | **Commit and push current remediation** | 🔴 Critical | ⚪ Trivial | Git hygiene |
-| 2 | **Update CHANGELOG.md** for this batch | 🟠 Med | ⚪ Trivial | Docs |
-| 3 | **Archive old status reports** | 🟡 Low | ⚪ Trivial | Docs |
-| 4 | **Update BENCHMARKS.md Go version** | 🟡 Low | ⚪ Trivial | Docs |
-| 5 | **Update AGENTS.md with new CI commands** | 🟡 Low | ⚪ Trivial | Docs |
-| 6 | **v0.1.0 release** | 🟠 Med | 🟡 Med | Release |
-| 7 | **JSON Schema file** | 🟠 Med | 🔵 Low | Docs/API |
-| 8 | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`) | 🟠 Med | 🟡 Med | Architecture |
-| 9 | **Refactor `ServiceInfo` lifecycle concerns** | 🟠 Med | 🔴 High | Architecture |
-| 10 | **Prometheus exporter example** | 🟠 Med | 🟡 Med | Docs |
-| 11 | **Property-based `MigrateReport` tests** | 🟠 Med | 🔵 Low | Testing |
-| 12 | **Property-based `Diff` tests** | 🟠 Med | 🔵 Low | Testing |
-| 13 | **Fuzz Mermaid/PlantUML special chars** | 🟡 Low | 🔵 Low | Testing |
-| 14 | **Fuzz deeply nested scopes** | 🟡 Low | 🔵 Low | Testing |
-| 15 | **Fuzz filter inputs** | 🟡 Low | 🔵 Low | Testing |
-| 16 | **HTML integration test** | 🟠 Med | 🟡 Med | Testing |
-| 17 | **NDJSON import** | 🟠 Med | 🔴 High | Feature |
-| 18 | **CSV/TSV export** | 🟡 Low | 🔵 Low | Feature |
-| 19 | **CLI tool** | 🟢 Low | 🔴 High | Feature |
-| 20 | **WebSocket live stream** | 🟢 Low | 🔴 High | Feature |
-| 21 | **Add `actionlint` to CI** | 🟡 Low | ⚪ Trivial | CI |
-| 22 | **Add `gosec` to CI** | 🟡 Low | ⚪ Trivial | CI |
-| 23 | **GitHub Actions version upgrades** | 🟡 Low | ⚪ Trivial | CI |
-| 24 | **Flake app for coverage gate** | 🟡 Low | 🔵 Low | DevEx |
-| 25 | **Split `Report.Validate()` into constructor validation** | 🟠 Med | 🟡 Med | Architecture |
+| #   | Task                                                            | Impact      | Effort     | Category     |
+| --- | --------------------------------------------------------------- | ----------- | ---------- | ------------ |
+| 1   | **Commit and push current remediation**                         | 🔴 Critical | ⚪ Trivial | Git hygiene  |
+| 2   | **Update CHANGELOG.md** for this batch                          | 🟠 Med      | ⚪ Trivial | Docs         |
+| 3   | **Archive old status reports**                                  | 🟡 Low      | ⚪ Trivial | Docs         |
+| 4   | **Update BENCHMARKS.md Go version**                             | 🟡 Low      | ⚪ Trivial | Docs         |
+| 5   | **Update AGENTS.md with new CI commands**                       | 🟡 Low      | ⚪ Trivial | Docs         |
+| 6   | **v0.1.0 release**                                              | 🟠 Med      | 🟡 Med     | Release      |
+| 7   | **JSON Schema file**                                            | 🟠 Med      | 🔵 Low     | Docs/API     |
+| 8   | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`) | 🟠 Med      | 🟡 Med     | Architecture |
+| 9   | **Refactor `ServiceInfo` lifecycle concerns**                   | 🟠 Med      | 🔴 High    | Architecture |
+| 10  | **Prometheus exporter example**                                 | 🟠 Med      | 🟡 Med     | Docs         |
+| 11  | **Property-based `MigrateReport` tests**                        | 🟠 Med      | 🔵 Low     | Testing      |
+| 12  | **Property-based `Diff` tests**                                 | 🟠 Med      | 🔵 Low     | Testing      |
+| 13  | **Fuzz Mermaid/PlantUML special chars**                         | 🟡 Low      | 🔵 Low     | Testing      |
+| 14  | **Fuzz deeply nested scopes**                                   | 🟡 Low      | 🔵 Low     | Testing      |
+| 15  | **Fuzz filter inputs**                                          | 🟡 Low      | 🔵 Low     | Testing      |
+| 16  | **HTML integration test**                                       | 🟠 Med      | 🟡 Med     | Testing      |
+| 17  | **NDJSON import**                                               | 🟠 Med      | 🔴 High    | Feature      |
+| 18  | **CSV/TSV export**                                              | 🟡 Low      | 🔵 Low     | Feature      |
+| 19  | **CLI tool**                                                    | 🟢 Low      | 🔴 High    | Feature      |
+| 20  | **WebSocket live stream**                                       | 🟢 Low      | 🔴 High    | Feature      |
+| 21  | **Add `actionlint` to CI**                                      | 🟡 Low      | ⚪ Trivial | CI           |
+| 22  | **Add `gosec` to CI**                                           | 🟡 Low      | ⚪ Trivial | CI           |
+| 23  | **GitHub Actions version upgrades**                             | 🟡 Low      | ⚪ Trivial | CI           |
+| 24  | **Flake app for coverage gate**                                 | 🟡 Low      | 🔵 Low     | DevEx        |
+| 25  | **Split `Report.Validate()` into constructor validation**       | 🟠 Med      | 🟡 Med     | Architecture |
 
 ---
 
@@ -245,6 +245,7 @@ Uncommitted: 🔴 30+ files and 2 new test files waiting to be committed
 ## File Inventory
 
 ### Production Code (21 files)
+
 ```
 diff.go             event.go          export.go          filter.go
 healthcheck.go      hooks.go          html.go            html_templ.go (generated)
@@ -254,6 +255,7 @@ report_helpers.go   service.go        types.go           doc.go
 ```
 
 ### Test Code (24 files)
+
 ```
 benchmarks_test.go       diagram_test.go          diff_export_test.go
 example_test.go          extra_test.go            fuzz_test.go
@@ -266,11 +268,13 @@ robustness_test.go       status_internal_test.go  type_method_test.go
 ```
 
 ### Infrastructure
+
 ```
 .github/workflows/ci.yml    flake.nix    flake.lock    .golangci.yml
 ```
 
 ### Documentation
+
 ```
 AGENTS.md    CHANGELOG.md    CONTRIBUTING.md    FEATURES.md    README.md
 STABILITY.md    BENCHMARKS.md    TODO_LIST.md
