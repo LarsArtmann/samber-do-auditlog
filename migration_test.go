@@ -13,6 +13,8 @@ import (
 )
 
 func TestMigrateReport_FromV01(t *testing.T) {
+	t.Parallel()
+
 	v01JSON := `{
 		"version": "0.1.0",
 		"container_id": "test-app",
@@ -92,6 +94,8 @@ func TestMigrateReport_FromV01(t *testing.T) {
 }
 
 func TestMigrateReport_RejectsInvalidInput(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		name   string
 		input  []byte
@@ -103,6 +107,8 @@ func TestMigrateReport_RejectsInvalidInput(t *testing.T) {
 		{"missing_version", []byte(`{"container_id":"test"}`), "for input without version field"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := auditlog.MigrateReport(tc.input)
 			assertErrorExpected(t, err, tc.reason)
 		})
@@ -110,6 +116,8 @@ func TestMigrateReport_RejectsInvalidInput(t *testing.T) {
 }
 
 func TestMigrateReport_EmptyReport(t *testing.T) {
+	t.Parallel()
+
 	report, err := auditlog.MigrateReport([]byte(`{"version":"0.1.0"}`))
 	if err != nil {
 		t.Fatalf("MigrateReport: %v", err)
@@ -118,9 +126,13 @@ func TestMigrateReport_EmptyReport(t *testing.T) {
 	assertVersion(t, report)
 
 	assertServiceCount(t, report, 0)
+
+	assertReportValid(t, report, "empty migrated")
 }
 
 func TestMigrateReport_RoundTrip(t *testing.T) {
+	t.Parallel()
+
 	plugin := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(plugin.Opts())
 
@@ -158,6 +170,8 @@ func TestMigrateReport_RoundTrip(t *testing.T) {
 }
 
 func TestMigrateReport_NestedScopes(t *testing.T) {
+	t.Parallel()
+
 	v01JSON := `{
 		"version": "0.1.0",
 		"container_id": "test",
@@ -183,6 +197,8 @@ func TestMigrateReport_NestedScopes(t *testing.T) {
 }
 
 func TestMigrateReport_StatusComputation(t *testing.T) {
+	t.Parallel()
+
 	now := time.Now().Format(time.RFC3339)
 
 	for _, tc := range []struct {
@@ -217,6 +233,8 @@ func TestMigrateReport_StatusComputation(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			input := `{"version":"0.1.0","services":[` + tc.svcJSON + `]}`
 
 			report, err := auditlog.MigrateReport([]byte(input))
@@ -234,6 +252,8 @@ func TestMigrateReport_StatusComputation(t *testing.T) {
 }
 
 func TestMigrateReport_PreservesExistingStatus(t *testing.T) {
+	t.Parallel()
+
 	input := `{
 		"version": "0.1.0",
 		"services": [
@@ -252,6 +272,8 @@ func TestMigrateReport_PreservesExistingStatus(t *testing.T) {
 }
 
 func TestMigrateReport_EmptyScopeTree(t *testing.T) {
+	t.Parallel()
+
 	input := `{"version":"0.1.0","scope_tree":{"id":"","name":"","services":null}}`
 
 	report, err := auditlog.MigrateReport([]byte(input))
@@ -259,10 +281,12 @@ func TestMigrateReport_EmptyScopeTree(t *testing.T) {
 		t.Fatalf("MigrateReport: %v", err)
 	}
 
-	assertIntField(t, "scope_count", report.ScopeCount, 1)
+	assertIntField(t, "scope_count", report.ScopeCount, 0)
 }
 
 func TestMigrateReport_AlreadyCurrentVersion(t *testing.T) {
+	t.Parallel()
+
 	input := `{"version":"0.2.0","container_id":"test","exported_at":"2026-01-01T00:00:00Z","event_count":5,"service_count":2}`
 
 	report, err := auditlog.MigrateReport([]byte(input))
@@ -278,6 +302,8 @@ func TestMigrateReport_AlreadyCurrentVersion(t *testing.T) {
 }
 
 func TestMigrateReport_PreservesExportedAt(t *testing.T) {
+	t.Parallel()
+
 	originalTime := "2026-01-15T12:30:00Z"
 	input := `{"version":"0.1.0","exported_at":"` + originalTime + `"}`
 

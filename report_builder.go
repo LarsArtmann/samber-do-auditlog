@@ -249,15 +249,23 @@ func enrichCapabilities(scopes map[string]scopeMeta, services []ServiceInfo) {
 
 			caps, ok := svcMap[services[i].ServiceName]
 			if ok {
-				services[i].IsHealthchecker = caps[0]
-				services[i].IsShutdowner = caps[1]
+				services[i].IsHealthchecker = caps.isHealthchecker
+				services[i].IsShutdowner = caps.isShutdowner
 			}
 		}
 	}
 }
 
-func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[string][2]bool {
-	result := make(map[string][2]bool)
+// capabilityFlags pairs the two boolean capabilities detected by
+// do.ExplainInjector for a single service. A named struct replaces the
+// previous [2]bool tuple so call sites are self-documenting.
+type capabilityFlags struct {
+	isHealthchecker bool
+	isShutdowner    bool
+}
+
+func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[string]capabilityFlags {
+	result := make(map[string]capabilityFlags)
 	queue := scopes
 
 	for len(queue) > 0 {
@@ -265,7 +273,10 @@ func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[string][2]bo
 		queue = queue[1:]
 
 		for _, svc := range scope.Services {
-			result[svc.ServiceName] = [2]bool{svc.IsHealthchecker, svc.IsShutdowner}
+			result[svc.ServiceName] = capabilityFlags{
+				isHealthchecker: svc.IsHealthchecker,
+				isShutdowner:    svc.IsShutdowner,
+			}
 		}
 
 		queue = append(queue, scope.Children...)

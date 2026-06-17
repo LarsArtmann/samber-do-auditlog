@@ -6,6 +6,13 @@ import (
 	"github.com/samber/do/v2"
 )
 
+// scopeAncestorWalker matches any scope type that can report its ancestor
+// scopes. Using an interface assertion instead of a concrete type check makes
+// ResolveServiceScope robust against *do.RootScope and future wrapper types.
+type scopeAncestorWalker interface {
+	Ancestors() []*do.Scope
+}
+
 // RecordHealthCheck records a single health check result for a service.
 func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err error) {
 	now := time.Now()
@@ -55,8 +62,8 @@ func (r *Recorder) ResolveServiceScope(injector do.Injector, serviceName string)
 		return rec.scopeID, rec.scopeName, true
 	}
 
-	if scope, ok := injector.(*do.Scope); ok {
-		for _, ancestor := range scope.Ancestors() {
+	if walker, ok := injector.(scopeAncestorWalker); ok {
+		for _, ancestor := range walker.Ancestors() {
 			if rec, ok := r.services[svcKey{scopeID: ancestor.ID(), name: serviceName}]; ok {
 				return rec.scopeID, rec.scopeName, true
 			}

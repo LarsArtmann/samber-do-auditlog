@@ -35,10 +35,9 @@ func MigrateReport(data []byte) (Report, error) {
 		return Report{}, errMigrationMissingVersion
 	}
 
-	if report.Version == SchemaVersion {
-		return report, nil
-	}
-
+	// Normalize the report to the current schema regardless of the input
+	// version. This repairs stale or manually edited denormalized counts and
+	// ensures Validate() succeeds on the returned report.
 	report.Version = SchemaVersion
 
 	if report.ExportedAt.IsZero() {
@@ -48,7 +47,7 @@ func MigrateReport(data []byte) (Report, error) {
 	report.EventCount = len(report.Events)
 	report.ServiceCount = len(report.Services)
 
-	report.ScopeCount = countUniqueScopes(report.ScopeTree)
+	report.ScopeCount = countScopeNodes(report.ScopeTree)
 	report.TotalBuildDurationMs = sumBuildMs(report.Services)
 	report.TotalShutdownDurationMs = sumShutdownMs(report.Services)
 	report.ShutdownSucceeded = noShutdownErrors(report.Services)
@@ -62,16 +61,6 @@ func MigrateReport(data []byte) (Report, error) {
 	}
 
 	return report, nil
-}
-
-func countUniqueScopes(node ScopeNode) int {
-	count := 1
-
-	for _, child := range node.Children {
-		count += countUniqueScopes(child)
-	}
-
-	return count
 }
 
 func computeServiceStatusFromInfo(svc ServiceInfo) ServiceStatus {
