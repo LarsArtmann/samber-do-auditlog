@@ -23,8 +23,17 @@ jobs:
         run: go vet ./...
       - name: go build
         run: go build ./...
-      - name: go test -race
-        run: go test -race -count=1 ./...
+      - name: go test -race with coverage
+        run: |
+          go test -race -count=1 -coverprofile=cover.out -covermode=atomic ./...
+          # Exclude example package (demo code with no tests) from coverage gate.
+          grep -v '/example/' cover.out > cover-filtered.out
+          coverage=$(go tool cover -func=cover-filtered.out | grep '^total:' | awk '{print $3}' | tr -d '%')
+          echo "Total coverage: ${coverage}%"
+          if awk "BEGIN {exit !($coverage < 95.0)}"; then
+            echo "::error::Coverage ${coverage}% is below 95%"
+            exit 1
+          fi
 
   lint:
     name: Lint
@@ -35,11 +44,16 @@ jobs:
         with:
           go-version: "1.26.4"
           cache: true
+      - name: Verify golangci-lint config
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.12.2
+          args: config verify
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v7
         with:
           version: v2.12.2
-          args: --timeout=10m
+          args: run --timeout=10m
 
   vulncheck:
     name: Vulnerability scan
@@ -54,6 +68,25 @@ jobs:
         uses: golang/govulncheck-action@v1
         with:
           go-version-input: "1.26.4"
+
+  mod-tidy:
+    name: go mod tidy check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.4"
+          cache: true
+      - name: go mod tidy
+        run: go mod tidy
+      - name: Check for drift
+        run: |
+          if ! git diff --exit-code; then
+            echo "::error::go.sum is out of sync with go.mod. Run 'go mod tidy' and commit the result."
+            git diff --stat
+            exit 1
+          fi
 
   stale-generation:
     name: Stale generated code check

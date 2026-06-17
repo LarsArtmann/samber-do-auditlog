@@ -1,13 +1,7 @@
 version: "2"
 run:
   timeout: 5m
-  go: 1.26.3
-  build-tags:
-    - goexperiment.arenas
-    - goexperiment.goroutineleakprofile
-    - goexperiment.jsonv2
-    - goexperiment.runtimesecret
-    - goexperiment.simd
+  go: 1.26.4
   allow-parallel-runners: true
   allow-serial-runners: true
   issues-exit-code: 1

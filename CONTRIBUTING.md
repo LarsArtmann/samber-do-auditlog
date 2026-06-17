@@ -43,7 +43,10 @@ go test ./... -race
 # 3. Static analysis
 go vet ./...
 
-# 4. Full lint (strict config — this is the gatekeeper)
+# 4. Verify lint config schema (catches silent config issues)
+golangci-lint config verify
+
+# 5. Full lint (strict config — this is the gatekeeper)
 golangci-lint run
 ```
 
