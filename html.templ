@@ -446,6 +446,8 @@ templ reportHTML(report Report) {
 
 	  .scope-tree { font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; }
 	  .scope-node { margin-left: 1.5rem; margin-top: 0.25rem; }
+	  .scope-node.collapsed > .scope-services,
+	  .scope-node.collapsed > .scope-children { display: none; }
 	  .scope-node-header {
 	    display: flex;
 	    align-items: center;
@@ -458,7 +460,10 @@ templ reportHTML(report Report) {
 	  .scope-node-header:hover { background: var(--surface); }
 	  .scope-node-header .scope-name { color: var(--accent); font-weight: 600; }
 	  .scope-node-header .scope-count { color: var(--text-dim); font-size: 0.75rem; }
-	  .scope-node-header .toggle { color: var(--text-dim); font-size: 0.7rem; width: 1rem; text-align: center; }
+	  .scope-node-header .toggle {
+	    color: var(--text-dim); font-size: 0.7rem; width: 1rem; text-align: center;
+	    background: none; border: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+	  }
 	  .scope-children { border-left: 1px solid var(--border); margin-left: 0.75rem; }
 	  .scope-services { display: flex; flex-wrap: wrap; gap: 0.3rem; padding: 0.3rem 0 0.5rem 1.75rem; }
 	  .scope-svc {
@@ -511,13 +516,14 @@ templ reportHTML(report Report) {
 	  .wf-event {
 	    position: absolute;
 	    bottom: 4px;
-	    width: 2px;
+	    width: 3px;
 	    border-radius: 1px;
 	    min-height: 3px;
-	    transition: opacity 0.15s;
+	    transition: opacity 0.15s, transform 0.15s;
+	    cursor: crosshair;
 	  }
 	  .waveform:hover .wf-event { opacity: 0.6; }
-	  .waveform:hover .wf-event:hover { opacity: 1; transform: scaleY(1.15); }
+	  .waveform:hover .wf-event:hover { opacity: 1; transform: scaleY(1.25) scaleX(1.5); z-index: 10; }
 	  .waveform-legend {
 	    display: flex;
 	    gap: 0.45rem;
@@ -590,9 +596,9 @@ templ reportHTML(report Report) {
 				<span class="waveform-label">Lifecycle</span>
 				<div class="waveform" id="waveform"></div>
 				<div class="waveform-legend">
-					<span class="wf-legend-item"><span class="wf-legend-dot" style="background:var(--accent)"></span>reg</span>
+					<span class="wf-legend-item"><span class="wf-legend-dot" style="background:var(--accent)"></span>register</span>
 					<span class="wf-legend-item"><span class="wf-legend-dot" style="background:var(--success)"></span>invoke</span>
-					<span class="wf-legend-item"><span class="wf-legend-dot" style="background:var(--warning)"></span>shut</span>
+					<span class="wf-legend-item"><span class="wf-legend-dot" style="background:var(--warning)"></span>shutdown</span>
 					<span class="wf-legend-item"><span class="wf-legend-dot" style="background:var(--info)"></span>health</span>
 					<span class="wf-legend-item"><span class="wf-legend-dot" style="background:var(--error)"></span>error</span>
 				</div>
@@ -1002,7 +1008,9 @@ templ reportHTML(report Report) {
 	  const hdr=document.createElement('div');
 	  hdr.className='scope-node-header';
 	  const svcs=node.services||[];
-	  hdr.innerHTML='<span class="toggle">&#9662;</span><span class="scope-name">'+esc(node.name)+'</span><span class="scope-count">'+svcs.length+' service'+(svcs.length!==1?'s':'')+'</span>';
+	  hdr.innerHTML='<button class="toggle" aria-expanded="true" aria-label="Collapse scope">&#9662;</button><span class="scope-name">'+esc(node.name)+'</span><span class="scope-count">'+svcs.length+' service'+(svcs.length!==1?'s':'')+'</span>';
+	  hdr.setAttribute('role','button');
+	  hdr.setAttribute('tabindex','0');
 	  div.appendChild(hdr);
 	  if(svcs.length){
 	    const svcDiv=document.createElement('div');
@@ -1034,14 +1042,22 @@ templ reportHTML(report Report) {
 	    node.children.forEach(c=>renderScopeTree(c,childDiv));
 	    div.appendChild(childDiv);
 	  }
-	  hdr.addEventListener('click',()=>{
-	    const isCollapsed=hdr.querySelector('.toggle').textContent==='\u25B6';
-	    hdr.querySelector('.toggle').textContent=isCollapsed?'\u25B2':'\u25B6';
-	    Array.from(div.children).forEach(c=>{if(c!==hdr)c.style.display=isCollapsed?'':'none';});
-	  });
+	  function toggleScope(){
+	    const collapsed=div.classList.toggle('collapsed');
+	    const btn=hdr.querySelector('.toggle');
+	    btn.innerHTML=collapsed?'&#9656;':'&#9662;';
+	    btn.setAttribute('aria-expanded',!collapsed);
+	    btn.setAttribute('aria-label',collapsed?'Expand scope':'Collapse scope');
+	  }
+	  hdr.addEventListener('click',toggleScope);
+	  hdr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleScope();}});
 	  container.appendChild(div);
 	}
-	renderScopeTree(report.scope_tree,document.getElementById('scope-tree'));
+	if(report.scope_tree){
+	  renderScopeTree(report.scope_tree,document.getElementById('scope-tree'));
+	}else{
+	  document.getElementById('scope-tree').innerHTML='<div class="panel-empty"><div class="empty-icon">\u{1F5C2}</div><div class="empty-text">No scopes recorded</div></div>';
+	}
 
 	// Timeline
 	const tlServices=report.services
@@ -1381,6 +1397,9 @@ templ reportHTML(report Report) {
 	  svg.addEventListener('click',e=>{if(!e.target.closest('.graph-node'))clearHL();});
 	}
 
+	document.getElementById('footer-ts').textContent = new Date().toLocaleString();
+	document.getElementById('footer-stats').textContent = 'Schema v'+report.version+' \u00b7 '+report.event_count+' events \u00b7 '+report.service_count+' services';
+
 	function esc(s){
 	  if(!s)return'';
 	  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1388,8 +1407,8 @@ templ reportHTML(report Report) {
 
 	</script>
 			<div class="footer">
-				<span>Generated by <strong>do-auditlog</strong></span>
-				<span>Schema v{ report.Version }</span>
+				<span>Generated by <strong>do-auditlog</strong> · <span id="footer-ts"></span></span>
+				<span id="footer-stats">Schema v{ report.Version }</span>
 			</div>
 		</body>
 	</html>

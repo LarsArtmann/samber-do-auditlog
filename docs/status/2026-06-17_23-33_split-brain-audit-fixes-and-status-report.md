@@ -28,6 +28,7 @@ never checked consistency. `MigrateReport` preserved stale non-empty statuses.
 Proven with a PoC test (now deleted).
 
 **Fix:**
+
 - `report.go:Validate()` now checks `svc.Status == svc.DeriveStatus()` for every
   service. Returns `errReportStatusDrift` (new sentinel) with the service name,
   stored status, and derived status on mismatch.
@@ -48,6 +49,7 @@ pointers. `report.go:FailedServices()` checked `Status.IsError()` enum. They
 could disagree on stale reports.
 
 **Fix:**
+
 - Deleted `hasError()` function from `diff.go`.
 - `compareService()` now uses `!prev.Status.IsError() && other.Status.IsError()`
   — single error-detection path via the status enum.
@@ -60,6 +62,7 @@ could disagree on stale reports.
 `buildServicesLocked()`. No compile-time enforcement that all fields are wired.
 
 **Fix:**
+
 - Extracted `serviceRecordToInfo(rec *serviceRecord) ServiceInfo` — the single
   conversion function. Dependencies, Dependents, IsHealthchecker, and
   IsShutdowner are left as zero values for the caller to set (they require
@@ -77,6 +80,7 @@ could disagree on stale reports.
 for display metadata.
 
 **Fix:**
+
 - Added `ServiceStatus.Icon()` method to `types.go`.
 - Added `EventType.Label()` and `EventType.Color()` methods to `types.go`.
 - Added `ProviderType.Label()` method to `types.go`.
@@ -91,6 +95,7 @@ for display metadata.
 `report.go:WriteJSON`, `plugin.go:WriteReportJSON`, `plugin.go:ExportFilteredToFile`.
 
 **Fix:**
+
 - `Plugin.WriteReportJSON()` now delegates to `Report().WriteJSON(writer)`.
 - `Plugin.ExportFilteredToFile()` now delegates to `filtered.WriteJSON`.
 - Single JSON encoding path: `Report.WriteJSON()`.
@@ -121,15 +126,15 @@ renaming were added, which is not on any roadmap. Fixing it would add complexity
 
 ### Verification — ALL PASSING
 
-| Check | Result |
-|-------|--------|
-| `go build ./...` | ✅ Clean |
-| `go vet ./...` | ✅ Clean |
-| `go test -count=1 -race ./...` | ✅ All pass |
-| Coverage | ✅ 95.0% (CI gate: ≥95%) |
-| `golangci-lint run` | ✅ 0 issues |
-| `go mod tidy` | ✅ No drift |
-| `go generate ./...` | ✅ No diff (updates=0) |
+| Check                          | Result                   |
+| ------------------------------ | ------------------------ |
+| `go build ./...`               | ✅ Clean                 |
+| `go vet ./...`                 | ✅ Clean                 |
+| `go test -count=1 -race ./...` | ✅ All pass              |
+| Coverage                       | ✅ 95.0% (CI gate: ≥95%) |
+| `golangci-lint run`            | ✅ 0 issues              |
+| `go mod tidy`                  | ✅ No drift              |
+| `go generate ./...`            | ✅ No diff (updates=0)   |
 | `FuzzMigrateReport` (5s smoke) | ✅ 600K+ execs, no crash |
 
 ---
@@ -156,6 +161,7 @@ Nothing. No regressions, no broken tests, no lint failures.
 
 **One note on unexpected working-tree changes:** The working tree contains two
 modifications I did **not** author and deliberately excluded from this commit:
+
 1. `CODE_OF_CONDUCT.md` — deleted (was a 19-line boilerplate file)
 2. `html_templ.go` — import block reformatted (single-line → grouped)
 
@@ -292,6 +298,7 @@ CHANGELOG.md        — changelog
 ```
 
 Excluded (not my changes):
+
 ```
 CODE_OF_CONDUCT.md  — deleted (unknown origin)
 html_templ.go       — reformatted imports (unknown origin)
