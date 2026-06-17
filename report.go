@@ -224,9 +224,10 @@ func (r Report) Index() ReportIndex {
 		idx.EventsByName[event.ServiceName] = append(
 			idx.EventsByName[event.ServiceName], event,
 		)
-		idx.EventsByRef[serviceKey(event.ScopeID, event.ServiceName)] = append(
-			idx.EventsByRef[serviceKey(event.ScopeID, event.ServiceName)], event,
-		)
+
+		key := serviceKey(event.ScopeID, event.ServiceName)
+		idx.EventsByRef[key] = append(idx.EventsByRef[key], event)
+
 		idx.EventsByType[event.EventType] = append(
 			idx.EventsByType[event.EventType], event,
 		)
@@ -235,9 +236,9 @@ func (r Report) Index() ReportIndex {
 	return idx
 }
 
-// WriteNDJSON streams every event in the report as a line-delimited JSON
-// object (NDJSON). Unlike Plugin.WriteEventsNDJSON, this operates directly on
-// the already-materialized Report.Events slice without a defensive copy.
+// WriteNDJSON writes every event as a line-delimited JSON object (NDJSON).
+// Operates directly on the Report.Events slice without a defensive copy,
+// unlike Plugin.WriteEventsNDJSON which copies first.
 func (r Report) WriteNDJSON(writer io.Writer) error {
 	return writeEventsNDJSON(writer, r.Events)
 }

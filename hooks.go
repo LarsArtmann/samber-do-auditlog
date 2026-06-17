@@ -166,11 +166,7 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 	})
 
 	// Look up service type from existing record.
-	var svcType ProviderType
-
-	if rec, ok := r.services[depKey]; ok {
-		svcType = rec.serviceType
-	}
+	svcType := r.serviceTypeForLocked(depKey)
 
 	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
 	evt := newEventFromRef(seq, now, EventTypeInvocation, PhaseBefore, ref, r.containerID, svcType, nil, nil)

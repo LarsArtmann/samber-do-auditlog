@@ -1,6 +1,9 @@
 package auditlog
 
-import "slices"
+import (
+	"cmp"
+	"slices"
+)
 
 // DiffResult describes the differences between two Reports.
 // All slices are nil when empty (no allocation for identical reports).
@@ -58,9 +61,9 @@ func (r Report) Diff(other Report) DiffResult {
 			continue
 		}
 
-		diff := compareService(prevSvc, otherSvc)
-		if diff.hasChange {
-			result.ChangedServices = append(result.ChangedServices, diff.diff)
+		diff, changed := compareService(prevSvc, otherSvc)
+		if changed {
+			result.ChangedServices = append(result.ChangedServices, diff)
 		}
 	}
 
@@ -77,12 +80,7 @@ func (r Report) Diff(other Report) DiffResult {
 	return result
 }
 
-type serviceChange struct {
-	diff      ServiceDiff
-	hasChange bool
-}
-
-func compareService(prev, other ServiceInfo) serviceChange {
+func compareService(prev, other ServiceInfo) (ServiceDiff, bool) {
 	diff := ServiceDiff{
 		ServiceRef:            prev.ServiceRef,
 		StatusChanged:         prev.Status != other.Status,
@@ -91,12 +89,12 @@ func compareService(prev, other ServiceInfo) serviceChange {
 		HasNewError:           !hasError(prev) && hasError(other),
 	}
 
-	hasChange := diff.StatusChanged ||
+	changed := diff.StatusChanged ||
 		diff.InvocationCountDelta != 0 ||
 		diff.HealthCheckCountDelta != 0 ||
 		diff.HasNewError
 
-	return serviceChange{diff: diff, hasChange: hasChange}
+	return diff, changed
 }
 
 func hasError(svc ServiceInfo) bool {
@@ -114,23 +112,11 @@ func indexServicesByKey(services []ServiceInfo) map[string]ServiceInfo {
 }
 
 func sortServiceRefs(a, b ServiceRef) int {
-	if a.ServiceName != b.ServiceName {
-		if a.ServiceName < b.ServiceName {
-			return -1
-		}
-
-		return 1
+	if c := cmp.Compare(a.ServiceName, b.ServiceName); c != 0 {
+		return c
 	}
 
-	if a.ScopeID < b.ScopeID {
-		return -1
-	}
-
-	if a.ScopeID > b.ScopeID {
-		return 1
-	}
-
-	return 0
+	return cmp.Compare(a.ScopeID, b.ScopeID)
 }
 
 func sortServiceDiffs(a, b ServiceDiff) int {
