@@ -12,12 +12,14 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | ---------------------------------------- | ------------------------------------------------ |
 | `go generate ./...`                      | Regenerate templ (and any other generated code)  |
 | `go test ./...`                          | Run all tests                                    |
+| `go test -race ./...`                    | Run all tests with race detector (CI uses this)  |
 | `go test -run TestPlugin_DisabledIsNoOp` | Run single test                                  |
 | `go vet ./...`                           | Static analysis                                  |
 | `golangci-lint run`                      | Full lint (heavy config, see below)              |
+| `nix develop`                           | Enter devShell (Go 1.26.3, templ, golangci-lint, govulncheck) |
 | `go run ./example`                       | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
 
-No flake.nix, no Makefile, no justfile. Standard Go toolchain only.
+A `flake.nix` devShell is available for Nix users. No Makefile, no justfile.
 
 ---
 
@@ -33,7 +35,8 @@ types.go            — Domain enums: EventType, Phase, ProviderType, ServiceSta
 metadata.go         — TypeMetadata struct + BuildTypeMetadata() — Go enum display metadata for HTML
 event.go            — Event type + convenience methods (IsRegistration, Duration, etc.)
 service.go          — ServiceInfo, ScopeNode types + methods (Uptime, HasHealthError)
-report.go           — Report type + Validate() + query methods (ServiceByName, EventsByType, Index, etc.)
+report.go           — Report type + Validate() + query methods (ServiceByName, EventsByType, Index, WriteNDJSON, WriteJSON, etc.)
+diff.go             — Report.Diff(other) + DiffResult/ServiceDiff types
 report_builder.go   — BuildReport assembly: services, scope tree, capability enrichment
 report_helpers.go   — Report aggregate helpers (sumBuildMs, deriveServiceStatus, etc.)
 filter.go           — Report filtering (Filtered, ReportOption, WithServicesByName, etc.)
@@ -68,6 +71,16 @@ example/            — Self-checking demo with 19 samber/do v2 features
 - `BuildReport()` uses `mu.RLock()` for reading — concurrent reads don't block each other.
 
 ---
+
+## CI
+
+GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and PR with 4 parallel jobs:
+- **test**: `go vet`, `go build`, `go test -race`
+- **lint**: `golangci-lint v2.12.2` (pinned to match local dev)
+- **vulncheck**: `govulncheck` via `golang/govulncheck-action`
+- **stale-generation**: installs `templ@v0.3.1020` (go.mod pin), runs `go generate`, fails on diff
+
+The stale-gen check catches `html_templ.go` drift: if a contributor uses a different templ version locally, CI detects the mismatch.
 
 ## Lint Configuration (.golangci.yml)
 
