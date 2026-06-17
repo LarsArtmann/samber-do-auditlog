@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.0.4] - 2026-06-17
+
 ### Fixed
 
 - **`MigrateReport` scope counting**: removed the divergent `countUniqueScopes`
@@ -29,6 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   non-existent `registered_offset_ns`/`first_invoked_offset_ns` fields and an
   unused `formatNs()` helper. Both removed; the tooltip now uses the real
   `registered_at`/`first_invoked_at` ISO timestamps.
+- **Stale-generation CI gate was perpetually red**: `html_templ.go` was committed
+  with multi-line imports, but templ v0.3.1020 (pinned via the go.mod `tool`
+  directive) deterministically emits single-line import statements. Re-committed
+  the actual `go tool templ generate` output so the working tree matches CI.
 
 ### Changed
 
