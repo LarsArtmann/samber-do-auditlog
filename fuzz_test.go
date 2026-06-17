@@ -256,3 +256,147 @@ func stripJSONScripts(html string) string {
 
 	return html
 }
+
+func FuzzDiagramSpecialChars(f *testing.F) {
+	special := []string{
+		"svc]",
+		`svc"`,
+		"svc-->",
+		"@enduml",
+		"%%",
+		"svc\nother", // newline injection
+		"svc|pipe",
+		"a]b[c",
+		`a"b"c`,
+		"<script>alert(1)</script>",
+		strings.Repeat("A", 500),
+	}
+
+	for _, s := range special {
+		f.Add(s)
+	}
+
+	f.Fuzz(func(t *testing.T, svcName string) {
+		t.Parallel()
+
+		if svcName == "" {
+			t.Skip()
+		}
+
+		plugin := mustNew(auditlog.Config{Enabled: true})
+		injector := do.NewWithOpts(plugin.Opts())
+
+		provideString(injector, svcName, "val")
+
+		_, err := do.InvokeNamed[string](injector, svcName)
+		if err != nil {
+			t.Skip()
+		}
+
+		report := plugin.Report()
+
+		var mBuf bytes.Buffer
+
+		mErr := report.WriteMermaid(&mBuf)
+		if mErr != nil {
+			t.Fatalf("WriteMermaid error: %v", mErr)
+		}
+
+		mOut := mBuf.String()
+		assertStringContains(t, mOut, "flowchart TD")
+
+		var pBuf bytes.Buffer
+
+		pErr := report.WritePlantUML(&pBuf)
+		if pErr != nil {
+			t.Fatalf("WritePlantUML error: %v", pErr)
+		}
+
+		pOut := pBuf.String()
+		assertStringContains(t, pOut, "@startuml")
+		assertStringContains(t, pOut, "@enduml")
+	})
+}
+
+func FuzzNestedScopeExport(f *testing.F) {
+	depths := []int{0, 1, 5, 10, 50, 100}
+
+	for _, d := range depths {
+		f.Add(d)
+	}
+
+	f.Fuzz(func(t *testing.T, depth int) {
+		t.Parallel()
+
+		if depth < 0 || depth > 500 {
+			t.Skip()
+		}
+
+		node := auditlog.ScopeNode{ID: "root", Name: "[root]", Services: []string{"root-svc"}}
+		current := &node
+
+		for i := range depth {
+			child := auditlog.ScopeNode{
+				ID:       fmt.Sprintf("scope-%d", i),
+				Name:     fmt.Sprintf("scope-%d", i),
+				Services: []string{fmt.Sprintf("svc-%d", i)},
+			}
+			current.Children = []auditlog.ScopeNode{child}
+			current = &current.Children[0]
+		}
+
+		services := make([]auditlog.ServiceInfo, 0, depth+1)
+		services = append(services, auditlog.ServiceInfo{
+			ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "root-svc"},
+			Status:     auditlog.ServiceStatusActive,
+		})
+
+		for i := range depth {
+			services = append(services, auditlog.ServiceInfo{
+				ServiceRef: auditlog.ServiceRef{
+					ScopeID:     fmt.Sprintf("scope-%d", i),
+					ScopeName:   fmt.Sprintf("scope-%d", i),
+					ServiceName: fmt.Sprintf("svc-%d", i),
+				},
+				Status: auditlog.ServiceStatusActive,
+			})
+		}
+
+		rawReport := auditlog.Report{
+			Version:   auditlog.SchemaVersion,
+			ScopeTree: node,
+			Services:  services,
+		}
+
+		// Normalize via MigrateReport so all denormalized fields are set.
+		var rawBuf bytes.Buffer
+
+		enc := json.NewEncoder(&rawBuf)
+		if encodeErr := enc.Encode(rawReport); encodeErr != nil {
+			t.Fatalf("JSON encode error: %v", encodeErr)
+		}
+
+		report, migErr := auditlog.MigrateReport(rawBuf.Bytes())
+		if migErr != nil {
+			t.Fatalf("MigrateReport error: %v", migErr)
+		}
+
+		if validateErr := report.Validate(); validateErr != nil {
+			t.Errorf("deeply nested report failed Validate: %v", validateErr)
+		}
+
+		var jsonBuf bytes.Buffer
+
+		if jsonErr := report.WriteJSON(&jsonBuf); jsonErr != nil {
+			t.Fatalf("WriteJSON error: %v", jsonErr)
+		}
+
+		var mBuf bytes.Buffer
+
+		_ = report.WriteMermaid(&mBuf)
+
+		var pBuf bytes.Buffer
+
+		_ = report.WritePlantUML(&pBuf)
+	})
+}
