@@ -15,3 +15,5 @@ reports/
 /coverage
 # Nix build output
 /result
+# Sensitive files
+*.db
