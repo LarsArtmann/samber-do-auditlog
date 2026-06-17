@@ -154,17 +154,7 @@ func (p *Plugin) WriteReportJSON(writer io.Writer) error {
 
 // WriteEventsNDJSON writes every captured event as a line-delimited JSON stream to writer.
 func (p *Plugin) WriteEventsNDJSON(writer io.Writer) error {
-	events := p.recorder.Events()
-
-	enc := json.NewEncoder(writer)
-	for _, event := range events {
-		err := enc.Encode(event)
-		if err != nil {
-			return fmt.Errorf("encode event %d: %w", event.Sequence, err)
-		}
-	}
-
-	return nil
+	return writeEventsNDJSON(writer, p.recorder.Events())
 }
 
 // ExportToFile writes the full Report as indented JSON to path.

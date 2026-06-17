@@ -239,16 +239,7 @@ func (r Report) Index() ReportIndex {
 // object (NDJSON). Unlike Plugin.WriteEventsNDJSON, this operates directly on
 // the already-materialized Report.Events slice without a defensive copy.
 func (r Report) WriteNDJSON(writer io.Writer) error {
-	enc := json.NewEncoder(writer)
-
-	for _, event := range r.Events {
-		err := enc.Encode(event)
-		if err != nil {
-			return fmt.Errorf("encode event %d: %w", event.Sequence, err)
-		}
-	}
-
-	return nil
+	return writeEventsNDJSON(writer, r.Events)
 }
 
 // WriteJSON writes the full report as indented JSON to the writer.
