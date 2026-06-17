@@ -303,9 +303,9 @@ templ reportHTML(report Report) {
 	  }
 	  .table-wrap th.sortable { cursor: pointer; user-select: none; }
 	  .table-wrap th.sortable:hover { color: var(--accent); }
-	  .table-wrap th.sortable::after { content: '3'; opacity: 0; }
-	  .table-wrap th.sortable.sort-asc::after { content: ' 91'; opacity: 1; color: var(--accent); }
-	  .table-wrap th.sortable.sort-desc::after { content: ' 93'; opacity: 1; color: var(--accent); }
+	  .table-wrap th.sortable::after { content: '\2003'; opacity: 0; }
+	  .table-wrap th.sortable.sort-asc::after { content: '\2191'; opacity: 1; color: var(--accent); }
+	  .table-wrap th.sortable.sort-desc::after { content: '\2193'; opacity: 1; color: var(--accent); }
 	  .empty-state td {
 	    text-align: center;
 	    padding: 2rem;
