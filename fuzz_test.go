@@ -145,7 +145,7 @@ func FuzzDiagramSpecialChars(f *testing.F) {
 		"a]b[c",
 		`a"b"c`,
 		`evil]"svc`,    // combined bracket+quote (the regression test case)
-		`{inj}ect[ion`, // braces + brackets
+		`{inj}ect[ion`, //nolint:misspell // adversarial fuzz seed, not a real word
 		"<script>alert(1)</script>",
 		strings.Repeat("A", 500),
 	}

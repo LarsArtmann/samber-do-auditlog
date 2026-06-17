@@ -36,11 +36,12 @@ Last updated: 2026-06-17
 
 ## Not Planned (Explicitly Rejected)
 
-- **Multi-module split** — Project is too small (1 package, ~2300 LOC). Revisit at 5+ packages.
+- **Multi-module split** — Project is too small (1 package, ~2500 LOC). Revisit at 5+ packages.
 - **External storage backends** — File and io.Writer exports are sufficient.
 - **Prometheus/OpenTelemetry integration as a dependency** — Out of scope. Use OnEvent callback instead.
 - **`samber/lo` dependency** — Current stdlib `slices`/`cmp` usage is sufficient for this project size.
 - **`encoding/json/v2` migration** — Current `encoding/json` works fine. Risk of breaking JSON output format for consumers.
+- **`go-output` adoption (v0.11.0)** — Initially declined (breaking output, pink theme, 11-module dep bloat). All blockers resolved in v0.12.0 (GraphStyle wiring, SetCodeFence, DedupEdges, serialization removed from root go.mod). **Viable when a 3rd diagram format is needed** (e.g. DOT). See `docs/research/go-output-adoption-review.md` §8.
 
 ---
 
