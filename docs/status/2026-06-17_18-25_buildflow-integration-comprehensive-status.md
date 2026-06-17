@@ -12,29 +12,29 @@ Make `buildflow --fix --semantic -p --build-mode=fast --budget 1m --log-level wa
 
 ### buildflow integration — all blockers resolved
 
-| Blocker | Root Cause | Fix | Verified |
-| ------- | ---------- | --- | -------- |
-| `nix-fmt` failed | Flake had no `formatter` output → `nix fmt` error: "does not provide attribute 'formatter.x86_64-linux'" | Added `formatter = pkgs.nixpkgs-fmt` to flake.nix | ✅ `nix fmt` exit 0 |
-| `nix-build` failed | No `packages.default` output → `nix build` error: "does not provide attribute 'packages.x86_64-linux.default'" | Added `runCommand` placeholder derivation with full `meta` block | ✅ `nix build` exit 0 |
-| `flake-meta-checker` failed | Package derivation missing required meta attributes (description, license = errors) | Added `meta = { description, homepage, license, mainProgram, platforms }` | ✅ Step succeeds |
-| `test-fuzz` timed out | 6 fuzz targets × 30s sequential = ~3m, but `DefaultMaxTimeout` is hardcoded 120s (not configurable via .buildflow.yml — only CLI `--max-time` or `--profile`) | Consolidated 6→3 fuzz targets: merged 3 HTML XSS targets into one, converted FuzzNestedScopeExport to table-driven `TestNestedScopeExport` | ✅ test-fuzz ⏱️1m33s, passes |
-| Language detected as "nix" | Auto-detection picks nix when flake.nix present (go.mod + flake.nix both exist); config `language: go` is buggy in installed buildflow binary (detects "javascript" or "nix" instead) | Set `BUILDFLOW_LANGUAGE = "go"` in devShell shellHook env | ✅ "Build Automation Tool (go)" |
-| Stale buildflow binary | `~/go/bin/buildflow` (missing `-p` shorthand flag) shadowed nix version on PATH | Renamed to `~/go/bin/buildflow.stale` | ✅ nix version active |
+| Blocker                     | Root Cause                                                                                                                                                                            | Fix                                                                                                                                        | Verified                        |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------- |
+| `nix-fmt` failed            | Flake had no `formatter` output → `nix fmt` error: "does not provide attribute 'formatter.x86_64-linux'"                                                                              | Added `formatter = pkgs.nixpkgs-fmt` to flake.nix                                                                                          | ✅ `nix fmt` exit 0             |
+| `nix-build` failed          | No `packages.default` output → `nix build` error: "does not provide attribute 'packages.x86_64-linux.default'"                                                                        | Added `runCommand` placeholder derivation with full `meta` block                                                                           | ✅ `nix build` exit 0           |
+| `flake-meta-checker` failed | Package derivation missing required meta attributes (description, license = errors)                                                                                                   | Added `meta = { description, homepage, license, mainProgram, platforms }`                                                                  | ✅ Step succeeds                |
+| `test-fuzz` timed out       | 6 fuzz targets × 30s sequential = ~3m, but `DefaultMaxTimeout` is hardcoded 120s (not configurable via .buildflow.yml — only CLI `--max-time` or `--profile`)                         | Consolidated 6→3 fuzz targets: merged 3 HTML XSS targets into one, converted FuzzNestedScopeExport to table-driven `TestNestedScopeExport` | ✅ test-fuzz ⏱️1m33s, passes    |
+| Language detected as "nix"  | Auto-detection picks nix when flake.nix present (go.mod + flake.nix both exist); config `language: go` is buggy in installed buildflow binary (detects "javascript" or "nix" instead) | Set `BUILDFLOW_LANGUAGE = "go"` in devShell shellHook env                                                                                  | ✅ "Build Automation Tool (go)" |
+| Stale buildflow binary      | `~/go/bin/buildflow` (missing `-p` shorthand flag) shadowed nix version on PATH                                                                                                       | Renamed to `~/go/bin/buildflow.stale`                                                                                                      | ✅ nix version active           |
 
 ### Project health metrics
 
-| Metric | Value |
-| ------ | ----- |
-| Go tests (`-race`) | ✅ PASS |
-| Coverage | 95.3% of statements (CI gate: ≥95%) |
-| `go vet` | ✅ PASS |
-| `golangci-lint` (76 linters) | ✅ 0 issues |
-| `go mod tidy` | ✅ No drift |
-| `go generate` | ✅ Matches committed output (fixed in this commit) |
-| Fuzz targets | 3 (was 6) |
-| Test functions | 167 |
-| Source LOC | 8,331 |
-| buildflow full run | ✅ 53 steps, 0 failures, ~1m42s |
+| Metric                       | Value                                              |
+| ---------------------------- | -------------------------------------------------- |
+| Go tests (`-race`)           | ✅ PASS                                            |
+| Coverage                     | 95.3% of statements (CI gate: ≥95%)                |
+| `go vet`                     | ✅ PASS                                            |
+| `golangci-lint` (76 linters) | ✅ 0 issues                                        |
+| `go mod tidy`                | ✅ No drift                                        |
+| `go generate`                | ✅ Matches committed output (fixed in this commit) |
+| Fuzz targets                 | 3 (was 6)                                          |
+| Test functions               | 167                                                |
+| Source LOC                   | 8,331                                              |
+| buildflow full run           | ✅ 53 steps, 0 failures, ~1m42s                    |
 
 ---
 
@@ -50,6 +50,7 @@ buildflow's `--fix` mode made two legitimate auto-fixes that need review/commit:
 ### Fuzz coverage trade-off
 
 Consolidating from 6 to 3 fuzz targets reduced independent fuzzing surface area:
+
 - **Before**: 6 targets × 30s = 3 minutes of fuzzing, each target explored independently
 - **After**: 3 targets × 30s = 1.5 minutes of fuzzing, 3 former targets share compilation/input space
 - The merged `FuzzPluginHTML` now tests service-name XSS, error-message XSS, AND dependency-chain XSS in a single fuzz target — the fuzzer finds inputs that exercise all three code paths simultaneously, but each individual path gets less dedicated fuzzing time.
@@ -100,33 +101,33 @@ Commit `762e7f9` included `html_templ.go` with gofumpt-grouped imports instead o
 
 ## f) Top 25 Things to Get Done Next
 
-| # | Task | Impact | Effort |
-| --- | --- | --- | --- |
-| 1 | Restore `html_templ.go` to canonical `go generate` output (this commit) | 🔴 CI-blocking | 2 min |
-| 2 | Commit `.gitignore` `*.db` sensitive-files addition from buildflow --fix | 🟡 Hygiene | 1 min |
-| 3 | Fix `flake.nix` description: "Go 1.26.3" → "Go 1.26.4" | 🟡 Accuracy | 1 min |
-| 4 | Upgrade buildflow when language-detection bug is fixed; replace `BUILDFLOW_LANGUAGE` env hack with `.buildflow.yml` | 🟡 DX | When fixed |
-| 5 | Add `buildflow` to flake.nix `buildInputs` so it's available in devShell without system install | 🟡 DX | 5 min |
-| 6 | Add `*_templ.go` to buildflow exclude patterns to prevent gofumpt/templ conflicts | 🟡 Correctness | 5 min |
-| 7 | Run `buildflow precommit install` to add pre-commit quality gate | 🟢 Prevention | 2 min |
-| 8 | Add a buildflow job to `.github/workflows/ci.yml` | 🟢 CI coverage | 15 min |
-| 9 | Replace `runCommand` placeholder with real `buildGoModule` once nixpkgs has Go 1.26.4 | 🟢 Builds | When available |
-| 10 | Add dedicated unit tests for XSS vectors that lost dedicated fuzz targets (error-message, dep-chain) | 🟢 Coverage | 20 min |
-| 11 | Update AGENTS.md with buildflow integration details (commands, gotchas, config) | 🟢 Docs | 10 min |
-| 12 | Consider `--profile thorough` for buildflow in CI (longer fuzz time, deeper analysis) | 🟢 Quality | 5 min |
-| 13 | Clean up `~/go/bin/buildflow.stale` (rename artifact from this session) | 🟢 Hygiene | 1 min |
-| 14 | Update FEATURES.md to mention buildflow integration | 🟢 Docs | 5 min |
-| 15 | Update TODO_LIST.md with buildflow-related tasks from this report | 🟢 Planning | 10 min |
-| 16 | Investigate `oxfmt` vs `gofumpt` overlap — buildflow runs both; are they redundant? | 🟢 Cleanup | 15 min |
-| 17 | Add `flake.nix` `meta` to devShell (currently only on `packages.default`) | 🟢 Nix hygiene | 5 min |
-| 18 | Consider nix flake `checks` output for CI-equivalent validation in nix | 🟢 Reproducibility | 30 min |
-| 19 | Run `buildflow doctor` output review — gci not installed (informational) | 🟢 Completeness | 5 min |
-| 20 | Document the 120s hardcoded timeout limitation in AGENTS.md buildflow section | 🟢 Knowledge | 5 min |
-| 21 | Consider splitting `fuzz_test.go` — it's now 300+ lines with 3 targets + helpers | 🟢 Organization | 15 min |
-| 22 | Add fuzz corpus seed files for merged `FuzzPluginHTML` (more seeds = better coverage) | 🟢 Fuzzing | 10 min |
-| 23 | Explore buildflow `--profile lightning` for fast pre-commit feedback loop | 🟢 DX | 10 min |
-| 24 | Update `CHANGELOG.md` with buildflow integration entry | 🟢 Docs | 5 min |
-| 25 | Run `nix flake check` and fix any warnings | 🟢 Nix quality | 10 min |
+| #   | Task                                                                                                                | Impact             | Effort         |
+| --- | ------------------------------------------------------------------------------------------------------------------- | ------------------ | -------------- |
+| 1   | Restore `html_templ.go` to canonical `go generate` output (this commit)                                             | 🔴 CI-blocking     | 2 min          |
+| 2   | Commit `.gitignore` `*.db` sensitive-files addition from buildflow --fix                                            | 🟡 Hygiene         | 1 min          |
+| 3   | Fix `flake.nix` description: "Go 1.26.3" → "Go 1.26.4"                                                              | 🟡 Accuracy        | 1 min          |
+| 4   | Upgrade buildflow when language-detection bug is fixed; replace `BUILDFLOW_LANGUAGE` env hack with `.buildflow.yml` | 🟡 DX              | When fixed     |
+| 5   | Add `buildflow` to flake.nix `buildInputs` so it's available in devShell without system install                     | 🟡 DX              | 5 min          |
+| 6   | Add `*_templ.go` to buildflow exclude patterns to prevent gofumpt/templ conflicts                                   | 🟡 Correctness     | 5 min          |
+| 7   | Run `buildflow precommit install` to add pre-commit quality gate                                                    | 🟢 Prevention      | 2 min          |
+| 8   | Add a buildflow job to `.github/workflows/ci.yml`                                                                   | 🟢 CI coverage     | 15 min         |
+| 9   | Replace `runCommand` placeholder with real `buildGoModule` once nixpkgs has Go 1.26.4                               | 🟢 Builds          | When available |
+| 10  | Add dedicated unit tests for XSS vectors that lost dedicated fuzz targets (error-message, dep-chain)                | 🟢 Coverage        | 20 min         |
+| 11  | Update AGENTS.md with buildflow integration details (commands, gotchas, config)                                     | 🟢 Docs            | 10 min         |
+| 12  | Consider `--profile thorough` for buildflow in CI (longer fuzz time, deeper analysis)                               | 🟢 Quality         | 5 min          |
+| 13  | Clean up `~/go/bin/buildflow.stale` (rename artifact from this session)                                             | 🟢 Hygiene         | 1 min          |
+| 14  | Update FEATURES.md to mention buildflow integration                                                                 | 🟢 Docs            | 5 min          |
+| 15  | Update TODO_LIST.md with buildflow-related tasks from this report                                                   | 🟢 Planning        | 10 min         |
+| 16  | Investigate `oxfmt` vs `gofumpt` overlap — buildflow runs both; are they redundant?                                 | 🟢 Cleanup         | 15 min         |
+| 17  | Add `flake.nix` `meta` to devShell (currently only on `packages.default`)                                           | 🟢 Nix hygiene     | 5 min          |
+| 18  | Consider nix flake `checks` output for CI-equivalent validation in nix                                              | 🟢 Reproducibility | 30 min         |
+| 19  | Run `buildflow doctor` output review — gci not installed (informational)                                            | 🟢 Completeness    | 5 min          |
+| 20  | Document the 120s hardcoded timeout limitation in AGENTS.md buildflow section                                       | 🟢 Knowledge       | 5 min          |
+| 21  | Consider splitting `fuzz_test.go` — it's now 300+ lines with 3 targets + helpers                                    | 🟢 Organization    | 15 min         |
+| 22  | Add fuzz corpus seed files for merged `FuzzPluginHTML` (more seeds = better coverage)                               | 🟢 Fuzzing         | 10 min         |
+| 23  | Explore buildflow `--profile lightning` for fast pre-commit feedback loop                                           | 🟢 DX              | 10 min         |
+| 24  | Update `CHANGELOG.md` with buildflow integration entry                                                              | 🟢 Docs            | 5 min          |
+| 25  | Run `nix flake check` and fix any warnings                                                                          | 🟢 Nix quality     | 10 min         |
 
 ---
 
@@ -146,10 +147,10 @@ The `BUILDFLOW_LANGUAGE=go` env var workaround works perfectly, so this is not b
 
 ## Files Changed This Session
 
-| File | Change | Committed |
-| --- | --- | --- |
-| `flake.nix` | +`formatter`, +`packages.default` with meta, +`BUILDFLOW_LANGUAGE=go` | ✅ `762e7f9` |
-| `fuzz_test.go` | Consolidated 6→3 fuzz targets, added `TestNestedScopeExport` | ✅ `762e7f9` |
-| `.gitignore` | +`/result`, +`*.db` (from buildflow --fix) | ✅ `/result` in `762e7f9`; `*.db` pending |
-| `html_templ.go` | Restore canonical `go generate` output (fix CI drift) | This commit |
-| `docs/status/` | This status report | This commit |
+| File            | Change                                                                | Committed                                 |
+| --------------- | --------------------------------------------------------------------- | ----------------------------------------- |
+| `flake.nix`     | +`formatter`, +`packages.default` with meta, +`BUILDFLOW_LANGUAGE=go` | ✅ `762e7f9`                              |
+| `fuzz_test.go`  | Consolidated 6→3 fuzz targets, added `TestNestedScopeExport`          | ✅ `762e7f9`                              |
+| `.gitignore`    | +`/result`, +`*.db` (from buildflow --fix)                            | ✅ `/result` in `762e7f9`; `*.db` pending |
+| `html_templ.go` | Restore canonical `go generate` output (fix CI drift)                 | This commit                               |
+| `docs/status/`  | This status report                                                    | This commit                               |
