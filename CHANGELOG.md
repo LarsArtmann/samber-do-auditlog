@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Templ CLI now managed via Go `tool` directive**: `go get -tool` pins the exact
+  version in `go.mod`. `go generate` calls `go tool templ generate` — no external
+  binary needed. Eliminates the Nix-vs-go.mod version drift that plagued v0.0.3.
+  Removed `templ` from `flake.nix` and the `go install` step from CI.
+
 ### Added
 
 - **CI pipeline** (`.github/workflows/ci.yml`): four parallel jobs — test (with
@@ -22,8 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Report.WriteJSON(writer)`**: writes the full report as indented JSON.
 - **`Report.Diff(other Report) DiffResult`**: structural comparison of two
   reports (added/removed/changed services, event count delta).
-- **`flake.nix` devShell**: pins Go 1.26.3, golangci-lint, govulncheck, templ,
-  golines for contributor reproducibility.
+- **`flake.nix` devShell**: pins Go 1.26.3, golangci-lint, govulncheck, golines
+  for contributor reproducibility.
 - **`BENCHMARKS.md`**: post-v0.0.3 baseline of all 13 benchmarks for regression
   detection.
 - **`STABILITY.md`**: 0.x API stability promise (stable vs evolving vs internal).

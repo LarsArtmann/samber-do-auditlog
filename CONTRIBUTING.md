@@ -2,7 +2,7 @@
 
 Thanks for your interest in making do-auditlog better.
 
-This project uses the standard Go toolchain. A `flake.nix` devShell is available for contributors using Nix; otherwise you just need Go, `golangci-lint`, and `templ` if you touch the HTML template.
+This project uses the standard Go toolchain. A `flake.nix` devShell is available for contributors using Nix; otherwise you just need Go and `golangci-lint`. The templ CLI is managed automatically via Go's `tool` directive — no manual install needed.
 
 ---
 
@@ -12,7 +12,7 @@ This project uses the standard Go toolchain. A `flake.nix` devShell is available
 - [golangci-lint](https://golangci-lint.run/usage/install/) (latest v2.x)
 - [templ](https://templ.guide/) (only if you edit `html.templ`)
 
-**Nix users:** Run `nix develop` to get Go 1.26.3, golangci-lint, govulncheck, templ, and golines pinned in `flake.nix`.
+**Nix users:** Run `nix develop` to get Go 1.26.3, golangci-lint, govulncheck, and golines pinned in `flake.nix`.
 
 Verify your setup:
 
@@ -99,7 +99,7 @@ func TestPlugin_SomeFeature(t *testing.T) {
 
 ## Generated Code
 
-`html_templ.go` is generated from `html.templ` by `templ generate`.
+`html_templ.go` is generated from `html.templ` by `go tool templ generate` (pinned via Go's `tool` directive in go.mod).
 
 - **Never edit `html_templ.go` by hand.**
 - If you modify `html.templ`, run `go generate ./...` and include the regenerated file in your commit.

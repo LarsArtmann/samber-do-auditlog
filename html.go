@@ -1,6 +1,6 @@
 package auditlog
 
-//go:generate templ generate
+//go:generate go tool templ generate
 
 import (
 	"context"

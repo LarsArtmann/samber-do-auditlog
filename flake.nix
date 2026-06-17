@@ -1,5 +1,5 @@
 {
-  description = "DevShell for samber-do-auditlog — Go 1.26.3, templ, golangci-lint, govulncheck";
+  description = "DevShell for samber-do-auditlog — Go 1.26.3, golangci-lint, govulncheck";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -25,13 +25,9 @@
             # Vulnerability scanning.
             govulncheck
 
-            # HTML template code generation.
-            # NOTE: nixpkgs templ may differ from the go.mod pin (v0.3.1020).
-            # CI's stale-generation check uses `go install ...@v0.3.1020`
-            # as the authoritative version. If local regeneration produces
-            # drift, install the exact version:
-            #   go install github.com/a-h/templ/cmd/templ@v0.3.1020
-            templ
+            # HTML template code generation is handled by Go's `tool` directive
+            # (see go.mod). No external templ binary needed — `go tool templ`
+            # builds the exact go.mod-pinned version automatically.
 
             # Code formatting.
             golines
