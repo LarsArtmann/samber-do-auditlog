@@ -22,10 +22,10 @@ Last updated: 2026-06-17
 
 ## Priority 3 — Developer Experience
 
-- [ ] **`flake.nix` devShell** — pin Go 1.26.3, templ CLI, golangci-lint, govulncheck so contributors have identical tooling (resolves templ CLI version drift: local v0.3.1036 vs go.mod v0.3.1020)
-- [ ] **"Releasing" section in CONTRIBUTING.md** — document the tag → CHANGELOG → push → GitHub Release procedure, including the release-vs-schema-version distinction
-- [ ] **pkg.go.dev badge** — add to README and verify the 7 godoc examples render
-- [ ] **Benchmark baselines** — re-run the 11 benchmarks post-v0.0.3 and record in a `BENCHMARKS.md` for regression detection
+- [x] **`flake.nix` devShell** — pins Go 1.26.3, golangci-lint, govulncheck, templ, golines; documents the go.mod templ version pin (v0.3.1020) alongside nixpkgs (2026-06-17)
+- [x] **"Releasing" section in CONTRIBUTING.md** — documents tag → CHANGELOG → push → GitHub Release procedure + release-vs-schema-version distinction; also fixed stale `New()` example (2026-06-17)
+- [x] **pkg.go.dev badge** — already present in README; all 7 godoc examples verified passing (`go test -run Example`) (2026-06-17)
+- [x] **Benchmark baselines** — `BENCHMARKS.md` created with all 13 benchmarks (3 runs, median values) post-v0.0.3 for regression detection (2026-06-17)
 
 ## Priority 4 — Future API Exploration
 
