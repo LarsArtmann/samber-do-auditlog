@@ -218,3 +218,75 @@ func TestWriteMermaid_ExternalDependency(t *testing.T) {
 	assertStringContains(t, output, "external-dep")
 	assertStringContains(t, output, "-->")
 }
+
+func TestWriteMermaid_EscapesSpecialChars(t *testing.T) {
+	t.Parallel()
+
+	report := auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: "test",
+		ExportedAt:  time.Now(),
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceRef: auditlog.ServiceRef{
+					ScopeID:     "root",
+					ScopeName:   auditlog.RootScopeName,
+					ServiceName: `evil]"svc`,
+				},
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+
+	err := report.WriteMermaid(&buf)
+	if err != nil {
+		t.Fatalf("WriteMermaid: %v", err)
+	}
+
+	output := buf.String()
+	// The label must be escaped (] -> ), " -> ') and the identifier sanitized
+	// so the node syntax id[label] stays balanced and valid.
+	assertStringContains(t, output, "root_evil_svc[evil)'svc]")
+
+	// No raw double-quote should leak into the rendered Mermaid: the theme
+	// header uses single quotes, so any " indicates an unescaped label.
+	if strings.Contains(output, `"`) {
+		t.Errorf("mermaid output must not contain unescaped double quotes: %s", output)
+	}
+}
+
+func TestWritePlantUML_EscapesSpecialChars(t *testing.T) {
+	t.Parallel()
+
+	report := auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: "test",
+		ExportedAt:  time.Now(),
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceRef: auditlog.ServiceRef{
+					ScopeID:     "root",
+					ScopeName:   auditlog.RootScopeName,
+					ServiceName: `evil]"svc`,
+				},
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+
+	err := report.WritePlantUML(&buf)
+	if err != nil {
+		t.Fatalf("WritePlantUML: %v", err)
+	}
+
+	output := buf.String()
+	// The quote inside the service name is escaped to an apostrophe so the
+	// quoted component declaration stays well-formed.
+	assertStringContains(t, output, `component "evil]'svc" as root_evil_svc`)
+}

@@ -84,14 +84,71 @@ func writeDiagram(writer io.Writer, report Report, formatter diagramFormatter) e
 	return nil
 }
 
-// diagramNodeID returns a sanitized node ID for diagram output.
-func diagramNodeID(scopeID, serviceName string) string {
-	return strings.NewReplacer(
-		"-", "_",
-		" ", "_",
-		"/", "_",
-		".", "_",
-	).Replace(scopeID + "_" + serviceName)
+// diagramIDReplacer collapses characters that are invalid or problematic in
+// Mermaid/PlantUML node identifiers into underscores.
+//
+//nolint:gochecknoglobals // Reusable strings.Replacer, safe to share.
+var diagramIDReplacer = strings.NewReplacer(
+	"-", "_",
+	" ", "_",
+	"/", "_",
+	".", "_",
+	"*", "_",
+	"[", "_",
+	"]", "_",
+)
+
+// sanitizeDiagramID builds a node identifier from scopeID and serviceName that
+// is valid in both Mermaid and PlantUML: separators become underscores and any
+// remaining non-identifier character is stripped. Returns "node" if the result
+// would be empty.
+func sanitizeDiagramID(scopeID, serviceName string) string {
+	raw := diagramIDReplacer.Replace(scopeID + "_" + serviceName)
+
+	var b strings.Builder
+	b.Grow(len(raw))
+
+	for _, r := range raw {
+		if isDiagramIdentRune(r) {
+			b.WriteRune(r)
+		}
+	}
+
+	if b.Len() == 0 {
+		return "node"
+	}
+
+	return b.String()
+}
+
+// isDiagramIdentRune reports whether r is valid in a Mermaid/PlantUML node
+// identifier (ASCII letter, digit, or underscore).
+func isDiagramIdentRune(r rune) bool {
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') ||
+		(r >= '0' && r <= '9') || r == '_'
+}
+
+// mermaidLabelReplacer escapes characters that break Mermaid node labels.
+//
+//nolint:gochecknoglobals // Reusable strings.Replacer, safe to share.
+var mermaidLabelReplacer = strings.NewReplacer(
+	`"`, "'",
+	"[", "(",
+	"]", ")",
+	"{", "(",
+	"}", ")",
+	"\n", "<br>",
+)
+
+// mermaidLabel escapes special characters for a Mermaid display label.
+func mermaidLabel(label string) string {
+	return mermaidLabelReplacer.Replace(label)
+}
+
+// plantumlLabel escapes a double quote so a service name is safe inside a
+// PlantUML quoted component declaration.
+func plantumlLabel(label string) string {
+	return strings.ReplaceAll(label, `"`, "'")
 }
 
 type mermaidFormatter struct{}
@@ -102,11 +159,11 @@ flowchart TD`
 }
 func (mermaidFormatter) Footer() string { return "" }
 func (mermaidFormatter) NodeID(scopeID, serviceName string) string {
-	return diagramNodeID(scopeID, serviceName)
+	return sanitizeDiagramID(scopeID, serviceName)
 }
 
 func (mermaidFormatter) NodeDecl(id, label string) string {
-	return fmt.Sprintf("%s[%s]", id, label)
+	return fmt.Sprintf("%s[%s]", id, mermaidLabel(label))
 }
 
 func (mermaidFormatter) EdgeDecl(fromID, toID string) string {
@@ -129,19 +186,11 @@ skinparam defaultTextAlignment left`
 }
 func (plantumlFormatter) Footer() string { return "@enduml" }
 func (plantumlFormatter) NodeID(scopeID, serviceName string) string {
-	return strings.NewReplacer(
-		"-", "_",
-		" ", "_",
-		"/", "_",
-		".", "_",
-		"*", "_",
-		"[", "_",
-		"]", "_",
-	).Replace(scopeID + "_" + serviceName)
+	return sanitizeDiagramID(scopeID, serviceName)
 }
 
 func (plantumlFormatter) NodeDecl(id, label string) string {
-	return fmt.Sprintf(`component "%s" as %s`, label, id)
+	return fmt.Sprintf(`component "%s" as %s`, plantumlLabel(label), id)
 }
 
 func (plantumlFormatter) EdgeDecl(fromID, toID string) string {
