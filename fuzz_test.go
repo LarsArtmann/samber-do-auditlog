@@ -144,6 +144,8 @@ func FuzzDiagramSpecialChars(f *testing.F) {
 		"svc|pipe",
 		"a]b[c",
 		`a"b"c`,
+		`evil]"svc`,    // combined bracket+quote (the regression test case)
+		`{inj}ect[ion`, // braces + brackets
 		"<script>alert(1)</script>",
 		strings.Repeat("A", 500),
 	}
@@ -180,6 +182,13 @@ func FuzzDiagramSpecialChars(f *testing.F) {
 
 		mOut := mBuf.String()
 		assertStringContains(t, mOut, "flowchart TD")
+
+		// Structural integrity: the Mermaid node syntax id[label] must stay
+		// balanced. A raw double-quote in the label would indicate the escaping
+		// regressed (the theme header uses single quotes exclusively).
+		if strings.Contains(mOut, "\"") {
+			t.Errorf("raw double-quote in Mermaid output: %s", mOut)
+		}
 
 		var pBuf bytes.Buffer
 
