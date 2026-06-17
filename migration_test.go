@@ -251,9 +251,12 @@ func TestMigrateReport_StatusComputation(t *testing.T) {
 	}
 }
 
-func TestMigrateReport_PreservesExistingStatus(t *testing.T) {
+func TestMigrateReport_RecomputesStaleStatus(t *testing.T) {
 	t.Parallel()
 
+	// Input has status:"active" but no first_invoked_at — the correct derived
+	// status is "registered". MigrateReport must re-derive rather than trust
+	// the stale stored value.
 	input := `{
 		"version": "0.1.0",
 		"services": [
@@ -266,8 +269,13 @@ func TestMigrateReport_PreservesExistingStatus(t *testing.T) {
 		t.Fatalf("MigrateReport: %v", err)
 	}
 
-	if report.Services[0].Status != auditlog.ServiceStatusActive {
-		t.Errorf("existing status should be preserved, got %s", report.Services[0].Status)
+	if report.Services[0].Status != auditlog.ServiceStatusRegistered {
+		t.Errorf("stale status should be recomputed to %s, got %s",
+			auditlog.ServiceStatusRegistered, report.Services[0].Status)
+	}
+
+	if err := report.Validate(); err != nil {
+		t.Errorf("migrated report should pass Validate: %v", err)
 	}
 }
 

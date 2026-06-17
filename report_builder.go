@@ -47,31 +47,10 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 
 		sortDepRefs(svcDependents)
 
-		services = append(services, ServiceInfo{
-			ServiceRef: ServiceRef{
-				ServiceName: rec.serviceName,
-				ScopeID:     rec.scopeID,
-				ScopeName:   rec.scopeName,
-			},
-			Status:               computeServiceStatus(rec),
-			ServiceType:          rec.serviceType,
-			RegisteredAt:         rec.registeredAt,
-			FirstInvokedAt:       rec.firstInvokedAt,
-			InvocationCount:      rec.invocationCount,
-			InvocationOrder:      rec.invocationOrder,
-			FirstBuildDurationMs: rec.firstBuildDurationMs,
-			Dependencies:         deps,
-			Dependents:           svcDependents,
-			ShutdownAt:           rec.shutdownAt,
-			ShutdownDurationMs:   rec.shutdownDurationMs,
-			ShutdownError:        rec.shutdownError,
-			InvocationError:      rec.invocationError,
-			IsHealthchecker:      false,
-			IsShutdowner:         false,
-			LastHealthCheckAt:    rec.lastHealthCheckAt,
-			HealthCheckError:     rec.healthCheckError,
-			HealthCheckCount:     rec.healthCheckCount,
-		})
+		svc := serviceRecordToInfo(rec)
+		svc.Dependencies = deps
+		svc.Dependents = svcDependents
+		services = append(services, svc)
 	}
 
 	slices.SortFunc(services, func(a, b ServiceInfo) int {
@@ -79,6 +58,39 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 	})
 
 	return services
+}
+
+// serviceRecordToInfo converts an internal serviceRecord to a public ServiceInfo.
+// This centralizes the field mapping so any new field added to ServiceInfo only
+// needs to be wired in one place. Dependencies, Dependents, IsHealthchecker,
+// and IsShutdowner are left as zero values — the caller sets them after calling
+// this function.
+func serviceRecordToInfo(rec *serviceRecord) ServiceInfo {
+	return ServiceInfo{
+		ServiceRef: ServiceRef{
+			ServiceName: rec.serviceName,
+			ScopeID:     rec.scopeID,
+			ScopeName:   rec.scopeName,
+		},
+		Status:               computeServiceStatus(rec),
+		ServiceType:          rec.serviceType,
+		RegisteredAt:         rec.registeredAt,
+		FirstInvokedAt:       rec.firstInvokedAt,
+		InvocationCount:      rec.invocationCount,
+		InvocationOrder:      rec.invocationOrder,
+		FirstBuildDurationMs: rec.firstBuildDurationMs,
+		Dependencies:         nil,
+		Dependents:           nil,
+		ShutdownAt:           rec.shutdownAt,
+		ShutdownDurationMs:   rec.shutdownDurationMs,
+		ShutdownError:        rec.shutdownError,
+		InvocationError:      rec.invocationError,
+		IsHealthchecker:      false,
+		IsShutdowner:         false,
+		LastHealthCheckAt:    rec.lastHealthCheckAt,
+		HealthCheckError:     rec.healthCheckError,
+		HealthCheckCount:     rec.healthCheckCount,
+	}
 }
 
 // buildDepsLocked builds sorted dependency refs for a service record.

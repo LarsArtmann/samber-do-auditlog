@@ -33,23 +33,23 @@ type EventMeta struct {
 func BuildTypeMetadata() TypeMetadata {
 	return TypeMetadata{
 		Providers: map[string]ProviderMeta{
-			string(ProviderTypeLazy):      {Icon: ProviderTypeLazy.Icon(), Label: "Lazy"},
-			string(ProviderTypeEager):     {Icon: ProviderTypeEager.Icon(), Label: "Eager"},
-			string(ProviderTypeTransient): {Icon: ProviderTypeTransient.Icon(), Label: "Transient"},
-			string(ProviderTypeAlias):     {Icon: ProviderTypeAlias.Icon(), Label: "Alias"},
+			string(ProviderTypeLazy):      {Icon: ProviderTypeLazy.Icon(), Label: ProviderTypeLazy.Label()},
+			string(ProviderTypeEager):     {Icon: ProviderTypeEager.Icon(), Label: ProviderTypeEager.Label()},
+			string(ProviderTypeTransient): {Icon: ProviderTypeTransient.Icon(), Label: ProviderTypeTransient.Label()},
+			string(ProviderTypeAlias):     {Icon: ProviderTypeAlias.Icon(), Label: ProviderTypeAlias.Label()},
 		},
 		Statuses: map[string]StatusMeta{
-			string(ServiceStatusRegistered):      {Icon: "\u26AA"},
-			string(ServiceStatusActive):          {Icon: "\U0001F7E2"},
-			string(ServiceStatusShutdown):        {Icon: "\U0001F535"},
-			string(ServiceStatusInvocationError): {Icon: "\U0001F534"},
-			string(ServiceStatusShutdownError):   {Icon: "\U0001F534"},
+			string(ServiceStatusRegistered):      {Icon: ServiceStatusRegistered.Icon()},
+			string(ServiceStatusActive):          {Icon: ServiceStatusActive.Icon()},
+			string(ServiceStatusShutdown):        {Icon: ServiceStatusShutdown.Icon()},
+			string(ServiceStatusInvocationError): {Icon: ServiceStatusInvocationError.Icon()},
+			string(ServiceStatusShutdownError):   {Icon: ServiceStatusShutdownError.Icon()},
 		},
 		Events: map[string]EventMeta{
-			string(EventTypeRegistration): {Label: "Registration", Color: "var(--accent)"},
-			string(EventTypeInvocation):   {Label: "Invocation", Color: "var(--success)"},
-			string(EventTypeShutdown):     {Label: "Shutdown", Color: "var(--warning)"},
-			string(EventTypeHealthCheck):  {Label: "Health", Color: "var(--info)"},
+			string(EventTypeRegistration): {Label: EventTypeRegistration.Label(), Color: EventTypeRegistration.Color()},
+			string(EventTypeInvocation):   {Label: EventTypeInvocation.Label(), Color: EventTypeInvocation.Color()},
+			string(EventTypeShutdown):     {Label: EventTypeShutdown.Label(), Color: EventTypeShutdown.Color()},
+			string(EventTypeHealthCheck):  {Label: EventTypeHealthCheck.Label(), Color: EventTypeHealthCheck.Color()},
 		},
 	}
 }

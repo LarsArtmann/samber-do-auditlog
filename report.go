@@ -13,6 +13,7 @@ var (
 	errReportServiceCountMismatch  = errors.New("service_count does not match len(services)")
 	errReportScopeCountMismatch    = errors.New("scope_count does not match scope tree")
 	errReportHealthCheckedMismatch = errors.New("health_checked_count does not match services with health checks")
+	errReportStatusDrift           = errors.New("service status does not match derived status")
 )
 
 // Report is a consolidated, machine-readable snapshot of the audit log.
@@ -66,6 +67,14 @@ func (r Report) Validate() error {
 
 	if r.HealthCheckedCount != healthChecked {
 		return fmt.Errorf("%w: got %d, want %d", errReportHealthCheckedMismatch, r.HealthCheckedCount, healthChecked)
+	}
+
+	for _, svc := range r.Services {
+		derived := svc.DeriveStatus()
+		if svc.Status != derived {
+			return fmt.Errorf("%w: service %q has status %q but derived status is %q",
+				errReportStatusDrift, svc.ServiceName, svc.Status, derived)
+		}
 	}
 
 	return nil

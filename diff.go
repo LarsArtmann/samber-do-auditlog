@@ -86,7 +86,7 @@ func compareService(prev, other ServiceInfo) (ServiceDiff, bool) {
 		StatusChanged:         prev.Status != other.Status,
 		InvocationCountDelta:  other.InvocationCount - prev.InvocationCount,
 		HealthCheckCountDelta: other.HealthCheckCount - prev.HealthCheckCount,
-		HasNewError:           !hasError(prev) && hasError(other),
+		HasNewError:           !prev.Status.IsError() && other.Status.IsError(),
 	}
 
 	changed := diff.StatusChanged ||
@@ -95,10 +95,6 @@ func compareService(prev, other ServiceInfo) (ServiceDiff, bool) {
 		diff.HasNewError
 
 	return diff, changed
-}
-
-func hasError(svc ServiceInfo) bool {
-	return svc.InvocationError != nil || svc.ShutdownError != nil
 }
 
 func indexServicesByKey(services []ServiceInfo) map[string]ServiceInfo {

@@ -14,6 +14,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Split-brain audit fixes** (5 findings resolved):
+  - **Status consistency drift** (SB-01): `Report.Validate()` now checks that
+    every `ServiceInfo.Status` matches `DeriveStatus()`. `MigrateReport` always
+    re-derives status instead of preserving stale non-empty values. A report
+    with `Status="active"` + `InvocationError="boom"` now fails validation.
+  - **Duplicate error detection** (SB-02): `diff.go` `hasError()` checked raw
+    pointers while `FailedServices()` checked the status enum — they could
+    disagree on stale reports. Consolidated to `Status.IsError()` as the single
+    path; `hasError()` deleted.
+  - **Manual struct field copy** (SB-03): The 16-field `serviceRecord` →
+    `ServiceInfo` mapping is centralized in `serviceRecordToInfo()` so any new
+    field only needs wiring in one place.
+  - **Enum metadata asymmetry** (SB-04): `ServiceStatus.Icon()`, `EventType.Label()`,
+    `EventType.Color()`, and `ProviderType.Label()` methods are now the single
+    source of truth — `BuildTypeMetadata()` calls them instead of duplicating
+    hardcoded values.
+  - **Duplicate JSON encoding paths** (SB-05): `Plugin.WriteReportJSON()` and
+    `Plugin.ExportFilteredToFile()` now delegate to `Report.WriteJSON()`,
+    eliminating three independent encoder setups.
+
 - **Diagram output escaping**: Service names containing brackets (`]` `[` `{` `}`),
   quotes (`"`), or newlines previously produced malformed Mermaid and PlantUML
   output — the `id[label]` syntax would break, rendering the diagram invalid.

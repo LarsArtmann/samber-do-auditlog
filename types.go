@@ -18,6 +18,38 @@ const (
 	EventTypeHealthCheck  EventType = "health_check"
 )
 
+// Label returns the human-readable display label for this event type.
+func (e EventType) Label() string {
+	switch e {
+	case EventTypeRegistration:
+		return "Registration"
+	case EventTypeInvocation:
+		return "Invocation"
+	case EventTypeShutdown:
+		return "Shutdown"
+	case EventTypeHealthCheck:
+		return "Health"
+	default:
+		return ""
+	}
+}
+
+// Color returns the CSS color token for this event type, used in the HTML visualization.
+func (e EventType) Color() string {
+	switch e {
+	case EventTypeRegistration:
+		return "var(--accent)"
+	case EventTypeInvocation:
+		return "var(--success)"
+	case EventTypeShutdown:
+		return "var(--warning)"
+	case EventTypeHealthCheck:
+		return "var(--info)"
+	default:
+		return ""
+	}
+}
+
 // Phase indicates whether an event is the start or end of an operation.
 type Phase string
 
@@ -38,6 +70,22 @@ const (
 
 // String returns the provider type name.
 func (p ProviderType) String() string { return string(p) }
+
+// Label returns the human-readable display label for this provider type.
+func (p ProviderType) Label() string {
+	switch p {
+	case ProviderTypeLazy:
+		return "Lazy"
+	case ProviderTypeEager:
+		return "Eager"
+	case ProviderTypeTransient:
+		return "Transient"
+	case ProviderTypeAlias:
+		return "Alias"
+	default:
+		return ""
+	}
+}
 
 // IsKnown returns true if the provider type is a recognized value.
 func (p ProviderType) IsKnown() bool {
@@ -79,6 +127,22 @@ const (
 // IsError returns true if the service has an invocation or shutdown error.
 func (s ServiceStatus) IsError() bool {
 	return s == ServiceStatusInvocationError || s == ServiceStatusShutdownError
+}
+
+// Icon returns the display emoji for this service status.
+func (s ServiceStatus) Icon() string {
+	switch s {
+	case ServiceStatusRegistered:
+		return "\u26AA"
+	case ServiceStatusActive:
+		return "\U0001F7E2"
+	case ServiceStatusShutdown:
+		return "\U0001F535"
+	case ServiceStatusInvocationError, ServiceStatusShutdownError:
+		return "\U0001F534"
+	default:
+		return ""
+	}
 }
 
 // ServiceRef identifies a service within a specific scope.

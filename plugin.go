@@ -3,7 +3,6 @@ package auditlog
 import (
 	"bufio"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -140,16 +139,7 @@ func (p *Plugin) ReportFiltered(opts ...ReportOption) Report {
 
 // WriteReportJSON writes the full Report as indented JSON to writer.
 func (p *Plugin) WriteReportJSON(writer io.Writer) error {
-	report := p.Report()
-	enc := json.NewEncoder(writer)
-	enc.SetIndent("", "  ")
-
-	err := enc.Encode(report)
-	if err != nil {
-		return fmt.Errorf("encode report: %w", err)
-	}
-
-	return nil
+	return p.Report().WriteJSON(writer)
 }
 
 // WriteEventsNDJSON writes every captured event as a line-delimited JSON stream to writer.
@@ -171,17 +161,7 @@ func (p *Plugin) ExportEventsToNDJSON(path string) error {
 func (p *Plugin) ExportFilteredToFile(path string, opts ...ReportOption) error {
 	filtered := p.ReportFiltered(opts...)
 
-	return writeToFile(path, func(w io.Writer) error {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-
-		err := enc.Encode(filtered)
-		if err != nil {
-			return fmt.Errorf("encode filtered report: %w", err)
-		}
-
-		return nil
-	})
+	return writeToFile(path, filtered.WriteJSON)
 }
 
 // Events returns a defensive copy of all captured events.

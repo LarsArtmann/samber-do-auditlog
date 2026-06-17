@@ -51,10 +51,11 @@ func MigrateReport(data []byte) (Report, error) {
 		exportedAt = time.Now()
 	}
 
+	// Always re-derive per-service Status from the underlying error/timestamp
+	// fields. This repairs stale or hand-edited statuses so the returned report
+	// always passes Validate() — Status can never drift from DeriveStatus().
 	for idx := range report.Services {
-		if report.Services[idx].Status == "" {
-			report.Services[idx].Status = report.Services[idx].DeriveStatus()
-		}
+		report.Services[idx].Status = report.Services[idx].DeriveStatus()
 	}
 
 	return buildReportFromCore(
