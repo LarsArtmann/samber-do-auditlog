@@ -318,7 +318,7 @@ The callback is called **outside the mutex** on every event. Keep it fast — do
 
 | Function                                    | Description                                         |
 | ------------------------------------------- | --------------------------------------------------- |
-| `MigrateReport(data []byte) (Report, error)` | Upgrade a v0.1.0 JSON report to the current schema. |
+| `MigrateReport(data []byte) (Report, error)` | Normalize/repair a JSON report to the current schema (upgrades v0.1.0 and re-derives all denormalized fields for any input version). |
 
 ### Report
 
@@ -425,7 +425,7 @@ Report
     └── children[]             ScopeNode (recursive)
 ```
 
-> **Schema migration**: Reports exported with v0.1.0 can be upgraded to the current schema with `auditlog.MigrateReport(oldJSONBytes)`.
+> **Schema migration**: Reports exported with v0.1.0 can be upgraded to the current schema with `auditlog.MigrateReport(oldJSONBytes)`. `MigrateReport` also repairs current-schema reports — it re-derives every denormalized field, so stale or hand-edited reports that would fail `Validate()` are normalized to a valid report.
 
 ## Security
 

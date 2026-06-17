@@ -15,6 +15,14 @@ var errMigrationMissingVersion = errors.New("migration input has no version fiel
 // by a previous schema version and returns a Report compatible with the
 // current SchemaVersion. Unknown fields are preserved through round-tripping.
 //
+// In addition to upgrading older schemas, MigrateReport always re-derives the
+// denormalized count and aggregate fields (EventCount, ServiceCount,
+// ScopeCount, durations, health flags, per-service Status) from the actual
+// data. This means current-schema input is also repaired: stale or hand-edited
+// reports that would fail Validate() are normalized so the returned Report is
+// always valid. The implied contract is "repair/normalize -> current", not
+// just "upgrade old -> current".
+//
 // For v0.1.0 → v0.2.0 the migration adds:
 //   - scope_count, total_build_duration_ms, total_shutdown_duration_ms, shutdown_succeeded
 //   - health_check_succeeded, health_checked_count (always false/0 for old reports)
