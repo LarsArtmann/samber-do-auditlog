@@ -222,22 +222,7 @@ func TestWriteMermaid_ExternalDependency(t *testing.T) {
 func TestWriteMermaid_EscapesSpecialChars(t *testing.T) {
 	t.Parallel()
 
-	report := auditlog.Report{
-		Version:     auditlog.SchemaVersion,
-		ContainerID: "test",
-		ExportedAt:  time.Now(),
-		Services: []auditlog.ServiceInfo{
-			{
-				ServiceRef: auditlog.ServiceRef{
-					ScopeID:     "root",
-					ScopeName:   auditlog.RootScopeName,
-					ServiceName: `evil]"svc`,
-				},
-				Status:       auditlog.ServiceStatusActive,
-				RegisteredAt: time.Now(),
-			},
-		},
-	}
+	report := reportWithSpecialCharService()
 
 	var buf bytes.Buffer
 
@@ -261,7 +246,27 @@ func TestWriteMermaid_EscapesSpecialChars(t *testing.T) {
 func TestWritePlantUML_EscapesSpecialChars(t *testing.T) {
 	t.Parallel()
 
-	report := auditlog.Report{
+	report := reportWithSpecialCharService()
+
+	var buf bytes.Buffer
+
+	err := report.WritePlantUML(&buf)
+	if err != nil {
+		t.Fatalf("WritePlantUML: %v", err)
+	}
+
+	output := buf.String()
+	// The quote inside the service name is escaped to an apostrophe so the
+	// quoted component declaration stays well-formed.
+	assertStringContains(t, output, `component "evil]'svc" as root_evil_svc`)
+}
+
+// reportWithSpecialCharService builds a report containing a single service
+// whose name contains characters that are hostile to diagram syntax (brackets,
+// quotes, brackets). Shared by the Mermaid and PlantUML escaping tests so both
+// formats are verified against the same fixture.
+func reportWithSpecialCharService() auditlog.Report {
+	return auditlog.Report{
 		Version:     auditlog.SchemaVersion,
 		ContainerID: "test",
 		ExportedAt:  time.Now(),
@@ -277,16 +282,4 @@ func TestWritePlantUML_EscapesSpecialChars(t *testing.T) {
 			},
 		},
 	}
-
-	var buf bytes.Buffer
-
-	err := report.WritePlantUML(&buf)
-	if err != nil {
-		t.Fatalf("WritePlantUML: %v", err)
-	}
-
-	output := buf.String()
-	// The quote inside the service name is escaped to an apostrophe so the
-	// quoted component declaration stays well-formed.
-	assertStringContains(t, output, `component "evil]'svc" as root_evil_svc`)
 }
