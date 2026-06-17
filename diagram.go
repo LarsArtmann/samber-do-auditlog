@@ -23,6 +23,9 @@ type diagramEntry struct {
 	key  string
 }
 
+// diagramAvgLineBytes is the pre-allocation estimate for each diagram line.
+const diagramAvgLineBytes = 64
+
 // writeDiagram writes a dependency graph using the supplied formatter.
 // It deduplicates nodes and edges and sorts the output for stable,
 // deterministic reports. All lines are batched via strings.Builder and
@@ -56,24 +59,24 @@ func writeDiagram(writer io.Writer, report Report, formatter diagramFormatter) e
 		return strings.Compare(a.key, b.key)
 	})
 
-	var sb strings.Builder
-	sb.Grow(len(entries) * 64)
+	var builder strings.Builder
+	builder.Grow(len(entries) * diagramAvgLineBytes)
 
-	sb.WriteString(formatter.Header())
-	sb.WriteByte('\n')
+	builder.WriteString(formatter.Header())
+	builder.WriteByte('\n')
 
 	for _, entry := range entries {
-		sb.WriteString("    ")
-		sb.WriteString(entry.line)
-		sb.WriteByte('\n')
+		builder.WriteString("    ")
+		builder.WriteString(entry.line)
+		builder.WriteByte('\n')
 	}
 
 	if footer := formatter.Footer(); footer != "" {
-		sb.WriteString(footer)
-		sb.WriteByte('\n')
+		builder.WriteString(footer)
+		builder.WriteByte('\n')
 	}
 
-	_, err := writer.Write([]byte(sb.String()))
+	_, err := writer.Write([]byte(builder.String()))
 	if err != nil {
 		return fmt.Errorf("write diagram: %w", err)
 	}

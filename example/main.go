@@ -56,8 +56,10 @@ func setupPlugin() (*auditlog.Plugin, do.Injector, *[]string) { //nolint:ireturn
 	eventLog := &[]string{}
 
 	plugin, err := auditlog.New(auditlog.Config{
-		Enabled:     true,
-		ContainerID: "ride-share-app",
+		Enabled:              true,
+		ContainerID:          "ride-share-app",
+		MaxEvents:            0,
+		InitialEventCapacity: 1024,
 		OnEvent: func(e auditlog.Event) {
 			if e.IsAfter() && e.IsInvocation() {
 				*eventLog = append(*eventLog, e.ServiceName)

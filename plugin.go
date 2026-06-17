@@ -246,6 +246,9 @@ func (p *Plugin) RecordHealthCheck(injector do.Injector) map[string]error {
 	return p.RecordHealthCheckWithContext(context.Background(), injector)
 }
 
+// fileWriteBufferSize is the bufio buffer size used for atomic file exports.
+const fileWriteBufferSize = 65536
+
 // writeToFile creates a file at path and calls fn with a buffered writer.
 // The bufio.Writer batches small writes into 64KB blocks, reducing syscall count
 // by 10-100x compared to writing directly to os.File.
@@ -270,7 +273,7 @@ func writeToFile(path string, fn func(io.Writer) error) error {
 		}
 	}()
 
-	bw := bufio.NewWriterSize(tmpFile, 65536)
+	bw := bufio.NewWriterSize(tmpFile, fileWriteBufferSize)
 
 	writeErr := fn(bw)
 
@@ -290,8 +293,9 @@ func writeToFile(path string, fn func(io.Writer) error) error {
 		return fmt.Errorf("close temp file %q: %w", tmpPath, closeErr)
 	}
 
-	if err := os.Rename(tmpPath, path); err != nil {
-		return fmt.Errorf("rename %q → %q: %w", tmpPath, path, err)
+	renameErr := os.Rename(tmpPath, path)
+	if renameErr != nil {
+		return fmt.Errorf("rename %q → %q: %w", tmpPath, path, renameErr)
 	}
 
 	cleanup = false
