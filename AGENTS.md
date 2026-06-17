@@ -2,7 +2,7 @@
 
 Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI container lifecycle event (registration, invocation, shutdown) with timestamps, dependency graph inference, build duration tracking, and export to JSON / NDJSON / self-contained HTML.
 
-**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.26.3 · **Status**: ALPHA
+**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.26.4 · **Status**: ALPHA
 
 ---
 
@@ -13,10 +13,14 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | `go generate ./...`                      | Regenerate templ (and any other generated code)               |
 | `go test ./...`                          | Run all tests                                                 |
 | `go test -race ./...`                    | Run all tests with race detector (CI uses this)               |
+| `go test -race -coverprofile=cover.out \\
+  -covermode=atomic ./...`                | Run tests with coverage (CI gate: ≥95% of non-`example/` code) |
 | `go test -run TestPlugin_DisabledIsNoOp` | Run single test                                               |
 | `go vet ./...`                           | Static analysis                                               |
+| `golangci-lint config verify`            | Validate the lint config (CI runs this before `lint run`)     |
 | `golangci-lint run`                      | Full lint (heavy config, see below)                           |
-| `nix develop`                            | Enter devShell (Go 1.26.3, templ, golangci-lint, govulncheck) |
+| `go mod tidy`                            | Sync `go.sum` (CI `mod-tidy` job fails on drift)              |
+| `nix develop`                            | Enter devShell (Go 1.26.4, templ, golangci-lint, govulncheck) |
 | `go run ./example`                       | Run the example (set `DO_AUDITLOG_ENABLED=true`)              |
 
 A `flake.nix` devShell is available for Nix users. No Makefile, no justfile.
@@ -74,11 +78,12 @@ example/            — Self-checking demo with 19 samber/do v2 features
 
 ## CI
 
-GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and PR with 4 parallel jobs:
+GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and PR with 5 parallel jobs:
 
-- **test**: `go vet`, `go build`, `go test -race`
-- **lint**: `golangci-lint v2.12.2` (pinned to match local dev)
-- **vulncheck**: `govulncheck` via `golang/govulncheck-action`
+- **test**: `go vet`, `go build`, `go test -race` with a coverage profile, and a **coverage gate** that fails if non-`example/` statement coverage drops below 95%.
+- **lint**: `golangci-lint config verify` then `golangci-lint v2.12.2` run (pinned to match local dev).
+- **vulncheck**: `govulncheck` via `golang/govulncheck-action`.
+- **mod-tidy**: runs `go mod tidy` and fails if `go.sum` drifts from the committed version.
 - **stale-generation**: runs `go generate ./...` (uses `go tool templ` from go.mod `tool` directive), fails on diff. No manual templ install needed — Go toolchain auto-builds the exact pinned version.
 
 ## Lint Configuration (.golangci.yml)

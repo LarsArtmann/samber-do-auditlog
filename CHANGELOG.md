@@ -12,15 +12,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`MigrateReport` scope counting**: removed the divergent `countUniqueScopes`
+  helper; migration now reuses `countScopeNodes`, so an empty scope tree reports
+  `scope_count: 0` instead of `1` and matches `Report.Validate()`.
+- **`MigrateReport` normalizes current-schema reports too**: previously it only
+  upgraded v0.1.0 input. It now re-derives every denormalized field for *any*
+  input version, so stale or hand-edited current-schema reports also pass
+  `Validate()`. The implied contract shifts from "upgrade old → current" to
+  "repair/normalize → current".
+- **Fragile scope assertion in health checks**: `injector.(*do.Scope)` was
+  replaced with a `scopeAncestorWalker` interface assertion that works with
+  `*do.RootScope`, `*do.Scope`, and future wrappers.
+- **Dead JS timestamps in HTML**: the services-table tooltip referenced
+  non-existent `registered_offset_ns`/`first_invoked_offset_ns` fields and an
+  unused `formatNs()` helper. Both removed; the tooltip now uses the real
+  `registered_at`/`first_invoked_at` ISO timestamps.
+
 ### Changed
 
 - **Templ CLI now managed via Go `tool` directive**: `go get -tool` pins the exact
   version in `go.mod`. `go generate` calls `go tool templ generate` — no external
   binary needed. Eliminates the Nix-vs-go.mod version drift that plagued v0.0.3.
   Removed `templ` from `flake.nix` and the `go install` step from CI.
+- **Go 1.26.3 → 1.26.4** across `go.mod`, `.golangci.yml`, and the flake devShell.
+- **Removed experimental `goexperiment.*` build tags** from `.golangci.yml`
+  (notably `goexperiment.jsonv2`) that contradicted the stdlib-only policy.
+- **Capability map refactor**: `report_builder.go` replaced an opaque
+  `map[string][2]bool` with a named `capabilityFlags{isHealthchecker,
+  isShutdowner}` struct.
 
 ### Added
 
+- **CI coverage gate** (`.github/workflows/ci.yml`): the test job now produces a
+  coverage profile, excludes the `example/` demo package, and fails if production
+  statement coverage drops below 95%.
+- **`go mod tidy` drift check**: a new `mod-tidy` CI job fails if `go.sum` is out
+  of sync with `go.mod`.
+- **`golangci-lint config verify`** step in the lint job, run before
+  `golangci-lint run`, so a malformed config fails fast.
 - **CI pipeline** (`.github/workflows/ci.yml`): four parallel jobs — test (with
   `-race`), lint (golangci-lint v2.12.2), vulnerability scan (govulncheck), and
   stale-generation check (catches `html_templ.go` drift).
@@ -29,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Report.WriteJSON(writer)`**: writes the full report as indented JSON.
 - **`Report.Diff(other Report) DiffResult`**: structural comparison of two
   reports (added/removed/changed services, event count delta).
-- **`flake.nix` devShell**: pins Go 1.26.3, golangci-lint, govulncheck, golines
+- **`flake.nix` devShell**: pins Go 1.26.4, golangci-lint, govulncheck, golines
   for contributor reproducibility.
 - **`BENCHMARKS.md`**: post-v0.0.3 baseline of all 13 benchmarks for regression
   detection.
@@ -41,6 +72,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Tests
 
+- `FuzzMigrateReport`: fourth fuzz target — arbitrary JSON → migrate → validate,
+  with a re-migration round-trip property and seven seed corpora.
+- `BuildTypeMetadata` unit tests covering every provider/status/event emoji,
+  label, and color.
+- `NewRecorder` internal test verifying constructor initialization and that an
+  empty recorder yields a valid report.
+- `t.Parallel()` added to ~120 independent top-level tests and ~33 subtests
+  across 15 test files; env-var and fixed-path tests excluded.
 - `deriveServiceStatus` exhaustive 16-case property test (all 2^4 input
   combinations + priority ordering).
 - `MaxEvents` concurrency stress test (50 goroutines, 20x repeat, `-race`).

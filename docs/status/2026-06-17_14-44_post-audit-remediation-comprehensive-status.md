@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This session executed all 20 actionable items identified in the previous comprehensive audit (`docs/status/2026-06-17_13-36_post-templ-tool-directive-comprehensive-audit.md`). Every bug was fixed, every stale doc rewritten, every CI hardening item added, and the stale `~/go/bin/templ` binary was removed. Test coverage remains **95.3%** of production statements, with **145 top-level test functions**, **4 fuzz targets**, **11 benchmark functions**, and **7 example functions** across **24 test files**.
+This session executed all 20 actionable items identified in the previous comprehensive audit (`docs/archive/2026-06-17_13-36_post-templ-tool-directive-comprehensive-audit.md`). Every bug was fixed, every stale doc rewritten, every CI hardening item added, and the stale `~/go/bin/templ` binary was removed. Test coverage remains **95.3%** of production statements, with **145 top-level test functions**, **4 fuzz targets**, **11 benchmark functions**, and **7 example functions** across **24 test files**.
 
 The remaining risk is that a large, uncommitted changeset now exists on disk. It must be committed, pushed, and observed in CI before the project can be considered fully green again.
 

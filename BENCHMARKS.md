@@ -22,7 +22,7 @@ benchstat /tmp/new.txt  # compare manually against the table below
 | Property           | Value                              |
 | ------------------ | ---------------------------------- |
 | Date               | 2026-06-17                         |
-| Go                 | 1.26.3                             |
+| Go                 | 1.26.4                             |
 | OS                 | Linux (NixOS)                      |
 | CPU                | AMD Ryzen AI MAX+ 395 (32 threads) |
 | Runs per benchmark | 3                                  |
