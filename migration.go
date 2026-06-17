@@ -46,31 +46,24 @@ func MigrateReport(data []byte) (Report, error) {
 	// Normalize the report to the current schema regardless of the input
 	// version. This repairs stale or manually edited denormalized counts and
 	// ensures Validate() succeeds on the returned report.
-	report.Version = SchemaVersion
-
-	if report.ExportedAt.IsZero() {
-		report.ExportedAt = time.Now()
+	exportedAt := report.ExportedAt
+	if exportedAt.IsZero() {
+		exportedAt = time.Now()
 	}
-
-	report.EventCount = len(report.Events)
-	report.ServiceCount = len(report.Services)
-
-	report.ScopeCount = countScopeNodes(report.ScopeTree)
-	report.TotalBuildDurationMs = sumBuildMs(report.Services)
-	report.TotalShutdownDurationMs = sumShutdownMs(report.Services)
-	report.ShutdownSucceeded = noShutdownErrors(report.Services)
-	report.HealthCheckSucceeded = allHealthChecksPassed(report.Services)
-	report.HealthCheckedCount = countHealthChecked(report.Services)
 
 	for idx := range report.Services {
 		if report.Services[idx].Status == "" {
-			report.Services[idx].Status = computeServiceStatusFromInfo(report.Services[idx])
+			report.Services[idx].Status = report.Services[idx].DeriveStatus()
 		}
 	}
 
-	return report, nil
-}
-
-func computeServiceStatusFromInfo(svc ServiceInfo) ServiceStatus {
-	return deriveServiceStatus(svc.InvocationError, svc.ShutdownError, svc.ShutdownAt, svc.FirstInvokedAt)
+	return buildReportFromCore(
+		SchemaVersion,
+		report.ContainerID,
+		exportedAt,
+		report.DroppedEventCount,
+		report.Events,
+		report.Services,
+		report.ScopeTree,
+	), nil
 }

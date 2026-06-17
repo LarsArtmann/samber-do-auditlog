@@ -148,25 +148,17 @@ func (r Report) Filtered(opts ...ReportOption) Report {
 		}
 	}
 
-	scopeTree, scopeCount := pruneScopeTree(r.ScopeTree, filteredServices)
+	scopeTree, _ := pruneScopeTree(r.ScopeTree, filteredServices)
 
-	return Report{
-		Version:                 r.Version,
-		ContainerID:             r.ContainerID,
-		ExportedAt:              r.ExportedAt,
-		EventCount:              len(filteredEvents),
-		ServiceCount:            len(filteredServices),
-		ScopeCount:              scopeCount,
-		TotalBuildDurationMs:    sumBuildMs(filteredServices),
-		TotalShutdownDurationMs: sumShutdownMs(filteredServices),
-		ShutdownSucceeded:       noShutdownErrors(filteredServices),
-		HealthCheckSucceeded:    allHealthChecksPassed(filteredServices),
-		HealthCheckedCount:      countHealthChecked(filteredServices),
-		DroppedEventCount:       r.DroppedEventCount,
-		Events:                  filteredEvents,
-		Services:                filteredServices,
-		ScopeTree:               scopeTree,
-	}
+	return buildReportFromCore(
+		r.Version,
+		r.ContainerID,
+		r.ExportedAt,
+		r.DroppedEventCount,
+		filteredEvents,
+		filteredServices,
+		scopeTree,
+	)
 }
 
 // pruneScopeTree rebuilds the scope tree from the original tree,

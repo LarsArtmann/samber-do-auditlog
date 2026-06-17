@@ -71,6 +71,48 @@ func (r Report) Validate() error {
 	return nil
 }
 
+// finalizeDenormalized recomputes all aggregate count and summary fields on the
+// report from its core data (Events, Services, ScopeTree). Called after any
+// mutation to those core slices so the report stays self-consistent and passes
+// Validate(). This is the single source of truth for denormalized fields.
+func finalizeDenormalized(report *Report) {
+	report.EventCount = len(report.Events)
+	report.ServiceCount = len(report.Services)
+	report.ScopeCount = countScopeNodes(report.ScopeTree)
+	report.TotalBuildDurationMs = sumBuildMs(report.Services)
+	report.TotalShutdownDurationMs = sumShutdownMs(report.Services)
+	report.ShutdownSucceeded = noShutdownErrors(report.Services)
+	report.HealthCheckSucceeded = allHealthChecksPassed(report.Services)
+	report.HealthCheckedCount = countHealthChecked(report.Services)
+}
+
+// buildReportFromCore assembles a Report from the immutable identity/metadata
+// fields and the core data slices, deriving every denormalized aggregate from
+// them. This is the single construction path shared by BuildReport, Filtered,
+// and MigrateReport — guaranteeing that count/summary fields can never drift
+// from the underlying data.
+func buildReportFromCore(
+	version, containerID string,
+	exportedAt time.Time,
+	droppedEventCount int64,
+	events []Event,
+	services []ServiceInfo,
+	scopeTree ScopeNode,
+) Report {
+	report := Report{ //nolint:exhaustruct
+		Version:           version,
+		ContainerID:       containerID,
+		ExportedAt:        exportedAt,
+		DroppedEventCount: droppedEventCount,
+		Events:            events,
+		Services:          services,
+		ScopeTree:         scopeTree,
+	}
+	finalizeDenormalized(&report)
+
+	return report
+}
+
 // countScopeNodes counts all real scope nodes in the tree (root + recursive children).
 // A zero-value root (empty ID+Name, no children) counts as 0 — it represents
 // an empty report where buildScopeTreeLocked returns a default ScopeNode.

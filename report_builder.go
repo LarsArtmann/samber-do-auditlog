@@ -15,7 +15,6 @@ func (r *Recorder) BuildReport() Report {
 	services := r.buildServicesLocked()
 	scopeTree := r.buildScopeTreeLocked()
 	events := append([]Event(nil), r.events...)
-	scopeCount := len(r.scopes)
 	scopesCopy := make(map[string]scopeMeta, len(r.scopes))
 	maps.Copy(scopesCopy, r.scopes)
 
@@ -23,23 +22,15 @@ func (r *Recorder) BuildReport() Report {
 
 	enrichCapabilities(scopesCopy, services)
 
-	return Report{
-		Version:                 SchemaVersion,
-		ContainerID:             r.containerID,
-		ExportedAt:              time.Now(),
-		EventCount:              len(events),
-		ServiceCount:            len(services),
-		ScopeCount:              scopeCount,
-		TotalBuildDurationMs:    sumBuildMs(services),
-		TotalShutdownDurationMs: sumShutdownMs(services),
-		ShutdownSucceeded:       noShutdownErrors(services),
-		HealthCheckSucceeded:    allHealthChecksPassed(services),
-		HealthCheckedCount:      countHealthChecked(services),
-		DroppedEventCount:       r.droppedEvents.Load(),
-		Events:                  events,
-		Services:                services,
-		ScopeTree:               scopeTree,
-	}
+	return buildReportFromCore(
+		SchemaVersion,
+		r.containerID,
+		time.Now(),
+		r.droppedEvents.Load(),
+		events,
+		services,
+		scopeTree,
+	)
 }
 
 // buildServicesLocked assembles sorted ServiceInfo from the recorded data.
