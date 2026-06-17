@@ -1,6 +1,6 @@
 package auditlog
 
-//go:generate go run github.com/a-h/templ/cmd/templ generate
+//go:generate templ generate
 
 import (
 	"context"
