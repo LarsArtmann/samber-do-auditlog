@@ -2,15 +2,17 @@
 
 Thanks for your interest in making do-auditlog better.
 
-This project uses the standard Go toolchain. No Makefile, no Nix shell, no Docker — just Go, `golangci-lint`, and `templ` if you touch the HTML template.
+This project uses the standard Go toolchain. A `flake.nix` devShell is available for contributors using Nix; otherwise you just need Go, `golangci-lint`, and `templ` if you touch the HTML template.
 
 ---
 
 ## Prerequisites
 
 - [Go 1.26+](https://go.dev/dl/)
-- [golangci-lint](https://golangci-lint.run/usage/install/) (latest)
+- [golangci-lint](https://golangci-lint.run/usage/install/) (latest v2.x)
 - [templ](https://templ.guide/) (only if you edit `html.templ`)
+
+**Nix users:** Run `nix develop` to get Go 1.26.3, golangci-lint, govulncheck, templ, and golines pinned in `flake.nix`.
 
 Verify your setup:
 
@@ -79,7 +81,11 @@ Example pattern:
 
 ```go
 func TestPlugin_SomeFeature(t *testing.T) {
-    plugin := auditlog.New(auditlog.Config{Enabled: true})
+    plugin, err := auditlog.New(auditlog.Config{Enabled: true})
+    if err != nil {
+        t.Fatalf("unexpected error: %v", err)
+    }
+
     injector := do.NewWithOpts(plugin.Opts())
 
     // ... exercise the feature ...
@@ -118,6 +124,32 @@ samber/do v2 does not expose HookBeforeHealthCheck, so we wrap
 injector.HealthCheckWithContext() instead. This records EventTypeHealthCheck
 events and updates ServiceInfo health fields without modifying the core hook flow.
 ```
+
+## Releasing
+
+Release tags and the report schema version are **independent**:
+
+- **Release tags** follow `v0.0.x` (e.g. `v0.0.3`). These mark GitHub releases.
+- **Schema version** (currently `0.2.0`, in `types.go`) versions the JSON report format. It is upgraded via `MigrateReport` and has no relation to release tags.
+
+### Release Procedure
+
+1. **Update `CHANGELOG.md`** — move `[Unreleased]` items under a new `[0.0.x]` heading with today's date.
+2. **Commit** the changelog update.
+3. **Tag** the release (signed):
+   ```bash
+   git tag -s v0.0.x -m "v0.0.x — short description"
+   ```
+4. **Push** the tag and master:
+   ```bash
+   git push origin master --tags
+   ```
+5. **Create a GitHub Release** using `gh release create` with the changelog body as notes. Attach the example HTML artifact:
+   ```bash
+   DO_AUDITLOG_ENABLED=true go run ./example
+   gh release create v0.0.x --notes-file <notes> /tmp/.../audit-report.html
+   ```
+6. **Verify** the CI badge is green and the release appears on the releases page.
 
 ## Questions?
 

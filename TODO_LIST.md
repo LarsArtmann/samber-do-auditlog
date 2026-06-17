@@ -9,16 +9,16 @@ Last updated: 2026-06-17
 
 - [x] **Push v0.0.3** — tag `v0.0.3` and `master` confirmed on remote via `git ls-remote --tags origin` (2026-06-17)
 - [x] **GitHub Release for v0.0.3** — created with CHANGELOG notes + `audit-report.html` artifact (2026-06-17)
-- [ ] **CI pipeline** — GitHub Actions workflow running `go test`, `go vet`, `golangci-lint run`, `go build` on push and PR. No CI exists today — the v0.0.3 lint regressions shipped undetected because of this gap.
-- [ ] **govulncheck in CI** — scan dependencies for known CVEs on every push (gosec already runs via golangci-lint, but govulncheck is not installed or integrated)
-- [ ] **Stale-generation check in CI** — fail if `go generate ./...` produces a diff (catches `html_templ.go` drift)
+- [x] **CI pipeline** — `.github/workflows/ci.yml` runs test (with -race), vet, build, lint (golangci-lint v2.12.2) on push and PR (2026-06-17)
+- [x] **govulncheck in CI** — `vulncheck` job uses `golang/govulncheck-action` on every push and PR (2026-06-17)
+- [x] **Stale-generation check in CI** — `stale-generation` job installs templ@v0.3.1020 (go.mod pin), runs `go generate`, fails on any diff (2026-06-17)
 
 ## Priority 2 — Robustness & Testing
 
-- [ ] **`deriveServiceStatus` property tests** — the status state machine has 5 states and priority ordering; add table-driven tests covering every transition
-- [ ] **`MaxEvents` concurrency stress test** — verify `DroppedEventCount` is accurate under racing hooks
-- [ ] **Atomic-write crash path test** — simulate a rename failure (e.g. cross-device) to confirm temp-file cleanup runs
-- [ ] **Migration round-trip test** — export at current schema, manually downgrade to v0.1.0, migrate back, assert equality
+- [x] **`deriveServiceStatus` property tests** — exhaustive 16-case matrix (2^4 inputs) + priority-ordering + nil-pointer-semantics tests in `status_internal_test.go` (2026-06-17)
+- [x] **`MaxEvents` concurrency stress test** — 50-goroutine stress + 20x repeat variant verifying `stored+dropped==total` invariant under `-race` in `robustness_test.go` (2026-06-17)
+- [x] **Atomic-write crash path test** — rename-failure (target-is-dir) and write-error tests proving temp-file cleanup in `robustness_test.go` (2026-06-17)
+- [x] **Migration round-trip test** — `TestMigrateReport_FullRoundTrip` downgrades v0.2.0 JSON to v0.1.0, migrates back, asserts all recomputed fields match + `Validate()` passes (2026-06-17)
 
 ## Priority 3 — Developer Experience
 
