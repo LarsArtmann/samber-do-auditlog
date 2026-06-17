@@ -10,6 +10,8 @@ import (
 )
 
 func TestReport_FilteredByName(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -29,6 +31,8 @@ func TestReport_FilteredByName(t *testing.T) {
 }
 
 func TestReport_FilteredByType(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -48,6 +52,8 @@ func TestReport_FilteredByType(t *testing.T) {
 }
 
 func TestReport_FilteredByEventType(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -60,6 +66,8 @@ func TestReport_FilteredByEventType(t *testing.T) {
 }
 
 func TestReport_FilteredByTimeRange(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -86,6 +94,8 @@ func TestReport_FilteredByTimeRange(t *testing.T) {
 }
 
 func TestReport_FilteredByScope(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -115,6 +125,8 @@ func TestReport_FilteredByScope(t *testing.T) {
 }
 
 func TestReport_FilteredCombined(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -134,6 +146,8 @@ func TestReport_FilteredCombined(t *testing.T) {
 }
 
 func TestReport_FilteredTimeRangeNilChecks(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -158,6 +172,8 @@ func TestReport_FilteredTimeRangeNilChecks(t *testing.T) {
 }
 
 func TestPlugin_ReportFiltered(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 

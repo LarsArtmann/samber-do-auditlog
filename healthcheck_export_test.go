@@ -19,6 +19,8 @@ var _ do.Healthchecker = (*healthySvc)(nil)
 func (healthySvc) HealthCheck() error { return nil }
 
 func TestPlugin_HealthCheckReportSucceeded(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -38,6 +40,8 @@ func TestPlugin_HealthCheckReportSucceeded(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckSucceededFalseWhenNoChecks(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -54,6 +58,8 @@ func TestPlugin_HealthCheckSucceededFalseWhenNoChecks(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckOnEventCallback(t *testing.T) {
+	t.Parallel()
+
 	p, captured, injector := newPluginWithCapture()
 
 	provideHealthyDB(injector, "db", "test")
@@ -91,6 +97,8 @@ func TestPlugin_HealthCheckOnEventCallback(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckPhaseIsAfterOnly(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -116,6 +124,8 @@ func TestPlugin_HealthCheckPhaseIsAfterOnly(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckJSONExport(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -166,6 +176,8 @@ func TestPlugin_HealthCheckJSONExport(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckNDJSONExport(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -211,6 +223,8 @@ func TestPlugin_HealthCheckNDJSONExport(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckDiscoversUnregisteredService(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -232,6 +246,8 @@ func TestPlugin_HealthCheckDiscoversUnregisteredService(t *testing.T) {
 }
 
 func TestPlugin_HealthCheckWithContextCancelled(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -253,6 +269,8 @@ func TestPlugin_HealthCheckWithContextCancelled(t *testing.T) {
 }
 
 func TestReport_HealthCheckSucceeded_NoChecks(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -266,6 +284,8 @@ func TestReport_HealthCheckSucceeded_NoChecks(t *testing.T) {
 }
 
 func TestReport_AllHealthChecksPassed_AllHealthy(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 

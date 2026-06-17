@@ -12,6 +12,8 @@ import (
 )
 
 func TestPlugin_ExportToFile(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -35,6 +37,8 @@ func TestPlugin_ExportToFile(t *testing.T) {
 }
 
 func TestPlugin_ExportEventsToNDJSON(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -59,6 +63,8 @@ func TestPlugin_ExportEventsToNDJSON(t *testing.T) {
 }
 
 func TestPlugin_WriteReportJSON(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -83,6 +89,8 @@ func TestPlugin_WriteReportJSON(t *testing.T) {
 }
 
 func TestPlugin_WriteEventsNDJSON(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -103,6 +111,8 @@ func TestPlugin_WriteEventsNDJSON(t *testing.T) {
 }
 
 func TestPlugin_WriteReportJSONErrorPath(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -116,6 +126,8 @@ func TestPlugin_WriteReportJSONErrorPath(t *testing.T) {
 }
 
 func TestPlugin_WriteEventsNDJSONErrorPath(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -129,6 +141,8 @@ func TestPlugin_WriteEventsNDJSONErrorPath(t *testing.T) {
 }
 
 func TestPlugin_WriteHTMLErrorPath(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -142,6 +156,8 @@ func TestPlugin_WriteHTMLErrorPath(t *testing.T) {
 }
 
 func TestPlugin_ExportToFileInvalidPath(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -155,6 +171,8 @@ func TestPlugin_ExportToFileInvalidPath(t *testing.T) {
 }
 
 func TestPlugin_ExportFilteredToFile(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -190,6 +208,8 @@ func TestPlugin_ExportFilteredToFile(t *testing.T) {
 }
 
 func TestPlugin_ExportFilteredToFile_BadPath(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 

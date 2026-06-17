@@ -10,6 +10,8 @@ import (
 )
 
 func TestPlugin_ShutdownTracking(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -51,6 +53,8 @@ func TestPlugin_ShutdownTracking(t *testing.T) {
 }
 
 func TestPlugin_ShutdownStatus(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -72,6 +76,8 @@ func TestPlugin_ShutdownStatus(t *testing.T) {
 }
 
 func TestPlugin_ServiceStatus(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -104,6 +110,8 @@ func TestPlugin_ServiceStatus(t *testing.T) {
 }
 
 func TestPlugin_ProviderErrorStatus(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -127,6 +135,8 @@ func TestPlugin_ProviderErrorStatus(t *testing.T) {
 }
 
 func TestPlugin_ProviderError(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -157,6 +167,8 @@ func TestPlugin_ProviderError(t *testing.T) {
 }
 
 func TestPlugin_ShutdownWithErrors(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 

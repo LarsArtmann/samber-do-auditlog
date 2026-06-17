@@ -8,6 +8,8 @@ import (
 )
 
 func TestPlugin_EventHandler(t *testing.T) {
+	t.Parallel()
+
 	p, captured, injector := newPluginWithCapture()
 
 	provideDB(injector, "db", "postgres://localhost")
@@ -30,6 +32,8 @@ func TestPlugin_EventHandler(t *testing.T) {
 }
 
 func TestPlugin_EventHandlerNil(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{
 		Enabled: true,
 		OnEvent: nil,
@@ -46,6 +50,8 @@ func TestPlugin_EventHandlerNil(t *testing.T) {
 }
 
 func TestPlugin_RealWorldScenario(t *testing.T) {
+	t.Parallel()
+
 	plugin, injector := newPluginAndInjectorWithID("my-app")
 
 	do.ProvideValue(injector, &Config{Port: 8080})
@@ -122,6 +128,8 @@ func TestPlugin_RealWorldScenario(t *testing.T) {
 }
 
 func TestPlugin_EventsCount(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 

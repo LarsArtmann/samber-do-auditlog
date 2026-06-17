@@ -8,6 +8,8 @@ import (
 )
 
 func TestEvent_ConvenienceMethods(t *testing.T) {
+	t.Parallel()
+
 	events := []struct {
 		event      auditlog.Event
 		wantReg    bool
@@ -63,6 +65,8 @@ func TestEvent_ConvenienceMethods(t *testing.T) {
 }
 
 func TestEvent_Duration(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -90,6 +94,8 @@ func TestEvent_Duration(t *testing.T) {
 }
 
 func TestEvent_HasError(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -119,6 +125,8 @@ func TestEvent_HasError(t *testing.T) {
 }
 
 func TestServiceInfo_Uptime(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -139,6 +147,8 @@ func TestServiceInfo_Uptime(t *testing.T) {
 }
 
 func TestServiceInfo_HasHealthError(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -172,6 +182,8 @@ func TestServiceInfo_HasHealthError(t *testing.T) {
 }
 
 func TestServiceStatus_IsError(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		status auditlog.ServiceStatus
 		want   bool
@@ -184,6 +196,8 @@ func TestServiceStatus_IsError(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(string(tc.status), func(t *testing.T) {
+			t.Parallel()
+
 			if tc.status.IsError() != tc.want {
 				t.Errorf("IsError() = %v, want %v", tc.status.IsError(), tc.want)
 			}
@@ -192,6 +206,8 @@ func TestServiceStatus_IsError(t *testing.T) {
 }
 
 func TestServiceRef_String(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		ref  auditlog.ServiceRef
 		want string
@@ -202,6 +218,8 @@ func TestServiceRef_String(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.ref.String(), func(t *testing.T) {
+			t.Parallel()
+
 			if tc.ref.String() != tc.want {
 				t.Errorf("String() = %q, want %q", tc.ref.String(), tc.want)
 			}
@@ -210,6 +228,8 @@ func TestServiceRef_String(t *testing.T) {
 }
 
 func TestServiceRef_IsRoot(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		ref  auditlog.ServiceRef
@@ -222,6 +242,8 @@ func TestServiceRef_IsRoot(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			if tt.ref.IsRoot() != tt.want {
 				t.Errorf("IsRoot() = %v, want %v", tt.ref.IsRoot(), tt.want)
 			}
@@ -230,6 +252,8 @@ func TestServiceRef_IsRoot(t *testing.T) {
 }
 
 func TestProviderType_String(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		pt   auditlog.ProviderType
 		want string
@@ -250,6 +274,8 @@ func TestProviderType_String(t *testing.T) {
 }
 
 func TestProviderType_Icon(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		pt auditlog.ProviderType
 	}{
@@ -272,6 +298,8 @@ func TestProviderType_Icon(t *testing.T) {
 }
 
 func TestProviderType_IsKnown(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		pt   auditlog.ProviderType
 		want bool
@@ -286,6 +314,8 @@ func TestProviderType_IsKnown(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(string(tt.pt), func(t *testing.T) {
+			t.Parallel()
+
 			if tt.pt.IsKnown() != tt.want {
 				t.Errorf("IsKnown() = %v, want %v", tt.pt.IsKnown(), tt.want)
 			}
@@ -294,6 +324,8 @@ func TestProviderType_IsKnown(t *testing.T) {
 }
 
 func TestConfig_Validate(t *testing.T) {
+	t.Parallel()
+
 	err := auditlog.Config{}.Validate()
 	if err != nil {
 		t.Errorf("empty config should be valid, got: %v", err)

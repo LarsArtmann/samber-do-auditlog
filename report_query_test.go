@@ -9,6 +9,8 @@ import (
 )
 
 func TestReport_ServiceByName(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -30,6 +32,8 @@ func TestReport_ServiceByName(t *testing.T) {
 }
 
 func TestReport_ServiceByRef(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 	child := injector.Scope("child")
@@ -66,6 +70,8 @@ func TestReport_ServiceByRef(t *testing.T) {
 }
 
 func TestReport_ServicesByScope(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 	child := injector.Scope("child")
@@ -93,6 +99,8 @@ func TestReport_ServicesByScope(t *testing.T) {
 }
 
 func TestReport_ServicesByScope_EmptyScope(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -108,6 +116,8 @@ func TestReport_ServicesByScope_EmptyScope(t *testing.T) {
 }
 
 func TestReport_EventsByService(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -133,6 +143,8 @@ func TestReport_EventsByService(t *testing.T) {
 }
 
 func TestReport_EventsByType(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -158,6 +170,8 @@ func TestReport_EventsByType(t *testing.T) {
 }
 
 func TestReport_EventsByRef(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -180,6 +194,8 @@ func TestReport_EventsByRef(t *testing.T) {
 }
 
 func TestReport_FailedServices(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -202,6 +218,8 @@ func TestReport_FailedServices(t *testing.T) {
 }
 
 func TestReport_UnhealthyServices(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -220,6 +238,8 @@ func TestReport_UnhealthyServices(t *testing.T) {
 }
 
 func TestReport_Index(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -267,6 +287,8 @@ func TestReport_Index(t *testing.T) {
 }
 
 func TestReport_Validate_ConsistentReport(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -281,6 +303,8 @@ func TestReport_Validate_ConsistentReport(t *testing.T) {
 }
 
 func TestReport_Validate_WithScopesAndHealthChecks(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 	child := injector.Scope("child")
@@ -299,6 +323,8 @@ func TestReport_Validate_WithScopesAndHealthChecks(t *testing.T) {
 }
 
 func TestReport_Validate_DetectsCountMismatch(t *testing.T) {
+	t.Parallel()
+
 	makeDBReport := func(t *testing.T) auditlog.Report {
 		t.Helper()
 
@@ -358,6 +384,8 @@ func TestReport_Validate_DetectsCountMismatch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			report := tt.make(t)
 			tt.corrupt(&report)
 
@@ -369,6 +397,8 @@ func TestReport_Validate_DetectsCountMismatch(t *testing.T) {
 }
 
 func TestReport_Validate_EmptyReport(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	_ = do.NewWithOpts(p.Opts())
 

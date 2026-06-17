@@ -8,6 +8,8 @@ import (
 )
 
 func TestPlugin_ScopeTree(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -40,6 +42,8 @@ func TestPlugin_ScopeTree(t *testing.T) {
 }
 
 func TestPlugin_ScopeID(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -77,6 +81,8 @@ func TestPlugin_ScopeID(t *testing.T) {
 }
 
 func TestPlugin_ScopeTreeWithMultipleChildren(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -97,6 +103,8 @@ func TestPlugin_ScopeTreeWithMultipleChildren(t *testing.T) {
 }
 
 func TestPlugin_ResolveServiceScopeFromChildScope(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -137,6 +145,8 @@ func TestPlugin_ResolveServiceScopeFromChildScope(t *testing.T) {
 }
 
 func TestReport_ResolveServiceScope_NotFound(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -152,6 +162,8 @@ func TestReport_ResolveServiceScope_NotFound(t *testing.T) {
 }
 
 func TestResolveServiceScope_ParentScopeService(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -183,6 +195,8 @@ func TestResolveServiceScope_ParentScopeService(t *testing.T) {
 }
 
 func TestResolveServiceScope_GrandparentScopeService(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 

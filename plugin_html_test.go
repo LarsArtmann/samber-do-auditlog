@@ -11,6 +11,8 @@ import (
 )
 
 func TestPlugin_ExportToHTML(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -39,6 +41,8 @@ func TestPlugin_ExportToHTML(t *testing.T) {
 }
 
 func TestPlugin_WriteHTMLBuffer(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -65,6 +69,8 @@ func TestPlugin_WriteHTMLBuffer(t *testing.T) {
 }
 
 func TestWriteHTML_EventsTabContent(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -89,6 +95,8 @@ func TestWriteHTML_EventsTabContent(t *testing.T) {
 }
 
 func TestWriteHTML_AllFiveTabs(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -118,6 +126,8 @@ func TestWriteHTML_AllFiveTabs(t *testing.T) {
 }
 
 func TestWriteHTML_TypeMetadataInjected(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -140,6 +150,8 @@ func TestWriteHTML_TypeMetadataInjected(t *testing.T) {
 }
 
 func TestWriteHTML_MultiServiceIntegration(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 	child := injector.Scope("child-scope")

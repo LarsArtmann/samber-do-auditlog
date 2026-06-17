@@ -2,6 +2,7 @@ package auditlog_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -97,6 +98,51 @@ func FuzzPluginHTML_ErrorMessages(f *testing.F) {
 
 		output := buf.String()
 		assertNoRawXSS(t, output, errMsg)
+	})
+}
+
+func FuzzMigrateReport(f *testing.F) {
+	seeds := []string{
+		`{"version":"0.1.0"}`,
+		`{"version":"0.2.0"}`,
+		`{"version":"0.1.0","services":[{"service_name":"svc","scope_id":"r","scope_name":"[root]"}]}`,
+		`{"version":"0.1.0","scope_tree":{"id":"root","name":"[root]","services":[],"children":[{"id":"child","name":"child","services":[],"children":[]}]}}`,
+		`not json`,
+		`{}`,
+		``,
+	}
+
+	for _, s := range seeds {
+		f.Add([]byte(s))
+	}
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		report, err := auditlog.MigrateReport(data)
+		if err != nil {
+			// Errors are expected for malformed/empty input.
+			return
+		}
+
+		if validateErr := report.Validate(); validateErr != nil {
+			t.Errorf("migrated report failed validation: %v", validateErr)
+		}
+
+		// Re-migrating a current-schema report should be a no-op and stay valid.
+		var buf bytes.Buffer
+
+		enc := json.NewEncoder(&buf)
+		if encodeErr := enc.Encode(report); encodeErr != nil {
+			t.Fatalf("encode migrated report: %v", encodeErr)
+		}
+
+		reMigrated, reErr := auditlog.MigrateReport(buf.Bytes())
+		if reErr != nil {
+			t.Errorf("re-migrating current-schema report failed: %v", reErr)
+		}
+
+		if reValidateErr := reMigrated.Validate(); reValidateErr != nil {
+			t.Errorf("re-migrated report failed validation: %v", reValidateErr)
+		}
 	})
 }
 

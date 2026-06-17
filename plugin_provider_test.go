@@ -8,6 +8,8 @@ import (
 )
 
 func TestPlugin_ServiceTypeCapture(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		want     string
@@ -34,6 +36,8 @@ func TestPlugin_ServiceTypeCapture(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			p, injector := newPluginAndInjector()
 
 			tt.register(injector)
@@ -66,6 +70,8 @@ func newTransientDatabaseProvider() func(do.Injector) {
 }
 
 func TestPlugin_CapabilityTracking(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -108,6 +114,8 @@ func TestPlugin_CapabilityTracking(t *testing.T) {
 }
 
 func TestPlugin_CapabilityTrackingWithChildScopes(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -141,6 +149,8 @@ func TestPlugin_CapabilityTrackingWithChildScopes(t *testing.T) {
 }
 
 func TestPlugin_EventServiceType(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -168,6 +178,8 @@ func TestPlugin_EventServiceType(t *testing.T) {
 }
 
 func TestPlugin_ProvideEager(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -225,6 +237,8 @@ func TestPlugin_ProvideTransient(t *testing.T) {
 }
 
 func TestPlugin_ProvideTransientType(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -284,6 +298,8 @@ func TestPlugin_ProvideValue(t *testing.T) {
 }
 
 func TestPlugin_EnrichCapabilitiesWithNilScopeRef(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -301,6 +317,8 @@ func TestPlugin_EnrichCapabilitiesWithNilScopeRef(t *testing.T) {
 }
 
 func TestPlugin_RecordHealthCheckCreatesServiceFromMeta(t *testing.T) {
+	t.Parallel()
+
 	rec := auditlog.NewRecorder("test", nil)
 
 	rec.RecordHealthCheck("scope-1", "myscope", "discovered-svc", nil)

@@ -11,6 +11,8 @@ import (
 )
 
 func TestReport_WriteMermaid(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -35,6 +37,8 @@ func TestReport_WriteMermaid(t *testing.T) {
 }
 
 func TestReport_WritePlantUML(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -64,6 +68,8 @@ func TestReport_WritePlantUML(t *testing.T) {
 }
 
 func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -93,6 +99,8 @@ func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
 }
 
 func TestWriteMermaid_WriterError(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -106,6 +114,8 @@ func TestWriteMermaid_WriterError(t *testing.T) {
 }
 
 func TestWritePlantUML_WriterError(t *testing.T) {
+	t.Parallel()
+
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
@@ -119,6 +129,8 @@ func TestWritePlantUML_WriterError(t *testing.T) {
 }
 
 func TestWriteMermaid_DuplicateEdges(t *testing.T) {
+	t.Parallel()
+
 	report := auditlog.Report{
 		Version:     auditlog.SchemaVersion,
 		ContainerID: "test",
@@ -168,6 +180,8 @@ func TestWriteMermaid_DuplicateEdges(t *testing.T) {
 }
 
 func TestWriteMermaid_ExternalDependency(t *testing.T) {
+	t.Parallel()
+
 	report := auditlog.Report{
 		Version:     auditlog.SchemaVersion,
 		ContainerID: "test",
