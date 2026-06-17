@@ -1,4 +1,5 @@
 # Comprehensive Status Report
+
 **Date:** 2026-06-17 22:17
 **Branch:** master (ahead of origin by 5 commits)
 **Release:** v0.0.4 (latest tag)
@@ -9,19 +10,19 @@
 
 ## Project Snapshot
 
-| Metric | Value |
-|---|---|
-| Source LOC (non-test, non-generated, non-example) | 2,534 |
-| Test LOC | 5,860+ |
-| Go files (excl. example) | 45 |
-| Tests (Test + Benchmark + Fuzz + Example) | 171 |
-| Statement coverage (non-example) | 95.3% |
-| golangci-lint issues | 0 |
-| `go test -race ./...` | PASS |
-| `go vet ./...` | PASS |
-| External dependencies | `samber/do/v2`, `a-h/templ` |
-| Fuzz targets | 3 (492k+ executions, 0 failures) |
-| Go version | 1.26.3+ (go.mod says 1.26.3) |
+| Metric                                            | Value                            |
+| ------------------------------------------------- | -------------------------------- |
+| Source LOC (non-test, non-generated, non-example) | 2,534                            |
+| Test LOC                                          | 5,860+                           |
+| Go files (excl. example)                          | 45                               |
+| Tests (Test + Benchmark + Fuzz + Example)         | 171                              |
+| Statement coverage (non-example)                  | 95.3%                            |
+| golangci-lint issues                              | 0                                |
+| `go test -race ./...`                             | PASS                             |
+| `go vet ./...`                                    | PASS                             |
+| External dependencies                             | `samber/do/v2`, `a-h/templ`      |
+| Fuzz targets                                      | 3 (492k+ executions, 0 failures) |
+| Go version                                        | 1.26.3+ (go.mod says 1.26.3)     |
 
 ---
 
@@ -86,6 +87,7 @@
 **Nothing.** All tests pass, lint is clean, no security holes left open. The one bug found (diagram escaping) was fixed immediately with regression tests and fuzz seeds.
 
 **Self-critique — what I could have done better this session:**
+
 - Forgot to update the CHANGELOG when the escaping fix was committed — caught in this self-reflection pass.
 - The fuzz target didn't have seeds covering the exact regression case (`evil]"svc`) — added now.
 - The fuzz target only checked header presence, not structural integrity (balanced brackets, no raw quotes) — structural assertion added now.
@@ -119,33 +121,33 @@
 
 Sorted by impact ÷ effort (highest first):
 
-| # | Task | Impact | Effort | Notes |
-|---|---|---|---|---|
-| 1 | **Typed identifiers** (`ScopeID`, `ServiceName`, `ContainerID`) | High | Low | Compiler-enforced safety; existing `ServiceRef` pattern to follow |
-| 2 | **NDJSON import** (`ReadNDJSON`) | Medium | Low | Symmetry with export; trivial via `buildReportFromCore` |
-| 3 | **CSV/TSV export** | Medium | Low | `encoding/csv`, no dep; high value for data analysis |
-| 4 | **JSON Schema file** (`schema.json`) | High | Medium | Biggest gap for consumers; blocks v0.1.0 |
-| 5 | **`NewReport(...)` constructor** | Medium | Low | Makes invalid reports unrepresentable |
-| 6 | **HTML golden-file test** | Medium | Medium | Deterministic multi-service → golden file |
-| 7 | **DOT export** (via go-output v0.12.0) | Low | Low | Clean dep surface now; trigger to adopt go-output |
-| 8 | **Property-based `Diff` tests** | Medium | Low | Random reports, symmetry assertions |
-| 9 | **Property-based `MigrateReport` tests** | Medium | Low | Arbitrary JSON → migrate → validate |
-| 10 | **Split `ServiceInfo`** into identity/lifecycle/health/graph | High | High | Breaking change; decide before v0.1.0 |
-| 11 | **Fuzz filter inputs** | Low | Low | Arbitrary `ReportOption` combinations |
-| 12 | **Prometheus exporter example** | Medium | Low | Parallel to OTel bridge doc |
-| 13 | **`actionlint` in CI** | Low | Trivial | Workflow validation |
-| 14 | **CLI tool** (`auditlog-convert`) | Medium | High | Report conversion/export binary |
-| 15 | **WebSocket live stream** bridge for `OnEvent` | Medium | High | Live dashboards |
-| 16 | **v0.1.0 release** | High | Medium | Blocked on #4 (schema) and decision on #10 (split) |
-| 17 | **`RELEASING.md`** or release checklist | Low | Trivial | In CONTRIBUTING.md |
-| 18 | **`example/` smoke test** | Low | Low | At least a basic integration test |
-| 19 | **Coverage gate as separate CI step** | Low | Low | Clearer failure messages |
-| 20 | **Review `ServiceStatus` priority** for completeness | Low | Low | Is there a missing state? |
-| 21 | **`docs/status/` retention policy** | Low | Trivial | Keep last 5, archive rest |
-| 22 | **Benchmark the escaping functions** | Low | Trivial | Ensure no hot-path regression |
-| 23 | **Add diagram escaping edge cases to fuzz corpus** | Low | Trivial | Unicode, empty strings, very long names |
-| 24 | **D2 export** (via go-output) | Low | Medium | Rich domain model; nice-to-have |
-| 25 | **Streaming report export** | Medium | High | `io.Reader` for large reports |
+| #   | Task                                                            | Impact | Effort  | Notes                                                             |
+| --- | --------------------------------------------------------------- | ------ | ------- | ----------------------------------------------------------------- |
+| 1   | **Typed identifiers** (`ScopeID`, `ServiceName`, `ContainerID`) | High   | Low     | Compiler-enforced safety; existing `ServiceRef` pattern to follow |
+| 2   | **NDJSON import** (`ReadNDJSON`)                                | Medium | Low     | Symmetry with export; trivial via `buildReportFromCore`           |
+| 3   | **CSV/TSV export**                                              | Medium | Low     | `encoding/csv`, no dep; high value for data analysis              |
+| 4   | **JSON Schema file** (`schema.json`)                            | High   | Medium  | Biggest gap for consumers; blocks v0.1.0                          |
+| 5   | **`NewReport(...)` constructor**                                | Medium | Low     | Makes invalid reports unrepresentable                             |
+| 6   | **HTML golden-file test**                                       | Medium | Medium  | Deterministic multi-service → golden file                         |
+| 7   | **DOT export** (via go-output v0.12.0)                          | Low    | Low     | Clean dep surface now; trigger to adopt go-output                 |
+| 8   | **Property-based `Diff` tests**                                 | Medium | Low     | Random reports, symmetry assertions                               |
+| 9   | **Property-based `MigrateReport` tests**                        | Medium | Low     | Arbitrary JSON → migrate → validate                               |
+| 10  | **Split `ServiceInfo`** into identity/lifecycle/health/graph    | High   | High    | Breaking change; decide before v0.1.0                             |
+| 11  | **Fuzz filter inputs**                                          | Low    | Low     | Arbitrary `ReportOption` combinations                             |
+| 12  | **Prometheus exporter example**                                 | Medium | Low     | Parallel to OTel bridge doc                                       |
+| 13  | **`actionlint` in CI**                                          | Low    | Trivial | Workflow validation                                               |
+| 14  | **CLI tool** (`auditlog-convert`)                               | Medium | High    | Report conversion/export binary                                   |
+| 15  | **WebSocket live stream** bridge for `OnEvent`                  | Medium | High    | Live dashboards                                                   |
+| 16  | **v0.1.0 release**                                              | High   | Medium  | Blocked on #4 (schema) and decision on #10 (split)                |
+| 17  | **`RELEASING.md`** or release checklist                         | Low    | Trivial | In CONTRIBUTING.md                                                |
+| 18  | **`example/` smoke test**                                       | Low    | Low     | At least a basic integration test                                 |
+| 19  | **Coverage gate as separate CI step**                           | Low    | Low     | Clearer failure messages                                          |
+| 20  | **Review `ServiceStatus` priority** for completeness            | Low    | Low     | Is there a missing state?                                         |
+| 21  | **`docs/status/` retention policy**                             | Low    | Trivial | Keep last 5, archive rest                                         |
+| 22  | **Benchmark the escaping functions**                            | Low    | Trivial | Ensure no hot-path regression                                     |
+| 23  | **Add diagram escaping edge cases to fuzz corpus**              | Low    | Trivial | Unicode, empty strings, very long names                           |
+| 24  | **D2 export** (via go-output)                                   | Low    | Medium  | Rich domain model; nice-to-have                                   |
+| 25  | **Streaming report export**                                     | Medium | High    | `io.Reader` for large reports                                     |
 
 ---
 
@@ -169,10 +171,10 @@ git status                    → clean working tree
 
 ## Commits This Session (5)
 
-| Commit | Description |
-|---|---|
-| `e9b3ba7` | fix: harden diagram output escaping and document go-output adoption review |
-| `0a39b64` | docs: re-evaluate go-output adoption after v0.12.0 resolves all blockers |
-| `2e8cb8e` | docs(changelog): document diagram output escaping fix in [Unreleased] |
+| Commit    | Description                                                                                     |
+| --------- | ----------------------------------------------------------------------------------------------- |
+| `e9b3ba7` | fix: harden diagram output escaping and document go-output adoption review                      |
+| `0a39b64` | docs: re-evaluate go-output adoption after v0.12.0 resolves all blockers                        |
+| `2e8cb8e` | docs(changelog): document diagram output escaping fix in [Unreleased]                           |
 | `d0b266c` | test(fuzz): strengthen diagram fuzz with combined bracket+quote seeds and structural assertions |
-| `6b3fbef` | docs(todo): update with go-output review outcome and LOC correction |
+| `6b3fbef` | docs(todo): update with go-output review outcome and LOC correction                             |

@@ -44,10 +44,20 @@
         --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      html { scroll-behavior: smooth; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
       body {
-        font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family:
+          "Space Grotesk",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
         background: var(--bg);
         background-image:
           radial-gradient(ellipse 80% 50% at 50% 0%, var(--accent-glow), transparent),
@@ -61,7 +71,11 @@
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
       }
-      @media (max-width: 768px) { body { padding: 1rem; } }
+      @media (max-width: 768px) {
+        body {
+          padding: 1rem;
+        }
+      }
 
       /* --- Hero --- */
       .hero {
@@ -85,15 +99,21 @@
         margin-bottom: 1rem;
       }
       .hero .badge .dot {
-        width: 6px; height: 6px;
+        width: 6px;
+        height: 6px;
         background: var(--error);
         border-radius: 50%;
         box-shadow: 0 0 8px var(--error);
         animation: pulse 2s infinite;
       }
       @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.4; }
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
       }
       .hero h1 {
         font-size: 2.4rem;
@@ -143,9 +163,21 @@
         border-radius: 4px;
         border: 1px solid transparent;
       }
-      .sev-tag.high { color: var(--high); background: var(--high-dim); border-color: rgba(224,112,96,0.2); }
-      .sev-tag.medium { color: var(--medium); background: var(--medium-dim); border-color: rgba(212,168,67,0.2); }
-      .sev-tag.low { color: var(--low); background: var(--low-dim); border-color: rgba(111,191,142,0.2); }
+      .sev-tag.high {
+        color: var(--high);
+        background: var(--high-dim);
+        border-color: rgba(224, 112, 96, 0.2);
+      }
+      .sev-tag.medium {
+        color: var(--medium);
+        background: var(--medium-dim);
+        border-color: rgba(212, 168, 67, 0.2);
+      }
+      .sev-tag.low {
+        color: var(--low);
+        background: var(--low-dim);
+        border-color: rgba(111, 191, 142, 0.2);
+      }
 
       /* --- Summary card --- */
       .summary {
@@ -160,7 +192,9 @@
       .summary::before {
         content: "";
         position: absolute;
-        top: 0; left: 0; right: 0;
+        top: 0;
+        left: 0;
+        right: 0;
         height: 3px;
         background: linear-gradient(90deg, var(--high), var(--medium), var(--low));
         opacity: 0.6;
@@ -194,9 +228,15 @@
         font-weight: 700;
         display: block;
       }
-      .summary-stat .num.high { color: var(--high); }
-      .summary-stat .num.medium { color: var(--medium); }
-      .summary-stat .num.low { color: var(--low); }
+      .summary-stat .num.high {
+        color: var(--high);
+      }
+      .summary-stat .num.medium {
+        color: var(--medium);
+      }
+      .summary-stat .num.low {
+        color: var(--low);
+      }
       .summary-stat .lbl {
         font-size: 0.65rem;
         text-transform: uppercase;
@@ -206,7 +246,9 @@
       }
 
       /* --- Section headers --- */
-      .section { margin-bottom: 3rem; }
+      .section {
+        margin-bottom: 3rem;
+      }
       .section > h2 {
         font-size: 1.35rem;
         font-weight: 600;
@@ -239,7 +281,9 @@
         overflow: hidden;
         transition: border-color var(--transition);
       }
-      .finding:hover { border-color: var(--border-active); }
+      .finding:hover {
+        border-color: var(--border-active);
+      }
       .finding-header {
         padding: 1.2rem 1.5rem;
         display: flex;
@@ -265,7 +309,9 @@
         padding: 0 1.5rem 1.5rem;
         display: block;
       }
-      .finding-body.collapsed { display: none; }
+      .finding-body.collapsed {
+        display: none;
+      }
       .finding-header .chevron {
         color: var(--text-dim);
         font-size: 0.8rem;
@@ -273,7 +319,9 @@
         flex-shrink: 0;
         margin-top: 0.3rem;
       }
-      .finding-header.expanded .chevron { transform: rotate(90deg); }
+      .finding-header.expanded .chevron {
+        transform: rotate(90deg);
+      }
 
       .finding-section-title {
         font-family: "IBM Plex Mono", monospace;
@@ -285,15 +333,23 @@
         margin-bottom: 0.6rem;
         font-weight: 600;
       }
-      .finding-section-title:first-child { margin-top: 0; }
+      .finding-section-title:first-child {
+        margin-top: 0;
+      }
 
       .finding p {
         color: var(--text-muted);
         font-size: 0.9rem;
         margin-bottom: 0.6rem;
       }
-      .finding p strong { color: var(--text); font-weight: 600; }
-      .finding p code { font-family: "IBM Plex Mono", monospace; font-size: 0.85em; }
+      .finding p strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .finding p code {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.85em;
+      }
 
       /* --- Code blocks --- */
       .code-block {
@@ -308,14 +364,35 @@
         line-height: 1.5;
         color: var(--text-muted);
       }
-      .code-block .kw { color: var(--accent); }
-      .code-block .str { color: var(--success); }
-      .code-block .cmt { color: var(--text-dim); font-style: italic; }
-      .code-block .fn { color: var(--info); }
-      .code-block .hl { background: rgba(232, 168, 56, 0.08); display: block; margin: 0 -1rem; padding: 0 1rem; }
-      .code-block .err { color: var(--error); }
-      .code-block .ok { color: var(--success); }
-      .code-block .ref { color: var(--accent); border-bottom: 1px dotted var(--accent); }
+      .code-block .kw {
+        color: var(--accent);
+      }
+      .code-block .str {
+        color: var(--success);
+      }
+      .code-block .cmt {
+        color: var(--text-dim);
+        font-style: italic;
+      }
+      .code-block .fn {
+        color: var(--info);
+      }
+      .code-block .hl {
+        background: rgba(232, 168, 56, 0.08);
+        display: block;
+        margin: 0 -1rem;
+        padding: 0 1rem;
+      }
+      .code-block .err {
+        color: var(--error);
+      }
+      .code-block .ok {
+        color: var(--success);
+      }
+      .code-block .ref {
+        color: var(--accent);
+        border-bottom: 1px dotted var(--accent);
+      }
 
       /* --- File reference pills --- */
       .file-ref {
@@ -356,11 +433,21 @@
         font-family: "IBM Plex Mono", monospace;
         font-size: 0.8rem;
       }
-      .compare-table td:first-child { color: var(--text); }
-      .compare-table tr:last-child td { border-bottom: none; }
-      .compare-table .check { color: var(--success); }
-      .compare-table .cross { color: var(--error); }
-      .compare-table .warn { color: var(--warning); }
+      .compare-table td:first-child {
+        color: var(--text);
+      }
+      .compare-table tr:last-child td {
+        border-bottom: none;
+      }
+      .compare-table .check {
+        color: var(--success);
+      }
+      .compare-table .cross {
+        color: var(--error);
+      }
+      .compare-table .warn {
+        color: var(--warning);
+      }
 
       /* --- Fix box --- */
       .fix-box {
@@ -422,9 +509,15 @@
         color: var(--text-muted);
         margin-top: 0.5rem;
       }
-      .poc-output .ok-line { color: var(--success); }
-      .poc-output .err-line { color: var(--error); }
-      .poc-output .warn-line { color: var(--warning); }
+      .poc-output .ok-line {
+        color: var(--success);
+      }
+      .poc-output .err-line {
+        color: var(--error);
+      }
+      .poc-output .warn-line {
+        color: var(--warning);
+      }
 
       /* --- Data flow diagram --- */
       .flow-diagram {
@@ -440,10 +533,21 @@
         white-space: pre;
         color: var(--text-muted);
       }
-      .flow-diagram .arrow { color: var(--accent); }
-      .flow-diagram .label-err { color: var(--error); font-weight: 600; }
-      .flow-diagram .label-ok { color: var(--success); font-weight: 600; }
-      .flow-diagram .label-warn { color: var(--warning); font-weight: 600; }
+      .flow-diagram .arrow {
+        color: var(--accent);
+      }
+      .flow-diagram .label-err {
+        color: var(--error);
+        font-weight: 600;
+      }
+      .flow-diagram .label-ok {
+        color: var(--success);
+        font-weight: 600;
+      }
+      .flow-diagram .label-warn {
+        color: var(--warning);
+        font-weight: 600;
+      }
 
       /* --- TOC --- */
       .toc {
@@ -481,8 +585,13 @@
         font-size: 0.88rem;
         transition: color var(--transition);
       }
-      .toc a:hover { color: var(--accent); }
-      .toc a .sev-tag { margin-left: 0.5rem; vertical-align: middle; }
+      .toc a:hover {
+        color: var(--accent);
+      }
+      .toc a .sev-tag {
+        margin-left: 0.5rem;
+        vertical-align: middle;
+      }
 
       /* --- Callout --- */
       .callout {
@@ -494,7 +603,9 @@
         font-size: 0.88rem;
         color: var(--text-muted);
       }
-      .callout strong { color: var(--accent); }
+      .callout strong {
+        color: var(--accent);
+      }
 
       /* --- Footer --- */
       footer {
@@ -506,7 +617,10 @@
         font-size: 0.78rem;
         font-family: "IBM Plex Mono", monospace;
       }
-      footer a { color: var(--text-muted); text-decoration: none; }
+      footer a {
+        color: var(--text-muted);
+        text-decoration: none;
+      }
 
       /* --- Glossary --- */
       .glossary-item {
@@ -535,15 +649,17 @@
       </div>
       <h1>SPLIT-BRAIN.html</h1>
       <p class="subtitle">
-        A systematic audit of every place where the same concept is stored, computed, or
-        represented in more than one way — and can drift out of sync. Each finding includes
-        the exact file:line evidence, a runnable proof, and step-by-step fix instructions.
+        A systematic audit of every place where the same concept is stored, computed, or represented
+        in more than one way — and can drift out of sync. Each finding includes the exact file:line
+        evidence, a runnable proof, and step-by-step fix instructions.
       </p>
       <div class="meta">
         <div class="meta-item"><strong>Project:</strong> samber-do-auditlog</div>
         <div class="meta-item"><strong>Date:</strong> 2026-06-17</div>
         <div class="meta-item"><strong>Scope:</strong> Data model &amp; domain types</div>
-        <div class="meta-item"><strong>Method:</strong> Full source audit, 15 files, 6 findings</div>
+        <div class="meta-item">
+          <strong>Method:</strong> Full source audit, 15 files, 6 findings
+        </div>
       </div>
       <div class="severity-legend">
         <span class="sev-tag high">2 HIGH</span>
@@ -556,19 +672,32 @@
     <div class="summary">
       <h2>What is a Split-Brain?</h2>
       <p>
-        A <strong>split-brain</strong> occurs when the same piece of information exists in
-        two or more places in the codebase with no mechanism to keep them in sync. When one
-        copy is updated but the other isn't, consumers reading from the stale copy get wrong
-        answers. This is the most dangerous class of data-model bug because it's invisible
-        to the compiler — the code compiles, tests pass, but the data lies.
+        A <strong>split-brain</strong> occurs when the same piece of information exists in two or
+        more places in the codebase with no mechanism to keep them in sync. When one copy is updated
+        but the other isn't, consumers reading from the stale copy get wrong answers. This is the
+        most dangerous class of data-model bug because it's invisible to the compiler — the code
+        compiles, tests pass, but the data lies.
       </p>
       <p>
-        The most critical finding (<a href="#f1">#1</a>) is <strong>proven with a runnable test</strong>:
-        a report where <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent)">Status="active"</code>
-        but <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent)">InvocationError="boom"</code>
-        passes <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent)">Validate()</code>,
-        is missed by <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent)">FailedServices()</code>,
-        and is silently preserved by <code style="font-family:'IBM Plex Mono',monospace;color:var(--accent)">MigrateReport()</code>.
+        The most critical finding (<a href="#f1">#1</a>) is
+        <strong>proven with a runnable test</strong>: a report where
+        <code style="font-family: &quot;IBM Plex Mono&quot;, monospace; color: var(--accent)"
+          >Status="active"</code
+        >
+        but
+        <code style="font-family: &quot;IBM Plex Mono&quot;, monospace; color: var(--accent)"
+          >InvocationError="boom"</code
+        >
+        passes
+        <code style="font-family: &quot;IBM Plex Mono&quot;, monospace; color: var(--accent)"
+          >Validate()</code
+        >, is missed by
+        <code style="font-family: &quot;IBM Plex Mono&quot;, monospace; color: var(--accent)"
+          >FailedServices()</code
+        >, and is silently preserved by
+        <code style="font-family: &quot;IBM Plex Mono&quot;, monospace; color: var(--accent)"
+          >MigrateReport()</code
+        >.
       </p>
       <div class="summary-stats">
         <div class="summary-stat">
@@ -594,28 +723,48 @@
     <div class="toc">
       <h2>Findings Index</h2>
       <ol>
-        <li><a href="#f1">Status Field vs. Derived Status — Unguarded Denormalization</a> <span class="sev-tag high">HIGH</span></li>
-        <li><a href="#f2">Dual Error Detection: hasError() vs Status.IsError()</a> <span class="sev-tag high">HIGH</span></li>
-        <li><a href="#f3">serviceRecord ↔ ServiceInfo Parallel Model</a> <span class="sev-tag medium">MEDIUM</span></li>
-        <li><a href="#f4">Provider Icon Metadata Asymmetry</a> <span class="sev-tag low">LOW</span></li>
-        <li><a href="#f5">Triplicated JSON Encoding Paths</a> <span class="sev-tag low">LOW</span></li>
-        <li><a href="#f6">scopeName Denormalized Across 5 Types</a> <span class="sev-tag low">LOW</span></li>
+        <li>
+          <a href="#f1">Status Field vs. Derived Status — Unguarded Denormalization</a>
+          <span class="sev-tag high">HIGH</span>
+        </li>
+        <li>
+          <a href="#f2">Dual Error Detection: hasError() vs Status.IsError()</a>
+          <span class="sev-tag high">HIGH</span>
+        </li>
+        <li>
+          <a href="#f3">serviceRecord ↔ ServiceInfo Parallel Model</a>
+          <span class="sev-tag medium">MEDIUM</span>
+        </li>
+        <li>
+          <a href="#f4">Provider Icon Metadata Asymmetry</a> <span class="sev-tag low">LOW</span>
+        </li>
+        <li>
+          <a href="#f5">Triplicated JSON Encoding Paths</a> <span class="sev-tag low">LOW</span>
+        </li>
+        <li>
+          <a href="#f6">scopeName Denormalized Across 5 Types</a>
+          <span class="sev-tag low">LOW</span>
+        </li>
       </ol>
     </div>
 
     <!-- ==================== FINDING 1 ==================== -->
     <div class="section" id="f1">
-      <h2><span class="num-badge">01</span> Status Field vs. Derived Status <span class="sev-tag high">HIGH</span></h2>
+      <h2>
+        <span class="num-badge">01</span> Status Field vs. Derived Status
+        <span class="sev-tag high">HIGH</span>
+      </h2>
       <p class="section-desc">
-        The service lifecycle status is stored as a denormalized field AND independently
-        computable from error pointers — but nothing enforces their consistency.
+        The service lifecycle status is stored as a denormalized field AND independently computable
+        from error pointers — but nothing enforces their consistency.
       </p>
 
       <div class="finding">
         <div class="finding-header expanded" onclick="toggleFinding(this)">
           <h3>
             <span class="finding-id">SB-01</span>
-            <code>ServiceInfo.Status</code> is a stored field that can contradict its own error pointers
+            <code>ServiceInfo.Status</code> is a stored field that can contradict its own error
+            pointers
           </h3>
           <span class="chevron">▶</span>
         </div>
@@ -624,65 +773,93 @@
           <div class="finding-section-title">The Problem</div>
           <p>
             <code>ServiceInfo.Status</code> is a stored <code>ServiceStatus</code> enum field. It's
-            <em>supposed</em> to always equal the output of <code>ServiceInfo.DeriveStatus()</code>, which
-            computes the status from <code>InvocationError</code>, <code>ShutdownError</code>,
+            <em>supposed</em> to always equal the output of <code>ServiceInfo.DeriveStatus()</code>,
+            which computes the status from <code>InvocationError</code>, <code>ShutdownError</code>,
             <code>ShutdownAt</code>, and <code>FirstInvokedAt</code>.
           </p>
           <p>
-            But <strong>nothing enforces this</strong>. The <code>Status</code> field can be set to any
-            value via JSON deserialization or stale migration input, and the report still passes
+            But <strong>nothing enforces this</strong>. The <code>Status</code> field can be set to
+            any value via JSON deserialization or stale migration input, and the report still passes
             <code>Validate()</code>. This creates two sources of truth for "what lifecycle state is
             this service in?":
           </p>
 
-          <div class="flow-diagram"><span class="label-err">SOURCE A (stored):</span>  ServiceInfo.Status  ──read by──▶  FailedServices(), Diff.StatusChanged, HTML template
-<span class="label-ok">SOURCE B (derived):</span> ServiceInfo.DeriveStatus()  ──read by──▶  MigrateReport() (only when Status is empty!)
-<span class="label-warn">GUARD:</span>               Validate()  ──────────────────▶  checks COUNTS only, never checks Status == DeriveStatus()</div>
+          <div class="flow-diagram">
+            <span class="label-err">SOURCE A (stored):</span> ServiceInfo.Status ──read by──▶
+            FailedServices(), Diff.StatusChanged, HTML template
+            <span class="label-ok">SOURCE B (derived):</span> ServiceInfo.DeriveStatus() ──read
+            by──▶ MigrateReport() (only when Status is empty!)
+            <span class="label-warn">GUARD:</span> Validate() ──────────────────▶ checks COUNTS
+            only, never checks Status == DeriveStatus()
+          </div>
 
           <div class="callout">
             <strong>Why this matters:</strong> <code>FailedServices()</code> checks
-            <code>Status.IsError()</code>. If <code>Status</code> is stale, a broken service
-            is invisible to monitoring dashboards, alerting, and regression tests.
+            <code>Status.IsError()</code>. If <code>Status</code> is stale, a broken service is
+            invisible to monitoring dashboards, alerting, and regression tests.
           </div>
 
           <!-- EVIDENCE -->
           <div class="finding-section-title">Evidence — Exact Code Locations</div>
-          <div class="code-block"><span class="cmt">// service.go:42-44 — DeriveStatus() exists as the "canonical" derivation</span>
-<span class="kw">func</span> (s ServiceInfo) <span class="fn">DeriveStatus</span>() ServiceStatus {
-    <span class="kw">return</span> <span class="fn">deriveServiceStatus</span>(s.InvocationError, s.ShutdownError, s.ShutdownAt, s.FirstInvokedAt)
-}
+          <div class="code-block">
+            <span class="cmt"
+              >// service.go:42-44 — DeriveStatus() exists as the "canonical" derivation</span
+            >
+            <span class="kw">func</span> (s ServiceInfo) <span class="fn">DeriveStatus</span>()
+            ServiceStatus { <span class="kw">return</span>
+            <span class="fn">deriveServiceStatus</span>(s.InvocationError, s.ShutdownError,
+            s.ShutdownAt, s.FirstInvokedAt) }
 
-<span class="cmt">// report_builder.go:56 — Status is SET at build time (correct)</span>
-services = append(services, ServiceInfo{
-    <span class="hl">Status: <span class="fn">computeServiceStatus</span>(rec),  <span class="cmt">// ← derived correctly HERE</span></span>
-    ...
-})
+            <span class="cmt">// report_builder.go:56 — Status is SET at build time (correct)</span>
+            services = append(services, ServiceInfo{
+            <span class="hl"
+              >Status: <span class="fn">computeServiceStatus</span>(rec),
+              <span class="cmt">// ← derived correctly HERE</span></span
+            >
+            ... })
 
-<span class="cmt">// migration.go:54-58 — BUT migration PRESERVES stale non-empty statuses!</span>
-<span class="kw">for</span> idx := <span class="kw">range</span> report.Services {
-<span class="hl">    <span class="kw">if</span> report.Services[idx].Status == <span class="str">""</span> {   <span class="cmt">// ← only fixes EMPTY status</span></span>
-<span class="hl">        report.Services[idx].Status = report.Services[idx].<span class="fn">DeriveStatus</span>()</span>
-<span class="hl">    }</span>
-    <span class="cmt">// ← non-empty stale status is SILENTLY KEPT</span>
-}
+            <span class="cmt"
+              >// migration.go:54-58 — BUT migration PRESERVES stale non-empty statuses!</span
+            >
+            <span class="kw">for</span> idx := <span class="kw">range</span> report.Services {
+            <span class="hl">
+              <span class="kw">if</span> report.Services[idx].Status ==
+              <span class="str">""</span> {
+              <span class="cmt">// ← only fixes EMPTY status</span></span
+            >
+            <span class="hl">
+              report.Services[idx].Status = report.Services[idx].<span class="fn">DeriveStatus</span
+              >()</span
+            >
+            <span class="hl"> }</span>
+            <span class="cmt">// ← non-empty stale status is SILENTLY KEPT</span>
+            }
 
-<span class="cmt">// report.go:45-72 — Validate() checks counts, NOT status consistency</span>
-<span class="kw">func</span> (r Report) <span class="fn">Validate</span>() error {
-    <span class="kw">if</span> r.EventCount != <span class="fn">len</span>(r.Events) { ... }     <span class="cmt">// ← count check</span>
-    <span class="kw">if</span> r.ServiceCount != <span class="fn">len</span>(r.Services) { ... } <span class="cmt">// ← count check</span>
-    <span class="cmt">// ... NO Status == DeriveStatus() check anywhere</span>
-}
+            <span class="cmt"
+              >// report.go:45-72 — Validate() checks counts, NOT status consistency</span
+            >
+            <span class="kw">func</span> (r Report) <span class="fn">Validate</span>() error {
+            <span class="kw">if</span> r.EventCount != <span class="fn">len</span>(r.Events) { ... }
+            <span class="cmt">// ← count check</span> <span class="kw">if</span> r.ServiceCount !=
+            <span class="fn">len</span>(r.Services) { ... }
+            <span class="cmt">// ← count check</span>
+            <span class="cmt">// ... NO Status == DeriveStatus() check anywhere</span>
+            }
 
-<span class="cmt">// report.go:197-207 — FailedServices() trusts the stored Status blindly</span>
-<span class="kw">func</span> (r Report) <span class="fn">FailedServices</span>() []ServiceInfo {
-    <span class="kw">for</span> _, s := <span class="kw">range</span> r.Services {
-<span class="hl">        <span class="kw">if</span> s.Status.<span class="fn">IsError</span>() {   <span class="cmt">// ← reads STORED status, not derived</span></span>
-            failed = append(failed, s)
-        }
-    }
-}</div>
+            <span class="cmt"
+              >// report.go:197-207 — FailedServices() trusts the stored Status blindly</span
+            >
+            <span class="kw">func</span> (r Report) <span class="fn">FailedServices</span>()
+            []ServiceInfo { <span class="kw">for</span> _, s :=
+            <span class="kw">range</span> r.Services {
+            <span class="hl">
+              <span class="kw">if</span> s.Status.<span class="fn">IsError</span>() {
+              <span class="cmt">// ← reads STORED status, not derived</span></span
+            >
+            failed = append(failed, s) } } }
+          </div>
 
-          <p style="margin-top: 0.8rem;">
+          <p style="margin-top: 0.8rem">
             Key files to read:
             <span class="file-ref">service.go:38-44</span>
             <span class="file-ref">report_builder.go:50-74</span>
@@ -694,37 +871,51 @@ services = append(services, ServiceInfo{
           <!-- PROOF OF CONCEPT -->
           <div class="finding-section-title">Runnable Proof of Concept</div>
           <p>Create a test file <code>splitbrain_poc_test.go</code> in the project root:</p>
-          <div class="code-block"><span class="kw">package</span> auditlog_test
+          <div class="code-block">
+            <span class="kw">package</span> auditlog_test
 
-<span class="kw">import</span> (
-    <span class="str">"encoding/json"</span>
-    <span class="str">"testing"</span>
-    auditlog <span class="str">"github.com/larsartmann/samber-do-auditlog"</span>
-)
+            <span class="kw">import</span> (
+            <span class="str">"encoding/json"</span>
+            <span class="str">"testing"</span>
+            auditlog <span class="str">"github.com/larsartmann/samber-do-auditlog"</span>
+            )
 
-<span class="kw">func</span> <span class="fn">TestSplitBrain_StatusDrift</span>(t *testing.T) {
-    <span class="cmt">// A service with InvocationError="boom" but Status="active" (stale).</span>
-    input := <span class="str">`{
-        "version": "0.2.0", "container_id": "test", "exported_at": "2026-01-01T00:00:00Z",
-        "event_count": 0, "service_count": 1, "scope_count": 1, "health_checked_count": 0,
-        "services": [{"scope_id":"root","scope_name":"[root]","service_name":"broken-svc",
-        "status":"active","registered_at":"2026-01-01T00:00:00Z",
-        "first_invoked_at":"2026-01-01T00:00:01Z","invocation_error":"boom"}],
-        "scope_tree": {"id":"root","name":"[root]"}
-    }`</span>
-    <span class="kw">var</span> report auditlog.Report
-    _ = json.<span class="fn">Unmarshal</span>([]byte(input), &amp;report)
-
-    t.<span class="fn">Logf</span>(<span class="str">"Validate passes: %v"</span>, report.<span class="fn">Validate</span>() == nil)
-    t.<span class="fn">Logf</span>(<span class="str">"Stored=%s  Derived=%s  FailedServices()=%d"</span>,
-        report.Services[0].Status, report.Services[0].<span class="fn">DeriveStatus</span>(), <span class="fn">len</span>(report.<span class="fn">FailedServices</span>()))
-}</div>
+            <span class="kw">func</span> <span class="fn">TestSplitBrain_StatusDrift</span>(t
+            *testing.T) {
+            <span class="cmt"
+              >// A service with InvocationError="boom" but Status="active" (stale).</span
+            >
+            input :=
+            <span class="str"
+              >`{ "version": "0.2.0", "container_id": "test", "exported_at": "2026-01-01T00:00:00Z",
+              "event_count": 0, "service_count": 1, "scope_count": 1, "health_checked_count": 0,
+              "services": [{"scope_id":"root","scope_name":"[root]","service_name":"broken-svc",
+              "status":"active","registered_at":"2026-01-01T00:00:00Z",
+              "first_invoked_at":"2026-01-01T00:00:01Z","invocation_error":"boom"}], "scope_tree":
+              {"id":"root","name":"[root]"} }`</span
+            >
+            <span class="kw">var</span> report auditlog.Report _ = json.<span class="fn"
+              >Unmarshal</span
+            >([]byte(input), &amp;report) t.<span class="fn">Logf</span>(<span class="str"
+              >"Validate passes: %v"</span
+            >, report.<span class="fn">Validate</span>() == nil) t.<span class="fn">Logf</span
+            >(<span class="str">"Stored=%s Derived=%s FailedServices()=%d"</span>,
+            report.Services[0].Status, report.Services[0].<span class="fn">DeriveStatus</span>(),
+            <span class="fn">len</span>(report.<span class="fn">FailedServices</span>())) }
+          </div>
 
           <div class="poc-box">
             <div class="poc-title">Actual Test Output (verified)</div>
-            <div class="poc-output"><span class="ok-line">    Validate passes: true</span>
-<span class="warn-line">    Stored=active  Derived=invocation_error  FailedServices()=0</span>
-<span class="err-line">    --- FAIL: broken service with InvocationError="boom" is invisible to FailedServices()</span></div>
+            <div class="poc-output">
+              <span class="ok-line"> Validate passes: true</span>
+              <span class="warn-line">
+                Stored=active Derived=invocation_error FailedServices()=0</span
+              >
+              <span class="err-line">
+                --- FAIL: broken service with InvocationError="boom" is invisible to
+                FailedServices()</span
+              >
+            </div>
           </div>
 
           <!-- IMPACT -->
@@ -769,33 +960,40 @@ services = append(services, ServiceInfo{
               <li>
                 <strong>Add a status consistency check to <code>Validate()</code></strong> in
                 <span class="file-ref">report.go:45</span>. After the existing count checks, add:
-                <div class="code-block" style="margin-top: 0.4rem;"><span class="kw">for</span> i, svc := <span class="kw">range</span> r.Services {
-    <span class="kw">if</span> svc.Status != svc.<span class="fn">DeriveStatus</span>() {
-        <span class="kw">return</span> fmt.<span class="fn">Errorf</span>(<span class="str">"service %q status=%q does not match derived=%q"</span>,
-            svc.ServiceName, svc.Status, svc.<span class="fn">DeriveStatus</span>())
-    }
-}</div>
+                <div class="code-block" style="margin-top: 0.4rem">
+                  <span class="kw">for</span> i, svc := <span class="kw">range</span> r.Services {
+                  <span class="kw">if</span> svc.Status != svc.<span class="fn">DeriveStatus</span
+                  >() { <span class="kw">return</span> fmt.<span class="fn">Errorf</span>(<span
+                    class="str"
+                    >"service %q status=%q does not match derived=%q"</span
+                  >, svc.ServiceName, svc.Status, svc.<span class="fn">DeriveStatus</span>()) } }
+                </div>
               </li>
               <li>
                 <strong>Always re-derive in <code>MigrateReport()</code></strong> in
                 <span class="file-ref">migration.go:54-58</span>. Remove the
                 <code>if Status == ""</code> guard:
-                <div class="code-block" style="margin-top: 0.4rem;"><span class="cmt">// BEFORE (broken):</span>
-<span class="kw">if</span> report.Services[idx].Status == <span class="str">""</span> {
-    report.Services[idx].Status = report.Services[idx].<span class="fn">DeriveStatus</span>()
-}
-<span class="cmt">// AFTER (fixed):</span>
-report.Services[idx].Status = report.Services[idx].<span class="fn">DeriveStatus</span>()</div>
+                <div class="code-block" style="margin-top: 0.4rem">
+                  <span class="cmt">// BEFORE (broken):</span>
+                  <span class="kw">if</span> report.Services[idx].Status ==
+                  <span class="str">""</span> { report.Services[idx].Status =
+                  report.Services[idx].<span class="fn">DeriveStatus</span>() }
+                  <span class="cmt">// AFTER (fixed):</span>
+                  report.Services[idx].Status = report.Services[idx].<span class="fn"
+                    >DeriveStatus</span
+                  >()
+                </div>
               </li>
               <li>
-                <strong>Update the test</strong> <code>TestMigrateReport_PreservesExistingStatus</code>
-                in <span class="file-ref">migration_test.go:254</span> — it currently asserts the
-                broken behavior. Rename it to
-                <code>TestMigrateReport_RederivesStatus</code> and assert the derived value.
+                <strong>Update the test</strong>
+                <code>TestMigrateReport_PreservesExistingStatus</code> in
+                <span class="file-ref">migration_test.go:254</span> — it currently asserts the
+                broken behavior. Rename it to <code>TestMigrateReport_RederivesStatus</code> and
+                assert the derived value.
               </li>
               <li>
-                <strong>Run <code>go test -race ./...</code></strong> to verify all tests pass
-                with the fix.
+                <strong>Run <code>go test -race ./...</code></strong> to verify all tests pass with
+                the fix.
               </li>
             </ol>
           </div>
@@ -805,7 +1003,10 @@ report.Services[idx].Status = report.Services[idx].<span class="fn">DeriveStatus
 
     <!-- ==================== FINDING 2 ==================== -->
     <div class="section" id="f2">
-      <h2><span class="num-badge">02</span> Dual Error Detection <span class="sev-tag high">HIGH</span></h2>
+      <h2>
+        <span class="num-badge">02</span> Dual Error Detection
+        <span class="sev-tag high">HIGH</span>
+      </h2>
       <p class="section-desc">
         Two independent functions answer the same question — "does this service have an error?" —
         from different data, and they can disagree.
@@ -815,7 +1016,8 @@ report.Services[idx].Status = report.Services[idx].<span class="fn">DeriveStatus
         <div class="finding-header expanded" onclick="toggleFinding(this)">
           <h3>
             <span class="finding-id">SB-02</span>
-            <code>diff.go:hasError()</code> checks raw pointers; <code>Status.IsError()</code> checks the enum
+            <code>diff.go:hasError()</code> checks raw pointers;
+            <code>Status.IsError()</code> checks the enum
           </h3>
           <span class="chevron">▶</span>
         </div>
@@ -855,33 +1057,41 @@ report.Services[idx].Status = report.Services[idx].<span class="fn">DeriveStatus
 
           <p>
             The first two represent the <strong>same concept</strong> ("does this service have a
-            lifecycle error?") but read from different data. When <code>Status</code> is stale
-            (see <a href="#f1">SB-01</a>), they disagree:
+            lifecycle error?") but read from different data. When <code>Status</code> is stale (see
+            <a href="#f1">SB-01</a>), they disagree:
           </p>
 
-          <div class="code-block"><span class="cmt">// diff.go:83-98 — compareService uses hasError()</span>
-<span class="kw">func</span> <span class="fn">compareService</span>(prev, other ServiceInfo) (ServiceDiff, bool) {
-    diff := ServiceDiff{
-<span class="hl">        HasNewError: !<span class="fn">hasError</span>(prev) &amp;&amp; <span class="fn">hasError</span>(other),  <span class="cmt">// ← raw pointer check</span></span>
-    }
-    ...
-}
+          <div class="code-block">
+            <span class="cmt">// diff.go:83-98 — compareService uses hasError()</span>
+            <span class="kw">func</span> <span class="fn">compareService</span>(prev, other
+            ServiceInfo) (ServiceDiff, bool) { diff := ServiceDiff{
+            <span class="hl">
+              HasNewError: !<span class="fn">hasError</span>(prev) &amp;&amp;
+              <span class="fn">hasError</span>(other),
+              <span class="cmt">// ← raw pointer check</span></span
+            >
+            } ... }
 
-<span class="cmt">// diff.go:100-102 — hasError bypasses Status entirely</span>
-<span class="kw">func</span> <span class="fn">hasError</span>(svc ServiceInfo) bool {
-<span class="hl">    <span class="kw">return</span> svc.InvocationError != nil || svc.ShutdownError != nil  <span class="cmt">// ← ignores Status field</span></span>
-}
+            <span class="cmt">// diff.go:100-102 — hasError bypasses Status entirely</span>
+            <span class="kw">func</span> <span class="fn">hasError</span>(svc ServiceInfo) bool {
+            <span class="hl">
+              <span class="kw">return</span> svc.InvocationError != nil || svc.ShutdownError != nil
+              <span class="cmt">// ← ignores Status field</span></span
+            >
+            }
 
-<span class="cmt">// report.go:201 — FailedServices uses Status.IsError()</span>
-<span class="kw">if</span> s.Status.<span class="fn">IsError</span>() {  <span class="cmt">// ← enum check, trusts stored Status</span>
-    failed = append(failed, s)
-}</div>
+            <span class="cmt">// report.go:201 — FailedServices uses Status.IsError()</span>
+            <span class="kw">if</span> s.Status.<span class="fn">IsError</span>() {
+            <span class="cmt">// ← enum check, trusts stored Status</span> failed = append(failed,
+            s) }
+          </div>
 
           <div class="callout">
-            <strong>Concrete scenario:</strong> A service has <code>InvocationError="boom"</code> but
-            stale <code>Status="active"</code>. <code>Diff.HasNewError</code> says
-            <strong>true</strong> (it checks the pointer). <code>FailedServices()</code> says
-            <strong>false</strong> (it checks the enum). They contradict each other on the same report.
+            <strong>Concrete scenario:</strong> A service has
+            <code>InvocationError="boom"</code> but stale <code>Status="active"</code>.
+            <code>Diff.HasNewError</code> says <strong>true</strong> (it checks the pointer).
+            <code>FailedServices()</code> says <strong>false</strong> (it checks the enum). They
+            contradict each other on the same report.
           </div>
 
           <!-- FIX -->
@@ -889,17 +1099,25 @@ report.Services[idx].Status = report.Services[idx].<span class="fn">DeriveStatus
             <div class="fix-title">How to Fix</div>
             <ol>
               <li>
-                <strong>Delete <code>hasError()</code></strong> in <span class="file-ref">diff.go:100-102</span>.
+                <strong>Delete <code>hasError()</code></strong> in
+                <span class="file-ref">diff.go:100-102</span>.
               </li>
               <li>
-                <strong>Replace its call site</strong> in <span class="file-ref">diff.go:89</span> with:
-                <div class="code-block" style="margin-top: 0.4rem;"><span class="cmt">// Uses the Status field consistently with FailedServices()</span>
-HasNewError: !prev.Status.<span class="fn">IsError</span>() &amp;&amp; other.Status.<span class="fn">IsError</span>(),</div>
+                <strong>Replace its call site</strong> in
+                <span class="file-ref">diff.go:89</span> with:
+                <div class="code-block" style="margin-top: 0.4rem">
+                  <span class="cmt"
+                    >// Uses the Status field consistently with FailedServices()</span
+                  >
+                  HasNewError: !prev.Status.<span class="fn">IsError</span>() &amp;&amp;
+                  other.Status.<span class="fn">IsError</span>(),
+                </div>
               </li>
               <li>
-                <strong>Or</strong>, for maximum safety, use <code>DeriveStatus()</code> instead of the
-                stored field: <code>!prev.DeriveStatus().IsError() &amp;&amp; other.DeriveStatus().IsError()</code>.
-                This makes the check immune to stale Status even before SB-01 is fixed.
+                <strong>Or</strong>, for maximum safety, use <code>DeriveStatus()</code> instead of
+                the stored field:
+                <code>!prev.DeriveStatus().IsError() &amp;&amp; other.DeriveStatus().IsError()</code
+                >. This makes the check immune to stale Status even before SB-01 is fixed.
               </li>
             </ol>
           </div>
@@ -909,7 +1127,10 @@ HasNewError: !prev.Status.<span class="fn">IsError</span>() &amp;&amp; other.Sta
 
     <!-- ==================== FINDING 3 ==================== -->
     <div class="section" id="f3">
-      <h2><span class="num-badge">03</span> serviceRecord ↔ ServiceInfo Parallel Model <span class="sev-tag medium">MEDIUM</span></h2>
+      <h2>
+        <span class="num-badge">03</span> serviceRecord ↔ ServiceInfo Parallel Model
+        <span class="sev-tag medium">MEDIUM</span>
+      </h2>
       <p class="section-desc">
         16 fields are manually mirrored between an internal mutable struct and a public immutable
         snapshot with no compile-time guarantee that all fields are mapped.
@@ -919,7 +1140,8 @@ HasNewError: !prev.Status.<span class="fn">IsError</span>() &amp;&amp; other.Sta
         <div class="finding-header expanded" onclick="toggleFinding(this)">
           <h3>
             <span class="finding-id">SB-03</span>
-            Manual field-by-field copy between <code>serviceRecord</code> and <code>ServiceInfo</code>
+            Manual field-by-field copy between <code>serviceRecord</code> and
+            <code>ServiceInfo</code>
           </h3>
           <span class="chevron">▶</span>
         </div>
@@ -953,36 +1175,26 @@ HasNewError: !prev.Status.<span class="fn">IsError</span>() &amp;&amp; other.Sta
           </table>
 
           <p>
-            The bridge is a <strong>26-line manual copy</strong> in <code>buildServicesLocked()</code>.
-            Every field on <code>serviceRecord</code> must be explicitly listed:
+            The bridge is a <strong>26-line manual copy</strong> in
+            <code>buildServicesLocked()</code>. Every field on <code>serviceRecord</code> must be
+            explicitly listed:
           </p>
 
-          <div class="code-block"><span class="cmt">// report_builder.go:50-74 — manual field-by-field copy</span>
-services = append(services, ServiceInfo{
-    ServiceRef: ServiceRef{
-        ServiceName: rec.serviceName,
-        ScopeID:     rec.scopeID,
-        ScopeName:   rec.scopeName,
-    },
-    Status:               <span class="fn">computeServiceStatus</span>(rec),
-    ServiceType:          rec.serviceType,
-    RegisteredAt:         rec.registeredAt,
-    FirstInvokedAt:       rec.firstInvokedAt,
-    InvocationCount:      rec.invocationCount,
-    InvocationOrder:      rec.invocationOrder,
-    FirstBuildDurationMs: rec.firstBuildDurationMs,
-    Dependencies:         deps,
-    Dependents:           svcDependents,
-    ShutdownAt:           rec.shutdownAt,
-    ShutdownDurationMs:   rec.shutdownDurationMs,
-    ShutdownError:        rec.shutdownError,
-    InvocationError:      rec.invocationError,
-    IsHealthchecker:      false,  <span class="cmt">// ← not on serviceRecord at all</span>
-    IsShutdowner:         false,  <span class="cmt">// ← not on serviceRecord at all</span>
-    LastHealthCheckAt:    rec.lastHealthCheckAt,
-    HealthCheckError:     rec.healthCheckError,
-    HealthCheckCount:     rec.healthCheckCount,
-})</div>
+          <div class="code-block">
+            <span class="cmt">// report_builder.go:50-74 — manual field-by-field copy</span>
+            services = append(services, ServiceInfo{ ServiceRef: ServiceRef{ ServiceName:
+            rec.serviceName, ScopeID: rec.scopeID, ScopeName: rec.scopeName, }, Status:
+            <span class="fn">computeServiceStatus</span>(rec), ServiceType: rec.serviceType,
+            RegisteredAt: rec.registeredAt, FirstInvokedAt: rec.firstInvokedAt, InvocationCount:
+            rec.invocationCount, InvocationOrder: rec.invocationOrder, FirstBuildDurationMs:
+            rec.firstBuildDurationMs, Dependencies: deps, Dependents: svcDependents, ShutdownAt:
+            rec.shutdownAt, ShutdownDurationMs: rec.shutdownDurationMs, ShutdownError:
+            rec.shutdownError, InvocationError: rec.invocationError, IsHealthchecker: false,
+            <span class="cmt">// ← not on serviceRecord at all</span> IsShutdowner: false,
+            <span class="cmt">// ← not on serviceRecord at all</span> LastHealthCheckAt:
+            rec.lastHealthCheckAt, HealthCheckError: rec.healthCheckError, HealthCheckCount:
+            rec.healthCheckCount, })
+          </div>
 
           <div class="callout">
             <strong>The risk:</strong> If a developer adds <code>lastInvokedAt *time.Time</code> to
@@ -997,30 +1209,21 @@ services = append(services, ServiceInfo{
             <div class="fix-title">How to Fix</div>
             <ol>
               <li>
-                <strong>Extract a conversion function</strong> to centralize the mapping in one place:
-                <div class="code-block" style="margin-top: 0.4rem;"><span class="cmt">// Put this in hooks.go next to newServiceRecordCore</span>
-<span class="kw">func</span> <span class="fn">serviceRecordToInfo</span>(rec *serviceRecord) ServiceInfo {
-    <span class="kw">return</span> ServiceInfo{
-        ServiceRef: ServiceRef{
-            ServiceName: rec.serviceName,
-            ScopeID:     rec.scopeID,
-            ScopeName:   rec.scopeName,
-        },
-        ServiceType:          rec.serviceType,
-        RegisteredAt:         rec.registeredAt,
-        FirstInvokedAt:       rec.firstInvokedAt,
-        InvocationCount:      rec.invocationCount,
-        InvocationOrder:      rec.invocationOrder,
-        FirstBuildDurationMs: rec.firstBuildDurationMs,
-        ShutdownAt:           rec.shutdownAt,
-        ShutdownDurationMs:   rec.shutdownDurationMs,
-        ShutdownError:        rec.shutdownError,
-        InvocationError:      rec.invocationError,
-        LastHealthCheckAt:    rec.lastHealthCheckAt,
-        HealthCheckError:     rec.healthCheckError,
-        HealthCheckCount:     rec.healthCheckCount,
-    }
-}</div>
+                <strong>Extract a conversion function</strong> to centralize the mapping in one
+                place:
+                <div class="code-block" style="margin-top: 0.4rem">
+                  <span class="cmt">// Put this in hooks.go next to newServiceRecordCore</span>
+                  <span class="kw">func</span> <span class="fn">serviceRecordToInfo</span>(rec
+                  *serviceRecord) ServiceInfo { <span class="kw">return</span> ServiceInfo{
+                  ServiceRef: ServiceRef{ ServiceName: rec.serviceName, ScopeID: rec.scopeID,
+                  ScopeName: rec.scopeName, }, ServiceType: rec.serviceType, RegisteredAt:
+                  rec.registeredAt, FirstInvokedAt: rec.firstInvokedAt, InvocationCount:
+                  rec.invocationCount, InvocationOrder: rec.invocationOrder, FirstBuildDurationMs:
+                  rec.firstBuildDurationMs, ShutdownAt: rec.shutdownAt, ShutdownDurationMs:
+                  rec.shutdownDurationMs, ShutdownError: rec.shutdownError, InvocationError:
+                  rec.invocationError, LastHealthCheckAt: rec.lastHealthCheckAt, HealthCheckError:
+                  rec.healthCheckError, HealthCheckCount: rec.healthCheckCount, } }
+                </div>
                 Then call it in <code>buildServicesLocked</code> and fill in the derived fields
                 (<code>Status</code>, <code>Dependencies</code>, <code>Dependents</code>,
                 <code>IsHealthchecker</code>, <code>IsShutdowner</code>) after.
@@ -1038,7 +1241,10 @@ services = append(services, ServiceInfo{
 
     <!-- ==================== FINDING 4 ==================== -->
     <div class="section" id="f4">
-      <h2><span class="num-badge">04</span> Provider Icon Metadata Asymmetry <span class="sev-tag low">LOW</span></h2>
+      <h2>
+        <span class="num-badge">04</span> Provider Icon Metadata Asymmetry
+        <span class="sev-tag low">LOW</span>
+      </h2>
       <p class="section-desc">
         ProviderType has an Icon() method; ServiceStatus and EventType do not. Icons for the latter
         are hardcoded in a separate file with no compiler enforcement.
@@ -1087,10 +1293,23 @@ services = append(services, ServiceInfo{
           <div class="fix-box">
             <div class="fix-title">How to Fix</div>
             <ol>
-              <li>Add <code>func (s ServiceStatus) Icon() string</code> to <span class="file-ref">types.go</span> following the <code>ProviderType.Icon()</code> pattern.</li>
-              <li>Add <code>func (e EventType) Label() string</code> and <code>func (e EventType) Color() string</code> similarly.</li>
-              <li>Update <code>BuildTypeMetadata()</code> to call these methods instead of hardcoding strings.</li>
-              <li>This makes the metadata struct the single consumer of the methods, not a parallel source of truth.</li>
+              <li>
+                Add <code>func (s ServiceStatus) Icon() string</code> to
+                <span class="file-ref">types.go</span> following the
+                <code>ProviderType.Icon()</code> pattern.
+              </li>
+              <li>
+                Add <code>func (e EventType) Label() string</code> and
+                <code>func (e EventType) Color() string</code> similarly.
+              </li>
+              <li>
+                Update <code>BuildTypeMetadata()</code> to call these methods instead of hardcoding
+                strings.
+              </li>
+              <li>
+                This makes the metadata struct the single consumer of the methods, not a parallel
+                source of truth.
+              </li>
             </ol>
           </div>
         </div>
@@ -1099,9 +1318,13 @@ services = append(services, ServiceInfo{
 
     <!-- ==================== FINDING 5 ==================== -->
     <div class="section" id="f5">
-      <h2><span class="num-badge">05</span> Triplicated JSON Encoding Paths <span class="sev-tag low">LOW</span></h2>
+      <h2>
+        <span class="num-badge">05</span> Triplicated JSON Encoding Paths
+        <span class="sev-tag low">LOW</span>
+      </h2>
       <p class="section-desc">
-        Three independent code blocks encode reports as JSON with identical logic but no shared helper.
+        Three independent code blocks encode reports as JSON with identical logic but no shared
+        helper.
       </p>
 
       <div class="finding">
@@ -1115,27 +1338,35 @@ services = append(services, ServiceInfo{
         </div>
         <div class="finding-body collapsed">
           <div class="finding-section-title">The Problem</div>
-          <div class="code-block"><span class="cmt">// report.go:289-299 — Path 1</span>
-<span class="kw">func</span> (r Report) <span class="fn">WriteJSON</span>(writer io.Writer) error {
-    enc := json.<span class="fn">NewEncoder</span>(writer)
-    enc.<span class="fn">SetIndent</span>(<span class="str">""</span>, <span class="str">"  "</span>)
-    <span class="kw">return</span> enc.<span class="fn">Encode</span>(r)
-}
+          <div class="code-block">
+            <span class="cmt">// report.go:289-299 — Path 1</span> <span class="kw">func</span> (r
+            Report) <span class="fn">WriteJSON</span>(writer io.Writer) error { enc := json.<span
+              class="fn"
+              >NewEncoder</span
+            >(writer) enc.<span class="fn">SetIndent</span>(<span class="str">""</span>,
+            <span class="str">" "</span>) <span class="kw">return</span> enc.<span class="fn"
+              >Encode</span
+            >(r) }
 
-<span class="cmt">// plugin.go:142-153 — Path 2 (duplicates Path 1)</span>
-<span class="kw">func</span> (p *Plugin) <span class="fn">WriteReportJSON</span>(writer io.Writer) error {
-    report := p.<span class="fn">Report</span>()
-    enc := json.<span class="fn">NewEncoder</span>(writer)
-    enc.<span class="fn">SetIndent</span>(<span class="str">""</span>, <span class="str">"  "</span>)
-    <span class="kw">return</span> enc.<span class="fn">Encode</span>(report)
-}
+            <span class="cmt">// plugin.go:142-153 — Path 2 (duplicates Path 1)</span>
+            <span class="kw">func</span> (p *Plugin) <span class="fn">WriteReportJSON</span>(writer
+            io.Writer) error { report := p.<span class="fn">Report</span>() enc := json.<span
+              class="fn"
+              >NewEncoder</span
+            >(writer) enc.<span class="fn">SetIndent</span>(<span class="str">""</span>,
+            <span class="str">" "</span>) <span class="kw">return</span> enc.<span class="fn"
+              >Encode</span
+            >(report) }
 
-<span class="cmt">// plugin.go:174-184 — Path 3 (duplicates again for filtered)</span>
-<span class="kw">return</span> <span class="fn">writeToFile</span>(path, <span class="kw">func</span>(w io.Writer) error {
-    enc := json.<span class="fn">NewEncoder</span>(writer)
-    enc.<span class="fn">SetIndent</span>(<span class="str">""</span>, <span class="str">"  "</span>)
-    <span class="kw">return</span> enc.<span class="fn">Encode</span>(filtered)
-})</div>
+            <span class="cmt">// plugin.go:174-184 — Path 3 (duplicates again for filtered)</span>
+            <span class="kw">return</span> <span class="fn">writeToFile</span>(path,
+            <span class="kw">func</span>(w io.Writer) error { enc := json.<span class="fn"
+              >NewEncoder</span
+            >(writer) enc.<span class="fn">SetIndent</span>(<span class="str">""</span>,
+            <span class="str">" "</span>) <span class="kw">return</span> enc.<span class="fn"
+              >Encode</span
+            >(filtered) })
+          </div>
           <p>
             If indentation or error-wrapping changes in one path, the others silently diverge.
             <code>Plugin.WriteReportJSON()</code> could simply delegate to
@@ -1145,8 +1376,14 @@ services = append(services, ServiceInfo{
           <div class="fix-box">
             <div class="fix-title">How to Fix</div>
             <ol>
-              <li>Make <code>Plugin.WriteReportJSON()</code> call <code>p.Report().WriteJSON(writer)</code>.</li>
-              <li>Make <code>ExportFilteredToFile</code> call <code>filtered.WriteJSON(writer)</code> inside the <code>writeToFile</code> closure.</li>
+              <li>
+                Make <code>Plugin.WriteReportJSON()</code> call
+                <code>p.Report().WriteJSON(writer)</code>.
+              </li>
+              <li>
+                Make <code>ExportFilteredToFile</code> call
+                <code>filtered.WriteJSON(writer)</code> inside the <code>writeToFile</code> closure.
+              </li>
               <li>One encoding path, one source of truth for indentation and error wrapping.</li>
             </ol>
           </div>
@@ -1156,10 +1393,13 @@ services = append(services, ServiceInfo{
 
     <!-- ==================== FINDING 6 ==================== -->
     <div class="section" id="f6">
-      <h2><span class="num-badge">06</span> scopeName Denormalized Across 5 Types <span class="sev-tag low">LOW</span></h2>
+      <h2>
+        <span class="num-badge">06</span> scopeName Denormalized Across 5 Types
+        <span class="sev-tag low">LOW</span>
+      </h2>
       <p class="section-desc">
-        The scope's human-readable name is copied into every struct that references a scope,
-        rather than looked up from the single scope registry.
+        The scope's human-readable name is copied into every struct that references a scope, rather
+        than looked up from the single scope registry.
       </p>
 
       <div class="finding">
@@ -1178,11 +1418,31 @@ services = append(services, ServiceInfo{
               <th>File</th>
               <th>scopeName field</th>
             </tr>
-            <tr><td><code>ServiceRef</code></td><td><span class="file-ref">types.go:86</span></td><td><code>ScopeName string</code></td></tr>
-            <tr><td><code>serviceRecord</code></td><td><span class="file-ref">recorder.go:42</span></td><td><code>scopeName string</code></td></tr>
-            <tr><td><code>stackEntry</code></td><td><span class="file-ref">recorder.go:22</span></td><td><code>scopeName string</code></td></tr>
-            <tr><td><code>scopeMeta</code></td><td><span class="file-ref">recorder.go:61</span></td><td><code>name string</code></td></tr>
-            <tr><td><code>ScopeNode</code></td><td><span class="file-ref">service.go:49</span></td><td><code>Name string</code></td></tr>
+            <tr>
+              <td><code>ServiceRef</code></td>
+              <td><span class="file-ref">types.go:86</span></td>
+              <td><code>ScopeName string</code></td>
+            </tr>
+            <tr>
+              <td><code>serviceRecord</code></td>
+              <td><span class="file-ref">recorder.go:42</span></td>
+              <td><code>scopeName string</code></td>
+            </tr>
+            <tr>
+              <td><code>stackEntry</code></td>
+              <td><span class="file-ref">recorder.go:22</span></td>
+              <td><code>scopeName string</code></td>
+            </tr>
+            <tr>
+              <td><code>scopeMeta</code></td>
+              <td><span class="file-ref">recorder.go:61</span></td>
+              <td><code>name string</code></td>
+            </tr>
+            <tr>
+              <td><code>ScopeNode</code></td>
+              <td><span class="file-ref">service.go:49</span></td>
+              <td><code>Name string</code></td>
+            </tr>
           </table>
           <p>
             The <code>scopeName</code> is set once when a scope is first observed
@@ -1197,11 +1457,23 @@ services = append(services, ServiceInfo{
             renaming, the copies will silently diverge.
           </div>
           <div class="fix-box">
-            <div class="fix-title">How to Fix (Optional — only if scope renaming is ever added)</div>
+            <div class="fix-title">
+              How to Fix (Optional — only if scope renaming is ever added)
+            </div>
             <ol>
-              <li>Keep <code>ScopeName</code> on <code>ServiceRef</code> (public API needs it for JSON).</li>
-              <li>In internal types (<code>stackEntry</code>, <code>serviceRecord</code>), look up the name from the <code>scopes</code> map via <code>scopeID</code> when needed, rather than storing a copy.</li>
-              <li>This centralizes scope-name resolution to <code>scopeMeta</code> as the single source.</li>
+              <li>
+                Keep <code>ScopeName</code> on <code>ServiceRef</code> (public API needs it for
+                JSON).
+              </li>
+              <li>
+                In internal types (<code>stackEntry</code>, <code>serviceRecord</code>), look up the
+                name from the <code>scopes</code> map via <code>scopeID</code> when needed, rather
+                than storing a copy.
+              </li>
+              <li>
+                This centralizes scope-name resolution to <code>scopeMeta</code> as the single
+                source.
+              </li>
             </ol>
           </div>
         </div>
@@ -1243,8 +1515,8 @@ services = append(services, ServiceInfo{
             <div class="glossary-item">
               <dt>Drift</dt>
               <dd>
-                When two copies of the same data get out of sync. Usually caused by updating one copy
-                (e.g., the error pointer) but not the other (e.g., the Status field).
+                When two copies of the same data get out of sync. Usually caused by updating one
+                copy (e.g., the error pointer) but not the other (e.g., the Status field).
               </dd>
             </div>
             <div class="glossary-item">
@@ -1277,9 +1549,7 @@ services = append(services, ServiceInfo{
     <!-- ==================== FIX PRIORITY ==================== -->
     <div class="section">
       <h2>Recommended Fix Order</h2>
-      <p class="section-desc">
-        Fix in this order — each fix makes the next one safer to verify.
-      </p>
+      <p class="section-desc">Fix in this order — each fix makes the next one safer to verify.</p>
       <div class="finding">
         <div class="finding-body">
           <table class="compare-table">
@@ -1339,40 +1609,65 @@ services = append(services, ServiceInfo{
             Every <code>.go</code> file in the package root was read in full. The following patterns
             were systematically searched for:
           </p>
-          <ul style="color: var(--text-muted); font-size: 0.88rem; padding-left: 1.2rem; margin-top: 0.5rem;">
-            <li><strong>Duplicate type definitions</strong> — structs representing the same concept in multiple places</li>
-            <li><strong>Denormalized fields</strong> — stored values that duplicate computable data (counts, statuses, flags)</li>
-            <li><strong>Multiple derivation paths</strong> — the same computation in 2+ functions</li>
-            <li><strong>Validation gaps</strong> — <code>Validate()</code> not covering all invariants</li>
-            <li><strong>Enum metadata asymmetry</strong> — some enums have methods, others use parallel maps</li>
-            <li><strong>Manual field copying</strong> — struct-to-struct conversion without compile-time enforcement</li>
+          <ul
+            style="
+              color: var(--text-muted);
+              font-size: 0.88rem;
+              padding-left: 1.2rem;
+              margin-top: 0.5rem;
+            "
+          >
+            <li>
+              <strong>Duplicate type definitions</strong> — structs representing the same concept in
+              multiple places
+            </li>
+            <li>
+              <strong>Denormalized fields</strong> — stored values that duplicate computable data
+              (counts, statuses, flags)
+            </li>
+            <li>
+              <strong>Multiple derivation paths</strong> — the same computation in 2+ functions
+            </li>
+            <li>
+              <strong>Validation gaps</strong> — <code>Validate()</code> not covering all invariants
+            </li>
+            <li>
+              <strong>Enum metadata asymmetry</strong> — some enums have methods, others use
+              parallel maps
+            </li>
+            <li>
+              <strong>Manual field copying</strong> — struct-to-struct conversion without
+              compile-time enforcement
+            </li>
           </ul>
-          <p style="margin-top: 0.8rem;">
-            The critical finding (<a href="#f1">SB-01</a>) was verified with a runnable proof-of-concept
-            test that demonstrates <code>Validate()</code> passing on a self-contradictory report.
+          <p style="margin-top: 0.8rem">
+            The critical finding (<a href="#f1">SB-01</a>) was verified with a runnable
+            proof-of-concept test that demonstrates <code>Validate()</code> passing on a
+            self-contradictory report.
           </p>
           <p>
             <strong>Areas checked and found clean:</strong>
-            Event/Phase enums (single source in types.go), <code>buildReportFromCore</code> invariant
-            (all construction paths route through it), <code>finalizeDenormalized</code> (recomputes
-            all 8 aggregate fields from core data), <code>ServiceRef</code> identity (embedded, not
-            duplicated), <code>scopeKey</code> removal (all callers use <code>serviceKey</code>).
+            Event/Phase enums (single source in types.go),
+            <code>buildReportFromCore</code> invariant (all construction paths route through it),
+            <code>finalizeDenormalized</code> (recomputes all 8 aggregate fields from core data),
+            <code>ServiceRef</code> identity (embedded, not duplicated),
+            <code>scopeKey</code> removal (all callers use <code>serviceKey</code>).
           </p>
         </div>
       </div>
     </div>
 
     <footer>
-      Generated 2026-06-17 · Split-Brain Data Model Audit · samber-do-auditlog<br/>
+      Generated 2026-06-17 · Split-Brain Data Model Audit · samber-do-auditlog<br />
       15 source files audited · 6 findings · 2 verified with runnable proof-of-concept
     </footer>
 
     <script>
       function toggleFinding(header) {
         const body = header.nextElementSibling;
-        const isCollapsed = body.classList.contains('collapsed');
-        body.classList.toggle('collapsed');
-        header.classList.toggle('expanded', isCollapsed);
+        const isCollapsed = body.classList.contains("collapsed");
+        body.classList.toggle("collapsed");
+        header.classList.toggle("expanded", isCollapsed);
       }
     </script>
   </body>
