@@ -7,8 +7,8 @@ Last updated: 2026-06-17
 
 ## Priority 1 — Release & CI
 
-- [ ] **Push v0.0.3** — tag is signed locally but not pushed (`git push origin master --tags`)
-- [ ] **GitHub Release for v0.0.3** — create a release with the CHANGELOG body and example HTML artifact
+- [x] **Push v0.0.3** — tag `v0.0.3` and `master` confirmed on remote via `git ls-remote --tags origin` (2026-06-17)
+- [x] **GitHub Release for v0.0.3** — created with CHANGELOG notes + `audit-report.html` artifact (2026-06-17)
 - [ ] **CI pipeline** — GitHub Actions workflow running `go test`, `go vet`, `golangci-lint run`, `go build` on push and PR. No CI exists today — the v0.0.3 lint regressions shipped undetected because of this gap.
 - [ ] **govulncheck in CI** — scan dependencies for known CVEs on every push (gosec already runs via golangci-lint, but govulncheck is not installed or integrated)
 - [ ] **Stale-generation check in CI** — fail if `go generate ./...` produces a diff (catches `html_templ.go` drift)
