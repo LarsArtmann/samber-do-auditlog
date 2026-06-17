@@ -85,7 +85,7 @@ func TestPlugin_DependencyTracking(t *testing.T) {
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
 
-	provideDBWithSleep(injector, "db", "postgres://localhost")
+	provideDB(injector, "db", "postgres://localhost")
 	provideCacheWithSleep(injector, "cache")
 	provideUserServiceWithDeps(injector, "users", "db", "cache")
 

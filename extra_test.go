@@ -50,7 +50,7 @@ func TestPlugin_RealWorldScenario(t *testing.T) {
 
 	do.ProvideValue(injector, &Config{Port: 8080})
 
-	provideDBWithSleep(injector, "postgres", "postgres://localhost")
+	provideDB(injector, "postgres", "postgres://localhost")
 	provideCacheWithSleep(injector, "redis")
 	provideUserServiceWithDeps(injector, "users", "postgres", "redis")
 	provideHTTPServerWithUsers(injector, "http-server", "users")

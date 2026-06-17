@@ -1,6 +1,7 @@
 package auditlog_test
 
 import (
+	"strings"
 	"testing"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
@@ -84,9 +85,7 @@ func TestReport_ServicesByScope(t *testing.T) {
 	}
 
 	childServices := report.ServicesByScope(child.ID())
-	if len(childServices) != 1 {
-		t.Fatalf("expected 1 child service, got %d", len(childServices))
-	}
+	requireOneService(t, "child", childServices)
 
 	if childServices[0].ServiceName != "child-svc" {
 		t.Errorf("child service: want child-svc, got %s", childServices[0].ServiceName)
@@ -195,9 +194,7 @@ func TestReport_FailedServices(t *testing.T) {
 	report := p.Report()
 
 	failed := report.FailedServices()
-	if len(failed) != 1 {
-		t.Fatalf("expected 1 failed service, got %d", len(failed))
-	}
+	requireOneService(t, "failed", failed)
 
 	if failed[0].ServiceName != "flaky" {
 		t.Errorf("failed service: want flaky, got %s", failed[0].ServiceName)
@@ -280,9 +277,7 @@ func TestReport_Validate_ConsistentReport(t *testing.T) {
 
 	report := p.Report()
 
-	if err := report.Validate(); err != nil {
-		t.Fatalf("expected valid report, got: %v", err)
-	}
+	assertReportValid(t, report, "")
 }
 
 func TestReport_Validate_WithScopesAndHealthChecks(t *testing.T) {
@@ -300,69 +295,76 @@ func TestReport_Validate_WithScopesAndHealthChecks(t *testing.T) {
 
 	report := p.Report()
 
-	if err := report.Validate(); err != nil {
-		t.Fatalf("expected valid report with scopes+health, got: %v", err)
-	}
+	assertReportValid(t, report, "with scopes+health")
 }
 
-func TestReport_Validate_DetectsEventCountMismatch(t *testing.T) {
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+func TestReport_Validate_DetectsCountMismatch(t *testing.T) {
+	makeDBReport := func(t *testing.T) auditlog.Report {
+		t.Helper()
 
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
+		p := mustNew(auditlog.Config{Enabled: true})
+		injector := do.NewWithOpts(p.Opts())
 
-	report := p.Report()
-	report.EventCount = 999 // corrupt
+		provideDB(injector, "db", "test")
+		_ = do.MustInvokeNamed[*Database](injector, "db")
 
-	if err := report.Validate(); err == nil {
-		t.Fatal("expected error for mismatched event_count")
+		return p.Report()
 	}
-}
 
-func TestReport_Validate_DetectsServiceCountMismatch(t *testing.T) {
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	makeHealthCheckedReport := func(t *testing.T) auditlog.Report {
+		t.Helper()
 
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
+		p := mustNew(auditlog.Config{Enabled: true})
+		injector := do.NewWithOpts(p.Opts())
 
-	report := p.Report()
-	report.ServiceCount = 999 // corrupt
+		provideHealthyDB(injector, "healthy-svc", "ok")
+		_ = do.MustInvokeNamed[*HealthyDB](injector, "healthy-svc")
+		_ = p.RecordHealthCheck(injector)
 
-	if err := report.Validate(); err == nil {
-		t.Fatal("expected error for mismatched service_count")
+		return p.Report()
 	}
-}
 
-func TestReport_Validate_DetectsScopeCountMismatch(t *testing.T) {
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	report := p.Report()
-	report.ScopeCount = 999 // corrupt
-
-	if err := report.Validate(); err == nil {
-		t.Fatal("expected error for mismatched scope_count")
+	tests := []struct {
+		name        string
+		make        func(t *testing.T) auditlog.Report
+		corrupt     func(*auditlog.Report)
+		errContains string
+	}{
+		{
+			name:        "event_count",
+			make:        makeDBReport,
+			corrupt:     func(r *auditlog.Report) { r.EventCount = 999 },
+			errContains: "event_count",
+		},
+		{
+			name:        "service_count",
+			make:        makeDBReport,
+			corrupt:     func(r *auditlog.Report) { r.ServiceCount = 999 },
+			errContains: "service_count",
+		},
+		{
+			name:        "scope_count",
+			make:        makeDBReport,
+			corrupt:     func(r *auditlog.Report) { r.ScopeCount = 999 },
+			errContains: "scope_count",
+		},
+		{
+			name:        "health_checked_count",
+			make:        makeHealthCheckedReport,
+			corrupt:     func(r *auditlog.Report) { r.HealthCheckedCount = 999 },
+			errContains: "health_checked_count",
+		},
 	}
-}
 
-func TestReport_Validate_DetectsHealthCheckedCountMismatch(t *testing.T) {
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			report := tt.make(t)
+			tt.corrupt(&report)
 
-	provideHealthyDB(injector, "healthy-svc", "ok")
-	_ = do.MustInvokeNamed[*HealthyDB](injector, "healthy-svc")
-	_ = p.RecordHealthCheck(injector)
-
-	report := p.Report()
-	report.HealthCheckedCount = 999 // corrupt
-
-	if err := report.Validate(); err == nil {
-		t.Fatal("expected error for mismatched health_checked_count")
+			if err := report.Validate(); err == nil || !strings.Contains(err.Error(), tt.errContains) {
+				t.Fatalf("expected error containing %q, got %v", tt.errContains, err)
+			}
+		})
 	}
 }
 
@@ -372,7 +374,5 @@ func TestReport_Validate_EmptyReport(t *testing.T) {
 
 	report := p.Report()
 
-	if err := report.Validate(); err != nil {
-		t.Fatalf("expected valid empty report, got: %v", err)
-	}
+	assertReportValid(t, report, "empty")
 }

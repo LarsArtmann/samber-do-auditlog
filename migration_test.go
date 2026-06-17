@@ -90,9 +90,22 @@ func TestMigrateReport_FromV01(t *testing.T) {
 	}
 }
 
-func TestMigrateReport_InvalidJSON(t *testing.T) {
-	_, err := auditlog.MigrateReport([]byte("not json"))
-	assertErrorExpected(t, err, "for invalid JSON")
+func TestMigrateReport_RejectsInvalidInput(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		input  []byte
+		reason string
+	}{
+		{"invalid_json", []byte("not json"), "for invalid JSON"},
+		{"empty_input", []byte{}, "for empty input"},
+		{"nil_input", nil, "for nil input"},
+		{"missing_version", []byte(`{"container_id":"test"}`), "for input without version field"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := auditlog.MigrateReport(tc.input)
+			assertErrorExpected(t, err, tc.reason)
+		})
+	}
 }
 
 func TestMigrateReport_EmptyReport(t *testing.T) {
@@ -275,21 +288,4 @@ func TestMigrateReport_PreservesExportedAt(t *testing.T) {
 	if report.ExportedAt.Format("2006-01-02") != "2026-01-15" {
 		t.Errorf("ExportedAt should be preserved from original, got %v", report.ExportedAt)
 	}
-}
-
-func TestMigrateReport_EmptyInput(t *testing.T) {
-	_, err := auditlog.MigrateReport([]byte{})
-	if err == nil {
-		t.Error("expected error for empty input")
-	}
-
-	_, err = auditlog.MigrateReport(nil)
-	if err == nil {
-		t.Error("expected error for nil input")
-	}
-}
-
-func TestMigrateReport_MissingVersion(t *testing.T) {
-	_, err := auditlog.MigrateReport([]byte(`{"container_id":"test"}`))
-	assertErrorExpected(t, err, "for input without version field")
 }

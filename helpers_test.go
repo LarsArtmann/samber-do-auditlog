@@ -85,13 +85,6 @@ func provideDB(injector do.Injector, name, url string) {
 	})
 }
 
-// provideDBWithSleep is a named *Database provider kept for test compatibility.
-func provideDBWithSleep(injector do.Injector, name, url string) {
-	do.ProvideNamed(injector, name, func(_ do.Injector) (*Database, error) {
-		return &Database{URL: url}, nil
-	})
-}
-
 // provideCacheWithSleep is a named *Cache provider kept for test compatibility.
 func provideCacheWithSleep(injector do.Injector, name string) {
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*Cache, error) {
@@ -318,9 +311,7 @@ func assertServiceIntField(t *testing.T, svc *auditlog.ServiceInfo, fieldName st
 func assertFilteredServiceCount(t *testing.T, filtered auditlog.Report, wantName string) {
 	t.Helper()
 
-	if len(filtered.Services) != 1 {
-		t.Fatalf("expected 1 service, got %d", len(filtered.Services))
-	}
+	requireOneService(t, "", filtered.Services)
 
 	assertStringField(t, "service name", filtered.Services[0].ServiceName, wantName)
 }
@@ -330,8 +321,28 @@ func assertFilteredServiceCount(t *testing.T, filtered auditlog.Report, wantName
 func assertReportServiceCount(t *testing.T, report auditlog.Report) {
 	t.Helper()
 
-	if len(report.Services) != 1 {
-		t.Fatalf("expected 1 service, got %d", len(report.Services))
+	requireOneService(t, "", report.Services)
+}
+
+// assertReportValid fails the test (with Fatalf) if the report fails validation.
+// wantValidMsg describes the scenario (e.g. "empty", "with scopes+health") and is
+// interpolated into the error message so test output identifies which scenario broke.
+func assertReportValid(t *testing.T, report auditlog.Report, wantValidMsg string) {
+	t.Helper()
+
+	if err := report.Validate(); err != nil {
+		t.Fatalf("expected valid %s report, got: %v", wantValidMsg, err)
+	}
+}
+
+// requireOneService fails the test (with Fatalf) if the services slice does not have
+// exactly one element. label describes what the slice represents (e.g. "child",
+// "failed", "unhealthy", "eager") and is interpolated into the error message.
+func requireOneService(t *testing.T, label string, services []auditlog.ServiceInfo) {
+	t.Helper()
+
+	if len(services) != 1 {
+		t.Fatalf("expected 1 %s service, got %d", label, len(services))
 	}
 }
 
@@ -340,9 +351,7 @@ func assertReportServiceCount(t *testing.T, report auditlog.Report) {
 func assertUnhealthyServiceCount(t *testing.T, unhealthy []auditlog.ServiceInfo, wantName string) {
 	t.Helper()
 
-	if len(unhealthy) != 1 {
-		t.Fatalf("expected 1 unhealthy service, got %d", len(unhealthy))
-	}
+	requireOneService(t, "unhealthy", unhealthy)
 
 	assertStringField(t, "unhealthy service", unhealthy[0].ServiceName, wantName)
 }
