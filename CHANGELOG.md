@@ -12,7 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._
+### Fixed
+
+- **Diagram output escaping**: Service names containing brackets (`]` `[` `{` `}`),
+  quotes (`"`), or newlines previously produced malformed Mermaid and PlantUML
+  output — the `id[label]` syntax would break, rendering the diagram invalid.
+  Unified ID sanitization (`sanitizeDiagramID`) now strips non-identifier runes
+  after replacing separators. Mermaid labels are escaped via `mermaidLabel`
+  (brackets/braces → parentheses, quotes → apostrophes). PlantUML labels are
+  escaped via `plantumlLabel` (quotes → apostrophes). The two divergent ID
+  replacers (Mermaid had 4 chars, PlantUML had 7) are replaced by a single
+  shared function.
 
 ## [0.0.4] - 2026-06-17
 
