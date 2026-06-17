@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-17
 **Question:** Should `samber-do-auditlog` adopt `go-output/...` for its export pipeline?
-**Reviewer verdict:** **Do NOT adopt wholesale. Adopt the escaping *concept* locally (no dependency).**
+**Reviewer verdict:** ~~Do NOT adopt wholesale.~~ **Viable for adoption (v0.12.0+).** Adopt when a 3rd diagram format is needed. See §8 Addendum.
 
 ---
 
@@ -100,4 +100,54 @@ root_evil]"svc[evil]"svc]
 
 ## 7. Decision log
 
-- **2026-06-17:** Reviewed against `go-output` v0.11.0. Declined wholesale adoption; approved local escaping hardening. See `diagram.go` escaping fix + tests.
+- **2026-06-17 (initial):** Reviewed against `go-output` v0.11.0. Declined wholesale adoption; approved local escaping hardening. See `diagram.go` escaping fix + tests.
+- **2026-06-17 (re-evaluation):** go-output v0.12.0 resolved all 4 critical blockers. Verdict updated to **viable for adoption**. See Addendum below.
+
+---
+
+## 8. Addendum: Re-evaluation after go-output v0.12.0
+
+**Date:** 2026-06-17
+**Trigger:** go-output maintainer responded to all 8 feedback items (see `go-output/docs/feedback/2026-06-17_..._APPENDIX.md`). go-output tagged v0.12.0 at commit `021c333`.
+
+### Verification: all claims confirmed against source
+
+Every fix was verified by reading the committed source code, not just the appendix claims:
+
+| # | Issue | Claim | Verified |
+|---|-------|-------|----------|
+| C1 | GraphStyle ignored | Mermaid emits per-node `style <id> fill:...,stroke:...`; PlantUML emits inline `#[fill;line:stroke]` | ✅ `graph/mermaid.go:120-151`, `plantuml/plantuml.go:57,91-107` |
+| C2 | No edge dedup | `DedupEdges()` method on `GraphRendererState`, opt-in | ✅ `graph.go:157-181` |
+| C3 | Markdown fence locked | `SetCodeFence(bool)` on `MermaidRenderer`, default `true` | ✅ `graph/mermaid.go:42-60` |
+| C4 | Root pulls YAML/TOML | `serialization` removed from root `go.mod` `require` block | ✅ `go.mod` — only in `replace` (local dev) |
+| I5 | SlugifyID gaps | Now replaces `. * [ ] { } ( )` in addition to `␣ - /` | ✅ `escape/escape.go:70-81` |
+| I6 | Hardcoded DOT attrs | `SetRankDir(RankDir)`, `SetSplines(SplineStyle)`, `SetNodeSep`, `SetRankSep` + typed enums | ✅ `graph/dot.go:44-98`, `graph/dot_enum.go` |
+| I7 | No io.Writer for diagrams | Already supported via `StreamingRendererFromRenderer()` adapter | ✅ `streaming.go:24` |
+| N8 | No stability promise | ADR 006 documents stable vs experimental tiers | ✅ `docs/adr/006-api-stability.md` |
+
+### Dependency tree re-measured
+
+```
+BEFORE (v0.11.0): 11 unwanted external modules (go-faster/yaml, go-toml/v2, segmentio/asm, ...)
+AFTER  (v0.12.0):  2 modules (golang.org/x/sys, golang.org/x/term)
+```
+
+Measured via `go list -m all` on a scratch module importing only `graph` + `plantuml`. The remaining 2 are standard Go supplementary libraries present in nearly every Go project.
+
+### Updated verdict
+
+**The adoption is now technically viable.** All 4 critical blockers are resolved, the dependency surface is clean, and the API has the right escape hatches (`SetCodeFence`, `GraphStyle`, `DedupEdges`, typed enums).
+
+**Recommendation: adopt when the project needs a 3rd diagram format (e.g. DOT).**
+
+The local `diagram.go` (~200 LOC) is working, tested, and the escaping bug is already fixed locally. Adopting go-output now would replace working code with a dependency for no net new capability. The trigger to adopt is **format breadth**: when the project adds DOT, CSV, or D2 export, go-output becomes the clear choice over hand-rolling each renderer.
+
+When that trigger fires, the integration path is straightforward:
+
+```go
+// ~15 lines replaces the entire diagramFormatter + writeDiagram machinery
+r := graph.NewMermaidRenderer()
+r.SetCodeFence(false)
+// Set GraphStyle.FillColor/StrokeColor for warm-amber theme per node
+// AddNode / AddEdge / DedupEdges / Render
+```
