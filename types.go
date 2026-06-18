@@ -25,6 +25,9 @@ type eventTypeMeta struct {
 }
 
 // eventTypeMetaTable maps each known EventType to its display metadata.
+// Read-only lookup table — treated as a constant, never mutated at runtime.
+//
+//nolint:gochecknoglobals // read-only enum metadata table, not mutable shared state
 var eventTypeMetaTable = map[EventType]eventTypeMeta{
 	EventTypeRegistration: {label: "Registration", color: "var(--accent)"},
 	EventTypeInvocation:   {label: "Invocation", color: "var(--success)"},
@@ -72,6 +75,9 @@ type providerMeta struct {
 // providerTypeMeta maps each known ProviderType to its display metadata.
 // The metadata builder in metadata.go reads from this via BuildTypeMetadata;
 // Label and Icon methods on ProviderType look up here as well.
+// Read-only lookup table — treated as a constant, never mutated at runtime.
+//
+//nolint:gochecknoglobals // read-only enum metadata table, not mutable shared state
 var providerTypeMeta = map[ProviderType]providerMeta{
 	ProviderTypeLazy:      {label: "Lazy", icon: "\U0001F634"},
 	ProviderTypeEager:     {label: "Eager", icon: "\U0001F501"},
@@ -113,6 +119,9 @@ func (s ServiceStatus) IsError() bool {
 }
 
 // serviceStatusIcons maps ServiceStatus to its display emoji.
+// Read-only lookup table — treated as a constant, never mutated at runtime.
+//
+//nolint:gochecknoglobals // read-only enum metadata table, not mutable shared state
 var serviceStatusIcons = map[ServiceStatus]string{
 	ServiceStatusRegistered:      "\u26AA",
 	ServiceStatusActive:          "\U0001F7E2",

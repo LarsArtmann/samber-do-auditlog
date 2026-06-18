@@ -222,13 +222,13 @@ func buildScopeChildren[T any](
 			continue
 		}
 
-		id := metaID(meta)
+		scopeID := metaID(meta)
 
 		children = append(children, ScopeNode{
-			ID:       id,
+			ID:       scopeID,
 			Name:     metaName(meta),
-			Services: scopeServices[id],
-			Children: buildScopeChildren(id, sorted, metaID, metaName, metaParent, scopeServices),
+			Services: scopeServices[scopeID],
+			Children: buildScopeChildren(scopeID, sorted, metaID, metaName, metaParent, scopeServices),
 		})
 	}
 
@@ -253,13 +253,13 @@ func buildScopeTreeFromMeta[T any](
 		root = sorted[0]
 	}
 
-	id := metaID(root)
+	rootID := metaID(root)
 
 	return ScopeNode{
-		ID:       id,
+		ID:       rootID,
 		Name:     metaName(root),
-		Services: scopeServices[id],
-		Children: sortScopeNodes(buildScopeChildren(id, sorted, metaID, metaName, metaParent, scopeServices)),
+		Services: scopeServices[rootID],
+		Children: sortScopeNodes(buildScopeChildren(rootID, sorted, metaID, metaName, metaParent, scopeServices)),
 	}
 }
 
