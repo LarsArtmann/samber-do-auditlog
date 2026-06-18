@@ -21,8 +21,14 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | `golangci-lint config verify` | Validate the lint config (CI runs this before `lint run`) |
 | `golangci-lint run` | Full lint (heavy config, see below) |
 | `go mod tidy` | Sync `go.sum` (CI `mod-tidy` job fails on drift) |
-| `nix develop` | Enter devShell (Go 1.26.4, templ, golangci-lint, govulncheck) |
+| `nix develop` | Enter devShell (Go 1.26.4, templ, golangci-lint, govulncheck, actionlint) |
 | `go run ./example` | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
+| `go run ./cmd/auditlog help` | CLI: inspect/convert/diff/validate reports |
+| `go install ./cmd/auditlog` | Install the `auditlog` CLI to `$GOBIN` |
+| `nix run .#auditlog -- help` | Run the CLI via Nix (no install) |
+| `nix run .#coverage` | Run the CI-equivalent coverage gate via Nix |
+| `sh scripts/coverage-gate.sh` | Coverage gate (excludes example/ + cmd/; ≥95%) |
+| `git config core.hooksPath scripts/hooks` | Install the pre-commit hook |
 
 A `flake.nix` devShell is available for Nix users. No Makefile, no justfile.
 
@@ -165,6 +171,10 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **`diff.go` uses `Status.IsError()`** as the single error-detection path — the old `hasError()` helper that checked raw pointers was deleted to prevent drift.
 - **`Plugin.WriteReportJSON()` and `ExportFilteredToFile()`** delegate to `Report.WriteJSON()` — single JSON encoding path.
 - **CSP hardened**: `base-uri 'none'; frame-ancestors 'none'` added to prevent base injection and clickjacking.
+- **JSON Schema** (`schema/report.schema.json`) is GENERATED from Go types by `cmd/genschema` (invoked via `//go:generate go run ./cmd/genschema` in `schema.go`). It is `go:embed`ded and exposed via `JSONSchema()`. Never hand-edit it — change the Go struct tags and regenerate. The `invopop/jsonschema` dependency is depguard-restricted to `cmd/` only; the library never imports it.
+- **`cmd/` packages are tooling, not library code** — `cmd/genschema` (schema generator) and `cmd/auditlog` (CLI binary). The `.golangci.yml` `cmd/` path excludes pragmatic tooling linters (forbidigo, exhaustruct, gosec, err113, errcheck, wrapcheck, nlreturn, goconst). `cmd/` and `example/` are EXCLUDED from the 95% coverage gate (their logic is exercised by integration/golden tests that exec a built binary, not in-process).
+- **DOT diagram format** uses `dotFormatter` in `diagram.go` alongside `mermaidFormatter`/`plantumlFormatter`. DOT labels escape `"`→`\"` and newlines→`\n` via `dotLabel`. Adding a 4th format = implement the `diagramFormatter` interface + add a `Write*` method.
+- **Typed identifiers / ServiceInfo split are DEFERRED to v0.1.0** — `ContainerID`/`ScopeID`/`ServiceName` named string types and splitting `ServiceInfo` into identity/lifecycle/health/graph structs were evaluated: blast radius measured at 65+ compile errors across production + tests + generated templ, with **zero existing bugs** from string/monolith usage. These are the single v0.1.0 breaking-change batch (do together). The full analysis lives in `docs/status/` reports.
 
 ---
 
