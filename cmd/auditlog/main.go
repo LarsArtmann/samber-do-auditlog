@@ -45,6 +45,8 @@ func main() {
 		err = runDiff(args)
 	case "validate":
 		err = runValidate(args)
+	case "stats":
+		err = runStats(args)
 	case "schema":
 		err = runSchema(args)
 	case "version", "-v", "--version":
