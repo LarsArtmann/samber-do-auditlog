@@ -1468,3 +1468,44 @@ func TestReplayEvents_EmptyContainerID(t *testing.T) {
 		t.Errorf("expected empty container ID, got %q", report.ContainerID)
 	}
 }
+
+// TestReplayEvents_InvocationOrder verifies that the replay engine assigns
+// correct cross-service invocation order (regression test for a bug where
+// invocationOrder was always 0 for every service).
+func TestReplayEvents_InvocationOrder(t *testing.T) {
+	t.Parallel()
+
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	// Two services invoked in sequence: config first, then db.
+	// invocationOrder must reflect the global invocation sequence, not per-service count.
+	events := []auditlog.Event{
+		mkEvent(1, base, auditlog.EventTypeRegistration, auditlog.PhaseAfter,
+			"config", "test", auditlog.ProviderTypeLazy),
+		mkEvent(2, base.Add(time.Millisecond), auditlog.EventTypeRegistration, auditlog.PhaseAfter,
+			"db", "test", auditlog.ProviderTypeLazy),
+		mkEvent(3, base.Add(2*time.Millisecond), auditlog.EventTypeInvocation, auditlog.PhaseBefore,
+			"config", "test", auditlog.ProviderTypeLazy),
+		mkEvent(4, base.Add(3*time.Millisecond), auditlog.EventTypeInvocation, auditlog.PhaseAfter,
+			"config", "test", auditlog.ProviderTypeLazy),
+		mkEvent(5, base.Add(4*time.Millisecond), auditlog.EventTypeInvocation, auditlog.PhaseBefore,
+			"db", "test", auditlog.ProviderTypeLazy),
+		mkEvent(6, base.Add(5*time.Millisecond), auditlog.EventTypeInvocation, auditlog.PhaseAfter,
+			"db", "test", auditlog.ProviderTypeLazy),
+	}
+
+	report, err := auditlog.ReplayEvents(events)
+	if err != nil {
+		t.Fatalf("ReplayEvents: %v", err)
+	}
+
+	configSvc := findServiceByName(t, report, "config")
+	if configSvc.InvocationOrder != 0 {
+		t.Errorf("config invocationOrder: want 0, got %d", configSvc.InvocationOrder)
+	}
+
+	dbSvc := findServiceByName(t, report, "db")
+	if dbSvc.InvocationOrder != 1 {
+		t.Errorf("db invocationOrder: want 1, got %d", dbSvc.InvocationOrder)
+	}
+}
