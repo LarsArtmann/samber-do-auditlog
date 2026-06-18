@@ -5,12 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-> **Release vs. schema versions.** Release tags follow `v0.0.x`. The report
+> **Release vs. schema versions.** Release tags follow `v0.x.y`. The report
 > `schema_version` (currently `0.2.0`, see `types.go`) is a **separate**, independent
 > version for the JSON report format and is upgraded via `MigrateReport`. The two
 > version numbers are unrelated.
 
 ## [Unreleased]
+
+## [0.1.0] - 2026-06-19
+
+A milestone release: first CLI release, replay engine, NDJSON import/export,
+JSON Schema generation, CSV/TSV/DOT export, comprehensive self-review
+remediation, and breaking API cleanup.
 
 ### Added
 
@@ -26,8 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Loader API** (`LoadReport` + variants): auto-detects JSON vs NDJSON by
   inspecting the first non-blank line. JSON routes through `MigrateReport`;
   NDJSON routes through `ReadEvents` + `ReplayEvents`. Variants:
-  `LoadReportFromReader`, `LoadReportFromBytes`, `LoadReportFromJSON`,
-  `LoadReportFromNDJSON`.
+  `LoadReportFromReader`, `LoadReportFromBytes`.
 - **`Format` enum and `WithFormat` option**: explicit format selection for
   the loader (`FormatAuto`, `FormatJSON`, `FormatNDJSON`).
 - **`Report.Reconstructed` field**: boolean flag distinguishing replayed
@@ -80,8 +85,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   production code with zero remaining production clones at `-t 15`.
 - **HTML scope tree**: collapsible/expandable scope nodes and waveform visual
   improvements.
+- **`MergeReports`**: combines multiple reports from different containers into
+  one, concatenating events with sequence offsets and merging services/scopes.
+- **`stats` CLI subcommand**: prints aggregate statistics — invocation counts,
+  error rates, build time averages, provider type and status breakdowns.
+- **`Format.String()`**: returns "auto"/"json"/"ndjson" for human-readable
+  error messages.
+- **Enum validation on ingest**: `ReadEvents` now rejects events with unknown
+  `event_type` or `phase` values. All four enums (`EventType`, `Phase`,
+  `ProviderType`, `ServiceStatus`) have `IsKnown()` methods.
+- **Schema drift detection test**: `TestSchemaNoDrift` compares the committed
+  schema file against the embedded `JSONSchema()` to catch type/schema drift.
+- **`Report.Validate()` version check**: rejects reports with empty Version.
+- **CLI `version` command**: prints CLI version (ldflags-injectable) and schema
+  version. **CLI `--help` to stdout**: Unix convention for explicit help.
+- **CLI `--` end-of-options marker**: `reorderFlags` now handles `--`.
+- **`PopStackFrame`**: shared LIFO stack-pop logic between hooks.go and replay.go.
+
+### Breaking
+
+- **Removed `LoadReportFromJSON`**: one-line alias for `MigrateReport`. Use
+  `MigrateReport` directly.
+- **Removed `LoadReportFromNDJSON`**: duplicate of `LoadReportFromReader(r,
+  FormatNDJSON)`. Use `LoadReportFromReader` with `FormatNDJSON`.
+
+### Changed
+
+- **Unified scope metadata**: `scopeMeta` and `replayScopeMeta` merged into a
+  single type, eliminating 6 duplicated accessor functions.
+- **Unified service assembly**: `buildServicesLocked` and `buildReplayServices`
+  collapsed into `buildServicesFromMap` — the most dangerous split brain.
+- **Unified ServiceRef sorting**: single `CompareServiceRefs` (ServiceName
+  primary, ScopeID secondary) replaces `compareByName` + `sortServiceRefs`.
+- **`trimWhitespace` → `bytes.TrimSpace`**: stdlib handles Unicode whitespace.
+- **Removed pointless wrappers**: `serviceRefLabel`, `buildDepsLocked`,
+  `computeServiceStatus` inlined.
+- **`CLIVersion`**: changed from const to ldflags-overridable var.
 
 ### Fixed
+
+- **`invocationOrder` always 0 in replay** (critical): the replay engine
+  computed `invocationOrder = invocationCount - 1`, always 0 since the branch
+  fires on first invocation. Every replayed report silently lost cross-service
+  build ordering. Fixed with a global `invocationSeq` counter.
+- **CLI error handling**: `loadFile` no longer calls `os.Exit`; `flag.ExitOnError`
+  → `flag.ContinueOnError`; `validate` error includes filename.
+- **CLI stdin support**: path `"-"` reads from stdin via `LoadReportFromReader`.
+- **Doc drift**: README "5 export formats" → 8; "~1μs" → "~1.7μs"; missing API
+  methods; `doc.go` graph type corrected.
+- **NDJSON enum validation**: rejects unknown `event_type`/`phase` on ingest.
+- **`%w: %w` double-error-wrap** in replay.go:98 → `%w: %v`.
+
+### Changed (prior to self-review)
 
 - **Split-brain audit fixes** (5 findings resolved):
   - **Status consistency drift** (SB-01): `Report.Validate()` now checks that
