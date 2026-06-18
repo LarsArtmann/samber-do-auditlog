@@ -29,7 +29,8 @@ func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err
 
 	rec, ok := r.services[key]
 	if !ok {
-		rec = upsertServiceRecord(r.services, key, scopeID, scopeName, serviceName, "", now)
+		rec = newServiceRecordCore(scopeID, scopeName, serviceName, "", now)
+		r.services[key] = rec
 	} else {
 		svcType = rec.serviceType
 	}

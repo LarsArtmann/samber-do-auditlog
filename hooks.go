@@ -35,9 +35,8 @@ func newEventFromRef(
 }
 
 // getOrCreateServiceRecord returns the existing serviceRecord for evt, or
-// creates a new one when absent using metadata from evt. Used by both the
-// live Recorder path (under r.mu) and the replay path (no lock), so it
-// takes the map explicitly.
+// creates a new one when absent using metadata from evt. Used by the replay
+// path where an Event is already available.
 func getOrCreateServiceRecord(
 	services map[svcKey]*serviceRecord,
 	evt Event,
@@ -52,23 +51,6 @@ func getOrCreateServiceRecord(
 	services[key] = rec
 
 	return rec
-}
-
-// upsertServiceRecord finds the serviceRecord for key in services, creating
-// it if absent. Wraps getOrCreateServiceRecord for callers that already
-// have the field values unpacked.
-func upsertServiceRecord(
-	services map[svcKey]*serviceRecord,
-	key svcKey,
-	scopeID, scopeName, serviceName string,
-	svcType ProviderType,
-	now time.Time,
-) *serviceRecord {
-	return getOrCreateServiceRecord(services, Event{
-		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
-		ServiceType: svcType,
-		Timestamp:   now,
-	})
 }
 
 // recordDependencyFromStack inspects the current invocation stack and, if
@@ -181,7 +163,8 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 
 	if !ok {
 		svcType = inferServiceType(scope, serviceName)
-		rec = upsertServiceRecord(r.services, key, scopeID, scopeName, serviceName, svcType, now)
+		rec = newServiceRecordCore(scopeID, scopeName, serviceName, svcType, now)
+		r.services[key] = rec
 	} else {
 		svcType = rec.serviceType
 	}
@@ -288,7 +271,8 @@ func (r *Recorder) updateInvocationAggregate(
 
 	rec, ok := r.services[key]
 	if !ok {
-		rec = upsertServiceRecord(r.services, key, scopeID, scopeName, serviceName, svcType, now)
+		rec = newServiceRecordCore(scopeID, scopeName, serviceName, svcType, now)
+		r.services[key] = rec
 	}
 
 	rec.invocationCount++
