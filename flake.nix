@@ -7,7 +7,7 @@
   };
 
   outputs =
-    { nixpkgs, flake-utils, ... }:
+    { nixpkgs, flake-utils, self, ... }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
@@ -21,6 +21,9 @@
 
             # Linting and analysis.
             golangci-lint
+
+            # GitHub Actions workflow validation.
+            actionlint
 
             # Vulnerability scanning.
             govulncheck
@@ -57,6 +60,28 @@
           This is a library; use devShells.default for development.
           EOF
         '';
+
+        # Runnable apps. Invoke with: nix run .#<name>
+        # They wrap go so no vendorHash is required; run from the repo root.
+        apps.coverage = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "coverage-gate" ''
+            export PATH="${pkgs.lib.makeBinPath [ pkgs.go_1_26 ]}"
+            export CGO_ENABLED=0
+            exec sh ./scripts/coverage-gate.sh "$@"
+          '');
+        };
+
+        apps.auditlog = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "auditlog" ''
+            export PATH="${pkgs.lib.makeBinPath [ pkgs.go_1_26 ]}"
+            export CGO_ENABLED=0
+            exec go run ./cmd/auditlog "$@"
+          '');
+        };
+
+        apps.default = self.apps.${system}.auditlog;
 
         formatter = pkgs.nixpkgs-fmt;
       }

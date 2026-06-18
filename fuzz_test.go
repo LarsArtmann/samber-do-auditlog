@@ -200,6 +200,16 @@ func FuzzDiagramSpecialChars(f *testing.F) {
 		pOut := pBuf.String()
 		assertStringContains(t, pOut, "@startuml")
 		assertStringContains(t, pOut, "@enduml")
+
+		var dBuf bytes.Buffer
+
+		dErr := report.WriteDOT(&dBuf)
+		if dErr != nil {
+			t.Fatalf("WriteDOT error: %v", dErr)
+		}
+
+		dOut := dBuf.String()
+		assertStringContains(t, dOut, "digraph do_auditlog")
 	})
 }
 

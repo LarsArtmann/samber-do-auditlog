@@ -1,0 +1,45 @@
+#!/usr/bin/env sh
+# Pre-commit hook for samber-do-auditlog.
+#
+# Install once (from the repo root):
+#   git config core.hooksPath scripts/hooks
+#
+# Then every commit runs: go generate drift check, vet, lint, and tests.
+# Bypass with:  git commit --no-verify
+
+set -e
+
+# Files produced by `go generate` (templ + JSON schema generator).
+generated_files="html_templ.go schema/report.schema.json"
+
+snapshot() {
+	# sha256sum if available, else shasum, else cksum.
+	if command -v sha256sum >/dev/null 2>&1; then
+		sha256sum $generated_files 2>/dev/null
+	elif command -v shasum >/dev/null 2>&1; then
+		shasum -a 256 $generated_files 2>/dev/null
+	else
+		cksum $generated_files 2>/dev/null
+	fi
+}
+
+echo "▶ go generate (drift check)"
+before=$(snapshot)
+go generate ./...
+after=$(snapshot)
+if [ "$before" != "$after" ]; then
+  echo "❌ Generated code is stale or changed by 'go generate'." >&2
+  echo "   Run 'go generate ./...' and stage: $generated_files" >&2
+  exit 1
+fi
+
+echo "▶ go vet"
+go vet ./...
+
+echo "▶ golangci-lint"
+golangci-lint run --timeout=120s ./...
+
+echo "▶ go test -race"
+go test -race -count=1 ./...
+
+echo "✓ pre-commit checks passed"

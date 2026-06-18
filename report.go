@@ -127,6 +127,43 @@ func buildReportFromCore(
 	return report
 }
 
+// NewReport constructs a validated Report from its core data: the immutable
+// identity/metadata fields and the three data slices (events, services,
+// scope tree). It is the public, validated counterpart to the internal
+// buildReportFromCore path used by BuildReport, Filtered, MigrateReport and
+// ReplayEvents.
+//
+// Per-service Status is re-derived from the underlying error/timestamp fields
+// (via ServiceInfo.DeriveStatus), so callers never need to compute Status by
+// hand and cannot construct a report whose Status would drift. All denormalized
+// aggregate fields (counts, durations, health flags) are derived from the data.
+//
+// Returns an error if the inputs are structurally inconsistent in a way that
+// cannot be repaired by re-derivation.
+func NewReport(
+	version, containerID string,
+	exportedAt time.Time,
+	events []Event,
+	services []ServiceInfo,
+	scopeTree ScopeNode,
+) (Report, error) {
+	// Re-derive per-service Status so the report is always self-consistent.
+	for idx := range services {
+		services[idx].Status = services[idx].DeriveStatus()
+	}
+
+	report := buildReportFromCore(
+		version, containerID, exportedAt, 0, events, services, scopeTree,
+	)
+
+	err := report.Validate()
+	if err != nil {
+		return Report{}, fmt.Errorf("new report: %w", err)
+	}
+
+	return report, nil
+}
+
 // countScopeNodes counts all real scope nodes in the tree (root + recursive children).
 // A zero-value root (empty ID+Name, no children) counts as 0 — it represents
 // an empty report where buildScopeTreeLocked returns a default ScopeNode.

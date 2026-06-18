@@ -37,6 +37,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `encoding/csv`. Dependencies/dependents are semicolon-separated refs. Nil
   pointer fields render as empty strings. Enables data-analysis workflows
   (Excel, pandas, jq on TSV).
+- **Plugin CSV/TSV methods**: `Plugin.WriteReportCSV`, `Plugin.WriteReportTSV`,
+  `Plugin.ExportToCSV`, `Plugin.ExportToTSV` wire through to the Report methods.
+- **DOT diagram export** (`Report.WriteDOT`): Graphviz digraph of the dependency
+  graph (native formatter, zero dependencies). Joins Mermaid and PlantUML as the
+  third diagram format.
+- **JSON Schema** (`JSONSchema()`): the canonical Draft 2020-12 schema for the
+  report format, generated from Go types by `cmd/genschema` and embedded in the
+  library via `go:embed`. Consumers can validate exported JSON or generate
+  clients from `schema/report.schema.json`.
+- **CLI tool** (`cmd/auditlog`): `auditlog info|convert|diff|validate|schema`
+  subcommands for inspecting, converting (json/ndjson/csv/tsv/html/mermaid/
+  plantuml/dot), diffing and validating reports offline. Install via
+  `go install ./cmd/auditlog` or `nix run .#auditlog`.
+- **`NewReport` constructor**: builds a validated `Report` from core data,
+  re-derives per-service `Status` and all aggregate fields, and enforces
+  `Validate()`. The public counterpart to the internal `buildReportFromCore`.
+- **`Report.WriteHTML`**: renders the self-contained HTML visualization from a
+  loaded `Report` (not just a live `Plugin`), enabling offline rendering and the
+  CLI `convert -f html` path.
+- **Property-based tests**: algebraic `Diff` properties (identity, symmetry,
+  anti-symmetry) and `MigrateReport` round-trip/repair properties (200
+  iterations each, deterministic seeds).
+- **HTML golden-file test**: deterministic report → byte-stable HTML comparison
+  (`testdata/golden/report.html`, `UPDATE_GOLDEN=1` to regenerate).
+- **Filter fuzz target** (`FuzzFilterInputs`): arbitrary `ReportOption`
+  combinations never panic and always yield valid subset reports.
+- **Reference examples**: Prometheus bridge, WebSocket live stream, and
+  samber/ro reactive adapter docs under `docs/examples/`.
+- **Developer tooling**: `actionlint` in CI + devShell; pre-commit hook
+  (`scripts/hooks/pre-commit`); coverage-gate script (`scripts/coverage-gate.sh`);
+  Nix flake apps `.#auditlog` and `.#coverage`.
 
 ### Changed
 

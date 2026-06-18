@@ -26,8 +26,9 @@ jobs:
       - name: go test -race with coverage
         run: |
           go test -race -count=1 -coverprofile=cover.out -covermode=atomic ./...
-          # Exclude example package (demo code with no tests) from coverage gate.
-          grep -v '/example/' cover.out > cover-filtered.out
+          # Exclude demo (example/) and tooling (cmd/) packages from the coverage gate.
+          # Their logic is exercised by integration/golden tests that run a built binary.
+          grep -v -e '/example/' -e '/cmd/' cover.out > cover-filtered.out
           coverage=$(go tool cover -func=cover-filtered.out | grep '^total:' | awk '{print $3}' | tr -d '%')
           echo "Total coverage: ${coverage}%"
           if awk "BEGIN {exit !($coverage < 95.0)}"; then
@@ -106,3 +107,17 @@ jobs:
             git diff --stat
             exit 1
           fi
+
+  actionlint:
+    name: Workflow lint (actionlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.4"
+          cache: true
+      - name: Install actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+      - name: Run actionlint
+        run: actionlint -color

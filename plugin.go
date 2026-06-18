@@ -164,6 +164,26 @@ func (p *Plugin) ExportFilteredToFile(path string, opts ...ReportOption) error {
 	return writeToFile(path, filtered.WriteJSON)
 }
 
+// WriteReportCSV writes the Report services as comma-separated values to writer.
+func (p *Plugin) WriteReportCSV(writer io.Writer) error {
+	return p.Report().WriteCSV(writer)
+}
+
+// WriteReportTSV writes the Report services as tab-separated values to writer.
+func (p *Plugin) WriteReportTSV(writer io.Writer) error {
+	return p.Report().WriteTSV(writer)
+}
+
+// ExportToCSV writes the Report services as comma-separated values to path.
+func (p *Plugin) ExportToCSV(path string) error {
+	return writeToFile(path, p.WriteReportCSV)
+}
+
+// ExportToTSV writes the Report services as tab-separated values to path.
+func (p *Plugin) ExportToTSV(path string) error {
+	return writeToFile(path, p.WriteReportTSV)
+}
+
 // Events returns a defensive copy of all captured events.
 func (p *Plugin) Events() []Event {
 	return p.recorder.Events()

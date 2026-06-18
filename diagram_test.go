@@ -67,6 +67,87 @@ func TestReport_WritePlantUML(t *testing.T) {
 	assertStringContains(t, output, "user-svc")
 }
 
+func TestReport_WriteDOT(t *testing.T) {
+	t.Parallel()
+
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	provideUserServiceWithDB(injector, "user-svc", "db")
+
+	_ = do.MustInvokeNamed[*UserService](injector, "user-svc")
+
+	report := p.Report()
+
+	var buf bytes.Buffer
+
+	err := report.WriteDOT(&buf)
+	if err != nil {
+		t.Fatalf("WriteDOT: %v", err)
+	}
+
+	output := buf.String()
+
+	assertStringContains(t, output, "digraph do_auditlog")
+	assertStringContains(t, output, "->")
+	assertStringContains(t, output, "label=")
+	assertStringContains(t, output, "db")
+	assertStringContains(t, output, "user-svc")
+
+	// A closing brace terminates the digraph.
+	if !strings.Contains(output, "}") {
+		t.Error("DOT output missing closing brace")
+	}
+}
+
+func TestReport_WriteDOT_LabelEscaping(t *testing.T) {
+	t.Parallel()
+
+	report := auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: "test",
+		ExportedAt:  time.Now(),
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceRef: auditlog.ServiceRef{
+					ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: `svc"quote`,
+				},
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+
+	err := report.WriteDOT(&buf)
+	if err != nil {
+		t.Fatalf("WriteDOT: %v", err)
+	}
+
+	output := buf.String()
+	// The literal double-quote in the service name must be escaped as \".
+	if !strings.Contains(output, `\"`) {
+		t.Errorf("expected escaped quote in DOT label, got:\n%s", output)
+	}
+}
+
+func TestWriteDOT_WriterError(t *testing.T) {
+	t.Parallel()
+
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	err := p.Report().WriteDOT(failingWriter{})
+	if err == nil {
+		t.Fatal("expected error from failing writer")
+	}
+}
+
 func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
 	t.Parallel()
 

@@ -151,6 +151,21 @@ func plantumlLabel(label string) string {
 	return strings.ReplaceAll(label, `"`, "'")
 }
 
+// dotLabelReplacer escapes characters that break a DOT double-quoted label:
+// a literal double quote becomes \" and a newline becomes the DOT line-break
+// escape \n.
+//
+//nolint:gochecknoglobals // Reusable strings.Replacer, safe to share.
+var dotLabelReplacer = strings.NewReplacer(
+	`"`, `\"`,
+	"\n", `\n`,
+)
+
+// dotLabel escapes a service name for use inside a DOT double-quoted label.
+func dotLabel(label string) string {
+	return dotLabelReplacer.Replace(label)
+}
+
 type mermaidFormatter struct{}
 
 func (mermaidFormatter) Header() string {
@@ -195,4 +210,27 @@ func (plantumlFormatter) NodeDecl(id, label string) string {
 
 func (plantumlFormatter) EdgeDecl(fromID, toID string) string {
 	return fmt.Sprintf("%s --> %s", fromID, toID)
+}
+
+type dotFormatter struct{}
+
+func (dotFormatter) Header() string {
+	return `digraph do_auditlog {
+  graph [rankdir=LR, bgcolor="#14110d", color="#9a8d78", fontcolor="#e2e8f0", fontname="Helvetica"]
+  node [shape=box, style="rounded,filled", fillcolor="#e8a838", fontcolor="#14110d", fontname="Helvetica"]
+  edge [color="#9a8d78"]`
+}
+
+func (dotFormatter) Footer() string { return "}" }
+
+func (dotFormatter) NodeID(scopeID, serviceName string) string {
+	return sanitizeDiagramID(scopeID, serviceName)
+}
+
+func (dotFormatter) NodeDecl(id, label string) string {
+	return fmt.Sprintf(`%s [label="%s"]`, id, dotLabel(label))
+}
+
+func (dotFormatter) EdgeDecl(fromID, toID string) string {
+	return fmt.Sprintf("%s -> %s", fromID, toID)
 }

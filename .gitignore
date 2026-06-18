@@ -13,6 +13,10 @@ reports/
 *_templ.go
 # Test coverage
 /coverage
+/cover.out
+/cover-filtered.out
+# Built CLI binary (use `go install ./cmd/auditlog` or `nix run .#auditlog`)
+/auditlog
 # Nix build output
 /result
 # Sensitive files

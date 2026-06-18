@@ -224,3 +224,79 @@ func TestPlugin_ExportFilteredToFile_BadPath(t *testing.T) {
 		t.Error("expected error for bad path")
 	}
 }
+
+func TestPlugin_WriteReportCSV(t *testing.T) {
+	t.Parallel()
+
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "postgres://localhost")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	var buf bytes.Buffer
+	if err := p.WriteReportCSV(&buf); err != nil {
+		t.Fatalf("WriteReportCSV failed: %v", err)
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "service_name") {
+		t.Errorf("CSV output missing header. got:\n%s", output)
+	}
+
+	if !strings.Contains(output, "db") {
+		t.Errorf("CSV output missing service 'db'. got:\n%s", output)
+	}
+}
+
+func TestPlugin_ExportToCSV(t *testing.T) {
+	t.Parallel()
+
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	path := t.TempDir() + "/report.csv"
+	if err := p.ExportToCSV(path); err != nil {
+		t.Fatalf("ExportToCSV failed: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile failed: %v", err)
+	}
+
+	if !strings.Contains(string(data), "db") {
+		t.Errorf("CSV file missing service 'db'. got:\n%s", string(data))
+	}
+}
+
+func TestPlugin_ExportToTSV(t *testing.T) {
+	t.Parallel()
+
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	path := t.TempDir() + "/report.tsv"
+	if err := p.ExportToTSV(path); err != nil {
+		t.Fatalf("ExportToTSV failed: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile failed: %v", err)
+	}
+
+	if !strings.Contains(string(data), "\t") {
+		t.Errorf("TSV file should be tab-delimited. got:\n%s", string(data))
+	}
+
+	if !strings.Contains(string(data), "db") {
+		t.Errorf("TSV file missing service 'db'. got:\n%s", string(data))
+	}
+}

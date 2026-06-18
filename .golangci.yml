@@ -127,11 +127,19 @@ linters:
           files:
             - "!**/*_test.go"
             - "!**/example/**"
+            - "!**/cmd/**"
           allow:
             - $gostd
             - github.com/a-h/templ
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
+        cmd:
+          files:
+            - "**/cmd/**"
+          allow:
+            - $gostd
+            - github.com/invopop/jsonschema
+            - github.com/larsartmann/samber-do-auditlog
         example:
           files:
             - "**/example/**"
@@ -223,6 +231,21 @@ linters:
           - unparam
           - varnamelen
           - noinlineerr
+      - path: cmd/
+        linters:
+          - forbidigo
+          - funlen
+          - mnd
+          - unparam
+          - varnamelen
+          - noinlineerr
+          - exhaustruct
+          - gosec
+          - err113
+          - errcheck
+          - wrapcheck
+          - nlreturn
+          - goconst
       - path: _test\.go
         linters:
           - paralleltest

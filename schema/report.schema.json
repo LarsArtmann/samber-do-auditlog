@@ -1,0 +1,266 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/larsartmann/samber-do-auditlog/schema/report.schema.json",
+  "$defs": {
+    "Event": {
+      "properties": {
+        "scope_id": {
+          "type": "string"
+        },
+        "scope_name": {
+          "type": "string"
+        },
+        "service_name": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "event_type": {
+          "type": "string"
+        },
+        "phase": {
+          "type": "string"
+        },
+        "service_type": {
+          "type": "string"
+        },
+        "container_id": {
+          "type": "string"
+        },
+        "duration_ms": {
+          "type": "number"
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "scope_id",
+        "scope_name",
+        "service_name",
+        "sequence",
+        "timestamp",
+        "event_type",
+        "phase",
+        "container_id"
+      ]
+    },
+    "ScopeNode": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "services": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "children": {
+          "items": {
+            "$ref": "#/$defs/ScopeNode"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["id", "name"]
+    },
+    "ServiceInfo": {
+      "properties": {
+        "scope_id": {
+          "type": "string"
+        },
+        "scope_name": {
+          "type": "string"
+        },
+        "service_name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "service_type": {
+          "type": "string"
+        },
+        "registered_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "first_invoked_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "invocation_count": {
+          "type": "integer"
+        },
+        "invocation_order": {
+          "type": "integer"
+        },
+        "first_build_duration_ms": {
+          "type": "number"
+        },
+        "dependencies": {
+          "items": {
+            "$ref": "#/$defs/ServiceRef"
+          },
+          "type": "array"
+        },
+        "dependents": {
+          "items": {
+            "$ref": "#/$defs/ServiceRef"
+          },
+          "type": "array"
+        },
+        "shutdown_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "shutdown_duration_ms": {
+          "type": "number"
+        },
+        "shutdown_error": {
+          "type": "string"
+        },
+        "invocation_error": {
+          "type": "string"
+        },
+        "is_healthchecker": {
+          "type": "boolean"
+        },
+        "is_shutdowner": {
+          "type": "boolean"
+        },
+        "last_health_check_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "health_check_error": {
+          "type": "string"
+        },
+        "health_check_count": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "scope_id",
+        "scope_name",
+        "service_name",
+        "status",
+        "service_type",
+        "registered_at",
+        "invocation_count",
+        "invocation_order",
+        "is_healthchecker",
+        "is_shutdowner",
+        "health_check_count"
+      ]
+    },
+    "ServiceRef": {
+      "properties": {
+        "scope_id": {
+          "type": "string"
+        },
+        "scope_name": {
+          "type": "string"
+        },
+        "service_name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["scope_id", "scope_name", "service_name"]
+    }
+  },
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "container_id": {
+      "type": "string"
+    },
+    "exported_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_count": {
+      "type": "integer"
+    },
+    "service_count": {
+      "type": "integer"
+    },
+    "scope_count": {
+      "type": "integer"
+    },
+    "total_build_duration_ms": {
+      "type": "number"
+    },
+    "total_shutdown_duration_ms": {
+      "type": "number"
+    },
+    "shutdown_succeeded": {
+      "type": "boolean"
+    },
+    "health_check_succeeded": {
+      "type": "boolean"
+    },
+    "health_checked_count": {
+      "type": "integer"
+    },
+    "dropped_event_count": {
+      "type": "integer"
+    },
+    "reconstructed": {
+      "type": "boolean"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/Event"
+      },
+      "type": "array"
+    },
+    "services": {
+      "items": {
+        "$ref": "#/$defs/ServiceInfo"
+      },
+      "type": "array"
+    },
+    "scope_tree": {
+      "$ref": "#/$defs/ScopeNode"
+    }
+  },
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "version",
+    "container_id",
+    "exported_at",
+    "event_count",
+    "service_count",
+    "scope_count",
+    "total_build_duration_ms",
+    "total_shutdown_duration_ms",
+    "shutdown_succeeded",
+    "health_check_succeeded",
+    "health_checked_count",
+    "dropped_event_count",
+    "services",
+    "scope_tree"
+  ],
+  "title": "do-auditlog Report",
+  "description": "Report exported by the samber-do-auditlog plugin."
+}
