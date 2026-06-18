@@ -33,6 +33,12 @@ func (r *Recorder) BuildReport() Report {
 	)
 }
 
+func sortServiceInfos(services []ServiceInfo) {
+	slices.SortFunc(services, func(a, b ServiceInfo) int {
+		return compareByName(a.ServiceRef, b.ServiceRef)
+	})
+}
+
 // buildServicesLocked assembles sorted ServiceInfo from the recorded data.
 // Must be called with r.mu held for reading.
 func (r *Recorder) buildServicesLocked() []ServiceInfo {
@@ -53,9 +59,7 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 		services = append(services, svc)
 	}
 
-	slices.SortFunc(services, func(a, b ServiceInfo) int {
-		return compareByName(a.ServiceRef, b.ServiceRef)
-	})
+	sortServiceInfos(services)
 
 	return services
 }
@@ -96,24 +100,37 @@ func serviceRecordToInfo(rec *serviceRecord) ServiceInfo {
 // buildDepsLocked builds sorted dependency refs for a service record.
 // Must be called with r.mu held for reading.
 func (r *Recorder) buildDepsLocked(rec *serviceRecord) []ServiceRef {
+	return buildServiceDeps(rec, r.services)
+}
+
+// buildServiceDeps converts a serviceRecord's dependency map into a sorted
+// slice of ServiceRef pointers, skipping any deps whose target service is
+// missing. Pure function — usable from both the locked live path and the
+// unlocked replay path.
+func buildServiceDeps(rec *serviceRecord, services map[svcKey]*serviceRecord) []ServiceRef {
 	if len(rec.dependencies) == 0 {
 		return nil
 	}
 
 	deps := make([]ServiceRef, 0, len(rec.dependencies))
 	for depKey := range rec.dependencies {
-		if depRec, ok := r.services[depKey]; ok {
-			deps = append(deps, ServiceRef{
-				ScopeID:     depRec.scopeID,
-				ScopeName:   depRec.scopeName,
-				ServiceName: depRec.serviceName,
-			})
+		if depRec, ok := services[depKey]; ok {
+			deps = append(deps, depRecToRef(depRec))
 		}
 	}
 
 	sortDepRefs(deps)
 
 	return deps
+}
+
+// depRecToRef extracts a ServiceRef from a serviceRecord.
+func depRecToRef(rec *serviceRecord) ServiceRef {
+	return ServiceRef{
+		ScopeID:     rec.scopeID,
+		ScopeName:   rec.scopeName,
+		ServiceName: rec.serviceName,
+	}
 }
 
 func sortDepRefs(refs []ServiceRef) {
@@ -133,11 +150,7 @@ func buildDependentsMapLocked(services map[svcKey]*serviceRecord) map[svcKey][]S
 	for _, rec := range services {
 		for depKey := range rec.dependencies {
 			if _, ok := services[depKey]; ok {
-				dependents[depKey] = append(dependents[depKey], ServiceRef{
-					ScopeID:     rec.scopeID,
-					ScopeName:   rec.scopeName,
-					ServiceName: rec.serviceName,
-				})
+				dependents[depKey] = append(dependents[depKey], depRecToRef(rec))
 			}
 		}
 	}
@@ -148,25 +161,22 @@ func buildDependentsMapLocked(services map[svcKey]*serviceRecord) map[svcKey][]S
 func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 	sortedScopes := sortedScopesLocked(r.scopes)
 
-	var root scopeMeta
+	return buildScopeTreeFromMeta(
+		sortedScopes,
+		scopeMetaID, scopeMetaName, scopeMetaParentID,
+		scopeServicesForServices(r.services),
+	)
+}
 
-	hasRoot := false
+// scopeMetaID, scopeMetaName, scopeMetaParentID are field accessors for scopeMeta.
+func scopeMetaID(m scopeMeta) string       { return m.id }
+func scopeMetaName(m scopeMeta) string     { return m.name }
+func scopeMetaParentID(m scopeMeta) string { return m.parentID }
 
-	for _, meta := range sortedScopes {
-		if meta.parentID == "" {
-			root = meta
-			hasRoot = true
-
-			break
-		}
-	}
-
-	if !hasRoot && len(sortedScopes) > 0 {
-		root = sortedScopes[0]
-	}
-
+// scopeServicesForServices groups service names by their scopeID.
+func scopeServicesForServices(services map[svcKey]*serviceRecord) map[string][]string {
 	scopeServices := make(map[string][]string)
-	for _, rec := range r.services {
+	for _, rec := range services {
 		scopeServices[rec.scopeID] = append(scopeServices[rec.scopeID], rec.serviceName)
 	}
 
@@ -175,30 +185,81 @@ func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 		scopeServices[id] = names
 	}
 
-	var build func(parentID string) []ScopeNode
+	return scopeServices
+}
 
-	build = func(parentID string) []ScopeNode {
-		var children []ScopeNode
-
-		for _, meta := range sortedScopes {
-			if meta.parentID == parentID {
-				children = append(children, ScopeNode{
-					ID:       meta.id,
-					Name:     meta.name,
-					Services: scopeServices[meta.id],
-					Children: build(meta.id),
-				})
-			}
+// findRootScope returns the first meta with an empty parentID, or false
+// if none found. Sorted iteration keeps the result deterministic.
+func findRootScope[T any](sorted []T, parentOf func(T) string) (T, bool) {
+	for _, meta := range sorted {
+		if parentOf(meta) == "" {
+			return meta, true
 		}
-
-		return children
 	}
 
+	var zero T
+
+	return zero, false
+}
+
+// buildScopeChildren constructs the child scope tree below parentID. The
+// cycle guard (metaID(meta) != parentID) prevents infinite recursion on
+// self-referential entries where both IDs are empty.
+func buildScopeChildren[T any](
+	parentID string,
+	sorted []T,
+	metaID, metaName, metaParent func(T) string,
+	scopeServices map[string][]string,
+) []ScopeNode {
+	var children []ScopeNode
+
+	for _, meta := range sorted {
+		if metaParent(meta) != parentID {
+			continue
+		}
+
+		if metaID(meta) == parentID {
+			continue
+		}
+
+		id := metaID(meta)
+
+		children = append(children, ScopeNode{
+			ID:       id,
+			Name:     metaName(meta),
+			Services: scopeServices[id],
+			Children: buildScopeChildren(id, sorted, metaID, metaName, metaParent, scopeServices),
+		})
+	}
+
+	return children
+}
+
+// buildScopeTreeFromMeta assembles a ScopeNode tree from sorted scope
+// metadata using the provided field accessors. The first scope with an
+// empty parentID is the root; remaining scopes become children of
+// whichever scope matches their parentID.
+func buildScopeTreeFromMeta[T any](
+	sorted []T,
+	metaID, metaName, metaParent func(T) string,
+	scopeServices map[string][]string,
+) ScopeNode {
+	if len(sorted) == 0 {
+		return ScopeNode{} //nolint:exhaustruct
+	}
+
+	root, ok := findRootScope(sorted, metaParent)
+	if !ok {
+		root = sorted[0]
+	}
+
+	id := metaID(root)
+
 	return ScopeNode{
-		ID:       root.id,
-		Name:     root.name,
-		Services: scopeServices[root.id],
-		Children: sortScopeNodes(build(root.id)),
+		ID:       id,
+		Name:     metaName(root),
+		Services: scopeServices[id],
+		Children: sortScopeNodes(buildScopeChildren(id, sorted, metaID, metaName, metaParent, scopeServices)),
 	}
 }
 

@@ -23,13 +23,13 @@ func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err
 
 	r.mu.Lock()
 
-	svcType := ProviderType("")
 	key := svcKey{scopeID: scopeID, name: serviceName}
+
+	svcType := ProviderType("")
 
 	rec, ok := r.services[key]
 	if !ok {
-		rec = newServiceRecordCore(scopeID, scopeName, serviceName, "", now)
-		r.services[key] = rec
+		rec = upsertServiceRecord(r.services, key, scopeID, scopeName, serviceName, "", now)
 	} else {
 		svcType = rec.serviceType
 	}

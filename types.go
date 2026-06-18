@@ -18,36 +18,28 @@ const (
 	EventTypeHealthCheck  EventType = "health_check"
 )
 
+// eventTypeMeta pairs the human-readable label with the CSS color token.
+type eventTypeMeta struct {
+	label string
+	color string
+}
+
+// eventTypeMetaTable maps each known EventType to its display metadata.
+var eventTypeMetaTable = map[EventType]eventTypeMeta{
+	EventTypeRegistration: {label: "Registration", color: "var(--accent)"},
+	EventTypeInvocation:   {label: "Invocation", color: "var(--success)"},
+	EventTypeShutdown:     {label: "Shutdown", color: "var(--warning)"},
+	EventTypeHealthCheck:  {label: "Health", color: "var(--info)"},
+}
+
 // Label returns the human-readable display label for this event type.
 func (e EventType) Label() string {
-	switch e {
-	case EventTypeRegistration:
-		return "Registration"
-	case EventTypeInvocation:
-		return "Invocation"
-	case EventTypeShutdown:
-		return "Shutdown"
-	case EventTypeHealthCheck:
-		return "Health"
-	default:
-		return ""
-	}
+	return eventTypeMetaTable[e].label
 }
 
 // Color returns the CSS color token for this event type, used in the HTML visualization.
 func (e EventType) Color() string {
-	switch e {
-	case EventTypeRegistration:
-		return "var(--accent)"
-	case EventTypeInvocation:
-		return "var(--success)"
-	case EventTypeShutdown:
-		return "var(--warning)"
-	case EventTypeHealthCheck:
-		return "var(--info)"
-	default:
-		return ""
-	}
+	return eventTypeMetaTable[e].color
 }
 
 // Phase indicates whether an event is the start or end of an operation.
@@ -71,46 +63,37 @@ const (
 // String returns the provider type name.
 func (p ProviderType) String() string { return string(p) }
 
+// providerMeta pairs the human-readable label with the samber/do canonical emoji.
+type providerMeta struct {
+	label string
+	icon  string
+}
+
+// providerTypeMeta maps each known ProviderType to its display metadata.
+// The metadata builder in metadata.go reads from this via BuildTypeMetadata;
+// Label and Icon methods on ProviderType look up here as well.
+var providerTypeMeta = map[ProviderType]providerMeta{
+	ProviderTypeLazy:      {label: "Lazy", icon: "\U0001F634"},
+	ProviderTypeEager:     {label: "Eager", icon: "\U0001F501"},
+	ProviderTypeTransient: {label: "Transient", icon: "\U0001F3ED"},
+	ProviderTypeAlias:     {label: "Alias", icon: "\U0001F517"},
+}
+
 // Label returns the human-readable display label for this provider type.
 func (p ProviderType) Label() string {
-	switch p {
-	case ProviderTypeLazy:
-		return "Lazy"
-	case ProviderTypeEager:
-		return "Eager"
-	case ProviderTypeTransient:
-		return "Transient"
-	case ProviderTypeAlias:
-		return "Alias"
-	default:
-		return ""
-	}
+	return providerTypeMeta[p].label
 }
 
 // IsKnown returns true if the provider type is a recognized value.
 func (p ProviderType) IsKnown() bool {
-	switch p {
-	case ProviderTypeLazy, ProviderTypeEager, ProviderTypeTransient, ProviderTypeAlias:
-		return true
-	default:
-		return false
-	}
+	_, ok := providerTypeMeta[p]
+
+	return ok
 }
 
 // Icon returns the samber/do canonical emoji for this provider type.
 func (p ProviderType) Icon() string {
-	switch p {
-	case ProviderTypeLazy:
-		return "\U0001F634"
-	case ProviderTypeEager:
-		return "\U0001F501"
-	case ProviderTypeTransient:
-		return "\U0001F3ED"
-	case ProviderTypeAlias:
-		return "\U0001F517"
-	default:
-		return ""
-	}
+	return providerTypeMeta[p].icon
 }
 
 // ServiceStatus describes the lifecycle state of a service.
@@ -129,20 +112,18 @@ func (s ServiceStatus) IsError() bool {
 	return s == ServiceStatusInvocationError || s == ServiceStatusShutdownError
 }
 
+// serviceStatusIcons maps ServiceStatus to its display emoji.
+var serviceStatusIcons = map[ServiceStatus]string{
+	ServiceStatusRegistered:      "\u26AA",
+	ServiceStatusActive:          "\U0001F7E2",
+	ServiceStatusShutdown:        "\U0001F535",
+	ServiceStatusInvocationError: "\U0001F534",
+	ServiceStatusShutdownError:   "\U0001F534",
+}
+
 // Icon returns the display emoji for this service status.
 func (s ServiceStatus) Icon() string {
-	switch s {
-	case ServiceStatusRegistered:
-		return "\u26AA"
-	case ServiceStatusActive:
-		return "\U0001F7E2"
-	case ServiceStatusShutdown:
-		return "\U0001F535"
-	case ServiceStatusInvocationError, ServiceStatusShutdownError:
-		return "\U0001F534"
-	default:
-		return ""
-	}
+	return serviceStatusIcons[s]
 }
 
 // ServiceRef identifies a service within a specific scope.

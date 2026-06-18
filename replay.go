@@ -173,28 +173,12 @@ func (state *replayState) firstScopeID() string {
 }
 
 func (state *replayState) applyRegistrationAfter(evt Event, key svcKey) {
-	rec, ok := state.services[key]
-	if !ok {
-		rec = newServiceRecordCore(evt.ScopeID, evt.ScopeName, evt.ServiceName, evt.ServiceType, evt.Timestamp)
-		state.services[key] = rec
-	} else {
-		rec.serviceType = evt.ServiceType
-	}
+	rec := getOrCreateServiceRecord(state.services, evt)
+	rec.serviceType = evt.ServiceType
 }
 
 func (state *replayState) applyInvocationBefore(evt Event, key svcKey) {
-	if len(state.stack) > 0 {
-		parent := state.stack[len(state.stack)-1]
-		parentKey := svcKey{scopeID: parent.scopeID, name: parent.serviceName}
-
-		if rec, ok := state.services[parentKey]; ok {
-			if rec.dependencies == nil {
-				rec.dependencies = make(map[svcKey]struct{}, initialDepsCapacity)
-			}
-
-			rec.dependencies[key] = struct{}{}
-		}
-	}
+	recordDependencyFromStack(state.stack, state.services, key)
 
 	state.stack = append(state.stack, stackEntry{
 		scopeID:     evt.ScopeID,
@@ -217,11 +201,7 @@ func (state *replayState) applyInvocationAfter(evt Event, key svcKey) {
 		}
 	}
 
-	rec, ok := state.services[key]
-	if !ok {
-		rec = newServiceRecordCore(evt.ScopeID, evt.ScopeName, evt.ServiceName, evt.ServiceType, evt.Timestamp)
-		state.services[key] = rec
-	}
+	rec := getOrCreateServiceRecord(state.services, evt)
 
 	if evt.ServiceType != "" {
 		rec.serviceType = evt.ServiceType
@@ -246,11 +226,7 @@ func (state *replayState) applyInvocationAfter(evt Event, key svcKey) {
 }
 
 func (state *replayState) applyShutdownAfter(evt Event, key svcKey) {
-	rec, ok := state.services[key]
-	if !ok {
-		rec = newServiceRecordCore(evt.ScopeID, evt.ScopeName, evt.ServiceName, evt.ServiceType, evt.Timestamp)
-		state.services[key] = rec
-	}
+	rec := getOrCreateServiceRecord(state.services, evt)
 
 	t := evt.Timestamp
 	rec.shutdownAt = &t
@@ -271,11 +247,7 @@ func (state *replayState) applyShutdownAfter(evt Event, key svcKey) {
 }
 
 func (state *replayState) applyHealthCheck(evt Event, key svcKey) {
-	rec, ok := state.services[key]
-	if !ok {
-		rec = newServiceRecordCore(evt.ScopeID, evt.ScopeName, evt.ServiceName, evt.ServiceType, evt.Timestamp)
-		state.services[key] = rec
-	}
+	rec := getOrCreateServiceRecord(state.services, evt)
 
 	t := evt.Timestamp
 	rec.lastHealthCheckAt = &t
@@ -290,7 +262,7 @@ func buildReplayServices(state *replayState) []ServiceInfo {
 	services := make([]ServiceInfo, 0, len(state.services))
 
 	for _, rec := range state.services {
-		deps := buildReplayDeps(rec, state.services)
+		deps := buildServiceDeps(rec, state.services)
 		key := svcKey{scopeID: rec.scopeID, name: rec.serviceName}
 		svcDependents := dependents[key]
 
@@ -302,99 +274,26 @@ func buildReplayServices(state *replayState) []ServiceInfo {
 		services = append(services, svc)
 	}
 
-	slices.SortFunc(services, func(a, b ServiceInfo) int {
-		return compareByName(a.ServiceRef, b.ServiceRef)
-	})
+	sortServiceInfos(services)
 
 	return services
-}
-
-// buildReplayDeps builds sorted dependency refs from a replay service record.
-func buildReplayDeps(rec *serviceRecord, services map[svcKey]*serviceRecord) []ServiceRef {
-	if len(rec.dependencies) == 0 {
-		return nil
-	}
-
-	deps := make([]ServiceRef, 0, len(rec.dependencies))
-	for depKey := range rec.dependencies {
-		if depRec, ok := services[depKey]; ok {
-			deps = append(deps, ServiceRef{
-				ScopeID:     depRec.scopeID,
-				ScopeName:   depRec.scopeName,
-				ServiceName: depRec.serviceName,
-			})
-		}
-	}
-
-	sortDepRefs(deps)
-
-	return deps
 }
 
 // buildReplayScopeTree builds a ScopeNode tree from replay scopes.
 func buildReplayScopeTree(state *replayState) ScopeNode {
 	sorted := sortedReplayScopes(state.scopes)
-	if len(sorted) == 0 {
-		return ScopeNode{} //nolint:exhaustruct
-	}
 
-	var root replayScopeMeta
-
-	hasRoot := false
-
-	for _, meta := range sorted {
-		if meta.parentID == "" {
-			root = meta
-			hasRoot = true
-
-			break
-		}
-	}
-
-	// hasRoot is always true because recordScope assigns parentID="" to
-	// the first scope. The fallback is defensive but unreachable.
-	if !hasRoot && len(sorted) > 0 {
-		root = sorted[0]
-	}
-
-	scopeServices := make(map[string][]string)
-	for _, rec := range state.services {
-		scopeServices[rec.scopeID] = append(scopeServices[rec.scopeID], rec.serviceName)
-	}
-
-	for id, names := range scopeServices {
-		slices.Sort(names)
-		scopeServices[id] = names
-	}
-
-	var build func(parentID string) []ScopeNode
-
-	build = func(parentID string) []ScopeNode {
-		var children []ScopeNode
-
-		for _, meta := range sorted {
-			// Guard against self-referential cycles (e.g. root with
-			// empty ID where parentID == meta.id == "").
-			if meta.parentID == parentID && meta.id != parentID {
-				children = append(children, ScopeNode{
-					ID:       meta.id,
-					Name:     meta.name,
-					Services: scopeServices[meta.id],
-					Children: build(meta.id),
-				})
-			}
-		}
-
-		return children
-	}
-
-	return ScopeNode{
-		ID:       root.id,
-		Name:     root.name,
-		Services: scopeServices[root.id],
-		Children: sortScopeNodes(build(root.id)),
-	}
+	return buildScopeTreeFromMeta(
+		sorted,
+		replayMetaID, replayMetaName, replayMetaParentID,
+		scopeServicesForServices(state.services),
+	)
 }
+
+// replayMetaID, replayMetaName, replayMetaParentID are field accessors for replayScopeMeta.
+func replayMetaID(m replayScopeMeta) string       { return m.id }
+func replayMetaName(m replayScopeMeta) string     { return m.name }
+func replayMetaParentID(m replayScopeMeta) string { return m.parentID }
 
 func sortedReplayScopes(scopes map[string]replayScopeMeta) []replayScopeMeta {
 	result := make([]replayScopeMeta, 0, len(scopes))

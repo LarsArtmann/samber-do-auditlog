@@ -11,6 +11,7 @@
 This session delivered the **keystone of the CLI/NDJSON/Schema plan**: the replay engine that reconstructs a full `Report` from a flat event stream. With `ReplayEvents`, `ReadEvents`, and `LoadReport` now in place, the library can round-trip: capture → export NDJSON → read back → reconstruct → re-render in any format — all without a live container.
 
 **Two commits shipped:**
+
 1. `b8c592e` — feat: add replay engine, NDJSON reader, and loader API (T1-T4)
 2. `39ef88a` — fix: consolidate test files, fix stack overflow, reach 95% coverage gate
 
@@ -26,51 +27,51 @@ This session delivered the **keystone of the CLI/NDJSON/Schema plan**: the repla
 
 ### New This Session (T1-T4 + fixes)
 
-| Task | File | Lines | Status |
-| --- | --- | --- | --- |
-| **T1+T2: Replay engine** | `replay.go` | 414 | ✅ `ReplayEvents([]Event) (Report, error)` — reconstructs Services + ScopeTree from events, uses `buildReportFromCore` finalizer, sets `Reconstructed=true` |
-| **T3: NDJSON reader** | `ndjson.go` | 85 | ✅ `ReadEvents(io.Reader)` — bufio.Scanner, 1MB cap, blank-line skip, per-line error wrapping, sentinel errors |
-| **T4: Loader API** | `loader.go` | 176 | ✅ `LoadReport(path)` auto-detects JSON vs NDJSON by inspecting first line for `version` vs `event_type` key |
-| **Report.Reconstructed field** | `report.go` | +13 | ✅ Additive `bool` field (JSON: `reconstructed,omitempty`) — lets consumers detect capability-flag absence |
-| **Stack overflow fix** | `replay.go` | +2 | ✅ Self-reference guard `meta.id != parentID` in recursive `build()` |
-| **Fuzz target** | `replay_test.go` | +15 | ✅ `FuzzReadEvents` — validates no-panic on arbitrary input |
-| **Test suite** | `replay_test.go` | 1477 | ✅ 44 test functions + 1 fuzz target in a single consolidated file |
+| Task                           | File             | Lines | Status                                                                                                                                                      |
+| ------------------------------ | ---------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **T1+T2: Replay engine**       | `replay.go`      | 414   | ✅ `ReplayEvents([]Event) (Report, error)` — reconstructs Services + ScopeTree from events, uses `buildReportFromCore` finalizer, sets `Reconstructed=true` |
+| **T3: NDJSON reader**          | `ndjson.go`      | 85    | ✅ `ReadEvents(io.Reader)` — bufio.Scanner, 1MB cap, blank-line skip, per-line error wrapping, sentinel errors                                              |
+| **T4: Loader API**             | `loader.go`      | 176   | ✅ `LoadReport(path)` auto-detects JSON vs NDJSON by inspecting first line for `version` vs `event_type` key                                                |
+| **Report.Reconstructed field** | `report.go`      | +13   | ✅ Additive `bool` field (JSON: `reconstructed,omitempty`) — lets consumers detect capability-flag absence                                                  |
+| **Stack overflow fix**         | `replay.go`      | +2    | ✅ Self-reference guard `meta.id != parentID` in recursive `build()`                                                                                        |
+| **Fuzz target**                | `replay_test.go` | +15   | ✅ `FuzzReadEvents` — validates no-panic on arbitrary input                                                                                                 |
+| **Test suite**                 | `replay_test.go` | 1477  | ✅ 44 test functions + 1 fuzz target in a single consolidated file                                                                                          |
 
 ### Pre-Existing (verified intact, all gates pass)
 
-| Capability | Evidence |
-| --- | --- |
-| Plugin lifecycle hooks (registration/invocation/shutdown/healthcheck) | `hooks.go` (324 LOC) |
-| Stack-based dependency graph inference | `hooks.go`, `report_builder.go` |
-| Concurrent-safe recorder (single RWMutex + 2 atomics) | `recorder.go` |
-| 5 export formats (JSON, NDJSON, HTML, Mermaid, PlantUML) | `plugin.go`, `report.go`, `html.go`, `mermaid.go`, `plantuml.go` |
-| Report model with 16 fields + Validate() | `report.go` |
-| Report.Diff directional diff | `diff.go` |
-| Report.Filtered with 5 filter options | `filter.go` |
-| Schema migration v0.1.0 → v0.2.0 | `migration.go` |
-| HTML dashboard (5-tab, Sugiyama graph, waveform, XSS-hardened) | `html.templ` |
-| CI: 5 jobs (test 95% gate, lint, vulncheck, mod-tidy, stale-generation) | `.github/workflows/ci.yml` |
+| Capability                                                              | Evidence                                                         |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Plugin lifecycle hooks (registration/invocation/shutdown/healthcheck)   | `hooks.go` (324 LOC)                                             |
+| Stack-based dependency graph inference                                  | `hooks.go`, `report_builder.go`                                  |
+| Concurrent-safe recorder (single RWMutex + 2 atomics)                   | `recorder.go`                                                    |
+| 5 export formats (JSON, NDJSON, HTML, Mermaid, PlantUML)                | `plugin.go`, `report.go`, `html.go`, `mermaid.go`, `plantuml.go` |
+| Report model with 16 fields + Validate()                                | `report.go`                                                      |
+| Report.Diff directional diff                                            | `diff.go`                                                        |
+| Report.Filtered with 5 filter options                                   | `filter.go`                                                      |
+| Schema migration v0.1.0 → v0.2.0                                        | `migration.go`                                                   |
+| HTML dashboard (5-tab, Sugiyama graph, waveform, XSS-hardened)          | `html.templ`                                                     |
+| CI: 5 jobs (test 95% gate, lint, vulncheck, mod-tidy, stale-generation) | `.github/workflows/ci.yml`                                       |
 
 ### Metrics
 
-| Metric | Value |
-| --- | --- |
-| Test functions | 197 |
-| Benchmarks | 11 |
-| Fuzz targets | 4 |
-| Godoc examples | 7 |
-| Source + test LOC | 10,831 |
-| Coverage | 95.3% |
-| Lint issues | 0 |
-| Source files (non-test) | 24 |
-| Test files | 25 |
+| Metric                  | Value  |
+| ----------------------- | ------ |
+| Test functions          | 197    |
+| Benchmarks              | 11     |
+| Fuzz targets            | 4      |
+| Godoc examples          | 7      |
+| Source + test LOC       | 10,831 |
+| Coverage                | 95.3%  |
+| Lint issues             | 0      |
+| Source files (non-test) | 24     |
+| Test files              | 25     |
 
 ### Planning Artifacts
 
-| Artifact | Commit | Purpose |
-| --- | --- | --- |
-| Pareto plan HTML + D2 | `e6e7d52`, `c3a380d` | 26 medium tasks, 95 fine tasks, ~25h total |
-| Pre-execution status report | `07fde6d` | Honest gap analysis before execution |
+| Artifact                    | Commit               | Purpose                                    |
+| --------------------------- | -------------------- | ------------------------------------------ |
+| Pareto plan HTML + D2       | `e6e7d52`, `c3a380d` | 26 medium tasks, 95 fine tasks, ~25h total |
+| Pre-execution status report | `07fde6d`            | Honest gap analysis before execution       |
 
 ---
 
@@ -98,27 +99,27 @@ Write: `WriteEventsNDJSON` (existing). Read: `ReadEvents` (new). But there is no
 
 From the Pareto plan, remaining tasks:
 
-| Task | Plan ID | Effort | Notes |
-| --- | --- | --- | --- |
-| CLI skeleton (`cmd/auditlog` + cobra) | T5 | 60m | Zero scaffolding exists |
-| CLI `import` subcommand | T6 | 75m | Depends on T4 (done) + T5 |
-| CLI `export` subcommand | T7 | 60m | Depends on T4 (done) + T5 |
-| JSON Schema file (`schema/report.schema.json`) | T8 | 75m | No machine-readable contract exists |
-| Schema validation (`ValidateAgainstSchema`) | T9 | 60m | Depends on T8 |
-| Diff: dependency edges | T10 | 75m | Fixes `diff.go:43` doc lie |
-| Diff: scope tree | T11 | 60m | New `ScopeDiff` type |
-| CLI `validate` subcommand | T12 | 45m | Depends on T9 |
-| CLI `diff` subcommand | T13 | 60m | Depends on T10, T11 |
-| CLI `info` subcommand | T14 | 30m | Summary stats |
-| `nix build .#auditlog` binary | T18 | 45m | Replaces README stub in `flake.nix` |
-| samber/ro reactive adapter | T26 | 75m | `EventsAsObservable` via BehaviorSubject |
-| CI cross-compile matrix | T19 | 60m | linux/darwin/windows × amd64/arm64 |
-| CI smoke test | T20 | 30m | Build + `--version` + `import` fixture |
-| README CLI section | T21 | 45m | Install + examples |
-| AGENTS.md update | T22 | 30m | File inventory + replay caveats |
-| FEATURES.md + TODO_LIST.md | T23 | 30m | Flip items to DONE |
-| cli-workflow.md example | T24 | 45m | Round-trip tutorial |
-| CHANGELOG | T25 | 30m | Unreleased section |
+| Task                                           | Plan ID | Effort | Notes                                    |
+| ---------------------------------------------- | ------- | ------ | ---------------------------------------- |
+| CLI skeleton (`cmd/auditlog` + cobra)          | T5      | 60m    | Zero scaffolding exists                  |
+| CLI `import` subcommand                        | T6      | 75m    | Depends on T4 (done) + T5                |
+| CLI `export` subcommand                        | T7      | 60m    | Depends on T4 (done) + T5                |
+| JSON Schema file (`schema/report.schema.json`) | T8      | 75m    | No machine-readable contract exists      |
+| Schema validation (`ValidateAgainstSchema`)    | T9      | 60m    | Depends on T8                            |
+| Diff: dependency edges                         | T10     | 75m    | Fixes `diff.go:43` doc lie               |
+| Diff: scope tree                               | T11     | 60m    | New `ScopeDiff` type                     |
+| CLI `validate` subcommand                      | T12     | 45m    | Depends on T9                            |
+| CLI `diff` subcommand                          | T13     | 60m    | Depends on T10, T11                      |
+| CLI `info` subcommand                          | T14     | 30m    | Summary stats                            |
+| `nix build .#auditlog` binary                  | T18     | 45m    | Replaces README stub in `flake.nix`      |
+| samber/ro reactive adapter                     | T26     | 75m    | `EventsAsObservable` via BehaviorSubject |
+| CI cross-compile matrix                        | T19     | 60m    | linux/darwin/windows × amd64/arm64       |
+| CI smoke test                                  | T20     | 30m    | Build + `--version` + `import` fixture   |
+| README CLI section                             | T21     | 45m    | Install + examples                       |
+| AGENTS.md update                               | T22     | 30m    | File inventory + replay caveats          |
+| FEATURES.md + TODO_LIST.md                     | T23     | 30m    | Flip items to DONE                       |
+| cli-workflow.md example                        | T24     | 45m    | Round-trip tutorial                      |
+| CHANGELOG                                      | T25     | 30m    | Unreleased section                       |
 
 ---
 
@@ -180,33 +181,33 @@ The `//nolint:unparam` directive was on the wrong function (`provideUserServiceW
 
 Sorted by **impact × value ÷ effort** (descending).
 
-| # | Task | Impact | Effort | Status |
-| --- | --- | --- | --- | --- |
-| 1 | **T10: Diff dependency edges** — implement dep comparison + fix `diff.go:43` doc lie | 🔴 High | 75m | Not started |
-| 2 | **T8: JSON Schema file** — `schema/report.schema.json` for v0.2.0 | 🔴 High | 75m | Not started |
-| 3 | **T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version` | 🟠 Medium | 60m | Not started |
-| 4 | **T6: CLI `import`** — `auditlog import <file> -o report.html` | 🟠 Medium | 75m | Not started |
-| 5 | **T7: CLI `export`** — 5 formats via library APIs | 🟠 Medium | 60m | Not started |
-| 6 | **T9: Schema validation** — embedded validator via santhosh-tekuri | 🟠 Medium | 60m | Not started |
-| 7 | **T11: Diff scope tree** — flatten ScopeNode, set-diff scopes | 🟠 Medium | 60m | Not started |
-| 8 | **T26: samber/ro adapter** — `EventsAsObservable()` | 🟠 Medium | 75m | Not started |
-| 9 | **T13: CLI `diff`** — text + JSON output, exit 3 on non-empty | 🟡 Low | 60m | Not started |
-| 10 | **T12: CLI `validate`** — `Report.Validate()` + schema check | 🟡 Low | 45m | Not started |
-| 11 | **T14: CLI `info`** — summary stats | 🟡 Low | 30m | Not started |
-| 12 | **T18: `nix build` binary** — replace README stub | 🟡 Low | 45m | Not started |
-| 13 | **T17: CLI golden tests** — per-subcommand assertions | 🟡 Low | 75m | Not started |
-| 14 | **Typed identifiers** — distinct string types for IDs | 🟡 Low | 60m | Not started |
-| 15 | **`NewReport` constructor** — invalid states unrepresentable | 🟡 Low | 45m | Not started |
-| 16 | **T19: CI cross-compile** — 6-target matrix | 🟡 Low | 60m | Not started |
-| 17 | **T20: CI smoke test** — build + `--version` + import | 🟡 Low | 30m | Not started |
-| 18 | **CSV/TSV export** — tabular export for spreadsheets | 🟡 Low | 60m | Not started |
-| 19 | **Property-based Diff tests** — symmetry + identity | 🟡 Low | 60m | Not started |
-| 20 | **HTML golden-file test** — deterministic fixture | 🟡 Low | 45m | Not started |
-| 21 | **T21: README CLI section** — install + examples | 🟡 Low | 45m | Not started |
-| 22 | **T22: AGENTS.md update** — file inventory + caveats | 🟡 Low | 30m | Not started |
-| 23 | **T23: FEATURES + TODO sync** — flip to DONE | 🟡 Low | 30m | Not started |
-| 24 | **T24: cli-workflow.md** — round-trip tutorial | 🟡 Low | 45m | Not started |
-| 25 | **T25: CHANGELOG** — Unreleased section | 🟡 Low | 30m | Not started |
+| #   | Task                                                                                 | Impact    | Effort | Status      |
+| --- | ------------------------------------------------------------------------------------ | --------- | ------ | ----------- |
+| 1   | **T10: Diff dependency edges** — implement dep comparison + fix `diff.go:43` doc lie | 🔴 High   | 75m    | Not started |
+| 2   | **T8: JSON Schema file** — `schema/report.schema.json` for v0.2.0                    | 🔴 High   | 75m    | Not started |
+| 3   | **T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`                        | 🟠 Medium | 60m    | Not started |
+| 4   | **T6: CLI `import`** — `auditlog import <file> -o report.html`                       | 🟠 Medium | 75m    | Not started |
+| 5   | **T7: CLI `export`** — 5 formats via library APIs                                    | 🟠 Medium | 60m    | Not started |
+| 6   | **T9: Schema validation** — embedded validator via santhosh-tekuri                   | 🟠 Medium | 60m    | Not started |
+| 7   | **T11: Diff scope tree** — flatten ScopeNode, set-diff scopes                        | 🟠 Medium | 60m    | Not started |
+| 8   | **T26: samber/ro adapter** — `EventsAsObservable()`                                  | 🟠 Medium | 75m    | Not started |
+| 9   | **T13: CLI `diff`** — text + JSON output, exit 3 on non-empty                        | 🟡 Low    | 60m    | Not started |
+| 10  | **T12: CLI `validate`** — `Report.Validate()` + schema check                         | 🟡 Low    | 45m    | Not started |
+| 11  | **T14: CLI `info`** — summary stats                                                  | 🟡 Low    | 30m    | Not started |
+| 12  | **T18: `nix build` binary** — replace README stub                                    | 🟡 Low    | 45m    | Not started |
+| 13  | **T17: CLI golden tests** — per-subcommand assertions                                | 🟡 Low    | 75m    | Not started |
+| 14  | **Typed identifiers** — distinct string types for IDs                                | 🟡 Low    | 60m    | Not started |
+| 15  | **`NewReport` constructor** — invalid states unrepresentable                         | 🟡 Low    | 45m    | Not started |
+| 16  | **T19: CI cross-compile** — 6-target matrix                                          | 🟡 Low    | 60m    | Not started |
+| 17  | **T20: CI smoke test** — build + `--version` + import                                | 🟡 Low    | 30m    | Not started |
+| 18  | **CSV/TSV export** — tabular export for spreadsheets                                 | 🟡 Low    | 60m    | Not started |
+| 19  | **Property-based Diff tests** — symmetry + identity                                  | 🟡 Low    | 60m    | Not started |
+| 20  | **HTML golden-file test** — deterministic fixture                                    | 🟡 Low    | 45m    | Not started |
+| 21  | **T21: README CLI section** — install + examples                                     | 🟡 Low    | 45m    | Not started |
+| 22  | **T22: AGENTS.md update** — file inventory + caveats                                 | 🟡 Low    | 30m    | Not started |
+| 23  | **T23: FEATURES + TODO sync** — flip to DONE                                         | 🟡 Low    | 30m    | Not started |
+| 24  | **T24: cli-workflow.md** — round-trip tutorial                                       | 🟡 Low    | 45m    | Not started |
+| 25  | **T25: CHANGELOG** — Unreleased section                                              | 🟡 Low    | 30m    | Not started |
 
 ---
 
@@ -215,6 +216,7 @@ Sorted by **impact × value ÷ effort** (descending).
 ### Q1: Should I build the CLI (T5-T7) next, or fix the diff doc lie (T10) first?
 
 **The tension:**
+
 - **T10 (diff fix)** is the highest-integrity issue — `diff.go:43` actively lies to consumers. It's a 75m fix that restores trust. But it doesn't unlock new user-facing capability.
 - **T5-T7 (CLI)** is the highest user-value next step — it turns the replay engine into an installable tool. But it's 3-4h of work before any user sees benefit.
 

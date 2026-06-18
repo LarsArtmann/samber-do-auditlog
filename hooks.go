@@ -34,6 +34,71 @@ func newEventFromRef(
 	}
 }
 
+// getOrCreateServiceRecord returns the existing serviceRecord for evt, or
+// creates a new one when absent using metadata from evt. Used by both the
+// live Recorder path (under r.mu) and the replay path (no lock), so it
+// takes the map explicitly.
+func getOrCreateServiceRecord(
+	services map[svcKey]*serviceRecord,
+	evt Event,
+) *serviceRecord {
+	key := svcKey{scopeID: evt.ScopeID, name: evt.ServiceName}
+
+	if rec, ok := services[key]; ok {
+		return rec
+	}
+
+	rec := newServiceRecordCore(evt.ScopeID, evt.ScopeName, evt.ServiceName, evt.ServiceType, evt.Timestamp)
+	services[key] = rec
+
+	return rec
+}
+
+// upsertServiceRecord finds the serviceRecord for key in services, creating
+// it if absent. Wraps getOrCreateServiceRecord for callers that already
+// have the field values unpacked.
+func upsertServiceRecord(
+	services map[svcKey]*serviceRecord,
+	key svcKey,
+	scopeID, scopeName, serviceName string,
+	svcType ProviderType,
+	now time.Time,
+) *serviceRecord {
+	return getOrCreateServiceRecord(services, Event{
+		ServiceRef:  ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
+		ServiceType: svcType,
+		Timestamp:   now,
+	})
+}
+
+// recordDependencyFromStack inspects the current invocation stack and, if
+// non-empty, records depKey as a dependency of the top-of-stack service.
+// Used by both the live Recorder path (under r.mu) and the replay path
+// (no lock), so it takes the maps explicitly.
+func recordDependencyFromStack(
+	stack []stackEntry,
+	services map[svcKey]*serviceRecord,
+	depKey svcKey,
+) {
+	if len(stack) == 0 {
+		return
+	}
+
+	parent := stack[len(stack)-1]
+	parentKey := svcKey{scopeID: parent.scopeID, name: parent.serviceName}
+
+	rec, ok := services[parentKey]
+	if !ok {
+		return
+	}
+
+	if rec.dependencies == nil {
+		rec.dependencies = make(map[svcKey]struct{}, initialDepsCapacity)
+	}
+
+	rec.dependencies[depKey] = struct{}{}
+}
+
 // newServiceRecordCore constructs a serviceRecord with lazy deps map.
 func newServiceRecordCore(scopeID, scopeName, serviceName string, svcType ProviderType, now time.Time) *serviceRecord {
 	return &serviceRecord{
@@ -116,8 +181,7 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 
 	if !ok {
 		svcType = inferServiceType(scope, serviceName)
-		rec = newServiceRecordCore(scopeID, scopeName, serviceName, svcType, now)
-		r.services[key] = rec
+		rec = upsertServiceRecord(r.services, key, scopeID, scopeName, serviceName, svcType, now)
 	} else {
 		svcType = rec.serviceType
 	}
@@ -144,19 +208,7 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 
 	r.recordScopeLocked(scopeID, scopeName, scope)
 
-	// Infer dependency from invocation stack.
-	if len(r.stack) > 0 {
-		parent := r.stack[len(r.stack)-1]
-		parentKey := svcKey{scopeID: parent.scopeID, name: parent.serviceName}
-
-		if rec, ok := r.services[parentKey]; ok {
-			if rec.dependencies == nil {
-				rec.dependencies = make(map[svcKey]struct{}, initialDepsCapacity)
-			}
-
-			rec.dependencies[depKey] = struct{}{}
-		}
-	}
+	recordDependencyFromStack(r.stack, r.services, depKey)
 
 	r.stack = append(r.stack, stackEntry{
 		scopeID:     scopeID,
@@ -236,8 +288,7 @@ func (r *Recorder) updateInvocationAggregate(
 
 	rec, ok := r.services[key]
 	if !ok {
-		rec = newServiceRecordCore(scopeID, scopeName, serviceName, svcType, now)
-		r.services[key] = rec
+		rec = upsertServiceRecord(r.services, key, scopeID, scopeName, serviceName, svcType, now)
 	}
 
 	rec.invocationCount++
