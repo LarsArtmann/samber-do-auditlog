@@ -46,9 +46,11 @@ tier3: Customer Value (20% -> 80%) {
   cli_validate: CLI validate
   cli_diff: CLI diff
   cli_info: CLI info
+  ro_adapter: samber/ro Adapter\nEventsAsObservable
   replay_tests: Replay Golden Tests
   ndjson_tests: NDJSON Fuzz Tests
   cli_tests: CLI Golden Tests
+  ro_tests: Rx Adapter Tests
   nix_binary: nix build binary
 }
 
@@ -86,6 +88,7 @@ replay_engine -> replay_tests: {style.stroke-dash: 4}
 ndjson_reader -> ndjson_tests: {style.stroke-dash: 4}
 cli_import -> cli_tests: {style.stroke-dash: 4}
 cli_export -> cli_tests: {style.stroke-dash: 4}
+ro_adapter -> ro_tests: {style.stroke-dash: 4}
 
 diff_deps -> cli_diff
 diff_scopes -> cli_diff
@@ -99,6 +102,7 @@ nix_binary -> ci_smoke
 cli_tests -> readme
 replay_tests -> features
 ndjson_tests -> features
+ro_tests -> features
 
 # ---------- Containment (visual grouping only) ----------
 
