@@ -40,6 +40,13 @@ func (e EventType) Label() string {
 	return eventTypeMetaTable[e].label
 }
 
+// IsKnown returns true if the event type is a recognized value.
+func (e EventType) IsKnown() bool {
+	_, ok := eventTypeMetaTable[e]
+
+	return ok
+}
+
 // Color returns the CSS color token for this event type, used in the HTML visualization.
 func (e EventType) Color() string {
 	return eventTypeMetaTable[e].color
@@ -52,6 +59,11 @@ const (
 	PhaseBefore Phase = "before"
 	PhaseAfter  Phase = "after"
 )
+
+// IsKnown returns true if the phase is a recognized value.
+func (p Phase) IsKnown() bool {
+	return p == PhaseBefore || p == PhaseAfter
+}
 
 // ProviderType describes how a service was registered in the DI container.
 type ProviderType string
@@ -128,6 +140,13 @@ var serviceStatusIcons = map[ServiceStatus]string{
 	ServiceStatusShutdown:        "\U0001F535",
 	ServiceStatusInvocationError: "\U0001F534",
 	ServiceStatusShutdownError:   "\U0001F534",
+}
+
+// IsKnown returns true if the service status is a recognized value.
+func (s ServiceStatus) IsKnown() bool {
+	_, ok := serviceStatusIcons[s]
+
+	return ok
 }
 
 // Icon returns the display emoji for this service status.

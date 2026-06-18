@@ -1034,6 +1034,36 @@ func TestLoadReportFromReader_EmptyNDJSON(t *testing.T) {
 
 // --- Fuzz target ---
 
+func TestReadEvents_RejectsUnknownEventType(t *testing.T) {
+	t.Parallel()
+
+	input := `{"sequence":1,"timestamp":"2026-01-01T00:00:00Z","event_type":"bogus","phase":"after","container_id":"x","scope_id":"s","scope_name":"s","service_name":"db"}`
+
+	_, err := auditlog.ReadEvents(strings.NewReader(input))
+	if err == nil {
+		t.Fatal("expected error for unknown event_type, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "unknown event_type") {
+		t.Errorf("error should mention unknown event_type, got: %v", err)
+	}
+}
+
+func TestReadEvents_RejectsUnknownPhase(t *testing.T) {
+	t.Parallel()
+
+	input := `{"sequence":1,"timestamp":"2026-01-01T00:00:00Z","event_type":"registration","phase":"mid","container_id":"x","scope_id":"s","scope_name":"s","service_name":"db"}`
+
+	_, err := auditlog.ReadEvents(strings.NewReader(input))
+	if err == nil {
+		t.Fatal("expected error for unknown phase, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "unknown phase") {
+		t.Errorf("error should mention unknown phase, got: %v", err)
+	}
+}
+
 func FuzzReadEvents(f *testing.F) {
 	f.Add(
 		[]byte(

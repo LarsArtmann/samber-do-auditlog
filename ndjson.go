@@ -14,9 +14,11 @@ const ndjsonMaxLineBytes = 1 << 20
 
 // Errors returned by ReadEvents.
 var (
-	ErrEmpty         = errors.New("ndjson input is empty")
-	ErrNoEvents      = errors.New("ndjson input contains no events")
-	ErrOversizedLine = errors.New("ndjson line exceeds maximum size")
+	ErrEmpty            = errors.New("ndjson input is empty")
+	ErrNoEvents         = errors.New("ndjson input contains no events")
+	ErrOversizedLine    = errors.New("ndjson line exceeds maximum size")
+	errUnknownEventType = errors.New("unknown event_type")
+	errUnknownPhase     = errors.New("unknown phase")
 )
 
 // ReadEvents reads line-delimited JSON events from reader.
@@ -44,6 +46,14 @@ func ReadEvents(reader io.Reader) ([]Event, error) {
 		err := json.Unmarshal(line, &evt)
 		if err != nil {
 			return nil, fmt.Errorf("line %d: %w", lineNum, err)
+		}
+
+		if evt.EventType != "" && !evt.EventType.IsKnown() {
+			return nil, fmt.Errorf("line %d: %w: %q", lineNum, errUnknownEventType, evt.EventType)
+		}
+
+		if evt.Phase != "" && !evt.Phase.IsKnown() {
+			return nil, fmt.Errorf("line %d: %w: %q", lineNum, errUnknownPhase, evt.Phase)
 		}
 
 		events = append(events, evt)
