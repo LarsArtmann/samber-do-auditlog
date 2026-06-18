@@ -15,6 +15,34 @@ import (
 
 // --- Replay engine tests ---
 
+// mkEvent builds a root-scope Event for replay tests. All replay test
+// events use ScopeID "root" / ScopeName "[root]" — hardcoding it here
+// reduces every 5-7 line struct literal to a single call. For events
+// needing DurationMs or Error, set those fields on the returned value.
+func mkEvent(
+	seq int,
+	ts time.Time,
+	eventType auditlog.EventType,
+	phase auditlog.Phase,
+	serviceName, containerID string,
+	svcType auditlog.ProviderType,
+) auditlog.Event {
+	return auditlog.Event{
+		ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: serviceName},
+		Sequence:    seq,
+		Timestamp:   ts,
+		EventType:   eventType,
+		Phase:       phase,
+		ContainerID: containerID,
+		ServiceType: svcType,
+	}
+}
+
+// rootRef returns a root-scope ServiceRef for the given service name.
+func rootRef(serviceName string) auditlog.ServiceRef {
+	return auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: serviceName}
+}
+
 func TestReplayEvents_EmptyInput(t *testing.T) {
 	t.Parallel()
 
@@ -171,12 +199,7 @@ func TestReplayEvents_ContainerIDFromEvents(t *testing.T) {
 	t.Parallel()
 
 	events := []auditlog.Event{
-		{
-			ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:   1, Timestamp: time.Now(),
-			EventType: auditlog.EventTypeRegistration, Phase: auditlog.PhaseAfter,
-			ContainerID: "from-event", ServiceType: auditlog.ProviderTypeLazy,
-		},
+		mkEvent(1, time.Now(), auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "from-event", auditlog.ProviderTypeLazy),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -314,16 +337,11 @@ func TestReplayEvents_ManualShutdownWithoutBefore(t *testing.T) {
 	errMsg := "shutdown failed"
 
 	events := []auditlog.Event{
+		mkEvent(1, time.Now(), auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "test", auditlog.ProviderTypeLazy),
 		{
-			ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:   1, Timestamp: time.Now(),
-			EventType: auditlog.EventTypeRegistration, Phase: auditlog.PhaseAfter,
-			ContainerID: "test", ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:   2, Timestamp: time.Now(),
-			EventType: auditlog.EventTypeShutdown, Phase: auditlog.PhaseAfter,
+			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
+			Sequence:    2, Timestamp: time.Now(),
+			EventType:   auditlog.EventTypeShutdown, Phase: auditlog.PhaseAfter,
 			ContainerID: "test", ServiceType: auditlog.ProviderTypeLazy,
 			DurationMs: &dur, Error: &errMsg,
 		},
@@ -349,12 +367,7 @@ func TestReplayEvents_ManualHealthCheckNewService(t *testing.T) {
 
 	// Health check event for a service that was never registered.
 	events := []auditlog.Event{
-		{
-			ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "ghost"},
-			Sequence:   1, Timestamp: time.Now(),
-			EventType: auditlog.EventTypeHealthCheck, Phase: auditlog.PhaseAfter,
-			ContainerID: "test",
-		},
+		mkEvent(1, time.Now(), auditlog.EventTypeHealthCheck, auditlog.PhaseAfter, "ghost", "test", ""),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -378,18 +391,8 @@ func TestReplayEvents_RegistrationOverwriteType(t *testing.T) {
 	// Two registration-after events for the same service — the second
 	// should update the service type.
 	events := []auditlog.Event{
-		{
-			ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:   1, Timestamp: time.Now(),
-			EventType: auditlog.EventTypeRegistration, Phase: auditlog.PhaseAfter,
-			ContainerID: "test", ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:   2, Timestamp: time.Now(),
-			EventType: auditlog.EventTypeRegistration, Phase: auditlog.PhaseAfter,
-			ContainerID: "test", ServiceType: auditlog.ProviderTypeEager,
-		},
+		mkEvent(1, time.Now(), auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "test", auditlog.ProviderTypeLazy),
+		mkEvent(2, time.Now(), auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "test", auditlog.ProviderTypeEager),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -480,59 +483,13 @@ func TestReplayEvents_OutOfOrderStackPop(t *testing.T) {
 	// Interleaved invocations: A starts, B starts, B ends, A ends.
 	// The stack pop for A is NOT the last element (non-LIFO path).
 	events := []auditlog.Event{
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "a"},
-			Sequence:    1,
-			Timestamp:   time.Now(),
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "b"},
-			Sequence:    2,
-			Timestamp:   time.Now(),
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "a"},
-			Sequence:    3,
-			Timestamp:   time.Now(),
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "b"},
-			Sequence:    4,
-			Timestamp:   time.Now(),
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
+		mkEvent(1, time.Now(), auditlog.EventTypeRegistration, auditlog.PhaseAfter, "a", "c", auditlog.ProviderTypeLazy),
+		mkEvent(2, time.Now(), auditlog.EventTypeRegistration, auditlog.PhaseAfter, "b", "c", auditlog.ProviderTypeLazy),
+		mkEvent(3, time.Now(), auditlog.EventTypeInvocation, auditlog.PhaseBefore, "a", "c", ""),
+		mkEvent(4, time.Now(), auditlog.EventTypeInvocation, auditlog.PhaseBefore, "b", "c", ""),
 		// B finishes first (LIFO pop), then A finishes (non-LIFO: index < len-1).
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "b"},
-			Sequence:    5,
-			Timestamp:   time.Now(),
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "a"},
-			Sequence:    6,
-			Timestamp:   time.Now(),
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
+		mkEvent(5, time.Now(), auditlog.EventTypeInvocation, auditlog.PhaseAfter, "b", "c", auditlog.ProviderTypeLazy),
+		mkEvent(6, time.Now(), auditlog.EventTypeInvocation, auditlog.PhaseAfter, "a", "c", auditlog.ProviderTypeLazy),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -1086,8 +1043,8 @@ func TestDiff_MultipleAddedRemoved(t *testing.T) {
 func TestDiff_MultipleChanged(t *testing.T) {
 	t.Parallel()
 
-	ref1 := auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc-a"}
-	ref2 := auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc-b"}
+	ref1 := rootRef("svc-a")
+	ref2 := rootRef("svc-b")
 	now := time.Now()
 
 	eventsA := []auditlog.Event{
@@ -1258,59 +1215,13 @@ func TestReplayEvents_NonLIFOStackPop(t *testing.T) {
 	// Stack: push A, push B. Pop A FIRST (not last), then B.
 	// This triggers the append(stack[:i], stack[i+1:]...) path.
 	events := []auditlog.Event{
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "a"},
-			Sequence:    1,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "b"},
-			Sequence:    2,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "a"},
-			Sequence:    3,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "b"},
-			Sequence:    4,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
+		mkEvent(1, now, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "a", "c", auditlog.ProviderTypeLazy),
+		mkEvent(2, now, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "b", "c", auditlog.ProviderTypeLazy),
+		mkEvent(3, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "a", "c", ""),
+		mkEvent(4, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "b", "c", ""),
 		// A finishes while B is still on stack — pops from middle.
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "a"},
-			Sequence:    5,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "b"},
-			Sequence:    6,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
+		mkEvent(5, now, auditlog.EventTypeInvocation, auditlog.PhaseAfter, "a", "c", auditlog.ProviderTypeLazy),
+		mkEvent(6, now, auditlog.EventTypeInvocation, auditlog.PhaseAfter, "b", "c", auditlog.ProviderTypeLazy),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -1338,24 +1249,9 @@ func TestReplayEvents_DoubleInvocation(t *testing.T) {
 	dur := 3.3
 
 	events := []auditlog.Event{
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:    1,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
+		mkEvent(1, now, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "c", auditlog.ProviderTypeLazy),
 		// First invocation.
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:    2,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
+		mkEvent(2, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "svc", "c", ""),
 		{
 			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
 			Sequence:    3,
@@ -1367,14 +1263,7 @@ func TestReplayEvents_DoubleInvocation(t *testing.T) {
 			DurationMs:  &dur,
 		},
 		// Second invocation — firstInvokedAt already set, firstBuildDurationMs already set.
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:    4,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
+		mkEvent(4, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "svc", "c", ""),
 		{
 			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
 			Sequence:    5,
@@ -1411,50 +1300,12 @@ func TestReplayEvents_ShutdownWithMatchingBefore(t *testing.T) {
 	t1 := t0.Add(5 * time.Millisecond)
 
 	events := []auditlog.Event{
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:    1,
-			Timestamp:   t0,
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:    2,
-			Timestamp:   t0,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:    3,
-			Timestamp:   t0,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
+		mkEvent(1, t0, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "c", auditlog.ProviderTypeLazy),
+		mkEvent(2, t0, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "svc", "c", ""),
+		mkEvent(3, t0, auditlog.EventTypeInvocation, auditlog.PhaseAfter, "svc", "c", auditlog.ProviderTypeLazy),
 		// Shutdown with matching before event.
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:    4,
-			Timestamp:   t0,
-			EventType:   auditlog.EventTypeShutdown,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:    5,
-			Timestamp:   t1,
-			EventType:   auditlog.EventTypeShutdown,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
+		mkEvent(4, t0, auditlog.EventTypeShutdown, auditlog.PhaseBefore, "svc", "c", ""),
+		mkEvent(5, t1, auditlog.EventTypeShutdown, auditlog.PhaseAfter, "svc", "c", auditlog.ProviderTypeLazy),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -1485,14 +1336,7 @@ func TestReplayEvents_InvocationWithoutRegistration(t *testing.T) {
 	dur := 2.0
 
 	events := []auditlog.Event{
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "ghost"},
-			Sequence:    1,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
+		mkEvent(1, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "ghost", "c", ""),
 		{
 			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "ghost"},
 			Sequence:    2,
@@ -1528,23 +1372,8 @@ func TestReplayEvents_ShutdownWithoutRegistration(t *testing.T) {
 	now := time.Now()
 
 	events := []auditlog.Event{
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "phantom"},
-			Sequence:    1,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeShutdown,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "phantom"},
-			Sequence:    2,
-			Timestamp:   now.Add(time.Millisecond),
-			EventType:   auditlog.EventTypeShutdown,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
+		mkEvent(1, now, auditlog.EventTypeShutdown, auditlog.PhaseBefore, "phantom", "c", ""),
+		mkEvent(2, now.Add(time.Millisecond), auditlog.EventTypeShutdown, auditlog.PhaseAfter, "phantom", "c", auditlog.ProviderTypeLazy),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -1570,15 +1399,7 @@ func TestReplayEvents_EmptyContainerID(t *testing.T) {
 	now := time.Now()
 
 	events := []auditlog.Event{
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:    1,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
+		mkEvent(1, now, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "", auditlog.ProviderTypeLazy),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
