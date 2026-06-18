@@ -34,10 +34,15 @@ type Report struct {
 	HealthCheckedCount   int  `json:"health_checked_count"`
 	// DroppedEventCount is the number of events dropped due to Config.MaxEvents.
 	// Always 0 when MaxEvents is 0 (unlimited).
-	DroppedEventCount int64         `json:"dropped_event_count"`
-	Events            []Event       `json:"events,omitempty"`
-	Services          []ServiceInfo `json:"services"`
-	ScopeTree         ScopeNode     `json:"scope_tree"`
+	DroppedEventCount int64 `json:"dropped_event_count"`
+	// Reconstructed is true when the report was built by ReplayEvents from a
+	// flat event stream rather than from live container hooks. Capability
+	// flags (IsHealthchecker, IsShutdowner) are always false on reconstructed
+	// reports, and the scope tree may be flattened.
+	Reconstructed bool          `json:"reconstructed,omitempty"`
+	Events        []Event       `json:"events,omitempty"`
+	Services      []ServiceInfo `json:"services"`
+	ScopeTree     ScopeNode     `json:"scope_tree"`
 }
 
 // Validate checks internal consistency of the report: denormalized count fields
