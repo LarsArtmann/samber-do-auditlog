@@ -199,7 +199,15 @@ func TestReplayEvents_ContainerIDFromEvents(t *testing.T) {
 	t.Parallel()
 
 	events := []auditlog.Event{
-		mkEvent(1, time.Now(), auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "from-event", auditlog.ProviderTypeLazy),
+		mkEvent(
+			1,
+			time.Now(),
+			auditlog.EventTypeRegistration,
+			auditlog.PhaseAfter,
+			"svc",
+			"from-event",
+			auditlog.ProviderTypeLazy,
+		),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -337,11 +345,19 @@ func TestReplayEvents_ManualShutdownWithoutBefore(t *testing.T) {
 	errMsg := "shutdown failed"
 
 	events := []auditlog.Event{
-		mkEvent(1, time.Now(), auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "test", auditlog.ProviderTypeLazy),
+		mkEvent(
+			1,
+			time.Now(),
+			auditlog.EventTypeRegistration,
+			auditlog.PhaseAfter,
+			"svc",
+			"test",
+			auditlog.ProviderTypeLazy,
+		),
 		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:    2, Timestamp: time.Now(),
-			EventType:   auditlog.EventTypeShutdown, Phase: auditlog.PhaseAfter,
+			ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
+			Sequence:   2, Timestamp: time.Now(),
+			EventType: auditlog.EventTypeShutdown, Phase: auditlog.PhaseAfter,
 			ContainerID: "test", ServiceType: auditlog.ProviderTypeLazy,
 			DurationMs: &dur, Error: &errMsg,
 		},
@@ -391,8 +407,24 @@ func TestReplayEvents_RegistrationOverwriteType(t *testing.T) {
 	// Two registration-after events for the same service — the second
 	// should update the service type.
 	events := []auditlog.Event{
-		mkEvent(1, time.Now(), auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "test", auditlog.ProviderTypeLazy),
-		mkEvent(2, time.Now(), auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "test", auditlog.ProviderTypeEager),
+		mkEvent(
+			1,
+			time.Now(),
+			auditlog.EventTypeRegistration,
+			auditlog.PhaseAfter,
+			"svc",
+			"test",
+			auditlog.ProviderTypeLazy,
+		),
+		mkEvent(
+			2,
+			time.Now(),
+			auditlog.EventTypeRegistration,
+			auditlog.PhaseAfter,
+			"svc",
+			"test",
+			auditlog.ProviderTypeEager,
+		),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -483,8 +515,24 @@ func TestReplayEvents_OutOfOrderStackPop(t *testing.T) {
 	// Interleaved invocations: A starts, B starts, B ends, A ends.
 	// The stack pop for A is NOT the last element (non-LIFO path).
 	events := []auditlog.Event{
-		mkEvent(1, time.Now(), auditlog.EventTypeRegistration, auditlog.PhaseAfter, "a", "c", auditlog.ProviderTypeLazy),
-		mkEvent(2, time.Now(), auditlog.EventTypeRegistration, auditlog.PhaseAfter, "b", "c", auditlog.ProviderTypeLazy),
+		mkEvent(
+			1,
+			time.Now(),
+			auditlog.EventTypeRegistration,
+			auditlog.PhaseAfter,
+			"a",
+			"c",
+			auditlog.ProviderTypeLazy,
+		),
+		mkEvent(
+			2,
+			time.Now(),
+			auditlog.EventTypeRegistration,
+			auditlog.PhaseAfter,
+			"b",
+			"c",
+			auditlog.ProviderTypeLazy,
+		),
 		mkEvent(3, time.Now(), auditlog.EventTypeInvocation, auditlog.PhaseBefore, "a", "c", ""),
 		mkEvent(4, time.Now(), auditlog.EventTypeInvocation, auditlog.PhaseBefore, "b", "c", ""),
 		// B finishes first (LIFO pop), then A finishes (non-LIFO: index < len-1).
@@ -1373,7 +1421,15 @@ func TestReplayEvents_ShutdownWithoutRegistration(t *testing.T) {
 
 	events := []auditlog.Event{
 		mkEvent(1, now, auditlog.EventTypeShutdown, auditlog.PhaseBefore, "phantom", "c", ""),
-		mkEvent(2, now.Add(time.Millisecond), auditlog.EventTypeShutdown, auditlog.PhaseAfter, "phantom", "c", auditlog.ProviderTypeLazy),
+		mkEvent(
+			2,
+			now.Add(time.Millisecond),
+			auditlog.EventTypeShutdown,
+			auditlog.PhaseAfter,
+			"phantom",
+			"c",
+			auditlog.ProviderTypeLazy,
+		),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
