@@ -109,7 +109,7 @@ func applyEvent(evt Event, state *replayState) {
 	switch evt.EventType {
 	case EventTypeRegistration:
 		if evt.Phase == PhaseAfter {
-			state.applyRegistrationAfter(evt, key)
+			state.applyRegistrationAfter(evt)
 		}
 
 	case EventTypeInvocation:
@@ -117,7 +117,7 @@ func applyEvent(evt Event, state *replayState) {
 		case PhaseBefore:
 			state.applyInvocationBefore(evt, key)
 		case PhaseAfter:
-			state.applyInvocationAfter(evt, key)
+			state.applyInvocationAfter(evt)
 		}
 
 	case EventTypeShutdown:
@@ -130,7 +130,7 @@ func applyEvent(evt Event, state *replayState) {
 
 	case EventTypeHealthCheck:
 		if evt.Phase == PhaseAfter {
-			state.applyHealthCheck(evt, key)
+			state.applyHealthCheck(evt)
 		}
 	}
 }
@@ -172,7 +172,7 @@ func (state *replayState) firstScopeID() string {
 	return sorted[0].id
 }
 
-func (state *replayState) applyRegistrationAfter(evt Event, key svcKey) {
+func (state *replayState) applyRegistrationAfter(evt Event) {
 	rec := getOrCreateServiceRecord(state.services, evt)
 	rec.serviceType = evt.ServiceType
 }
@@ -188,7 +188,7 @@ func (state *replayState) applyInvocationBefore(evt Event, key svcKey) {
 	})
 }
 
-func (state *replayState) applyInvocationAfter(evt Event, key svcKey) {
+func (state *replayState) applyInvocationAfter(evt Event) {
 	for i, frame := range slices.Backward(state.stack) {
 		if frame.serviceName == evt.ServiceName && frame.scopeID == evt.ScopeID {
 			if i == len(state.stack)-1 {
@@ -246,7 +246,7 @@ func (state *replayState) applyShutdownAfter(evt Event, key svcKey) {
 	}
 }
 
-func (state *replayState) applyHealthCheck(evt Event, key svcKey) {
+func (state *replayState) applyHealthCheck(evt Event) {
 	rec := getOrCreateServiceRecord(state.services, evt)
 
 	t := evt.Timestamp

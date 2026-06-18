@@ -12,6 +12,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Replay engine** (`ReplayEvents`): reconstructs a `Report` from a flat event
+  stream — the inverse of hook-based recording. Processes already-captured
+  events to rebuild service/scope state, then assembles a `Report` via the same
+  `buildReportFromCore` finalizer. Returns `Report{Reconstructed: true}` so
+  consumers can detect inherent limitations (no `IsHealthchecker`/
+  `IsShutdowner`, inferred scope hierarchy).
+- **NDJSON reader** (`ReadEvents`): reads line-delimited JSON events with
+  blank-line skipping and a 1 MB max-line guard. Enables round-trip
+  export → import workflows.
+- **Loader API** (`LoadReport` + variants): auto-detects JSON vs NDJSON by
+  inspecting the first non-blank line. JSON routes through `MigrateReport`;
+  NDJSON routes through `ReadEvents` + `ReplayEvents`. Variants:
+  `LoadReportFromReader`, `LoadReportFromBytes`, `LoadReportFromJSON`,
+  `LoadReportFromNDJSON`.
+- **`Format` enum and `WithFormat` option**: explicit format selection for
+  the loader (`FormatAuto`, `FormatJSON`, `FormatNDJSON`).
+- **`Report.Reconstructed` field**: boolean flag distinguishing replayed
+  reports from live-recorded ones.
+
+### Changed
+
+- **Deduplication refactoring**: unified scope-tree builders via a generic
+  `buildScopeTreeFromMeta[T]()` (replaced two ~50-line recursive builders),
+  extracted shared helpers (`getOrCreateServiceRecord`,
+  `recordDependencyFromStack`, `buildServiceDeps`, `depRecToRef`,
+  `sortServiceInfos`, `scopeServicesForServices`), and converted 5 switch-
+  statement enum methods to map-based lookups. Net ~60 LOC removed from
+  production code with zero remaining production clones at `-t 15`.
+- **HTML scope tree**: collapsible/expandable scope nodes and waveform visual
+  improvements.
+
 ### Fixed
 
 - **Split-brain audit fixes** (5 findings resolved):
@@ -43,6 +76,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   escaped via `plantumlLabel` (quotes → apostrophes). The two divergent ID
   replacers (Mermaid had 4 chars, PlantUML had 7) are replaced by a single
   shared function.
+
+- **Stack overflow in recursive scope-tree walkers**: deeply nested scope trees
+  (500+ levels) caused stack overflow. Consolidated to a table-driven
+  implementation that avoids unbounded recursion.
+- **HTML sort indicator CSS**: unicode escape sequences were mangled by templ
+  code generation, causing incorrect sort-direction glyphs. Corrected.
 
 ## [0.0.4] - 2026-06-17
 

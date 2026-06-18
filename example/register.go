@@ -87,7 +87,9 @@ func registerServices(injector do.Injector) *do.Scope {
 		}, nil
 	})
 
-	// 8. Override
+	// 8. Override (hot-swap) — ProvideValue + OverrideValue use the same struct
+	// type intentionally to demonstrate the override feature (see AGENTS.md
+	// duplication policy, category 4: demo pairs).
 	do.ProvideValue(injector, &ServerConfig{
 		Port:         80,
 		ReadTimeout:  30 * time.Second,
