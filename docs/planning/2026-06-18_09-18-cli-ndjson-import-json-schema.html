@@ -1,0 +1,1263 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pareto Plan: CLI + NDJSON Import + JSON Schema</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --bg-elevated: #1e293b;
+        --bg-sunken: #020617;
+        --text: #e2e8f0;
+        --text-dim: #94a3b8;
+        --text-faint: #64748b;
+        --accent: #6366f1;
+        --accent-glow: rgba(99, 102, 241, 0.15);
+        --rose: #f43f5e;
+        --rose-glow: rgba(244, 63, 94, 0.15);
+        --emerald: #10b981;
+        --emerald-glow: rgba(16, 185, 129, 0.15);
+        --amber: #f59e0b;
+        --amber-glow: rgba(245, 158, 11, 0.15);
+        --cyan: #06b6d4;
+        --border: #334155;
+        --radius: 12px;
+        --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+        --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html {
+        scroll-behavior: smooth;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-sans);
+        line-height: 1.6;
+      }
+      body { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+
+      /* Hero */
+      .hero {
+        background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-sunken) 100%);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 2.5rem 2rem;
+        margin-bottom: 2.5rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 60%;
+        height: 200%;
+        background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
+        pointer-events: none;
+      }
+      .hero-badge {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+        background: var(--accent-glow);
+        padding: 0.3rem 0.75rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+      }
+      .hero h1 {
+        font-size: 2rem;
+        line-height: 1.2;
+        margin-bottom: 0.5rem;
+      }
+      .hero-subtitle {
+        color: var(--text-dim);
+        font-size: 1.05rem;
+        max-width: 60ch;
+      }
+      .hero-meta {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+      }
+      .hero-meta .tag {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--text-faint);
+        padding: 0.2rem 0.5rem;
+        background: var(--bg-sunken);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+      }
+
+      /* Section headings */
+      h2 {
+        font-size: 1.5rem;
+        margin: 2.5rem 0 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+      h2 .num {
+        font-family: var(--font-mono);
+        color: var(--accent);
+        margin-right: 0.5rem;
+        font-size: 0.9em;
+      }
+      h3 { font-size: 1.15rem; margin: 1.5rem 0 0.5rem; }
+      p { margin-bottom: 1rem; }
+      ul, ol { margin: 0 0 1rem 1.5rem; }
+      li { margin-bottom: 0.25rem; }
+      code {
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+        background: var(--bg-sunken);
+        padding: 0.1rem 0.35rem;
+        border-radius: 3px;
+        color: var(--amber);
+      }
+      pre {
+        font-family: var(--font-mono);
+        background: var(--bg-sunken);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem 1.25rem;
+        overflow-x: auto;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin: 1rem 0;
+      }
+
+      /* Stat grid */
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+      }
+      .stat-card {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem 1rem;
+        text-align: center;
+        transition: transform 0.15s ease, border-color 0.15s ease;
+      }
+      .stat-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+      .stat-value {
+        font-family: var(--font-mono);
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.1;
+      }
+      .stat-card.stat-good .stat-value { color: var(--emerald); }
+      .stat-card.stat-warn .stat-value { color: var(--amber); }
+      .stat-card.stat-bad  .stat-value { color: var(--rose); }
+      .stat-card.stat-accent .stat-value { color: var(--accent); }
+      .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 0.35rem;
+      }
+
+      /* Cards */
+      .card {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.25rem 1.5rem;
+        margin: 1rem 0;
+      }
+      .card-problem { border-left: 4px solid var(--rose); }
+      .card-solution { border-left: 4px solid var(--emerald); }
+      .card-warning { border-left: 4px solid var(--amber); }
+      .card h4 { margin-bottom: 0.5rem; font-size: 1rem; }
+
+      /* Callouts */
+      .callout {
+        border-radius: var(--radius);
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+        font-size: 0.9375rem;
+      }
+      .callout-solution { background: rgba(16,185,129,0.08); border: 1px solid var(--emerald); }
+      .callout-warning { background: var(--amber-glow); border: 1px solid var(--amber); }
+      .callout-problem { background: var(--rose-glow); border: 1px solid var(--rose); }
+      .callout strong { display: block; margin-bottom: 0.25rem; }
+
+      /* Tables */
+      .table-wrap { overflow-x: auto; margin: 1rem 0; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      thead {
+        background: var(--bg-sunken);
+      }
+      th {
+        text-align: left;
+        padding: 0.65rem 0.85rem;
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-dim);
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      td {
+        padding: 0.6rem 0.85rem;
+        border-bottom: 1px solid rgba(51,65,85,0.4);
+        vertical-align: top;
+      }
+      tbody tr:hover { background: rgba(99,102,241,0.05); }
+      tbody tr:last-child td { border-bottom: none; }
+
+      /* Tier badges */
+      .tier {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.2rem 0.5rem;
+        border-radius: 3px;
+        white-space: nowrap;
+      }
+      .tier-1 { background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent); }
+      .tier-2 { background: var(--emerald-glow); color: var(--emerald); border: 1px solid var(--emerald); }
+      .tier-3 { background: var(--amber-glow); color: var(--amber); border: 1px solid var(--amber); }
+      .tier-4 { background: rgba(100,116,139,0.15); color: var(--text-dim); border: 1px solid var(--text-faint); }
+
+      /* Generic badges */
+      .badge {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.15rem 0.5rem;
+        border-radius: 3px;
+        white-space: nowrap;
+      }
+      .badge-good { background: var(--emerald-glow); color: var(--emerald); }
+      .badge-warn { background: var(--amber-glow); color: var(--amber); }
+      .badge-bad  { background: var(--rose-glow); color: var(--rose); }
+      .badge-info { background: var(--accent-glow); color: var(--accent); }
+      .badge-dim  { background: var(--bg-sunken); color: var(--text-dim); border: 1px solid var(--border); }
+
+      /* Effort pills */
+      .effort {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        padding: 0.15rem 0.4rem;
+        border-radius: 3px;
+        background: var(--bg-sunken);
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+      }
+      .effort-xs { color: var(--emerald); border-color: var(--emerald); }
+      .effort-s  { color: var(--emerald); border-color: var(--emerald); }
+      .effort-m  { color: var(--amber); border-color: var(--amber); }
+      .effort-l  { color: var(--rose); border-color: var(--rose); }
+
+      /* SVG container */
+      .diagram-wrap {
+        background: var(--bg-sunken);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin: 1.5rem 0;
+        overflow-x: auto;
+      }
+      .diagram-wrap svg {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+      }
+
+      /* Migration steps */
+      .migration-step {
+        display: flex;
+        gap: 1rem;
+        margin: 1rem 0;
+        padding: 1rem;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+      }
+      .migration-num {
+        flex-shrink: 0;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: var(--accent);
+        color: white;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .migration-content h4 { margin-bottom: 0.25rem; font-size: 1rem; }
+      .migration-content p { margin: 0; font-size: 0.9rem; color: var(--text-dim); }
+
+      /* Strengths */
+      .strengths {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        margin: 1.25rem 0;
+      }
+      .strength {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.875rem 1rem;
+        background: rgba(16, 185, 129, 0.08);
+        border: 1px solid var(--emerald);
+        border-radius: var(--radius);
+      }
+      .strength .check { color: var(--emerald); font-weight: 700; font-size: 1.125rem; flex-shrink: 0; }
+      .strength .text strong { display: block; margin-bottom: 0.125rem; }
+      .strength .text span { color: var(--text-dim); font-size: 0.9rem; }
+
+      /* Grid layouts */
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+        margin: 1.25rem 0;
+      }
+
+      /* Footer */
+      .footer {
+        margin-top: 4rem;
+        padding: 2rem 0;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        font-size: 0.8125rem;
+        color: var(--text-faint);
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: var(--bg-sunken); }
+      ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+      /* Token colors for code */
+      .tok-keyword { color: #c678dd; }
+      .tok-type { color: #e5c07b; }
+      .tok-string { color: #98c379; }
+      .tok-comment { color: #5c6370; font-style: italic; }
+      .tok-func { color: #61afef; }
+      .tok-punct { color: #abb2bf; }
+    </style>
+  </head>
+  <body>
+    <div class="hero">
+      <div class="hero-badge">PARETO PLAN &middot; 2026-06-18</div>
+      <h1>CLI Tool &middot; NDJSON Import &middot; JSON Schema</h1>
+      <p class="hero-subtitle">
+        Three net-new features for <code>samber-do-auditlog</code> that turn the library into a
+        round-trippable telemetry tool: capture once, persist, reload, validate, diff, and re-export
+        in any format &mdash; all without a live container.
+      </p>
+      <div class="hero-meta">
+        <span class="tag">25 medium tasks</span>
+        <span class="tag">~120 fine tasks</span>
+        <span class="tag">~24h total effort</span>
+        <span class="tag">0 existing CLI scaffolding</span>
+      </div>
+    </div>
+
+    <!-- ============= SUMMARY ============= -->
+    <h2 id="summary"><span class="num">00</span>Summary</h2>
+    <div class="stat-grid">
+      <div class="stat-card stat-accent">
+        <div class="stat-value">1</div>
+        <div class="stat-label">Keystone blocker<br/>(event-replay engine)</div>
+      </div>
+      <div class="stat-card stat-good">
+        <div class="stat-value">3</div>
+        <div class="stat-label">Features, mutually<br/>reinforcing</div>
+      </div>
+      <div class="stat-card stat-warn">
+        <div class="stat-value">2</div>
+        <div class="stat-label">Honesty constraints<br/>(capabilities &amp; diffs)</div>
+      </div>
+      <div class="stat-card stat-bad">
+        <div class="stat-value">0</div>
+        <div class="stat-label">CLI scaffolding<br/>in repo today</div>
+      </div>
+    </div>
+
+    <div class="callout callout-problem">
+      <strong>The keystone blocker</strong>
+      Reconstructing a <code>Report</code> (with <code>Services</code>, <code>ScopeTree</code>,
+      and all denormalized counts) from a bare <code>[]Event</code> is the single piece of work
+      that unlocks NDJSON import, the CLI, and schema-validated diffing. The logic currently lives
+      stateful inside <code>Recorder</code> hooks &mdash; it must be extracted into a pure,
+      testable <code>ReplayEvents</code> function. Without this, NDJSON import yields only an
+      event bag, useless for diffing or HTML re-rendering.
+    </div>
+
+    <!-- ============= THREE FEATURES ============= -->
+    <h2 id="features"><span class="num">01</span>The three features &mdash; why they belong together</h2>
+
+    <div class="grid-3">
+      <div class="card">
+        <h4>1. NDJSON Import</h4>
+        <p style="font-size: 0.9rem; color: var(--text-dim);">
+          Load events back from a saved <code>.ndjson</code> file. Currently the library is
+          <strong>write-only</strong>: <code>writeEventsNDJSON</code> in
+          <code>export.go:12</code> emits events but nothing reads them. Import + replay
+          closes the loop and makes <code>Report.Diff</code> usable across time.
+        </p>
+      </div>
+      <div class="card">
+        <h4>2. JSON Schema file</h4>
+        <p style="font-size: 0.9rem; color: var(--text-dim);">
+          <code>schema/report.schema.json</code> describes the v0.2.0 wire format
+          machine-readably. <code>Report.Validate()</code> in <code>report.go:46</code> only
+          checks internal consistency; it cannot catch type/shape violations in a hand-edited
+          or third-party JSON. The schema is the contract.
+        </p>
+      </div>
+      <div class="card">
+        <h4>3. Stand-alone CLI</h4>
+        <p style="font-size: 0.9rem; color: var(--text-dim);">
+          A <code>cmd/auditlog</code> binary with <code>import</code>, <code>export</code>,
+          <code>validate</code>, <code>diff</code>, <code>info</code> subcommands. Today the
+          repo is library-only (<code>flake.nix:44-59</code> explicitly ships a README stub,
+          not a binary). CLI turns every library API into an end-user command.
+        </p>
+      </div>
+    </div>
+
+    <div class="callout callout-solution">
+      <strong>The synergy</strong>
+      The CLI is a thin shell over library APIs &mdash; but it has nothing to call without
+      NDJSON import (you can't load saved data) and no contract without JSON Schema (you can't
+      validate what you load). Building any one alone is half a feature. Building all three in
+      the order below gives a fully round-trippable telemetry tool.
+    </div>
+
+    <!-- ============= STRENGTHS ============= -->
+    <h2 id="strengths"><span class="num">&diams;</span>What the codebase already gives us for free</h2>
+    <div class="strengths">
+      <div class="strength">
+        <div class="check">+</div>
+        <div class="text">
+          <strong>All export formats already exist</strong>
+          <span><code>WriteJSON</code>, <code>WriteNDJSON</code>, <code>WriteHTML</code>, <code>WriteMermaid</code>, <code>WritePlantUML</code> &mdash; the CLI just wires inputs to these.</span>
+        </div>
+      </div>
+      <div class="strength">
+        <div class="check">+</div>
+        <div class="text">
+          <strong>Report.Diff already exists</strong>
+          <span>Directional diff with added/removed/changed services and event-count delta. Extensions (deps, scopes) are additive.</span>
+        </div>
+      </div>
+      <div class="strength">
+        <div class="check">+</div>
+        <div class="text">
+          <strong>MigrateReport handles old JSON</strong>
+          <span>Version-agnostic re-derivation means <code>LoadReportFromJSON</code> gets v0.1.0&rarr;v0.2.0 upgrade for free.</span>
+        </div>
+      </div>
+      <div class="strength">
+        <div class="check">+</div>
+        <div class="text">
+          <strong>Event struct is the wire unit</strong>
+          <span>NDJSON is one Event per line &mdash; decoding is a one-liner per line. The hard part is reconstruction, not parsing.</span>
+        </div>
+      </div>
+      <div class="strength">
+        <div class="check">+</div>
+        <div class="text">
+          <strong>buildReportFromCore is the single finalizer</strong>
+          <span>Any new construction path (including replay) just builds a core state and hands it to <code>buildReportFromCore</code> &mdash; counts cannot drift.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============= PARETO BREAKDOWN ============= -->
+    <h2 id="pareto"><span class="num">02</span>Pareto breakdown &mdash; what delivers the most for the least</h2>
+
+    <p>Following the 80/20 rule applied recursively:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Tier</th>
+            <th>Yield</th>
+            <th>What's in it</th>
+            <th>Why it's there</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tier tier-1">T1 KEYSTONE</span></td>
+            <td><strong>1% &rarr; 51%</strong></td>
+            <td>
+              <code>ReplayEvents([]Event) (Report, error)</code> &mdash; pure function that
+              reconstructs <code>Services</code> + <code>ScopeTree</code> from a flat event
+              stream by re-using the Recorder's state-machine logic, plus
+              <code>ReadEvents(io.Reader) ([]Event, error)</code>.
+            </td>
+            <td>
+              Without this, NDJSON import returns a useless event bag (no Services to diff,
+              no scope tree to render). Every other feature depends on being able to load a
+              saved Report. This is the only piece with non-trivial logic.
+            </td>
+          </tr>
+          <tr>
+            <td><span class="tier tier-2">T2 OPERATIONAL</span></td>
+            <td><strong>4% &rarr; 64%</strong></td>
+            <td>
+              <code>LoadReport(path)</code> with format auto-detect,
+              <code>cmd/auditlog</code> skeleton with cobra, <code>import</code> &amp;
+              <code>export</code> subcommands, JSON Schema v0.2.0 file + embedded validator.
+            </td>
+            <td>
+              Converts the keystone into a usable product: a user can now
+              <code>auditlog import events.ndjson -o report.html</code> and get a visualisation.
+              Schema gives a machine-checked contract.
+            </td>
+          </tr>
+          <tr>
+            <td><span class="tier tier-3">T3 CUSTOMER VALUE</span></td>
+            <td><strong>20% &rarr; 80%</strong></td>
+            <td>
+              <code>validate</code>, <code>diff</code>, <code>info</code> subcommands;
+              <code>Report.Diff</code> extensions (dependency edges, scope tree);
+              golden/fuzz tests; <code>nix build</code> binary.
+            </td>
+            <td>
+              This is where the diff-across-time promise is actually delivered, and where the
+              library gains a buildable artifact. Tests here de-risk the keystone.
+            </td>
+          </tr>
+          <tr>
+            <td><span class="tier tier-4">T4 POLISH</span></td>
+            <td><strong>80% &rarr; 100%</strong></td>
+            <td>
+              Cross-compile CI matrix, README/AGENTS/FEATURES docs, cli-workflow.md example,
+              CHANGELOG entry.
+            </td>
+            <td>
+              Discovery, distribution, and maintainability. Without these nobody knows the
+              features exist and future contributors hit undocumented traps.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ============= RISKS ============= -->
+    <h2 id="risks"><span class="num">03</span>Honesty constraints &amp; risks</h2>
+
+    <div class="card card-warning">
+      <h4>Risk A &mdash; Capability flags cannot be reconstructed</h4>
+      <p style="font-size: 0.9rem; margin-bottom: 0;">
+        <code>IsHealthchecker</code> and <code>IsShutdowner</code> on <code>ServiceInfo</code>
+        are populated by <code>enrichCapabilities()</code> in <code>BuildReport()</code>, which
+        calls <code>do.ExplainInjector(scope)</code> on a <strong>live</strong>
+        <code>*do.Scope</code> reference. A replayed Report has no live container. These two
+        bools will always be <code>false</code> on imported Reports.
+        <strong>Mitigation:</strong> document loudly in AGENTS.md and add a
+        <code>Reconstructed bool</code> flag on Report so consumers can detect this state.
+      </p>
+    </div>
+
+    <div class="card card-warning">
+      <h4>Risk B &mdash; diff.go doc currently lies</h4>
+      <p style="font-size: 0.9rem; margin-bottom: 0;">
+        The doc comment at <code>diff.go:43</code> claims dependency edges are compared, but
+        <code>compareService</code> in <code>diff.go:83-98</code> only looks at Status,
+        InvocationCount, HealthCheckCount, and an error-state boolean. Either fix the doc or
+        implement the comparison. The plan does both: extend the diff <em>and</em> correct the
+        doc.
+      </p>
+    </div>
+
+    <div class="card card-warning">
+      <h4>Risk C &mdash; NDJSON has no schema version</h4>
+      <p style="font-size: 0.9rem; margin-bottom: 0;">
+        Each Event line is bare JSON; there is no header and no version marker. An importer
+        cannot detect "this NDJSON was emitted by a future v0.3.0 with new fields". Future Event
+        fields with <code>omitempty</code> will silently round-trip; field removals will fail
+        loudly. <strong>Mitigation:</strong> add a separate <code>.auditlogmeta</code> sidecar
+        convention (out of scope here; flagged for roadmap).
+      </p>
+    </div>
+
+    <div class="card card-warning">
+      <h4>Risk D &mdash; Recorder refactor risk</h4>
+      <p style="font-size: 0.9rem; margin-bottom: 0;">
+        Extracting <code>ReplayEvents</code> means either (a) refactoring the Recorder to share
+        logic, or (b) duplicating the state machine. Option (a) touches the hottest code path
+        (every hook). <strong>Mitigation:</strong> prefer (b) for v1 &mdash; duplicate with a
+        golden-test gate, refactor later when both paths are proven equivalent. The library is
+        ~2,500 LOC; a few hundred lines of parallel logic is acceptable.
+      </p>
+    </div>
+
+    <!-- ============= COMPREHENSIVE PLAN ============= -->
+    <h2 id="plan"><span class="num">04</span>Comprehensive plan &mdash; 25 medium tasks (30&ndash;100 min each)</h2>
+
+    <p>Sorted by Pareto tier, then by impact &times; customer-value &divide; effort (descending within tier).</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Tier</th>
+            <th>Task</th>
+            <th>Impact</th>
+            <th>Effort</th>
+            <th>Customer value</th>
+            <th>Depends on</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>T1</strong></td>
+            <td><span class="tier tier-1">T1</span></td>
+            <td><strong>Replay engine</strong> &mdash; extract event-application logic from <code>Recorder</code> hooks into pure <code>applyEvent</code> functions in new <code>replay.go</code>.</td>
+            <td><span class="badge badge-bad">5</span></td>
+            <td><span class="effort effort-l">90m</span></td>
+            <td><span class="badge badge-info">indirect</span></td>
+            <td>&mdash;</td>
+          </tr>
+          <tr>
+            <td><strong>T2</strong></td>
+            <td><span class="tier tier-1">T1</span></td>
+            <td><strong>ReplayEvents(events) &rarr; Report</strong> &mdash; orchestrate state machine, build scope tree + ServiceInfo, finalise via <code>buildReportFromCore</code>, run <code>Validate()</code>.</td>
+            <td><span class="badge badge-bad">5</span></td>
+            <td><span class="effort effort-l">100m</span></td>
+            <td><span class="badge badge-info">indirect</span></td>
+            <td>T1</td>
+          </tr>
+          <tr>
+            <td><strong>T3</strong></td>
+            <td><span class="tier tier-1">T1</span></td>
+            <td><strong>NDJSON reader</strong> &mdash; <code>ReadEvents(io.Reader)</code> using <code>bufio.Scanner</code>, per-line <code>json.Unmarshal</code>, line-number error wrapping, 1&nbsp;MB default buffer.</td>
+            <td><span class="badge badge-bad">5</span></td>
+            <td><span class="effort effort-s">45m</span></td>
+            <td><span class="badge badge-info">indirect</span></td>
+            <td>&mdash;</td>
+          </tr>
+          <tr>
+            <td><strong>T4</strong></td>
+            <td><span class="tier tier-2">T2</span></td>
+            <td><strong>Loader API</strong> &mdash; <code>LoadReport(path)</code> with format auto-detect (first non-ws byte <code>{</code> &rarr; JSON, else NDJSON). Routes to <code>MigrateReport</code> or <code>ReadEvents&rarr;ReplayEvents</code>.</td>
+            <td><span class="badge badge-bad">5</span></td>
+            <td><span class="effort effort-m">60m</span></td>
+            <td><span class="badge badge-good">high</span></td>
+            <td>T2, T3</td>
+          </tr>
+          <tr>
+            <td><strong>T5</strong></td>
+            <td><span class="tier tier-2">T2</span></td>
+            <td><strong>CLI skeleton</strong> &mdash; pick <code>spf13/cobra</code>, create <code>cmd/auditlog/main.go</code>, root command with <code>--version</code>, persistent flags (<code>--quiet</code>/<code>--no-color</code>).</td>
+            <td><span class="badge badge-bad">5</span></td>
+            <td><span class="effort effort-m">60m</span></td>
+            <td><span class="badge badge-good">high</span></td>
+            <td>&mdash;</td>
+          </tr>
+          <tr>
+            <td><strong>T6</strong></td>
+            <td><span class="tier tier-2">T2</span></td>
+            <td><strong>CLI <code>import</code></strong> &mdash; <code>auditlog import &lt;file&gt;</code> loads via <code>LoadReport</code>, writes chosen format with <code>-o</code>/<code>-t</code>.</td>
+            <td><span class="badge badge-bad">5</span></td>
+            <td><span class="effort effort-m">75m</span></td>
+            <td><span class="badge badge-good">high</span></td>
+            <td>T4, T5</td>
+          </tr>
+          <tr>
+            <td><strong>T7</strong></td>
+            <td><span class="tier tier-2">T2</span></td>
+            <td><strong>CLI <code>export</code></strong> &mdash; <code>auditlog export &lt;input&gt; -f html|json|ndjson|mermaid|plantuml</code>. Default <code>json</code>; stdout or <code>-o</code>.</td>
+            <td><span class="badge badge-bad">5</span></td>
+            <td><span class="effort effort-s">60m</span></td>
+            <td><span class="badge badge-good">high</span></td>
+            <td>T4, T5</td>
+          </tr>
+          <tr>
+            <td><strong>T8</strong></td>
+            <td><span class="tier tier-2">T2</span></td>
+            <td><strong>JSON Schema draft</strong> &mdash; <code>schema/report.schema.json</code> for v0.2.0. Top-level Report + ServiceInfo + Event + ServiceRef + ScopeNode + enum constraints + RFC3339 timestamps.</td>
+            <td><span class="badge badge-warn">4</span></td>
+            <td><span class="effort effort-m">75m</span></td>
+            <td><span class="badge badge-good">high</span></td>
+            <td>&mdash;</td>
+          </tr>
+          <tr>
+            <td><strong>T9</strong></td>
+            <td><span class="tier tier-2">T2</span></td>
+            <td><strong>Schema validation</strong> &mdash; embed schema via <code>embed.FS</code>, add <code>ValidateAgainstSchema(Report)</code> using <code>santhosh-tekuri/jsonschema</code> (pure Go, no deps).</td>
+            <td><span class="badge badge-warn">4</span></td>
+            <td><span class="effort effort-m">60m</span></td>
+            <td><span class="badge badge-good">med</span></td>
+            <td>T8</td>
+          </tr>
+          <tr>
+            <td><strong>T10</strong></td>
+            <td><span class="tier tier-3">T3</span></td>
+            <td><strong>Diff: dependency edges</strong> &mdash; extend <code>ServiceDiff</code> with <code>AddedDeps</code>/<code>RemovedDeps</code>; compare dep slices as sets. Fixes <code>diff.go:43</code> doc lie.</td>
+            <td><span class="badge badge-warn">4</span></td>
+            <td><span class="effort effort-m">75m</span></td>
+            <td><span class="badge badge-good">med</span></td>
+            <td>&mdash;</td>
+          </tr>
+          <tr>
+            <td><strong>T11</strong></td>
+            <td><span class="tier tier-3">T3</span></td>
+            <td><strong>Diff: scope tree</strong> &mdash; flatten <code>ScopeNode</code> by parent-path, set-diff added/removed scopes. New <code>ScopeDiff</code> result type.</td>
+            <td><span class="badge badge-warn">4</span></td>
+            <td><span class="effort effort-m">60m</span></td>
+            <td><span class="badge badge-good">med</span></td>
+            <td>&mdash;</td>
+          </tr>
+          <tr>
+            <td><strong>T12</strong></td>
+            <td><span class="tier tier-3">T3</span></td>
+            <td><strong>CLI <code>validate</code></strong> &mdash; <code>auditlog validate &lt;file&gt; [--schema path]</code>: runs <code>Report.Validate()</code> + optional JSON Schema validation. Exit 2 on failure.</td>
+            <td><span class="badge badge-warn">4</span></td>
+            <td><span class="effort effort-s">45m</span></td>
+            <td><span class="badge badge-good">med</span></td>
+            <td>T4, T9</td>
+          </tr>
+          <tr>
+            <td><strong>T13</strong></td>
+            <td><span class="tier tier-3">T3</span></td>
+            <td><strong>CLI <code>diff</code></strong> &mdash; <code>auditlog diff &lt;a&gt; &lt;b&gt;</code> loads both, runs <code>Report.Diff</code>, prints text or <code>-f json</code>. Exit 3 if non-empty.</td>
+            <td><span class="badge badge-warn">4</span></td>
+            <td><span class="effort effort-s">60m</span></td>
+            <td><span class="badge badge-good">high</span></td>
+            <td>T4, T10, T11</td>
+          </tr>
+          <tr>
+            <td><strong>T14</strong></td>
+            <td><span class="tier tier-3">T3</span></td>
+            <td><strong>CLI <code>info</code></strong> &mdash; summary stats (version, counts, durations, health/shutdown). Aliases <code>summary</code>, <code>stats</code>. <code>--json</code> output.</td>
+            <td><span class="badge badge-info">3</span></td>
+            <td><span class="effort effort-xs">30m</span></td>
+            <td><span class="badge badge-warn">low</span></td>
+            <td>T4</td>
+          </tr>
+          <tr>
+            <td><strong>T15</strong></td>
+            <td><span class="tier tier-3">T3</span></td>
+            <td><strong>Replay golden tests</strong> &mdash; capture example/demo run as fixture (JSON + NDJSON), assert <code>ReplayEvents(ndjson) &asymp; report</code> modulo capability flags. Plus targeted unit tests.</td>
+            <td><span class="badge badge-bad">5</span></td>
+            <td><span class="effort effort-m">90m</span></td>
+            <td><span class="badge badge-info">indirect</span></td>
+            <td>T2</td>
+          </tr>
+          <tr>
+            <td><strong>T16</strong></td>
+            <td><span class="tier tier-3">T3</span></td>
+            <td><strong>NDJSON reader tests</strong> &mdash; roundtrip, empty input, missing trailing newline, malformed line N, fuzz target.</td>
+            <td><span class="badge badge-warn">4</span></td>
+            <td><span class="effort effort-s">60m</span></td>
+            <td><span class="badge badge-info">indirect</span></td>
+            <td>T3</td>
+          </tr>
+          <tr>
+            <td><strong>T17</strong></td>
+            <td><span class="tier tier-3">T3</span></td>
+            <td><strong>CLI golden tests</strong> &mdash; build binary in test setup; per-subcommand golden file assertions; exit-code checks.</td>
+            <td><span class="badge badge-warn">4</span></td>
+            <td><span class="effort effort-m">75m</span></td>
+            <td><span class="badge badge-info">indirect</span></td>
+            <td>T6, T7</td>
+          </tr>
+          <tr>
+            <td><strong>T18</strong></td>
+            <td><span class="tier tier-3">T3</span></td>
+            <td><strong>nix build binary</strong> &mdash; add <code>packages.auditlog = buildGoModule { subPackages = ["cmd/auditlog"]; }</code>; pin version via <code>git rev-parse</code>.</td>
+            <td><span class="badge badge-warn">4</span></td>
+            <td><span class="effort effort-s">45m</span></td>
+            <td><span class="badge badge-good">med</span></td>
+            <td>T6, T7</td>
+          </tr>
+          <tr>
+            <td><strong>T19</strong></td>
+            <td><span class="tier tier-4">T4</span></td>
+            <td><strong>CI cross-compile matrix</strong> &mdash; <code>[linux, darwin, windows] &times; [amd64, arm64]</code>; ldflags version injection; upload artifacts.</td>
+            <td><span class="badge badge-info">3</span></td>
+            <td><span class="effort effort-m">60m</span></td>
+            <td><span class="badge badge-good">med</span></td>
+            <td>T18</td>
+          </tr>
+          <tr>
+            <td><strong>T20</strong></td>
+            <td><span class="tier tier-4">T4</span></td>
+            <td><strong>CI smoke test</strong> &mdash; build CLI, run <code>--version</code>, run <code>import</code> on sample fixture, fail on non-zero exit.</td>
+            <td><span class="badge badge-info">3</span></td>
+            <td><span class="effort effort-xs">30m</span></td>
+            <td><span class="badge badge-info">indirect</span></td>
+            <td>T18</td>
+          </tr>
+          <tr>
+            <td><strong>T21</strong></td>
+            <td><span class="tier tier-4">T4</span></td>
+            <td><strong>README update</strong> &mdash; "CLI tool" section: install (<code>go install</code>, <code>nix run</code>, binary), per-subcommand examples, link to workflow doc.</td>
+            <td><span class="badge badge-info">3</span></td>
+            <td><span class="effort effort-s">45m</span></td>
+            <td><span class="badge badge-good">high</span></td>
+            <td>T6, T7, T12, T13</td>
+          </tr>
+          <tr>
+            <td><strong>T22</strong></td>
+            <td><span class="tier tier-4">T4</span></td>
+            <td><strong>AGENTS.md update</strong> &mdash; add <code>cmd/</code>, <code>replay.go</code>, <code>ndjson.go</code>, <code>loader.go</code>, <code>schema/</code> to file inventory; document CLI architecture and replay caveats.</td>
+            <td><span class="badge badge-info">3</span></td>
+            <td><span class="effort effort-xs">30m</span></td>
+            <td><span class="badge badge-warn">low</span></td>
+            <td>T2, T6</td>
+          </tr>
+          <tr>
+            <td><strong>T23</strong></td>
+            <td><span class="tier tier-4">T4</span></td>
+            <td><strong>FEATURES.md + TODO_LIST.md</strong> &mdash; move CLI tool, NDJSON import, JSON Schema from PLANNED &rarr; DONE; mark related TODO items completed.</td>
+            <td><span class="badge badge-info">3</span></td>
+            <td><span class="effort effort-xs">30m</span></td>
+            <td><span class="badge badge-warn">low</span></td>
+            <td>T6, T8</td>
+          </tr>
+          <tr>
+            <td><strong>T24</strong></td>
+            <td><span class="tier tier-4">T4</span></td>
+            <td><strong>docs/examples/cli-workflow.md</strong> &mdash; full round-trip demo: capture &rarr; export ndjson &rarr; import &rarr; render html &rarr; diff against fresh capture.</td>
+            <td><span class="badge badge-info">3</span></td>
+            <td><span class="effort effort-s">45m</span></td>
+            <td><span class="badge badge-good">med</span></td>
+            <td>T13</td>
+          </tr>
+          <tr>
+            <td><strong>T25</strong></td>
+            <td><span class="tier tier-4">T4</span></td>
+            <td><strong>CHANGELOG.md</strong> &mdash; Unreleased section with feature entries for CLI, NDJSON import, JSON Schema, diff extensions.</td>
+            <td><span class="badge badge-info">3</span></td>
+            <td><span class="effort effort-xs">30m</span></td>
+            <td><span class="badge badge-warn">low</span></td>
+            <td>all</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-solution">
+      <strong>Effort legend:</strong>
+      <span class="effort effort-xs">XS &asymp; 30m</span>
+      <span class="effort effort-s">S &asymp; 45&ndash;60m</span>
+      <span class="effort effort-m">M &asymp; 75&ndash;90m</span>
+      <span class="effort effort-l">L &asymp; 100m</span>
+      &nbsp;|&nbsp;
+      <strong>Impact:</strong> 5=critical-path &middot; 4=high &middot; 3=medium
+    </div>
+
+    <!-- ============= EXECUTION GRAPH ============= -->
+    <h2 id="graph"><span class="num">05</span>Execution dependency graph</h2>
+
+    <p>Edges show build-order dependencies. Red animated edge = critical path. Dashed = test dependency. Tier containers indicate Pareto grouping.</p>
+
+    <div class="diagram-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-d2-version="v0.7.1" preserveAspectRatio="xMinYMin meet" viewBox="0 0 2383 1718"><svg class="d2-4246079714 d2-svg" width="2383" height="1718" viewBox="-89 -89 2383 1718"><rect x="-89.000000" y="-89.000000" width="2383.000000" height="1718.000000" rx="0.000000" fill="#FFFFFF" class=" fill-N7" stroke-width="0" /><style type="text/css"><![CDATA[
+.d2-4246079714 .text {
+	font-family: "d2-4246079714-font-regular";
+}
+@font-face {
+	font-family: d2-4246079714-font-regular;
+	src: url("data:application/font-woff;base64,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");
+}
+@keyframes dashdraw {
+	from {
+		stroke-dashoffset: 0;
+	}
+}
+
+.appendix-icon {
+	filter: drop-shadow(0px 0px 32px rgba(31, 36, 58, 0.1));
+}
+.d2-4246079714 .text-bold {
+	font-family: "d2-4246079714-font-bold";
+}
+@font-face {
+	font-family: d2-4246079714-font-bold;
+	src: url("data:application/font-woff;base64,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");
+}
+.d2-4246079714 .text-italic {
+	font-family: "d2-4246079714-font-italic";
+}
+@font-face {
+	font-family: d2-4246079714-font-italic;
+	src: url("data:application/font-woff;base64,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");
+}]]></style><style type="text/css"><![CDATA[.shape {
+  shape-rendering: geometricPrecision;
+  stroke-linejoin: round;
+}
+.connection {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.blend {
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
+
+		.d2-4246079714 .fill-N1{fill:#0A0F25;}
+		.d2-4246079714 .fill-N2{fill:#676C7E;}
+		.d2-4246079714 .fill-N3{fill:#9499AB;}
+		.d2-4246079714 .fill-N4{fill:#CFD2DD;}
+		.d2-4246079714 .fill-N5{fill:#DEE1EB;}
+		.d2-4246079714 .fill-N6{fill:#EEF1F8;}
+		.d2-4246079714 .fill-N7{fill:#FFFFFF;}
+		.d2-4246079714 .fill-B1{fill:#0D32B2;}
+		.d2-4246079714 .fill-B2{fill:#0D32B2;}
+		.d2-4246079714 .fill-B3{fill:#E3E9FD;}
+		.d2-4246079714 .fill-B4{fill:#E3E9FD;}
+		.d2-4246079714 .fill-B5{fill:#EDF0FD;}
+		.d2-4246079714 .fill-B6{fill:#F7F8FE;}
+		.d2-4246079714 .fill-AA2{fill:#4A6FF3;}
+		.d2-4246079714 .fill-AA4{fill:#EDF0FD;}
+		.d2-4246079714 .fill-AA5{fill:#F7F8FE;}
+		.d2-4246079714 .fill-AB4{fill:#EDF0FD;}
+		.d2-4246079714 .fill-AB5{fill:#F7F8FE;}
+		.d2-4246079714 .stroke-N1{stroke:#0A0F25;}
+		.d2-4246079714 .stroke-N2{stroke:#676C7E;}
+		.d2-4246079714 .stroke-N3{stroke:#9499AB;}
+		.d2-4246079714 .stroke-N4{stroke:#CFD2DD;}
+		.d2-4246079714 .stroke-N5{stroke:#DEE1EB;}
+		.d2-4246079714 .stroke-N6{stroke:#EEF1F8;}
+		.d2-4246079714 .stroke-N7{stroke:#FFFFFF;}
+		.d2-4246079714 .stroke-B1{stroke:#0D32B2;}
+		.d2-4246079714 .stroke-B2{stroke:#0D32B2;}
+		.d2-4246079714 .stroke-B3{stroke:#E3E9FD;}
+		.d2-4246079714 .stroke-B4{stroke:#E3E9FD;}
+		.d2-4246079714 .stroke-B5{stroke:#EDF0FD;}
+		.d2-4246079714 .stroke-B6{stroke:#F7F8FE;}
+		.d2-4246079714 .stroke-AA2{stroke:#4A6FF3;}
+		.d2-4246079714 .stroke-AA4{stroke:#EDF0FD;}
+		.d2-4246079714 .stroke-AA5{stroke:#F7F8FE;}
+		.d2-4246079714 .stroke-AB4{stroke:#EDF0FD;}
+		.d2-4246079714 .stroke-AB5{stroke:#F7F8FE;}
+		.d2-4246079714 .background-color-N1{background-color:#0A0F25;}
+		.d2-4246079714 .background-color-N2{background-color:#676C7E;}
+		.d2-4246079714 .background-color-N3{background-color:#9499AB;}
+		.d2-4246079714 .background-color-N4{background-color:#CFD2DD;}
+		.d2-4246079714 .background-color-N5{background-color:#DEE1EB;}
+		.d2-4246079714 .background-color-N6{background-color:#EEF1F8;}
+		.d2-4246079714 .background-color-N7{background-color:#FFFFFF;}
+		.d2-4246079714 .background-color-B1{background-color:#0D32B2;}
+		.d2-4246079714 .background-color-B2{background-color:#0D32B2;}
+		.d2-4246079714 .background-color-B3{background-color:#E3E9FD;}
+		.d2-4246079714 .background-color-B4{background-color:#E3E9FD;}
+		.d2-4246079714 .background-color-B5{background-color:#EDF0FD;}
+		.d2-4246079714 .background-color-B6{background-color:#F7F8FE;}
+		.d2-4246079714 .background-color-AA2{background-color:#4A6FF3;}
+		.d2-4246079714 .background-color-AA4{background-color:#EDF0FD;}
+		.d2-4246079714 .background-color-AA5{background-color:#F7F8FE;}
+		.d2-4246079714 .background-color-AB4{background-color:#EDF0FD;}
+		.d2-4246079714 .background-color-AB5{background-color:#F7F8FE;}
+		.d2-4246079714 .color-N1{color:#0A0F25;}
+		.d2-4246079714 .color-N2{color:#676C7E;}
+		.d2-4246079714 .color-N3{color:#9499AB;}
+		.d2-4246079714 .color-N4{color:#CFD2DD;}
+		.d2-4246079714 .color-N5{color:#DEE1EB;}
+		.d2-4246079714 .color-N6{color:#EEF1F8;}
+		.d2-4246079714 .color-N7{color:#FFFFFF;}
+		.d2-4246079714 .color-B1{color:#0D32B2;}
+		.d2-4246079714 .color-B2{color:#0D32B2;}
+		.d2-4246079714 .color-B3{color:#E3E9FD;}
+		.d2-4246079714 .color-B4{color:#E3E9FD;}
+		.d2-4246079714 .color-B5{color:#EDF0FD;}
+		.d2-4246079714 .color-B6{color:#F7F8FE;}
+		.d2-4246079714 .color-AA2{color:#4A6FF3;}
+		.d2-4246079714 .color-AA4{color:#EDF0FD;}
+		.d2-4246079714 .color-AA5{color:#F7F8FE;}
+		.d2-4246079714 .color-AB4{color:#EDF0FD;}
+		.d2-4246079714 .color-AB5{color:#F7F8FE;}.appendix text.text{fill:#0A0F25}.md{--color-fg-default:#0A0F25;--color-fg-muted:#676C7E;--color-fg-subtle:#9499AB;--color-canvas-default:#FFFFFF;--color-canvas-subtle:#EEF1F8;--color-border-default:#0D32B2;--color-border-muted:#0D32B2;--color-neutral-muted:#EEF1F8;--color-accent-fg:#0D32B2;--color-accent-emphasis:#0D32B2;--color-attention-subtle:#676C7E;--color-danger-fg:red;}.sketch-overlay-B1{fill:url(#streaks-darker-d2-4246079714);mix-blend-mode:lighten}.sketch-overlay-B2{fill:url(#streaks-darker-d2-4246079714);mix-blend-mode:lighten}.sketch-overlay-B3{fill:url(#streaks-bright-d2-4246079714);mix-blend-mode:darken}.sketch-overlay-B4{fill:url(#streaks-bright-d2-4246079714);mix-blend-mode:darken}.sketch-overlay-B5{fill:url(#streaks-bright-d2-4246079714);mix-blend-mode:darken}.sketch-overlay-B6{fill:url(#streaks-bright-d2-4246079714);mix-blend-mode:darken}.sketch-overlay-AA2{fill:url(#streaks-dark-d2-4246079714);mix-blend-mode:overlay}.sketch-overlay-AA4{fill:url(#streaks-bright-d2-4246079714);mix-blend-mode:darken}.sketch-overlay-AA5{fill:url(#streaks-bright-d2-4246079714);mix-blend-mode:darken}.sketch-overlay-AB4{fill:url(#streaks-bright-d2-4246079714);mix-blend-mode:darken}.sketch-overlay-AB5{fill:url(#streaks-bright-d2-4246079714);mix-blend-mode:darken}.sketch-overlay-N1{fill:url(#streaks-darker-d2-4246079714);mix-blend-mode:lighten}.sketch-overlay-N2{fill:url(#streaks-dark-d2-4246079714);mix-blend-mode:overlay}.sketch-overlay-N3{fill:url(#streaks-normal-d2-4246079714);mix-blend-mode:color-burn}.sketch-overlay-N4{fill:url(#streaks-normal-d2-4246079714);mix-blend-mode:color-burn}.sketch-overlay-N5{fill:url(#streaks-bright-d2-4246079714);mix-blend-mode:darken}.sketch-overlay-N6{fill:url(#streaks-bright-d2-4246079714);mix-blend-mode:darken}.sketch-overlay-N7{fill:url(#streaks-bright-d2-4246079714);mix-blend-mode:darken}.light-code{display: block}.dark-code{display: none}]]></style><g class="bmVhci1yZXNpemUtY29udHJhY3Q="><g class="shape" ><rect x="158.000000" y="211.000000" width="75.000000" height="66.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="195.500000" y="249.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">true</text></g><g class="dGllcjE="><g class="shape" ><rect x="12.000000" y="297.000000" width="368.000000" height="284.000000" rx="12.000000" stroke="#6366f1" fill="#1e1240" style="stroke-width:2;" /></g><text x="196.000000" y="330.000000" fill="#e2e8f0" class="text" style="text-anchor:middle;font-size:28px">Keystone (1% -&gt; 51%)</text></g><g class="dGllcjI="><g class="shape" ><rect x="460.000000" y="93.000000" width="358.000000" height="692.000000" rx="12.000000" stroke="#10b981" fill="#0d2818" style="stroke-width:2;" /></g><text x="639.000000" y="126.000000" fill="#e2e8f0" class="text" style="text-anchor:middle;font-size:28px">Operational (4% -&gt; 64%)</text></g><g class="dGllcjM="><g class="shape" ><rect x="948.000000" y="12.000000" width="386.000000" height="854.000000" rx="12.000000" stroke="#f59e0b" fill="#3a1a0a" style="stroke-width:2;" /></g><text x="1141.000000" y="45.000000" fill="#e2e8f0" class="text" style="text-anchor:middle;font-size:28px">Customer Value (20% -&gt; 80%)</text></g><g class="dGllcjQ="><g class="shape" ><rect x="1514.000000" y="98.000000" width="286.000000" height="682.000000" rx="12.000000" stroke="#64748b" fill="#1e293b" style="stroke-width:2;" /></g><text x="1657.000000" y="131.000000" fill="#e2e8f0" class="text" style="text-anchor:middle;font-size:28px">Polish (80% -&gt; 100%)</text></g><g class="cmVwbGF5X2VuZ2luZQ=="><g class="shape" ><rect x="235.000000" y="1013.000000" width="145.000000" height="80.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="307.500000" y="1058.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">replay_engine</text></g><g class="bG9hZGVyX2FwaQ=="><g class="shape" ><rect x="1125.000000" y="1010.000000" width="120.000000" height="160.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1185.000000" y="1095.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">loader_api</text></g><g class="bmRqc29uX3JlYWRlcg=="><g class="shape" ><rect x="232.000000" y="1226.000000" width="148.000000" height="80.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="306.000000" y="1271.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">ndjson_reader</text></g><g class="Y2xpX2ltcG9ydA=="><g class="shape" ><rect x="1597.000000" y="849.000000" width="119.000000" height="80.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1656.500000" y="894.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">cli_import</text></g><g class="Y2xpX2V4cG9ydA=="><g class="shape" ><rect x="1570.000000" y="978.000000" width="117.000000" height="80.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1628.500000" y="1023.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">cli_export</text></g><g class="Y2xpX3NrZWxldG9u"><g class="shape" ><rect x="1203.000000" y="886.000000" width="131.000000" height="80.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1268.500000" y="931.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">cli_skeleton</text></g><g class="anNvbl9zY2hlbWE="><g class="shape" ><rect x="242.000000" y="1462.000000" width="138.000000" height="66.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="311.000000" y="1500.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">json_schema</text></g><g class="c2NoZW1hX3ZhbA=="><g class="shape" ><rect x="574.000000" y="1462.000000" width="129.000000" height="66.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="638.500000" y="1500.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">schema_val</text></g><g class="Y2xpX3ZhbGlkYXRl"><g class="shape" ><rect x="948.000000" y="1462.000000" width="128.000000" height="66.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1012.000000" y="1500.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">cli_validate</text></g><g class="cmVwbGF5X3Rlc3Rz"><g class="shape" ><rect x="573.000000" y="1097.000000" width="132.000000" height="66.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="639.000000" y="1135.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">replay_tests</text></g><g class="bmRqc29uX3Rlc3Rz"><g class="shape" ><rect x="571.000000" y="1270.000000" width="135.000000" height="66.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="638.500000" y="1308.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">ndjson_tests</text></g><g class="Y2xpX3Rlc3Rz"><g class="shape" ><rect x="1885.000000" y="965.000000" width="105.000000" height="80.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1937.500000" y="1010.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">cli_tests</text></g><g class="ZGlmZl9kZXBz"><g class="shape" ><rect x="1222.000000" y="1376.000000" width="112.000000" height="66.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1278.000000" y="1414.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">diff_deps</text></g><g class="Y2xpX2RpZmY="><g class="shape" ><rect x="1514.000000" y="1287.000000" width="95.000000" height="120.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1561.500000" y="1352.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">cli_diff</text></g><g class="ZGlmZl9zY29wZXM="><g class="shape" ><rect x="1208.000000" y="1290.000000" width="126.000000" height="66.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1271.000000" y="1328.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">diff_scopes</text></g><g class="Y2xpX2luZm8="><g class="shape" ><rect x="1514.000000" y="1096.000000" width="98.000000" height="66.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1563.000000" y="1134.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">cli_info</text></g><g class="bml4X2JpbmFyeQ=="><g class="shape" ><rect x="1880.000000" y="836.000000" width="121.000000" height="80.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1940.500000" y="881.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">nix_binary</text></g><g class="Y2lfY3Jvc3M="><g class="shape" ><rect x="2081.000000" y="800.000000" width="102.000000" height="66.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="2132.000000" y="838.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">ci_cross</text></g><g class="Y2lfc21va2U="><g class="shape" ><rect x="2081.000000" y="886.000000" width="112.000000" height="66.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="2137.000000" y="924.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">ci_smoke</text></g><g class="cmVhZG1l"><g class="shape" ><rect x="2081.000000" y="972.000000" width="98.000000" height="66.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="2130.000000" y="1010.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">readme</text></g><g class="ZmVhdHVyZXM="><g class="shape" ><rect x="948.000000" y="1190.000000" width="105.000000" height="80.000000" stroke="#0D32B2" fill="#F7F8FE" class=" stroke-B1 fill-B6" style="stroke-width:2;" /></g><text x="1000.500000" y="1235.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">features</text></g><g class="dGllcjEucmVwbGF5X2VuZ2luZQ=="><g class="shape" ><rect x="62.000000" y="347.000000" width="268.000000" height="82.000000" stroke="#0D32B2" fill="#6366f1" class=" stroke-B1" style="stroke-width:2;" /></g><text x="196.000000" y="385.500000" fill="white" class="text-bold" style="text-anchor:middle;font-size:16px"><tspan x="196.000000" dy="0.000000">Replay Engine</tspan><tspan x="196.000000" dy="18.500000">ReplayEvents(events) -&gt; Report</tspan></text><title>Hardest technical nut.&#xA;Reconstructs Services + ScopeTree&#xA;from a flat event stream.</title></g><g class="dGllcjEubmRqc29uX3JlYWRlcg=="><g class="shape" ><rect x="92.000000" y="449.000000" width="207.000000" height="82.000000" stroke="#0D32B2" fill="#6366f1" class=" stroke-B1" style="stroke-width:2;" /></g><text x="195.500000" y="487.500000" fill="white" class="text-bold" style="text-anchor:middle;font-size:16px"><tspan x="195.500000" dy="0.000000">NDJSON Reader</tspan><tspan x="195.500000" dy="18.500000">ReadEvents(io.Reader)</tspan></text><title>bufio.Scanner + per-line&#xA;json.Decode with line errors</title></g><g class="dGllcjIubG9hZGVyX2FwaQ=="><g class="shape" ><rect x="510.000000" y="143.000000" width="258.000000" height="82.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="639.000000" y="181.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="639.000000" dy="0.000000">Loader API</tspan><tspan x="639.000000" dy="18.500000">LoadReport(path) auto-detect</tspan></text></g><g class="dGllcjIuY2xpX3NrZWxldG9u"><g class="shape" ><rect x="541.000000" y="245.000000" width="195.000000" height="82.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="638.500000" y="283.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="638.500000" dy="0.000000">CLI Skeleton</tspan><tspan x="638.500000" dy="18.500000">cmd/auditlog + cobra</tspan></text></g><g class="dGllcjIuY2xpX2ltcG9ydA=="><g class="shape" ><rect x="568.000000" y="347.000000" width="141.000000" height="82.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="638.500000" y="385.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="638.500000" dy="0.000000">CLI import</tspan><tspan x="638.500000" dy="18.500000">subcommand</tspan></text></g><g class="dGllcjIuY2xpX2V4cG9ydA=="><g class="shape" ><rect x="568.000000" y="449.000000" width="141.000000" height="82.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="638.500000" y="487.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="638.500000" dy="0.000000">CLI export</tspan><tspan x="638.500000" dy="18.500000">subcommand</tspan></text></g><g class="dGllcjIuanNvbl9zY2hlbWE="><g class="shape" ><rect x="517.000000" y="551.000000" width="243.000000" height="82.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="638.500000" y="589.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="638.500000" dy="0.000000">JSON Schema</tspan><tspan x="638.500000" dy="18.500000">schema/report.schema.json</tspan></text></g><g class="dGllcjIuc2NoZW1hX3ZhbA=="><g class="shape" ><rect x="541.000000" y="653.000000" width="196.000000" height="82.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="639.000000" y="691.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="639.000000" dy="0.000000">Schema Validation</tspan><tspan x="639.000000" dy="18.500000">embed.FS + validator</tspan></text></g><g class="dGllcjMuZGlmZl9kZXBz"><g class="shape" ><rect x="1036.000000" y="62.000000" width="210.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1141.000000" y="100.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Diff: Dependency Edges</text></g><g class="dGllcjMuZGlmZl9zY29wZXM="><g class="shape" ><rect x="1063.000000" y="148.000000" width="155.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1140.500000" y="186.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Diff: Scope Tree</text></g><g class="dGllcjMuY2xpX3ZhbGlkYXRl"><g class="shape" ><rect x="1076.000000" y="234.000000" width="129.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1140.500000" y="272.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">CLI validate</text></g><g class="dGllcjMuY2xpX2RpZmY="><g class="shape" ><rect x="1093.000000" y="320.000000" width="96.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1141.000000" y="358.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">CLI diff</text></g><g class="dGllcjMuY2xpX2luZm8="><g class="shape" ><rect x="1091.000000" y="406.000000" width="99.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1140.500000" y="444.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">CLI info</text></g><g class="dGllcjMucmVwbGF5X3Rlc3Rz"><g class="shape" ><rect x="1047.000000" y="492.000000" width="187.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1140.500000" y="530.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Replay Golden Tests</text></g><g class="dGllcjMubmRqc29uX3Rlc3Rz"><g class="shape" ><rect x="1051.000000" y="578.000000" width="180.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1141.000000" y="616.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">NDJSON Fuzz Tests</text></g><g class="dGllcjMuY2xpX3Rlc3Rz"><g class="shape" ><rect x="1060.000000" y="664.000000" width="162.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1141.000000" y="702.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">CLI Golden Tests</text></g><g class="dGllcjMubml4X2JpbmFyeQ=="><g class="shape" ><rect x="1063.000000" y="750.000000" width="156.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1141.000000" y="788.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">nix build binary</text></g><g class="dGllcjQuY2lfY3Jvc3M="><g class="shape" ><rect x="1574.000000" y="148.000000" width="165.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1656.500000" y="186.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">CI Cross-Compile</text></g><g class="dGllcjQuY2lfc21va2U="><g class="shape" ><rect x="1584.000000" y="234.000000" width="145.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1656.500000" y="272.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">CI Smoke Test</text></g><g class="dGllcjQucmVhZG1l"><g class="shape" ><rect x="1578.000000" y="320.000000" width="158.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1657.000000" y="358.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">README Update</text></g><g class="dGllcjQuYWdlbnRz"><g class="shape" ><rect x="1564.000000" y="406.000000" width="185.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1656.500000" y="444.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">AGENTS.md Update</text></g><g class="dGllcjQuZmVhdHVyZXM="><g class="shape" ><rect x="1570.000000" y="492.000000" width="174.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1657.000000" y="530.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">FEATURES + TODO</text></g><g class="dGllcjQuZXhhbXBsZXM="><g class="shape" ><rect x="1575.000000" y="578.000000" width="163.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1656.500000" y="616.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">cli-workflow.md</text></g><g class="dGllcjQuY2hhbmdlbG9n"><g class="shape" ><rect x="1590.000000" y="664.000000" width="134.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1657.000000" y="702.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">CHANGELOG</text></g><g class="KHJlcGxheV9lbmdpbmUgLSZndDsgbG9hZGVyX2FwaSlbMF0="><marker id="mk-d2-4246079714-4112724623" markerWidth="10.000000" markerHeight="12.000000" refX="7.000000" refY="6.000000" viewBox="0.000000 0.000000 10.000000 12.000000" orient="auto" markerUnits="userSpaceOnUse"> <polygon points="0.000000,0.000000 10.000000,6.000000 0.000000,12.000000" fill="#f43f5e" class="connection" stroke-width="2" /> </marker><path d="M 382.000000 1040.166016 L 410.416992 1040.166016 C 429.583008 1040.166016 410.416992 1021.000000 429.583008 1021.000000 L 1121.000000 1021.000000" stroke="#f43f5e" fill="none" class="connection animated-connection" style="stroke-width:2;stroke-dasharray:10.000000,9.865639;stroke-dashoffset:-198.656393;animation: dashdraw 4.932820s linear infinite;" marker-end="url(#mk-d2-4246079714-4112724623)" mask="url(#d2-4246079714)" /><text x="743.000000" y="1027.000000" fill="#676C7E" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">unblocks</text></g><g class="KG5kanNvbl9yZWFkZXIgLSZndDsgbG9hZGVyX2FwaSlbMF0="><marker id="mk-d2-4246079714-3488378134" markerWidth="10.000000" markerHeight="12.000000" refX="7.000000" refY="6.000000" viewBox="0.000000 0.000000 10.000000 12.000000" orient="auto" markerUnits="userSpaceOnUse"> <polygon points="0.000000,0.000000 10.000000,6.000000 0.000000,12.000000" fill="#0D32B2" class="connection fill-B1" stroke-width="2" /> </marker><path d="M 382.000000 1253.166016 L 410.000000 1253.166016 S 420.000000 1253.166016 420.000000 1243.166016 L 420.000000 1213.166016 S 420.000000 1203.166016 430.000000 1203.166016 L 848.000000 1203.166016 S 858.000000 1203.166016 858.000000 1193.166016 L 858.000000 1126.666016 S 858.000000 1116.666016 868.000000 1116.666016 L 1121.000000 1116.666016" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KGxvYWRlcl9hcGkgLSZndDsgY2xpX2ltcG9ydClbMF0="><path d="M 1247.000000 1042.000000 L 1414.000000 1042.000000 S 1424.000000 1042.000000 1424.000000 1032.000000 L 1424.000000 912.666016 S 1424.000000 902.666016 1434.000000 902.666016 L 1594.000000 902.666016" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KGxvYWRlcl9hcGkgLSZndDsgY2xpX2V4cG9ydClbMF0="><path d="M 1247.000000 1074.000000 L 1464.000000 1074.000000 S 1474.000000 1074.000000 1474.000000 1064.000000 L 1474.000000 1042.000000 S 1474.000000 1032.000000 1484.000000 1032.000000 L 1566.000000 1032.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KGNsaV9za2VsZXRvbiAtJmd0OyBjbGlfaW1wb3J0KVswXQ=="><path d="M 1336.000000 912.666016 L 1364.000000 912.666016 S 1374.000000 912.666016 1374.000000 902.666016 L 1374.000000 885.999023 S 1374.000000 875.999023 1384.000000 875.999023 L 1594.000000 875.999023" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KGNsaV9za2VsZXRvbiAtJmd0OyBjbGlfZXhwb3J0KVswXQ=="><path d="M 1336.000000 939.333008 L 1464.000000 939.333008 S 1474.000000 939.333008 1474.000000 949.333008 L 1474.000000 995.333008 S 1474.000000 1005.333008 1484.000000 1005.333008 L 1566.000000 1005.333008" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KGpzb25fc2NoZW1hIC0mZ3Q7IHNjaGVtYV92YWwpWzBd"><path d="M 381.500000 1495.000000 L 570.500000 1495.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KHNjaGVtYV92YWwgLSZndDsgY2xpX3ZhbGlkYXRlKVswXQ=="><path d="M 705.000000 1495.000000 L 944.000000 1495.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KHJlcGxheV9lbmdpbmUgLSZndDsgcmVwbGF5X3Rlc3RzKVswXQ=="><marker id="mk-d2-4246079714-2177206569" markerWidth="10.000000" markerHeight="12.000000" refX="7.000000" refY="6.000000" viewBox="0.000000 0.000000 10.000000 12.000000" orient="auto" markerUnits="userSpaceOnUse"> <polygon points="0.000000,0.000000 10.000000,6.000000 0.000000,12.000000" fill="#0D32B2" class="connection fill-B2" stroke-width="2" /> </marker><path d="M 382.000000 1066.833008 L 410.000000 1066.833008 S 420.000000 1066.833008 420.000000 1076.833008 L 420.000000 1120.166016 S 420.000000 1130.166016 430.000000 1130.166016 L 569.000000 1130.166016" stroke="#0D32B2" fill="none" class="connection stroke-B2" style="stroke-width:2;stroke-dasharray:8.000000,7.892511;" marker-end="url(#mk-d2-4246079714-2177206569)" mask="url(#d2-4246079714)" /></g><g class="KG5kanNvbl9yZWFkZXIgLSZndDsgbmRqc29uX3Rlc3RzKVswXQ=="><path d="M 382.000000 1279.833008 L 410.000000 1279.833008 S 420.000000 1279.833008 420.000000 1289.833008 L 420.000000 1293.500000 S 420.000000 1303.500000 430.000000 1303.500000 L 568.000000 1303.500000" stroke="#0D32B2" fill="none" class="connection stroke-B2" style="stroke-width:2;stroke-dasharray:8.000000,7.892511;" marker-end="url(#mk-d2-4246079714-2177206569)" mask="url(#d2-4246079714)" /></g><g class="KGNsaV9pbXBvcnQgLSZndDsgY2xpX3Rlc3RzKVswXQ=="><path d="M 1718.000000 902.666016 L 1830.000000 902.666016 S 1840.000000 902.666016 1840.000000 912.666016 L 1840.000000 982.000000 S 1840.000000 992.000000 1850.000000 992.000000 L 1881.000000 992.000000" stroke="#0D32B2" fill="none" class="connection stroke-B2" style="stroke-width:2;stroke-dasharray:8.000000,7.892511;" marker-end="url(#mk-d2-4246079714-2177206569)" mask="url(#d2-4246079714)" /></g><g class="KGNsaV9leHBvcnQgLSZndDsgY2xpX3Rlc3RzKVswXQ=="><path d="M 1689.333008 1018.666016 L 1881.333008 1018.666016" stroke="#0D32B2" fill="none" class="connection stroke-B2" style="stroke-width:2;stroke-dasharray:8.000000,7.892511;" marker-end="url(#mk-d2-4246079714-2177206569)" mask="url(#d2-4246079714)" /></g><g class="KGRpZmZfZGVwcyAtJmd0OyBjbGlfZGlmZilbMF0="><path d="M 1336.000000 1409.000000 L 1364.000000 1409.000000 S 1374.000000 1409.000000 1374.000000 1399.000000 L 1374.000000 1387.000000 S 1374.000000 1377.000000 1384.000000 1377.000000 L 1510.000000 1377.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KGRpZmZfc2NvcGVzIC0mZ3Q7IGNsaV9kaWZmKVswXQ=="><path d="M 1336.000000 1323.000000 L 1364.000000 1323.000000 S 1374.000000 1323.000000 1374.000000 1333.000000 L 1374.000000 1337.000000 S 1374.000000 1347.000000 1384.000000 1347.000000 L 1510.000000 1347.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KGxvYWRlcl9hcGkgLSZndDsgY2xpX2RpZmYpWzBd"><path d="M 1247.000000 1138.000000 L 1414.000000 1138.000000 S 1424.000000 1138.000000 1424.000000 1148.000000 L 1424.000000 1307.000000 S 1424.000000 1317.000000 1434.000000 1317.000000 L 1510.000000 1317.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KGxvYWRlcl9hcGkgLSZndDsgY2xpX2luZm8pWzBd"><path d="M 1247.000000 1106.000000 L 1464.000000 1106.000000 S 1474.000000 1106.000000 1474.000000 1116.000000 L 1474.000000 1119.833008 S 1474.000000 1129.833008 1484.000000 1129.833008 L 1510.000000 1129.833008" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KGNsaV9pbXBvcnQgLSZndDsgbml4X2JpbmFyeSlbMF0="><path d="M 1718.000000 876.000000 L 1876.000000 876.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KG5peF9iaW5hcnkgLSZndDsgY2lfY3Jvc3MpWzBd"><path d="M 2003.000000 862.666016 L 2031.000000 862.666016 S 2041.000000 862.666016 2041.000000 852.666016 L 2041.000000 843.000000 S 2041.000000 833.000000 2051.000000 833.000000 L 2077.000000 833.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KG5peF9iaW5hcnkgLSZndDsgY2lfc21va2UpWzBd"><path d="M 2003.000000 889.333008 L 2031.000000 889.333008 S 2041.000000 889.333008 2041.000000 899.333008 L 2041.000000 909.000000 S 2041.000000 919.000000 2051.000000 919.000000 L 2077.000000 919.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KGNsaV90ZXN0cyAtJmd0OyByZWFkbWUpWzBd"><path d="M 1992.000000 1005.333008 L 2077.000000 1005.333008" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KHJlcGxheV90ZXN0cyAtJmd0OyBmZWF0dXJlcylbMF0="><path d="M 707.000000 1130.166016 L 898.000000 1130.166016 S 908.000000 1130.166016 908.000000 1140.166016 L 908.000000 1206.666016 S 908.000000 1216.666016 918.000000 1216.666016 L 944.000000 1216.666016" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KG5kanNvbl90ZXN0cyAtJmd0OyBmZWF0dXJlcylbMF0="><path d="M 708.000000 1303.500000 L 848.000000 1303.500000 S 858.000000 1303.500000 858.000000 1293.500000 L 858.000000 1253.333008 S 858.000000 1243.333008 868.000000 1243.333008 L 944.000000 1243.333008" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KHRpZXIxIC0mZ3Q7IHRpZXIyKVswXQ==" style='opacity:0.000000'><path d="M 382.000000 439.000000 L 456.000000 439.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KHRpZXIyIC0mZ3Q7IHRpZXIzKVswXQ==" style='opacity:0.000000'><path d="M 820.000000 439.000000 L 944.000000 439.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g class="KHRpZXIzIC0mZ3Q7IHRpZXI0KVswXQ==" style='opacity:0.000000'><path d="M 1336.000000 439.000000 L 1510.000000 439.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-4246079714-3488378134)" mask="url(#d2-4246079714)" /></g><g transform="translate(314 331)" class="appendix-icon"><title>Hardest technical nut.&#xA;Reconstructs Services + ScopeTree&#xA;from a flat event stream.</title><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_3427_35082111-d2-4246079714-ORUWK4RRFZZGK4DMMF4V6ZLOM5UW4ZI)">
+<path d="M16 31.1109C24.3456 31.1109 31.1111 24.3454 31.1111 15.9998C31.1111 7.65415 24.3456 0.888672 16 0.888672C7.65436 0.888672 0.888885 7.65415 0.888885 15.9998C0.888885 24.3454 7.65436 31.1109 16 31.1109Z" fill="white" stroke="#DEE1EB"/>
+<path d="M16 26C21.5228 26 26 21.5228 26 16C26 10.4772 21.5228 6 16 6C10.4772 6 6 10.4772 6 16C6 21.5228 10.4772 26 16 26Z" stroke="#2E3346" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M16 19.998V15.998" stroke="#2E3346" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M16 12H16.0098" stroke="#2E3346" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<clipPath id="clip0_3427_35082111-d2-4246079714-ORUWK4RRFZZGK4DMMF4V6ZLOM5UW4ZI">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+</g><g transform="translate(283 433)" class="appendix-icon"><title>bufio.Scanner + per-line&#xA;json.Decode with line errors</title><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_3427_35082111-d2-4246079714-ORUWK4RRFZXGI2TTN5XF64TFMFSGK4Q)">
+<path d="M16 31.1109C24.3456 31.1109 31.1111 24.3454 31.1111 15.9998C31.1111 7.65415 24.3456 0.888672 16 0.888672C7.65436 0.888672 0.888885 7.65415 0.888885 15.9998C0.888885 24.3454 7.65436 31.1109 16 31.1109Z" fill="white" stroke="#DEE1EB"/>
+<path d="M16 26C21.5228 26 26 21.5228 26 16C26 10.4772 21.5228 6 16 6C10.4772 6 6 10.4772 6 16C6 21.5228 10.4772 26 16 26Z" stroke="#2E3346" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M16 19.998V15.998" stroke="#2E3346" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M16 12H16.0098" stroke="#2E3346" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<clipPath id="clip0_3427_35082111-d2-4246079714-ORUWK4RRFZXGI2TTN5XF64TFMFSGK4Q">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+</g><mask id="d2-4246079714" maskUnits="userSpaceOnUse" x="-89" y="-89" width="2383" height="1718">
+<rect x="-89" y="-89" width="2383" height="1718" fill="white"></rect>
+<rect x="711.000000" y="1011.000000" width="64" height="21" fill="black"></rect>
+</mask></svg></svg>
+
+    </div>
+
+    <!-- ============= DETAILED BREAKDOWN ============= -->
+    <h2 id="detail"><span class="num">06</span>Detailed breakdown &mdash; 87 fine tasks (&le;15 min each)</h2>
+
+    <p>Each medium task expanded into atomic, verifiable units. Sorted by parent task then by execution order. Cumulative estimate: ~16&ndash;18h of focused work (excluding review/iteration loops).</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Parent</th>
+            <th>Sub-task</th>
+            <th>Est</th>
+            <th>Verify</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- T1: Replay engine extract -->
+          <tr><td>T1.1</td><td><span class="tier tier-1">T1</span></td><td>Audit <code>Recorder</code> hooks (registration/invocation/shutdown/healthcheck) and document which event type mutates which state field.</td><td><span class="effort effort-xs">10m</span></td><td>Comment block in <code>replay.go</code> describing state machine</td></tr>
+          <tr><td>T1.2</td><td><span class="tier tier-1">T1</span></td><td>Create <code>replay.go</code> with <code>type replayState struct</code> and <code>func applyEvent(evt Event, st *replayState) error</code> signature.</td><td><span class="effort effort-xs">10m</span></td><td>File compiles, type-checks</td></tr>
+          <tr><td>T1.3</td><td><span class="tier tier-1">T1</span></td><td>Implement <code>applyRegistration</code> (mirrors <code>OnAfterRegistration</code>): create <code>serviceRecord</code>, record scope, set <code>RegisteredAt</code>, store <code>ServiceType</code> from event.</td><td><span class="effort effort-s">15m</span></td><td>Unit test: 1 registration event &rarr; 1 serviceRecord</td></tr>
+          <tr><td>T1.4</td><td><span class="tier tier-1">T1</span></td><td>Implement <code>applyInvocationBefore</code>: push <code>(scopeID, serviceName)</code> onto stack for dep inference.</td><td><span class="effort effort-s">15m</span></td><td>Test: stack depth grows</td></tr>
+          <tr><td>T1.5</td><td><span class="tier tier-1">T1</span></td><td>Implement <code>applyInvocationAfter</code>: pop stack (LIFO fast path), set <code>FirstBuildDurationMs</code>, increment <code>InvocationCount</code>, set <code>FirstInvokedAt</code>, infer dep edge from remaining stack frames.</td><td><span class="effort effort-s">15m</span></td><td>Test: A&rarr;B chain produces both forward and reverse edges</td></tr>
+          <tr><td>T1.6</td><td><span class="tier tier-1">T1</span></td><td>Implement <code>applyShutdownBefore</code> + <code>applyShutdownAfter</code>: set <code>ShutdownAt</code>, <code>ShutdownDurationMs</code>, capture <code>ShutdownError</code>.</td><td><span class="effort effort-s">15m</span></td><td>Test: status transitions to <code>shutdown</code> or <code>shutdown_error</code></td></tr>
+          <tr><td>T1.7</td><td><span class="tier tier-1">T1</span></td><td>Implement <code>applyHealthCheck</code>: increment <code>HealthCheckCount</code>, set <code>LastHealthCheckAt</code>, store <code>HealthCheckError</code>.</td><td><span class="effort effort-xs">10m</span></td><td>Test: counts increment, healthy vs unhealthy paths</td></tr>
+
+          <!-- T2: ReplayEvents orchestration -->
+          <tr><td>T2.1</td><td><span class="tier tier-1">T1</span></td><td>Implement <code>ReplayEvents(events []Event) (Report, error)</code>: iterate, dispatch by <code>EventType</code>/<code>Phase</code>, collect into <code>replayState</code>.</td><td><span class="effort effort-s">15m</span></td><td>Happy-path: example fixture &rarr; non-empty Report</td></tr>
+          <tr><td>T2.2</td><td><span class="tier tier-1">T1</span></td><td>Build <code>ScopeNode</code> tree from <code>replayState.scopes</code> map (sorted by scope ID, deterministic).</td><td><span class="effort effort-s">15m</span></td><td>Test: 3-scope tree reproduces original structure</td></tr>
+          <tr><td>T2.3</td><td><span class="tier tier-1">T1</span></td><td>Build <code>[]ServiceInfo</code> via <code>serviceRecordToInfo</code>; wire dependencies + dependents; sort by (scope_name, service_name).</td><td><span class="effort effort-s">15m</span></td><td>Test: dep edges present in both directions</td></tr>
+          <tr><td>T2.4</td><td><span class="tier tier-1">T1</span></td><td>Call <code>buildReportFromCore(..., SchemaVersion, ExportedAt)</code> to finalise denormalized counts.</td><td><span class="effort effort-xs">10m</span></td><td>Validate() passes on output</td></tr>
+          <tr><td>T2.5</td><td><span class="tier tier-1">T1</span></td><td>Add <code>Report.Reconstructed bool</code> field (JSON <code>reconstructed</code>); set <code>true</code> in ReplayEvents output so consumers can detect capability-flag absence.</td><td><span class="effort effort-xs">10m</span></td><td>Field appears in JSON when true; false omitted via omitempty</td></tr>
+          <tr><td>T2.6</td><td><span class="tier tier-1">T1</span></td><td>Run <code>Report.Validate()</code> on result; wrap failures with <code>errReplayValidationFailed</code>.</td><td><span class="effort effort-xs">10m</span></td><td>Malformed event stream returns wrapped error</td></tr>
+
+          <!-- T3: NDJSON reader -->
+          <tr><td>T3.1</td><td><span class="tier tier-1">T1</span></td><td>Create <code>ndjson.go</code> with <code>func ReadEvents(r io.Reader) ([]Event, error)</code>.</td><td><span class="effort effort-s">15m</span></td><td>Compiles</td></tr>
+          <tr><td>T3.2</td><td><span class="tier tier-1">T1</span></td><td>Use <code>bufio.Scanner</code> with <code>bufio.NewBuffer(make([]byte, 0, 1&lt;&lt;20))</code> (1&nbsp;MB default, configurable via <code>ReadEventsWithMaxLineSize</code>).</td><td><span class="effort effort-xs">10m</span></td><td>1MB line accepted; 2MB line returns ErrOversizedLine</td></tr>
+          <tr><td>T3.3</td><td><span class="tier tier-1">T1</span></td><td>Skip blank/whitespace-only lines (robust against trailing newline + blank separators).</td><td><span class="effort effort-xs">5m</span></td><td>File with blank lines between events parses correctly</td></tr>
+          <tr><td>T3.4</td><td><span class="tier tier-1">T1</span></td><td>Per-line <code>json.Unmarshal</code> into <code>Event</code>; wrap errors as <code>fmt.Errorf("line %d: %w", n, err)</code>.</td><td><span class="effort effort-s">15m</span></td><td>Malformed JSON reports <code>line N</code> in message</td></tr>
+          <tr><td>T3.5</td><td><span class="tier tier-1">T1</span></td><td>Define sentinels <code>ErrEmpty</code>, <code>ErrOversizedLine</code>, <code>ErrNoEvents</code>.</td><td><span class="effort effort-xs">10m</span></td><td>errors.Is matches in tests</td></tr>
+
+          <!-- T4: Loader API -->
+          <tr><td>T4.1</td><td><span class="tier tier-2">T2</span></td><td>Create <code>loader.go</code>; define <code>type Format int</code> (<code>FormatJSON</code>, <code>FormatNDJSON</code>, <code>FormatAuto</code>).</td><td><span class="effort effort-s">15m</span></td><td>Type compiles</td></tr>
+          <tr><td>T4.2</td><td><span class="tier tier-2">T2</span></td><td>Implement format sniffing: read first non-whitespace byte; <code>{</code> &rarr; JSON, otherwise NDJSON. Use <code>bufio.Reader.Peek</code> to avoid consuming.</td><td><span class="effort effort-xs">10m</span></td><td>Test: both formats detected</td></tr>
+          <tr><td>T4.3</td><td><span class="tier tier-2">T2</span></td><td><code>LoadReportFromJSON(data []byte)</code>: call <code>MigrateReport(data)</code> &mdash; inherits v0.1.0&rarr;v0.2.0 upgrade path.</td><td><span class="effort effort-xs">10m</span></td><td>Old fixture upgrades cleanly</td></tr>
+          <tr><td>T4.4</td><td><span class="tier tier-2">T2</span></td><td><code>LoadReportFromNDJSON(r io.Reader)</code>: <code>ReadEvents</code> &rarr; <code>ReplayEvents</code>. Stamp <code>Reconstructed=true</code>.</td><td><span class="effort effort-xs">10m</span></td><td>Roundtrip: export &rarr; import &rarr; equal events</td></tr>
+          <tr><td>T4.5</td><td><span class="tier tier-2">T2</span></td><td><code>LoadReport(path string, opts ...LoadOption) (Report, Format, error)</code>: combines the above; options for forced format + schema validation.</td><td><span class="effort effort-xs">10m</span></td><td>Public API matches godoc</td></tr>
+
+          <!-- T5: CLI skeleton -->
+          <tr><td>T5.1</td><td><span class="tier tier-2">T2</span></td><td>ADR note <code>docs/planning/adr-001-cli-framework.md</code>: choose <code>spf13/cobra</code> (industry std, subcommand routing, autogen help). Reject stdlib <code>flag</code> (no subcommands), <code>urfave/cli</code> (less ecosystem).</td><td><span class="effort effort-s">15m</span></td><td>ADR committed</td></tr>
+          <tr><td>T5.2</td><td><span class="tier tier-2">T2</span></td><td><code>go get github.com/spf13/cobra@latest</code>; update <code>go.mod</code> + <code>go.sum</code>; verify <code>go mod tidy</code> clean.</td><td><span class="effort effort-xs">5m</span></td><td>tidy shows no drift</td></tr>
+          <tr><td>T5.3</td><td><span class="tier tier-2">T2</span></td><td>Create <code>cmd/auditlog/main.go</code> with <code>rootCmd</code>, <code>--version</code> flag wired to <code>SchemaVersion</code> + CLI version const.</td><td><span class="effort effort-s">15m</span></td><td><code>go run ./cmd/auditlog --version</code> prints both</td></tr>
+          <tr><td>T5.4</td><td><span class="tier tier-2">T2</span></td><td>Add persistent flags: <code>--quiet</code>, <code>--no-color</code>, <code>--log-level</code>. Default color enabled on TTY only.</td><td><span class="effort effort-xs">10m</span></td><td>Help shows flags</td></tr>
+          <tr><td>T5.5</td><td><span class="tier tier-2">T2</span></td><td>Write root help text with one-line overview + link to docs.</td><td><span class="effort effort-xs">10m</span></td><td>Help renders cleanly</td></tr>
+
+          <!-- T6: CLI import -->
+          <tr><td>T6.1</td><td><span class="tier tier-2">T2</span></td><td>Implement <code>import</code> subcommand: positional <code>&lt;file&gt;</code>, calls <code>LoadReport</code> with auto-detect.</td><td><span class="effort effort-s">15m</span></td><td>Both JSON and NDJSON inputs accepted</td></tr>
+          <tr><td>T6.2</td><td><span class="tier tier-2">T2</span></td><td>Add <code>-f, --format</code> flag: force <code>json|ndjson</code> (overrides auto-detect).</td><td><span class="effort effort-xs">10m</span></td><td>Forced format respected</td></tr>
+          <tr><td>T6.3</td><td><span class="tier tier-2">T2</span></td><td>Add <code>-o, --output</code> flag: <code>-</code> = stdout (default), else file path.</td><td><span class="effort effort-xs">10m</span></td><td>Writes to file or stdout</td></tr>
+          <tr><td>T6.4</td><td><span class="tier tier-2">T2</span></td><td>Add <code>-t, --to</code> flag: output format <code>json|html|ndjson|mermaid|plantuml</code>. Default <code>json</code>.</td><td><span class="effort effort-xs">10m</span></td><td>All 5 formats produce non-empty output</td></tr>
+          <tr><td>T6.5</td><td><span class="tier tier-2">T2</span></td><td>If no <code>-o</code>: print summary (counts, version) to stderr, exit 0.</td><td><span class="effort effort-xs">10m</span></td><td>Default invocation prints summary</td></tr>
+
+          <!-- T7: CLI export -->
+          <tr><td>T7.1</td><td><span class="tier tier-2">T2</span></td><td>Implement <code>export</code> subcommand: load <code>&lt;input&gt;</code>, call <code>report.Write&lt;Format&gt;</code>.</td><td><span class="effort effort-s">15m</span></td><td>Output matches library direct call</td></tr>
+          <tr><td>T7.2</td><td><span class="tier tier-2">T2</span></td><td>Add <code>-f</code> format flag (same 5 options as import's <code>-t</code>). Default <code>json</code>.</td><td><span class="effort effort-xs">10m</span></td><td>All formats reachable</td></tr>
+          <tr><td>T7.3</td><td><span class="tier tier-2">T2</span></td><td>HTML output: when <code>-o</code> given, write self-contained file (single <code>.html</code>); else stdout.</td><td><span class="effort effort-xs">5m</span></td><td>HTML file opens in browser</td></tr>
+          <tr><td>T7.4</td><td><span class="tier tier-2">T2</span></td><td>Error handling: file-not-found &rarr; friendly message + exit 1; unknown format &rarr; exit 1; write error &rarr; exit 1 with path.</td><td><span class="effort effort-xs">10m</span></td><td>All error paths exit non-zero with messages</td></tr>
+
+          <!-- T8: JSON Schema -->
+          <tr><td>T8.1</td><td><span class="tier tier-2">T2</span></td><td>Create <code>schema/report.schema.json</code>: <code>$schema</code>, <code>$id</code>, <code>title</code>, <code>description</code>, <code>type: object</code>.</td><td><span class="effort effort-xs">10m</span></td><td>Valid JSON Schema document</td></tr>
+          <tr><td>T8.2</td><td><span class="tier tier-2">T2</span></td><td>Define top-level <code>Report</code> properties (15 fields) with types matching Go.</td><td><span class="effort effort-s">15m</span></td><td>Cross-check vs <code>report.go:20-41</code></td></tr>
+          <tr><td>T8.3</td><td><span class="tier tier-2">T2</span></td><td>Define <code>ServiceInfo</code> subschema (21 keys, including embedded ServiceRef).</td><td><span class="effort effort-s">15m</span></td><td>Cross-check vs <code>service.go:6-28</code></td></tr>
+          <tr><td>T8.4</td><td><span class="tier tier-2">T2</span></td><td>Define <code>Event</code> subschema (12 keys) with omitempty-aware required list.</td><td><span class="effort effort-s">15m</span></td><td>Cross-check vs <code>event.go:6-17</code></td></tr>
+          <tr><td>T8.5</td><td><span class="tier tier-2">T2</span></td><td>Define <code>ServiceRef</code> (3 keys, all required) + recursive <code>ScopeNode</code> (4 keys).</td><td><span class="effort effort-xs">10m</span></td><td>Recursive scope def works</td></tr>
+          <tr><td>T8.6</td><td><span class="tier tier-2">T2</span></td><td>Define enums: <code>EventType</code>, <code>Phase</code>, <code>ProviderType</code>, <code>ServiceStatus</code> with exact wire values.</td><td><span class="effort effort-xs">10m</span></td><td>Cross-check vs <code>types.go</code></td></tr>
+          <tr><td>T8.7</td><td><span class="tier tier-2">T2</span></td><td>Define <code>timestamp</code> as RFC3339 via <code>format: "date-time"</code>; mark required vs optional fields.</td><td><span class="effort effort-xs">10m</span></td><td>Bad timestamp rejected</td></tr>
+
+          <!-- T9: Schema validation -->
+          <tr><td>T9.1</td><td><span class="tier tier-2">T2</span></td><td><code>go get github.com/santhosh-tekuri/jsonschema/v6</code> (pure Go, no transitive deps).</td><td><span class="effort effort-xs">5m</span></td><td>Dep added cleanly</td></tr>
+          <tr><td>T9.2</td><td><span class="tier tier-2">T2</span></td><td>Embed <code>schema/report.schema.json</code> via <code>//go:embed</code>; pre-compile on package init.</td><td><span class="effort effort-s">15m</span></td><td>Embedded schema in binary</td></tr>
+          <tr><td>T9.3</td><td><span class="tier tier-2">T2</span></td><td>Implement <code>ValidateAgainstSchema(r Report) error</code>: marshal Report &rarr; JSON &rarr; schema validator; return rich error with field path.</td><td><span class="effort effort-s">15m</span></td><td>Invalid report returns error with JSON pointer path</td></tr>
+          <tr><td>T9.4</td><td><span class="tier tier-2">T2</span></td><td>Wire <code>WithSchemaValidation()</code> option into <code>LoadReport</code>.</td><td><span class="effort effort-xs">10m</span></td><td>Loader option gates validation</td></tr>
+          <tr><td>T9.5</td><td><span class="tier tier-2">T2</span></td><td>Tests: valid report passes; invalid enum, missing required field, bad timestamp each fail distinctly.</td><td><span class="effort effort-s">15m</span></td><td>All test fixtures return expected errors</td></tr>
+
+          <!-- T10: Diff deps -->
+          <tr><td>T10.1</td><td><span class="tier tier-3">T3</span></td><td>Add <code>AddedDeps []ServiceRef</code> + <code>RemovedDeps []ServiceRef</code> to <code>ServiceDiff</code> with omitempty.</td><td><span class="effort effort-xs">10m</span></td><td>Fields appear in JSON when non-empty</td></tr>
+          <tr><td>T10.2</td><td><span class="tier tier-3">T3</span></td><td>Implement dep-set compare in <code>compareService</code>: convert slices to <code>map[serviceKey]struct{}</code>, compute set difference both ways.</td><td><span class="effort effort-s">15m</span></td><td>Unit test: A&rarr;B,C vs A&rarr;B,D yields Added={D} Removed={C}</td></tr>
+          <tr><td>T10.3</td><td><span class="tier tier-3">T3</span></td><td>Fix misleading doc comment at <code>diff.go:43</code> to match new reality (deps now actually compared).</td><td><span class="effort effort-xs">5m</span></td><td>Doc accurate</td></tr>
+          <tr><td>T10.4</td><td><span class="tier tier-3">T3</span></td><td>Update <code>DiffResult.IsEmpty()</code> to consider new dep fields.</td><td><span class="effort effort-xs">10m</span></td><td>Test: dep-only diff reports non-empty</td></tr>
+
+          <!-- T11: Diff scopes -->
+          <tr><td>T11.1</td><td><span class="tier tier-3">T3</span></td><td>Add <code>type ScopeDiff struct</code> with <code>AddedScopes []string</code> + <code>RemovedScopes []string</code> (path-qualified names).</td><td><span class="effort effort-xs">10m</span></td><td>Type compiles</td></tr>
+          <tr><td>T11.2</td><td><span class="tier tier-3">T3</span></td><td>Implement <code>flattenScopeTree(ScopeNode) map[string]struct{}</code>: walk tree, key by <code>parent-path/child-name</code>.</td><td><span class="effort effort-s">15m</span></td><td>Test: nested tree &rarr; expected key set</td></tr>
+          <tr><td>T11.3</td><td><span class="tier tier-3">T3</span></td><td>Set-diff flattened maps; populate <code>ScopeDiff</code> in <code>DiffResult</code>.</td><td><span class="effort effort-xs">10m</span></td><td>Test: added/removed scope detected</td></tr>
+
+          <!-- T12: CLI validate -->
+          <tr><td>T12.1</td><td><span class="tier tier-3">T3</span></td><td>Implement <code>validate &lt;file&gt;</code> subcommand: load report, call <code>Report.Validate()</code>.</td><td><span class="effort effort-s">15m</span></td><td>Valid report &rarr; exit 0; invalid &rarr; exit 2</td></tr>
+          <tr><td>T12.2</td><td><span class="tier tier-3">T3</span></td><td>Add <code>--schema</code> flag: when set, also run <code>ValidateAgainstSchema</code> with custom schema path; when unset, use embedded.</td><td><span class="effort effort-xs">10m</span></td><td>Custom schema accepted</td></tr>
+          <tr><td>T12.3</td><td><span class="tier tier-3">T3</span></td><td>Format violations: print each as <code>FAIL: &lt;field&gt;: &lt;reason&gt;</code> to stderr.</td><td><span class="effort effort-xs">10m</span></td><td>Output readable</td></tr>
+
+          <!-- T13: CLI diff -->
+          <tr><td>T13.1</td><td><span class="tier tier-3">T3</span></td><td>Implement <code>diff &lt;a&gt; &lt;b&gt;</code> subcommand: load both via <code>LoadReport</code>, call <code>a.Diff(b)</code>.</td><td><span class="effort effort-s">15m</span></td><td>Diff runs without panic</td></tr>
+          <tr><td>T13.2</td><td><span class="tier tier-3">T3</span></td><td>Default text output: human-readable summary with sections for added/removed/changed services + scopes.</td><td><span class="effort effort-s">15m</span></td><td>Output skimmable</td></tr>
+          <tr><td>T13.3</td><td><span class="tier tier-3">T3</span></td><td>Add <code>-f json</code> flag: emit <code>DiffResult</code> as JSON to stdout.</td><td><span class="effort effort-xs">10m</span></td><td>JSON round-trips through <code>json.Unmarshal</code></td></tr>
+          <tr><td>T13.4</td><td><span class="tier tier-3">T3</span></td><td>Exit code 3 when diff non-empty (for CI scripting); 0 when identical.</td><td><span class="effort effort-xs">5m</span></td><td>Exit codes verified</td></tr>
+
+          <!-- T14: CLI info -->
+          <tr><td>T14.1</td><td><span class="tier tier-3">T3</span></td><td>Implement <code>info &lt;file&gt;</code>: print version, container_id, event/service/scope counts, durations, health/shutdown flags.</td><td><span class="effort effort-s">15m</span></td><td>Output matches <code>Validate()</code> fields</td></tr>
+          <tr><td>T14.2</td><td><span class="tier tier-3">T3</span></td><td>Add <code>--json</code> flag: emit summary as JSON.</td><td><span class="effort effort-xs">10m</span></td><td>JSON parses</td></tr>
+
+          <!-- T15: Replay golden tests -->
+          <tr><td>T15.1</td><td><span class="tier tier-3">T3</span></td><td>Generate golden fixture: run example/demo, capture <code>Report.WriteJSON</code> to <code>testdata/golden_report.json</code> and <code>WriteNDJSON</code> to <code>testdata/golden_events.ndjson</code>.</td><td><span class="effort effort-s">15m</span></td><td>Fixtures committed, deterministic</td></tr>
+          <tr><td>T15.2</td><td><span class="tier tier-3">T3</span></td><td>Test: <code>ReplayEvents(goldenNDJSON) &asymp; goldenReport</code> modulo <code>IsHealthchecker/IsShutdowner/Reconstructed</code> fields.</td><td><span class="effort effort-s">15m</span></td><td>All comparable fields equal</td></tr>
+          <tr><td>T15.3</td><td><span class="tier tier-3">T3</span></td><td>Test: replay single registration &rarr; 1 service, status <code>registered</code>.</td><td><span class="effort effort-xs">10m</span></td><td>Counts match</td></tr>
+          <tr><td>T15.4</td><td><span class="tier tier-3">T3</span></td><td>Test: replay dep chain (A invokes B) &rarr; A.Dependencies=[B], B.Dependents=[A].</td><td><span class="effort effort-s">15m</span></td><td>Both edges present and sorted</td></tr>
+          <tr><td>T15.5</td><td><span class="tier tier-3">T3</span></td><td>Test: replay shutdown sequence &rarr; status transitions through <code>active</code> &rarr; <code>shutdown</code> or <code>shutdown_error</code>.</td><td><span class="effort effort-xs">10m</span></td><td>Final status correct</td></tr>
+
+          <!-- T16: NDJSON reader tests -->
+          <tr><td>T16.1</td><td><span class="tier tier-3">T3</span></td><td>Roundtrip test: <code>writeEventsNDJSON</code> &rarr; <code>ReadEvents</code> &rarr; slices equal.</td><td><span class="effort effort-s">15m</span></td><td>Equality holds</td></tr>
+          <tr><td>T16.2</td><td><span class="tier tier-3">T3</span></td><td>Edge cases: empty input, single line without trailing newline, file with blank-line separators.</td><td><span class="effort effort-xs">10m</span></td><td>All produce expected slices</td></tr>
+          <tr><td>T16.3</td><td><span class="tier tier-3">T3</span></td><td>Fuzz: random bytes &rarr; no panic; either error or valid events.</td><td><span class="effort effort-s">15m</span></td><td>Fuzz target added; CI runs it</td></tr>
+
+          <!-- T17: CLI tests -->
+          <tr><td>T17.1</td><td><span class="tier tier-3">T3</span></td><td>Test harness: <code>buildBinary(t)</code> helper compiles CLI to temp dir, returns path.</td><td><span class="effort effort-s">15m</span></td><td>Helper reusable across tests</td></tr>
+          <tr><td>T17.2</td><td><span class="tier tier-3">T3</span></td><td>Test <code>import</code> roundtrip: NDJSON in &rarr; JSON out, assert event count matches.</td><td><span class="effort effort-s">15m</span></td><td>Counts match</td></tr>
+          <tr><td>T17.3</td><td><span class="tier tier-3">T3</span></td><td>Test <code>export</code> to each of 5 formats produces non-empty output with expected MIME hints (HTML has <code>&lt;svg</code>, Mermaid has <code>flowchart</code>, etc.).</td><td><span class="effort effort-s">15m</span></td><td>Format signatures detected</td></tr>
+          <tr><td>T17.4</td><td><span class="tier tier-3">T3</span></td><td>Test <code>validate</code> exit codes: 0 on valid, 2 on invalid.</td><td><span class="effort effort-xs">10m</span></td><td>Codes match</td></tr>
+          <tr><td>T17.5</td><td><span class="tier tier-3">T3</span></td><td>Test <code>diff</code> text and JSON output formats.</td><td><span class="effort effort-xs">10m</span></td><td>Both formats render</td></tr>
+
+          <!-- T18: nix binary -->
+          <tr><td>T18.1</td><td><span class="tier tier-3">T3</span></td><td>Add <code>packages.auditlog = pkgs.buildGoModule { subPackages = ["cmd/auditlog"]; ... }</code> to <code>flake.nix</code>.</td><td><span class="effort effort-s">15m</span></td><td><code>nix build .#auditlog</code> succeeds</td></tr>
+          <tr><td>T18.2</td><td><span class="tier tier-3">T3</span></td><td>Pin <code>version</code> via <code>rev-parse --short HEAD</code> in flake; pass to <code>ldflags</code>.</td><td><span class="effort effort-xs">10m</span></td><td><code>--version</code> shows commit</td></tr>
+          <tr><td>T18.3</td><td><span class="tier tier-3">T3</span></td><td>Keep <code>packages.default</code> as library stub (avoid breaking existing <code>nix build</code> consumers); document <code>.#auditlog</code> as binary target.</td><td><span class="effort effort-xs">10m</span></td><td>Both targets work</td></tr>
+
+          <!-- T19: CI cross-compile -->
+          <tr><td>T19.1</td><td><span class="tier tier-4">T4</span></td><td>Add <code>cross-compile</code> job: matrix of <code>GOOS &times; GOARCH</code> (linux/darwin/windows &times; amd64/arm64; skip darwin/arm64=&gt;amd64 duplicates).</td><td><span class="effort effort-s">15m</span></td><td>Matrix runs green</td></tr>
+          <tr><td>T19.2</td><td><span class="tier tier-4">T4</span></td><td>Set <code>ldflags: -X main.version=...</code> from git tag; strip symbols with <code>-s -w</code>.</td><td><span class="effort effort-xs">10m</span></td><td>Binary sizes reasonable</td></tr>
+          <tr><td>T19.3</td><td><span class="tier tier-4">T4</span></td><td>Upload binaries as workflow artifacts via <code>actions/upload-artifact@v4</code>.</td><td><span class="effort effort-xs">10m</span></td><td>Artifacts downloadable</td></tr>
+
+          <!-- T20: CI smoke -->
+          <tr><td>T20.1</td><td><span class="tier tier-4">T4</span></td><td>Add <code>cli-smoke</code> job: <code>go build ./cmd/auditlog</code>, run <code>--version</code>, run <code>import</code> on <code>testdata/golden_events.ndjson</code>.</td><td><span class="effort effort-xs">10m</span></td><td>Smoke passes</td></tr>
+          <tr><td>T20.2</td><td><span class="tier tier-4">T4</span></td><td>Assert exit 0 and non-empty JSON output; fail job otherwise.</td><td><span class="effort effort-xs">10m</span></td><td>Failure path triggers</td></tr>
+
+          <!-- T21: README -->
+          <tr><td>T21.1</td><td><span class="tier tier-4">T4</span></td><td>Add "CLI tool" section after "Export Formats": overview + feature matrix.</td><td><span class="effort effort-s">15m</span></td><td>Section renders</td></tr>
+          <tr><td>T21.2</td><td><span class="tier tier-4">T4</span></td><td>Document installation: <code>go install github.com/larsartmann/samber-do-auditlog/cmd/auditlog@latest</code>, <code>nix run github:larsartmann/samber-do-auditlog#auditlog</code>, binary download.</td><td><span class="effort effort-xs">10m</span></td><td>Three install paths documented</td></tr>
+          <tr><td>T21.3</td><td><span class="tier tier-4">T4</span></td><td>Per-subcommand examples (import, export, validate, diff, info).</td><td><span class="effort effort-s">15m</span></td><td>Examples runnable</td></tr>
+          <tr><td>T21.4</td><td><span class="tier tier-4">T4</span></td><td>Link to <code>docs/examples/cli-workflow.md</code> for round-trip tutorial.</td><td><span class="effort effort-xs">5m</span></td><td>Link works</td></tr>
+
+          <!-- T22: AGENTS.md -->
+          <tr><td>T22.1</td><td><span class="tier tier-4">T4</span></td><td>Add <code>cmd/auditlog/</code>, <code>replay.go</code>, <code>ndjson.go</code>, <code>loader.go</code>, <code>schema/</code> to architecture file inventory.</td><td><span class="effort effort-xs">10m</span></td><td>Inventory matches reality</td></tr>
+          <tr><td>T22.2</td><td><span class="tier tier-4">T4</span></td><td>Add "CLI architecture" subsection: cmd/ is a thin shell; all business logic stays in library package.</td><td><span class="effort effort-xs">10m</span></td><td>Boundary documented</td></tr>
+          <tr><td>T22.3</td><td><span class="tier tier-4">T4</span></td><td>Add gotcha: <code>IsHealthchecker/IsShutdowner</code> are always false on replayed Reports; <code>Reconstructed=true</code> flags this.</td><td><span class="effort effort-xs">10m</span></td><td>Gotcha discoverable</td></tr>
+          <tr><td>T22.4</td><td><span class="tier tier-4">T4</span></td><td>Add CLI build/run commands to Commands table.</td><td><span class="effort effort-xs">10m</span></td><td>Commands copy-pasteable</td></tr>
+
+          <!-- T23: FEATURES + TODO -->
+          <tr><td>T23.1</td><td><span class="tier tier-4">T4</span></td><td>FEATURES.md: move "CLI tool", "NDJSON import", "JSON Schema file" from PLANNED to DONE.</td><td><span class="effort effort-xs">10m</span></td><td>Status accurate</td></tr>
+          <tr><td>T23.2</td><td><span class="tier tier-4">T4</span></td><td>TODO_LIST.md: mark CLI/NDJSON/schema items completed; remove from active list.</td><td><span class="effort effort-xs">10m</span></td><td>TODO reflects reality</td></tr>
+
+          <!-- T24: workflow doc -->
+          <tr><td>T24.1</td><td><span class="tier tier-4">T4</span></td><td>Create <code>docs/examples/cli-workflow.md</code>: round-trip demo (capture &rarr; export NDJSON &rarr; import &rarr; render HTML &rarr; diff against fresh capture).</td><td><span class="effort effort-s">15m</span></td><td>Workflow reproducible</td></tr>
+          <tr><td>T24.2</td><td><span class="tier tier-4">T4</span></td><td>Include sample inputs/outputs as fenced code blocks.</td><td><span class="effort effort-xs">10m</span></td><td>Examples clear</td></tr>
+
+          <!-- T25: CHANGELOG -->
+          <tr><td>T25.1</td><td><span class="tier tier-4">T4</span></td><td>Add Unreleased section with feature bullets: CLI tool, NDJSON import, JSON Schema, diff extensions, replay engine.</td><td><span class="effort effort-xs">10m</span></td><td>Entries follow Keep a Changelog format</td></tr>
+          <tr><td>T25.2</td><td><span class="tier tier-4">T4</span></td><td>Note breaking-change: <code>Report.Reconstructed</code> field added (additive, non-breaking but document).</td><td><span class="effort effort-xs">5m</span></td><td>Breaking changes called out</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ============= RECOMMENDED EXECUTION ORDER ============= -->
+    <h2 id="order"><span class="num">07</span>Recommended execution order (sequential critical path)</h2>
+
+    <p>The plan can be parallelised within tiers, but the critical path below gives the fastest
+       time-to-first-user-value if executed strictly serially.</p>
+
+    <div class="migration-step">
+      <div class="migration-num">1</div>
+      <div class="migration-content">
+        <h4>Foundation &mdash; ~5h</h4>
+        <p><strong>T1</strong> (extract replay logic) &rarr; <strong>T2</strong> (ReplayEvents) &rarr; <strong>T3</strong> (NDJSON reader) &rarr; <strong>T15</strong> (replay golden tests). After this step you can load any saved NDJSON file back into a Report in Go code. No CLI yet, but the keystone is proven.</p>
+      </div>
+    </div>
+
+    <div class="migration-step">
+      <div class="migration-num">2</div>
+      <div class="migration-content">
+        <h4>Operational layer &mdash; ~6h</h4>
+        <p><strong>T4</strong> (Loader API) + <strong>T5</strong> (CLI skeleton) &rarr; <strong>T6</strong> (import) + <strong>T7</strong> (export) + <strong>T8</strong> (JSON Schema draft) &rarr; <strong>T9</strong> (schema validation). After this step <code>auditlog import events.ndjson -o report.html</code> works end-to-end.</p>
+      </div>
+    </div>
+
+    <div class="migration-step">
+      <div class="migration-num">3</div>
+      <div class="migration-content">
+        <h4>Customer value &mdash; ~7h</h4>
+        <p><strong>T10</strong> (diff deps) + <strong>T11</strong> (diff scopes) &rarr; <strong>T12</strong> (validate) + <strong>T13</strong> (diff) + <strong>T14</strong> (info) + <strong>T16</strong> (NDJSON tests) + <strong>T17</strong> (CLI tests) + <strong>T18</strong> (nix binary). After this step the diff-across-time promise is delivered and the binary is installable.</p>
+      </div>
+    </div>
+
+    <div class="migration-step">
+      <div class="migration-num">4</div>
+      <div class="migration-content">
+        <h4>Polish &amp; distribution &mdash; ~5h</h4>
+        <p><strong>T19</strong> (cross-compile CI) + <strong>T20</strong> (smoke) + <strong>T21</strong> (README) + <strong>T22</strong> (AGENTS.md) + <strong>T23</strong> (FEATURES/TODO) + <strong>T24</strong> (workflow doc) + <strong>T25</strong> (CHANGELOG). Ship.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-warning">
+      <strong>Parallelisation opportunity</strong>
+      T1+T2 must be serial. But T3 (NDJSON reader), T5 (CLI skeleton), T8 (JSON Schema draft) can all proceed in parallel with T1/T2 since they have no dependency on the replay engine. That drops the critical-path wall-clock time from ~24h to ~18h on a 2-engineer team.
+    </div>
+
+    <!-- ============= OUT OF SCOPE ============= -->
+    <h2 id="scope"><span class="num">08</span>Explicitly out of scope (flagged for roadmap)</h2>
+
+    <ul>
+      <li><strong>Streaming event consumer</strong> (channels, <code>iter.Seq</code>, SSE, WebSocket). The current <code>OnEvent</code> callback is sufficient for live observability; the CLI imports saved files, not live streams.</li>
+      <li><strong>NDJSON sidecar metadata</strong> (schema version embedded in stream). Mitigation for Risk C above; deferred until a real v0.3.0 schema change forces it.</li>
+      <li><strong>HTML diff visualisation</strong> (rendering a DiffResult as a side-by-side HTML page). Powerful but a separate feature; the CLI emits text + JSON for now.</li>
+      <li><strong>Remote report sources</strong> (HTTP/S3 loading). The CLI takes file paths; remote fetching belongs in a wrapper or future <code>--source url</code> flag.</li>
+      <li><strong>TUI/multi-tab CLI</strong> (interactive <code>gocui</code>-style dashboard). Out of scope; the HTML export already serves this role better.</li>
+      <li><strong>Schema auto-generation from Go types</strong> via <code>swaggo</code> or similar. The schema is hand-curated for clarity and to capture enum constraints; regeneration would lose intent.</li>
+    </ul>
+
+    <footer class="footer">
+      Generated 2026-06-18 &middot; Pareto plan, not an implementation &middot; All facts cross-checked against <code>samber-do-auditlog</code> master @ <code>1767459</code>
+    </footer>
+  </body>
+</html>

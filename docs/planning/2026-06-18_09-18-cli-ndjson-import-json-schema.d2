@@ -1,0 +1,107 @@
+direction: right
+near-resize-contract: true
+
+# ---------- Tier containers ----------
+
+tier1: Keystone (1% -> 51%) {
+  style.fill: "#1e1240"
+  style.stroke: "#6366f1"
+  style.font-color: "#e2e8f0"
+  style.border-radius: 12
+
+  replay_engine: Replay Engine\nReplayEvents(events) -> Report {
+    style.fill: "#6366f1"
+    style.font-color: white
+    tooltip: "Hardest technical nut.\nReconstructs Services + ScopeTree\nfrom a flat event stream."
+  }
+  ndjson_reader: NDJSON Reader\nReadEvents(io.Reader) {
+    style.fill: "#6366f1"
+    style.font-color: white
+    tooltip: "bufio.Scanner + per-line\njson.Decode with line errors"
+  }
+}
+
+tier2: Operational (4% -> 64%) {
+  style.fill: "#0d2818"
+  style.stroke: "#10b981"
+  style.font-color: "#e2e8f0"
+  style.border-radius: 12
+
+  loader_api: Loader API\nLoadReport(path) auto-detect
+  cli_skeleton: CLI Skeleton\ncmd/auditlog + cobra
+  cli_import: CLI import\nsubcommand
+  cli_export: CLI export\nsubcommand
+  json_schema: JSON Schema\nschema/report.schema.json
+  schema_val: Schema Validation\nembed.FS + validator
+}
+
+tier3: Customer Value (20% -> 80%) {
+  style.fill: "#3a1a0a"
+  style.stroke: "#f59e0b"
+  style.font-color: "#e2e8f0"
+  style.border-radius: 12
+
+  diff_deps: Diff: Dependency Edges
+  diff_scopes: Diff: Scope Tree
+  cli_validate: CLI validate
+  cli_diff: CLI diff
+  cli_info: CLI info
+  replay_tests: Replay Golden Tests
+  ndjson_tests: NDJSON Fuzz Tests
+  cli_tests: CLI Golden Tests
+  nix_binary: nix build binary
+}
+
+tier4: Polish (80% -> 100%) {
+  style.fill: "#1e293b"
+  style.stroke: "#64748b"
+  style.font-color: "#e2e8f0"
+  style.border-radius: 12
+
+  ci_cross: CI Cross-Compile
+  ci_smoke: CI Smoke Test
+  readme: README Update
+  agents: AGENTS.md Update
+  features: FEATURES + TODO
+  examples: cli-workflow.md
+  changelog: CHANGELOG
+}
+
+# ---------- Critical path (keystone feeds everything) ----------
+
+replay_engine -> loader_api: {style.stroke: "#f43f5e"; style.animated: true; label: "unblocks"}
+ndjson_reader -> loader_api
+
+loader_api -> cli_import
+loader_api -> cli_export
+cli_skeleton -> cli_import
+cli_skeleton -> cli_export
+
+json_schema -> schema_val
+schema_val -> cli_validate
+
+# ---------- Tier 3 dependencies ----------
+
+replay_engine -> replay_tests: {style.stroke-dash: 4}
+ndjson_reader -> ndjson_tests: {style.stroke-dash: 4}
+cli_import -> cli_tests: {style.stroke-dash: 4}
+cli_export -> cli_tests: {style.stroke-dash: 4}
+
+diff_deps -> cli_diff
+diff_scopes -> cli_diff
+loader_api -> cli_diff
+loader_api -> cli_info
+
+cli_import -> nix_binary
+nix_binary -> ci_cross
+nix_binary -> ci_smoke
+
+cli_tests -> readme
+replay_tests -> features
+ndjson_tests -> features
+
+# ---------- Containment (visual grouping only) ----------
+
+tier1 -> tier2: {style.opacity: 0}
+tier2 -> tier3: {style.opacity: 0}
+tier3 -> tier4: {style.opacity: 0}
