@@ -19,6 +19,10 @@ type replayState struct {
 	stack         []stackEntry
 	shutdownStart map[svcKey]time.Time
 	containerID   string
+	// invocationSeq is a cross-service counter matching the live Recorder's
+	// invocationSeq. Each service gets its invocationOrder from this counter
+	// the first time it is invoked, preserving global build ordering.
+	invocationSeq int
 }
 
 // replayScopeMeta is scope metadata without the live *do.Scope reference.
@@ -212,7 +216,8 @@ func (state *replayState) applyInvocationAfter(evt Event) {
 	if rec.firstInvokedAt == nil {
 		t := evt.Timestamp
 		rec.firstInvokedAt = &t
-		rec.invocationOrder = rec.invocationCount - 1
+		state.invocationSeq++
+		rec.invocationOrder = state.invocationSeq - 1
 	}
 
 	if evt.DurationMs != nil && rec.firstBuildDurationMs == nil {

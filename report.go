@@ -158,7 +158,8 @@ func NewReport(
 
 	err := report.Validate()
 	if err != nil {
-		return Report{}, fmt.Errorf("new report: %w", err)
+		return Report{}, fmt.Errorf("new report for containerID=%q version=%q exportedAt=%v: %w",
+			containerID, version, exportedAt, err)
 	}
 
 	return report, nil
