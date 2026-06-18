@@ -32,6 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the loader (`FormatAuto`, `FormatJSON`, `FormatNDJSON`).
 - **`Report.Reconstructed` field**: boolean flag distinguishing replayed
   reports from live-recorded ones.
+- **CSV/TSV export** (`Report.WriteCSV`, `Report.WriteTSV`): writes all services
+  as comma- or tab-delimited values with a header row. Uses stdlib
+  `encoding/csv`. Dependencies/dependents are semicolon-separated refs. Nil
+  pointer fields render as empty strings. Enables data-analysis workflows
+  (Excel, pandas, jq on TSV).
 
 ### Changed
 
