@@ -71,6 +71,11 @@ func reorderFlags(args []string) []string {
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 
+		if arg == "--" {
+			positionals = append(positionals, args[i+1:]...)
+			break
+		}
+
 		if strings.HasPrefix(arg, "-") && arg != "-" {
 			flags = append(flags, arg)
 

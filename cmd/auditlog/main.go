@@ -12,12 +12,18 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
+
+	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
+
+// CLIVersion is the auditlog CLI version.
+const CLIVersion = "0.1.0"
 
 func main() {
 	if len(os.Args) < 2 {
-		usage()
+		usage(os.Stderr)
 		os.Exit(2)
 	}
 
@@ -37,12 +43,15 @@ func main() {
 		err = runValidate(args)
 	case "schema":
 		err = runSchema(args)
+	case "version", "-v", "--version":
+		fmt.Printf("auditlog %s (schema %s)\n", CLIVersion, auditlog.SchemaVersion)
+		return
 	case "-h", "--help", "help":
-		usage()
+		usage(os.Stdout)
 		return
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command %q\n\n", cmd)
-		usage()
+		usage(os.Stderr)
 		os.Exit(2)
 	}
 
@@ -52,8 +61,8 @@ func main() {
 	}
 }
 
-func usage() {
-	fmt.Fprint(os.Stderr, `auditlog — inspect and convert do-auditlog reports
+func usage(w io.Writer) {
+	fmt.Fprint(w, `auditlog — inspect and convert do-auditlog reports
 
 Usage:
   auditlog info <file>
@@ -72,5 +81,8 @@ Usage:
 
   auditlog schema
       Print the canonical JSON Schema for the report format.
+
+  auditlog version
+      Print the CLI and schema versions.
 `)
 }
