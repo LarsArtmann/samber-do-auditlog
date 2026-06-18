@@ -23,40 +23,40 @@ Verified against source, tests, and CI gates. These work and are protected by au
 
 ### Core Library (production-grade)
 
-| Capability | Evidence |
-| --- | --- |
+| Capability                                                            | Evidence                                                   |
+| --------------------------------------------------------------------- | ---------------------------------------------------------- |
 | Plugin lifecycle hooks (registration/invocation/shutdown/healthcheck) | `hooks.go` (324 LOC), 6 hook methods + healthcheck wrapper |
-| Stack-based dependency graph inference + reverse deps | `hooks.go`, `report_builder.go` |
-| Concurrent-safe recorder (single `sync.RWMutex` + 2 atomics) | `recorder.go` (191 LOC) |
-| Deterministic output (services sorted, scope tree sorted) | `report_builder.go` |
-| Event cap (`MaxEvents`) + dropped-event counter | `plugin.go`, `recorder.go` |
-| Zero-cost disabled mode | `plugin.go` (`Opts()` returns empty hooks) |
-| Real-time `OnEvent` callback (outside the lock) | `plugin.go:27`, all 7 hook fire sites |
-| Config validation (`ContainerID` path-sep rejection) | `plugin.go` (`Config.Validate`) |
+| Stack-based dependency graph inference + reverse deps                 | `hooks.go`, `report_builder.go`                            |
+| Concurrent-safe recorder (single `sync.RWMutex` + 2 atomics)          | `recorder.go` (191 LOC)                                    |
+| Deterministic output (services sorted, scope tree sorted)             | `report_builder.go`                                        |
+| Event cap (`MaxEvents`) + dropped-event counter                       | `plugin.go`, `recorder.go`                                 |
+| Zero-cost disabled mode                                               | `plugin.go` (`Opts()` returns empty hooks)                 |
+| Real-time `OnEvent` callback (outside the lock)                       | `plugin.go:27`, all 7 hook fire sites                      |
+| Config validation (`ContainerID` path-sep rejection)                  | `plugin.go` (`Config.Validate`)                            |
 
 ### Report Model & Queries
 
-| Capability | Evidence |
-| --- | --- |
-| `Report` struct with 15 fields + 8 denormalized aggregates | `report.go:20-41` |
-| **Single construction path** (`buildReportFromCore` + `finalizeDenormalized`) | `report.go:103-123` — eliminates count drift |
-| `Report.Validate()` — count + status consistency checks | `report.go:46-81`, 5 sentinel errors |
-| `Report.Index()` O(1) lookups | `report.go` |
-| Convenience queries: `ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByRef`, `EventsByType`, `FailedServices`, `UnhealthyServices` | `report.go` |
-| `Report.Diff(other)` directional diff (added/removed/changed + event-count delta) | `diff.go` |
-| `Report.Filtered(opts...)` with 5 filter options + pruned scope tree | `filter.go` |
-| Schema migration v0.1.0 → v0.2.0 (version-agnostic re-derivation) | `migration.go` |
+| Capability                                                                                                                                                       | Evidence                                     |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `Report` struct with 15 fields + 8 denormalized aggregates                                                                                                       | `report.go:20-41`                            |
+| **Single construction path** (`buildReportFromCore` + `finalizeDenormalized`)                                                                                    | `report.go:103-123` — eliminates count drift |
+| `Report.Validate()` — count + status consistency checks                                                                                                          | `report.go:46-81`, 5 sentinel errors         |
+| `Report.Index()` O(1) lookups                                                                                                                                    | `report.go`                                  |
+| Convenience queries: `ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByRef`, `EventsByType`, `FailedServices`, `UnhealthyServices` | `report.go`                                  |
+| `Report.Diff(other)` directional diff (added/removed/changed + event-count delta)                                                                                | `diff.go`                                    |
+| `Report.Filtered(opts...)` with 5 filter options + pruned scope tree                                                                                             | `filter.go`                                  |
+| Schema migration v0.1.0 → v0.2.0 (version-agnostic re-derivation)                                                                                                | `migration.go`                               |
 
 ### Export Formats (5/5 done)
 
-| Format | API | Notes |
-| --- | --- | --- |
-| JSON | `Report.WriteJSON`, `Plugin.WriteReportJSON`, `Plugin.ExportToFile` | Single encoding path via `Report.WriteJSON` |
-| NDJSON | `Report.WriteNDJSON`, `Plugin.WriteEventsNDJSON`, `Plugin.ExportEventsToNDJSON` | Per-line `json.Encode`, incremental writes |
-| HTML | `Plugin.WriteHTML`, `Plugin.ExportToHTML` | Self-contained, CSP-hardened, warm amber dashboard |
-| Mermaid | `Report.WriteMermaid` | Themed flowchart via shared `diagramFormatter` |
-| PlantUML | `Report.WritePlantUML` | Styled component diagram via shared `diagramFormatter` |
-| Atomic file writes | `writeToFile` helper | Temp file + `os.Rename`, 64KB buffered |
+| Format             | API                                                                             | Notes                                                  |
+| ------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| JSON               | `Report.WriteJSON`, `Plugin.WriteReportJSON`, `Plugin.ExportToFile`             | Single encoding path via `Report.WriteJSON`            |
+| NDJSON             | `Report.WriteNDJSON`, `Plugin.WriteEventsNDJSON`, `Plugin.ExportEventsToNDJSON` | Per-line `json.Encode`, incremental writes             |
+| HTML               | `Plugin.WriteHTML`, `Plugin.ExportToHTML`                                       | Self-contained, CSP-hardened, warm amber dashboard     |
+| Mermaid            | `Report.WriteMermaid`                                                           | Themed flowchart via shared `diagramFormatter`         |
+| PlantUML           | `Report.WritePlantUML`                                                          | Styled component diagram via shared `diagramFormatter` |
+| Atomic file writes | `writeToFile` helper                                                            | Temp file + `os.Rename`, 64KB buffered                 |
 
 ### HTML Visualization (production-grade observability dashboard)
 
@@ -64,26 +64,26 @@ Verified against source, tests, and CI gates. These work and are protected by au
 
 ### CI / Infrastructure
 
-| Gate | Status |
-| --- | --- |
-| `go vet`, `go build`, `go test -race` | ✅ PASS |
-| Coverage gate ≥ 95% (excluding `example/`) | ✅ 95.5% |
-| golangci-lint v2.12.2 (extremely strict config) | ✅ 0 issues |
-| govulncheck | ✅ PASS |
-| `go mod tidy` drift check | ✅ PASS |
-| `go generate ./...` stale-generation check | ✅ PASS |
+| Gate                                                        | Status         |
+| ----------------------------------------------------------- | -------------- |
+| `go vet`, `go build`, `go test -race`                       | ✅ PASS        |
+| Coverage gate ≥ 95% (excluding `example/`)                  | ✅ 95.5%       |
+| golangci-lint v2.12.2 (extremely strict config)             | ✅ 0 issues    |
+| govulncheck                                                 | ✅ PASS        |
+| `go mod tidy` drift check                                   | ✅ PASS        |
+| `go generate ./...` stale-generation check                  | ✅ PASS        |
 | Nix devShell (Go 1.26.4, templ, golangci-lint, govulncheck) | ✅ `flake.nix` |
 
 ### Testing
 
-| Metric | Value |
-| --- | --- |
-| Test functions | 147 (`^func Test`) |
-| Benchmarks | 11 |
-| Fuzz targets | 3 (HTML XSS, MigrateReport, Diagram special chars) |
-| Godoc examples | 7 |
-| `t.Parallel()` calls | 152 (~97% of eligible tests) |
-| Test files | 22 (split by feature area) |
+| Metric               | Value                                              |
+| -------------------- | -------------------------------------------------- |
+| Test functions       | 147 (`^func Test`)                                 |
+| Benchmarks           | 11                                                 |
+| Fuzz targets         | 3 (HTML XSS, MigrateReport, Diagram special chars) |
+| Godoc examples       | 7                                                  |
+| `t.Parallel()` calls | 152 (~97% of eligible tests)                       |
+| Test files           | 22 (split by feature area)                         |
 
 ### Releases
 
@@ -91,10 +91,10 @@ Verified against source, tests, and CI gates. These work and are protected by au
 
 ### This Session (planning only, no code)
 
-| Artifact | Commit | Purpose |
-| --- | --- | --- |
-| `docs/planning/2026-06-18_09-18-cli-ndjson-import-json-schema.html` | `e6e7d52`, updated `c3a380d` | Pareto plan: 26 medium tasks, 95 fine tasks, ~25h |
-| `docs/planning/2026-06-18_09-18-cli-ndjson-import-json-schema.d2` | `e6e7d52`, updated `c3a380d` | D2 source for execution graph (regenerates byte-identical SVG) |
+| Artifact                                                            | Commit                       | Purpose                                                        |
+| ------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------- |
+| `docs/planning/2026-06-18_09-18-cli-ndjson-import-json-schema.html` | `e6e7d52`, updated `c3a380d` | Pareto plan: 26 medium tasks, 95 fine tasks, ~25h              |
+| `docs/planning/2026-06-18_09-18-cli-ndjson-import-json-schema.d2`   | `e6e7d52`, updated `c3a380d` | D2 source for execution graph (regenerates byte-identical SVG) |
 
 ---
 
@@ -122,25 +122,25 @@ Write side is complete (`writeEventsNDJSON`). **Read side does not exist** — t
 
 These appear in FEATURES.md "WORTH CONSIDERING" or TODO_LIST.md "Future Priorities" with zero implementation.
 
-| Feature | Source | Notes |
-| --- | --- | --- |
-| **CLI tool** (`cmd/auditlog`) | FEATURES.md:170, TODO:63 | Zero scaffolding exists; `flake.nix packages.default` is a README stub |
-| **NDJSON import** (`ReadEvents` / `LoadReport`) | FEATURES.md:171, TODO:55 | Hardest piece: reconstruct Services + ScopeTree from event stream |
-| **Replay engine** (`ReplayEvents([]Event) → Report`) | TODO:55 (implied) | Keystone blocker for NDJSON import + diff across time |
-| **JSON Schema file** (`schema/report.schema.json`) | FEATURES.md:172, TODO:76 | Biggest missing piece for report consumers per TODO |
-| **samber/ro reactive adapter** (`EventsAsObservable`) | New (T26 in plan) | Fills live-streaming gap with Rx operators; depguard already allows `samber/*` |
-| **CSV/TSV export** | FEATURES.md:169, TODO:62 | Low effort, high value for spreadsheet workflows |
-| **WebSocket live stream** | FEATURES.md:174, TODO:64 | Rejected for now; T26 (ro adapter) covers the live use case better |
-| **Property-based tests** (`rapid`/`gopter`) | FEATURES.md:173, TODO:68-70 | Diff symmetry, MigrateReport round-trips, filter fuzzing |
-| **HTML golden-file test** | TODO:71 | Deterministic multi-service report → committed golden |
-| **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName` distinct types) | TODO:54 | Low effort, high safety; breaking change |
-| **`NewReport(...)` constructor validation** | TODO:56 | Make invalid reports unrepresentable |
-| **Split `ServiceInfo` lifecycle concerns** (19→4 structs) | TODO:57 | Breaking; decide before v0.1.0 |
-| **Prometheus exporter example** | TODO:77 | Parallel to OTel example |
-| **`actionlint` in CI** | TODO:78 | Workflow validation |
-| **Flake app for coverage gate** | TODO:80 | Replace inline CI shell |
-| **v0.1.0 release** | TODO:75 | Blocked on JSON-schema-first decision |
-| **gosec static analysis in CI** | FEATURES.md:168 | Alongside govulncheck |
+| Feature                                                                        | Source                      | Notes                                                                          |
+| ------------------------------------------------------------------------------ | --------------------------- | ------------------------------------------------------------------------------ |
+| **CLI tool** (`cmd/auditlog`)                                                  | FEATURES.md:170, TODO:63    | Zero scaffolding exists; `flake.nix packages.default` is a README stub         |
+| **NDJSON import** (`ReadEvents` / `LoadReport`)                                | FEATURES.md:171, TODO:55    | Hardest piece: reconstruct Services + ScopeTree from event stream              |
+| **Replay engine** (`ReplayEvents([]Event) → Report`)                           | TODO:55 (implied)           | Keystone blocker for NDJSON import + diff across time                          |
+| **JSON Schema file** (`schema/report.schema.json`)                             | FEATURES.md:172, TODO:76    | Biggest missing piece for report consumers per TODO                            |
+| **samber/ro reactive adapter** (`EventsAsObservable`)                          | New (T26 in plan)           | Fills live-streaming gap with Rx operators; depguard already allows `samber/*` |
+| **CSV/TSV export**                                                             | FEATURES.md:169, TODO:62    | Low effort, high value for spreadsheet workflows                               |
+| **WebSocket live stream**                                                      | FEATURES.md:174, TODO:64    | Rejected for now; T26 (ro adapter) covers the live use case better             |
+| **Property-based tests** (`rapid`/`gopter`)                                    | FEATURES.md:173, TODO:68-70 | Diff symmetry, MigrateReport round-trips, filter fuzzing                       |
+| **HTML golden-file test**                                                      | TODO:71                     | Deterministic multi-service report → committed golden                          |
+| **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName` distinct types) | TODO:54                     | Low effort, high safety; breaking change                                       |
+| **`NewReport(...)` constructor validation**                                    | TODO:56                     | Make invalid reports unrepresentable                                           |
+| **Split `ServiceInfo` lifecycle concerns** (19→4 structs)                      | TODO:57                     | Breaking; decide before v0.1.0                                                 |
+| **Prometheus exporter example**                                                | TODO:77                     | Parallel to OTel example                                                       |
+| **`actionlint` in CI**                                                         | TODO:78                     | Workflow validation                                                            |
+| **Flake app for coverage gate**                                                | TODO:80                     | Replace inline CI shell                                                        |
+| **v0.1.0 release**                                                             | TODO:75                     | Blocked on JSON-schema-first decision                                          |
+| **gosec static analysis in CI**                                                | FEATURES.md:168             | Alongside govulncheck                                                          |
 
 ---
 
@@ -152,7 +152,7 @@ Honest problems. None are catastrophic; all are fixable. Ordered by severity.
 
 `diff.go:43` claims:
 
-> *"The comparison key is (scope_id, service_name). Timestamps and durations are intentionally ignored — only structural changes (added/removed services, **dependency edges**, status transitions, error appearances) are reported."*
+> _"The comparison key is (scope_id, service_name). Timestamps and durations are intentionally ignored — only structural changes (added/removed services, **dependency edges**, status transitions, error appearances) are reported."_
 
 The bolded phrase is **false**. `compareService` (`diff.go:83-98`) never touches `Dependencies` or `Dependents`. This is the kind of doc/code drift that destroys trust in a library — a consumer reading the doc will build on a false premise. The plan's T10 both **implements** dep-edge diffing and **fixes the doc**.
 
@@ -220,33 +220,33 @@ Consumers (the planned CLI, third-party tools, future dashboard rebuilds) have n
 
 Sorted by **impact × value ÷ effort** (descending). Tier labels refer to the Pareto plan at `docs/planning/2026-06-18_09-18-cli-ndjson-import-json-schema.html`.
 
-| # | Task | Impact | Effort | Source |
-| --- | --- | --- | --- | --- |
-| 1 | **T1+T2: Replay engine** — extract event-application logic from Recorder hooks into pure `ReplayEvents([]Event) → Report` | 🔴 Critical | L (100m) | Plan T1+T2 |
-| 2 | **T3: NDJSON reader** — `ReadEvents(io.Reader) ([]Event, error)` with per-line errors | 🔴 Critical | S (45m) | Plan T3 |
-| 3 | **T4: Loader API** — `LoadReport(path)` auto-detects JSON vs NDJSON | 🔴 Critical | M (60m) | Plan T4 |
-| 4 | **D1 fix: Implement dependency-edge diffing + correct `diff.go:43` doc lie** | 🔴 High | M (75m) | Plan T10, integrity bug |
-| 5 | **T15: Replay golden tests** — capture demo fixture, assert `ReplayEvents(ndjson) ≈ report` modulo capability flags | 🔴 High | L (90m) | Plan T15 |
-| 6 | **T8: JSON Schema file** (`schema/report.schema.json`) for v0.2.0 — all 4 enums, RFC3339 timestamps, omitempty-aware required lists | 🔴 High | M (75m) | Plan T8, TODO:76 |
-| 7 | **T9: Embedded schema validator** — `ValidateAgainstSchema(Report)` via `santhosh-tekuri/jsonschema` | 🟠 Medium | M (60m) | Plan T9 |
-| 8 | **T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`, persistent flags | 🟠 Medium | M (60m) | Plan T5, FEATURES:170 |
-| 9 | **T6: CLI `import`** — `auditlog import <file> -o report.html` round-trip works | 🟠 Medium | M (75m) | Plan T6 |
-| 10 | **T7: CLI `export`** — 5 formats via library APIs | 🟠 Medium | S (60m) | Plan T7 |
-| 11 | **T11: Diff scope tree** — flatten ScopeNode by path, set-diff added/removed scopes | 🟠 Medium | M (60m) | Plan T11 |
-| 12 | **T26: samber/ro reactive adapter** — `EventsAsObservable()` via BehaviorSubject | 🟠 Medium | M (75m) | Plan T26 |
-| 13 | **T2.5: Add `Report.Reconstructed` field** — lets consumers detect capability-flag absence | 🟡 Low | XS (10m) | Plan, Risk A mitigation |
-| 14 | **T12: CLI `validate`** — `auditlog validate <file>` runs `Report.Validate()` + schema check | 🟡 Low | S (45m) | Plan T12 |
-| 15 | **T13: CLI `diff`** — `auditlog diff <a> <b>` text + JSON output, exit 3 on non-empty | 🟡 Low | S (60m) | Plan T13 |
-| 16 | **T14: CLI `info`** — summary stats, `--json` output | 🟡 Low | XS (30m) | Plan T14 |
-| 17 | **T16+T17: NDJSON reader + CLI golden tests** — roundtrip, fuzz, exit codes | 🟡 Low | M (135m) | Plan T16+T17 |
-| 18 | **Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` distinct types; breaking change | 🟡 Low | S (60m) | TODO:54 |
-| 19 | **`NewReport(...)` constructor** — invalid Reports unrepresentable | 🟡 Low | S (45m) | TODO:56 |
-| 20 | **T18: `nix build .#auditlog` binary** — replace README stub with real `buildGoModule` | 🟡 Low | S (45m) | Plan T18, D4 fix |
-| 21 | **T19: CI cross-compile matrix** — linux/darwin/windows × amd64/arm64, ldflags version injection, artifact upload | 🟡 Low | M (60m) | Plan T19 |
-| 22 | **CSV/TSV export** — tabular export of services/events for spreadsheets | 🟡 Low | S (60m) | FEATURES:169, TODO:62 |
-| 23 | **Property-based Diff tests** — `rapid`/`gopter`, assert symmetry + identity | 🟡 Low | S (60m) | TODO:68 |
-| 24 | **HTML golden-file test** — deterministic multi-service report → committed golden | 🟡 Low | S (45m) | TODO:71 |
-| 25 | **T21-T25: Docs sync** — README CLI section, AGENTS.md update, FEATURES/TODO flip to DONE, cli-workflow.md, CHANGELOG | 🟡 Low | L (~3h total) | Plan T21-T25 |
+| #   | Task                                                                                                                                | Impact      | Effort        | Source                  |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------- | ----------------------- |
+| 1   | **T1+T2: Replay engine** — extract event-application logic from Recorder hooks into pure `ReplayEvents([]Event) → Report`           | 🔴 Critical | L (100m)      | Plan T1+T2              |
+| 2   | **T3: NDJSON reader** — `ReadEvents(io.Reader) ([]Event, error)` with per-line errors                                               | 🔴 Critical | S (45m)       | Plan T3                 |
+| 3   | **T4: Loader API** — `LoadReport(path)` auto-detects JSON vs NDJSON                                                                 | 🔴 Critical | M (60m)       | Plan T4                 |
+| 4   | **D1 fix: Implement dependency-edge diffing + correct `diff.go:43` doc lie**                                                        | 🔴 High     | M (75m)       | Plan T10, integrity bug |
+| 5   | **T15: Replay golden tests** — capture demo fixture, assert `ReplayEvents(ndjson) ≈ report` modulo capability flags                 | 🔴 High     | L (90m)       | Plan T15                |
+| 6   | **T8: JSON Schema file** (`schema/report.schema.json`) for v0.2.0 — all 4 enums, RFC3339 timestamps, omitempty-aware required lists | 🔴 High     | M (75m)       | Plan T8, TODO:76        |
+| 7   | **T9: Embedded schema validator** — `ValidateAgainstSchema(Report)` via `santhosh-tekuri/jsonschema`                                | 🟠 Medium   | M (60m)       | Plan T9                 |
+| 8   | **T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`, persistent flags                                                     | 🟠 Medium   | M (60m)       | Plan T5, FEATURES:170   |
+| 9   | **T6: CLI `import`** — `auditlog import <file> -o report.html` round-trip works                                                     | 🟠 Medium   | M (75m)       | Plan T6                 |
+| 10  | **T7: CLI `export`** — 5 formats via library APIs                                                                                   | 🟠 Medium   | S (60m)       | Plan T7                 |
+| 11  | **T11: Diff scope tree** — flatten ScopeNode by path, set-diff added/removed scopes                                                 | 🟠 Medium   | M (60m)       | Plan T11                |
+| 12  | **T26: samber/ro reactive adapter** — `EventsAsObservable()` via BehaviorSubject                                                    | 🟠 Medium   | M (75m)       | Plan T26                |
+| 13  | **T2.5: Add `Report.Reconstructed` field** — lets consumers detect capability-flag absence                                          | 🟡 Low      | XS (10m)      | Plan, Risk A mitigation |
+| 14  | **T12: CLI `validate`** — `auditlog validate <file>` runs `Report.Validate()` + schema check                                        | 🟡 Low      | S (45m)       | Plan T12                |
+| 15  | **T13: CLI `diff`** — `auditlog diff <a> <b>` text + JSON output, exit 3 on non-empty                                               | 🟡 Low      | S (60m)       | Plan T13                |
+| 16  | **T14: CLI `info`** — summary stats, `--json` output                                                                                | 🟡 Low      | XS (30m)      | Plan T14                |
+| 17  | **T16+T17: NDJSON reader + CLI golden tests** — roundtrip, fuzz, exit codes                                                         | 🟡 Low      | M (135m)      | Plan T16+T17            |
+| 18  | **Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` distinct types; breaking change                                     | 🟡 Low      | S (60m)       | TODO:54                 |
+| 19  | **`NewReport(...)` constructor** — invalid Reports unrepresentable                                                                  | 🟡 Low      | S (45m)       | TODO:56                 |
+| 20  | **T18: `nix build .#auditlog` binary** — replace README stub with real `buildGoModule`                                              | 🟡 Low      | S (45m)       | Plan T18, D4 fix        |
+| 21  | **T19: CI cross-compile matrix** — linux/darwin/windows × amd64/arm64, ldflags version injection, artifact upload                   | 🟡 Low      | M (60m)       | Plan T19                |
+| 22  | **CSV/TSV export** — tabular export of services/events for spreadsheets                                                             | 🟡 Low      | S (60m)       | FEATURES:169, TODO:62   |
+| 23  | **Property-based Diff tests** — `rapid`/`gopter`, assert symmetry + identity                                                        | 🟡 Low      | S (60m)       | TODO:68                 |
+| 24  | **HTML golden-file test** — deterministic multi-service report → committed golden                                                   | 🟡 Low      | S (45m)       | TODO:71                 |
+| 25  | **T21-T25: Docs sync** — README CLI section, AGENTS.md update, FEATURES/TODO flip to DONE, cli-workflow.md, CHANGELOG               | 🟡 Low      | L (~3h total) | Plan T21-T25            |
 
 **Out of scope for next iteration** (deferred to roadmap): WebSocket live stream, multi-module split, Prometheus dep, `encoding/json/v2` migration, HTML diff visualization, NDJSON sidecar metadata.
 
@@ -259,6 +259,7 @@ Sorted by **impact × value ÷ effort** (descending). Tier labels refer to the P
 The Pareto plan T5 specifies **`spf13/cobra`**. The `how-to-golang` required-libraries table specifies **`charm.land/fang/v2`** for CLI. These disagree, and the choice cascades through T5, T6, T7, T12, T13, T14, T17 (every CLI task).
 
 **The facts as I understand them:**
+
 - `fang/v2` is a **wrapper around cobra** that adds automatic help formatting, color, and manpage generation. Adopting cobra now keeps the fang upgrade path open.
 - `how-to-golang` bans `urfave/cli` but does **not** ban cobra. `fang` is listed as the required CLI lib, but cobra is its foundation.
 - The samber ecosystem (which this project lives in) uses **cobra** in `samber/do-template-cli`.

@@ -351,7 +351,9 @@ func buildReplayScopeTree(state *replayState) ScopeNode {
 		}
 	}
 
-	if !hasRoot {
+	// hasRoot is always true because recordScope assigns parentID="" to
+	// the first scope. The fallback is defensive but unreachable.
+	if !hasRoot && len(sorted) > 0 {
 		root = sorted[0]
 	}
 
@@ -371,7 +373,9 @@ func buildReplayScopeTree(state *replayState) ScopeNode {
 		var children []ScopeNode
 
 		for _, meta := range sorted {
-			if meta.parentID == parentID {
+			// Guard against self-referential cycles (e.g. root with
+			// empty ID where parentID == meta.id == "").
+			if meta.parentID == parentID && meta.id != parentID {
 				children = append(children, ScopeNode{
 					ID:       meta.id,
 					Name:     meta.name,

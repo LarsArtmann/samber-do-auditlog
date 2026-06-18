@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{\"\":1,\"\":\"\",\"event_type\":\"registration\",\"\":\"\",\"\":\"\",\"cope_id\":\"s\",\"scope_name\":\"s\",\"service_name\":\"db\"}")
