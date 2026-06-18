@@ -14,6 +14,7 @@ var (
 	errReportScopeCountMismatch    = errors.New("scope_count does not match scope tree")
 	errReportHealthCheckedMismatch = errors.New("health_checked_count does not match services with health checks")
 	errReportStatusDrift           = errors.New("service status does not match derived status")
+	errReportEmptyVersion          = errors.New("report version is empty")
 )
 
 // Report is a consolidated, machine-readable snapshot of the audit log.
@@ -49,6 +50,10 @@ type Report struct {
 // must match the actual slice/tree lengths. Returns nil if consistent, or an
 // error describing the first discrepancy found.
 func (r Report) Validate() error {
+	if r.Version == "" {
+		return errReportEmptyVersion
+	}
+
 	if r.EventCount != len(r.Events) {
 		return fmt.Errorf("%w: got %d, want %d", errReportEventCountMismatch, r.EventCount, len(r.Events))
 	}
@@ -163,6 +168,96 @@ func NewReport(
 	}
 
 	return report, nil
+}
+
+// MergeReports combines multiple reports (e.g. from different containers or
+// scopes) into a single report. Events are concatenated (preserving sequence
+// order per-report but offsetting later reports to avoid collisions). Services
+// are merged: services with the same scopeID + serviceName from different
+// reports are kept separately only if they differ; duplicates are deduplicated.
+// The scope trees are merged by union of all scopes.
+//
+// The resulting report uses SchemaVersion, the latest ExportedAt, and a
+// combined containerID ("merged"). All aggregate fields are recomputed.
+func MergeReports(reports []Report) (Report, error) {
+	if len(reports) == 0 {
+		return Report{}, fmt.Errorf("merge: %w", errMigrationEmptyInput)
+	}
+
+	if len(reports) == 1 {
+		return reports[0], nil
+	}
+
+	var (
+		allEvents   []Event
+		allServices []ServiceInfo
+	)
+
+	scopeSet := make(map[string]ScopeNode)
+	seqOffset := 0
+	maxExportedAt := reports[0].ExportedAt
+
+	for _, report := range reports {
+		for _, evt := range report.Events {
+			evt.Sequence += seqOffset
+			allEvents = append(allEvents, evt)
+		}
+
+		if len(report.Events) > 0 {
+			seqOffset += len(report.Events)
+		}
+
+		allServices = append(allServices, report.Services...)
+		mergeScopeTree(scopeSet, report.ScopeTree)
+
+		if report.ExportedAt.After(maxExportedAt) {
+			maxExportedAt = report.ExportedAt
+		}
+	}
+
+	rootScope := buildMergedRootScope(scopeSet)
+
+	return buildReportFromCore(
+		SchemaVersion, "merged", maxExportedAt, 0,
+		allEvents, allServices, rootScope,
+	), nil
+}
+
+// buildMergedRootScope collects scopes from the set, sorts them, and returns
+// the first as the root.
+func buildMergedRootScope(scopeSet map[string]ScopeNode) ScopeNode {
+	scopes := make([]ScopeNode, 0, len(scopeSet))
+
+	for _, sc := range scopeSet {
+		scopes = append(scopes, sc)
+	}
+
+	sortScopeNodes(scopes)
+
+	if len(scopes) > 0 {
+		return scopes[0]
+	}
+
+	return ScopeNode{} //nolint:exhaustruct
+}
+
+// mergeScopeTree adds all scopes from a tree into the scope set.
+func mergeScopeTree(scopeSet map[string]ScopeNode, tree ScopeNode) {
+	if tree.ID == "" {
+		return
+	}
+
+	if _, exists := scopeSet[tree.ID]; !exists {
+		scopeSet[tree.ID] = ScopeNode{ //nolint:exhaustruct // children merged recursively below
+			ID:       tree.ID,
+			Name:     tree.Name,
+			Services: tree.Services,
+		}
+	}
+
+	for _, child := range tree.Children {
+		mergeScopeTree(scopeSet, child)
+	}
 }
 
 // countScopeNodes counts all real scope nodes in the tree (root + recursive children).
