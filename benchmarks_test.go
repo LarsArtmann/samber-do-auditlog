@@ -10,15 +10,6 @@ import (
 	"github.com/samber/do/v2"
 )
 
-// benchLoop wraps the standard b.Loop() benchmark pattern so call sites
-// can express their body as a function literal without repeating the
-// for-loop boilerplate.
-func benchLoop(b *testing.B, body func()) {
-	for b.Loop() {
-		body()
-	}
-}
-
 func BenchmarkHookOverhead_Invocation(b *testing.B) {
 	p := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(p.Opts())
@@ -27,9 +18,9 @@ func BenchmarkHookOverhead_Invocation(b *testing.B) {
 
 	b.ResetTimer()
 
-	benchLoop(b, func() {
+	for b.Loop() {
 		_, _ = do.InvokeNamed[*Database](injector, "db")
-	})
+	}
 }
 
 func BenchmarkHookOverhead_Disabled(b *testing.B) {
@@ -40,19 +31,19 @@ func BenchmarkHookOverhead_Disabled(b *testing.B) {
 
 	b.ResetTimer()
 
-	benchLoop(b, func() {
+	for b.Loop() {
 		_, _ = do.InvokeNamed[*Database](injector, "db")
-	})
+	}
 }
 
 func BenchmarkHookOverhead_Registration(b *testing.B) {
 	b.ResetTimer()
 
-	benchLoop(b, func() {
+	for b.Loop() {
 		p := mustNew(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(p.Opts())
 		provideDB(injector, "svc", "test")
-	})
+	}
 }
 
 func BenchmarkHookOnAfterInvocation(b *testing.B) {
@@ -64,19 +55,19 @@ func BenchmarkHookOnAfterInvocation(b *testing.B) {
 
 	b.ResetTimer()
 
-	benchLoop(b, func() {
+	for b.Loop() {
 		_, _ = do.InvokeNamed[*Database](injector, "db")
-	})
+	}
 }
 
 func BenchmarkHookRegistrationOnly(b *testing.B) {
 	b.ResetTimer()
 
-	benchLoop(b, func() {
+	for b.Loop() {
 		p := mustNew(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(p.Opts())
 		do.ProvideValue(injector, &Database{URL: "test"})
-	})
+	}
 }
 
 func BenchmarkConcurrentInvocation(b *testing.B) {
@@ -105,9 +96,9 @@ func BenchmarkBuildReport(b *testing.B) {
 
 			b.ResetTimer()
 
-			benchLoop(b, func() {
+			for b.Loop() {
 				_ = p.Report()
-			})
+			}
 		})
 	}
 }
@@ -126,9 +117,9 @@ func BenchmarkEnrichCapabilities(b *testing.B) {
 
 	b.ResetTimer()
 
-	benchLoop(b, func() {
+	for b.Loop() {
 		_ = p.Report()
-	})
+	}
 }
 
 func BenchmarkEventsCopy(b *testing.B) {
@@ -139,9 +130,9 @@ func BenchmarkEventsCopy(b *testing.B) {
 
 	b.ResetTimer()
 
-	benchLoop(b, func() {
+	for b.Loop() {
 		_ = p.Events()
-	})
+	}
 }
 
 func BenchmarkOnEventCallback(b *testing.B) {
@@ -157,9 +148,9 @@ func BenchmarkOnEventCallback(b *testing.B) {
 
 	b.ResetTimer()
 
-	benchLoop(b, func() {
+	for b.Loop() {
 		_, _ = do.InvokeNamed[*Database](injector, "db")
-	})
+	}
 }
 
 func BenchmarkHealthCheck(b *testing.B) {
@@ -174,9 +165,9 @@ func BenchmarkHealthCheck(b *testing.B) {
 
 	b.ResetTimer()
 
-	benchLoop(b, func() {
+	for b.Loop() {
 		_ = p.RecordHealthCheck(injector)
-	})
+	}
 }
 
 func populateDBServices(injector do.Injector, count int) {
