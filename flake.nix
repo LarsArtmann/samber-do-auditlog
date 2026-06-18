@@ -63,25 +63,27 @@
 
         # Runnable apps. Invoke with: nix run .#<name>
         # They wrap go so no vendorHash is required; run from the repo root.
-        apps.coverage = {
-          type = "app";
-          program = toString (pkgs.writeShellScript "coverage-gate" ''
-            export PATH="${pkgs.lib.makeBinPath [ pkgs.go_1_26 ]}"
-            export CGO_ENABLED=0
-            exec sh ./scripts/coverage-gate.sh "$@"
-          '');
-        };
+        apps = {
+          coverage = {
+            type = "app";
+            program = toString (pkgs.writeShellScript "coverage-gate" ''
+              export PATH="${pkgs.lib.makeBinPath [ pkgs.go_1_26 ]}"
+              export CGO_ENABLED=0
+              exec sh ./scripts/coverage-gate.sh "$@"
+            '');
+          };
 
-        apps.auditlog = {
-          type = "app";
-          program = toString (pkgs.writeShellScript "auditlog" ''
-            export PATH="${pkgs.lib.makeBinPath [ pkgs.go_1_26 ]}"
-            export CGO_ENABLED=0
-            exec go run ./cmd/auditlog "$@"
-          '');
-        };
+          auditlog = {
+            type = "app";
+            program = toString (pkgs.writeShellScript "auditlog" ''
+              export PATH="${pkgs.lib.makeBinPath [ pkgs.go_1_26 ]}"
+              export CGO_ENABLED=0
+              exec go run ./cmd/auditlog "$@"
+            '');
+          };
 
-        apps.default = self.apps.${system}.auditlog;
+          default = self.apps.${system}.auditlog;
+        };
 
         formatter = pkgs.nixpkgs-fmt;
       }

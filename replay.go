@@ -95,7 +95,7 @@ func ReplayEvents(events []Event) (Report, error) {
 
 	err := report.Validate()
 	if err != nil {
-		return report, fmt.Errorf("%w: %v", errReplayValidationFailed, err)
+		return report, fmt.Errorf("%w: %w", errReplayValidationFailed, err)
 	}
 
 	return report, nil

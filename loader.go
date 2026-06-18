@@ -158,19 +158,3 @@ func detectLineFormat(line []byte) Format {
 	// Default: single-line object without version or event_type.
 	return FormatNDJSON
 }
-
-// LoadReportFromJSON loads a report from raw JSON bytes.
-// Delegates to MigrateReport for version-agnostic upgrading.
-func LoadReportFromJSON(data []byte) (Report, error) {
-	return MigrateReport(data)
-}
-
-// LoadReportFromNDJSON loads a report from NDJSON-encoded events.
-func LoadReportFromNDJSON(reader io.Reader) (Report, error) {
-	events, err := ReadEvents(reader)
-	if err != nil {
-		return Report{}, err
-	}
-
-	return ReplayEvents(events)
-}

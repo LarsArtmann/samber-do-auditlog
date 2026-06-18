@@ -68,4 +68,3 @@ func ReadEvents(reader io.Reader) ([]Event, error) {
 
 	return events, nil
 }
-

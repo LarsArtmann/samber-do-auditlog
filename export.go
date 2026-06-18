@@ -32,5 +32,3 @@ func serviceLabel(svc ServiceInfo) string {
 
 	return name
 }
-
-

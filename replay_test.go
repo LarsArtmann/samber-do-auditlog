@@ -818,9 +818,9 @@ func TestLoadReportFromJSON_DirectBytes(t *testing.T) {
 		t.Fatalf("WriteReportJSON: %v", err)
 	}
 
-	report, err := auditlog.LoadReportFromJSON(buf.Bytes())
+	report, err := auditlog.MigrateReport(buf.Bytes())
 	if err != nil {
-		t.Fatalf("LoadReportFromJSON: %v", err)
+		t.Fatalf("MigrateReport: %v", err)
 	}
 
 	assertReportServiceCount(t, report)
@@ -1023,10 +1023,10 @@ func TestLoadReportFromBytes_NDJSONNoVersionOrEventType(t *testing.T) {
 	}
 }
 
-func TestLoadReportFromNDJSON_EmptyReader(t *testing.T) {
+func TestLoadReportFromReader_EmptyNDJSON(t *testing.T) {
 	t.Parallel()
 
-	_, err := auditlog.LoadReportFromNDJSON(strings.NewReader(""))
+	_, _, err := auditlog.LoadReportFromReader(strings.NewReader(""), auditlog.FormatNDJSON)
 	if !errors.Is(err, auditlog.ErrEmpty) {
 		t.Errorf("expected ErrEmpty, got %v", err)
 	}
