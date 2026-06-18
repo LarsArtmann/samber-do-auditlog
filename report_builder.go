@@ -83,7 +83,10 @@ func serviceRecordToInfo(rec *serviceRecord) ServiceInfo {
 			ScopeID:     rec.scopeID,
 			ScopeName:   rec.scopeName,
 		},
-		Status:               computeServiceStatus(rec),
+		Status: deriveServiceStatus(
+			rec.invocationError, rec.shutdownError,
+			rec.shutdownAt, rec.firstInvokedAt,
+		),
 		ServiceType:          rec.serviceType,
 		RegisteredAt:         rec.registeredAt,
 		FirstInvokedAt:       rec.firstInvokedAt,

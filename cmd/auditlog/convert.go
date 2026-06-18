@@ -15,6 +15,7 @@ import (
 // runConvert loads a report and writes it in the requested format.
 func runConvert(args []string) (err error) {
 	fs := flag.NewFlagSet("convert", flag.ContinueOnError)
+	fs.SetOutput(os.Stdout)
 
 	output := fs.String("o", "", "output file (default: stdout)")
 	format := fs.String("f", "", "output format: json, ndjson, csv, tsv, html, mermaid, plantuml, dot")

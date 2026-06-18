@@ -12,6 +12,7 @@ import (
 // runSchema prints the canonical JSON Schema for the report format.
 func runSchema(args []string) error {
 	fs := flag.NewFlagSet("schema", flag.ContinueOnError)
+	fs.SetOutput(os.Stdout)
 
 	if err := fs.Parse(args); err != nil {
 		return err

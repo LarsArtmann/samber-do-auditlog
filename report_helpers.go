@@ -88,8 +88,3 @@ func deriveServiceStatus(invocationError, shutdownError *string, shutdownAt, fir
 
 	return ServiceStatusRegistered
 }
-
-// computeServiceStatus derives the lifecycle status from a service record.
-func computeServiceStatus(rec *serviceRecord) ServiceStatus {
-	return deriveServiceStatus(rec.invocationError, rec.shutdownError, rec.shutdownAt, rec.firstInvokedAt)
-}

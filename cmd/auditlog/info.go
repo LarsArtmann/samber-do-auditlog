@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"os"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
@@ -11,6 +12,7 @@ import (
 // runInfo prints a human-readable summary of a report.
 func runInfo(args []string) error {
 	fs := flag.NewFlagSet("info", flag.ContinueOnError)
+	fs.SetOutput(os.Stdout)
 
 	if err := fs.Parse(args); err != nil {
 		return err

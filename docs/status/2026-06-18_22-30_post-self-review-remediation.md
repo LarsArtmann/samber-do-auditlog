@@ -48,13 +48,13 @@ A brutal self-review was triggered to find what was forgotten, what was stupid, 
 
 ## B. PARTIALLY DONE
 
-| Item | Status | Notes |
-|------|--------|-------|
-| Typed identifiers (branded types) | Deferred to v0.1.0 | 65+ compile error blast radius, zero existing bugs. Will batch as breaking change. |
-| `google/go-cmp` for test assertions | Evaluated | Already a transitive dep. Needs depguard policy change to adopt. |
-| CLI framework (cobra/kong) | Evaluated | `reorderFlags` fragility is the main argument for adoption. Defensible to stay stdlib-only for a 5-subcommand tool. |
-| `encoding/json/v2` | Rejected | Project has a frozen wire format (JSON Schema, stability guarantees). json/v2 changes defaults that would perturb the contract. |
-| Schema drift detection test | Not started | Would run `cmd/genschema` and compare to committed `schema/report.schema.json`. |
+| Item                                | Status             | Notes                                                                                                                           |
+| ----------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| Typed identifiers (branded types)   | Deferred to v0.1.0 | 65+ compile error blast radius, zero existing bugs. Will batch as breaking change.                                              |
+| `google/go-cmp` for test assertions | Evaluated          | Already a transitive dep. Needs depguard policy change to adopt.                                                                |
+| CLI framework (cobra/kong)          | Evaluated          | `reorderFlags` fragility is the main argument for adoption. Defensible to stay stdlib-only for a 5-subcommand tool.             |
+| `encoding/json/v2`                  | Rejected           | Project has a frozen wire format (JSON Schema, stability guarantees). json/v2 changes defaults that would perturb the contract. |
+| Schema drift detection test         | Not started        | Would run `cmd/genschema` and compare to committed `schema/report.schema.json`.                                                 |
 
 ---
 
@@ -158,12 +158,12 @@ The deeper architectural question: **should the replay engine and the live recor
 
 ## Session Stats
 
-| Metric | Value |
-|--------|-------|
-| Commits | 13 (including prior session's 4) |
-| Lines removed | ~150 (net: -60 after additions) |
-| Functions deleted | 12 (ghost API + wrappers + duplicates) |
-| Split brains fixed | 3 (scopeMeta, buildServices, stack-pop) |
-| Tests added | 4 (invocationOrder regression, 2 enum validation, CLI stdin) |
-| Coverage | 95.5% (above 95% gate) |
-| Lint issues | 0 |
+| Metric             | Value                                                        |
+| ------------------ | ------------------------------------------------------------ |
+| Commits            | 13 (including prior session's 4)                             |
+| Lines removed      | ~150 (net: -60 after additions)                              |
+| Functions deleted  | 12 (ghost API + wrappers + duplicates)                       |
+| Split brains fixed | 3 (scopeMeta, buildServices, stack-pop)                      |
+| Tests added        | 4 (invocationOrder regression, 2 enum validation, CLI stdin) |
+| Coverage           | 95.5% (above 95% gate)                                       |
+| Lint issues        | 0                                                            |
