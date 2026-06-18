@@ -2,6 +2,7 @@ package auditlog
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -34,7 +35,7 @@ func ReadEvents(reader io.Reader) ([]Event, error) {
 		line := scanner.Bytes()
 
 		// Skip blank/whitespace-only lines.
-		if len(trimWhitespace(line)) == 0 {
+		if len(bytes.TrimSpace(line)) == 0 {
 			continue
 		}
 
@@ -68,18 +69,3 @@ func ReadEvents(reader io.Reader) ([]Event, error) {
 	return events, nil
 }
 
-// trimWhitespace removes leading/trailing ASCII whitespace from a byte slice.
-func trimWhitespace(data []byte) []byte {
-	start := 0
-	end := len(data)
-
-	for start < end && (data[start] == ' ' || data[start] == '\t' || data[start] == '\r' || data[start] == '\n') {
-		start++
-	}
-
-	for end > start && (data[end-1] == ' ' || data[end-1] == '\t' || data[end-1] == '\r' || data[end-1] == '\n') {
-		end--
-	}
-
-	return data[start:end]
-}

@@ -33,7 +33,4 @@ func serviceLabel(svc ServiceInfo) string {
 	return name
 }
 
-// serviceRefLabel returns the service name from a reference for diagram labels.
-func serviceRefLabel(ref ServiceRef) string {
-	return ref.ServiceName
-}
+

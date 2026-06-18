@@ -50,7 +50,7 @@ func writeDiagram(writer io.Writer, report Report, formatter diagramFormatter) e
 
 		for _, dep := range svc.Dependencies {
 			toID := formatter.NodeID(dep.ScopeID, dep.ServiceName)
-			add(toID, formatter.NodeDecl(toID, serviceRefLabel(dep)))
+			add(toID, formatter.NodeDecl(toID, dep.ServiceName))
 			add(fromID+"->"+toID, formatter.EdgeDecl(fromID, toID))
 		}
 	}
