@@ -7,6 +7,6 @@
 // IsShutdowner capabilities detected via do.ExplainInjector.
 //
 // Config.Validate() checks configuration constraints. Export formats include JSON
-// reports, NDJSON event streams, and a self-contained HTML visualization with a
-// force-directed dependency graph.
+// reports, NDJSON event streams, CSV/TSV, self-contained HTML, Mermaid,
+// PlantUML, and Graphviz DOT diagrams.
 package auditlog

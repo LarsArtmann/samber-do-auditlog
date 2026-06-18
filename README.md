@@ -58,9 +58,9 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 | **Service types**        | Auto-detects lazy/eager/transient/alias via `do.ExplainNamedService`     |
 | **Timing**               | First build duration, shutdown duration, invocation count & order        |
 | **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events             |
-| **5 export formats**     | JSON · NDJSON · self-contained HTML · Mermaid · PlantUML                 |
+| **8 export formats**     | JSON · NDJSON · CSV · TSV · HTML · Mermaid · PlantUML · DOT              |
 | **Filtered reports**     | Functional options to slice by name, type, scope, event type, time range |
-| **~1μs overhead**        | In-memory capture, no I/O during container operation                     |
+| **~1.7μs overhead**      | In-memory capture, no I/O during container operation                     |
 | **Toggle on/off**        | `Enabled: false` → zero hooks, zero cost                                 |
 | **Minimal deps**         | Only `samber/do/v2` + `a-h/templ` (HTML visualization)                   |
 
@@ -337,9 +337,25 @@ The callback is called **outside the mutex** on every event. Keep it fast — do
 | `UnhealthyServices() []ServiceInfo`        | Services with health check errors.                  |
 | `WriteJSON(w) error`                       | Indented JSON report to `io.Writer`.                |
 | `WriteNDJSON(w) error`                     | NDJSON event stream to `io.Writer`.                 |
+| `WriteHTML(w) error`                       | Self-contained HTML visualization to `io.Writer`.   |
+| `WriteCSV(w) error`                        | Comma-separated values (all services).              |
+| `WriteTSV(w) error`                        | Tab-separated values (all services).                |
 | `WriteMermaid(w) error`                    | Mermaid flowchart to `io.Writer`.                   |
 | `WritePlantUML(w) error`                   | PlantUML component diagram to `io.Writer`.          |
+| `WriteDOT(w) error`                        | Graphviz DOT digraph to `io.Writer`.                |
 | `Diff(other Report) DiffResult`            | Structural comparison between two reports.          |
+
+### Package Functions
+
+| Function                                            | Purpose                                      |
+| --------------------------------------------------- | -------------------------------------------- |
+| `New(...) (*Plugin, error)`                         | Construct a plugin from Config (validated).  |
+| `NewReport(...) (Report, error)`                    | Construct a validated Report from core data. |
+| `LoadReport(path, opts...) (Report, Format, error)` | Auto-detect JSON/NDJSON and load.            |
+| `ReadEvents(reader) ([]Event, error)`               | Read NDJSON event stream.                    |
+| `ReplayEvents(events) (Report, error)`              | Reconstruct a Report from events.            |
+| `MigrateReport(data) (Report, error)`               | Migrate/repair old or stale JSON.            |
+| `JSONSchema() string`                               | Canonical JSON Schema for the report format. |
 
 ## How Dependency Tracking Works
 
