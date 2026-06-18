@@ -53,6 +53,26 @@ func getOrCreateServiceRecord(
 	return rec
 }
 
+// popStackFrame removes the most recent matching stack frame via backward
+// LIFO search. Returns the updated slice, the removed frame, and true if
+// found. Used by both the live Recorder path (under r.mu) and the replay
+// path (no lock).
+func popStackFrame(stack []stackEntry, scopeID, serviceName string) ([]stackEntry, stackEntry, bool) {
+	for i, frame := range slices.Backward(stack) {
+		if frame.serviceName == serviceName && frame.scopeID == scopeID {
+			if i == len(stack)-1 {
+				stack = stack[:i]
+			} else {
+				stack = append(stack[:i], stack[i+1:]...)
+			}
+
+			return stack, frame, true
+		}
+	}
+
+	return stack, stackEntry{}, false //nolint:exhaustruct // zero-value sentinel for not-found
+}
+
 // recordDependencyFromStack inspects the current invocation stack and, if
 // non-empty, records depKey as a dependency of the top-of-stack service.
 // Used by both the live Recorder path (under r.mu) and the replay path
@@ -227,19 +247,11 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 	// Pop matching stack frame (LIFO fast path).
 	var durationMs *float64
 
-	for i, frame := range slices.Backward(r.stack) {
-		if frame.serviceName == serviceName && frame.scopeID == scopeID {
-			d := float64(now.Sub(frame.start).Microseconds()) / microsPerMs
-			durationMs = &d
-
-			if i == len(r.stack)-1 {
-				r.stack = r.stack[:i]
-			} else {
-				r.stack = append(r.stack[:i], r.stack[i+1:]...)
-			}
-
-			break
-		}
+	newStack, frame, found := popStackFrame(r.stack, scopeID, serviceName)
+	if found {
+		r.stack = newStack
+		d := float64(now.Sub(frame.start).Microseconds()) / microsPerMs
+		durationMs = &d
 	}
 
 	// Look up service type.

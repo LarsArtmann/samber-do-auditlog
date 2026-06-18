@@ -189,16 +189,9 @@ func (state *replayState) applyInvocationBefore(evt Event, key svcKey) {
 }
 
 func (state *replayState) applyInvocationAfter(evt Event) {
-	for i, frame := range slices.Backward(state.stack) {
-		if frame.serviceName == evt.ServiceName && frame.scopeID == evt.ScopeID {
-			if i == len(state.stack)-1 {
-				state.stack = state.stack[:i]
-			} else {
-				state.stack = append(state.stack[:i], state.stack[i+1:]...)
-			}
-
-			break
-		}
+	newStack, _, found := popStackFrame(state.stack, evt.ScopeID, evt.ServiceName)
+	if found {
+		state.stack = newStack
 	}
 
 	rec := getOrCreateServiceRecord(state.services, evt)
