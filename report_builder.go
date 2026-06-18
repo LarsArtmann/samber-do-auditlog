@@ -153,7 +153,7 @@ func buildDependentsMapLocked(services map[svcKey]*serviceRecord) map[svcKey][]S
 }
 
 func (r *Recorder) buildScopeTreeLocked() ScopeNode {
-	sortedScopes := sortedScopesLocked(r.scopes)
+	sortedScopes := sortedScopes(r.scopes)
 
 	return buildScopeTreeFromMeta(
 		sortedScopes,
@@ -257,7 +257,7 @@ func buildScopeTreeFromMeta[T any](
 	}
 }
 
-func sortedScopesLocked(scopes map[string]scopeMeta) []scopeMeta {
+func sortedScopes(scopes map[string]scopeMeta) []scopeMeta {
 	result := make([]scopeMeta, 0, len(scopes))
 
 	for _, meta := range scopes {
@@ -290,7 +290,7 @@ func sortScopeNodes(nodes []ScopeNode) []ScopeNode {
 // outside the recorder mutex to avoid deadlocking with samber/do's internal locks.
 func enrichCapabilities(scopes map[string]scopeMeta, services []ServiceInfo) {
 	// Sort scope iteration for deterministic output across runs.
-	sorted := sortedScopesLocked(scopes)
+	sorted := sortedScopes(scopes)
 
 	for _, meta := range sorted {
 		if meta.ref == nil {

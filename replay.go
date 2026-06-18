@@ -1,7 +1,6 @@
 package auditlog
 
 import (
-	"cmp"
 	"errors"
 	"fmt"
 	"slices"
@@ -16,7 +15,7 @@ var errReplayValidationFailed = errors.New("replayed report failed validation")
 // primitives — replay is a single-threaded, pure transformation.
 type replayState struct {
 	services      map[svcKey]*serviceRecord
-	scopes        map[string]replayScopeMeta
+	scopes        map[string]scopeMeta
 	stack         []stackEntry
 	shutdownStart map[svcKey]time.Time
 	containerID   string
@@ -26,21 +25,11 @@ type replayState struct {
 	invocationSeq int
 }
 
-// replayScopeMeta is scope metadata without the live *do.Scope reference.
-// The parentID is inferred (first-seen scope becomes root; all others
-// parented to it) because events carry only scope_id/scope_name, not
-// the parent-child relationship from the original container.
-type replayScopeMeta struct {
-	id       string
-	name     string
-	parentID string
-}
-
 // newReplayState initializes an empty replay state.
 func newReplayState() *replayState {
 	return &replayState{ //nolint:exhaustruct
 		services:      make(map[svcKey]*serviceRecord),
-		scopes:        make(map[string]replayScopeMeta),
+		scopes:        make(map[string]scopeMeta),
 		shutdownStart: make(map[svcKey]time.Time),
 	}
 }
@@ -75,7 +64,11 @@ func ReplayEvents(events []Event) (Report, error) {
 	}
 
 	services := buildReplayServices(state)
-	scopeTree := buildReplayScopeTree(state)
+	scopeTree := buildScopeTreeFromMeta(
+		sortedScopes(state.scopes),
+		scopeMetaID, scopeMetaName, scopeMetaParentID,
+		scopeServicesForServices(state.services),
+	)
 	containerID := state.containerID
 
 	if containerID == "" && len(events) > 0 {
@@ -150,19 +143,21 @@ func (state *replayState) recordScope(scopeID, scopeName string) {
 	rootID := state.firstScopeID()
 
 	if rootID == "" {
-		state.scopes[scopeID] = replayScopeMeta{
+		state.scopes[scopeID] = scopeMeta{
 			id:       scopeID,
 			name:     scopeName,
 			parentID: "",
+			ref:      nil,
 		}
 
 		return
 	}
 
-	state.scopes[scopeID] = replayScopeMeta{
+	state.scopes[scopeID] = scopeMeta{
 		id:       scopeID,
 		name:     scopeName,
 		parentID: rootID,
+		ref:      nil,
 	}
 }
 
@@ -172,7 +167,7 @@ func (state *replayState) firstScopeID() string {
 		return ""
 	}
 
-	sorted := sortedReplayScopes(state.scopes)
+	sorted := sortedScopes(state.scopes)
 
 	return sorted[0].id
 }
@@ -283,33 +278,4 @@ func buildReplayServices(state *replayState) []ServiceInfo {
 	sortServiceInfos(services)
 
 	return services
-}
-
-// buildReplayScopeTree builds a ScopeNode tree from replay scopes.
-func buildReplayScopeTree(state *replayState) ScopeNode {
-	sorted := sortedReplayScopes(state.scopes)
-
-	return buildScopeTreeFromMeta(
-		sorted,
-		replayMetaID, replayMetaName, replayMetaParentID,
-		scopeServicesForServices(state.services),
-	)
-}
-
-// replayMetaID, replayMetaName, replayMetaParentID are field accessors for replayScopeMeta.
-func replayMetaID(m replayScopeMeta) string       { return m.id }
-func replayMetaName(m replayScopeMeta) string     { return m.name }
-func replayMetaParentID(m replayScopeMeta) string { return m.parentID }
-
-func sortedReplayScopes(scopes map[string]replayScopeMeta) []replayScopeMeta {
-	result := make([]replayScopeMeta, 0, len(scopes))
-	for _, meta := range scopes {
-		result = append(result, meta)
-	}
-
-	slices.SortFunc(result, func(a, b replayScopeMeta) int {
-		return cmp.Compare(a.id, b.id)
-	})
-
-	return result
 }

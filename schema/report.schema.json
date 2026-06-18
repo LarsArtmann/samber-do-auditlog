@@ -75,10 +75,7 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "id",
-        "name"
-      ]
+      "required": ["id", "name"]
     },
     "ServiceInfo": {
       "properties": {
@@ -186,11 +183,7 @@
       },
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "scope_id",
-        "scope_name",
-        "service_name"
-      ]
+      "required": ["scope_id", "scope_name", "service_name"]
     }
   },
   "properties": {
