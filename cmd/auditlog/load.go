@@ -2,23 +2,39 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
-// loadFile loads a report from path (auto-detecting JSON vs NDJSON) and exits
-// the process with a user-friendly message on failure.
-func loadFile(path string) auditlog.Report {
-	report, _, err := auditlog.LoadReport(path)
-	if err != nil {
-		failf("load %s: %v", path, err)
+// loadFile loads a report from path (auto-detecting JSON vs NDJSON).
+// A path of "-" reads from stdin. Returns an error so callers can produce
+// consistent error messages with the subcommand prefix.
+func loadFile(path string) (auditlog.Report, error) {
+	if path == "-" {
+		return loadFromReader(os.Stdin, "stdin")
 	}
 
-	return report
+	report, _, err := auditlog.LoadReport(path)
+	if err != nil {
+		return auditlog.Report{}, fmt.Errorf("load %s: %w", path, err)
+	}
+
+	return report, nil
 }
 
-func failf(format string, args ...any) {
-	fmt.Fprintf(os.Stderr, "auditlog: "+format+"\n", args...)
-	os.Exit(1)
+// loadFromReader loads from any io.Reader using auto-detection.
+func loadFromReader(r io.Reader, label string) (auditlog.Report, error) {
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return auditlog.Report{}, fmt.Errorf("read %s: %w", label, err)
+	}
+
+	report, _, err := auditlog.LoadReportFromBytes(data, auditlog.FormatAuto)
+	if err != nil {
+		return auditlog.Report{}, fmt.Errorf("load %s: %w", label, err)
+	}
+
+	return report, nil
 }

@@ -13,14 +13,12 @@ import (
 )
 
 // runConvert loads a report and writes it in the requested format.
-func runConvert(args []string) error {
-	fs := flag.NewFlagSet("convert", flag.ExitOnError)
+func runConvert(args []string) (err error) {
+	fs := flag.NewFlagSet("convert", flag.ContinueOnError)
 
 	output := fs.String("o", "", "output file (default: stdout)")
 	format := fs.String("f", "", "output format: json, ndjson, csv, tsv, html, mermaid, plantuml, dot")
 
-	// Reorder so flags can appear after the positional input (Go's flag
-	// package otherwise stops parsing at the first non-flag argument).
 	if err := fs.Parse(reorderFlags(args)); err != nil {
 		return err
 	}
@@ -29,7 +27,10 @@ func runConvert(args []string) error {
 		return errors.New("usage: auditlog convert <input> [-o output] [-f format]")
 	}
 
-	report := loadFile(fs.Arg(0))
+	report, err := loadFile(fs.Arg(0))
+	if err != nil {
+		return err
+	}
 
 	fmtName := *format
 	if fmtName == "" && *output != "" {
@@ -43,11 +44,16 @@ func runConvert(args []string) error {
 	out := os.Stdout
 
 	if *output != "" {
-		f, err := os.Create(*output)
-		if err != nil {
-			return fmt.Errorf("create %s: %w", *output, err)
+		f, createErr := os.Create(*output)
+		if createErr != nil {
+			return fmt.Errorf("create %s: %w", *output, createErr)
 		}
-		defer f.Close()
+
+		defer func() {
+			if cerr := f.Close(); err == nil {
+				err = cerr
+			}
+		}()
 
 		out = f
 	}

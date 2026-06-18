@@ -110,6 +110,57 @@ func TestCLI_Info(t *testing.T) {
 	}
 }
 
+func TestCLI_InfoFromStdin(t *testing.T) {
+	t.Parallel()
+
+	bin := buildCLIBinary(t)
+
+	// Build the JSON report in-memory and pipe it via stdin.
+	report := writeReportWithExtraService // reuse builder
+	_ = report
+
+	var jsonBuf bytes.Buffer
+
+	base := time.Date(2026, 3, 1, 10, 0, 0, 0, time.UTC)
+
+	events := []auditlog.Event{
+		{
+			ServiceRef: auditlog.ServiceRef{
+				ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "stdin-svc",
+			},
+			Sequence: 1, Timestamp: base,
+			EventType: auditlog.EventTypeRegistration, Phase: auditlog.PhaseAfter,
+			ContainerID: "stdin-test", ServiceType: auditlog.ProviderTypeLazy,
+		},
+	}
+
+	r, err := auditlog.ReplayEvents(events)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r.ExportedAt = base
+	if err := r.WriteJSON(&jsonBuf); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := exec.CommandContext(context.Background(), bin, "info", "-")
+	cmd.Stdin = &jsonBuf
+
+	var out bytes.Buffer
+
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("info stdin: %v\n%s", err, out.String())
+	}
+
+	if !strings.Contains(out.String(), "stdin-svc") {
+		t.Errorf("info from stdin missing 'stdin-svc':\n%s", out.String())
+	}
+}
+
 func TestCLI_Validate(t *testing.T) {
 	t.Parallel()
 

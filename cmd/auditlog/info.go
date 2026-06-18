@@ -10,7 +10,7 @@ import (
 
 // runInfo prints a human-readable summary of a report.
 func runInfo(args []string) error {
-	fs := flag.NewFlagSet("info", flag.ExitOnError)
+	fs := flag.NewFlagSet("info", flag.ContinueOnError)
 
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -20,7 +20,10 @@ func runInfo(args []string) error {
 		return errors.New("usage: auditlog info <file>")
 	}
 
-	report := loadFile(fs.Arg(0))
+	report, err := loadFile(fs.Arg(0))
+	if err != nil {
+		return err
+	}
 
 	fmt.Printf("version:      %s\n", report.Version)
 	fmt.Printf("container:    %s\n", report.ContainerID)
@@ -59,8 +62,10 @@ func runInfo(args []string) error {
 		}
 	}
 
-	fmt.Println("\nservice list:")
-	printServices(report)
+	if len(report.Services) > 0 {
+		fmt.Println("\nservice list:")
+		printServices(report)
+	}
 
 	return nil
 }

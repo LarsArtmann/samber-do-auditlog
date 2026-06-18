@@ -10,7 +10,7 @@ import (
 
 // runDiff loads two reports and prints their structural differences.
 func runDiff(args []string) error {
-	fs := flag.NewFlagSet("diff", flag.ExitOnError)
+	fs := flag.NewFlagSet("diff", flag.ContinueOnError)
 
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -20,8 +20,15 @@ func runDiff(args []string) error {
 		return errors.New("usage: auditlog diff <a> <b>")
 	}
 
-	a := loadFile(fs.Arg(0))
-	b := loadFile(fs.Arg(1))
+	a, err := loadFile(fs.Arg(0))
+	if err != nil {
+		return err
+	}
+
+	b, err := loadFile(fs.Arg(1))
+	if err != nil {
+		return err
+	}
 
 	result := a.Diff(b)
 
@@ -45,31 +52,34 @@ func runDiff(args []string) error {
 
 	if len(result.ChangedServices) > 0 {
 		fmt.Printf("\nchanged services (%d):\n", len(result.ChangedServices))
-
-		for _, c := range result.ChangedServices {
-			fmt.Printf("  • %s", c.ServiceName)
-
-			if c.StatusChanged {
-				fmt.Print(" [status changed]")
-			}
-
-			if c.InvocationCountDelta != 0 {
-				fmt.Printf(" invocations %+d", c.InvocationCountDelta)
-			}
-
-			if c.HealthCheckCountDelta != 0 {
-				fmt.Printf(" health %+d", c.HealthCheckCountDelta)
-			}
-
-			if c.HasNewError {
-				fmt.Print(" NEW ERROR")
-			}
-
-			fmt.Println()
-		}
+		printChangedServices(result.ChangedServices)
 	}
 
 	return nil
+}
+
+func printChangedServices(changed []auditlog.ServiceDiff) {
+	for _, c := range changed {
+		fmt.Printf("  • %s", c.ServiceName)
+
+		if c.StatusChanged {
+			fmt.Print(" [status changed]")
+		}
+
+		if c.InvocationCountDelta != 0 {
+			fmt.Printf(" invocations %+d", c.InvocationCountDelta)
+		}
+
+		if c.HealthCheckCountDelta != 0 {
+			fmt.Printf(" health %+d", c.HealthCheckCountDelta)
+		}
+
+		if c.HasNewError {
+			fmt.Print(" NEW ERROR")
+		}
+
+		fmt.Println()
+	}
 }
 
 func printRefs(refs []auditlog.ServiceRef) {
