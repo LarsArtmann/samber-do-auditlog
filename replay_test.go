@@ -15,6 +15,34 @@ import (
 
 // --- Replay engine tests ---
 
+// mkEvent constructs an auditlog.Event for replay tests. Reduces verbose
+// struct literals to a single call with the most-commonly-varied fields
+// as parameters; remaining fields (DurationMs, Error) are set on the
+// returned value by the caller when needed.
+func mkEvent(
+	seq int,
+	ts time.Time,
+	eventType auditlog.EventType,
+	phase auditlog.Phase,
+	scopeID, scopeName, serviceName, containerID string,
+	svcType auditlog.ProviderType,
+) auditlog.Event {
+	return auditlog.Event{
+		ServiceRef:  auditlog.ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName},
+		Sequence:    seq,
+		Timestamp:   ts,
+		EventType:   eventType,
+		Phase:       phase,
+		ContainerID: containerID,
+		ServiceType: svcType,
+	}
+}
+
+// rootRef returns a ServiceRef for a root-scope service.
+func rootRef(serviceName string) auditlog.ServiceRef {
+	return auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: serviceName}
+}
+
 func TestReplayEvents_EmptyInput(t *testing.T) {
 	t.Parallel()
 
