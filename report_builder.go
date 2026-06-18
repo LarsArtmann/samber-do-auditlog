@@ -35,7 +35,7 @@ func (r *Recorder) BuildReport() Report {
 
 func sortServiceInfos(services []ServiceInfo) {
 	slices.SortFunc(services, func(a, b ServiceInfo) int {
-		return compareByName(a.ServiceRef, b.ServiceRef)
+		return CompareServiceRefs(a.ServiceRef, b.ServiceRef)
 	})
 }
 
@@ -134,16 +134,10 @@ func depRecToRef(rec *serviceRecord) ServiceRef {
 }
 
 func sortDepRefs(refs []ServiceRef) {
-	slices.SortFunc(refs, compareByName)
+	slices.SortFunc(refs, CompareServiceRefs)
 }
 
-func compareByName(a, b ServiceRef) int {
-	return cmp.Or(
-		cmp.Compare(a.ScopeName, b.ScopeName),
-		cmp.Compare(a.ServiceName, b.ServiceName),
-	)
-}
-
+// buildDependentsMapLocked builds the reverse-dependency map.
 func buildDependentsMapLocked(services map[svcKey]*serviceRecord) map[svcKey][]ServiceRef {
 	dependents := make(map[svcKey][]ServiceRef)
 

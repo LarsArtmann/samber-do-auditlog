@@ -73,8 +73,8 @@ func (r Report) Diff(other Report) DiffResult {
 		}
 	}
 
-	slices.SortFunc(result.AddedServices, sortServiceRefs)
-	slices.SortFunc(result.RemovedServices, sortServiceRefs)
+	slices.SortFunc(result.AddedServices, CompareServiceRefs)
+	slices.SortFunc(result.RemovedServices, CompareServiceRefs)
 	slices.SortFunc(result.ChangedServices, sortServiceDiffs)
 
 	return result
@@ -107,14 +107,16 @@ func indexServicesByKey(services []ServiceInfo) map[string]ServiceInfo {
 	return idx
 }
 
-func sortServiceRefs(a, b ServiceRef) int {
-	if c := cmp.Compare(a.ServiceName, b.ServiceName); c != 0 {
-		return c
-	}
-
-	return cmp.Compare(a.ScopeID, b.ScopeID)
+// CompareServiceRefs is the canonical sort ordering for ServiceRef slices:
+// primary by ServiceName, secondary by ScopeID. Used by report builders and
+// diff output so all ServiceRef lists are consistently ordered.
+func CompareServiceRefs(a, b ServiceRef) int {
+	return cmp.Or(
+		cmp.Compare(a.ServiceName, b.ServiceName),
+		cmp.Compare(a.ScopeID, b.ScopeID),
+	)
 }
 
 func sortServiceDiffs(a, b ServiceDiff) int {
-	return sortServiceRefs(a.ServiceRef, b.ServiceRef)
+	return CompareServiceRefs(a.ServiceRef, b.ServiceRef)
 }

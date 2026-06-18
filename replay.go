@@ -1,6 +1,7 @@
 package auditlog
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"slices"
@@ -94,7 +95,7 @@ func ReplayEvents(events []Event) (Report, error) {
 
 	err := report.Validate()
 	if err != nil {
-		return report, fmt.Errorf("%w: %w", errReplayValidationFailed, err)
+		return report, fmt.Errorf("%w: %v", errReplayValidationFailed, err)
 	}
 
 	return report, nil
@@ -307,15 +308,7 @@ func sortedReplayScopes(scopes map[string]replayScopeMeta) []replayScopeMeta {
 	}
 
 	slices.SortFunc(result, func(a, b replayScopeMeta) int {
-		if a.id < b.id {
-			return -1
-		}
-
-		if a.id > b.id {
-			return 1
-		}
-
-		return 0
+		return cmp.Compare(a.id, b.id)
 	})
 
 	return result
