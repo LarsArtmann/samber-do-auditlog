@@ -42,12 +42,19 @@ func sortServiceInfos(services []ServiceInfo) {
 // buildServicesLocked assembles sorted ServiceInfo from the recorded data.
 // Must be called with r.mu held for reading.
 func (r *Recorder) buildServicesLocked() []ServiceInfo {
-	dependents := buildDependentsMapLocked(r.services)
+	return buildServicesFromMap(r.services)
+}
 
-	services := make([]ServiceInfo, 0, len(r.services))
-	for _, rec := range r.services {
-		deps := r.buildDepsLocked(rec)
+// buildServicesFromMap assembles sorted ServiceInfo from a service record map.
+// Shared by the live recording path (Recorder.buildServicesLocked) and the
+// replay path (ReplayEvents) to guarantee identical assembly logic.
+func buildServicesFromMap(services map[svcKey]*serviceRecord) []ServiceInfo {
+	dependents := buildDependentsMapLocked(services)
 
+	result := make([]ServiceInfo, 0, len(services))
+
+	for _, rec := range services {
+		deps := buildServiceDeps(rec, services)
 		key := svcKey{scopeID: rec.scopeID, name: rec.serviceName}
 		svcDependents := dependents[key]
 
@@ -56,12 +63,12 @@ func (r *Recorder) buildServicesLocked() []ServiceInfo {
 		svc := serviceRecordToInfo(rec)
 		svc.Dependencies = deps
 		svc.Dependents = svcDependents
-		services = append(services, svc)
+		result = append(result, svc)
 	}
 
-	sortServiceInfos(services)
+	sortServiceInfos(result)
 
-	return services
+	return result
 }
 
 // serviceRecordToInfo converts an internal serviceRecord to a public ServiceInfo.
@@ -95,12 +102,6 @@ func serviceRecordToInfo(rec *serviceRecord) ServiceInfo {
 		HealthCheckError:     rec.healthCheckError,
 		HealthCheckCount:     rec.healthCheckCount,
 	}
-}
-
-// buildDepsLocked builds sorted dependency refs for a service record.
-// Must be called with r.mu held for reading.
-func (r *Recorder) buildDepsLocked(rec *serviceRecord) []ServiceRef {
-	return buildServiceDeps(rec, r.services)
 }
 
 // buildServiceDeps converts a serviceRecord's dependency map into a sorted

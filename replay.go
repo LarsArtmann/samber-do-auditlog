@@ -63,7 +63,7 @@ func ReplayEvents(events []Event) (Report, error) {
 		applyEvent(evt, state)
 	}
 
-	services := buildReplayServices(state)
+	services := buildServicesFromMap(state.services)
 	scopeTree := buildScopeTreeFromMeta(
 		sortedScopes(state.scopes),
 		scopeMetaID, scopeMetaName, scopeMetaParentID,
@@ -254,28 +254,4 @@ func (state *replayState) applyHealthCheck(evt Event) {
 	rec.lastHealthCheckAt = &t
 	rec.healthCheckError = evt.Error
 	rec.healthCheckCount++
-}
-
-// buildReplayServices assembles sorted ServiceInfo from replay state.
-func buildReplayServices(state *replayState) []ServiceInfo {
-	dependents := buildDependentsMapLocked(state.services)
-
-	services := make([]ServiceInfo, 0, len(state.services))
-
-	for _, rec := range state.services {
-		deps := buildServiceDeps(rec, state.services)
-		key := svcKey{scopeID: rec.scopeID, name: rec.serviceName}
-		svcDependents := dependents[key]
-
-		sortDepRefs(svcDependents)
-
-		svc := serviceRecordToInfo(rec)
-		svc.Dependencies = deps
-		svc.Dependents = svcDependents
-		services = append(services, svc)
-	}
-
-	sortServiceInfos(services)
-
-	return services
 }
