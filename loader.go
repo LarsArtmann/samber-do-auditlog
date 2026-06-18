@@ -24,6 +24,20 @@ const (
 	FormatNDJSON
 )
 
+// String returns the human-readable format name.
+func (f Format) String() string {
+	switch f {
+	case FormatAuto:
+		return "auto"
+	case FormatJSON:
+		return "json"
+	case FormatNDJSON:
+		return "ndjson"
+	default:
+		return "unknown"
+	}
+}
+
 // LoadOption configures LoadReport behavior.
 type LoadOption func(*loadConfig)
 
@@ -90,7 +104,7 @@ func LoadReportFromBytes(data []byte, format Format) (Report, Format, error) {
 	case FormatNDJSON:
 		return loadNDJSONFromBytes(data)
 	default:
-		return Report{}, FormatAuto, fmt.Errorf("%w: %d", errUnsupportedFormat, format)
+		return Report{}, FormatAuto, fmt.Errorf("%w: %s", errUnsupportedFormat, format)
 	}
 }
 

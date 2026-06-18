@@ -18,8 +18,12 @@ import (
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
-// CLIVersion is the auditlog CLI version.
-const CLIVersion = "0.1.0"
+// CLIVersion is the auditlog CLI version. Overridable at build time via:
+//
+//	go build -ldflags "-X main.CLIVersion=v0.1.0" ./cmd/auditlog
+//
+//nolint:gochecknoglobals // build-time overridable via ldflags
+var CLIVersion = "0.1.0-dev"
 
 func main() {
 	if len(os.Args) < 2 {
