@@ -28,7 +28,7 @@ func mkEvent(
 	svcType auditlog.ProviderType,
 ) auditlog.Event {
 	return auditlog.Event{
-		ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: serviceName},
+		ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: serviceName},
 		Sequence:    seq,
 		Timestamp:   ts,
 		EventType:   eventType,
@@ -38,7 +38,7 @@ func mkEvent(
 	}
 }
 
-// mkEventWithDur is mkEvent with a DurationMs value — used where the
+// mkEventWithDur wraps mkEvent and sets DurationMs — used where the
 // invocation-after event needs to carry timing data.
 func mkEventWithDur(
 	seq int,
@@ -49,21 +49,15 @@ func mkEventWithDur(
 	svcType auditlog.ProviderType,
 	dur float64,
 ) auditlog.Event {
-	return auditlog.Event{
-		ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: serviceName},
-		Sequence:    seq,
-		Timestamp:   ts,
-		EventType:   eventType,
-		Phase:       phase,
-		ContainerID: containerID,
-		ServiceType: svcType,
-		DurationMs:  &dur,
-	}
+	e := mkEvent(seq, ts, eventType, phase, serviceName, containerID, svcType)
+	e.DurationMs = &dur
+
+	return e
 }
 
 // rootRef returns a root-scope ServiceRef for the given service name.
 func rootRef(serviceName string) auditlog.ServiceRef {
-	return auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: serviceName}
+	return auditlog.ServiceRef{ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: serviceName}
 }
 
 func TestReplayEvents_EmptyInput(t *testing.T) {
