@@ -67,14 +67,15 @@ func TestMergeReports_SingleReport(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	events := []auditlog.Event{
-		{
-			ServiceRef: auditlog.ServiceRef{
-				ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc",
-			},
-			Sequence: 1, Timestamp: base,
-			EventType: auditlog.EventTypeRegistration, Phase: auditlog.PhaseAfter,
-			ContainerID: "single", ServiceType: auditlog.ProviderTypeLazy,
-		},
+		mkEvent(
+			1,
+			base,
+			auditlog.EventTypeRegistration,
+			auditlog.PhaseAfter,
+			"svc",
+			"single",
+			auditlog.ProviderTypeLazy,
+		),
 	}
 
 	report, err := auditlog.ReplayEvents(events)

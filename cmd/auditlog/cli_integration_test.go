@@ -28,6 +28,21 @@ func buildCLIBinary(t *testing.T) string {
 	return binPath
 }
 
+// mkRegEvent creates a registration-after event for CLI test fixtures.
+func mkRegEvent(seq int, ts time.Time, serviceName, containerID string) auditlog.Event {
+	return auditlog.Event{
+		ServiceRef: auditlog.ServiceRef{
+			ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: serviceName,
+		},
+		Sequence:    seq,
+		Timestamp:   ts,
+		EventType:   auditlog.EventTypeRegistration,
+		Phase:       auditlog.PhaseAfter,
+		ContainerID: containerID,
+		ServiceType: auditlog.ProviderTypeLazy,
+	}
+}
+
 // writeSampleReport builds a deterministic report and writes it as JSON.
 func writeSampleReport(t *testing.T, path, containerID string) {
 	t.Helper()
@@ -35,28 +50,8 @@ func writeSampleReport(t *testing.T, path, containerID string) {
 	base := time.Date(2026, 3, 1, 10, 0, 0, 0, time.UTC)
 
 	events := []auditlog.Event{
-		{
-			ServiceRef: auditlog.ServiceRef{
-				ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "config",
-			},
-			Sequence:    1,
-			Timestamp:   base,
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: containerID,
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef: auditlog.ServiceRef{
-				ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "db",
-			},
-			Sequence:    2,
-			Timestamp:   base.Add(time.Millisecond),
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: containerID,
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
+		mkRegEvent(1, base, "config", containerID),
+		mkRegEvent(2, base.Add(time.Millisecond), "db", containerID),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -124,14 +119,7 @@ func TestCLI_InfoFromStdin(t *testing.T) {
 	base := time.Date(2026, 3, 1, 10, 0, 0, 0, time.UTC)
 
 	events := []auditlog.Event{
-		{
-			ServiceRef: auditlog.ServiceRef{
-				ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "stdin-svc",
-			},
-			Sequence: 1, Timestamp: base,
-			EventType: auditlog.EventTypeRegistration, Phase: auditlog.PhaseAfter,
-			ContainerID: "stdin-test", ServiceType: auditlog.ProviderTypeLazy,
-		},
+		mkRegEvent(1, base, "stdin-svc", "stdin-test"),
 	}
 
 	r, err := auditlog.ReplayEvents(events)
@@ -279,30 +267,9 @@ func writeReportWithExtraService(t *testing.T, path string) {
 	base := time.Date(2026, 3, 1, 10, 0, 0, 0, time.UTC)
 
 	events := []auditlog.Event{
-		{
-			ServiceRef: auditlog.ServiceRef{
-				ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "config",
-			},
-			Sequence: 1, Timestamp: base,
-			EventType: auditlog.EventTypeRegistration, Phase: auditlog.PhaseAfter,
-			ContainerID: "diff-b", ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef: auditlog.ServiceRef{
-				ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "db",
-			},
-			Sequence: 2, Timestamp: base.Add(time.Millisecond),
-			EventType: auditlog.EventTypeRegistration, Phase: auditlog.PhaseAfter,
-			ContainerID: "diff-b", ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef: auditlog.ServiceRef{
-				ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "cache",
-			},
-			Sequence: 3, Timestamp: base.Add(2 * time.Millisecond),
-			EventType: auditlog.EventTypeRegistration, Phase: auditlog.PhaseAfter,
-			ContainerID: "diff-b", ServiceType: auditlog.ProviderTypeLazy,
-		},
+		mkRegEvent(1, base, "config", "diff-b"),
+		mkRegEvent(2, base.Add(time.Millisecond), "db", "diff-b"),
+		mkRegEvent(3, base.Add(2*time.Millisecond), "cache", "diff-b"),
 	}
 
 	report, err := auditlog.ReplayEvents(events)

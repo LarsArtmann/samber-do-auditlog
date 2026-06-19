@@ -38,6 +38,29 @@ func mkEvent(
 	}
 }
 
+// mkEventWithDur is mkEvent with a DurationMs value — used where the
+// invocation-after event needs to carry timing data.
+func mkEventWithDur(
+	seq int,
+	ts time.Time,
+	eventType auditlog.EventType,
+	phase auditlog.Phase,
+	serviceName, containerID string,
+	svcType auditlog.ProviderType,
+	dur float64,
+) auditlog.Event {
+	return auditlog.Event{
+		ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: serviceName},
+		Sequence:    seq,
+		Timestamp:   ts,
+		EventType:   eventType,
+		Phase:       phase,
+		ContainerID: containerID,
+		ServiceType: svcType,
+		DurationMs:  &dur,
+	}
+}
+
 // rootRef returns a root-scope ServiceRef for the given service name.
 func rootRef(serviceName string) auditlog.ServiceRef {
 	return auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: serviceName}
@@ -1034,33 +1057,39 @@ func TestLoadReportFromReader_EmptyNDJSON(t *testing.T) {
 
 // --- Fuzz target ---
 
-func TestReadEvents_RejectsUnknownEventType(t *testing.T) {
+func TestReadEvents_RejectsInvalidInput(t *testing.T) {
 	t.Parallel()
 
-	input := `{"sequence":1,"timestamp":"2026-01-01T00:00:00Z","event_type":"bogus","phase":"after","container_id":"x","scope_id":"s","scope_name":"s","service_name":"db"}`
-
-	_, err := auditlog.ReadEvents(strings.NewReader(input))
-	if err == nil {
-		t.Fatal("expected error for unknown event_type, got nil")
+	tests := []struct {
+		name       string
+		input      string
+		wantSubstr string
+	}{
+		{
+			name:       "UnknownEventType",
+			input:      `{"sequence":1,"timestamp":"2026-01-01T00:00:00Z","event_type":"bogus","phase":"after","container_id":"x","scope_id":"s","scope_name":"s","service_name":"db"}`,
+			wantSubstr: "unknown event_type",
+		},
+		{
+			name:       "UnknownPhase",
+			input:      `{"sequence":1,"timestamp":"2026-01-01T00:00:00Z","event_type":"registration","phase":"mid","container_id":"x","scope_id":"s","scope_name":"s","service_name":"db"}`,
+			wantSubstr: "unknown phase",
+		},
 	}
 
-	if !strings.Contains(err.Error(), "unknown event_type") {
-		t.Errorf("error should mention unknown event_type, got: %v", err)
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-func TestReadEvents_RejectsUnknownPhase(t *testing.T) {
-	t.Parallel()
+			_, err := auditlog.ReadEvents(strings.NewReader(tt.input))
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
 
-	input := `{"sequence":1,"timestamp":"2026-01-01T00:00:00Z","event_type":"registration","phase":"mid","container_id":"x","scope_id":"s","scope_name":"s","service_name":"db"}`
-
-	_, err := auditlog.ReadEvents(strings.NewReader(input))
-	if err == nil {
-		t.Fatal("expected error for unknown phase, got nil")
-	}
-
-	if !strings.Contains(err.Error(), "unknown phase") {
-		t.Errorf("error should mention unknown phase, got: %v", err)
+			if !strings.Contains(err.Error(), tt.wantSubstr) {
+				t.Errorf("error should mention %q, got: %v", tt.wantSubstr, err)
+			}
+		})
 	}
 }
 
@@ -1324,34 +1353,32 @@ func TestReplayEvents_DoubleInvocation(t *testing.T) {
 
 	now := time.Now()
 
-	dur := 3.3
-
 	events := []auditlog.Event{
 		mkEvent(1, now, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "c", auditlog.ProviderTypeLazy),
 		// First invocation.
 		mkEvent(2, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "svc", "c", ""),
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:    3,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-			DurationMs:  &dur,
-		},
+		mkEventWithDur(
+			3,
+			now,
+			auditlog.EventTypeInvocation,
+			auditlog.PhaseAfter,
+			"svc",
+			"c",
+			auditlog.ProviderTypeLazy,
+			3.3,
+		),
 		// Second invocation — firstInvokedAt already set, firstBuildDurationMs already set.
 		mkEvent(4, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "svc", "c", ""),
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
-			Sequence:    5,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-			DurationMs:  &dur,
-		},
+		mkEventWithDur(
+			5,
+			now,
+			auditlog.EventTypeInvocation,
+			auditlog.PhaseAfter,
+			"svc",
+			"c",
+			auditlog.ProviderTypeLazy,
+			3.3,
+		),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -1411,20 +1438,19 @@ func TestReplayEvents_InvocationWithoutRegistration(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
-	dur := 2.0
 
 	events := []auditlog.Event{
 		mkEvent(1, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "ghost", "c", ""),
-		{
-			ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "ghost"},
-			Sequence:    2,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-			DurationMs:  &dur,
-		},
+		mkEventWithDur(
+			2,
+			now,
+			auditlog.EventTypeInvocation,
+			auditlog.PhaseAfter,
+			"ghost",
+			"c",
+			auditlog.ProviderTypeLazy,
+			2.0,
+		),
 	}
 
 	report, err := auditlog.ReplayEvents(events)

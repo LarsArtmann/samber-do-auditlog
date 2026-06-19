@@ -1,0 +1,12 @@
+# oxfmt reads .prettierignore by default.
+# These files have canonical formats that must not be reformatted.
+
+# Test fixtures must match exact generator output
+testdata/
+
+# Generated files — canonical output from their generators
+schema/
+
+# Manually maintained markdown format
+CHANGELOG.md
+docs/
