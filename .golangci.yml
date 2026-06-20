@@ -131,6 +131,7 @@ linters:
           allow:
             - $gostd
             - github.com/a-h/templ
+            - github.com/larsartmann/go-output
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
         cmd:
@@ -146,6 +147,7 @@ linters:
           allow:
             - $gostd
             - github.com/a-h/templ
+            - github.com/larsartmann/go-output
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
         tests:
@@ -154,6 +156,7 @@ linters:
           allow:
             - $gostd
             - github.com/a-h/templ
+            - github.com/larsartmann/go-output
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
     exhaustruct:

@@ -3,234 +3,114 @@ package auditlog
 import (
 	"fmt"
 	"io"
-	"slices"
-	"strings"
+
+	"github.com/larsartmann/go-output"
+	"github.com/larsartmann/go-output/escape"
 )
 
-// diagramFormatter turns a collected graph into a specific text format.
-type diagramFormatter interface {
-	Header() string
-	Footer() string
-	NodeID(scopeID, serviceName string) string
-	NodeDecl(id, label string) string
-	EdgeDecl(fromID, toID string) string
+// warmAmberNodeStyle is the "Container Telemetry" palette applied to every
+// diagram node, matching the HTML visualization aesthetic. go-output renderers
+// translate this into per-node style directives (Mermaid `style`, PlantUML
+// `#color;line:...;text:...`, DOT `fillcolor`/`color`), replacing the former
+// global theme headers with equivalent per-node styling.
+//
+//nolint:gochecknoglobals // Static theme palette, safe to share across formats.
+var warmAmberNodeStyle = output.GraphStyle{
+	Fill:      "#e8a838",
+	Stroke:    "#4a4030",
+	FontColor: "#14110d",
+	FontSize:  0,
 }
 
-// diagramEntry is a single line in the generated diagram, paired with its
-// sort key so declarations and edges can be deduplicated and ordered.
-type diagramEntry struct {
-	line string
-	key  string
+// diagramNodeID builds a deterministic node identifier from scopeID and
+// serviceName. SlugifyID collapses separator characters (- / . * [ ] { } ( )
+// and space) to underscores to preserve word boundaries, then MermaidID strips
+// any remaining non-identifier rune. The result is valid across Mermaid,
+// PlantUML, and DOT. Returns "node" if everything is stripped (via MermaidID).
+func diagramNodeID(scopeID, serviceName string) string {
+	return escape.MermaidID(escape.SlugifyID(scopeID + "_" + serviceName))
 }
 
-// diagramAvgLineBytes is the pre-allocation estimate for each diagram line.
-const diagramAvgLineBytes = 64
+// newGraphNode constructs a boxed graph node with the warm-amber style applied.
+// All GraphNode fields are set explicitly so the rendering is deterministic.
+func newGraphNode(id, label string) output.GraphNode {
+	return output.GraphNode{
+		ID:       output.NewBrandedID[output.GraphNodeIDBrand](id),
+		Label:    output.NewBrandedID[output.GraphNodeLabelBrand](label),
+		Shape:    output.NodeShapeBox,
+		Style:    warmAmberNodeStyle,
+		Metadata: nil,
+	}
+}
 
-// writeDiagram writes a dependency graph using the supplied formatter.
-// It deduplicates nodes and edges and sorts the output for stable,
-// deterministic reports. All lines are batched via strings.Builder and
-// written in a single io.Writer.Write call to minimize syscalls.
-func writeDiagram(writer io.Writer, report Report, formatter diagramFormatter) error {
+// newGraphEdge constructs an unlabeled directed edge from the dependent node to
+// its dependency.
+func newGraphEdge(fromID, toID string) output.GraphEdge {
+	return *output.NewGraphEdge(fromID, toID)
+}
+
+// buildDiagramNodes builds the deduplicated node list for the dependency graph.
+// Each registered service becomes a node labeled with its provider-type icon
+// (via serviceLabel); external dependencies are added as bare nodes. Nodes are
+// deduplicated by ID — first occurrence wins, preserving the sorted iteration
+// order of report.Services for deterministic output.
+func buildDiagramNodes(report Report) []output.GraphNode {
 	seen := make(map[string]struct{})
+	nodes := make([]output.GraphNode, 0, len(report.Services))
 
-	var entries []diagramEntry
-
-	add := func(key, line string) {
-		if _, ok := seen[key]; ok {
+	addNode := func(nodeID, label string) {
+		if _, ok := seen[nodeID]; ok {
 			return
 		}
 
-		seen[key] = struct{}{}
-		entries = append(entries, diagramEntry{line: line, key: key})
+		seen[nodeID] = struct{}{}
+		nodes = append(nodes, newGraphNode(nodeID, label))
 	}
 
 	for _, svc := range report.Services {
-		fromID := formatter.NodeID(svc.ScopeID, svc.ServiceName)
-		add(fromID, formatter.NodeDecl(fromID, serviceLabel(svc)))
+		fromID := diagramNodeID(svc.ScopeID, svc.ServiceName)
+		addNode(fromID, serviceLabel(svc))
 
 		for _, dep := range svc.Dependencies {
-			toID := formatter.NodeID(dep.ScopeID, dep.ServiceName)
-			add(toID, formatter.NodeDecl(toID, dep.ServiceName))
-			add(fromID+"->"+toID, formatter.EdgeDecl(fromID, toID))
+			toID := diagramNodeID(dep.ScopeID, dep.ServiceName)
+			addNode(toID, dep.ServiceName)
 		}
 	}
 
-	slices.SortFunc(entries, func(a, b diagramEntry) int {
-		return strings.Compare(a.key, b.key)
-	})
+	return nodes
+}
 
-	var builder strings.Builder
-	builder.Grow(len(entries) * diagramAvgLineBytes)
+// buildDiagramEdges builds the edge list for the dependency graph: one edge per
+// dependent -> dependency pair. Duplicate edges (same from/to) are NOT removed
+// here; the renderer's DedupEdges handles that so the dedup rules stay in one
+// place (go-output's validated implementation).
+func buildDiagramEdges(report Report) []output.GraphEdge {
+	edges := make([]output.GraphEdge, 0, len(report.Services))
 
-	builder.WriteString(formatter.Header())
-	builder.WriteByte('\n')
+	for _, svc := range report.Services {
+		fromID := diagramNodeID(svc.ScopeID, svc.ServiceName)
 
-	for _, entry := range entries {
-		builder.WriteString("    ")
-		builder.WriteString(entry.line)
-		builder.WriteByte('\n')
+		for _, dep := range svc.Dependencies {
+			toID := diagramNodeID(dep.ScopeID, dep.ServiceName)
+			edges = append(edges, newGraphEdge(fromID, toID))
+		}
 	}
 
-	if footer := formatter.Footer(); footer != "" {
-		builder.WriteString(footer)
-		builder.WriteByte('\n')
+	return edges
+}
+
+// writeRendered renders a graph renderer to writer with consistent error
+// wrapping shared by WriteMermaid, WritePlantUML, and WriteDOT.
+func writeRendered(writer io.Writer, renderer output.Renderer) error {
+	out, err := renderer.Render()
+	if err != nil {
+		return fmt.Errorf("render diagram: %w", err)
 	}
 
-	_, err := writer.Write([]byte(builder.String()))
+	_, err = writer.Write([]byte(out))
 	if err != nil {
 		return fmt.Errorf("write diagram: %w", err)
 	}
 
 	return nil
-}
-
-// diagramIDReplacer collapses characters that are invalid or problematic in
-// Mermaid/PlantUML node identifiers into underscores.
-//
-//nolint:gochecknoglobals // Reusable strings.Replacer, safe to share.
-var diagramIDReplacer = strings.NewReplacer(
-	"-", "_",
-	" ", "_",
-	"/", "_",
-	".", "_",
-	"*", "_",
-	"[", "_",
-	"]", "_",
-)
-
-// sanitizeDiagramID builds a node identifier from scopeID and serviceName that
-// is valid in both Mermaid and PlantUML: separators become underscores and any
-// remaining non-identifier character is stripped. Returns "node" if the result
-// would be empty.
-func sanitizeDiagramID(scopeID, serviceName string) string {
-	raw := diagramIDReplacer.Replace(scopeID + "_" + serviceName)
-
-	var b strings.Builder
-	b.Grow(len(raw))
-
-	for _, r := range raw {
-		if isDiagramIdentRune(r) {
-			b.WriteRune(r)
-		}
-	}
-
-	if b.Len() == 0 {
-		return "node"
-	}
-
-	return b.String()
-}
-
-// isDiagramIdentRune reports whether r is valid in a Mermaid/PlantUML node
-// identifier (ASCII letter, digit, or underscore).
-func isDiagramIdentRune(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') ||
-		(r >= '0' && r <= '9') || r == '_'
-}
-
-// mermaidLabelReplacer escapes characters that break Mermaid node labels.
-//
-//nolint:gochecknoglobals // Reusable strings.Replacer, safe to share.
-var mermaidLabelReplacer = strings.NewReplacer(
-	`"`, "'",
-	"[", "(",
-	"]", ")",
-	"{", "(",
-	"}", ")",
-	"\n", "<br>",
-)
-
-// mermaidLabel escapes special characters for a Mermaid display label.
-func mermaidLabel(label string) string {
-	return mermaidLabelReplacer.Replace(label)
-}
-
-// plantumlLabel escapes a double quote so a service name is safe inside a
-// PlantUML quoted component declaration.
-func plantumlLabel(label string) string {
-	return strings.ReplaceAll(label, `"`, "'")
-}
-
-// dotLabelReplacer escapes characters that break a DOT double-quoted label:
-// a literal double quote becomes \" and a newline becomes the DOT line-break
-// escape \n.
-//
-//nolint:gochecknoglobals // Reusable strings.Replacer, safe to share.
-var dotLabelReplacer = strings.NewReplacer(
-	`"`, `\"`,
-	"\n", `\n`,
-)
-
-// dotLabel escapes a service name for use inside a DOT double-quoted label.
-func dotLabel(label string) string {
-	return dotLabelReplacer.Replace(label)
-}
-
-type mermaidFormatter struct{}
-
-func (mermaidFormatter) Header() string {
-	return `%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#e8a838', 'primaryTextColor':'#14110d', 'primaryBorderColor':'#4a4030', 'lineColor':'#9a8d78', 'fontSize':'14px'}}}%%
-flowchart TD`
-}
-func (mermaidFormatter) Footer() string { return "" }
-func (mermaidFormatter) NodeID(scopeID, serviceName string) string {
-	return sanitizeDiagramID(scopeID, serviceName)
-}
-
-func (mermaidFormatter) NodeDecl(id, label string) string {
-	return fmt.Sprintf("%s[%s]", id, mermaidLabel(label))
-}
-
-func (mermaidFormatter) EdgeDecl(fromID, toID string) string {
-	return fmt.Sprintf("%s --> %s", fromID, toID)
-}
-
-type plantumlFormatter struct{}
-
-func (plantumlFormatter) Header() string {
-	return `@startuml
-skinparam component {
-  BackgroundColor #e8a838
-  FontColor #14110d
-  BorderColor #4a4030
-}
-skinparam arrow {
-  Color #9a8d78
-}
-skinparam defaultTextAlignment left`
-}
-func (plantumlFormatter) Footer() string { return "@enduml" }
-func (plantumlFormatter) NodeID(scopeID, serviceName string) string {
-	return sanitizeDiagramID(scopeID, serviceName)
-}
-
-func (plantumlFormatter) NodeDecl(id, label string) string {
-	return fmt.Sprintf(`component "%s" as %s`, plantumlLabel(label), id)
-}
-
-func (plantumlFormatter) EdgeDecl(fromID, toID string) string {
-	return fmt.Sprintf("%s --> %s", fromID, toID)
-}
-
-type dotFormatter struct{}
-
-func (dotFormatter) Header() string {
-	return `digraph do_auditlog {
-  graph [rankdir=LR, bgcolor="#14110d", color="#9a8d78", fontcolor="#e2e8f0", fontname="Helvetica"]
-  node [shape=box, style="rounded,filled", fillcolor="#e8a838", fontcolor="#14110d", fontname="Helvetica"]
-  edge [color="#9a8d78"]`
-}
-
-func (dotFormatter) Footer() string { return "}" }
-
-func (dotFormatter) NodeID(scopeID, serviceName string) string {
-	return sanitizeDiagramID(scopeID, serviceName)
-}
-
-func (dotFormatter) NodeDecl(id, label string) string {
-	return fmt.Sprintf(`%s [label="%s"]`, id, dotLabel(label))
-}
-
-func (dotFormatter) EdgeDecl(fromID, toID string) string {
-	return fmt.Sprintf("%s -> %s", fromID, toID)
 }

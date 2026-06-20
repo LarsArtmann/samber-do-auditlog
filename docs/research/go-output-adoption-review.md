@@ -154,3 +154,50 @@ r.SetCodeFence(false)
 // Set GraphStyle.FillColor/StrokeColor for warm-amber theme per node
 // AddNode / AddEdge / DedupEdges / Render
 ```
+
+---
+
+## 9. Adoption executed
+
+**Date:** 2026-06-21
+**Trigger:** DOT (the 3rd diagram format) had been hand-rolled locally, firing the §8 adoption condition. User directed adoption.
+**Versions adopted:** `go-output` root `v0.17.0`, `graph`/`plantuml`/`escape` `v0.13.0` (latest published tags).
+
+### What changed
+
+- **Deleted** (~237 LOC): the `diagramFormatter` interface, `writeDiagram`, the three formatter structs (`mermaidFormatter`/`plantumlFormatter`/`dotFormatter`), and the local escaping helpers (`sanitizeDiagramID`, `isDiagramIdentRune`, `diagramIDReplacer`, `mermaidLabel`/`mermaidLabelReplacer`, `plantumlLabel`, `dotLabel`/`dotLabelReplacer`).
+- **Added** (~135 LOC): `diagram.go` now builds `[]output.GraphNode` / `[]output.GraphEdge` (`buildDiagramNodes` with first-wins node dedup; `buildDiagramEdges`), applies `warmAmberNodeStyle` per node, and renders via `writeRendered`. Each `Write*` method is ~12 lines: construct the go-output renderer → configure → `SetNodes`/`SetEdges`/`DedupEdges` → `writeRendered`.
+- Escaping now delegates to go-output's `escape` package (`SlugifyID`+`MermaidID` for IDs; `MermaidText`/`PlantUML`/`DOT` for labels). Verified byte-identical to the local helpers for the Mermaid case; PlantUML/DOT use go-output's (more correct) escaping.
+
+### Dependency cost (re-measured, final)
+
+| Metric                                              | Value                                                        |
+| --------------------------------------------------- | ------------------------------------------------------------ |
+| Net new **external** compiled module                | **1** (`golang.org/x/term`; `x/sys` already present)         |
+| New `larsartmann` compiled modules                  | `go-output` (root) + `escape` + `graph` + `plantuml` + `enum` + `envdetect` + `go-branded-id` (all same author; branded-id is zero-dep phantom types) |
+| `delimited`/`markdown`/`tree`/`testhelpers`/`graphtest` | Module-graph verification entries only — **zero packages compiled** (confirmed via `go list -deps`). Root's core invariant (zero sub-module imports) holds. |
+
+### Output-format changes (documented; project is ALPHA)
+
+| Format   | Before                                              | After (go-output)                                                                                   | Net                                  |
+| -------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| Mermaid  | `%%{init}%%` global theme + `id[label]` + `-->`     | per-node `style <id> fill/stroke/color` + `id[label]` + `-->`                                       | Theming mechanism changes; output stays valid Mermaid |
+| PlantUML | `component "label" as id` (skinparam block)         | `[label] as id #color;line:...;text:...` (skinparam componentStyle uml2)                            | Bracket notation; `\]`/`\"` escaping (more correct) |
+| DOT      | `digraph do_auditlog { bgcolor="#14110d" ... }`     | `digraph do_auditlog { rankdir=LR ... }` per-node `fillcolor`/`color`                               | Dark `bgcolor` + edge color dropped (renderers lack graph-attr setter) |
+
+### Tradeoffs accepted
+
+1. **DOT dark background lost** — go-output's `DOTRenderer` has no graph-level `bgcolor`/`fontcolor` setter. Node fills (warm amber) are preserved; the signature dark canvas is not. Path to restore: add a graph-attributes setter upstream in go-output.
+2. **Edge line-colors lost** — Mermaid `lineColor` and PlantUML arrow color are no longer emitted (renderers style nodes, not edges). Minor visual.
+3. **Per-node styling is more verbose** than a single global directive, but it is also more capable (e.g. future: color nodes by provider type lazy/eager/transient).
+
+### Verification (all green)
+
+- `go build ./...`, `go vet ./...` — clean.
+- `go test -race ./...` — all pass.
+- `golangci-lint run` + `config verify` — 0 issues.
+- Coverage gate — 95.2% (≥95% threshold).
+- `FuzzDiagramSpecialChars` (25s, 3.9M execs), `FuzzPluginHTML`, `FuzzMigrateReport` — no failures.
+- `go mod tidy` — no drift; `stale-generation` (go generate) — clean.
+- Only one test assertion changed: `TestWritePlantUML_EscapesSpecialChars` (bracket notation `\]`/`\"` replaces the old `"→'` form). All other diagram tests passed unmodified because they assert structural properties (`flowchart TD`, `-->`, `@startuml`/`@enduml`, `digraph do_auditlog`, `label=`, `\"`), which go-output satisfies.
+

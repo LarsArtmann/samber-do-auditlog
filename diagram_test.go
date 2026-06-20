@@ -337,9 +337,10 @@ func TestWritePlantUML_EscapesSpecialChars(t *testing.T) {
 	}
 
 	output := buf.String()
-	// The quote inside the service name is escaped to an apostrophe so the
-	// quoted component declaration stays well-formed.
-	assertStringContains(t, output, `component "evil]'svc" as root_evil_svc`)
+	// go-output renders PlantUML nodes in bracket notation [label] as id. The
+	// hostile characters in the service name are escaped so the brackets stay
+	// balanced: ] -> \] (prevents early bracket close) and " -> \".
+	assertStringContains(t, output, `[evil\]\"svc] as root_evil_svc`)
 }
 
 // reportWithSpecialCharService builds a report containing a single service
