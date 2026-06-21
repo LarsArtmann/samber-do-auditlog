@@ -33,6 +33,8 @@ Last updated: 2026-06-18
 - [x] **`Report.Diff(other Report)`** — implemented in `diff.go` returning `DiffResult` with added/removed/changed services + event count delta. Tested with 5 test cases (2026-06-17)
 - [x] **OpenTelemetry reference example** — `docs/examples/otel-bridge.md` shows how to bridge `Config.OnEvent` to OTel spans without adding a dependency (2026-06-17)
 - [x] **0.x stability promise** — `STABILITY.md` documents stable vs evolving vs internal API surfaces, JSON schema versioning, and what "breaking" means in 0.x (2026-06-17)
+- [x] **`go-output` adoption** — Adopted `github.com/larsartmann/go-output` for all diagram rendering (Mermaid/PlantUML/DOT), replacing the hand-rolled `diagramFormatter` pipeline (~237 LOC). Triggered when DOT (the 3rd format) shipped. See `docs/research/go-output-adoption-review.md` §8–9 (2026-06-21)
+- [x] **D2 diagram export** — Added `Report.WriteD2` as the 4th diagram format via `go-output/d2`. Includes CLI `convert -f d2`, 5 unit tests, fuzz coverage, and full docs sync (2026-06-21)
 
 ## Not Planned (Explicitly Rejected)
 
@@ -41,7 +43,6 @@ Last updated: 2026-06-18
 - **Prometheus/OpenTelemetry integration as a dependency** — Out of scope. Use OnEvent callback instead.
 - **`samber/lo` dependency** — Current stdlib `slices`/`cmp` usage is sufficient for this project size.
 - **`encoding/json/v2` migration** — Current `encoding/json` works fine. Risk of breaking JSON output format for consumers.
-- **`go-output` adoption (v0.11.0)** — Initially declined (breaking output, pink theme, 11-module dep bloat). All blockers resolved in v0.12.0 (GraphStyle wiring, SetCodeFence, DedupEdges, serialization removed from root go.mod). **Viable when a 3rd diagram format is needed** (e.g. DOT). See `docs/research/go-output-adoption-review.md` §8.
 
 ---
 

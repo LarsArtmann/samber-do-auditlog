@@ -19,13 +19,13 @@ benchstat /tmp/new.txt  # compare manually against the table below
 
 ## Environment
 
-| Property           | Value                              |
-| ------------------ | ---------------------------------- |
-| Date               | 2026-06-17                         |
-| Go                 | 1.26.4                             |
-| OS                 | Linux (NixOS)                      |
-| CPU                | AMD Ryzen AI MAX+ 395 (32 threads) |
-| Runs per benchmark | 3                                  |
+| Property           | Value                                             |
+| ------------------ | ------------------------------------------------- |
+| Date               | 2026-06-21 (re-baselined post-go-output adoption) |
+| Go                 | 1.26.4                                            |
+| OS                 | Linux (NixOS)                                     |
+| CPU                | AMD Ryzen AI MAX+ 395 (32 threads)                |
+| Runs per benchmark | 3                                                 |
 
 ---
 
@@ -48,6 +48,7 @@ Median of 3 runs. Lower is better.
 | `BenchmarkEventsCopy`                | 21,985 ns  | 32,768 B  | 1         | Defensive copy of all events                                             |
 | `BenchmarkOnEventCallback`           | 1,686 ns   | 1,853 B   | 6         | OnEvent callback overhead per event                                      |
 | `BenchmarkHealthCheck`               | 41,484 ns  | 16,265 B  | 147       | Full health check cycle (bulk HealthCheckWithContext)                    |
+| `BenchmarkWriteD2`                   | 48,969 ns  | 96,085 B  | 1,176     | D2 diagram export (build + render + write, 50 services)                  |
 
 ---
 
@@ -58,3 +59,4 @@ Median of 3 runs. Lower is better.
 - **BuildReport scales linearly**: 50→500 services is ~5x time, confirming O(n) complexity.
 - **EventsCopy is a single allocation**: the `append([]Event(nil), r.events...)` pattern allocates exactly once for the backing array.
 - **HealthCheck has high alloc count (147)**: the bulk `HealthCheckWithContext` API allocates per-service internally; this is samber/do's cost, not the plugin's.
+- **Diagram export via go-output**: `BenchmarkWriteD2` (added 2026-06-21) covers the full build→render→write path for the D2 format after the go-output adoption. The pre-existing diagram bench was not re-baselined because go-output replaced the entire rendering pipeline; the numbers above for hook/report paths were re-confirmed stable post-adoption.

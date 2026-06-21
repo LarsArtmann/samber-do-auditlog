@@ -184,6 +184,46 @@ func (p *Plugin) ExportToTSV(path string) error {
 	return writeToFile(path, p.WriteReportTSV)
 }
 
+// WriteMermaid writes the dependency graph as a Mermaid flowchart to writer.
+func (p *Plugin) WriteMermaid(writer io.Writer) error {
+	return p.Report().WriteMermaid(writer)
+}
+
+// WritePlantUML writes the dependency graph as a PlantUML component diagram to writer.
+func (p *Plugin) WritePlantUML(writer io.Writer) error {
+	return p.Report().WritePlantUML(writer)
+}
+
+// WriteDOT writes the dependency graph as a Graphviz DOT digraph to writer.
+func (p *Plugin) WriteDOT(writer io.Writer) error {
+	return p.Report().WriteDOT(writer)
+}
+
+// WriteD2 writes the dependency graph as a D2 diagram to writer.
+func (p *Plugin) WriteD2(writer io.Writer) error {
+	return p.Report().WriteD2(writer)
+}
+
+// ExportToMermaid writes the dependency graph as a Mermaid flowchart to path.
+func (p *Plugin) ExportToMermaid(path string) error {
+	return writeToFile(path, p.WriteMermaid)
+}
+
+// ExportToPlantUML writes the dependency graph as a PlantUML component diagram to path.
+func (p *Plugin) ExportToPlantUML(path string) error {
+	return writeToFile(path, p.WritePlantUML)
+}
+
+// ExportToDOT writes the dependency graph as a Graphviz DOT digraph to path.
+func (p *Plugin) ExportToDOT(path string) error {
+	return writeToFile(path, p.WriteDOT)
+}
+
+// ExportToD2 writes the dependency graph as a D2 diagram to path.
+func (p *Plugin) ExportToD2(path string) error {
+	return writeToFile(path, p.WriteD2)
+}
+
 // Events returns a defensive copy of all captured events.
 func (p *Plugin) Events() []Event {
 	return p.recorder.Events()

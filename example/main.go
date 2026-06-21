@@ -155,7 +155,7 @@ func runShutdown(injector do.Injector) {
 	}
 }
 
-// exportReports writes the JSON, NDJSON, and HTML audit reports to a temp dir.
+// exportReports writes the JSON, NDJSON, HTML, and diagram audit reports to a temp dir.
 func exportReports(plugin *auditlog.Plugin) {
 	fmt.Println()
 	fmt.Println("--- Exporting audit reports ---")
@@ -182,4 +182,23 @@ func exportReports(plugin *auditlog.Plugin) {
 	}
 
 	fmt.Println("  Written " + tmpDir + "/audit-report.html")
+
+	// Diagram formats — paste into GitHub README (Mermaid), render with d2/dot, etc.
+	diagrams := []struct {
+		ext string
+		fn  func(string) error
+	}{
+		{"mermaid", plugin.ExportToMermaid},
+		{"puml", plugin.ExportToPlantUML},
+		{"dot", plugin.ExportToDOT},
+		{"d2", plugin.ExportToD2},
+	}
+	for _, d := range diagrams {
+		path := tmpDir + "/dependency-graph." + d.ext
+		if err := d.fn(path); err != nil {
+			log.Fatalf("%s export failed: %v", d.ext, err)
+		}
+
+		fmt.Println("  Written " + path)
+	}
 }

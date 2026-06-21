@@ -12,6 +12,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **D2 diagram export** (`Report.WriteD2`): a fourth diagram format, produced
+  via `github.com/larsartmann/go-output/d2`. Each node carries the warm-amber
+  per-node style; the diagram title is set to the container ID for
+  self-documenting output. D2 edges are deduplicated via a local
+  `dedupGraphEdges` helper because the D2 renderer does not expose `DedupEdges`.
+- **CLI `convert -f d2`**: the `auditlog convert` subcommand now accepts `d2`
+  as an output format and infers it from the `.d2` file extension.
+
+### Changed
+
+- **Diagram rendering adopted `go-output`**: the hand-rolled
+  `diagramFormatter` interface, three formatter structs, and seven escaping
+  helpers (~237 LOC) were replaced by
+  `github.com/larsartmann/go-output` renderers (`graph.MermaidRenderer`,
+  `plantuml.PlantUMLDiagram`, `graph.DOTRenderer`). Escaping is now delegated
+  to go-output's validated `escape` package. Net external dependency delta:
+  `+1` (`golang.org/x/term`; `x/sys` was already present).
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
+### Security
+
+- Nothing.
+
 ## [0.1.0] - 2026-06-19
 
 A milestone release: first CLI release, replay engine, NDJSON import/export,

@@ -381,8 +381,43 @@ func TestWriteD2_EscapesSpecialChars(t *testing.T) {
 	}
 
 	output := buf.String()
-	// D2 escapes double-quotes as \" in labels.
-	assertStringContains(t, output, `\"`)
+	// D2 escapes double-quote as \" in labels. The bracket is left as-is (D2
+	// has no bracket delimiter to break), so the full escaped label is present.
+	assertStringContains(t, output, `evil]\"svc`)
+}
+
+func TestWriteD2_EscapesControlChars(t *testing.T) {
+	t.Parallel()
+
+	// D2's d2Replacer escapes backslash, newline, and tab (quote is covered
+	// above). Verify each control character is escaped, not passed through raw.
+	report := auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: "test",
+		ExportedAt:  time.Now(),
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceRef: auditlog.ServiceRef{
+					ScopeName:   auditlog.RootScopeName,
+					ScopeID:     auditlog.RootScopeName,
+					ServiceName: "a\\b\n\tc",
+				},
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+
+	err := report.WriteD2(&buf)
+	if err != nil {
+		t.Fatalf("WriteD2: %v", err)
+	}
+
+	output := buf.String()
+	// Backslash -> \\, newline -> \n, tab -> \t (literal backslash sequences in output).
+	assertStringContains(t, output, `a\\b\n\tc`)
 }
 
 func TestWriteD2_WriterError(t *testing.T) {

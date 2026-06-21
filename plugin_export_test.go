@@ -3,6 +3,7 @@ package auditlog_test
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -223,4 +224,77 @@ func TestPlugin_ExportToTSV(t *testing.T) {
 
 	assertStringContains(t, string(data), "\t")
 	assertStringContains(t, string(data), "db")
+}
+
+// Each diagram Plugin wrapper delegates to the matching Report method. These
+// table-driven tests verify the delegation wiring for all four formats without
+// duplicating the per-format escaping assertions (those live in diagram_test.go).
+func TestPlugin_WriteDiagram(t *testing.T) {
+	t.Parallel()
+
+	p, _ := setupWithDB("test")
+
+	cases := []struct {
+		name string
+		fn   func(io.Writer) error
+	}{
+		{"Mermaid", p.WriteMermaid},
+		{"PlantUML", p.WritePlantUML},
+		{"DOT", p.WriteDOT},
+		{"D2", p.WriteD2},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buf bytes.Buffer
+			if err := tc.fn(&buf); err != nil {
+				t.Fatalf("%s failed: %v", tc.name, err)
+			}
+
+			if buf.Len() == 0 {
+				t.Fatalf("%s produced empty output", tc.name)
+			}
+
+			assertStringContains(t, buf.String(), "db")
+		})
+	}
+}
+
+func TestPlugin_ExportToDiagram(t *testing.T) {
+	t.Parallel()
+
+	p, _ := setupWithDB("test")
+
+	cases := []struct {
+		name string
+		ext  string
+		fn   func(string) error
+	}{
+		{"Mermaid", ".mmd", p.ExportToMermaid},
+		{"PlantUML", ".puml", p.ExportToPlantUML},
+		{"DOT", ".dot", p.ExportToDOT},
+		{"D2", ".d2", p.ExportToD2},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			path := t.TempDir() + "/graph" + tc.ext
+			if err := tc.fn(path); err != nil {
+				t.Fatalf("%s export failed: %v", tc.name, err)
+			}
+
+			data, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatalf("ReadFile failed: %v", err)
+			}
+
+			if len(data) == 0 {
+				t.Fatalf("%s export wrote empty file", tc.name)
+			}
+
+			assertStringContains(t, string(data), "db")
+		})
+	}
 }

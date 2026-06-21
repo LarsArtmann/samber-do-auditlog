@@ -2,6 +2,7 @@ package auditlog_test
 
 import (
 	"fmt"
+	"io"
 	"strconv"
 	"sync/atomic"
 	"testing"
@@ -175,5 +176,21 @@ func populateDBServices(injector do.Injector, count int) {
 		name := "svc-" + strconv.Itoa(i)
 		provideDB(injector, name, "test")
 		_ = do.MustInvokeNamed[*Database](injector, name)
+	}
+}
+
+// BenchmarkWriteD2 measures the D2 diagram export hot path (build + render + write).
+func BenchmarkWriteD2(b *testing.B) {
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	populateDBServices(injector, 50)
+
+	report := p.Report()
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		_ = report.WriteD2(io.Discard)
 	}
 }

@@ -219,6 +219,37 @@ report.WritePlantUML(os.Stdout)
 @enduml
 ```
 
+### DOT Digraph
+
+Writes a Graphviz DOT digraph. Render with `dot -Tsvg graph.dot -o graph.svg` or any Graphviz viewer. Each node is styled with the warm-amber fill; note that the dark canvas background is not emitted (go-output has no graph-level `bgcolor` setter — see [Diagram theming](#diagram-theming) below).
+
+```go
+report := plugin.Report()
+report.WriteDOT(os.Stdout)
+```
+
+### D2 Diagram
+
+Writes a [D2](https://d2lang.com) diagram — the most modern of the four formats, with native Markdown labels and a polished default renderer. Render with `d2 graph.d2 graph.svg` or the [D2 playground](https://play.d2lang.com). The diagram title is set to the container ID for self-documenting output.
+
+```go
+report := plugin.Report()
+report.WriteD2(os.Stdout)
+```
+
+```d2
+direction: right
+title: do-auditlog
+"root/*main.HTTPServer 🔄": { style.fill: "#e8a838"; ... }
+"root/*main.HTTPServer 🔄" -> "root/*main.UserService 😴"
+"root/*main.HTTPServer 🔄" -> "root/*main.Database 😴"
+"root/*main.UserService 😴" -> "root/*main.Database 😴"
+```
+
+### Diagram theming
+
+All four diagram formats share the warm-amber per-node style (`fill:#e8a838`, `stroke:#4a4030`, `font:#14110d`) via go-output's `GraphStyle`. Two visual elements are not emitted because go-output's renderers lack graph-level attribute setters: the DOT dark canvas background (`bgcolor`) and edge line-colors. Restoring these requires an upstream contribution to `go-output`.
+
 ### Filtered Reports
 
 Functional options let you slice the report before exporting. Filters compose — pass multiple options to intersect them.
