@@ -280,7 +280,7 @@ func TestReplayEvents_ManualShutdownWithoutBefore(t *testing.T) {
 	events := []auditlog.Event{
 		mkRegEvent(1, time.Now(), "svc", "test"),
 		{
-			ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
+			ServiceRef: rootRef("svc"),
 			Sequence:   2, Timestamp: time.Now(),
 			EventType: auditlog.EventTypeShutdown, Phase: auditlog.PhaseAfter,
 			ContainerID: "test", ServiceType: auditlog.ProviderTypeLazy,

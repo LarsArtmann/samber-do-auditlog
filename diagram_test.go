@@ -330,11 +330,7 @@ func reportWithSpecialCharService() auditlog.Report {
 		ExportedAt:  time.Now(),
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceRef: auditlog.ServiceRef{
-					ScopeID:     "root",
-					ScopeName:   auditlog.RootScopeName,
-					ServiceName: `evil]"svc`,
-				},
+				ServiceRef:   rootRef(`evil]"svc`),
 				Status:       auditlog.ServiceStatusActive,
 				RegisteredAt: time.Now(),
 			},
