@@ -25,25 +25,17 @@ func runStats(args []string) error {
 	}
 
 	totalInvocations := 0
+	typeBreakdown := make(map[auditlog.ProviderType]int)
+	statusBreakdown := make(map[auditlog.ServiceStatus]int)
 
 	for _, svc := range report.Services {
 		totalInvocations += svc.InvocationCount
+		typeBreakdown[svc.ServiceType]++
+		statusBreakdown[svc.Status]++
 	}
 
 	failedCount := len(report.FailedServices())
 	unhealthyCount := len(report.UnhealthyServices())
-
-	typeBreakdown := make(map[auditlog.ProviderType]int)
-
-	for _, svc := range report.Services {
-		typeBreakdown[svc.ServiceType]++
-	}
-
-	statusBreakdown := make(map[auditlog.ServiceStatus]int)
-
-	for _, svc := range report.Services {
-		statusBreakdown[svc.Status]++
-	}
 
 	fmt.Printf("container:        %s\n", report.ContainerID)
 	fmt.Printf("services:         %d\n", report.ServiceCount)
