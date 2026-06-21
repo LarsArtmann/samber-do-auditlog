@@ -8,5 +8,5 @@
 //
 // Config.Validate() checks configuration constraints. Export formats include JSON
 // reports, NDJSON event streams, CSV/TSV, self-contained HTML, Mermaid,
-// PlantUML, and Graphviz DOT diagrams.
+// PlantUML, Graphviz DOT, and D2 diagrams.
 package auditlog

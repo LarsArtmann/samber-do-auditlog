@@ -82,8 +82,9 @@ func buildDiagramNodes(report Report) []output.GraphNode {
 
 // buildDiagramEdges builds the edge list for the dependency graph: one edge per
 // dependent -> dependency pair. Duplicate edges (same from/to) are NOT removed
-// here; the renderer's DedupEdges handles that so the dedup rules stay in one
-// place (go-output's validated implementation).
+// here; the renderer's DedupEdges handles that for Mermaid/PlantUML/DOT.
+// D2 uses the dedupGraphEdges helper since go-output's D2 renderer lacks
+// built-in edge dedup.
 func buildDiagramEdges(report Report) []output.GraphEdge {
 	edges := make([]output.GraphEdge, 0, len(report.Services))
 
@@ -100,7 +101,7 @@ func buildDiagramEdges(report Report) []output.GraphEdge {
 }
 
 // writeRendered renders a graph renderer to writer with consistent error
-// wrapping shared by WriteMermaid, WritePlantUML, and WriteDOT.
+// wrapping shared by WriteMermaid, WritePlantUML, WriteDOT, and WriteD2.
 func writeRendered(writer io.Writer, renderer output.Renderer) error {
 	out, err := renderer.Render()
 	if err != nil {
