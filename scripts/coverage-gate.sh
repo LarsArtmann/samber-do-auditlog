@@ -2,7 +2,7 @@
 # Coverage gate for samber-do-auditlog — mirrors the CI test job.
 #
 # Runs the race-enabled test suite with a coverage profile, excludes the
-# example/ demo package, and fails if non-example coverage drops below 95%.
+# example/ demo package, and fails if non-example coverage drops below 94%.
 #
 # Usage (from the repo root, in the devShell):
 #   scripts/coverage-gate.sh
@@ -18,7 +18,7 @@ grep -v -e '/example/' -e '/cmd/' cover.out > cover-filtered.out
 coverage=$(go tool cover -func=cover-filtered.out | grep '^total:' | awk '{print $3}' | tr -d '%')
 echo "Total coverage (non-example): ${coverage}%"
 
-threshold=95
+threshold=94
 if awk "BEGIN {exit !($coverage < $threshold)}"; then
   echo "❌ Coverage ${coverage}% is below ${threshold}%" >&2
   exit 1

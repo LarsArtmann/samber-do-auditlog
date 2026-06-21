@@ -86,6 +86,8 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Filtered JSON report to file**  | `Plugin.ExportFilteredToFile(path, opts...)`                                                | `plugin.go`                 |
 | **Plugin CSV/TSV export**         | `Plugin.WriteReportCSV/TSV(w)` and `Plugin.ExportToCSV/TSV(path)`                           | `plugin.go`                 |
 | **Plugin diagram export**         | `Plugin.WriteMermaid/PlantUML/DOT/D2(w)` and `Plugin.ExportToMermaid/PlantUML/DOT/D2(path)` | `plugin.go`                 |
+| **Plugin tree export**            | `Plugin.WriteTree/WriteHTMLTree(w)` and `Plugin.ExportToTree/ExportToHTMLTree(path)`        | `plugin.go`, `tree.go`      |
+| **Plugin table export**           | `Plugin.WriteTable(w, format, opts)` and `Plugin.ExportToTable(path, format, opts)`         | `plugin.go`, `table.go`     |
 | **Report JSON writer**            | `Report.WriteJSON(writer)`                                                                  | `report.go`                 |
 | **Report NDJSON writer**          | `Report.WriteNDJSON(writer)`                                                                | `report.go`                 |
 | **Atomic file writes**            | File exports write to temp file and rename for crash safety                                 | `plugin.go` (`writeToFile`) |
@@ -94,6 +96,9 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **DOT diagram export**            | `Report.WriteDOT(writer)` outputs a Graphviz digraph                                        | `dot.go`, `diagram.go`      |
 | **D2 diagram export**             | `Report.WriteD2(writer)` outputs a D2 diagram with per-node warm-amber styling              | `d2.go`, `diagram.go`       |
 | **Shared diagram builder**        | `buildDiagramNodes`/`buildDiagramEdges` drives all four formats with deduplicated output    | `diagram.go`                |
+| **ASCII tree export**             | `Report.WriteTree(writer)` outputs a dependency DAG as an ASCII tree                        | `tree.go`                   |
+| **HTML tree export**              | `Report.WriteHTMLTree(writer)` outputs a dependency DAG as an HTML nested list              | `tree.go`                   |
+| **Multi-format table export**     | `Report.WriteTable(writer, format, opts)` outputs service summary in 16+ formats            | `table.go`                  |
 | **Self-contained HTML export**    | `Plugin.ExportToHTML(path)` and `Plugin.WriteHTML(w)` render a single-file report           | `html.go`, `html.templ`     |
 
 ### HTML Visualization

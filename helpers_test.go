@@ -108,7 +108,7 @@ func provideUserServiceWithDB(
 
 // provideUserServiceWithDeps is a named *UserService provider that depends on a *Database and *Cache.
 //
-//nolint:unparam // name always "users" in current tests but varies by future intent
+
 func provideUserServiceWithDeps(injector do.Injector, name, dbName, cacheName string) {
 	do.ProvideNamed(injector, name, func(i do.Injector) (*UserService, error) {
 		db := do.MustInvokeNamed[*Database](i, dbName)

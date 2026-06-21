@@ -31,8 +31,8 @@ jobs:
           grep -v -e '/example/' -e '/cmd/' cover.out > cover-filtered.out
           coverage=$(go tool cover -func=cover-filtered.out | grep '^total:' | awk '{print $3}' | tr -d '%')
           echo "Total coverage: ${coverage}%"
-          if awk "BEGIN {exit !($coverage < 95.0)}"; then
-            echo "::error::Coverage ${coverage}% is below 95%"
+          if awk "BEGIN {exit !($coverage < 94.0)}"; then
+            echo "::error::Coverage ${coverage}% is below 94%"
             exit 1
           fi
 

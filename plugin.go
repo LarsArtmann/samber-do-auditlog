@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/larsartmann/go-output"
 	"github.com/samber/do/v2"
 )
 
@@ -222,6 +223,38 @@ func (p *Plugin) ExportToDOT(path string) error {
 // ExportToD2 writes the dependency graph as a D2 diagram to path.
 func (p *Plugin) ExportToD2(path string) error {
 	return writeToFile(path, p.WriteD2)
+}
+
+// WriteTree writes the service dependency DAG as an ASCII tree to writer.
+func (p *Plugin) WriteTree(writer io.Writer) error {
+	return p.Report().WriteTree(writer)
+}
+
+// WriteHTMLTree writes the service dependency DAG as an HTML nested list tree to writer.
+func (p *Plugin) WriteHTMLTree(writer io.Writer) error {
+	return p.Report().WriteHTMLTree(writer)
+}
+
+// WriteTable writes the service summary as a table in the specified format to writer.
+func (p *Plugin) WriteTable(writer io.Writer, format output.Format, opts output.RenderOptions) error {
+	return p.Report().WriteTable(writer, format, opts)
+}
+
+// ExportToTree writes the service dependency DAG as an ASCII tree to path.
+func (p *Plugin) ExportToTree(path string) error {
+	return writeToFile(path, p.WriteTree)
+}
+
+// ExportToHTMLTree writes the service dependency DAG as an HTML tree to path.
+func (p *Plugin) ExportToHTMLTree(path string) error {
+	return writeToFile(path, p.WriteHTMLTree)
+}
+
+// ExportToTable writes the service summary table to path in the specified format.
+func (p *Plugin) ExportToTable(path string, format output.Format, opts output.RenderOptions) error {
+	return writeToFile(path, func(w io.Writer) error {
+		return p.WriteTable(w, format, opts)
+	})
 }
 
 // Events returns a defensive copy of all captured events.
