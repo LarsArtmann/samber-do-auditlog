@@ -133,6 +133,36 @@ func ExampleReport_WriteMermaid() {
 	// Output: has header: true
 }
 
+func ExampleReport_WriteD2() {
+	plugin := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(plugin.Opts())
+
+	type appConfig struct{ Debug bool }
+
+	do.ProvideValue(injector, appConfig{Debug: false})
+
+	do.ProvideNamed(injector, "renderer", func(i do.Injector) (string, error) {
+		_ = do.MustInvoke[appConfig](i)
+
+		return "rendered", nil
+	})
+
+	_ = do.MustInvokeNamed[string](injector, "renderer")
+
+	var buf bytes.Buffer
+
+	err := plugin.Report().WriteD2(&buf)
+	if err != nil {
+		fmt.Println("error:", err)
+
+		return
+	}
+
+	fmt.Println("has edge:", bytes.Contains(buf.Bytes(), []byte("->")))
+
+	// Output: has edge: true
+}
+
 func Example_validate() {
 	cfg := auditlog.Config{ContainerID: "my-app"}
 	fmt.Println("valid:", cfg.Validate())
