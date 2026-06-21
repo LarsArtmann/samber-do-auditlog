@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-21
+
+A feature release: D2 diagram export, go-output adoption for all diagram rendering, and Plugin-level API parity across all export formats. Non-breaking — additive only.
+
 ### Added
 
 - **D2 diagram export** (`Report.WriteD2`): a fourth diagram format, produced
@@ -21,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `dedupGraphEdges` helper because the D2 renderer does not expose `DedupEdges`.
 - **CLI `convert -f d2`**: the `auditlog convert` subcommand now accepts `d2`
   as an output format and infers it from the `.d2` file extension.
+- **Plugin-level diagram wrappers**: `Plugin.WriteMermaid`, `WritePlantUML`,
+  `WriteDOT`, `WriteD2` (to `io.Writer`) and `Plugin.ExportToMermaid`,
+  `ExportToPlantUML`, `ExportToDOT`, `ExportToD2` (to file path). Completes
+  Plugin API parity — all 9 export formats now have both Write and Export
+  methods, matching the existing JSON/NDJSON/HTML/CSV/TSV wrappers.
 
 ### Changed
 
