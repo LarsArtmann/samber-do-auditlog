@@ -28,18 +28,18 @@ type ServiceInfo struct {
 }
 
 // Uptime returns the duration since the service was registered.
-func (s ServiceInfo) Uptime() time.Duration {
+func (s *ServiceInfo) Uptime() time.Duration {
 	return time.Since(s.RegisteredAt)
 }
 
 // HasHealthError returns true if the service has a health check error.
-func (s ServiceInfo) HasHealthError() bool { return s.HealthCheckError != nil }
+func (s *ServiceInfo) HasHealthError() bool { return s.HealthCheckError != nil }
 
 // DeriveStatus computes the lifecycle status from the service's own error
 // pointers and invocation/shutdown timestamps. This is the canonical
 // derivation — the stored Status field should always be populated via this
 // method so it can never drift from the underlying data.
-func (s ServiceInfo) DeriveStatus() ServiceStatus {
+func (s *ServiceInfo) DeriveStatus() ServiceStatus {
 	return deriveServiceStatus(s.InvocationError, s.ShutdownError, s.ShutdownAt, s.FirstInvokedAt)
 }
 

@@ -26,7 +26,7 @@ func ExampleNew() {
 // registered "renderer" string service that depends on an appConfig
 // value. Used by ExampleReport_WriteMermaid and ExampleReport_WriteD2
 // to keep the setup code single-sourced.
-func setupNamedRendererInjector() (*auditlog.Plugin, do.Injector) {
+func setupNamedRendererInjector() *auditlog.Plugin {
 	type appConfig struct{ Debug bool }
 
 	plugin := mustNew(auditlog.Config{Enabled: true})
@@ -42,7 +42,7 @@ func setupNamedRendererInjector() (*auditlog.Plugin, do.Injector) {
 
 	_ = do.MustInvokeNamed[string](injector, "renderer")
 
-	return plugin, injector
+	return plugin
 }
 
 func ExamplePlugin_Report() {
@@ -127,7 +127,7 @@ func ExamplePlugin_RecordHealthCheck() {
 }
 
 func ExampleReport_WriteMermaid() {
-	plugin, _ := setupNamedRendererInjector()
+	plugin := setupNamedRendererInjector()
 
 	var buf bytes.Buffer
 
@@ -144,7 +144,7 @@ func ExampleReport_WriteMermaid() {
 }
 
 func ExampleReport_WriteD2() {
-	plugin, _ := setupNamedRendererInjector()
+	plugin := setupNamedRendererInjector()
 
 	var buf bytes.Buffer
 
