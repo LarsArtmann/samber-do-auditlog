@@ -43,6 +43,13 @@ func (s ServiceInfo) DeriveStatus() ServiceStatus {
 	return deriveServiceStatus(s.InvocationError, s.ShutdownError, s.ShutdownAt, s.FirstInvokedAt)
 }
 
+// RederiveStatus sets Status to the value of DeriveStatus() in place.
+// Use this on *ServiceInfo to repair stale or hand-edited statuses so
+// the report always passes Validate().
+func (s *ServiceInfo) RederiveStatus() {
+	s.Status = s.DeriveStatus()
+}
+
 // ScopeNode represents the scope hierarchy for visualization.
 type ScopeNode struct {
 	ID       string      `json:"id"`

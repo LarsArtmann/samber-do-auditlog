@@ -22,6 +22,29 @@ func ExampleNew() {
 	// Output: services: 1
 }
 
+// setupNamedRendererInjector builds a minimal injector with one
+// registered "renderer" string service that depends on an appConfig
+// value. Used by ExampleReport_WriteMermaid and ExampleReport_WriteD2
+// to keep the setup code single-sourced.
+func setupNamedRendererInjector() (*auditlog.Plugin, do.Injector) {
+	type appConfig struct{ Debug bool }
+
+	plugin := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(plugin.Opts())
+
+	do.ProvideValue(injector, appConfig{Debug: false})
+
+	do.ProvideNamed(injector, "renderer", func(i do.Injector) (string, error) {
+		_ = do.MustInvoke[appConfig](i)
+
+		return "rendered", nil
+	})
+
+	_ = do.MustInvokeNamed[string](injector, "renderer")
+
+	return plugin, injector
+}
+
 func ExamplePlugin_Report() {
 	plugin := mustNew(auditlog.Config{Enabled: true})
 	injector := do.NewWithOpts(plugin.Opts())
@@ -104,20 +127,7 @@ func ExamplePlugin_RecordHealthCheck() {
 }
 
 func ExampleReport_WriteMermaid() {
-	plugin := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(plugin.Opts())
-
-	type appConfig struct{ Debug bool }
-
-	do.ProvideValue(injector, appConfig{Debug: false})
-
-	do.ProvideNamed(injector, "renderer", func(i do.Injector) (string, error) {
-		_ = do.MustInvoke[appConfig](i)
-
-		return "rendered", nil
-	})
-
-	_ = do.MustInvokeNamed[string](injector, "renderer")
+	plugin, _ := setupNamedRendererInjector()
 
 	var buf bytes.Buffer
 
@@ -134,20 +144,7 @@ func ExampleReport_WriteMermaid() {
 }
 
 func ExampleReport_WriteD2() {
-	plugin := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(plugin.Opts())
-
-	type appConfig struct{ Debug bool }
-
-	do.ProvideValue(injector, appConfig{Debug: false})
-
-	do.ProvideNamed(injector, "renderer", func(i do.Injector) (string, error) {
-		_ = do.MustInvoke[appConfig](i)
-
-		return "rendered", nil
-	})
-
-	_ = do.MustInvokeNamed[string](injector, "renderer")
+	plugin, _ := setupNamedRendererInjector()
 
 	var buf bytes.Buffer
 

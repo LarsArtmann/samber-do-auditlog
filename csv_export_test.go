@@ -21,7 +21,7 @@ func TestReport_WriteCSV_HeaderAndRows(t *testing.T) {
 		t.Fatalf("WriteCSV failed: %v", err)
 	}
 
-	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+	lines := csvSplitLines(buf.String())
 	if len(lines) < 2 {
 		t.Fatalf("expected at least header + 1 row, got %d lines", len(lines))
 	}
@@ -51,17 +51,9 @@ func TestReport_WriteCSV_ServiceData(t *testing.T) {
 
 	output := buf.String()
 
-	if !strings.Contains(output, "db") {
-		t.Errorf("CSV output missing service name 'db'. got:\n%s", output)
-	}
-
-	if !strings.Contains(output, "active") {
-		t.Errorf("CSV output missing status 'active'. got:\n%s", output)
-	}
-
-	if !strings.Contains(output, "lazy") {
-		t.Errorf("CSV output missing service type 'lazy'. got:\n%s", output)
-	}
+	assertStringContains(t, output, "db")
+	assertStringContains(t, output, "active")
+	assertStringContains(t, output, "lazy")
 }
 
 func TestReport_WriteCSV_EmptyReport(t *testing.T) {
@@ -76,7 +68,7 @@ func TestReport_WriteCSV_EmptyReport(t *testing.T) {
 		t.Fatalf("WriteCSV on empty report failed: %v", err)
 	}
 
-	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+	lines := csvSplitLines(buf.String())
 	if len(lines) != 1 {
 		t.Fatalf("expected only header row for empty report, got %d lines", len(lines))
 	}
@@ -100,7 +92,7 @@ func TestReport_WriteTSV_TabDelimited(t *testing.T) {
 		t.Errorf("TSV output should contain tabs. got:\n%s", output)
 	}
 
-	lines := strings.Split(strings.TrimRight(output, "\n"), "\n")
+	lines := csvSplitLines(output)
 	if len(lines) < 2 {
 		t.Fatalf("expected at least header + 1 row, got %d lines", len(lines))
 	}
@@ -125,9 +117,7 @@ func TestReport_WriteCSV_DependenciesFormatted(t *testing.T) {
 
 	output := buf.String()
 
-	if !strings.Contains(output, "config") {
-		t.Errorf("CSV output should contain dependency 'config'. got:\n%s", output)
-	}
+	assertStringContains(t, output, "config")
 }
 
 func TestReport_WriteCSV_NilPointersEmpty(t *testing.T) {
@@ -141,11 +131,7 @@ func TestReport_WriteCSV_NilPointersEmpty(t *testing.T) {
 		ExportedAt:  time.Now(),
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceRef: auditlog.ServiceRef{
-					ScopeID:     "",
-					ScopeName:   "",
-					ServiceName: "bare-svc",
-				},
+				ServiceRef:   csvServiceRef("bare-svc"),
 				Status:       auditlog.ServiceStatusRegistered,
 				ServiceType:  auditlog.ProviderTypeLazy,
 				RegisteredAt: registeredAt,
@@ -160,7 +146,7 @@ func TestReport_WriteCSV_NilPointersEmpty(t *testing.T) {
 		t.Fatalf("WriteCSV failed: %v", err)
 	}
 
-	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+	lines := csvSplitLines(buf.String())
 	if len(lines) != 2 {
 		t.Fatalf("expected header + 1 row, got %d lines", len(lines))
 	}
@@ -177,17 +163,16 @@ func buildCSVTestReport() auditlog.Report {
 	invokedAt := time.Date(2026, 1, 1, 12, 0, 1, 0, time.UTC)
 	buildMs := 15.5
 
+	configRef := csvServiceRef("config")
+	dbRef := csvServiceRef("db")
+
 	return auditlog.Report{
 		Version:     auditlog.SchemaVersion,
 		ContainerID: "test-container",
 		ExportedAt:  time.Now(),
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceRef: auditlog.ServiceRef{
-					ScopeID:     "",
-					ScopeName:   "",
-					ServiceName: "config",
-				},
+				ServiceRef:      configRef,
 				Status:          auditlog.ServiceStatusActive,
 				ServiceType:     auditlog.ProviderTypeLazy,
 				RegisteredAt:    registeredAt,
@@ -195,24 +180,32 @@ func buildCSVTestReport() auditlog.Report {
 				InvocationCount: 1,
 			},
 			{
-				ServiceRef: auditlog.ServiceRef{
-					ScopeID:     "",
-					ScopeName:   "",
-					ServiceName: "db",
-				},
+				ServiceRef:           dbRef,
 				Status:               auditlog.ServiceStatusActive,
 				ServiceType:          auditlog.ProviderTypeLazy,
 				RegisteredAt:         registeredAt,
 				FirstInvokedAt:       &invokedAt,
 				InvocationCount:      1,
 				FirstBuildDurationMs: &buildMs,
-				Dependencies: []auditlog.ServiceRef{
-					{
-						ScopeName:   "",
-						ServiceName: "config",
-					},
-				},
+				Dependencies:         []auditlog.ServiceRef{configRef},
 			},
 		},
 	}
+}
+
+// csvServiceRef is a 3-line constructor for the empty-scope ServiceRef that
+// every CSV test fixture shares (ScopeID/ScopeName intentionally blank — the
+// CSV export tests the nil-pointer render path).
+func csvServiceRef(name string) auditlog.ServiceRef {
+	return auditlog.ServiceRef{
+		ScopeID:     "",
+		ScopeName:   "",
+		ServiceName: name,
+	}
+}
+
+// csvSplitLines splits a CSV/TSV buffer into non-trailing-empty lines. Centralizes
+// the 1-line preamble shared by every "expected N rows" assertion in CSV tests.
+func csvSplitLines(s string) []string {
+	return strings.Split(strings.TrimRight(s, "\n"), "\n")
 }

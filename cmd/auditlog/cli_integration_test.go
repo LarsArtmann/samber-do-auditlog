@@ -28,6 +28,17 @@ func buildCLIBinary(t *testing.T) string {
 	return binPath
 }
 
+// assertCLIOutputContains fails the test if the CLI output does not contain
+// the expected substring. Centralizes the 3-line "if !strings.Contains(out, X)"
+// pattern shared by every CLI assertion test.
+func assertCLIOutputContains(t *testing.T, label, output, want string) {
+	t.Helper()
+
+	if !strings.Contains(output, want) {
+		t.Errorf("%s missing %q:\n%s", label, want, output)
+	}
+}
+
 // mkRegEvent creates a registration-after event for CLI test fixtures.
 func mkRegEvent(seq int, ts time.Time, serviceName, containerID string) auditlog.Event {
 	return auditlog.Event{
@@ -96,13 +107,8 @@ func TestCLI_Info(t *testing.T) {
 
 	out := runCLI(t, bin, "info", reportPath)
 
-	if !strings.Contains(out, "services:") {
-		t.Errorf("info missing 'services:':\n%s", out)
-	}
-
-	if !strings.Contains(out, "config") {
-		t.Errorf("info missing service 'config':\n%s", out)
-	}
+	assertCLIOutputContains(t, "info", out, "services:")
+	assertCLIOutputContains(t, "info", out, "config")
 }
 
 func TestCLI_InfoFromStdin(t *testing.T) {
@@ -144,9 +150,7 @@ func TestCLI_InfoFromStdin(t *testing.T) {
 		t.Fatalf("info stdin: %v\n%s", err, out.String())
 	}
 
-	if !strings.Contains(out.String(), "stdin-svc") {
-		t.Errorf("info from stdin missing 'stdin-svc':\n%s", out.String())
-	}
+	assertCLIOutputContains(t, "info from stdin", out.String(), "stdin-svc")
 }
 
 func TestCLI_Validate(t *testing.T) {
@@ -256,9 +260,7 @@ func TestCLI_NoArgs_PrintsUsage(t *testing.T) {
 		t.Fatal("expected non-zero exit with no args")
 	}
 
-	if !strings.Contains(out.String(), "auditlog") {
-		t.Errorf("usage output missing 'auditlog':\n%s", out.String())
-	}
+	assertCLIOutputContains(t, "usage output", out.String(), "auditlog")
 }
 
 func writeReportWithExtraService(t *testing.T, path string) {

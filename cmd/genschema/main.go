@@ -32,22 +32,26 @@ func main() {
 
 	data, err := json.MarshalIndent(schema, "", "  ")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "marshal schema: %v\n", err)
-		os.Exit(1)
+		die("marshal schema: %v\n", err)
 	}
 
 	data = append(data, '\n')
 
 	outPath := filepath.Join("schema", "report.schema.json")
 	if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
-		fmt.Fprintf(os.Stderr, "mkdir: %v\n", err)
-		os.Exit(1)
+		die("mkdir: %v\n", err)
 	}
 
 	if err := os.WriteFile(outPath, data, 0o644); err != nil {
-		fmt.Fprintf(os.Stderr, "write schema: %v\n", err)
-		os.Exit(1)
+		die("write schema: %v\n", err)
 	}
 
 	fmt.Printf("wrote %s (%d bytes)\n", outPath, len(data))
+}
+
+// die prints a formatted message to stderr and exits with code 1.
+// Centralizes the "print + exit" pattern shared by every error path in main.
+func die(format string, args ...any) {
+	fmt.Fprintf(os.Stderr, format, args...)
+	os.Exit(1)
 }

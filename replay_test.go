@@ -28,7 +28,7 @@ func mkEvent(
 	svcType auditlog.ProviderType,
 ) auditlog.Event {
 	return auditlog.Event{
-		ServiceRef:  auditlog.ServiceRef{ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: serviceName},
+		ServiceRef:  rootRef(serviceName),
 		Sequence:    seq,
 		Timestamp:   ts,
 		EventType:   eventType,
@@ -55,9 +55,34 @@ func mkEventWithDur(
 	return e
 }
 
-// rootRef returns a root-scope ServiceRef for the given service name.
-func rootRef(serviceName string) auditlog.ServiceRef {
-	return auditlog.ServiceRef{ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: serviceName}
+// mkRegEvent is a shorthand for a registration-after event. Centralizes the
+// 9-line mkEvent(...) block used by every manual event-fixture test.
+func mkRegEvent(seq int, ts time.Time, serviceName, containerID string) auditlog.Event {
+	return mkEvent(
+		seq,
+		ts,
+		auditlog.EventTypeRegistration,
+		auditlog.PhaseAfter,
+		serviceName,
+		containerID,
+		auditlog.ProviderTypeLazy,
+	)
+}
+
+// mkInvAfterWithDur is a shorthand for an invocation-after event with duration.
+// Centralizes the 9-line mkEventWithDur(...) block used by every
+// double-invocation replay test.
+func mkInvAfterWithDur(seq int, ts time.Time, serviceName, containerID string, dur float64) auditlog.Event {
+	return mkEventWithDur(
+		seq,
+		ts,
+		auditlog.EventTypeInvocation,
+		auditlog.PhaseAfter,
+		serviceName,
+		containerID,
+		auditlog.ProviderTypeLazy,
+		dur,
+	)
 }
 
 func TestReplayEvents_EmptyInput(t *testing.T) {
@@ -76,22 +101,7 @@ func TestReplayEvents_SingleRegistration(t *testing.T) {
 	provideDB(injector, "db", "postgres://localhost")
 	do.MustInvokeNamed[*Database](injector, "db")
 
-	var buf bytes.Buffer
-
-	err := plugin.WriteEventsNDJSON(&buf)
-	if err != nil {
-		t.Fatalf("WriteEventsNDJSON: %v", err)
-	}
-
-	events, err := auditlog.ReadEvents(&buf)
-	if err != nil {
-		t.Fatalf("ReadEvents: %v", err)
-	}
-
-	replayed, err := auditlog.ReplayEvents(events)
-	if err != nil {
-		t.Fatalf("ReplayEvents: %v", err)
-	}
+	replayed := replayFromPlugin(t, plugin)
 
 	assertReportServiceCount(t, replayed)
 	assertReportValid(t, replayed, "single registration replayed")
@@ -111,31 +121,14 @@ func TestReplayEvents_RegistrationOnly(t *testing.T) {
 	plugin, injector := newPluginAndInjector()
 	provideDB(injector, "db", "postgres://localhost")
 
-	var buf bytes.Buffer
-
-	err := plugin.WriteEventsNDJSON(&buf)
-	if err != nil {
-		t.Fatalf("WriteEventsNDJSON: %v", err)
-	}
-
-	events, err := auditlog.ReadEvents(&buf)
-	if err != nil {
-		t.Fatalf("ReadEvents: %v", err)
-	}
-
-	report, err := auditlog.ReplayEvents(events)
-	if err != nil {
-		t.Fatalf("ReplayEvents: %v", err)
-	}
+	report := replayFromPlugin(t, plugin)
 
 	svc := findServiceByName(t, report, "db")
 	if svc == nil {
 		t.Fatal("db service not found")
 	}
 
-	if svc.Status != auditlog.ServiceStatusRegistered {
-		t.Errorf("status: want %q, got %q", auditlog.ServiceStatusRegistered, svc.Status)
-	}
+	assertServiceStatus(t, svc, auditlog.ServiceStatusRegistered)
 }
 
 func TestReplayEvents_DependencyChain(t *testing.T) {
@@ -147,22 +140,7 @@ func TestReplayEvents_DependencyChain(t *testing.T) {
 	provideUserServiceWithDeps(injector, "users", "db", "cache")
 	do.MustInvokeNamed[*UserService](injector, "users")
 
-	var buf bytes.Buffer
-
-	err := plugin.WriteEventsNDJSON(&buf)
-	if err != nil {
-		t.Fatalf("WriteEventsNDJSON: %v", err)
-	}
-
-	events, err := auditlog.ReadEvents(&buf)
-	if err != nil {
-		t.Fatalf("ReadEvents: %v", err)
-	}
-
-	replayed, err := auditlog.ReplayEvents(events)
-	if err != nil {
-		t.Fatalf("ReplayEvents: %v", err)
-	}
+	replayed := replayFromPlugin(t, plugin)
 
 	users := findServiceByName(t, replayed, "users")
 	if users == nil {
@@ -190,41 +168,16 @@ func TestReplayEvents_PreservesContainerID(t *testing.T) {
 	provideDB(injector, "db", "postgres://localhost")
 	do.MustInvokeNamed[*Database](injector, "db")
 
-	var buf bytes.Buffer
+	report := replayFromPlugin(t, plugin)
 
-	err := plugin.WriteEventsNDJSON(&buf)
-	if err != nil {
-		t.Fatalf("WriteEventsNDJSON: %v", err)
-	}
-
-	events, err := auditlog.ReadEvents(&buf)
-	if err != nil {
-		t.Fatalf("ReadEvents: %v", err)
-	}
-
-	report, err := auditlog.ReplayEvents(events)
-	if err != nil {
-		t.Fatalf("ReplayEvents: %v", err)
-	}
-
-	if report.ContainerID != "my-container" {
-		t.Errorf("container ID: want %q, got %q", "my-container", report.ContainerID)
-	}
+	assertContainerID(t, report, "my-container")
 }
 
 func TestReplayEvents_ContainerIDFromEvents(t *testing.T) {
 	t.Parallel()
 
 	events := []auditlog.Event{
-		mkEvent(
-			1,
-			time.Now(),
-			auditlog.EventTypeRegistration,
-			auditlog.PhaseAfter,
-			"svc",
-			"from-event",
-			auditlog.ProviderTypeLazy,
-		),
+		mkRegEvent(1, time.Now(), "svc", "from-event"),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -232,9 +185,7 @@ func TestReplayEvents_ContainerIDFromEvents(t *testing.T) {
 		t.Fatalf("ReplayEvents: %v", err)
 	}
 
-	if report.ContainerID != "from-event" {
-		t.Errorf("container ID: want %q, got %q", "from-event", report.ContainerID)
-	}
+	assertContainerID(t, report, "from-event")
 }
 
 func TestReplayEvents_HealthCheckCount(t *testing.T) {
@@ -251,31 +202,14 @@ func TestReplayEvents_HealthCheckCount(t *testing.T) {
 		}
 	}
 
-	var buf bytes.Buffer
-
-	err := plugin.WriteEventsNDJSON(&buf)
-	if err != nil {
-		t.Fatalf("WriteEventsNDJSON: %v", err)
-	}
-
-	events, err := auditlog.ReadEvents(&buf)
-	if err != nil {
-		t.Fatalf("ReadEvents: %v", err)
-	}
-
-	replayed, err := auditlog.ReplayEvents(events)
-	if err != nil {
-		t.Fatalf("ReplayEvents: %v", err)
-	}
+	replayed := replayFromPlugin(t, plugin)
 
 	svc := findServiceByName(t, replayed, "db")
 	if svc == nil {
 		t.Fatal("db not found")
 	}
 
-	if svc.HealthCheckCount != 1 {
-		t.Errorf("health check count: want 1, got %d", svc.HealthCheckCount)
-	}
+	assertServiceHealthCheckCount(t, svc, 1)
 }
 
 func TestReplayEvents_FullLifecycle(t *testing.T) {
@@ -290,22 +224,7 @@ func TestReplayEvents_FullLifecycle(t *testing.T) {
 
 	_ = injector.Shutdown()
 
-	var buf bytes.Buffer
-
-	err := plugin.WriteEventsNDJSON(&buf)
-	if err != nil {
-		t.Fatalf("WriteEventsNDJSON: %v", err)
-	}
-
-	events, err := auditlog.ReadEvents(&buf)
-	if err != nil {
-		t.Fatalf("ReadEvents: %v", err)
-	}
-
-	replayed, err := auditlog.ReplayEvents(events)
-	if err != nil {
-		t.Fatalf("ReplayEvents: %v", err)
-	}
+	replayed := replayFromPlugin(t, plugin)
 
 	assertReportValid(t, replayed, "full lifecycle replayed")
 
@@ -328,31 +247,14 @@ func TestReplayEvents_ShutdownErrorPreserved(t *testing.T) {
 
 	_ = injector.Shutdown()
 
-	var buf bytes.Buffer
-
-	err := plugin.WriteEventsNDJSON(&buf)
-	if err != nil {
-		t.Fatalf("WriteEventsNDJSON: %v", err)
-	}
-
-	events, err := auditlog.ReadEvents(&buf)
-	if err != nil {
-		t.Fatalf("ReadEvents: %v", err)
-	}
-
-	replayed, err := auditlog.ReplayEvents(events)
-	if err != nil {
-		t.Fatalf("ReplayEvents: %v", err)
-	}
+	replayed := replayFromPlugin(t, plugin)
 
 	svc := findServiceByName(t, replayed, "crasher")
 	if svc == nil {
 		t.Fatal("crasher not found")
 	}
 
-	if svc.Status != auditlog.ServiceStatusShutdownError {
-		t.Errorf("status: want %q, got %q", auditlog.ServiceStatusShutdownError, svc.Status)
-	}
+	assertServiceStatus(t, svc, auditlog.ServiceStatusShutdownError)
 }
 
 func TestReplayEvents_ManualShutdownWithoutBefore(t *testing.T) {
@@ -362,15 +264,7 @@ func TestReplayEvents_ManualShutdownWithoutBefore(t *testing.T) {
 	errMsg := "shutdown failed"
 
 	events := []auditlog.Event{
-		mkEvent(
-			1,
-			time.Now(),
-			auditlog.EventTypeRegistration,
-			auditlog.PhaseAfter,
-			"svc",
-			"test",
-			auditlog.ProviderTypeLazy,
-		),
+		mkRegEvent(1, time.Now(), "svc", "test"),
 		{
 			ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "svc"},
 			Sequence:   2, Timestamp: time.Now(),
@@ -390,9 +284,7 @@ func TestReplayEvents_ManualShutdownWithoutBefore(t *testing.T) {
 		t.Fatal("svc not found")
 	}
 
-	if svc.Status != auditlog.ServiceStatusShutdownError {
-		t.Errorf("status: want %q, got %q", auditlog.ServiceStatusShutdownError, svc.Status)
-	}
+	assertServiceStatus(t, svc, auditlog.ServiceStatusShutdownError)
 }
 
 func TestReplayEvents_ManualHealthCheckNewService(t *testing.T) {
@@ -413,9 +305,7 @@ func TestReplayEvents_ManualHealthCheckNewService(t *testing.T) {
 		t.Fatal("ghost not found")
 	}
 
-	if svc.HealthCheckCount != 1 {
-		t.Errorf("health check count: want 1, got %d", svc.HealthCheckCount)
-	}
+	assertServiceHealthCheckCount(t, svc, 1)
 }
 
 func TestReplayEvents_RegistrationOverwriteType(t *testing.T) {
@@ -424,15 +314,7 @@ func TestReplayEvents_RegistrationOverwriteType(t *testing.T) {
 	// Two registration-after events for the same service — the second
 	// should update the service type.
 	events := []auditlog.Event{
-		mkEvent(
-			1,
-			time.Now(),
-			auditlog.EventTypeRegistration,
-			auditlog.PhaseAfter,
-			"svc",
-			"test",
-			auditlog.ProviderTypeLazy,
-		),
+		mkRegEvent(1, time.Now(), "svc", "test"),
 		mkEvent(
 			2,
 			time.Now(),
@@ -532,24 +414,8 @@ func TestReplayEvents_OutOfOrderStackPop(t *testing.T) {
 	// Interleaved invocations: A starts, B starts, B ends, A ends.
 	// The stack pop for A is NOT the last element (non-LIFO path).
 	events := []auditlog.Event{
-		mkEvent(
-			1,
-			time.Now(),
-			auditlog.EventTypeRegistration,
-			auditlog.PhaseAfter,
-			"a",
-			"c",
-			auditlog.ProviderTypeLazy,
-		),
-		mkEvent(
-			2,
-			time.Now(),
-			auditlog.EventTypeRegistration,
-			auditlog.PhaseAfter,
-			"b",
-			"c",
-			auditlog.ProviderTypeLazy,
-		),
+		mkRegEvent(1, time.Now(), "a", "c"),
+		mkRegEvent(2, time.Now(), "b", "c"),
 		mkEvent(3, time.Now(), auditlog.EventTypeInvocation, auditlog.PhaseBefore, "a", "c", ""),
 		mkEvent(4, time.Now(), auditlog.EventTypeInvocation, auditlog.PhaseBefore, "b", "c", ""),
 		// B finishes first (LIFO pop), then A finishes (non-LIFO: index < len-1).
@@ -567,9 +433,7 @@ func TestReplayEvents_OutOfOrderStackPop(t *testing.T) {
 		t.Fatal("a not found")
 	}
 
-	if svcA.InvocationCount != 1 {
-		t.Errorf("a invocation count: want 1, got %d", svcA.InvocationCount)
-	}
+	assertServiceInvocationCount(t, svcA, 1)
 }
 
 // --- NDJSON reader tests ---
@@ -606,18 +470,14 @@ func TestReadEvents_EmptyInput(t *testing.T) {
 	t.Parallel()
 
 	_, err := auditlog.ReadEvents(strings.NewReader(""))
-	if !errors.Is(err, auditlog.ErrEmpty) {
-		t.Errorf("expected ErrEmpty, got %v", err)
-	}
+	assertErrIs(t, err, auditlog.ErrEmpty, "expected ErrEmpty")
 }
 
 func TestReadEvents_OnlyBlankLines(t *testing.T) {
 	t.Parallel()
 
 	_, err := auditlog.ReadEvents(strings.NewReader("\n\n\n"))
-	if !errors.Is(err, auditlog.ErrNoEvents) {
-		t.Errorf("expected ErrNoEvents, got %v", err)
-	}
+	assertErrIs(t, err, auditlog.ErrNoEvents, "expected ErrNoEvents")
 }
 
 func TestReadEvents_BlankLinesSkipped(t *testing.T) {
@@ -678,9 +538,7 @@ func TestReadEvents_OversizedLine(t *testing.T) {
 	huge := strings.Repeat("x", 2<<20)
 
 	_, err := auditlog.ReadEvents(strings.NewReader(huge))
-	if !errors.Is(err, auditlog.ErrOversizedLine) {
-		t.Errorf("expected ErrOversizedLine, got %v", err)
-	}
+	assertErrIs(t, err, auditlog.ErrOversizedLine, "expected ErrOversizedLine")
 }
 
 func TestReadEvents_NoTrailingNewline(t *testing.T) {
@@ -693,9 +551,7 @@ func TestReadEvents_NoTrailingNewline(t *testing.T) {
 		t.Fatalf("ReadEvents: %v", err)
 	}
 
-	if len(events) != 1 {
-		t.Errorf("event count: want 1, got %d", len(events))
-	}
+	assertLen(t, "event count", events, 1)
 }
 
 func TestReadEvents_LeadingWhitespace(t *testing.T) {
@@ -708,9 +564,7 @@ func TestReadEvents_LeadingWhitespace(t *testing.T) {
 		t.Fatalf("ReadEvents: %v", err)
 	}
 
-	if len(events) != 1 {
-		t.Errorf("event count: want 1, got %d", len(events))
-	}
+	assertLen(t, "event count", events, 1)
 }
 
 func TestReadEvents_CarriageReturns(t *testing.T) {
@@ -724,9 +578,7 @@ func TestReadEvents_CarriageReturns(t *testing.T) {
 		t.Fatalf("ReadEvents with \\r\\n: %v", err)
 	}
 
-	if len(events) != 1 {
-		t.Errorf("event count: want 1, got %d", len(events))
-	}
+	assertLen(t, "event count", events, 1)
 }
 
 // --- Loader API tests ---
@@ -734,14 +586,12 @@ func TestReadEvents_CarriageReturns(t *testing.T) {
 func TestLoadReport_JSONFile(t *testing.T) {
 	t.Parallel()
 
-	plugin, injector := newPluginAndInjector()
-	provideDB(injector, "db", "postgres://localhost")
-	do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "report.json")
 
-	err := plugin.ExportToFile(path)
+	err := p.ExportToFile(path)
 	if err != nil {
 		t.Fatalf("ExportToFile: %v", err)
 	}
@@ -761,14 +611,12 @@ func TestLoadReport_JSONFile(t *testing.T) {
 func TestLoadReport_NDJSONFile(t *testing.T) {
 	t.Parallel()
 
-	plugin, injector := newPluginAndInjector()
-	provideDB(injector, "db", "postgres://localhost")
-	do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "events.ndjson")
 
-	err := plugin.ExportEventsToNDJSON(path)
+	err := p.ExportEventsToNDJSON(path)
 	if err != nil {
 		t.Fatalf("ExportEventsToNDJSON: %v", err)
 	}
@@ -801,14 +649,12 @@ func TestLoadReport_NonExistentFile(t *testing.T) {
 func TestLoadReport_WithFormatOption(t *testing.T) {
 	t.Parallel()
 
-	plugin, injector := newPluginAndInjector()
-	provideDB(injector, "db", "postgres://localhost")
-	do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "report.json")
 
-	err := plugin.ExportToFile(path)
+	err := p.ExportToFile(path)
 	if err != nil {
 		t.Fatalf("ExportToFile: %v", err)
 	}
@@ -824,13 +670,11 @@ func TestLoadReport_WithFormatOption(t *testing.T) {
 func TestLoadReportFromJSON_DirectBytes(t *testing.T) {
 	t.Parallel()
 
-	plugin, injector := newPluginAndInjector()
-	provideDB(injector, "db", "postgres://localhost")
-	do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	var buf bytes.Buffer
 
-	err := plugin.WriteReportJSON(&buf)
+	err := p.WriteReportJSON(&buf)
 	if err != nil {
 		t.Fatalf("WriteReportJSON: %v", err)
 	}
@@ -846,13 +690,11 @@ func TestLoadReportFromJSON_DirectBytes(t *testing.T) {
 func TestLoadReportFromReader_AutoDetectJSON(t *testing.T) {
 	t.Parallel()
 
-	plugin, injector := newPluginAndInjector()
-	provideDB(injector, "db", "postgres://localhost")
-	do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	var buf bytes.Buffer
 
-	err := plugin.WriteReportJSON(&buf)
+	err := p.WriteReportJSON(&buf)
 	if err != nil {
 		t.Fatalf("WriteReportJSON: %v", err)
 	}
@@ -872,13 +714,11 @@ func TestLoadReportFromReader_AutoDetectJSON(t *testing.T) {
 func TestLoadReportFromReader_AutoDetectNDJSON(t *testing.T) {
 	t.Parallel()
 
-	plugin, injector := newPluginAndInjector()
-	provideDB(injector, "db", "postgres://localhost")
-	do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	var buf bytes.Buffer
 
-	err := plugin.WriteEventsNDJSON(&buf)
+	err := p.WriteEventsNDJSON(&buf)
 	if err != nil {
 		t.Fatalf("WriteEventsNDJSON: %v", err)
 	}
@@ -899,9 +739,7 @@ func TestLoadReportFromReader_EmptyReader(t *testing.T) {
 	t.Parallel()
 
 	_, _, err := auditlog.LoadReportFromReader(strings.NewReader(""), auditlog.FormatAuto)
-	if !errors.Is(err, auditlog.ErrEmpty) {
-		t.Errorf("expected ErrEmpty, got %v", err)
-	}
+	assertErrIs(t, err, auditlog.ErrEmpty, "expected ErrEmpty")
 }
 
 func TestLoadReportFromReader_ReaderError(t *testing.T) {
@@ -916,13 +754,11 @@ func TestLoadReportFromReader_ReaderError(t *testing.T) {
 func TestLoadReportFromBytes_AutoDetectJSON(t *testing.T) {
 	t.Parallel()
 
-	plugin, injector := newPluginAndInjector()
-	provideDB(injector, "db", "postgres://localhost")
-	do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	var buf bytes.Buffer
 
-	err := plugin.WriteReportJSON(&buf)
+	err := p.WriteReportJSON(&buf)
 	if err != nil {
 		t.Fatalf("WriteReportJSON: %v", err)
 	}
@@ -942,13 +778,11 @@ func TestLoadReportFromBytes_AutoDetectJSON(t *testing.T) {
 func TestLoadReportFromBytes_AutoDetectNDJSON(t *testing.T) {
 	t.Parallel()
 
-	plugin, injector := newPluginAndInjector()
-	provideDB(injector, "db", "postgres://localhost")
-	do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	var buf bytes.Buffer
 
-	err := plugin.WriteEventsNDJSON(&buf)
+	err := p.WriteEventsNDJSON(&buf)
 	if err != nil {
 		t.Fatalf("WriteEventsNDJSON: %v", err)
 	}
@@ -969,9 +803,7 @@ func TestLoadReportFromBytes_EmptyInput(t *testing.T) {
 	t.Parallel()
 
 	_, _, err := auditlog.LoadReportFromBytes(nil, auditlog.FormatAuto)
-	if !errors.Is(err, auditlog.ErrEmpty) {
-		t.Errorf("expected ErrEmpty, got %v", err)
-	}
+	assertErrIs(t, err, auditlog.ErrEmpty, "expected ErrEmpty")
 }
 
 func TestLoadReportFromBytes_InvalidJSON(t *testing.T) {
@@ -1144,135 +976,28 @@ func TestDiff_MultipleAddedRemoved(t *testing.T) {
 func TestDiff_MultipleChanged(t *testing.T) {
 	t.Parallel()
 
-	ref1 := rootRef("svc-a")
-	ref2 := rootRef("svc-b")
 	now := time.Now()
-
-	eventsA := []auditlog.Event{
-		{
-			ServiceRef:  ref1,
-			Sequence:    1,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  ref2,
-			Sequence:    2,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  ref1,
-			Sequence:    3,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
-		{
-			ServiceRef:  ref1,
-			Sequence:    4,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  ref2,
-			Sequence:    5,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
-		{
-			ServiceRef:  ref2,
-			Sequence:    6,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  ref1,
-			Sequence:    7,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeHealthCheck,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-		},
-		{
-			ServiceRef:  ref2,
-			Sequence:    8,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeHealthCheck,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-		},
+	mk := func(seq int, name string, eventType auditlog.EventType, phase auditlog.Phase) auditlog.Event {
+		return mkEvent(seq, now, eventType, phase, name, "c", auditlog.ProviderTypeLazy)
 	}
 
-	eventsB := []auditlog.Event{
-		{
-			ServiceRef:  ref1,
-			Sequence:    1,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  ref2,
-			Sequence:    2,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeRegistration,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  ref1,
-			Sequence:    3,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
-		{
-			ServiceRef:  ref1,
-			Sequence:    4,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
-		{
-			ServiceRef:  ref2,
-			Sequence:    5,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseBefore,
-			ContainerID: "c",
-		},
-		{
-			ServiceRef:  ref2,
-			Sequence:    6,
-			Timestamp:   now,
-			EventType:   auditlog.EventTypeInvocation,
-			Phase:       auditlog.PhaseAfter,
-			ContainerID: "c",
-			ServiceType: auditlog.ProviderTypeLazy,
-		},
+	sharedRegInv := []auditlog.Event{
+		mk(1, "svc-a", auditlog.EventTypeRegistration, auditlog.PhaseAfter),
+		mk(2, "svc-b", auditlog.EventTypeRegistration, auditlog.PhaseAfter),
+		mk(3, "svc-a", auditlog.EventTypeInvocation, auditlog.PhaseBefore),
+		mk(4, "svc-a", auditlog.EventTypeInvocation, auditlog.PhaseAfter),
+		mk(5, "svc-b", auditlog.EventTypeInvocation, auditlog.PhaseBefore),
+		mk(6, "svc-b", auditlog.EventTypeInvocation, auditlog.PhaseAfter),
 	}
+
+	eventsA := append([]auditlog.Event(nil), sharedRegInv...)
+	eventsA = append(
+		eventsA,
+		mk(7, "svc-a", auditlog.EventTypeHealthCheck, auditlog.PhaseAfter),
+		mk(8, "svc-b", auditlog.EventTypeHealthCheck, auditlog.PhaseAfter),
+	)
+
+	eventsB := append([]auditlog.Event(nil), sharedRegInv...)
 
 	reportA, err := auditlog.ReplayEvents(eventsA)
 	if err != nil {
@@ -1316,8 +1041,8 @@ func TestReplayEvents_NonLIFOStackPop(t *testing.T) {
 	// Stack: push A, push B. Pop A FIRST (not last), then B.
 	// This triggers the append(stack[:i], stack[i+1:]...) path.
 	events := []auditlog.Event{
-		mkEvent(1, now, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "a", "c", auditlog.ProviderTypeLazy),
-		mkEvent(2, now, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "b", "c", auditlog.ProviderTypeLazy),
+		mkRegEvent(1, now, "a", "c"),
+		mkRegEvent(2, now, "b", "c"),
 		mkEvent(3, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "a", "c", ""),
 		mkEvent(4, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "b", "c", ""),
 		// A finishes while B is still on stack — pops from middle.
@@ -1335,9 +1060,7 @@ func TestReplayEvents_NonLIFOStackPop(t *testing.T) {
 		t.Fatal("a not found")
 	}
 
-	if svcA.InvocationCount != 1 {
-		t.Errorf("a invocation count: want 1, got %d", svcA.InvocationCount)
-	}
+	assertServiceInvocationCount(t, svcA, 1)
 }
 
 // TestReplayEvents_DoubleInvocation covers the firstInvokedAt-already-set
@@ -1348,31 +1071,13 @@ func TestReplayEvents_DoubleInvocation(t *testing.T) {
 	now := time.Now()
 
 	events := []auditlog.Event{
-		mkEvent(1, now, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "c", auditlog.ProviderTypeLazy),
+		mkRegEvent(1, now, "svc", "c"),
 		// First invocation.
 		mkEvent(2, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "svc", "c", ""),
-		mkEventWithDur(
-			3,
-			now,
-			auditlog.EventTypeInvocation,
-			auditlog.PhaseAfter,
-			"svc",
-			"c",
-			auditlog.ProviderTypeLazy,
-			3.3,
-		),
+		mkInvAfterWithDur(3, now, "svc", "c", 3.3),
 		// Second invocation — firstInvokedAt already set, firstBuildDurationMs already set.
 		mkEvent(4, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "svc", "c", ""),
-		mkEventWithDur(
-			5,
-			now,
-			auditlog.EventTypeInvocation,
-			auditlog.PhaseAfter,
-			"svc",
-			"c",
-			auditlog.ProviderTypeLazy,
-			3.3,
-		),
+		mkInvAfterWithDur(5, now, "svc", "c", 3.3),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -1399,7 +1104,7 @@ func TestReplayEvents_ShutdownWithMatchingBefore(t *testing.T) {
 	t1 := t0.Add(5 * time.Millisecond)
 
 	events := []auditlog.Event{
-		mkEvent(1, t0, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "c", auditlog.ProviderTypeLazy),
+		mkRegEvent(1, t0, "svc", "c"),
 		mkEvent(2, t0, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "svc", "c", ""),
 		mkEvent(3, t0, auditlog.EventTypeInvocation, auditlog.PhaseAfter, "svc", "c", auditlog.ProviderTypeLazy),
 		// Shutdown with matching before event.
@@ -1417,9 +1122,7 @@ func TestReplayEvents_ShutdownWithMatchingBefore(t *testing.T) {
 		t.Fatal("svc not found")
 	}
 
-	if svc.Status != auditlog.ServiceStatusShutdown {
-		t.Errorf("status: want %q, got %q", auditlog.ServiceStatusShutdown, svc.Status)
-	}
+	assertServiceStatus(t, svc, auditlog.ServiceStatusShutdown)
 
 	if svc.ShutdownDurationMs == nil {
 		t.Error("expected non-nil shutdown duration from matching before")
@@ -1435,16 +1138,7 @@ func TestReplayEvents_InvocationWithoutRegistration(t *testing.T) {
 
 	events := []auditlog.Event{
 		mkEvent(1, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "ghost", "c", ""),
-		mkEventWithDur(
-			2,
-			now,
-			auditlog.EventTypeInvocation,
-			auditlog.PhaseAfter,
-			"ghost",
-			"c",
-			auditlog.ProviderTypeLazy,
-			2.0,
-		),
+		mkInvAfterWithDur(2, now, "ghost", "c", 2.0),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -1457,9 +1151,7 @@ func TestReplayEvents_InvocationWithoutRegistration(t *testing.T) {
 		t.Fatal("ghost not found")
 	}
 
-	if svc.InvocationCount != 1 {
-		t.Errorf("invocation count: want 1, got %d", svc.InvocationCount)
-	}
+	assertServiceInvocationCount(t, svc, 1)
 }
 
 // TestReplayEvents_ShutdownWithoutRegistration covers the !ok branch
@@ -1492,9 +1184,7 @@ func TestReplayEvents_ShutdownWithoutRegistration(t *testing.T) {
 		t.Fatal("phantom not found")
 	}
 
-	if svc.Status != auditlog.ServiceStatusShutdown {
-		t.Errorf("status: want %q, got %q", auditlog.ServiceStatusShutdown, svc.Status)
-	}
+	assertServiceStatus(t, svc, auditlog.ServiceStatusShutdown)
 }
 
 // TestReplayEvents_EmptyContainerID covers the containerID fallback
@@ -1505,7 +1195,7 @@ func TestReplayEvents_EmptyContainerID(t *testing.T) {
 	now := time.Now()
 
 	events := []auditlog.Event{
-		mkEvent(1, now, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "svc", "", auditlog.ProviderTypeLazy),
+		mkRegEvent(1, now, "svc", ""),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -1529,19 +1219,17 @@ func TestReplayEvents_InvocationOrder(t *testing.T) {
 
 	// Two services invoked in sequence: config first, then db.
 	// invocationOrder must reflect the global invocation sequence, not per-service count.
+	mk := func(seq int, name string, offset time.Duration, eventType auditlog.EventType, phase auditlog.Phase) auditlog.Event {
+		return mkEvent(seq, base.Add(offset), eventType, phase, name, "test", auditlog.ProviderTypeLazy)
+	}
+
 	events := []auditlog.Event{
-		mkEvent(1, base, auditlog.EventTypeRegistration, auditlog.PhaseAfter,
-			"config", "test", auditlog.ProviderTypeLazy),
-		mkEvent(2, base.Add(time.Millisecond), auditlog.EventTypeRegistration, auditlog.PhaseAfter,
-			"db", "test", auditlog.ProviderTypeLazy),
-		mkEvent(3, base.Add(2*time.Millisecond), auditlog.EventTypeInvocation, auditlog.PhaseBefore,
-			"config", "test", auditlog.ProviderTypeLazy),
-		mkEvent(4, base.Add(3*time.Millisecond), auditlog.EventTypeInvocation, auditlog.PhaseAfter,
-			"config", "test", auditlog.ProviderTypeLazy),
-		mkEvent(5, base.Add(4*time.Millisecond), auditlog.EventTypeInvocation, auditlog.PhaseBefore,
-			"db", "test", auditlog.ProviderTypeLazy),
-		mkEvent(6, base.Add(5*time.Millisecond), auditlog.EventTypeInvocation, auditlog.PhaseAfter,
-			"db", "test", auditlog.ProviderTypeLazy),
+		mk(1, "config", 0, auditlog.EventTypeRegistration, auditlog.PhaseAfter),
+		mk(2, "db", time.Millisecond, auditlog.EventTypeRegistration, auditlog.PhaseAfter),
+		mk(3, "config", 2*time.Millisecond, auditlog.EventTypeInvocation, auditlog.PhaseBefore),
+		mk(4, "config", 3*time.Millisecond, auditlog.EventTypeInvocation, auditlog.PhaseAfter),
+		mk(5, "db", 4*time.Millisecond, auditlog.EventTypeInvocation, auditlog.PhaseBefore),
+		mk(6, "db", 5*time.Millisecond, auditlog.EventTypeInvocation, auditlog.PhaseAfter),
 	}
 
 	report, err := auditlog.ReplayEvents(events)

@@ -13,6 +13,25 @@ import (
 	"github.com/samber/do/v2"
 )
 
+// registerNUniqueDatabases launches goroutines that each call provideDB
+// with a unique service name derived from nameCounter. Used by stress
+// tests to flood the hook system with concurrent registrations.
+func registerNUniqueDatabases(goroutines, regsPerGoroutine int, nameCounter *atomic.Int64, injector do.Injector) {
+	var wg sync.WaitGroup
+
+	for range goroutines {
+		wg.Go(func() {
+			for range regsPerGoroutine {
+				num := nameCounter.Add(1)
+
+				provideDB(injector, "db-"+strconv.FormatInt(num, 10), "test")
+			}
+		})
+	}
+
+	wg.Wait()
+}
+
 // TestPlugin_MaxEventsConcurrentStress fires many goroutines racing against
 // hooks with a tight MaxEvents cap and verifies the invariant:
 //
@@ -37,21 +56,7 @@ func TestPlugin_MaxEventsConcurrentStress(t *testing.T) {
 	injector := do.NewWithOpts(p.Opts())
 
 	var nameCounter atomic.Int64
-
-	var wg sync.WaitGroup
-
-	for range goroutines {
-		wg.Go(func() {
-			for range regsPerGoroutine {
-				// Unique name per registration to avoid duplicate-declaration panic.
-				num := nameCounter.Add(1)
-
-				provideDB(injector, "db-"+strconv.FormatInt(num, 10), "test")
-			}
-		})
-	}
-
-	wg.Wait()
+	registerNUniqueDatabases(goroutines, regsPerGoroutine, &nameCounter, injector)
 
 	report := p.Report()
 	stored := report.EventCount
@@ -90,18 +95,7 @@ func TestPlugin_MaxEventsConcurrentRepeat(t *testing.T) {
 		injector := do.NewWithOpts(p.Opts())
 
 		var nameCounter atomic.Int64
-
-		var wg sync.WaitGroup
-
-		for range 8 {
-			wg.Go(func() {
-				num := nameCounter.Add(1)
-
-				provideDB(injector, "db-"+strconv.FormatInt(num, 10), "test")
-			})
-		}
-
-		wg.Wait()
+		registerNUniqueDatabases(8, 1, &nameCounter, injector)
 
 		report := p.Report()
 		stored := report.EventCount

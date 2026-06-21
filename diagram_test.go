@@ -11,13 +11,34 @@ import (
 	"github.com/samber/do/v2"
 )
 
+// singleServiceWithExternalDepReport builds a Report containing one
+// service ("my-service") that depends on a non-registered
+// "external-dep". Used by tests that assert the external-dep edge
+// appears in the rendered diagram.
+func singleServiceWithExternalDepReport() auditlog.Report {
+	now := time.Now()
+
+	return auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: "test",
+		ExportedAt:  now,
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceRef:   rootRef("my-service"),
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: now,
+				Dependencies: []auditlog.ServiceRef{
+					rootRef("external-dep"),
+				},
+			},
+		},
+	}
+}
+
 func TestReport_WriteMermaid(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
+	p, injector := setupWithDB("test")
 	provideUserServiceWithDB(injector, "user-svc", "db")
 
 	_ = do.MustInvokeNamed[*UserService](injector, "user-svc")
@@ -40,10 +61,7 @@ func TestReport_WriteMermaid(t *testing.T) {
 func TestReport_WritePlantUML(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
+	p, injector := setupWithDB("test")
 	provideUserServiceWithDB(injector, "user-svc", "db")
 
 	_ = do.MustInvokeNamed[*UserService](injector, "user-svc")
@@ -71,10 +89,7 @@ func TestReport_WritePlantUML(t *testing.T) {
 func TestReport_WriteDOT(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
+	p, injector := setupWithDB("test")
 	provideUserServiceWithDB(injector, "user-svc", "db")
 
 	_ = do.MustInvokeNamed[*UserService](injector, "user-svc")
@@ -111,9 +126,7 @@ func TestReport_WriteDOT_LabelEscaping(t *testing.T) {
 		ExportedAt:  time.Now(),
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceRef: auditlog.ServiceRef{
-					ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: `svc"quote`,
-				},
+				ServiceRef:   rootRef(`svc"quote`),
 				Status:       auditlog.ServiceStatusActive,
 				RegisteredAt: time.Now(),
 			},
@@ -129,24 +142,14 @@ func TestReport_WriteDOT_LabelEscaping(t *testing.T) {
 
 	output := buf.String()
 	// The literal double-quote in the service name must be escaped as \".
-	if !strings.Contains(output, `\"`) {
-		t.Errorf("expected escaped quote in DOT label, got:\n%s", output)
-	}
+	assertStringContains(t, output, `\"`)
 }
 
 func TestWriteDOT_WriterError(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	err := p.Report().WriteDOT(failingWriter{})
-	if err == nil {
-		t.Fatal("expected error from failing writer")
-	}
+	p, _ := setupWithDB("test")
+	assertWriteFails(t, "WriteDOT", p.Report().WriteDOT)
 }
 
 func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
@@ -183,31 +186,15 @@ func TestWriteMermaid_WithDependencies_LabelsDeps(t *testing.T) {
 func TestWriteMermaid_WriterError(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	err := p.Report().WriteMermaid(failingWriter{})
-	if err == nil {
-		t.Error("expected error from failing writer")
-	}
+	p, _ := setupWithDB("test")
+	assertWriteFails(t, "WriteMermaid", p.Report().WriteMermaid)
 }
 
 func TestWritePlantUML_WriterError(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	err := p.Report().WritePlantUML(failingWriter{})
-	if err == nil {
-		t.Fatal("expected error from failing writer")
-	}
+	p, _ := setupWithDB("test")
+	assertWriteFails(t, "WritePlantUML", p.Report().WritePlantUML)
 }
 
 // reportWithDuplicateEdges builds a report where svc-a depends on svc-b twice.
@@ -219,20 +206,16 @@ func reportWithDuplicateEdges() auditlog.Report {
 		ExportedAt:  time.Now(),
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceRef: auditlog.ServiceRef{
-					ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc-a",
-				},
+				ServiceRef:   rootRef("svc-a"),
 				Status:       auditlog.ServiceStatusActive,
 				RegisteredAt: time.Now(),
 				Dependencies: []auditlog.ServiceRef{
-					{ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc-b"},
-					{ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc-b"},
+					rootRef("svc-b"),
+					rootRef("svc-b"),
 				},
 			},
 			{
-				ServiceRef: auditlog.ServiceRef{
-					ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "svc-b",
-				},
+				ServiceRef:   rootRef("svc-b"),
 				Status:       auditlog.ServiceStatusActive,
 				RegisteredAt: time.Now(),
 			},
@@ -278,29 +261,7 @@ func TestWriteMermaid_DuplicateEdges(t *testing.T) {
 func TestWriteMermaid_ExternalDependency(t *testing.T) {
 	t.Parallel()
 
-	report := auditlog.Report{
-		Version:     auditlog.SchemaVersion,
-		ContainerID: "test",
-		ExportedAt:  time.Now(),
-		Services: []auditlog.ServiceInfo{
-			{
-				ServiceRef: auditlog.ServiceRef{
-					ScopeID:     "root",
-					ScopeName:   auditlog.RootScopeName,
-					ServiceName: "my-service",
-				},
-				Status:       auditlog.ServiceStatusActive,
-				RegisteredAt: time.Now(),
-				Dependencies: []auditlog.ServiceRef{
-					{
-						ScopeID:     "root",
-						ScopeName:   auditlog.RootScopeName,
-						ServiceName: "external-dep",
-					},
-				},
-			},
-		},
-	}
+	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
 
@@ -384,10 +345,7 @@ func reportWithSpecialCharService() auditlog.Report {
 func TestReport_WriteD2(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
+	p, injector := setupWithDB("test")
 	provideUserServiceWithDB(injector, "user-svc", "db")
 
 	_ = do.MustInvokeNamed[*UserService](injector, "user-svc")
@@ -434,16 +392,8 @@ func TestWriteD2_EscapesSpecialChars(t *testing.T) {
 func TestWriteD2_WriterError(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	err := p.Report().WriteD2(failingWriter{})
-	if err == nil {
-		t.Fatal("expected error from failing writer")
-	}
+	p, _ := setupWithDB("test")
+	assertWriteFails(t, "WriteD2", p.Report().WriteD2)
 }
 
 func TestWriteD2_DuplicateEdges(t *testing.T) {
@@ -456,29 +406,7 @@ func TestWriteD2_DuplicateEdges(t *testing.T) {
 func TestWriteD2_ExternalDependency(t *testing.T) {
 	t.Parallel()
 
-	report := auditlog.Report{
-		Version:     auditlog.SchemaVersion,
-		ContainerID: "test",
-		ExportedAt:  time.Now(),
-		Services: []auditlog.ServiceInfo{
-			{
-				ServiceRef: auditlog.ServiceRef{
-					ScopeID:     "root",
-					ScopeName:   auditlog.RootScopeName,
-					ServiceName: "my-service",
-				},
-				Status:       auditlog.ServiceStatusActive,
-				RegisteredAt: time.Now(),
-				Dependencies: []auditlog.ServiceRef{
-					{
-						ScopeID:     "root",
-						ScopeName:   auditlog.RootScopeName,
-						ServiceName: "external-dep",
-					},
-				},
-			},
-		},
-	}
+	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
 

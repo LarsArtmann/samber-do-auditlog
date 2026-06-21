@@ -107,9 +107,7 @@ func FuzzMigrateReport(f *testing.F) {
 			return
 		}
 
-		if validateErr := report.Validate(); validateErr != nil {
-			t.Errorf("migrated report failed validation: %v", validateErr)
-		}
+		assertReportValidNoFatal(t, report, "migrated")
 
 		// Re-migrating a current-schema report should be a no-op and stay valid.
 		var buf bytes.Buffer
@@ -323,7 +321,7 @@ func TestNestedScopeExport(t *testing.T) {
 
 			services := make([]auditlog.ServiceInfo, 0, depth+1)
 			services = append(services, auditlog.ServiceInfo{
-				ServiceRef: auditlog.ServiceRef{ScopeID: "root", ScopeName: "[root]", ServiceName: "root-svc"},
+				ServiceRef: rootRef("root-svc"),
 				Status:     auditlog.ServiceStatusActive,
 			})
 
@@ -357,9 +355,7 @@ func TestNestedScopeExport(t *testing.T) {
 				t.Fatalf("MigrateReport error: %v", migErr)
 			}
 
-			if validateErr := report.Validate(); validateErr != nil {
-				t.Errorf("deeply nested report failed Validate: %v", validateErr)
-			}
+			assertReportValidNoFatal(t, report, "deeply nested")
 
 			var jsonBuf bytes.Buffer
 

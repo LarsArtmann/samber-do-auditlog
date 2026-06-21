@@ -70,9 +70,7 @@ func TestPlugin_ShutdownStatus(t *testing.T) {
 		t.Fatal("clean service not found")
 	}
 
-	if svc.Status != auditlog.ServiceStatusShutdown {
-		t.Errorf("status: want shutdown, got %s", svc.Status)
-	}
+	assertServiceStatus(t, svc, auditlog.ServiceStatusShutdown)
 }
 
 func TestPlugin_ServiceStatus(t *testing.T) {
@@ -91,9 +89,7 @@ func TestPlugin_ServiceStatus(t *testing.T) {
 		t.Fatal("db not found")
 	}
 
-	if svc.Status != auditlog.ServiceStatusActive {
-		t.Errorf("active service status: want %s, got %s", auditlog.ServiceStatusActive, svc.Status)
-	}
+	assertServiceStatus(t, svc, auditlog.ServiceStatusActive)
 
 	provideCache(injector, "idle")
 
@@ -129,9 +125,7 @@ func TestPlugin_ProviderErrorStatus(t *testing.T) {
 		t.Fatal("failing service not found in report")
 	}
 
-	if svc.Status != auditlog.ServiceStatusInvocationError {
-		t.Errorf("status: want %s, got %s", auditlog.ServiceStatusInvocationError, svc.Status)
-	}
+	assertServiceStatus(t, svc, auditlog.ServiceStatusInvocationError)
 }
 
 func TestPlugin_ProviderError(t *testing.T) {

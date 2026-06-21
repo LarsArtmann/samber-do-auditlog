@@ -6,10 +6,10 @@ require (
 	github.com/a-h/templ v0.3.1020
 	github.com/invopop/jsonschema v0.14.0
 	github.com/larsartmann/go-output v0.17.0
-	github.com/larsartmann/go-output/d2 v0.13.0
-	github.com/larsartmann/go-output/escape v0.13.0
-	github.com/larsartmann/go-output/graph v0.13.0
-	github.com/larsartmann/go-output/plantuml v0.13.0
+	github.com/larsartmann/go-output/d2 v0.17.0
+	github.com/larsartmann/go-output/escape v0.17.0
+	github.com/larsartmann/go-output/graph v0.17.0
+	github.com/larsartmann/go-output/plantuml v0.17.0
 	github.com/samber/do/v2 v2.0.0
 )
 
@@ -25,8 +25,8 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/larsartmann/go-branded-id v0.3.1 // indirect
-	github.com/larsartmann/go-output/enum v0.13.0 // indirect
-	github.com/larsartmann/go-output/envdetect v0.13.0 // indirect
+	github.com/larsartmann/go-output/enum v0.17.0 // indirect
+	github.com/larsartmann/go-output/envdetect v0.17.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect

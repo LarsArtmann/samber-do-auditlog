@@ -75,9 +75,7 @@ func goldenReport(t *testing.T) auditlog.Report {
 	// Pin the timestamp so the golden file is byte-stable.
 	report.ExportedAt = goldenExportedAt
 
-	if err := report.Validate(); err != nil {
-		t.Fatalf("golden report invalid: %v", err)
-	}
+	assertReportValid(t, report, "golden")
 
 	return report
 }

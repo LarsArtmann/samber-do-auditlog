@@ -11,6 +11,14 @@ var errMigrationEmptyInput = errors.New("migration input is empty")
 
 var errMigrationMissingVersion = errors.New("migration input has no version field")
 
+// RedriveReportStatuses calls RederiveStatus on every service in the report.
+// Used by MigrateReport (repair) and property-test fixture builders (sanitize).
+func RedriveReportStatuses(report *Report) {
+	for idx := range report.Services {
+		report.Services[idx].RederiveStatus()
+	}
+}
+
 // MigrateReport takes a raw JSON byte slice representing a report exported
 // by a previous schema version and returns a Report compatible with the
 // current SchemaVersion. Unknown fields are preserved through round-tripping.
@@ -54,9 +62,7 @@ func MigrateReport(data []byte) (Report, error) {
 	// Always re-derive per-service Status from the underlying error/timestamp
 	// fields. This repairs stale or hand-edited statuses so the returned report
 	// always passes Validate() — Status can never drift from DeriveStatus().
-	for idx := range report.Services {
-		report.Services[idx].Status = report.Services[idx].DeriveStatus()
-	}
+	RedriveReportStatuses(&report)
 
 	return buildReportFromCore(
 		SchemaVersion,

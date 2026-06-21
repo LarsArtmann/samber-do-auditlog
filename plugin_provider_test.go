@@ -53,17 +53,30 @@ func TestPlugin_ServiceTypeCapture(t *testing.T) {
 	}
 }
 
+// newDatabaseProvider returns a provider that registers a Database via
+// do.Provide (lazy). See newTransientDatabaseProvider for the
+// transient variant.
 func newDatabaseProvider() func(do.Injector) {
-	return func(i do.Injector) {
-		do.Provide(i, func(_ do.Injector) (*Database, error) {
-			return &Database{URL: "test"}, nil
-		})
-	}
+	return newDatabaseProviderRegistered(do.Provide[*Database])
 }
 
+// newTransientDatabaseProvider returns a provider that registers a
+// Database via do.ProvideTransient. See newDatabaseProvider for the
+// lazy variant.
 func newTransientDatabaseProvider() func(do.Injector) {
+	return newDatabaseProviderRegistered(do.ProvideTransient[*Database])
+}
+
+// databaseRegistrar is the shared shape of do.Provide / do.ProvideTransient
+// for a single Database provider.
+type databaseRegistrar func(do.Injector, do.Provider[*Database])
+
+// newDatabaseProviderRegistered wires a Database provider via the
+// given register function (do.Provide for lazy, do.ProvideTransient
+// for transient). Keeps the factory body single-sourced.
+func newDatabaseProviderRegistered(register databaseRegistrar) func(do.Injector) {
 	return func(i do.Injector) {
-		do.ProvideTransient(i, func(_ do.Injector) (*Database, error) {
+		register(i, func(_ do.Injector) (*Database, error) {
 			return &Database{URL: "test"}, nil
 		})
 	}

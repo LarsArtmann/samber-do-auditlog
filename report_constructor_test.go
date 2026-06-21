@@ -14,44 +14,25 @@ func TestNewReport_ValidAndDerivesAggregates(t *testing.T) {
 
 	services := []auditlog.ServiceInfo{
 		{
-			ServiceRef: auditlog.ServiceRef{
-				ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "db",
-			},
+			ServiceRef:      rootRef("db"),
 			RegisteredAt:    exported,
 			InvocationCount: 3,
 		},
 		{
-			ServiceRef: auditlog.ServiceRef{
-				ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "cache",
-			},
+			ServiceRef:   rootRef("cache"),
 			RegisteredAt: exported,
 		},
 	}
 
-	scopeTree := auditlog.ScopeNode{
-		ID: "root", Name: auditlog.RootScopeName,
-		Services: []string{"db", "cache"},
-	}
+	report := mkNewReport(t, "test-container", exported, services, rootScopeTree("db", "cache"))
 
-	report, err := auditlog.NewReport(
-		auditlog.SchemaVersion, "test-container", exported,
-		nil, services, scopeTree,
-	)
-	if err != nil {
-		t.Fatalf("NewReport: %v", err)
-	}
-
-	if err := report.Validate(); err != nil {
-		t.Fatalf("constructed report invalid: %v", err)
-	}
+	assertReportValid(t, report, "constructed")
 
 	if report.ServiceCount != 2 {
 		t.Errorf("ServiceCount: want 2, got %d", report.ServiceCount)
 	}
 
-	if report.Version != auditlog.SchemaVersion {
-		t.Errorf("Version: want %s, got %s", auditlog.SchemaVersion, report.Version)
-	}
+	assertVersion(t, report)
 }
 
 func TestNewReport_ReDerivesStatus(t *testing.T) {
@@ -64,9 +45,7 @@ func TestNewReport_ReDerivesStatus(t *testing.T) {
 
 	services := []auditlog.ServiceInfo{
 		{
-			ServiceRef: auditlog.ServiceRef{
-				ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: "db",
-			},
+			ServiceRef:      rootRef("db"),
 			RegisteredAt:    exported,
 			FirstInvokedAt:  &invokedAt,
 			InvocationCount: 1,
@@ -74,16 +53,7 @@ func TestNewReport_ReDerivesStatus(t *testing.T) {
 		},
 	}
 
-	scopeTree := auditlog.ScopeNode{
-		ID: "root", Name: auditlog.RootScopeName, Services: []string{"db"},
-	}
-
-	report, err := auditlog.NewReport(
-		auditlog.SchemaVersion, "test", exported, nil, services, scopeTree,
-	)
-	if err != nil {
-		t.Fatalf("NewReport: %v", err)
-	}
+	report := mkNewReport(t, "test", exported, services, rootScopeTree("db"))
 
 	// Invoked once, no shutdown, no error → Active. And Validate() confirms
 	// Status matches DeriveStatus (which is the whole point).
@@ -91,4 +61,46 @@ func TestNewReport_ReDerivesStatus(t *testing.T) {
 	if report.Services[0].Status != want {
 		t.Errorf("Status: want %s, got %s", want, report.Services[0].Status)
 	}
+}
+
+// rootRef is a 1-line ServiceRef constructor for the root scope ("root" /
+// auditlog.RootScopeName). Used by every test that builds a fixture by hand.
+func rootRef(serviceName string) auditlog.ServiceRef {
+	return auditlog.ServiceRef{
+		ScopeID:     "root",
+		ScopeName:   auditlog.RootScopeName,
+		ServiceName: serviceName,
+	}
+}
+
+// rootScopeTree is a 1-line ScopeNode constructor for the root scope with
+// the given service names. Shared by every NewReport fixture test.
+func rootScopeTree(services ...string) auditlog.ScopeNode {
+	return auditlog.ScopeNode{
+		ID:       "root",
+		Name:     auditlog.RootScopeName,
+		Services: services,
+	}
+}
+
+// mkNewReport constructs a Report via auditlog.NewReport and fails the test
+// on any error. Centralizes the 7-line call used by every NewReport fixture.
+func mkNewReport(
+	t *testing.T,
+	containerID string,
+	exported time.Time,
+	services []auditlog.ServiceInfo,
+	scopeTree auditlog.ScopeNode,
+) auditlog.Report {
+	t.Helper()
+
+	report, err := auditlog.NewReport(
+		auditlog.SchemaVersion, containerID, exported,
+		nil, services, scopeTree,
+	)
+	if err != nil {
+		t.Fatalf("NewReport: %v", err)
+	}
+
+	return report
 }

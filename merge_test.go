@@ -14,8 +14,7 @@ func TestMergeReports_TwoReports(t *testing.T) {
 
 	makeReport := func(containerID string, seq int, svcName string) auditlog.Report {
 		events := []auditlog.Event{
-			mkEvent(seq, base, auditlog.EventTypeRegistration,
-				auditlog.PhaseAfter, svcName, containerID, auditlog.ProviderTypeLazy),
+			mkRegEvent(seq, base, svcName, containerID),
 		}
 
 		report, err := auditlog.ReplayEvents(events)
@@ -61,15 +60,7 @@ func TestMergeReports_SingleReport(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	events := []auditlog.Event{
-		mkEvent(
-			1,
-			base,
-			auditlog.EventTypeRegistration,
-			auditlog.PhaseAfter,
-			"svc",
-			"single",
-			auditlog.ProviderTypeLazy,
-		),
+		mkRegEvent(1, base, "svc", "single"),
 	}
 
 	report, err := auditlog.ReplayEvents(events)

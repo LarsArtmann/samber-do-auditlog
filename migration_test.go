@@ -156,9 +156,7 @@ func TestMigrateReport_RoundTrip(t *testing.T) {
 		t.Fatalf("MigrateReport: %v", err)
 	}
 
-	if migrated.Version != auditlog.SchemaVersion {
-		t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, migrated.Version)
-	}
+	assertVersion(t, migrated)
 
 	if migrated.ServiceCount != original.ServiceCount {
 		t.Errorf("service_count: want %d, got %d", original.ServiceCount, migrated.ServiceCount)
@@ -274,9 +272,7 @@ func TestMigrateReport_RecomputesStaleStatus(t *testing.T) {
 			auditlog.ServiceStatusRegistered, report.Services[0].Status)
 	}
 
-	if err := report.Validate(); err != nil {
-		t.Errorf("migrated report should pass Validate: %v", err)
-	}
+	assertReportValidNoFatal(t, report, "migrated")
 }
 
 func TestMigrateReport_EmptyScopeTree(t *testing.T) {

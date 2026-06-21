@@ -37,9 +37,7 @@ func TestBuildTypeMetadata(t *testing.T) {
 			t.Errorf("providers[%q].Icon: want %q, got %q", name, want.icon, got.Icon)
 		}
 
-		if got.Label != want.label {
-			t.Errorf("providers[%q].Label: want %q, got %q", name, want.label, got.Label)
-		}
+		assertMetadataLabel(t, got.Label, want.label, "providers", name)
 	}
 
 	if len(meta.Statuses) != 5 {
@@ -89,12 +87,20 @@ func TestBuildTypeMetadata(t *testing.T) {
 			continue
 		}
 
-		if got.Label != want.label {
-			t.Errorf("events[%q].Label: want %q, got %q", name, want.label, got.Label)
-		}
+		assertMetadataLabel(t, got.Label, want.label, "events", name)
 
 		if got.Color != want.color {
 			t.Errorf("events[%q].Color: want %q, got %q", name, want.color, got.Color)
 		}
+	}
+}
+
+// assertMetadataLabel fails the test if got does not equal want. Used by the
+// metadata builder tests, which all assert Label against a table of fixtures.
+func assertMetadataLabel(t *testing.T, got, want, collection, name string) {
+	t.Helper()
+
+	if got != want {
+		t.Errorf("%s[%q].Label: want %q, got %q", collection, name, want, got)
 	}
 }

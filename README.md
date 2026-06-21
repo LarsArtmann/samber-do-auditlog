@@ -58,7 +58,7 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 | **Service types**        | Auto-detects lazy/eager/transient/alias via `do.ExplainNamedService`     |
 | **Timing**               | First build duration, shutdown duration, invocation count & order        |
 | **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events             |
-| **9 export formats**     | JSON · NDJSON · CSV · TSV · HTML · Mermaid · PlantUML · DOT · D2        |
+| **9 export formats**     | JSON · NDJSON · CSV · TSV · HTML · Mermaid · PlantUML · DOT · D2         |
 | **Filtered reports**     | Functional options to slice by name, type, scope, event type, time range |
 | **~1.7μs overhead**      | In-memory capture, no I/O during container operation                     |
 | **Toggle on/off**        | `Enabled: false` → zero hooks, zero cost                                 |

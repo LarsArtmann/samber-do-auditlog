@@ -15,9 +15,7 @@ func migrateReport(rng *rand.Rand) ([]byte, auditlog.Report) {
 	report.Version = auditlog.SchemaVersion
 
 	// Make it valid: sync per-service status so the source itself passes checks.
-	for idx := range report.Services {
-		report.Services[idx].Status = report.Services[idx].DeriveStatus()
-	}
+	auditlog.RedriveReportStatuses(&report)
 
 	data, err := json.Marshal(report)
 	if err != nil {
@@ -42,9 +40,7 @@ func TestMigrateReport_AlwaysValid(t *testing.T) {
 			t.Fatalf("MigrateReport error: %v", err)
 		}
 
-		if err := migrated.Validate(); err != nil {
-			t.Fatalf("migrated report invalid: %v", err)
-		}
+		assertReportValidNoFatal(t, migrated, "migrated")
 	}
 }
 
@@ -108,9 +104,7 @@ func TestMigrateReport_VersionNormalized(t *testing.T) {
 			t.Fatalf("MigrateReport: %v", err)
 		}
 
-		if migrated.Version != auditlog.SchemaVersion {
-			t.Errorf("version: want %s, got %s", auditlog.SchemaVersion, migrated.Version)
-		}
+		assertVersion(t, migrated)
 	}
 }
 

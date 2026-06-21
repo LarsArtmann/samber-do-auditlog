@@ -14,11 +14,7 @@ import (
 func TestPlugin_ExportToFile(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "postgres://localhost")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	path := t.TempDir() + "/report.json"
 	if err := p.ExportToFile(path); err != nil {
@@ -39,11 +35,7 @@ func TestPlugin_ExportToFile(t *testing.T) {
 func TestPlugin_ExportEventsToNDJSON(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "postgres://localhost")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	path := t.TempDir() + "/events.ndjson"
 	if err := p.ExportEventsToNDJSON(path); err != nil {
@@ -65,11 +57,7 @@ func TestPlugin_ExportEventsToNDJSON(t *testing.T) {
 func TestPlugin_WriteReportJSON(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "postgres://localhost")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	var buf bytes.Buffer
 
@@ -91,11 +79,7 @@ func TestPlugin_WriteReportJSON(t *testing.T) {
 func TestPlugin_WriteEventsNDJSON(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "postgres://localhost")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	var buf bytes.Buffer
 
@@ -113,56 +97,28 @@ func TestPlugin_WriteEventsNDJSON(t *testing.T) {
 func TestPlugin_WriteReportJSONErrorPath(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	err := p.WriteReportJSON(failingWriter{})
-	if err == nil {
-		t.Fatal("expected error from failing writer")
-	}
+	p, _ := setupWithDB("test")
+	assertWriteFails(t, "WriteReportJSON", p.WriteReportJSON)
 }
 
 func TestPlugin_WriteEventsNDJSONErrorPath(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	err := p.WriteEventsNDJSON(failingWriter{})
-	if err == nil {
-		t.Fatal("expected error from failing writer")
-	}
+	p, _ := setupWithDB("test")
+	assertWriteFails(t, "WriteEventsNDJSON", p.WriteEventsNDJSON)
 }
 
 func TestPlugin_WriteHTMLErrorPath(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	err := p.WriteHTML(failingWriter{})
-	if err == nil {
-		t.Fatal("expected error from failing writer")
-	}
+	p, _ := setupWithDB("test")
+	assertWriteFails(t, "WriteHTML", p.WriteHTML)
 }
 
 func TestPlugin_ExportToFileInvalidPath(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("test")
 
 	err := p.ExportToFile("/nonexistent/dir/report.json")
 	if err == nil {
@@ -173,12 +129,8 @@ func TestPlugin_ExportToFileInvalidPath(t *testing.T) {
 func TestPlugin_ExportFilteredToFile(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
+	p, injector := setupWithDB("test")
 	provideCache(injector, "cache")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
 	_ = do.MustInvokeNamed[*Cache](injector, "cache")
 
 	dir := t.TempDir()
@@ -210,11 +162,7 @@ func TestPlugin_ExportFilteredToFile(t *testing.T) {
 func TestPlugin_ExportFilteredToFile_BadPath(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("test")
 
 	err := p.ExportFilteredToFile(
 		"/nonexistent/dir/file.json",
@@ -228,11 +176,7 @@ func TestPlugin_ExportFilteredToFile_BadPath(t *testing.T) {
 func TestPlugin_WriteReportCSV(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "postgres://localhost")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("postgres://localhost")
 
 	var buf bytes.Buffer
 	if err := p.WriteReportCSV(&buf); err != nil {
@@ -240,23 +184,14 @@ func TestPlugin_WriteReportCSV(t *testing.T) {
 	}
 
 	output := buf.String()
-	if !strings.Contains(output, "service_name") {
-		t.Errorf("CSV output missing header. got:\n%s", output)
-	}
-
-	if !strings.Contains(output, "db") {
-		t.Errorf("CSV output missing service 'db'. got:\n%s", output)
-	}
+	assertStringContains(t, output, "service_name")
+	assertStringContains(t, output, "db")
 }
 
 func TestPlugin_ExportToCSV(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("test")
 
 	path := t.TempDir() + "/report.csv"
 	if err := p.ExportToCSV(path); err != nil {
@@ -268,19 +203,13 @@ func TestPlugin_ExportToCSV(t *testing.T) {
 		t.Fatalf("ReadFile failed: %v", err)
 	}
 
-	if !strings.Contains(string(data), "db") {
-		t.Errorf("CSV file missing service 'db'. got:\n%s", string(data))
-	}
+	assertStringContains(t, string(data), "db")
 }
 
 func TestPlugin_ExportToTSV(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
+	p, _ := setupWithDB("test")
 
 	path := t.TempDir() + "/report.tsv"
 	if err := p.ExportToTSV(path); err != nil {
@@ -292,11 +221,6 @@ func TestPlugin_ExportToTSV(t *testing.T) {
 		t.Fatalf("ReadFile failed: %v", err)
 	}
 
-	if !strings.Contains(string(data), "\t") {
-		t.Errorf("TSV file should be tab-delimited. got:\n%s", string(data))
-	}
-
-	if !strings.Contains(string(data), "db") {
-		t.Errorf("TSV file missing service 'db'. got:\n%s", string(data))
-	}
+	assertStringContains(t, string(data), "\t")
+	assertStringContains(t, string(data), "db")
 }

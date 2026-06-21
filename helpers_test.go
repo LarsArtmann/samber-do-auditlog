@@ -1,10 +1,12 @@
 package auditlog_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -288,6 +290,15 @@ func assertServiceInvocationCount(t *testing.T, svc *auditlog.ServiceInfo, want 
 	assertServiceIntField(t, svc, "invocation_count", svc.InvocationCount, want)
 }
 
+// assertServiceStatus fails the test if the service's status does not match.
+func assertServiceStatus(t *testing.T, svc *auditlog.ServiceInfo, want auditlog.ServiceStatus) {
+	t.Helper()
+
+	if svc.Status != want {
+		t.Errorf("status: want %q, got %q", want, svc.Status)
+	}
+}
+
 // assertServiceHealthCheckCount fails the test if the service's health check count does not match.
 func assertServiceHealthCheckCount(t *testing.T, svc *auditlog.ServiceInfo, want int) {
 	t.Helper()
@@ -334,6 +345,17 @@ func assertReportValid(t *testing.T, report auditlog.Report, wantValidMsg string
 
 	if err := report.Validate(); err != nil {
 		t.Fatalf("expected valid %s report, got: %v", wantValidMsg, err)
+	}
+}
+
+// assertReportValidNoFatal is like assertReportValid but uses Errorf so the
+// caller continues checking additional reports (used inside fuzz loops where
+// each iteration is independent).
+func assertReportValidNoFatal(t *testing.T, report auditlog.Report, wantValidMsg string) {
+	t.Helper()
+
+	if err := report.Validate(); err != nil {
+		t.Errorf("expected valid %s report, got: %v", wantValidMsg, err)
 	}
 }
 
@@ -387,6 +409,72 @@ func newPluginAndInjectorWithID(containerID string) (*auditlog.Plugin, do.Inject
 	p := mustNew(auditlog.Config{Enabled: true, ContainerID: containerID})
 
 	return p, do.NewWithOpts(p.Opts())
+}
+
+// setupWithDB returns a plugin and injector with a single *Database registered
+// under "db" and already invoked. The standard 4-line "register + invoke"
+// preamble that opens most plugin-level tests.
+func setupWithDB(url string) (*auditlog.Plugin, do.Injector) { //nolint:ireturn
+	p, injector := newPluginAndInjector()
+	provideDB(injector, "db", url)
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	return p, injector
+}
+
+// replayFromPlugin drives the standard round-trip: writes plugin events to
+// NDJSON, reads them back, and replays them into a Report. Centralizes the
+// 8-line preamble that opens every replay round-trip test.
+func replayFromPlugin(t *testing.T, p *auditlog.Plugin) auditlog.Report {
+	t.Helper()
+
+	var buf bytes.Buffer
+
+	if err := p.WriteEventsNDJSON(&buf); err != nil {
+		t.Fatalf("WriteEventsNDJSON: %v", err)
+	}
+
+	events, err := auditlog.ReadEvents(&buf)
+	if err != nil {
+		t.Fatalf("ReadEvents: %v", err)
+	}
+
+	report, err := auditlog.ReplayEvents(events)
+	if err != nil {
+		t.Fatalf("ReplayEvents: %v", err)
+	}
+
+	return report
+}
+
+// assertWriteFails expects a non-nil error from fn writing to a failingWriter.
+// Centralizes the "failingWriter error path" assertion used by every plugin
+// write-method test.
+func assertWriteFails(t *testing.T, label string, fn func(io.Writer) error) {
+	t.Helper()
+
+	if err := fn(failingWriter{}); err == nil {
+		t.Fatalf("%s: expected error from failing writer", label)
+	}
+}
+
+// assertErrIs fails the test if err does not match want via errors.Is. Shared
+// by every "should return sentinel error" test in the loader/reader paths.
+func assertErrIs(t *testing.T, err, want error, label string) {
+	t.Helper()
+
+	if !errors.Is(err, want) {
+		t.Errorf("%s: want %v, got %v", label, want, err)
+	}
+}
+
+// assertLen fails the test if the slice length does not equal want.
+func assertLen[T any](t *testing.T, label string, slice []T, want int) {
+	t.Helper()
+
+	if len(slice) != want {
+		t.Errorf("%s length: want %d, got %d", label, want, len(slice))
+	}
 }
 
 func newPluginWithCapture() (*auditlog.Plugin, *[]auditlog.Event, do.Injector) { //nolint:ireturn

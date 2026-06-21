@@ -154,7 +154,7 @@ func NewReport(
 ) (Report, error) {
 	// Re-derive per-service Status so the report is always self-consistent.
 	for idx := range services {
-		services[idx].Status = services[idx].DeriveStatus()
+		services[idx].RederiveStatus()
 	}
 
 	report := buildReportFromCore(
