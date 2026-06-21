@@ -39,7 +39,7 @@ A `flake.nix` devShell is available for Nix users. No Makefile, no justfile.
 Single-package library (`auditlog`) with these source files:
 
 ```
-plugin.go           — Public API: New(), Opts(), Report(), Export*(), Events(), RecordHealthCheck*
+plugin.go           — Public API: New(), Opts(), Report(), Export*(), Write*(), Events(), RecordHealthCheck*
 recorder.go         — Core state machine: event capture, invocation stack, service aggregation
 hooks.go            — Hook methods + shared helpers (newEventFromRef, newServiceRecordCore, inferServiceType, getOrCreateServiceRecord, recordDependencyFromStack)
 types.go            — Domain enums: EventType, Phase, ProviderType, ServiceStatus, ServiceRef

@@ -84,6 +84,8 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **JSON report to file**           | `Plugin.ExportToFile(path)`                                                              | `plugin.go`                 |
 | **NDJSON events to file**         | `Plugin.ExportEventsToNDJSON(path)`                                                      | `plugin.go`                 |
 | **Filtered JSON report to file**  | `Plugin.ExportFilteredToFile(path, opts...)`                                             | `plugin.go`                 |
+| **Plugin CSV/TSV export**         | `Plugin.WriteReportCSV/TSV(w)` and `Plugin.ExportToCSV/TSV(path)`                        | `plugin.go`                 |
+| **Plugin diagram export**         | `Plugin.WriteMermaid/PlantUML/DOT/D2(w)` and `Plugin.ExportToMermaid/PlantUML/DOT/D2(path)` | `plugin.go`              |
 | **Report JSON writer**            | `Report.WriteJSON(writer)`                                                               | `report.go`                 |
 | **Report NDJSON writer**          | `Report.WriteNDJSON(writer)`                                                             | `report.go`                 |
 | **Atomic file writes**            | File exports write to temp file and rename for crash safety                              | `plugin.go` (`writeToFile`) |
