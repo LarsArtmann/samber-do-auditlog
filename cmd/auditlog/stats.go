@@ -2,17 +2,14 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"fmt"
-	"os"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
 // runStats prints aggregate statistics for a report.
 func runStats(args []string) error {
-	fs := flag.NewFlagSet("stats", flag.ContinueOnError)
-	fs.SetOutput(os.Stdout)
+	fs := newFlagSet("stats")
 
 	if err := fs.Parse(args); err != nil {
 		return err

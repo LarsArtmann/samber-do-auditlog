@@ -2,17 +2,14 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"fmt"
-	"os"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
 // runDiff loads two reports and prints their structural differences.
 func runDiff(args []string) error {
-	fs := flag.NewFlagSet("diff", flag.ContinueOnError)
-	fs.SetOutput(os.Stdout)
+	fs := newFlagSet("diff")
 
 	if err := fs.Parse(args); err != nil {
 		return err

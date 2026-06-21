@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -14,8 +13,7 @@ import (
 
 // runConvert loads a report and writes it in the requested format.
 func runConvert(args []string) (err error) {
-	fs := flag.NewFlagSet("convert", flag.ContinueOnError)
-	fs.SetOutput(os.Stdout)
+	fs := newFlagSet("convert")
 
 	output := fs.String("o", "", "output file (default: stdout)")
 	format := fs.String("f", "", "output format: json, ndjson, csv, tsv, html, mermaid, plantuml, dot, d2")

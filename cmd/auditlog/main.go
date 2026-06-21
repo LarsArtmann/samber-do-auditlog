@@ -11,6 +11,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -91,4 +92,12 @@ Usage:
   auditlog version
       Print the CLI and schema versions.
 `)
+}
+
+// newFlagSet creates a pre-configured FlagSet for a CLI subcommand.
+func newFlagSet(name string) *flag.FlagSet {
+	fs := flag.NewFlagSet(name, flag.ContinueOnError)
+	fs.SetOutput(os.Stdout)
+
+	return fs
 }

@@ -2,15 +2,12 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"fmt"
-	"os"
 )
 
 // runValidate loads a report and verifies internal consistency via Validate().
 func runValidate(args []string) error {
-	fs := flag.NewFlagSet("validate", flag.ContinueOnError)
-	fs.SetOutput(os.Stdout)
+	fs := newFlagSet("validate")
 
 	if err := fs.Parse(args); err != nil {
 		return err
