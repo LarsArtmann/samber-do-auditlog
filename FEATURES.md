@@ -77,22 +77,22 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ### Export Formats
 
-| Feature                           | Description                                                                           | Verified                    |
-| --------------------------------- | ------------------------------------------------------------------------------------- | --------------------------- |
-| **JSON report to writer**         | `Plugin.WriteReportJSON(writer)`                                                      | `plugin.go`                 |
-| **NDJSON event stream to writer** | `Plugin.WriteEventsNDJSON(writer)`                                                    | `plugin.go`                 |
-| **JSON report to file**           | `Plugin.ExportToFile(path)`                                                           | `plugin.go`                 |
-| **NDJSON events to file**         | `Plugin.ExportEventsToNDJSON(path)`                                                   | `plugin.go`                 |
-| **Filtered JSON report to file**  | `Plugin.ExportFilteredToFile(path, opts...)`                                          | `plugin.go`                 |
-| **Report JSON writer**            | `Report.WriteJSON(writer)`                                                            | `report.go`                 |
-| **Report NDJSON writer**          | `Report.WriteNDJSON(writer)`                                                          | `report.go`                 |
-| **Atomic file writes**            | File exports write to temp file and rename for crash safety                           | `plugin.go` (`writeToFile`) |
-| **Mermaid diagram export**        | `Report.WriteMermaid(writer)` outputs a themed flowchart                              | `mermaid.go`, `diagram.go`  |
-| **PlantUML diagram export**       | `Report.WritePlantUML(writer)` outputs a styled component diagram                     | `plantuml.go`, `diagram.go` |
-| **DOT diagram export**            | `Report.WriteDOT(writer)` outputs a Graphviz digraph                                  | `dot.go`, `diagram.go`      |
-| **D2 diagram export**             | `Report.WriteD2(writer)` outputs a D2 diagram with per-node warm-amber styling      | `d2.go`, `diagram.go`       |
+| Feature                           | Description                                                                              | Verified                    |
+| --------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------- |
+| **JSON report to writer**         | `Plugin.WriteReportJSON(writer)`                                                         | `plugin.go`                 |
+| **NDJSON event stream to writer** | `Plugin.WriteEventsNDJSON(writer)`                                                       | `plugin.go`                 |
+| **JSON report to file**           | `Plugin.ExportToFile(path)`                                                              | `plugin.go`                 |
+| **NDJSON events to file**         | `Plugin.ExportEventsToNDJSON(path)`                                                      | `plugin.go`                 |
+| **Filtered JSON report to file**  | `Plugin.ExportFilteredToFile(path, opts...)`                                             | `plugin.go`                 |
+| **Report JSON writer**            | `Report.WriteJSON(writer)`                                                               | `report.go`                 |
+| **Report NDJSON writer**          | `Report.WriteNDJSON(writer)`                                                             | `report.go`                 |
+| **Atomic file writes**            | File exports write to temp file and rename for crash safety                              | `plugin.go` (`writeToFile`) |
+| **Mermaid diagram export**        | `Report.WriteMermaid(writer)` outputs a themed flowchart                                 | `mermaid.go`, `diagram.go`  |
+| **PlantUML diagram export**       | `Report.WritePlantUML(writer)` outputs a styled component diagram                        | `plantuml.go`, `diagram.go` |
+| **DOT diagram export**            | `Report.WriteDOT(writer)` outputs a Graphviz digraph                                     | `dot.go`, `diagram.go`      |
+| **D2 diagram export**             | `Report.WriteD2(writer)` outputs a D2 diagram with per-node warm-amber styling           | `d2.go`, `diagram.go`       |
 | **Shared diagram builder**        | `buildDiagramNodes`/`buildDiagramEdges` drives all four formats with deduplicated output | `diagram.go`                |
-| **Self-contained HTML export**    | `Plugin.ExportToHTML(path)` and `Plugin.WriteHTML(w)` render a single-file report     | `html.go`, `html.templ`     |
+| **Self-contained HTML export**    | `Plugin.ExportToHTML(path)` and `Plugin.WriteHTML(w)` render a single-file report        | `html.go`, `html.templ`     |
 
 ### HTML Visualization
 
