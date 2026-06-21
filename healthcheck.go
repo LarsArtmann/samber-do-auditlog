@@ -47,9 +47,7 @@ func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err
 
 	r.mu.Unlock()
 
-	if r.onEvent != nil {
-		r.onEvent(evt)
-	}
+	r.fireEvent(evt)
 }
 
 // ResolveServiceScope finds the scope metadata for a service by name.

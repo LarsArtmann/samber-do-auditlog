@@ -149,6 +149,14 @@ func inferServiceType(scope *do.Scope, serviceName string) ProviderType {
 
 // --- Hook methods (single-lock hot path) ---
 
+// fireEvent invokes the onEvent callback if configured. Always called
+// outside the mutex to avoid blocking the hot path.
+func (r *Recorder) fireEvent(evt Event) {
+	if r.onEvent != nil {
+		r.onEvent(evt)
+	}
+}
+
 func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
 	scopeID := scope.ID()
 	scopeName := scope.Name()
@@ -163,9 +171,7 @@ func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
 	r.appendEventLocked(evt)
 	r.mu.Unlock()
 
-	if r.onEvent != nil {
-		r.onEvent(evt)
-	}
+	r.fireEvent(evt)
 }
 
 func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
@@ -195,9 +201,7 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 
 	r.mu.Unlock()
 
-	if r.onEvent != nil {
-		r.onEvent(evt)
-	}
+	r.fireEvent(evt)
 }
 
 func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
@@ -229,9 +233,7 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 
 	r.mu.Unlock()
 
-	if r.onEvent != nil {
-		r.onEvent(evt)
-	}
+	r.fireEvent(evt)
 }
 
 func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err error) {
@@ -265,9 +267,7 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 
 	r.mu.Unlock()
 
-	if r.onEvent != nil {
-		r.onEvent(evt)
-	}
+	r.fireEvent(evt)
 }
 
 // updateInvocationAggregate updates the per-service aggregate after an invocation.
@@ -323,9 +323,7 @@ func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
 
 	r.mu.Unlock()
 
-	if r.onEvent != nil {
-		r.onEvent(evt)
-	}
+	r.fireEvent(evt)
 }
 
 func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err error) {
@@ -365,7 +363,5 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 
 	r.mu.Unlock()
 
-	if r.onEvent != nil {
-		r.onEvent(evt)
-	}
+	r.fireEvent(evt)
 }
