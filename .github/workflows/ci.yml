@@ -45,16 +45,14 @@ jobs:
         with:
           go-version: "1.26.4"
           cache: true
+      - uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.12.2
+          install-only: true
       - name: Verify golangci-lint config
-        uses: golangci/golangci-lint-action@v7
-        with:
-          version: v2.12.2
-          args: config verify
+        run: golangci-lint config verify
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v7
-        with:
-          version: v2.12.2
-          args: run --timeout=10m
+        run: golangci-lint run --timeout=10m
 
   vulncheck:
     name: Vulnerability scan
