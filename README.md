@@ -340,21 +340,21 @@ The callback is called **outside the mutex** on every event. Keep it fast — do
 | `WriteReportJSON(w) error`                    | Indented JSON to any `io.Writer`.                          |
 | `WriteEventsNDJSON(w) error`                  | NDJSON event stream to any `io.Writer`.                    |
 | `WriteHTML(w) error`                          | Self-contained HTML visualization to any `io.Writer`.      |
-| `WriteReportCSV(w) error`                     | CSV of all services to `io.Writer`.                       |
-| `WriteReportTSV(w) error`                     | TSV of all services to `io.Writer`.                       |
-| `WriteMermaid(w) error`                       | Mermaid flowchart to `io.Writer`.                         |
-| `WritePlantUML(w) error`                      | PlantUML component diagram to `io.Writer`.                |
-| `WriteDOT(w) error`                           | Graphviz DOT digraph to `io.Writer`.                      |
-| `WriteD2(w) error`                            | D2 diagram to `io.Writer`.                                |
+| `WriteReportCSV(w) error`                     | CSV of all services to `io.Writer`.                        |
+| `WriteReportTSV(w) error`                     | TSV of all services to `io.Writer`.                        |
+| `WriteMermaid(w) error`                       | Mermaid flowchart to `io.Writer`.                          |
+| `WritePlantUML(w) error`                      | PlantUML component diagram to `io.Writer`.                 |
+| `WriteDOT(w) error`                           | Graphviz DOT digraph to `io.Writer`.                       |
+| `WriteD2(w) error`                            | D2 diagram to `io.Writer`.                                 |
 | `ExportToFile(path) error`                    | JSON report to file.                                       |
 | `ExportEventsToNDJSON(path) error`            | NDJSON events to file.                                     |
 | `ExportToHTML(path) error`                    | HTML visualization to file.                                |
-| `ExportToCSV(path) error`                     | CSV of all services to file.                              |
-| `ExportToTSV(path) error`                     | TSV of all services to file.                              |
-| `ExportToMermaid(path) error`                 | Mermaid flowchart to file.                                |
-| `ExportToPlantUML(path) error`                | PlantUML component diagram to file.                       |
-| `ExportToDOT(path) error`                     | Graphviz DOT digraph to file.                             |
-| `ExportToD2(path) error`                      | D2 diagram to file.                                       |
+| `ExportToCSV(path) error`                     | CSV of all services to file.                               |
+| `ExportToTSV(path) error`                     | TSV of all services to file.                               |
+| `ExportToMermaid(path) error`                 | Mermaid flowchart to file.                                 |
+| `ExportToPlantUML(path) error`                | PlantUML component diagram to file.                        |
+| `ExportToDOT(path) error`                     | Graphviz DOT digraph to file.                              |
+| `ExportToD2(path) error`                      | D2 diagram to file.                                        |
 | `ExportFilteredToFile(path, opts...) error`   | Filtered JSON report to file.                              |
 
 **Package-level**
