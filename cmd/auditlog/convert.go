@@ -16,7 +16,11 @@ func runConvert(args []string) (err error) {
 	fs := newFlagSet("convert")
 
 	output := fs.String("o", "", "output file (default: stdout)")
-	format := fs.String("f", "", "output format: json, ndjson, csv, tsv, html, mermaid, plantuml, dot, d2")
+	format := fs.String(
+		"f",
+		"",
+		"output format: json, ndjson, csv, tsv, html, mermaid, plantuml, dot, d2, tree, htmltree, table",
+	)
 
 	if err := fs.Parse(reorderFlags(args)); err != nil {
 		return err
@@ -112,6 +116,12 @@ func formatFromExt(path string) string {
 		return "dot"
 	case ".d2":
 		return "d2"
+	case ".tree", ".ascii-tree":
+		return "tree"
+	case ".htmltree", ".html-tree":
+		return "htmltree"
+	case ".table":
+		return "table"
 	default:
 		return ""
 	}
@@ -137,7 +147,16 @@ func writeFormat(w io.Writer, report auditlog.Report, format string) error {
 		return report.WriteDOT(w)
 	case "d2":
 		return report.WriteD2(w)
+	case "tree":
+		return report.WriteTree(w)
+	case "htmltree":
+		return report.WriteHTMLTree(w)
+	case "table":
+		return report.WriteTable(w, "table", auditlog.DefaultTableOpts())
 	default:
-		return fmt.Errorf("unknown format %q (want: json, ndjson, csv, tsv, html, mermaid, plantuml, dot, d2)", format)
+		return fmt.Errorf(
+			"unknown format %q (want: json, ndjson, csv, tsv, html, mermaid, plantuml, dot, d2, tree, htmltree, table)",
+			format,
+		)
 	}
 }
