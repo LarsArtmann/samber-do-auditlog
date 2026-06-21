@@ -115,3 +115,24 @@ func writeRendered(writer io.Writer, renderer output.Renderer) error {
 
 	return nil
 }
+
+// dedupGraphEdges removes duplicate edges (same from/to pair) while preserving
+// order. Used by WriteD2 since go-output's D2 renderer lacks built-in
+// DedupEdges (unlike Mermaid/PlantUML/DOT which call renderer.DedupEdges()).
+func dedupGraphEdges(edges []output.GraphEdge) []output.GraphEdge {
+	seen := make(map[string]struct{}, len(edges))
+	out := make([]output.GraphEdge, 0, len(edges))
+
+	for _, edge := range edges {
+		key := edge.From.Get() + "|" + edge.To.Get()
+		if _, ok := seen[key]; ok {
+			continue
+		}
+
+		seen[key] = struct{}{}
+
+		out = append(out, edge)
+	}
+
+	return out
+}

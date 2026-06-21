@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/larsartmann/go-output"
 	"github.com/larsartmann/go-output/d2"
 )
 
@@ -23,25 +22,4 @@ func (r Report) WriteD2(writer io.Writer) error {
 	}
 
 	return nil
-}
-
-// dedupGraphEdges removes duplicate edges (same from/to pair) while preserving
-// order. D2's SetEdges does not deduplicate, so we do it here for consistency
-// with Mermaid/PlantUML/DOT which rely on renderer-level DedupEdges.
-func dedupGraphEdges(edges []output.GraphEdge) []output.GraphEdge {
-	seen := make(map[string]struct{}, len(edges))
-	out := make([]output.GraphEdge, 0, len(edges))
-
-	for _, edge := range edges {
-		key := edge.From.Get() + "|" + edge.To.Get()
-		if _, ok := seen[key]; ok {
-			continue
-		}
-
-		seen[key] = struct{}{}
-
-		out = append(out, edge)
-	}
-
-	return out
 }
