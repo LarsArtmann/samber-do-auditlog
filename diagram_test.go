@@ -2,6 +2,7 @@ package auditlog_test
 
 import (
 	"bytes"
+	"io"
 	"strings"
 	"testing"
 	"time"
@@ -209,10 +210,10 @@ func TestWritePlantUML_WriterError(t *testing.T) {
 	}
 }
 
-func TestWriteMermaid_DuplicateEdges(t *testing.T) {
-	t.Parallel()
-
-	report := auditlog.Report{
+// reportWithDuplicateEdges builds a report where svc-a depends on svc-b twice.
+// Used by duplicate-edge tests to verify deduplication across diagram formats.
+func reportWithDuplicateEdges() auditlog.Report {
+	return auditlog.Report{
 		Version:     auditlog.SchemaVersion,
 		ContainerID: "test",
 		ExportedAt:  time.Now(),
@@ -237,12 +238,19 @@ func TestWriteMermaid_DuplicateEdges(t *testing.T) {
 			},
 		},
 	}
+}
+
+// assertSingleEdge counts occurrences of edgeMarker in the output of writeFn and
+// fails the test if the count is not exactly 1. Shared by duplicate-edge tests to
+// eliminate duplication flagged by the dupl linter.
+func assertSingleEdge(t *testing.T, edgeMarker string, writeFn func(io.Writer) error) {
+	t.Helper()
 
 	var buf bytes.Buffer
 
-	err := report.WriteMermaid(&buf)
+	err := writeFn(&buf)
 	if err != nil {
-		t.Fatalf("WriteMermaid: %v", err)
+		t.Fatalf("write diagram: %v", err)
 	}
 
 	output := buf.String()
@@ -250,7 +258,7 @@ func TestWriteMermaid_DuplicateEdges(t *testing.T) {
 	edgeCount := 0
 
 	for _, line := range lines {
-		if strings.Contains(line, "root_svc_a --> root_svc_b") {
+		if strings.Contains(line, edgeMarker) {
 			edgeCount++
 		}
 	}
@@ -258,6 +266,13 @@ func TestWriteMermaid_DuplicateEdges(t *testing.T) {
 	if edgeCount != 1 {
 		t.Errorf("expected exactly 1 deduplicated edge, got %d", edgeCount)
 	}
+}
+
+func TestWriteMermaid_DuplicateEdges(t *testing.T) {
+	t.Parallel()
+
+	report := reportWithDuplicateEdges()
+	assertSingleEdge(t, "root_svc_a --> root_svc_b", report.WriteMermaid)
 }
 
 func TestWriteMermaid_ExternalDependency(t *testing.T) {
@@ -364,4 +379,113 @@ func reportWithSpecialCharService() auditlog.Report {
 			},
 		},
 	}
+}
+
+func TestReport_WriteD2(t *testing.T) {
+	t.Parallel()
+
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	provideUserServiceWithDB(injector, "user-svc", "db")
+
+	_ = do.MustInvokeNamed[*UserService](injector, "user-svc")
+
+	report := p.Report()
+
+	var buf bytes.Buffer
+
+	err := report.WriteD2(&buf)
+	if err != nil {
+		t.Fatalf("WriteD2: %v", err)
+	}
+
+	output := buf.String()
+
+	// D2 node syntax: id: label { ... }
+	assertStringContains(t, output, ":")
+	// D2 edge syntax: id -> id
+	assertStringContains(t, output, "->")
+	// Warm-amber per-node styling
+	assertStringContains(t, output, "style.fill:")
+}
+
+func TestWriteD2_EscapesSpecialChars(t *testing.T) {
+	t.Parallel()
+
+	report := reportWithSpecialCharService()
+
+	var buf bytes.Buffer
+
+	err := report.WriteD2(&buf)
+	if err != nil {
+		t.Fatalf("WriteD2: %v", err)
+	}
+
+	output := buf.String()
+	// D2 escapes double-quotes as \" in labels.
+	assertStringContains(t, output, `\"`)
+}
+
+func TestWriteD2_WriterError(t *testing.T) {
+	t.Parallel()
+
+	p := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(p.Opts())
+
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	err := p.Report().WriteD2(failingWriter{})
+	if err == nil {
+		t.Fatal("expected error from failing writer")
+	}
+}
+
+func TestWriteD2_DuplicateEdges(t *testing.T) {
+	t.Parallel()
+
+	report := reportWithDuplicateEdges()
+	assertSingleEdge(t, "root_svc_a -> root_svc_b", report.WriteD2)
+}
+
+func TestWriteD2_ExternalDependency(t *testing.T) {
+	t.Parallel()
+
+	report := auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: "test",
+		ExportedAt:  time.Now(),
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceRef: auditlog.ServiceRef{
+					ScopeID:     "root",
+					ScopeName:   auditlog.RootScopeName,
+					ServiceName: "my-service",
+				},
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
+				Dependencies: []auditlog.ServiceRef{
+					{
+						ScopeID:     "root",
+						ScopeName:   auditlog.RootScopeName,
+						ServiceName: "external-dep",
+					},
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+
+	err := report.WriteD2(&buf)
+	if err != nil {
+		t.Fatalf("WriteD2: %v", err)
+	}
+
+	output := buf.String()
+	assertStringContains(t, output, ":")
+	assertStringContains(t, output, "external-dep")
+	assertStringContains(t, output, "->")
 }

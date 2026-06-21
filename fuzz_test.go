@@ -148,6 +148,8 @@ func FuzzDiagramSpecialChars(f *testing.F) {
 		`{inj}ect[ion`, //nolint:misspell // adversarial fuzz seed, not a real word
 		"<script>alert(1)</script>",
 		strings.Repeat("A", 500),
+		"svc:colon",  // D2 colon injection
+		"svc\tother", // D2 tab injection
 	}
 
 	for _, s := range special {
@@ -210,6 +212,16 @@ func FuzzDiagramSpecialChars(f *testing.F) {
 
 		dOut := dBuf.String()
 		assertStringContains(t, dOut, "digraph do_auditlog")
+
+		var d2Buf bytes.Buffer
+
+		d2Err := report.WriteD2(&d2Buf)
+		if d2Err != nil {
+			t.Fatalf("WriteD2 error: %v", d2Err)
+		}
+
+		d2Out := d2Buf.String()
+		assertStringContains(t, d2Out, ":")
 	})
 }
 

@@ -18,7 +18,7 @@ func runConvert(args []string) (err error) {
 	fs.SetOutput(os.Stdout)
 
 	output := fs.String("o", "", "output file (default: stdout)")
-	format := fs.String("f", "", "output format: json, ndjson, csv, tsv, html, mermaid, plantuml, dot")
+	format := fs.String("f", "", "output format: json, ndjson, csv, tsv, html, mermaid, plantuml, dot, d2")
 
 	if err := fs.Parse(reorderFlags(args)); err != nil {
 		return err
@@ -112,6 +112,8 @@ func formatFromExt(path string) string {
 		return "plantuml"
 	case ".dot", ".gv":
 		return "dot"
+	case ".d2":
+		return "d2"
 	default:
 		return ""
 	}
@@ -135,7 +137,9 @@ func writeFormat(w io.Writer, report auditlog.Report, format string) error {
 		return report.WritePlantUML(w)
 	case "dot":
 		return report.WriteDOT(w)
+	case "d2":
+		return report.WriteD2(w)
 	default:
-		return fmt.Errorf("unknown format %q (want: json, ndjson, csv, tsv, html, mermaid, plantuml, dot)", format)
+		return fmt.Errorf("unknown format %q (want: json, ndjson, csv, tsv, html, mermaid, plantuml, dot, d2)", format)
 	}
 }

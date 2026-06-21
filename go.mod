@@ -6,6 +6,7 @@ require (
 	github.com/a-h/templ v0.3.1020
 	github.com/invopop/jsonschema v0.14.0
 	github.com/larsartmann/go-output v0.17.0
+	github.com/larsartmann/go-output/d2 v0.13.0
 	github.com/larsartmann/go-output/escape v0.13.0
 	github.com/larsartmann/go-output/graph v0.13.0
 	github.com/larsartmann/go-output/plantuml v0.13.0

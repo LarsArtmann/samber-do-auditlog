@@ -89,7 +89,9 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Atomic file writes**            | File exports write to temp file and rename for crash safety                           | `plugin.go` (`writeToFile`) |
 | **Mermaid diagram export**        | `Report.WriteMermaid(writer)` outputs a themed flowchart                              | `mermaid.go`, `diagram.go`  |
 | **PlantUML diagram export**       | `Report.WritePlantUML(writer)` outputs a styled component diagram                     | `plantuml.go`, `diagram.go` |
-| **Shared diagram formatter**      | `diagramFormatter` interface drives Mermaid/PlantUML with deduplicated, sorted output | `diagram.go`                |
+| **DOT diagram export**            | `Report.WriteDOT(writer)` outputs a Graphviz digraph                                  | `dot.go`, `diagram.go`      |
+| **D2 diagram export**             | `Report.WriteD2(writer)` outputs a D2 diagram with per-node warm-amber styling      | `d2.go`, `diagram.go`       |
+| **Shared diagram builder**        | `buildDiagramNodes`/`buildDiagramEdges` drives all four formats with deduplicated output | `diagram.go`                |
 | **Self-contained HTML export**    | `Plugin.ExportToHTML(path)` and `Plugin.WriteHTML(w)` render a single-file report     | `html.go`, `html.templ`     |
 
 ### HTML Visualization

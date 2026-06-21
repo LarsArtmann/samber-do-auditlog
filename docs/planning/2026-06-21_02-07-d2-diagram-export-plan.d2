@@ -1,0 +1,305 @@
+direction: down
+
+classes: {
+  foundation: {
+    style: {
+      fill: "#e8a838"
+      stroke: "#4a4030"
+      font-color: "#14110d"
+      font-size: 13
+      bold: true
+    }
+  }
+  test: {
+    style: {
+      fill: "#6eb5ff"
+      stroke: "#3a6ea5"
+      font-color: "#14110d"
+      font-size: 13
+    }
+  }
+  cli: {
+    style: {
+      fill: "#f4d35e"
+      stroke: "#8a7a30"
+      font-color: "#14110d"
+      font-size: 13
+    }
+  }
+  docs: {
+    style: {
+      fill: "#a8d5ba"
+      stroke: "#5a8a6a"
+      font-color: "#14110d"
+      font-size: 13
+    }
+  }
+  validate: {
+    style: {
+      fill: "#ff6b6b"
+      stroke: "#a03030"
+      font-color: "#ffffff"
+      font-size: 13
+      bold: true
+    }
+  }
+  gate: {
+    style: {
+      fill: "#ffb347"
+      stroke: "#8a5a20"
+      font-color: "#14110d"
+      font-size: 13
+      bold: true
+    }
+  }
+}
+
+foundation: {
+  label: |md
+    **Foundation Layer**
+    1% → 51% impact
+  |
+  style.fill: "#e8a838"
+  style.stroke: "#4a4030"
+  style.font-color: "#14110d"
+
+  add_dep: {
+    label: |md
+      **Add go-output/d2 dep**
+      `go get github.com/larsartmann/go-output/d2@v0.13.0`
+      `go mod tidy`
+    |
+    class: foundation
+  }
+
+  create_d2go: {
+    label: |md
+      **Create d2.go**
+      `Report.WriteD2()` ~15 lines
+      Same pattern as mermaid.go/dot.go
+    |
+    class: foundation
+  }
+
+  add_dep -> create_d2go
+}
+
+gate_build: {
+  label: |md
+    **Build Gate**
+    Must pass before any test or CLI work
+  |
+  class: gate
+
+  gobuild: {
+    label: |md
+      `go build ./...`
+      `go vet ./...`
+    |
+    class: gate
+  }
+}
+
+create_d2go -> gate_build
+
+tests: {
+  label: |md
+    **Test Layer**
+    4% → 64% impact
+  |
+  style.fill: "#6eb5ff"
+  style.stroke: "#3a6ea5"
+  style.font-color: "#14110d"
+
+  basic: {
+    label: |md
+      **Basic D2 test**
+      `TestReport_WriteD2`
+      Asserts: `direction:`, `->`, `style.fill:`
+    |
+    class: test
+  }
+
+  escaping: {
+    label: |md
+      **Escaping test**
+      `TestWriteD2_EscapesSpecialChars`
+      svc\"quote, brackets, pipes
+    |
+    class: test
+  }
+
+  writer_err: {
+    label: |md
+      **Writer error test**
+      `TestWriteD2_WriterError`
+      `failingWriter{}`
+    |
+    class: test
+  }
+
+  dup_edges: {
+    label: |md
+      **Duplicate edges test**
+      `TestWriteD2_DuplicateEdges`
+      Verify `DedupEdges()`
+    |
+    class: test
+  }
+
+  ext_dep: {
+    label: |md
+      **External dep test**
+      `TestWriteD2_ExternalDependency`
+      Cross-scope deps
+    |
+    class: test
+  }
+
+  fuzz: {
+    label: |md
+      **Fuzz target**
+      `FuzzDiagramSpecialChars` + D2
+      Add to existing fuzz target
+    |
+    class: test
+  }
+}
+
+gate_build -> tests.basic
+gate_build -> tests.escaping
+gate_build -> tests.writer_err
+gate_build -> tests.dup_edges
+gate_build -> tests.ext_dep
+gate_build -> tests.fuzz
+
+cli: {
+  label: |md
+    **CLI Layer**
+    High customer value
+  |
+  style.fill: "#f4d35e"
+  style.stroke: "#8a7a30"
+  style.font-color: "#14110d"
+
+  convert: {
+    label: |md
+      **Update convert.go**
+      Add `"d2"` to format list
+      `formatFromExt(".d2")`
+      `writeFormat` switch case
+    |
+    class: cli
+  }
+
+  usage: {
+    label: |md
+      **Update usage text**
+      `main.go` help: add d2 to format list
+    |
+    class: cli
+  }
+
+  integration: {
+    label: |md
+      **Integration test**
+      `cli_integration_test.go`: add `"d2"` to formats
+    |
+    class: cli
+  }
+}
+
+gate_build -> cli.convert
+cli.convert -> cli.usage
+cli.convert -> cli.integration
+
+docs: {
+  label: |md
+    **Documentation Layer**
+    Parallel with everything
+  |
+  style.fill: "#a8d5ba"
+  style.stroke: "#5a8a6a"
+  style.font-color: "#14110d"
+
+  agents: {
+    label: |md
+      **AGENTS.md**
+      Add D2 to diagram export list
+      Update architecture section
+    |
+    class: docs
+  }
+
+  features: {
+    label: |md
+      **FEATURES.md**
+      Add D2 to export formats table
+    |
+    class: docs
+  }
+
+  adoption: {
+    label: |md
+      **Adoption review**
+      Update `go-output-adoption-review.md` §9
+      Document D2 as 4th format
+    |
+    class: docs
+  }
+}
+
+gate_build -> docs.agents
+gate_build -> docs.features
+gate_build -> docs.adoption
+
+validation: {
+  label: |md
+    **Final Validation**
+    20% → 80% impact
+    Everything must be green
+  |
+  style.fill: "#ff6b6b"
+  style.stroke: "#a03030"
+  style.font-color: "#ffffff"
+
+  race: {
+    label: |md
+      `go test -race ./...`
+    |
+    class: validate
+  }
+
+  lint: {
+    label: |md
+      `golangci-lint run`
+      `golangci-lint config verify`
+    |
+    class: validate
+  }
+
+  coverage: {
+    label: |md
+      Coverage gate ≥95%
+      `scripts/coverage-gate.sh`
+    |
+    class: validate
+  }
+
+  commit: {
+    label: |md
+      **Commit & push**
+      Clean git status
+      Detailed commit message
+    |
+    class: validate
+  }
+}
+
+tests -> validation.race
+tests -> validation.lint
+tests -> validation.coverage
+cli -> validation.race
+cli -> validation.lint
+cli -> validation.coverage
+docs -> validation.commit

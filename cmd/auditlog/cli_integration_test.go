@@ -168,7 +168,7 @@ func TestCLI_Convert_Formats(t *testing.T) {
 
 	bin := buildCLIBinary(t)
 
-	formats := []string{"csv", "tsv", "ndjson", "mermaid", "plantuml", "dot"}
+	formats := []string{"csv", "tsv", "ndjson", "mermaid", "plantuml", "dot", "d2"}
 	for _, format := range formats {
 		t.Run(format, func(t *testing.T) {
 			t.Parallel()

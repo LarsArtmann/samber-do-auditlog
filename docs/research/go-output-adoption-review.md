@@ -160,13 +160,13 @@ r.SetCodeFence(false)
 ## 9. Adoption executed
 
 **Date:** 2026-06-21
-**Trigger:** DOT (the 3rd diagram format) had been hand-rolled locally, firing the §8 adoption condition. User directed adoption.
-**Versions adopted:** `go-output` root `v0.17.0`, `graph`/`plantuml`/`escape` `v0.13.0` (latest published tags).
+**Trigger:** DOT (the 3rd diagram format) had been hand-rolled locally, firing the §8 adoption condition. User directed adoption. D2 (4th format) added same day as a natural extension of the go-output pipeline.
+**Versions adopted:** `go-output` root `v0.17.0`, `graph`/`plantuml`/`escape`/`d2` `v0.13.0` (latest published tags).
 
 ### What changed
 
 - **Deleted** (~237 LOC): the `diagramFormatter` interface, `writeDiagram`, the three formatter structs (`mermaidFormatter`/`plantumlFormatter`/`dotFormatter`), and the local escaping helpers (`sanitizeDiagramID`, `isDiagramIdentRune`, `diagramIDReplacer`, `mermaidLabel`/`mermaidLabelReplacer`, `plantumlLabel`, `dotLabel`/`dotLabelReplacer`).
-- **Added** (~135 LOC): `diagram.go` now builds `[]output.GraphNode` / `[]output.GraphEdge` (`buildDiagramNodes` with first-wins node dedup; `buildDiagramEdges`), applies `warmAmberNodeStyle` per node, and renders via `writeRendered`. Each `Write*` method is ~12 lines: construct the go-output renderer → configure → `SetNodes`/`SetEdges`/`DedupEdges` → `writeRendered`.
+- **Added** (~150 LOC): `diagram.go` now builds `[]output.GraphNode` / `[]output.GraphEdge` (`buildDiagramNodes` with first-wins node dedup; `buildDiagramEdges`), applies `warmAmberNodeStyle` per node, and renders via `writeRendered`. Each `Write*` method is ~12 lines: construct the go-output renderer → configure → `SetNodes`/`SetEdges`/`DedupEdges` → `writeRendered`. D2 uses a `dedupGraphEdges` helper since `d2.D2Diagram` lacks built-in `DedupEdges()`.
 - Escaping now delegates to go-output's `escape` package (`SlugifyID`+`MermaidID` for IDs; `MermaidText`/`PlantUML`/`DOT` for labels). Verified byte-identical to the local helpers for the Mermaid case; PlantUML/DOT use go-output's (more correct) escaping.
 
 ### Dependency cost (re-measured, final)
@@ -174,7 +174,7 @@ r.SetCodeFence(false)
 | Metric                                              | Value                                                        |
 | --------------------------------------------------- | ------------------------------------------------------------ |
 | Net new **external** compiled module                | **1** (`golang.org/x/term`; `x/sys` already present)         |
-| New `larsartmann` compiled modules                  | `go-output` (root) + `escape` + `graph` + `plantuml` + `enum` + `envdetect` + `go-branded-id` (all same author; branded-id is zero-dep phantom types) |
+| New `larsartmann` compiled modules                  | `go-output` (root) + `escape` + `graph` + `plantuml` + `d2` + `enum` + `envdetect` + `go-branded-id` (all same author; branded-id is zero-dep phantom types) |
 | `delimited`/`markdown`/`tree`/`testhelpers`/`graphtest` | Module-graph verification entries only — **zero packages compiled** (confirmed via `go list -deps`). Root's core invariant (zero sub-module imports) holds. |
 
 ### Output-format changes (documented; project is ALPHA)
@@ -184,6 +184,7 @@ r.SetCodeFence(false)
 | Mermaid  | `%%{init}%%` global theme + `id[label]` + `-->`     | per-node `style <id> fill/stroke/color` + `id[label]` + `-->`                                       | Theming mechanism changes; output stays valid Mermaid |
 | PlantUML | `component "label" as id` (skinparam block)         | `[label] as id #color;line:...;text:...` (skinparam componentStyle uml2)                            | Bracket notation; `\]`/`\"` escaping (more correct) |
 | DOT      | `digraph do_auditlog { bgcolor="#14110d" ... }`     | `digraph do_auditlog { rankdir=LR ... }` per-node `fillcolor`/`color`                               | Dark `bgcolor` + edge color dropped (renderers lack graph-attr setter) |
+| D2       | N/A (new format)                                    | `id: label { style.fill:... }` + `id -> id`                                                        | New format; zero breaking changes to existing outputs |
 
 ### Tradeoffs accepted
 

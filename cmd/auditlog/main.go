@@ -76,7 +76,7 @@ Usage:
 
   auditlog convert <input> [-o output] [-f format]
       Convert a report between formats. Format: json, ndjson, csv, tsv,
-      html, mermaid, plantuml, dot. When -f is omitted it is inferred from
+      html, mermaid, plantuml, dot, d2. When -f is omitted it is inferred from
       the -o file extension; when -o is omitted output goes to stdout.
 
   auditlog diff <a> <b>
