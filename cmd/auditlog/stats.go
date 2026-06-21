@@ -66,7 +66,7 @@ func runStats(args []string) error {
 
 	if len(statusBreakdown) > 0 {
 		fmt.Println("\nstatus breakdown:")
-		printStatusBreakdown(statusBreakdown)
+		printBreakdown(statusBreakdown)
 	}
 
 	return nil
@@ -81,12 +81,6 @@ func avgMs(total float64, count int) float64 {
 }
 
 func printBreakdown[T ~string](m map[T]int) {
-	for val, count := range m {
-		fmt.Printf("  %-16s %d\n", val, count)
-	}
-}
-
-func printStatusBreakdown(m map[auditlog.ServiceStatus]int) {
 	for val, count := range m {
 		fmt.Printf("  %-20s %d\n", val, count)
 	}
