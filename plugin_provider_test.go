@@ -326,7 +326,7 @@ func TestPlugin_EnrichCapabilitiesWithNilScopeRef(t *testing.T) {
 		t.Fatal("db not found")
 	}
 
-	assertStringField(t, "service name", svc.ServiceName, "db")
+	assertEqual(t, "service name", svc.ServiceName, "db")
 }
 
 func TestPlugin_RecordHealthCheckCreatesServiceFromMeta(t *testing.T) {
@@ -343,7 +343,7 @@ func TestPlugin_RecordHealthCheckCreatesServiceFromMeta(t *testing.T) {
 		t.Fatal("discovered-svc should exist via newServiceRecordFromMeta")
 	}
 
-	assertStringField(t, "service name", svc.ServiceName, "discovered-svc")
+	assertEqual(t, "service name", svc.ServiceName, "discovered-svc")
 
 	assertServiceHealthCheckCount(t, svc, 1)
 }

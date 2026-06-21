@@ -24,7 +24,7 @@ func TestReport_ServiceByName(t *testing.T) {
 		t.Fatal("expected to find db service")
 	}
 
-	assertStringField(t, "service name", svc.ServiceName, "db")
+	assertEqual(t, "service name", svc.ServiceName, "db")
 
 	if report.ServiceByName("nonexistent") != nil {
 		t.Error("expected nil for nonexistent service")

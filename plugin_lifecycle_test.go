@@ -44,7 +44,7 @@ func TestPlugin_RegistrationAndInvocation(t *testing.T) {
 	}
 
 	svc := report.Services[0]
-	assertStringField(t, "service_name", svc.ServiceName, "db")
+	assertEqual(t, "service_name", svc.ServiceName, "db")
 
 	assertServiceInvocationCount(t, &svc, 1)
 

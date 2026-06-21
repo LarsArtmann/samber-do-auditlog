@@ -53,7 +53,7 @@ func TestPlugin_HealthCheckSucceededFalseWhenNoChecks(t *testing.T) {
 		t.Error("HealthCheckSucceeded should be false when no health checks have been recorded")
 	}
 
-	assertIntField(t, "HealthCheckedCount", report.HealthCheckedCount, 0)
+	assertEqual(t, "HealthCheckedCount", report.HealthCheckedCount, 0)
 }
 
 func TestPlugin_HealthCheckOnEventCallback(t *testing.T) {
@@ -88,7 +88,7 @@ func TestPlugin_HealthCheckOnEventCallback(t *testing.T) {
 		t.Errorf("phase: want after, got %s", evt.Phase)
 	}
 
-	assertStringField(t, "service name", evt.ServiceName, "db")
+	assertEqual(t, "service name", evt.ServiceName, "db")
 
 	if evt.Error != nil {
 		t.Errorf("expected no error for healthy service, got %s", *evt.Error)

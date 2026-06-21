@@ -184,7 +184,7 @@ func TestPlugin_HealthCheckReport(t *testing.T) {
 		t.Error("HealthCheckSucceeded should be true when all services are healthy")
 	}
 
-	assertIntField(t, "HealthCheckedCount", report.HealthCheckedCount, 1)
+	assertEqual(t, "HealthCheckedCount", report.HealthCheckedCount, 1)
 }
 
 func TestPlugin_HealthCheckWithScope(t *testing.T) {

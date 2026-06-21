@@ -72,7 +72,7 @@ func TestMigrateReport_FromV01(t *testing.T) {
 
 	assertEventCount(t, report, 4)
 
-	assertIntField(t, "scope_count", report.ScopeCount, 1)
+	assertEqual(t, "scope_count", report.ScopeCount, 1)
 
 	if math.Abs(report.TotalBuildDurationMs-17.7) > 1e-9 {
 		t.Errorf("total_build_duration_ms: want 17.7, got %f", report.TotalBuildDurationMs)
@@ -191,7 +191,7 @@ func TestMigrateReport_NestedScopes(t *testing.T) {
 		t.Fatalf("MigrateReport: %v", err)
 	}
 
-	assertIntField(t, "scope_count", report.ScopeCount, 4)
+	assertEqual(t, "scope_count", report.ScopeCount, 4)
 }
 
 func TestMigrateReport_StatusComputation(t *testing.T) {
@@ -285,7 +285,7 @@ func TestMigrateReport_EmptyScopeTree(t *testing.T) {
 		t.Fatalf("MigrateReport: %v", err)
 	}
 
-	assertIntField(t, "scope_count", report.ScopeCount, 0)
+	assertEqual(t, "scope_count", report.ScopeCount, 0)
 }
 
 func TestMigrateReport_AlreadyCurrentVersion(t *testing.T) {

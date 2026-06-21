@@ -213,7 +213,7 @@ func assertAllEventsForService(t *testing.T, events []auditlog.Event, serviceNam
 	t.Helper()
 
 	for _, evt := range events {
-		assertStringField(t, "service name", evt.ServiceName, serviceName)
+		assertEqual(t, "service name", evt.ServiceName, serviceName)
 	}
 }
 
@@ -242,13 +242,13 @@ func assertStringContains(t *testing.T, s, want string) {
 	}
 }
 
-// assertIntField fails the test if the actual int value does not match the expected value.
+// assertEqual fails the test if got != want for any comparable type.
 // The fieldName is used in the error message.
-func assertIntField(t *testing.T, fieldName string, got, want int) {
+func assertEqual[T comparable](t *testing.T, fieldName string, got, want T) {
 	t.Helper()
 
 	if got != want {
-		t.Errorf("%s: want %d, got %d", fieldName, want, got)
+		t.Errorf("%s: want %v, got %v", fieldName, want, got)
 	}
 }
 
@@ -256,31 +256,21 @@ func assertIntField(t *testing.T, fieldName string, got, want int) {
 func assertServiceCount(t *testing.T, report auditlog.Report, want int) {
 	t.Helper()
 
-	assertIntField(t, "service_count", report.ServiceCount, want)
+	assertEqual(t, "service_count", report.ServiceCount, want)
 }
 
 // assertEventCount fails the test if the report's event count does not match.
 func assertEventCount(t *testing.T, report auditlog.Report, want int) {
 	t.Helper()
 
-	assertIntField(t, "event_count", report.EventCount, want)
+	assertEqual(t, "event_count", report.EventCount, want)
 }
 
 // assertContainerID fails the test if the report's container_id does not match.
 func assertContainerID(t *testing.T, report auditlog.Report, want string) {
 	t.Helper()
 
-	assertStringField(t, "container_id", report.ContainerID, want)
-}
-
-// assertStringField fails the test if the actual string value does not match the expected value.
-// The fieldName is used in the error message.
-func assertStringField(t *testing.T, fieldName, got, want string) {
-	t.Helper()
-
-	if got != want {
-		t.Errorf("%s: want %s, got %s", fieldName, want, got)
-	}
+	assertEqual(t, "container_id", report.ContainerID, want)
 }
 
 // assertServiceInvocationCount fails the test if the service's invocation count does not match.
@@ -316,7 +306,7 @@ func assertServiceIntField(t *testing.T, svc *auditlog.ServiceInfo, fieldName st
 		return
 	}
 
-	assertIntField(t, fieldName, got, want)
+	assertEqual(t, fieldName, got, want)
 }
 
 // assertFilteredServiceCount fails the test unless filtered has exactly one matching service
@@ -326,7 +316,7 @@ func assertFilteredServiceCount(t *testing.T, filtered auditlog.Report, wantName
 
 	requireOneService(t, "", filtered.Services)
 
-	assertStringField(t, "service name", filtered.Services[0].ServiceName, wantName)
+	assertEqual(t, "service name", filtered.Services[0].ServiceName, wantName)
 }
 
 // assertReportServiceCount fails the test (with Fatalf) if the report's services slice
@@ -377,7 +367,7 @@ func assertUnhealthyServiceCount(t *testing.T, unhealthy []auditlog.ServiceInfo,
 
 	requireOneService(t, "unhealthy", unhealthy)
 
-	assertStringField(t, "unhealthy service", unhealthy[0].ServiceName, wantName)
+	assertEqual(t, "unhealthy service", unhealthy[0].ServiceName, wantName)
 }
 
 // assertErrorExpected fails the test if err is nil.

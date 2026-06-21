@@ -26,7 +26,7 @@ func TestPlugin_ScopeTree(t *testing.T) {
 		t.Errorf("root scope name: want [root], got %s", report.ScopeTree.Name)
 	}
 
-	assertIntField(t, "child scope count", len(report.ScopeTree.Children), 1)
+	assertEqual(t, "child scope count", len(report.ScopeTree.Children), 1)
 
 	if report.ScopeTree.Children[0].Name != "child" {
 		t.Errorf("child scope name: want child, got %s", report.ScopeTree.Children[0].Name)
@@ -99,7 +99,7 @@ func TestPlugin_ScopeTreeWithMultipleChildren(t *testing.T) {
 
 	report := p.Report()
 
-	assertIntField(t, "child scope count", len(report.ScopeTree.Children), 2)
+	assertEqual(t, "child scope count", len(report.ScopeTree.Children), 2)
 }
 
 func TestPlugin_ResolveServiceScopeFromChildScope(t *testing.T) {
