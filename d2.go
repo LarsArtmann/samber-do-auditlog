@@ -13,6 +13,7 @@ import (
 // The warm-amber palette is applied per-node via D2 style directives.
 func (r Report) WriteD2(writer io.Writer) error {
 	renderer := d2.NewD2Diagram()
+	renderer.SetTitle(r.ContainerID)
 	renderer.SetNodes(buildDiagramNodes(r))
 	renderer.SetEdges(dedupGraphEdges(buildDiagramEdges(r)))
 

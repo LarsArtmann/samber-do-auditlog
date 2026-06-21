@@ -404,11 +404,14 @@ func TestReport_WriteD2(t *testing.T) {
 	output := buf.String()
 
 	// D2 node syntax: id: label { ... }
-	assertStringContains(t, output, ":")
+	assertStringContains(t, output, "db")
+	assertStringContains(t, output, "user-svc")
 	// D2 edge syntax: id -> id
 	assertStringContains(t, output, "->")
 	// Warm-amber per-node styling
 	assertStringContains(t, output, "style.fill:")
+	// Diagram title from container ID
+	assertStringContains(t, output, "title:")
 }
 
 func TestWriteD2_EscapesSpecialChars(t *testing.T) {

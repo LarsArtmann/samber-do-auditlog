@@ -222,6 +222,7 @@ func FuzzDiagramSpecialChars(f *testing.F) {
 
 		d2Out := d2Buf.String()
 		assertStringContains(t, d2Out, ":")
+		assertStringContains(t, d2Out, "->")
 	})
 }
 
