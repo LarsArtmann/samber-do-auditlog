@@ -162,9 +162,7 @@ func TestCLI_Validate(t *testing.T) {
 
 	out := runCLI(t, bin, "validate", reportPath)
 
-	if !strings.Contains(out, "OK") {
-		t.Errorf("validate expected OK:\n%s", out)
-	}
+	assertCLIOutputContains(t, "validate", out, "OK")
 }
 
 func TestCLI_Convert_Formats(t *testing.T) {
@@ -221,9 +219,7 @@ func TestCLI_Diff(t *testing.T) {
 
 	out := runCLI(t, bin, "diff", aPath, bPath)
 
-	if !strings.Contains(out, "added services") {
-		t.Errorf("diff expected 'added services':\n%s", out)
-	}
+	assertCLIOutputContains(t, "diff", out, "added services")
 }
 
 func TestCLI_Schema(t *testing.T) {

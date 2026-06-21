@@ -21,10 +21,7 @@ func TestReport_WriteCSV_HeaderAndRows(t *testing.T) {
 		t.Fatalf("WriteCSV failed: %v", err)
 	}
 
-	lines := csvSplitLines(buf.String())
-	if len(lines) < 2 {
-		t.Fatalf("expected at least header + 1 row, got %d lines", len(lines))
-	}
+	lines := requireMinCSVRows(t, buf.String(), 2)
 
 	expectedCols := []string{
 		"scope_id", "scope_name", "service_name",
@@ -68,10 +65,7 @@ func TestReport_WriteCSV_EmptyReport(t *testing.T) {
 		t.Fatalf("WriteCSV on empty report failed: %v", err)
 	}
 
-	lines := csvSplitLines(buf.String())
-	if len(lines) != 1 {
-		t.Fatalf("expected only header row for empty report, got %d lines", len(lines))
-	}
+	_ = requireExactCSVRows(t, buf.String(), 1)
 }
 
 func TestReport_WriteTSV_TabDelimited(t *testing.T) {
@@ -92,10 +86,7 @@ func TestReport_WriteTSV_TabDelimited(t *testing.T) {
 		t.Errorf("TSV output should contain tabs. got:\n%s", output)
 	}
 
-	lines := csvSplitLines(output)
-	if len(lines) < 2 {
-		t.Fatalf("expected at least header + 1 row, got %d lines", len(lines))
-	}
+	lines := requireMinCSVRows(t, output, 2)
 
 	firstLineFields := strings.Split(lines[0], "\t")
 	if len(firstLineFields) < 10 {
@@ -146,10 +137,7 @@ func TestReport_WriteCSV_NilPointersEmpty(t *testing.T) {
 		t.Fatalf("WriteCSV failed: %v", err)
 	}
 
-	lines := csvSplitLines(buf.String())
-	if len(lines) != 2 {
-		t.Fatalf("expected header + 1 row, got %d lines", len(lines))
-	}
+	lines := requireExactCSVRows(t, buf.String(), 2)
 
 	// The row should not contain "nil" or "<nil>" — nil pointers render as empty.
 	if strings.Contains(lines[1], "nil") {
@@ -208,4 +196,38 @@ func csvServiceRef(name string) auditlog.ServiceRef {
 // the 1-line preamble shared by every "expected N rows" assertion in CSV tests.
 func csvSplitLines(s string) []string {
 	return strings.Split(strings.TrimRight(s, "\n"), "\n")
+}
+
+// ndjsonLines splits an NDJSON buffer into non-trailing-whitespace lines.
+// Centralizes the 1-line preamble shared by every NDJSON line-iteration test.
+func ndjsonLines(s string) []string {
+	return strings.Split(strings.TrimSpace(s), "\n")
+}
+
+// requireMinCSVRows fails the test (with Fatalf) unless the output contains at
+// least minLines lines (including the header). Returns the split lines so the
+// caller can inspect the header / row contents.
+func requireMinCSVRows(t *testing.T, output string, minLines int) []string {
+	t.Helper()
+
+	lines := csvSplitLines(output)
+	if len(lines) < minLines {
+		t.Fatalf("expected at least %d lines, got %d", minLines, len(lines))
+	}
+
+	return lines
+}
+
+// requireExactCSVRows fails the test (with Fatalf) unless the output contains
+// exactly wantLines lines. Returns the split lines so the caller can inspect
+// the header / row contents.
+func requireExactCSVRows(t *testing.T, output string, wantLines int) []string {
+	t.Helper()
+
+	lines := csvSplitLines(output)
+	if len(lines) != wantLines {
+		t.Fatalf("expected %d lines, got %d", wantLines, len(lines))
+	}
+
+	return lines
 }

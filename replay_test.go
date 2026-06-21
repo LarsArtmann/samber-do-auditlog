@@ -85,6 +85,20 @@ func mkInvAfterWithDur(seq int, ts time.Time, serviceName, containerID string, d
 	)
 }
 
+// loadReportOK calls auditlog.LoadReportFromBytes and fails the test on error.
+// Centralizes the 4-line "LoadReportFromBytes(...) + t.Fatalf(err)" preamble
+// shared by every successful round-trip test in this file.
+func loadReportOK(t *testing.T, data []byte, format auditlog.Format) (auditlog.Report, auditlog.Format) {
+	t.Helper()
+
+	report, gotFormat, err := auditlog.LoadReportFromBytes(data, format)
+	if err != nil {
+		t.Fatalf("LoadReportFromBytes: %v", err)
+	}
+
+	return report, gotFormat
+}
+
 func TestReplayEvents_EmptyInput(t *testing.T) {
 	t.Parallel()
 
@@ -763,10 +777,7 @@ func TestLoadReportFromBytes_AutoDetectJSON(t *testing.T) {
 		t.Fatalf("WriteReportJSON: %v", err)
 	}
 
-	report, format, err := auditlog.LoadReportFromBytes(buf.Bytes(), auditlog.FormatAuto)
-	if err != nil {
-		t.Fatalf("LoadReportFromBytes: %v", err)
-	}
+	report, format := loadReportOK(t, buf.Bytes(), auditlog.FormatAuto)
 
 	if format != auditlog.FormatJSON {
 		t.Errorf("format: want JSON, got %v", format)
@@ -787,10 +798,7 @@ func TestLoadReportFromBytes_AutoDetectNDJSON(t *testing.T) {
 		t.Fatalf("WriteEventsNDJSON: %v", err)
 	}
 
-	report, format, err := auditlog.LoadReportFromBytes(buf.Bytes(), auditlog.FormatAuto)
-	if err != nil {
-		t.Fatalf("LoadReportFromBytes: %v", err)
-	}
+	report, format := loadReportOK(t, buf.Bytes(), auditlog.FormatAuto)
 
 	if format != auditlog.FormatNDJSON {
 		t.Errorf("format: want NDJSON, got %v", format)

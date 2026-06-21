@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"strings"
 	"testing"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
@@ -193,7 +192,7 @@ func TestPlugin_HealthCheckNDJSONExport(t *testing.T) {
 		t.Fatalf("WriteEventsNDJSON: %v", err)
 	}
 
-	lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
+	lines := ndjsonLines(buf.String())
 	foundHealthCheck := false
 
 	for _, line := range lines {

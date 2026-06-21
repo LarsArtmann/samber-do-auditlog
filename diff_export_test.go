@@ -3,7 +3,6 @@ package auditlog_test
 import (
 	"bytes"
 	"encoding/json"
-	"strings"
 	"testing"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
@@ -26,7 +25,7 @@ func TestReport_WriteNDJSON(t *testing.T) {
 		t.Fatalf("WriteNDJSON: %v", err)
 	}
 
-	lines := strings.Split(strings.TrimSpace(buf.String()), "\n")
+	lines := ndjsonLines(buf.String())
 	if len(lines) != report.EventCount {
 		t.Fatalf("expected %d NDJSON lines, got %d", report.EventCount, len(lines))
 	}

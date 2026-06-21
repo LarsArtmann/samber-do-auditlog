@@ -37,9 +37,7 @@ func TestMergeReports_TwoReports(t *testing.T) {
 		t.Fatalf("MergeReports: %v", err)
 	}
 
-	if merged.ContainerID != "merged" {
-		t.Errorf("container_id: want merged, got %s", merged.ContainerID)
-	}
+	assertContainerID(t, merged, "merged")
 
 	if merged.ServiceCount != 2 {
 		t.Errorf("service_count: want 2, got %d", merged.ServiceCount)
@@ -75,9 +73,7 @@ func TestMergeReports_SingleReport(t *testing.T) {
 		t.Fatalf("MergeReports: %v", err)
 	}
 
-	if merged.ContainerID != "single" {
-		t.Errorf("single report should pass through: got %s", merged.ContainerID)
-	}
+	assertContainerID(t, merged, "single")
 }
 
 func TestMergeReports_Empty(t *testing.T) {
