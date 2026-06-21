@@ -257,12 +257,8 @@ func TestReport_WriteTree_FailingWriter(t *testing.T) {
 		},
 	}
 
-	assertWriteFails(t, "WriteTree", func(w io.Writer) error {
-		return report.WriteTree(w)
-	})
-	assertWriteFails(t, "WriteHTMLTree", func(w io.Writer) error {
-		return report.WriteHTMLTree(w)
-	})
+	assertWriteFails(t, "WriteTree", report.WriteTree)
+	assertWriteFails(t, "WriteHTMLTree", report.WriteHTMLTree)
 	assertWriteFails(t, "WriteTable", func(w io.Writer) error {
 		return report.WriteTable(w, "csv", auditlog.DefaultTableOpts())
 	})

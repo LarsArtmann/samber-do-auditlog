@@ -79,5 +79,9 @@ func (r Report) WriteTableString(format output.Format, opts output.RenderOptions
 // DefaultTableOpts returns the default RenderOptions for table export.
 // Convenience for callers who don't need custom rendering options.
 func DefaultTableOpts() output.RenderOptions {
-	return output.RenderOptions{}
+	return output.RenderOptions{
+		Title:     "",
+		Writer:    nil,
+		ColorMode: output.ColorModeAuto,
+	}
 }

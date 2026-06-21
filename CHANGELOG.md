@@ -12,6 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-21
+
+A feature release: tree and table export formats, plus CLI coverage for all new formats. Non-breaking — additive only.
+
+### Added
+
+- **Tree export** (`Report.WriteTree`, `Report.WriteHTMLTree`): dependency DAG rendered as an ASCII tree (`go-output/tree.ASCIITreeRenderer`) or an HTML nested-list tree (`go-output/markup.HTMLTreeRenderer`). Nodes are labeled with service name and provider-type icon.
+- **Plugin-level tree wrappers**: `Plugin.WriteTree`, `WriteHTMLTree` (to `io.Writer`) and `Plugin.ExportToTree`, `ExportToHTMLTree` (to file path).
+- **Table export** (`Report.WriteTable`): service summary table in 16+ formats via `go-output RenderTableData` — including table, json, csv, tsv, markdown, xml, d2, yaml, html, tree, mermaid, dot, jsonl, asciidoc, toml, and plantuml. Configured via `DefaultTableOpts()`.
+- **Plugin-level table wrappers**: `Plugin.WriteTable(writer, format, opts)` and `Plugin.ExportToTable(path, format, opts)`.
+- **CLI `convert` subcommand extensions**: `auditlog convert` now accepts `tree`, `htmltree`, and `table` as output formats, and infers them from `.tree`, `.htmltree`, and `.table` file extensions.
+
 ## [0.2.0] - 2026-06-21
 
 A feature release: D2 diagram export, go-output adoption for all diagram rendering, and Plugin-level API parity across all export formats. Non-breaking — additive only.

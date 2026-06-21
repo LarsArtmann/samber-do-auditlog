@@ -96,6 +96,8 @@ func reorderFlags(args []string) []string {
 }
 
 // formatFromExt infers an output format from a file extension.
+//
+//nolint:cyclop // extension mapping is inherently branch-heavy
 func formatFromExt(path string) string {
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".json":
@@ -127,6 +129,7 @@ func formatFromExt(path string) string {
 	}
 }
 
+//nolint:cyclop // format dispatch is inherently branch-heavy
 func writeFormat(w io.Writer, report auditlog.Report, format string) error {
 	switch format {
 	case "json":

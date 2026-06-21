@@ -10,6 +10,36 @@ import (
 	"github.com/larsartmann/go-output/tree"
 )
 
+// addTreeChildren recursively adds dependent services as children to the parent
+// TreeNode, using the provided lookup map and visited set to avoid cycles.
+func addTreeChildren(
+	parent *output.TreeNode,
+	svc ServiceInfo,
+	byKey map[string]ServiceInfo,
+	visited map[string]struct{},
+) {
+	key := serviceKey(svc.ScopeID, svc.ServiceName)
+	if _, ok := visited[key]; ok {
+		return
+	}
+
+	visited[key] = struct{}{}
+
+	for _, depRef := range svc.Dependents {
+		childSvc, ok := byKey[serviceKey(depRef.ScopeID, depRef.ServiceName)]
+		if !ok {
+			continue
+		}
+
+		childNode := output.NewTreeNode(
+			diagramNodeID(childSvc.ScopeID, childSvc.ServiceName),
+			serviceLabel(childSvc),
+		)
+		parent.AddChild(childNode)
+		addTreeChildren(childNode, childSvc, byKey, visited)
+	}
+}
+
 // buildServiceTreeNodes constructs a forest of TreeNodes from the service
 // dependency graph. Root nodes are services with no dependencies; children are
 // their dependents (services that depend on the parent). The result is wrapped
@@ -26,13 +56,11 @@ func (r Report) buildServiceTreeNodes() *output.TreeNode {
 		return forestRoot
 	}
 
-	// Build lookup map from service key to ServiceInfo.
 	byKey := make(map[string]ServiceInfo, len(r.Services))
 	for _, svc := range r.Services {
 		byKey[serviceKey(svc.ScopeID, svc.ServiceName)] = svc
 	}
 
-	// Find root services: those with no dependencies.
 	var roots []ServiceInfo
 
 	for _, svc := range r.Services {
@@ -41,39 +69,11 @@ func (r Report) buildServiceTreeNodes() *output.TreeNode {
 		}
 	}
 
-	// If every service has dependencies (e.g. external-only deps), fall back
-	// to using the first service as root.
 	if len(roots) == 0 && len(r.Services) > 0 {
 		roots = append(roots, r.Services[0])
 	}
 
-	// Track visited to avoid infinite recursion on unexpected cycles.
 	visited := make(map[string]struct{})
-
-	var addChildren func(parent *output.TreeNode, svc ServiceInfo)
-
-	addChildren = func(parent *output.TreeNode, svc ServiceInfo) {
-		key := serviceKey(svc.ScopeID, svc.ServiceName)
-		if _, ok := visited[key]; ok {
-			return
-		}
-
-		visited[key] = struct{}{}
-
-		for _, depRef := range svc.Dependents {
-			childSvc, ok := byKey[serviceKey(depRef.ScopeID, depRef.ServiceName)]
-			if !ok {
-				continue
-			}
-
-			childNode := output.NewTreeNode(
-				diagramNodeID(childSvc.ScopeID, childSvc.ServiceName),
-				serviceLabel(childSvc),
-			)
-			parent.AddChild(childNode)
-			addChildren(childNode, childSvc)
-		}
-	}
 
 	for _, rootSvc := range roots {
 		rootNode := output.NewTreeNode(
@@ -81,7 +81,7 @@ func (r Report) buildServiceTreeNodes() *output.TreeNode {
 			serviceLabel(rootSvc),
 		)
 		forestRoot.AddChild(rootNode)
-		addChildren(rootNode, rootSvc)
+		addTreeChildren(rootNode, rootSvc, byKey, visited)
 	}
 
 	return forestRoot
