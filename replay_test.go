@@ -58,31 +58,59 @@ func mkEventWithDur(
 // mkRegEvent is a shorthand for a registration-after event. Centralizes the
 // 9-line mkEvent(...) block used by every manual event-fixture test.
 func mkRegEvent(seq int, ts time.Time, serviceName, containerID string) auditlog.Event {
-	return mkEvent(
-		seq,
-		ts,
-		auditlog.EventTypeRegistration,
-		auditlog.PhaseAfter,
-		serviceName,
-		containerID,
-		auditlog.ProviderTypeLazy,
-	)
+	return mkLazyEvent(seq, ts, auditlog.EventTypeRegistration, auditlog.PhaseAfter, serviceName, containerID)
 }
 
 // mkInvAfterWithDur is a shorthand for an invocation-after event with duration.
 // Centralizes the 9-line mkEventWithDur(...) block used by every
 // double-invocation replay test.
 func mkInvAfterWithDur(seq int, ts time.Time, serviceName, containerID string, dur float64) auditlog.Event {
-	return mkEventWithDur(
-		seq,
-		ts,
-		auditlog.EventTypeInvocation,
-		auditlog.PhaseAfter,
-		serviceName,
-		containerID,
-		auditlog.ProviderTypeLazy,
+	return mkLazyEventWithDur(
+		seq, ts,
+		auditlog.EventTypeInvocation, auditlog.PhaseAfter,
+		serviceName, containerID,
 		dur,
 	)
+}
+
+// mkInvAfter is a shorthand for an invocation-after event (no duration).
+// Centralizes the 9-line mkEvent(...) block used by every nested-invocation
+// replay test where only the call order matters.
+func mkInvAfter(seq int, ts time.Time, serviceName, containerID string) auditlog.Event {
+	return mkLazyEvent(seq, ts, auditlog.EventTypeInvocation, auditlog.PhaseAfter, serviceName, containerID)
+}
+
+// mkInvBefore is a shorthand for an invocation-before event with empty
+// ServiceType (matches what recorder.go emits for the before phase). Used by
+// every nested-invocation replay test for the "push to stack" half of a call.
+func mkInvBefore(seq int, ts time.Time, serviceName, containerID string) auditlog.Event {
+	return mkEvent(seq, ts, auditlog.EventTypeInvocation, auditlog.PhaseBefore, serviceName, containerID, "")
+}
+
+// mkLazyEvent is the shared lazy-provider mkEvent(...) body used by every
+// typed-event shorthand above. Centralizes the 9-line call shared by mkRegEvent,
+// mkInvAfter, and any future shorthand for the ProviderTypeLazy default.
+func mkLazyEvent(
+	seq int,
+	ts time.Time,
+	eventType auditlog.EventType,
+	phase auditlog.Phase,
+	serviceName, containerID string,
+) auditlog.Event {
+	return mkEvent(seq, ts, eventType, phase, serviceName, containerID, auditlog.ProviderTypeLazy)
+}
+
+// mkLazyEventWithDur is the duration-carrying variant of mkLazyEvent, used by
+// mkInvAfterWithDur. Same 9-line shape with DurationMs appended.
+func mkLazyEventWithDur(
+	seq int,
+	ts time.Time,
+	eventType auditlog.EventType,
+	phase auditlog.Phase,
+	serviceName, containerID string,
+	dur float64,
+) auditlog.Event {
+	return mkEventWithDur(seq, ts, eventType, phase, serviceName, containerID, auditlog.ProviderTypeLazy, dur)
 }
 
 // loadReportOK calls auditlog.LoadReportFromBytes and fails the test on error.
@@ -430,11 +458,11 @@ func TestReplayEvents_OutOfOrderStackPop(t *testing.T) {
 	events := []auditlog.Event{
 		mkRegEvent(1, time.Now(), "a", "c"),
 		mkRegEvent(2, time.Now(), "b", "c"),
-		mkEvent(3, time.Now(), auditlog.EventTypeInvocation, auditlog.PhaseBefore, "a", "c", ""),
-		mkEvent(4, time.Now(), auditlog.EventTypeInvocation, auditlog.PhaseBefore, "b", "c", ""),
+		mkInvBefore(3, time.Now(), "a", "c"),
+		mkInvBefore(4, time.Now(), "b", "c"),
 		// B finishes first (LIFO pop), then A finishes (non-LIFO: index < len-1).
-		mkEvent(5, time.Now(), auditlog.EventTypeInvocation, auditlog.PhaseAfter, "b", "c", auditlog.ProviderTypeLazy),
-		mkEvent(6, time.Now(), auditlog.EventTypeInvocation, auditlog.PhaseAfter, "a", "c", auditlog.ProviderTypeLazy),
+		mkInvAfter(5, time.Now(), "b", "c"),
+		mkInvAfter(6, time.Now(), "a", "c"),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -1051,11 +1079,11 @@ func TestReplayEvents_NonLIFOStackPop(t *testing.T) {
 	events := []auditlog.Event{
 		mkRegEvent(1, now, "a", "c"),
 		mkRegEvent(2, now, "b", "c"),
-		mkEvent(3, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "a", "c", ""),
-		mkEvent(4, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "b", "c", ""),
+		mkInvBefore(3, now, "a", "c"),
+		mkInvBefore(4, now, "b", "c"),
 		// A finishes while B is still on stack — pops from middle.
-		mkEvent(5, now, auditlog.EventTypeInvocation, auditlog.PhaseAfter, "a", "c", auditlog.ProviderTypeLazy),
-		mkEvent(6, now, auditlog.EventTypeInvocation, auditlog.PhaseAfter, "b", "c", auditlog.ProviderTypeLazy),
+		mkInvAfter(5, now, "a", "c"),
+		mkInvAfter(6, now, "b", "c"),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -1081,10 +1109,10 @@ func TestReplayEvents_DoubleInvocation(t *testing.T) {
 	events := []auditlog.Event{
 		mkRegEvent(1, now, "svc", "c"),
 		// First invocation.
-		mkEvent(2, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "svc", "c", ""),
+		mkInvBefore(2, now, "svc", "c"),
 		mkInvAfterWithDur(3, now, "svc", "c", 3.3),
 		// Second invocation — firstInvokedAt already set, firstBuildDurationMs already set.
-		mkEvent(4, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "svc", "c", ""),
+		mkInvBefore(4, now, "svc", "c"),
 		mkInvAfterWithDur(5, now, "svc", "c", 3.3),
 	}
 
@@ -1113,8 +1141,8 @@ func TestReplayEvents_ShutdownWithMatchingBefore(t *testing.T) {
 
 	events := []auditlog.Event{
 		mkRegEvent(1, t0, "svc", "c"),
-		mkEvent(2, t0, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "svc", "c", ""),
-		mkEvent(3, t0, auditlog.EventTypeInvocation, auditlog.PhaseAfter, "svc", "c", auditlog.ProviderTypeLazy),
+		mkInvBefore(2, t0, "svc", "c"),
+		mkInvAfter(3, t0, "svc", "c"),
 		// Shutdown with matching before event.
 		mkEvent(4, t0, auditlog.EventTypeShutdown, auditlog.PhaseBefore, "svc", "c", ""),
 		mkEvent(5, t1, auditlog.EventTypeShutdown, auditlog.PhaseAfter, "svc", "c", auditlog.ProviderTypeLazy),
@@ -1145,7 +1173,7 @@ func TestReplayEvents_InvocationWithoutRegistration(t *testing.T) {
 	now := time.Now()
 
 	events := []auditlog.Event{
-		mkEvent(1, now, auditlog.EventTypeInvocation, auditlog.PhaseBefore, "ghost", "c", ""),
+		mkInvBefore(1, now, "ghost", "c"),
 		mkInvAfterWithDur(2, now, "ghost", "c", 2.0),
 	}
 
@@ -1223,7 +1251,7 @@ func TestReplayEvents_EmptyContainerID(t *testing.T) {
 func TestReplayEvents_InvocationOrder(t *testing.T) {
 	t.Parallel()
 
-	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	base := epochTime
 
 	// Two services invoked in sequence: config first, then db.
 	// invocationOrder must reflect the global invocation sequence, not per-service count.

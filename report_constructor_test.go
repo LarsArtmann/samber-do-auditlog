@@ -10,7 +10,7 @@ import (
 func TestNewReport_ValidAndDerivesAggregates(t *testing.T) {
 	t.Parallel()
 
-	exported := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	exported := epochTime
 
 	services := []auditlog.ServiceInfo{
 		{
@@ -38,7 +38,7 @@ func TestNewReport_ValidAndDerivesAggregates(t *testing.T) {
 func TestNewReport_ReDerivesStatus(t *testing.T) {
 	t.Parallel()
 
-	exported := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	exported := epochTime
 
 	// Pass a deliberately wrong Status; NewReport must re-derive it.
 	invokedAt := exported.Add(time.Second)

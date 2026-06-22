@@ -7,21 +7,21 @@ require (
 	github.com/invopop/jsonschema v0.14.0
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
 	// are tagged together at the same version. Pin them in lockstep.
-	github.com/larsartmann/go-output v0.17.0
-	github.com/larsartmann/go-output/d2 v0.17.0
-	github.com/larsartmann/go-output/escape v0.17.0
-	github.com/larsartmann/go-output/graph v0.17.0
-	github.com/larsartmann/go-output/plantuml v0.17.0
+	github.com/larsartmann/go-output v0.17.1
+	github.com/larsartmann/go-output/d2 v0.17.1
+	github.com/larsartmann/go-output/escape v0.17.1
+	github.com/larsartmann/go-output/graph v0.17.1
+	github.com/larsartmann/go-output/plantuml v0.17.1
 	github.com/samber/do/v2 v2.0.0
 )
 
 require (
-	github.com/larsartmann/go-output/delimited v0.17.0
-	github.com/larsartmann/go-output/markdown v0.17.0
-	github.com/larsartmann/go-output/markup v0.17.0
-	github.com/larsartmann/go-output/serialization v0.17.0
-	github.com/larsartmann/go-output/table v0.17.0
-	github.com/larsartmann/go-output/tree v0.17.0
+	github.com/larsartmann/go-output/delimited v0.17.1
+	github.com/larsartmann/go-output/markdown v0.17.1
+	github.com/larsartmann/go-output/markup v0.17.1
+	github.com/larsartmann/go-output/serialization v0.17.1
+	github.com/larsartmann/go-output/table v0.17.1
+	github.com/larsartmann/go-output/tree v0.17.1
 )
 
 require (
@@ -32,7 +32,7 @@ require (
 	github.com/buger/jsonparser v1.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20260615092913-2399af76d5b1 // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260622092850-f39628c8a989 // indirect
 	github.com/charmbracelet/x/ansi v0.11.7 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
@@ -48,8 +48,8 @@ require (
 	github.com/go-faster/yaml v0.4.6 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/larsartmann/go-branded-id v0.3.1 // indirect
-	github.com/larsartmann/go-output/enum v0.17.0 // indirect
-	github.com/larsartmann/go-output/envdetect v0.17.0 // indirect
+	github.com/larsartmann/go-output/enum v0.17.1 // indirect
+	github.com/larsartmann/go-output/envdetect v0.17.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect

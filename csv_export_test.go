@@ -9,6 +9,11 @@ import (
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
+// csvRegisteredAt is the canonical "registration" timestamp used by every CSV
+// test fixture. Centralizes the time.Date literal that previously appeared in
+// both TestReport_WriteCSV_NilPointersEmpty and buildCSVTestReport.
+var csvRegisteredAt = time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+
 func TestReport_WriteCSV_HeaderAndRows(t *testing.T) {
 	t.Parallel()
 
@@ -114,8 +119,6 @@ func TestReport_WriteCSV_DependenciesFormatted(t *testing.T) {
 func TestReport_WriteCSV_NilPointersEmpty(t *testing.T) {
 	t.Parallel()
 
-	registeredAt := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
-
 	report := auditlog.Report{
 		Version:     auditlog.SchemaVersion,
 		ContainerID: "test-container",
@@ -125,7 +128,7 @@ func TestReport_WriteCSV_NilPointersEmpty(t *testing.T) {
 				ServiceRef:   csvServiceRef("bare-svc"),
 				Status:       auditlog.ServiceStatusRegistered,
 				ServiceType:  auditlog.ProviderTypeLazy,
-				RegisteredAt: registeredAt,
+				RegisteredAt: csvRegisteredAt,
 			},
 		},
 	}
@@ -147,8 +150,8 @@ func TestReport_WriteCSV_NilPointersEmpty(t *testing.T) {
 
 // buildCSVTestReport creates a report with known service data for CSV testing.
 func buildCSVTestReport() auditlog.Report {
-	registeredAt := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
-	invokedAt := time.Date(2026, 1, 1, 12, 0, 1, 0, time.UTC)
+	registeredAt := csvRegisteredAt
+	invokedAt := csvRegisteredAt.Add(time.Second)
 	buildMs := 15.5
 
 	configRef := csvServiceRef("config")

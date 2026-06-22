@@ -28,6 +28,10 @@ func buildCLIBinary(t *testing.T) string {
 	return binPath
 }
 
+// cliBaseTime is a fixed timestamp shared by every CLI test fixture so the
+// event stream is deterministic across runs.
+var cliBaseTime = time.Date(2026, 3, 1, 10, 0, 0, 0, time.UTC)
+
 // assertCLIOutputContains fails the test if the CLI output does not contain
 // the expected substring. Centralizes the 3-line "if !strings.Contains(out, X)"
 // pattern shared by every CLI assertion test.
@@ -58,11 +62,9 @@ func mkRegEvent(seq int, ts time.Time, serviceName, containerID string) auditlog
 func writeSampleReport(t *testing.T, path, containerID string) {
 	t.Helper()
 
-	base := time.Date(2026, 3, 1, 10, 0, 0, 0, time.UTC)
-
 	events := []auditlog.Event{
-		mkRegEvent(1, base, "config", containerID),
-		mkRegEvent(2, base.Add(time.Millisecond), "db", containerID),
+		mkRegEvent(1, cliBaseTime, "config", containerID),
+		mkRegEvent(2, cliBaseTime.Add(time.Millisecond), "db", containerID),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -70,7 +72,7 @@ func writeSampleReport(t *testing.T, path, containerID string) {
 		t.Fatalf("ReplayEvents: %v", err)
 	}
 
-	report.ExportedAt = base
+	report.ExportedAt = cliBaseTime
 
 	var buf bytes.Buffer
 	if err := report.WriteJSON(&buf); err != nil {
@@ -122,10 +124,8 @@ func TestCLI_InfoFromStdin(t *testing.T) {
 
 	var jsonBuf bytes.Buffer
 
-	base := time.Date(2026, 3, 1, 10, 0, 0, 0, time.UTC)
-
 	events := []auditlog.Event{
-		mkRegEvent(1, base, "stdin-svc", "stdin-test"),
+		mkRegEvent(1, cliBaseTime, "stdin-svc", "stdin-test"),
 	}
 
 	r, err := auditlog.ReplayEvents(events)
@@ -133,7 +133,7 @@ func TestCLI_InfoFromStdin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r.ExportedAt = base
+	r.ExportedAt = cliBaseTime
 	if err := r.WriteJSON(&jsonBuf); err != nil {
 		t.Fatal(err)
 	}
@@ -262,12 +262,10 @@ func TestCLI_NoArgs_PrintsUsage(t *testing.T) {
 func writeReportWithExtraService(t *testing.T, path string) {
 	t.Helper()
 
-	base := time.Date(2026, 3, 1, 10, 0, 0, 0, time.UTC)
-
 	events := []auditlog.Event{
-		mkRegEvent(1, base, "config", "diff-b"),
-		mkRegEvent(2, base.Add(time.Millisecond), "db", "diff-b"),
-		mkRegEvent(3, base.Add(2*time.Millisecond), "cache", "diff-b"),
+		mkRegEvent(1, cliBaseTime, "config", "diff-b"),
+		mkRegEvent(2, cliBaseTime.Add(time.Millisecond), "db", "diff-b"),
+		mkRegEvent(3, cliBaseTime.Add(2*time.Millisecond), "cache", "diff-b"),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -275,7 +273,7 @@ func writeReportWithExtraService(t *testing.T, path string) {
 		t.Fatalf("ReplayEvents: %v", err)
 	}
 
-	report.ExportedAt = base
+	report.ExportedAt = cliBaseTime
 
 	var buf bytes.Buffer
 	if err := report.WriteJSON(&buf); err != nil {

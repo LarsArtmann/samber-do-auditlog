@@ -10,6 +10,22 @@ import (
 	"github.com/samber/do/v2"
 )
 
+// activeSvcReport builds a minimal Report with one Active service in the root
+// scope. Centralizes the 6-line struct literal repeated by every tree/table
+// string-returning test.
+func activeSvcReport(containerID, serviceName string) auditlog.Report {
+	return auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: containerID,
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceRef: rootRef(serviceName),
+				Status:     auditlog.ServiceStatusActive,
+			},
+		},
+	}
+}
+
 func TestReport_WriteTree_BasicDAG(t *testing.T) {
 	t.Parallel()
 
@@ -33,13 +49,8 @@ func TestReport_WriteTree_BasicDAG(t *testing.T) {
 
 	out := buf.String()
 
-	if !strings.Contains(out, "db") {
-		t.Errorf("tree output missing 'db':\n%s", out)
-	}
-
-	if !strings.Contains(out, "cache") {
-		t.Errorf("tree output missing 'cache':\n%s", out)
-	}
+	assertOutputContains(t, "tree", out, "db")
+	assertOutputContains(t, "tree", out, "cache")
 }
 
 func TestReport_WriteTree_EmptyReport(t *testing.T) {
@@ -88,9 +99,7 @@ func TestReport_WriteHTMLTree_BasicDAG(t *testing.T) {
 		t.Errorf("HTML tree output should contain list tags:\n%s", out)
 	}
 
-	if !strings.Contains(out, "db") {
-		t.Errorf("HTML tree output missing 'db':\n%s", out)
-	}
+	assertOutputContains(t, "HTML tree", out, "db")
 }
 
 func TestReport_WriteTable_CSV(t *testing.T) {
@@ -116,13 +125,8 @@ func TestReport_WriteTable_CSV(t *testing.T) {
 
 	out := buf.String()
 
-	if !strings.Contains(out, "Service") {
-		t.Errorf("CSV table missing header 'Service':\n%s", out)
-	}
-
-	if !strings.Contains(out, "db") {
-		t.Errorf("CSV table missing 'db' row:\n%s", out)
-	}
+	assertOutputContains(t, "CSV table", out, "Service")
+	assertOutputContains(t, "CSV table", out, "db")
 }
 
 func TestReport_WriteTable_JSON(t *testing.T) {
@@ -143,11 +147,7 @@ func TestReport_WriteTable_JSON(t *testing.T) {
 		t.Fatalf("WriteTable json error: %v", err)
 	}
 
-	out := buf.String()
-
-	if !strings.Contains(out, "db") {
-		t.Errorf("JSON table missing 'db':\n%s", out)
-	}
+	assertOutputContains(t, "JSON table", buf.String(), "db")
 }
 
 func TestPlugin_WriteTree_DelegatesToReport(t *testing.T) {
@@ -166,96 +166,46 @@ func TestPlugin_WriteTree_DelegatesToReport(t *testing.T) {
 		t.Fatalf("Plugin.WriteTree error: %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "db") {
-		t.Errorf("Plugin.WriteTree output missing 'db':\n%s", buf.String())
-	}
+	assertOutputContains(t, "Plugin.WriteTree", buf.String(), "db")
 }
 
 func TestReport_WriteTreeString(t *testing.T) {
 	t.Parallel()
 
-	report := auditlog.Report{
-		Version:     auditlog.SchemaVersion,
-		ContainerID: "str-test",
-		Services: []auditlog.ServiceInfo{
-			{
-				ServiceRef: auditlog.ServiceRef{ScopeID: "r", ScopeName: "[root]", ServiceName: "svc-a"},
-				Status:     auditlog.ServiceStatusActive,
-			},
-		},
-	}
-
-	out, err := report.WriteTreeString()
+	out, err := activeSvcReport("str-test", "svc-a").WriteTreeString()
 	if err != nil {
 		t.Fatalf("WriteTreeString error: %v", err)
 	}
 
-	if !strings.Contains(out, "svc-a") {
-		t.Errorf("WriteTreeString missing 'svc-a':\n%s", out)
-	}
+	assertOutputContains(t, "WriteTreeString", out, "svc-a")
 }
 
 func TestReport_WriteHTMLTreeString(t *testing.T) {
 	t.Parallel()
 
-	report := auditlog.Report{
-		Version:     auditlog.SchemaVersion,
-		ContainerID: "str-test",
-		Services: []auditlog.ServiceInfo{
-			{
-				ServiceRef: auditlog.ServiceRef{ScopeID: "r", ScopeName: "[root]", ServiceName: "svc-b"},
-				Status:     auditlog.ServiceStatusActive,
-			},
-		},
-	}
-
-	out, err := report.WriteHTMLTreeString()
+	out, err := activeSvcReport("str-test", "svc-b").WriteHTMLTreeString()
 	if err != nil {
 		t.Fatalf("WriteHTMLTreeString error: %v", err)
 	}
 
-	if !strings.Contains(out, "svc-b") {
-		t.Errorf("WriteHTMLTreeString missing 'svc-b':\n%s", out)
-	}
+	assertOutputContains(t, "WriteHTMLTreeString", out, "svc-b")
 }
 
 func TestReport_WriteTableString(t *testing.T) {
 	t.Parallel()
 
-	report := auditlog.Report{
-		Version:     auditlog.SchemaVersion,
-		ContainerID: "str-test",
-		Services: []auditlog.ServiceInfo{
-			{
-				ServiceRef: auditlog.ServiceRef{ScopeID: "r", ScopeName: "[root]", ServiceName: "svc-c"},
-				Status:     auditlog.ServiceStatusActive,
-			},
-		},
-	}
-
-	out, err := report.WriteTableString("markdown", auditlog.DefaultTableOpts())
+	out, err := activeSvcReport("str-test", "svc-c").WriteTableString("markdown", auditlog.DefaultTableOpts())
 	if err != nil {
 		t.Fatalf("WriteTableString error: %v", err)
 	}
 
-	if !strings.Contains(out, "svc-c") {
-		t.Errorf("WriteTableString missing 'svc-c':\n%s", out)
-	}
+	assertOutputContains(t, "WriteTableString", out, "svc-c")
 }
 
 func TestReport_WriteTree_FailingWriter(t *testing.T) {
 	t.Parallel()
 
-	report := auditlog.Report{
-		Version:     auditlog.SchemaVersion,
-		ContainerID: "fail-test",
-		Services: []auditlog.ServiceInfo{
-			{
-				ServiceRef: auditlog.ServiceRef{ScopeID: "r", ScopeName: "[root]", ServiceName: "svc"},
-				Status:     auditlog.ServiceStatusActive,
-			},
-		},
-	}
+	report := activeSvcReport("fail-test", "svc")
 
 	assertWriteFails(t, "WriteTree", report.WriteTree)
 	assertWriteFails(t, "WriteHTMLTree", report.WriteHTMLTree)
@@ -267,29 +217,17 @@ func TestReport_WriteTree_FailingWriter(t *testing.T) {
 func TestReport_WriteTreeString_FailingWriter(t *testing.T) {
 	t.Parallel()
 
-	report := auditlog.Report{
-		Version:     auditlog.SchemaVersion,
-		ContainerID: "fail-test",
-		Services: []auditlog.ServiceInfo{
-			{
-				ServiceRef: auditlog.ServiceRef{ScopeID: "r", ScopeName: "[root]", ServiceName: "svc"},
-				Status:     auditlog.ServiceStatusActive,
-			},
-		},
-	}
+	report := activeSvcReport("fail-test", "svc")
 
-	_, err := report.WriteTreeString()
-	if err != nil {
+	if _, err := report.WriteTreeString(); err != nil {
 		t.Errorf("WriteTreeString should not error with strings.Builder: %v", err)
 	}
 
-	_, err = report.WriteHTMLTreeString()
-	if err != nil {
+	if _, err := report.WriteHTMLTreeString(); err != nil {
 		t.Errorf("WriteHTMLTreeString should not error with strings.Builder: %v", err)
 	}
 
-	_, err = report.WriteTableString("csv", auditlog.DefaultTableOpts())
-	if err != nil {
+	if _, err := report.WriteTableString("csv", auditlog.DefaultTableOpts()); err != nil {
 		t.Errorf("WriteTableString should not error with strings.Builder: %v", err)
 	}
 }
@@ -305,11 +243,7 @@ func TestReport_WriteTable_ShutdownError(t *testing.T) {
 		ContainerID: "err-test",
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceRef: auditlog.ServiceRef{
-					ScopeID:     "r",
-					ScopeName:   "[root]",
-					ServiceName: "crashing-svc",
-				},
+				ServiceRef:           rootRef("crashing-svc"),
 				Status:               auditlog.ServiceStatusShutdownError,
 				ShutdownError:        &shutdownErr,
 				FirstBuildDurationMs: &buildMs,
@@ -326,13 +260,8 @@ func TestReport_WriteTable_ShutdownError(t *testing.T) {
 
 	out := buf.String()
 
-	if !strings.Contains(out, "connection reset") {
-		t.Errorf("table should contain shutdown error:\n%s", out)
-	}
-
-	if !strings.Contains(out, "42.5") {
-		t.Errorf("table should contain build duration:\n%s", out)
-	}
+	assertOutputContains(t, "table", out, "connection reset")
+	assertOutputContains(t, "table", out, "42.5")
 }
 
 func TestReport_WriteTree_AllServicesHaveDeps(t *testing.T) {
@@ -346,7 +275,7 @@ func TestReport_WriteTree_AllServicesHaveDeps(t *testing.T) {
 		ContainerID: "all-deps",
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceRef: auditlog.ServiceRef{ScopeID: "r", ScopeName: "[root]", ServiceName: "svc-a"},
+				ServiceRef: rootRef("svc-a"),
 				Status:     auditlog.ServiceStatusActive,
 				Dependencies: []auditlog.ServiceRef{
 					{ScopeID: "ext", ScopeName: "external", ServiceName: "ext-svc"},
@@ -360,7 +289,5 @@ func TestReport_WriteTree_AllServicesHaveDeps(t *testing.T) {
 		t.Fatalf("WriteTreeString error: %v", err)
 	}
 
-	if !strings.Contains(out, "svc-a") {
-		t.Errorf("tree should contain fallback root 'svc-a':\n%s", out)
-	}
+	assertOutputContains(t, "tree", out, "svc-a")
 }

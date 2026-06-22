@@ -2,7 +2,6 @@ package auditlog_test
 
 import (
 	"testing"
-	"time"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
@@ -10,7 +9,7 @@ import (
 func TestMergeReports_TwoReports(t *testing.T) {
 	t.Parallel()
 
-	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	base := epochTime
 
 	makeReport := func(containerID string, seq int, svcName string) auditlog.Report {
 		events := []auditlog.Event{
@@ -55,7 +54,7 @@ func TestMergeReports_TwoReports(t *testing.T) {
 func TestMergeReports_SingleReport(t *testing.T) {
 	t.Parallel()
 
-	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	base := epochTime
 
 	events := []auditlog.Event{
 		mkRegEvent(1, base, "svc", "single"),

@@ -10,12 +10,19 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/samber/do/v2"
 )
 
 // --- Shared test types ---.
+
+// epochTime is the canonical fixture base time used by every test that needs
+// a deterministic timestamp (replay, merge, new-report). Centralizes the
+// `time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)` literal that previously
+// appeared in 6 different test files.
+var epochTime = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
 // mustNew is a test helper that wraps auditlog.New and panics on error.
 // Use in tests where the config is known to be valid.
@@ -239,6 +246,17 @@ func assertStringContains(t *testing.T, s, want string) {
 
 	if !strings.Contains(s, want) {
 		t.Errorf("expected %q in output", want)
+	}
+}
+
+// assertOutputContains fails the test if output does not contain want. Unlike
+// assertStringContains, it prints the full output in the error message — used
+// by tree/table/HTML export tests where the buffer content is the only signal.
+func assertOutputContains(t *testing.T, label, output, want string) {
+	t.Helper()
+
+	if !strings.Contains(output, want) {
+		t.Errorf("%s missing %q:\n%s", label, want, output)
 	}
 }
 
