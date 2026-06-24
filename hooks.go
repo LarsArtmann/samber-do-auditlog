@@ -157,6 +157,16 @@ func (r *Recorder) fireEvent(evt Event) {
 	}
 }
 
+// publishLockedEvent finalizes a hook: appends evt under r.mu, releases the
+// lock, and fires the onEvent callback outside the lock. Centralizes the
+// 3-line "append + unlock + fire" closing that every before/after hook shares.
+// Caller must hold r.mu; on return the lock is released.
+func (r *Recorder) publishLockedEvent(evt Event) {
+	r.appendEventLocked(evt)
+	r.mu.Unlock()
+	r.fireEvent(evt)
+}
+
 // hookContext bundles the per-hook preamble that every before/after
 // invocation+shutdown hook shares: scope identifiers, current time, and a
 // monotonically increasing sequence number. Centralizing this avoids the
@@ -183,6 +193,19 @@ func (r *Recorder) beginBeforeHook(scope *do.Scope, serviceName string) hookCont
 	}
 }
 
+// beginLockedBeforeHook combines beginBeforeHook with r.mu.Lock() and
+// recordScopeLocked so the 3 before-hooks that share this exact preamble
+// (registration, invocation, shutdown) don't repeat it inline. Caller
+// inherits r.mu and must release it (typically via publishLockedEvent).
+func (r *Recorder) beginLockedBeforeHook(scope *do.Scope, serviceName string) hookContext {
+	ctx := r.beginBeforeHook(scope, serviceName)
+
+	r.mu.Lock()
+	r.recordScopeLocked(ctx.scopeID, ctx.scopeName, scope)
+
+	return ctx
+}
+
 // beginAfterHook builds a hookContext for an after-hook, pre-stringifying the
 // error so callers can pass it straight into newEventFromRef. Caller is
 // responsible for r.mu.Lock().
@@ -197,58 +220,37 @@ func (r *Recorder) beginAfterHook(scope *do.Scope, serviceName string, err error
 }
 
 func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
-	scopeID := scope.ID()
-	scopeName := scope.Name()
-	now := time.Now()
-	seq := r.nextSequence()
+	ctx := r.beginLockedBeforeHook(scope, serviceName)
 
-	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
-	evt := newEventFromRef(seq, now, EventTypeRegistration, PhaseBefore, ref, r.containerID, "", nil, nil)
-
-	r.mu.Lock()
-	r.recordScopeLocked(scopeID, scopeName, scope)
-	r.appendEventLocked(evt)
-	r.mu.Unlock()
-
-	r.fireEvent(evt)
+	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeRegistration, PhaseBefore, ref, r.containerID, "", nil, nil)
+	r.publishLockedEvent(evt)
 }
 
 func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
-	scopeID := scope.ID()
-	scopeName := scope.Name()
-	now := time.Now()
-	key := svcKey{scopeID: scopeID, name: serviceName}
-	seq := r.nextSequence()
+	ctx := r.beginBeforeHook(scope, serviceName)
 
 	r.mu.Lock()
 
-	rec, ok := r.services[key]
+	rec, ok := r.services[ctx.key]
 
 	var svcType ProviderType
 
 	if !ok {
 		svcType = inferServiceType(scope, serviceName)
-		rec = newServiceRecordCore(scopeID, scopeName, serviceName, svcType, now)
-		r.services[key] = rec
+		rec = newServiceRecordCore(ctx.scopeID, ctx.scopeName, serviceName, svcType, ctx.now)
+		r.services[ctx.key] = rec
 	} else {
 		svcType = rec.serviceType
 	}
 
-	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
-	evt := newEventFromRef(seq, now, EventTypeRegistration, PhaseAfter, ref, r.containerID, svcType, nil, nil)
-	r.appendEventLocked(evt)
-
-	r.mu.Unlock()
-
-	r.fireEvent(evt)
+	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeRegistration, PhaseAfter, ref, r.containerID, svcType, nil, nil)
+	r.publishLockedEvent(evt)
 }
 
 func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
-	ctx := r.beginBeforeHook(scope, serviceName)
-
-	r.mu.Lock()
-
-	r.recordScopeLocked(ctx.scopeID, ctx.scopeName, scope)
+	ctx := r.beginLockedBeforeHook(scope, serviceName)
 
 	recordDependencyFromStack(r.stack, r.services, ctx.key)
 
@@ -264,11 +266,7 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 
 	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
 	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeInvocation, PhaseBefore, ref, r.containerID, svcType, nil, nil)
-	r.appendEventLocked(evt)
-
-	r.mu.Unlock()
-
-	r.fireEvent(evt)
+	r.publishLockedEvent(evt)
 }
 
 func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err error) {
@@ -337,22 +335,14 @@ func (r *Recorder) updateInvocationAggregate(
 }
 
 func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
-	ctx := r.beginBeforeHook(scope, serviceName)
-
-	r.mu.Lock()
-
-	r.recordScopeLocked(ctx.scopeID, ctx.scopeName, scope)
+	ctx := r.beginLockedBeforeHook(scope, serviceName)
 	r.shutdownStart[ctx.key] = ctx.now
 
 	svcType := r.serviceTypeForLocked(ctx.key)
 
 	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
 	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeShutdown, PhaseBefore, ref, r.containerID, svcType, nil, nil)
-	r.appendEventLocked(evt)
-
-	r.mu.Unlock()
-
-	r.fireEvent(evt)
+	r.publishLockedEvent(evt)
 }
 
 func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err error) {

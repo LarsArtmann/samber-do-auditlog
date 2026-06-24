@@ -6,15 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/samber/do/v2"
 )
 
 func TestPlugin_ExportToHTML(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideDB(injector, "db", "postgres://localhost")
 	_ = do.MustInvokeNamed[*Database](injector, "db")
@@ -100,8 +98,7 @@ func TestWriteHTML_TypeMetadataInjected(t *testing.T) {
 func TestWriteHTML_MultiServiceIntegration(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 	child := injector.Scope("child-scope")
 
 	provideDB(injector, "db", "postgres://localhost")

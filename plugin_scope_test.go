@@ -10,8 +10,7 @@ import (
 func TestPlugin_ScopeTree(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	child := injector.Scope("child")
 
@@ -44,8 +43,7 @@ func TestPlugin_ScopeTree(t *testing.T) {
 func TestPlugin_ScopeID(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	child := injector.Scope("child")
 
@@ -83,8 +81,7 @@ func TestPlugin_ScopeID(t *testing.T) {
 func TestPlugin_ScopeTreeWithMultipleChildren(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	child1 := injector.Scope("child-1")
 	child2 := injector.Scope("child-2")
@@ -105,8 +102,7 @@ func TestPlugin_ScopeTreeWithMultipleChildren(t *testing.T) {
 func TestPlugin_ResolveServiceScopeFromChildScope(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideDB(injector, "root-db", "test")
 	_ = do.MustInvokeNamed[*Database](injector, "root-db")
@@ -147,8 +143,7 @@ func TestPlugin_ResolveServiceScopeFromChildScope(t *testing.T) {
 func TestReport_ResolveServiceScope_NotFound(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	do.ProvideValue(injector, &Database{URL: "test"})
 	_ = do.MustInvoke[*Database](injector)
@@ -164,8 +159,7 @@ func TestReport_ResolveServiceScope_NotFound(t *testing.T) {
 func TestResolveServiceScope_ParentScopeService(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideDB(injector, "root-db", "root-dsn")
 	_ = do.MustInvokeNamed[*Database](injector, "root-db")
@@ -197,8 +191,7 @@ func TestResolveServiceScope_ParentScopeService(t *testing.T) {
 func TestResolveServiceScope_GrandparentScopeService(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideDB(injector, "grandparent-db", "gp-dsn")
 	_ = do.MustInvokeNamed[*Database](injector, "grandparent-db")

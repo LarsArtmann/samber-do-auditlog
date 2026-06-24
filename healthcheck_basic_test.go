@@ -10,8 +10,7 @@ import (
 func TestPlugin_HealthCheckHealthy(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideHealthyDB(injector, "db", "postgres://localhost")
 
@@ -43,8 +42,7 @@ func TestPlugin_HealthCheckHealthy(t *testing.T) {
 func TestPlugin_HealthCheckUnhealthy(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideUnhealthyCache(injector, "cache", "connection lost")
 
@@ -78,8 +76,7 @@ func TestPlugin_HealthCheckUnhealthy(t *testing.T) {
 func TestPlugin_HealthCheckMultipleServices(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideHealthyDB(injector, "db", "postgres://localhost")
 	provideUnhealthyCache(injector, "cache", "connection lost")
@@ -142,8 +139,7 @@ func TestPlugin_HealthCheckDisabled(t *testing.T) {
 func TestPlugin_HealthCheckCount(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideHealthyDB(injector, "db", "test")
 
@@ -170,8 +166,7 @@ func TestPlugin_HealthCheckCount(t *testing.T) {
 func TestPlugin_HealthCheckReport(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideHealthyDB(injector, "db", "test")
 
@@ -190,8 +185,7 @@ func TestPlugin_HealthCheckReport(t *testing.T) {
 func TestPlugin_HealthCheckWithScope(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	child := injector.Scope("child")
 

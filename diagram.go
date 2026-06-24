@@ -116,6 +116,27 @@ func writeRendered(writer io.Writer, renderer output.Renderer) error {
 	return nil
 }
 
+// graphRendererWithDedup is the subset of go-output renderers that embed
+// GraphRendererState (DOT/Mermaid/PlantUML) and therefore have a built-in
+// DedupEdges. D2 doesn't satisfy this and uses the local dedupGraphEdges
+// helper instead.
+type graphRendererWithDedup interface {
+	output.GraphRenderer
+	DedupEdges()
+}
+
+// renderGraphDiagram drives the shared 4-line pipeline (SetNodes / SetEdges /
+// DedupEdges / writeRendered) for any graph renderer that embeds
+// GraphRendererState. DOT/Mermaid/PlantUML all use this; D2 has its own
+// write path because the D2 renderer lacks DedupEdges.
+func renderGraphDiagram(writer io.Writer, r Report, renderer graphRendererWithDedup) error {
+	renderer.SetNodes(buildDiagramNodes(r))
+	renderer.SetEdges(buildDiagramEdges(r))
+	renderer.DedupEdges()
+
+	return writeRendered(writer, renderer)
+}
+
 // dedupGraphEdges removes duplicate edges (same from/to pair) while preserving
 // order. Used by WriteD2 since go-output's D2 renderer lacks built-in
 // DedupEdges (unlike Mermaid/PlantUML/DOT which call renderer.DedupEdges()).

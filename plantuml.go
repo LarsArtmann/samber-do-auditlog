@@ -13,11 +13,8 @@ import (
 // Paste the output into any tool that renders PlantUML.
 func (r Report) WritePlantUML(writer io.Writer) error {
 	renderer := plantuml.NewPlantUMLDiagram()
-	renderer.SetNodes(buildDiagramNodes(r))
-	renderer.SetEdges(buildDiagramEdges(r))
-	renderer.DedupEdges()
 
-	err := writeRendered(writer, renderer)
+	err := renderGraphDiagram(writer, r, renderer)
 	if err != nil {
 		return fmt.Errorf("write plantuml diagram: %w", err)
 	}

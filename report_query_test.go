@@ -28,8 +28,7 @@ func TestReport_ServiceByName(t *testing.T) {
 func TestReport_ServiceByRef(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 	child := injector.Scope("child")
 
 	provideDB(injector, "db", "root-db")
@@ -66,8 +65,7 @@ func TestReport_ServiceByRef(t *testing.T) {
 func TestReport_ServicesByScope(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 	child := injector.Scope("child")
 
 	provideDB(injector, "root-svc", "test")
@@ -106,8 +104,7 @@ func TestReport_ServicesByScope_EmptyScope(t *testing.T) {
 func TestReport_EventsByService(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideDB(injector, "db", "test")
 	provideDB(injector, "cache", "cache")
@@ -174,8 +171,7 @@ func TestReport_EventsByRef(t *testing.T) {
 func TestReport_FailedServices(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideDB(injector, "db", "test")
 	do.ProvideNamed(injector, "flaky", func(i do.Injector) (*Database, error) {
@@ -198,8 +194,7 @@ func TestReport_FailedServices(t *testing.T) {
 func TestReport_UnhealthyServices(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideHealthyDB(injector, "healthy-svc", "ok")
 	provideUnhealthyCache(injector, "sick-svc", "cache miss")
@@ -218,8 +213,7 @@ func TestReport_UnhealthyServices(t *testing.T) {
 func TestReport_Index(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideDB(injector, "db", "postgres://localhost")
 	provideCache(injector, "cache")
@@ -267,8 +261,7 @@ func TestReport_Index(t *testing.T) {
 func TestReport_Validate_ConsistentReport(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideDB(injector, "db", "test")
 	provideCache(injector, "cache")
@@ -283,8 +276,7 @@ func TestReport_Validate_ConsistentReport(t *testing.T) {
 func TestReport_Validate_WithScopesAndHealthChecks(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 	child := injector.Scope("child")
 
 	provideHealthyDB(injector, "healthy-svc", "ok")
@@ -306,8 +298,7 @@ func TestReport_Validate_DetectsCountMismatch(t *testing.T) {
 	makeDBReport := func(t *testing.T) auditlog.Report {
 		t.Helper()
 
-		p := mustNew(auditlog.Config{Enabled: true})
-		injector := do.NewWithOpts(p.Opts())
+		p, injector := newPluginAndInjector()
 
 		provideDB(injector, "db", "test")
 		_ = do.MustInvokeNamed[*Database](injector, "db")
@@ -318,8 +309,7 @@ func TestReport_Validate_DetectsCountMismatch(t *testing.T) {
 	makeHealthCheckedReport := func(t *testing.T) auditlog.Report {
 		t.Helper()
 
-		p := mustNew(auditlog.Config{Enabled: true})
-		injector := do.NewWithOpts(p.Opts())
+		p, injector := newPluginAndInjector()
 
 		provideHealthyDB(injector, "healthy-svc", "ok")
 		_ = do.MustInvokeNamed[*HealthyDB](injector, "healthy-svc")
@@ -377,8 +367,7 @@ func TestReport_Validate_DetectsCountMismatch(t *testing.T) {
 func TestReport_Validate_EmptyReport(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	_ = do.NewWithOpts(p.Opts())
+	p, _ := newPluginAndInjector()
 
 	report := p.Report()
 

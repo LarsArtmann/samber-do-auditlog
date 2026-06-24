@@ -15,11 +15,8 @@ func (r Report) WriteDOT(writer io.Writer) error {
 	renderer := graph.NewDOTRenderer()
 	renderer.SetGraphID("do_auditlog")
 	renderer.SetRankDir(graph.RankDirLR)
-	renderer.SetNodes(buildDiagramNodes(r))
-	renderer.SetEdges(buildDiagramEdges(r))
-	renderer.DedupEdges()
 
-	err := writeRendered(writer, renderer)
+	err := renderGraphDiagram(writer, r, renderer)
 	if err != nil {
 		return fmt.Errorf("write dot diagram: %w", err)
 	}

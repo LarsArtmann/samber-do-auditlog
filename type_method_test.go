@@ -90,8 +90,7 @@ func TestEvent_Duration(t *testing.T) {
 func TestEvent_HasError(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideDB(injector, "ok", "test")
 	provideFailing(injector, "fail")
@@ -121,8 +120,7 @@ func TestEvent_HasError(t *testing.T) {
 func TestServiceInfo_Uptime(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideDB(injector, "db", "test")
 	_ = do.MustInvokeNamed[*Database](injector, "db")
@@ -143,8 +141,7 @@ func TestServiceInfo_Uptime(t *testing.T) {
 func TestServiceInfo_HasHealthError(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
+	p, injector := newPluginAndInjector()
 
 	provideHealthyDB(injector, "ok", "test")
 	provideUnhealthyCache(injector, "bad", "broken")
