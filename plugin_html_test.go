@@ -43,20 +43,7 @@ func TestPlugin_ExportToHTML(t *testing.T) {
 func TestPlugin_WriteHTMLBuffer(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "postgres://localhost")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	var buf bytes.Buffer
-
-	err := p.WriteHTML(&buf)
-	if err != nil {
-		t.Fatalf("WriteHTML failed: %v", err)
-	}
-
-	html := buf.String()
+	html := writeHTMLToString(t)
 	if len(html) < 500 {
 		t.Errorf("HTML too small (%d bytes)", len(html))
 	}
@@ -71,20 +58,7 @@ func TestPlugin_WriteHTMLBuffer(t *testing.T) {
 func TestWriteHTML_EventsTabContent(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "postgres://localhost")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	var buf bytes.Buffer
-
-	err := p.WriteHTML(&buf)
-	if err != nil {
-		t.Fatalf("WriteHTML failed: %v", err)
-	}
-
-	html := buf.String()
+	html := writeHTMLToString(t)
 	htmlLower := strings.ToLower(html)
 
 	assertHTMLContains(t, html, "events-tbody")
@@ -97,20 +71,7 @@ func TestWriteHTML_EventsTabContent(t *testing.T) {
 func TestWriteHTML_AllFiveTabs(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "postgres://localhost")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	var buf bytes.Buffer
-
-	err := p.WriteHTML(&buf)
-	if err != nil {
-		t.Fatalf("WriteHTML failed: %v", err)
-	}
-
-	html := buf.String()
+	html := writeHTMLToString(t)
 
 	tabs := []string{"services", "scopes", "graph", "timeline", "events"}
 	for _, tab := range tabs {
@@ -128,20 +89,7 @@ func TestWriteHTML_AllFiveTabs(t *testing.T) {
 func TestWriteHTML_TypeMetadataInjected(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "postgres://localhost")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	var buf bytes.Buffer
-
-	err := p.WriteHTML(&buf)
-	if err != nil {
-		t.Fatalf("WriteHTML failed: %v", err)
-	}
-
-	html := buf.String()
+	html := writeHTMLToString(t)
 
 	assertHTMLContains(t, html, "type-metadata")
 	assertHTMLContains(t, html, "providers")

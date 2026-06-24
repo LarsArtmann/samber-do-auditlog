@@ -7,21 +7,21 @@ require (
 	github.com/invopop/jsonschema v0.14.0
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
 	// are tagged together at the same version. Pin them in lockstep.
-	github.com/larsartmann/go-output v0.17.2
-	github.com/larsartmann/go-output/d2 v0.17.2
-	github.com/larsartmann/go-output/escape v0.17.1
-	github.com/larsartmann/go-output/graph v0.17.2
-	github.com/larsartmann/go-output/plantuml v0.17.2
+	github.com/larsartmann/go-output v0.18.0
+	github.com/larsartmann/go-output/d2 v0.18.0
+	github.com/larsartmann/go-output/escape v0.18.0
+	github.com/larsartmann/go-output/graph v0.18.0
+	github.com/larsartmann/go-output/plantuml v0.18.0
 	github.com/samber/do/v2 v2.0.0
 )
 
 require (
-	github.com/larsartmann/go-output/delimited v0.17.2
-	github.com/larsartmann/go-output/markdown v0.17.2
-	github.com/larsartmann/go-output/markup v0.17.2
-	github.com/larsartmann/go-output/serialization v0.17.2
-	github.com/larsartmann/go-output/table v0.17.2
-	github.com/larsartmann/go-output/tree v0.17.2
+	github.com/larsartmann/go-output/delimited v0.18.0
+	github.com/larsartmann/go-output/markdown v0.18.0
+	github.com/larsartmann/go-output/markup v0.18.0
+	github.com/larsartmann/go-output/serialization v0.18.0
+	github.com/larsartmann/go-output/table v0.18.0
+	github.com/larsartmann/go-output/tree v0.18.0
 )
 
 require (
@@ -48,8 +48,6 @@ require (
 	github.com/go-faster/yaml v0.4.6 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/larsartmann/go-branded-id v0.3.1 // indirect
-	github.com/larsartmann/go-output/enum v0.17.1 // indirect
-	github.com/larsartmann/go-output/envdetect v0.17.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
@@ -57,7 +55,7 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
 	github.com/pb33f/ordered-map/v2 v2.3.1 // indirect
-	github.com/pelletier/go-toml/v2 v2.4.1 // indirect
+	github.com/pelletier/go-toml/v2 v2.4.2 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/samber/go-type-to-string v1.8.0 // indirect

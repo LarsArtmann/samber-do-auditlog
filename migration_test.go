@@ -133,13 +133,7 @@ func TestMigrateReport_EmptyReport(t *testing.T) {
 func TestMigrateReport_RoundTrip(t *testing.T) {
 	t.Parallel()
 
-	plugin := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(plugin.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	original := plugin.Report()
+	original := setupWithDBReport()
 
 	var buf bytes.Buffer
 

@@ -41,14 +41,7 @@ func TestPlugin_HealthCheckReportSucceeded(t *testing.T) {
 func TestPlugin_HealthCheckSucceededFalseWhenNoChecks(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	report := p.Report()
+	report := setupWithDBReport()
 	if report.HealthCheckSucceeded {
 		t.Error("HealthCheckSucceeded should be false when no health checks have been recorded")
 	}

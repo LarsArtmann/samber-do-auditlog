@@ -11,13 +11,7 @@ import (
 func TestReport_ServiceByName(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	report := p.Report()
+	report := setupWithDBReport()
 
 	svc := report.ServiceByName("db")
 	if svc == nil {
@@ -101,13 +95,7 @@ func TestReport_ServicesByScope(t *testing.T) {
 func TestReport_ServicesByScope_EmptyScope(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	report := p.Report()
+	report := setupWithDBReport()
 
 	noServices := report.ServicesByScope("nonexistent-scope")
 	if len(noServices) != 0 {
@@ -145,13 +133,7 @@ func TestReport_EventsByService(t *testing.T) {
 func TestReport_EventsByType(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	report := p.Report()
+	report := setupWithDBReport()
 
 	regEvents := report.EventsByType(auditlog.EventTypeRegistration)
 	if len(regEvents) == 0 {
@@ -172,11 +154,7 @@ func TestReport_EventsByType(t *testing.T) {
 func TestReport_EventsByRef(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
+	p, injector := setupWithDB("test")
 
 	report := p.Report()
 

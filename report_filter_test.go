@@ -68,13 +68,7 @@ func TestReport_FilteredByEventType(t *testing.T) {
 func TestReport_FilteredByTimeRange(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	report := p.Report()
+	report := setupWithDBReport()
 
 	from := report.Events[0].Timestamp.Add(-1 * time.Hour)
 	to := report.Events[0].Timestamp.Add(1 * time.Hour)

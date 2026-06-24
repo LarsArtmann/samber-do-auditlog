@@ -67,13 +67,7 @@ func TestEvent_ConvenienceMethods(t *testing.T) {
 func TestEvent_Duration(t *testing.T) {
 	t.Parallel()
 
-	p := mustNew(auditlog.Config{Enabled: true})
-	injector := do.NewWithOpts(p.Opts())
-
-	provideDB(injector, "db", "test")
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-
-	report := p.Report()
+	report := setupWithDBReport()
 
 	invocations := report.EventsByType(auditlog.EventTypeInvocation)
 	if len(invocations) == 0 {

@@ -2,6 +2,12 @@ version: "2"
 run:
   timeout: 5m
   go: 1.26.3
+  build-tags:
+    - goexperiment.arenas
+    - goexperiment.goroutineleakprofile
+    - goexperiment.jsonv2
+    - goexperiment.runtimesecret
+    - goexperiment.simd
   allow-parallel-runners: true
   allow-serial-runners: true
   issues-exit-code: 1
@@ -123,42 +129,42 @@ linters:
       max-complexity: 12
     depguard:
       rules:
-        main:
-          files:
-            - "!**/*_test.go"
-            - "!**/example/**"
-            - "!**/cmd/**"
-          allow:
-            - $gostd
-            - github.com/a-h/templ
-            - github.com/larsartmann/go-output
-            - github.com/larsartmann/samber-do-auditlog
-            - github.com/samber
         cmd:
-          files:
-            - "**/cmd/**"
           allow:
             - $gostd
             - github.com/invopop/jsonschema
             - github.com/larsartmann/samber-do-auditlog
+          files:
+            - "**/cmd/**"
         example:
+          allow:
+            - $gostd
+            - github.com/a-h/templ
+            - github.com/larsartmann/go-output
+            - github.com/larsartmann/samber-do-auditlog
+            - github.com/samber
           files:
             - "**/example/**"
+        main:
           allow:
             - $gostd
             - github.com/a-h/templ
             - github.com/larsartmann/go-output
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
+          files:
+            - "!**/*_test.go"
+            - "!**/example/**"
+            - "!**/cmd/**"
         tests:
+          allow:
+            - $gostd
+            - github.com/a-h/templ
+            - github.com/larsartmann/go-output
+            - github.com/larsartmann/samber-do-auditlog
+            - github.com/samber
           files:
             - "**/*_test.go"
-          allow:
-            - $gostd
-            - github.com/a-h/templ
-            - github.com/larsartmann/go-output
-            - github.com/larsartmann/samber-do-auditlog
-            - github.com/samber
     exhaustruct:
       exclude:
         - os/exec.Cmd
@@ -181,6 +187,8 @@ linters:
         - anon
         - stdlib
         - generic
+    makezero:
+      always: true
     revive:
       rules:
         - disabled: true

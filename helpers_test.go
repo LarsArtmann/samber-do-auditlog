@@ -430,6 +430,34 @@ func setupWithDB(url string) (*auditlog.Plugin, do.Injector) { //nolint:ireturn
 	return p, injector
 }
 
+// setupWithDBReport returns the populated Report from a fresh plugin with a
+// single *Database invoked — the 5-line preamble (`mustNew + NewWithOpts +
+// provideDB + invoke + Report()`) shared by every "build a populated report
+// and assert on it" test.
+func setupWithDBReport() auditlog.Report {
+	p, _ := setupWithDB("test")
+
+	return p.Report()
+}
+
+// writeHTMLToString runs the standard "plugin + provideDB + invoke + WriteHTML"
+// pipeline and returns the rendered HTML string. Fails the test on any
+// pipeline error. Centralizes the 7-line preamble shared by every HTML
+// rendering test.
+func writeHTMLToString(t *testing.T) string {
+	t.Helper()
+
+	p, _ := setupWithDB("postgres://localhost")
+
+	var buf bytes.Buffer
+
+	if err := p.WriteHTML(&buf); err != nil {
+		t.Fatalf("WriteHTML failed: %v", err)
+	}
+
+	return buf.String()
+}
+
 // replayFromPlugin drives the standard round-trip: writes plugin events to
 // NDJSON, reads them back, and replays them into a Report. Centralizes the
 // 8-line preamble that opens every replay round-trip test.

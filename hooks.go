@@ -157,6 +157,45 @@ func (r *Recorder) fireEvent(evt Event) {
 	}
 }
 
+// hookContext bundles the per-hook preamble that every before/after
+// invocation+shutdown hook shares: scope identifiers, current time, and a
+// monotonically increasing sequence number. Centralizing this avoids the
+// repeated 5-line `scopeID := ...; scopeName := ...; now := ...; key := ...;
+// seq := ...` that previously appeared in 4 hook methods.
+type hookContext struct {
+	scopeID   string
+	scopeName string
+	key       svcKey
+	now       time.Time
+	seq       int
+}
+
+// beginBeforeHook builds a hookContext for a before-hook (no error to
+// pre-stringify). Caller is responsible for r.mu.Lock() and for invoking
+// recordScopeLocked after acquiring the lock.
+func (r *Recorder) beginBeforeHook(scope *do.Scope, serviceName string) hookContext {
+	return hookContext{
+		scopeID:   scope.ID(),
+		scopeName: scope.Name(),
+		key:       svcKey{scopeID: scope.ID(), name: serviceName},
+		now:       time.Now(),
+		seq:       r.nextSequence(),
+	}
+}
+
+// beginAfterHook builds a hookContext for an after-hook, pre-stringifying the
+// error so callers can pass it straight into newEventFromRef. Caller is
+// responsible for r.mu.Lock().
+func (r *Recorder) beginAfterHook(scope *do.Scope, serviceName string, err error) (hookContext, *string) {
+	return hookContext{
+		scopeID:   scope.ID(),
+		scopeName: scope.Name(),
+		key:       svcKey{scopeID: scope.ID(), name: serviceName},
+		now:       time.Now(),
+		seq:       r.nextSequence(),
+	}, errorToStringPtr(err)
+}
+
 func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
 	scopeID := scope.ID()
 	scopeName := scope.Name()
@@ -205,30 +244,26 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 }
 
 func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
-	scopeID := scope.ID()
-	scopeName := scope.Name()
-	now := time.Now()
-	depKey := svcKey{scopeID: scopeID, name: serviceName}
-	seq := r.nextSequence()
+	ctx := r.beginBeforeHook(scope, serviceName)
 
 	r.mu.Lock()
 
-	r.recordScopeLocked(scopeID, scopeName, scope)
+	r.recordScopeLocked(ctx.scopeID, ctx.scopeName, scope)
 
-	recordDependencyFromStack(r.stack, r.services, depKey)
+	recordDependencyFromStack(r.stack, r.services, ctx.key)
 
 	r.stack = append(r.stack, stackEntry{
-		scopeID:     scopeID,
-		scopeName:   scopeName,
+		scopeID:     ctx.scopeID,
+		scopeName:   ctx.scopeName,
 		serviceName: serviceName,
-		start:       now,
+		start:       ctx.now,
 	})
 
 	// Look up service type from existing record.
-	svcType := r.serviceTypeForLocked(depKey)
+	svcType := r.serviceTypeForLocked(ctx.key)
 
-	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
-	evt := newEventFromRef(seq, now, EventTypeInvocation, PhaseBefore, ref, r.containerID, svcType, nil, nil)
+	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeInvocation, PhaseBefore, ref, r.containerID, svcType, nil, nil)
 	r.appendEventLocked(evt)
 
 	r.mu.Unlock()
@@ -237,33 +272,31 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 }
 
 func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err error) {
-	scopeID := scope.ID()
-	scopeName := scope.Name()
-	now := time.Now()
-	errStr := errorToStringPtr(err)
-	key := svcKey{scopeID: scopeID, name: serviceName}
-	seq := r.nextSequence()
+	ctx, errStr := r.beginAfterHook(scope, serviceName, err)
 
 	r.mu.Lock()
 
 	// Pop matching stack frame (LIFO fast path).
 	var durationMs *float64
 
-	newStack, frame, found := popStackFrame(r.stack, scopeID, serviceName)
+	newStack, frame, found := popStackFrame(r.stack, ctx.scopeID, serviceName)
 	if found {
 		r.stack = newStack
-		d := float64(now.Sub(frame.start).Microseconds()) / microsPerMs
+		d := float64(ctx.now.Sub(frame.start).Microseconds()) / microsPerMs
 		durationMs = &d
 	}
 
 	// Look up service type.
-	svcType := r.serviceTypeForLocked(key)
+	svcType := r.serviceTypeForLocked(ctx.key)
 
-	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
-	evt := newEventFromRef(seq, now, EventTypeInvocation, PhaseAfter, ref, r.containerID, svcType, durationMs, errStr)
+	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(
+		ctx.seq, ctx.now, EventTypeInvocation, PhaseAfter,
+		ref, r.containerID, svcType, durationMs, errStr,
+	)
 	r.appendEventLocked(evt)
 
-	r.updateInvocationAggregate(scopeID, scopeName, serviceName, now, svcType, durationMs, errStr)
+	r.updateInvocationAggregate(ctx.scopeID, ctx.scopeName, serviceName, ctx.now, svcType, durationMs, errStr)
 
 	r.mu.Unlock()
 
@@ -304,21 +337,17 @@ func (r *Recorder) updateInvocationAggregate(
 }
 
 func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
-	scopeID := scope.ID()
-	scopeName := scope.Name()
-	now := time.Now()
-	key := svcKey{scopeID: scopeID, name: serviceName}
-	seq := r.nextSequence()
+	ctx := r.beginBeforeHook(scope, serviceName)
 
 	r.mu.Lock()
 
-	r.recordScopeLocked(scopeID, scopeName, scope)
-	r.shutdownStart[key] = now
+	r.recordScopeLocked(ctx.scopeID, ctx.scopeName, scope)
+	r.shutdownStart[ctx.key] = ctx.now
 
-	svcType := r.serviceTypeForLocked(key)
+	svcType := r.serviceTypeForLocked(ctx.key)
 
-	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
-	evt := newEventFromRef(seq, now, EventTypeShutdown, PhaseBefore, ref, r.containerID, svcType, nil, nil)
+	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeShutdown, PhaseBefore, ref, r.containerID, svcType, nil, nil)
 	r.appendEventLocked(evt)
 
 	r.mu.Unlock()
@@ -327,36 +356,31 @@ func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
 }
 
 func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err error) {
-	scopeID := scope.ID()
-	scopeName := scope.Name()
-	now := time.Now()
-	errStr := errorToStringPtr(err)
-	key := svcKey{scopeID: scopeID, name: serviceName}
-	seq := r.nextSequence()
+	ctx, errStr := r.beginAfterHook(scope, serviceName, err)
 
 	r.mu.Lock()
 
 	// Resolve shutdown duration.
-	start, hasStart := r.shutdownStart[key]
+	start, hasStart := r.shutdownStart[ctx.key]
 	if hasStart {
-		delete(r.shutdownStart, key)
+		delete(r.shutdownStart, ctx.key)
 	}
 
 	var shutdownDur *float64
 
 	if hasStart {
-		d := float64(now.Sub(start).Microseconds()) / microsPerMs
+		d := float64(ctx.now.Sub(start).Microseconds()) / microsPerMs
 		shutdownDur = &d
 	}
 
-	svcType := r.serviceTypeForLocked(key)
+	svcType := r.serviceTypeForLocked(ctx.key)
 
-	ref := ServiceRef{ScopeID: scopeID, ScopeName: scopeName, ServiceName: serviceName}
-	evt := newEventFromRef(seq, now, EventTypeShutdown, PhaseAfter, ref, r.containerID, svcType, nil, errStr)
+	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
+	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeShutdown, PhaseAfter, ref, r.containerID, svcType, nil, errStr)
 	r.appendEventLocked(evt)
 
-	if rec, ok := r.services[key]; ok {
-		rec.shutdownAt = &now
+	if rec, ok := r.services[ctx.key]; ok {
+		rec.shutdownAt = &ctx.now
 		rec.shutdownDurationMs = shutdownDur
 		rec.shutdownError = errStr
 	}
