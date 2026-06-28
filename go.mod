@@ -1,13 +1,13 @@
 module github.com/larsartmann/samber-do-auditlog
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/a-h/templ v0.3.1020
 	github.com/invopop/jsonschema v0.14.0
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
 	// are tagged together at the same version. Pin them in lockstep.
-	github.com/larsartmann/go-output v0.18.0
+	github.com/larsartmann/go-output v0.19.0
 	github.com/larsartmann/go-output/d2 v0.18.0
 	github.com/larsartmann/go-output/escape v0.18.0
 	github.com/larsartmann/go-output/graph v0.18.0

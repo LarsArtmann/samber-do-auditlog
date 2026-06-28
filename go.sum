@@ -48,8 +48,8 @@ github.com/invopop/jsonschema v0.14.0 h1:MHQqLhvpNUZfw+hM3AZDYK7jxO8FZoQeQM77g8i
 github.com/invopop/jsonschema v0.14.0/go.mod h1:ygm6C2EaVNMBDPpaPlnOA2pFAxBnxGjFlMZABxm9n2I=
 github.com/larsartmann/go-branded-id v0.3.1 h1:n53Vz3MCUy3S8YfW/v+zxL/qT96iiXZOT6p46HZysyA=
 github.com/larsartmann/go-branded-id v0.3.1/go.mod h1:fiv3t1PyNCITnE/8KtymGCUz7tQRuQxF+8oqNdFmA/Y=
-github.com/larsartmann/go-output v0.18.0 h1:BFm98/vdf1MKTj1fGT9eklk4UDb37TlHi0eJH2JGS+0=
-github.com/larsartmann/go-output v0.18.0/go.mod h1:Y66BC+CD/yUSOvCvEx1cW6CBjzqKv43mEa2ukrrXfKY=
+github.com/larsartmann/go-output v0.19.0 h1:N0T7XfKxK+v/3QAAwBCHS/5qqgoyH0Fqlbzoxf3wBiQ=
+github.com/larsartmann/go-output v0.19.0/go.mod h1:Y66BC+CD/yUSOvCvEx1cW6CBjzqKv43mEa2ukrrXfKY=
 github.com/larsartmann/go-output/d2 v0.18.0 h1:OzUo3JcvXeKshPjciAXCioC/lPHNmHIHz2x2lV0HQgw=
 github.com/larsartmann/go-output/d2 v0.18.0/go.mod h1:H0QtumvPTYpkxJLNeibnkjvCHLX+o3rGB2snH0P10dY=
 github.com/larsartmann/go-output/delimited v0.18.0 h1:bnsEc8GWQ/RWpS9mkD5eLhs/GKPHYGHh9IyiHcwiV04=
