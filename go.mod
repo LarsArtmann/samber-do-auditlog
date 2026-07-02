@@ -7,21 +7,21 @@ require (
 	github.com/invopop/jsonschema v0.14.0
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
 	// are tagged together at the same version. Pin them in lockstep.
-	github.com/larsartmann/go-output v0.19.0
-	github.com/larsartmann/go-output/d2 v0.18.0
-	github.com/larsartmann/go-output/escape v0.18.0
-	github.com/larsartmann/go-output/graph v0.18.0
-	github.com/larsartmann/go-output/plantuml v0.18.0
+	github.com/larsartmann/go-output v0.22.0
+	github.com/larsartmann/go-output/d2 v0.22.0
+	github.com/larsartmann/go-output/escape v0.22.0
+	github.com/larsartmann/go-output/graph v0.22.0
+	github.com/larsartmann/go-output/plantuml v0.22.0
 	github.com/samber/do/v2 v2.0.0
 )
 
 require (
-	github.com/larsartmann/go-output/delimited v0.18.0
-	github.com/larsartmann/go-output/markdown v0.18.0
-	github.com/larsartmann/go-output/markup v0.18.0
-	github.com/larsartmann/go-output/serialization v0.18.0
-	github.com/larsartmann/go-output/table v0.18.0
-	github.com/larsartmann/go-output/tree v0.18.0
+	github.com/larsartmann/go-output/delimited v0.22.0
+	github.com/larsartmann/go-output/markdown v0.22.0
+	github.com/larsartmann/go-output/markup v0.22.0
+	github.com/larsartmann/go-output/serialization v0.22.0
+	github.com/larsartmann/go-output/table v0.22.0
+	github.com/larsartmann/go-output/tree v0.22.0
 )
 
 require (

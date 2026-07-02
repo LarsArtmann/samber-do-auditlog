@@ -21,3 +21,59 @@ reports/
 /result
 # Sensitive files
 *.db
+
+# >>> buildflow-managed (.gitignore) >>>
+# Auto-managed by buildflow. Edit outside these markers; this block is regenerated on `buildflow --fix`.
+
+## Secrets and environment
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+## Databases
+*.db-shm
+*.db-wal
+
+## Operating systems
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+## Editors and ides
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+## Logs and temporaries
+*.log
+*.tmp
+*.temp
+
+## Buildflow artifacts
+audit-log.*
+workflow-audit-log.*
+.buildflow-workflow-baseline.json
+
+## Go
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+go.work
+go.work.sum
+
+## Nix
+result-*
+.envrc
+.direnv/
+# <<< buildflow-managed (.gitignore) <<<
