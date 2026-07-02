@@ -20,8 +20,8 @@ github.com/charmbracelet/ultraviolet v0.0.0-20260622092850-f39628c8a989 h1:aLA9A
 github.com/charmbracelet/ultraviolet v0.0.0-20260622092850-f39628c8a989/go.mod h1:f/jRa757WUmaOZrbPspXymbg/GnbF+rwe4OLsG7aXYo=
 github.com/charmbracelet/x/ansi v0.11.7 h1:kzv1kJvjg2S3r9KHo8hDdHFQLEqn4RBCb39dAYC84jI=
 github.com/charmbracelet/x/ansi v0.11.7/go.mod h1:9qGpnAVYz+8ACONkZBUWPtL7lulP9No6p1epAihUZwQ=
-github.com/charmbracelet/x/exp/golden v0.0.0-20260622092256-25656177ba8e h1:x7pKVbisrybuOyTq7CS0zQoKNrckmfBPXAgKK/Hkg1I=
-github.com/charmbracelet/x/exp/golden v0.0.0-20260622092256-25656177ba8e/go.mod h1:6fMpcW6iwN/kX+xJ52eqVWsDiBTe0UJD24JLoHFe+P0=
+github.com/charmbracelet/x/exp/golden v0.0.0-20260629091435-9c70f75e26a4 h1:Ixrvza17xB1Hm2kAesipn1IKaxJRbHYnwkrQiwfu0tI=
+github.com/charmbracelet/x/exp/golden v0.0.0-20260629091435-9c70f75e26a4/go.mod h1:6fMpcW6iwN/kX+xJ52eqVWsDiBTe0UJD24JLoHFe+P0=
 github.com/charmbracelet/x/term v0.2.2 h1:xVRT/S2ZcKdhhOuSP4t5cLi5o+JxklsoEObBSgfgZRk=
 github.com/charmbracelet/x/term v0.2.2/go.mod h1:kF8CY5RddLWrsgVwpw4kAa6TESp6EB5y3uxGLeCqzAI=
 github.com/charmbracelet/x/termios v0.1.1 h1:o3Q2bT8eqzGnGPOYheoYS8eEleT5ZVNYNy8JawjaNZY=
@@ -52,10 +52,12 @@ github.com/invopop/jsonschema v0.14.0 h1:MHQqLhvpNUZfw+hM3AZDYK7jxO8FZoQeQM77g8i
 github.com/invopop/jsonschema v0.14.0/go.mod h1:ygm6C2EaVNMBDPpaPlnOA2pFAxBnxGjFlMZABxm9n2I=
 github.com/larsartmann/go-branded-id v0.3.1 h1:n53Vz3MCUy3S8YfW/v+zxL/qT96iiXZOT6p46HZysyA=
 github.com/larsartmann/go-branded-id v0.3.1/go.mod h1:fiv3t1PyNCITnE/8KtymGCUz7tQRuQxF+8oqNdFmA/Y=
-github.com/larsartmann/go-output v0.22.0 h1:BcW6FiRwA7CDJMFfoH1zE5jEVOldAyo4wR3Vs9dvOPE=
-github.com/larsartmann/go-output v0.22.0/go.mod h1:LNCy7hi/3yKBS88rWNUb3IIVL+KB+Xl8wU3jtz9lKuA=
+github.com/larsartmann/go-output v0.23.0 h1:YRcoiPDQIdm4Zimioi6BQPljHMk+2ln5trGZ1Ik/+Pw=
+github.com/larsartmann/go-output v0.23.0/go.mod h1:Aw8Pjib8X6+6xcPoQ5YcMwZ4O1I32WT9Aw2uqhekYO8=
 github.com/larsartmann/go-output/d2 v0.22.0 h1:qRwvq6B436M7t0bXH7kz3p/FRgSTDniBwtvXZIHYJLI=
 github.com/larsartmann/go-output/d2 v0.22.0/go.mod h1:oYRsKAep6RJbs/DB/JQ0cpekcB6XqH7S00L4JC8QZhg=
+github.com/larsartmann/go-output/daghtml v0.23.1 h1:x25xr8/sb+Wk9KFibhJCH4xoNRd43mgDSrHhv8Ak+i0=
+github.com/larsartmann/go-output/daghtml v0.23.1/go.mod h1:holcQVJPytKDcFUXKZlaDtMzJzOROXPqNQpwmfFD5OQ=
 github.com/larsartmann/go-output/delimited v0.22.0 h1:jk2rpxXgEoE4OqjgNflPobPbckZ3Ue/jMVrYZ3aLoyA=
 github.com/larsartmann/go-output/delimited v0.22.0/go.mod h1:QIbuR8T/vHsAf3pnXSh71j5LAsP0RMKjGsSbR7slMi4=
 github.com/larsartmann/go-output/escape v0.22.0 h1:abUQMltvZBUcCJORiMkz7hCrLb7gI/W3YraV4ZHrleY=
