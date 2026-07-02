@@ -9,6 +9,7 @@ require (
 	// are tagged together at the same version. Pin them in lockstep.
 	github.com/larsartmann/go-output v0.22.0
 	github.com/larsartmann/go-output/d2 v0.22.0
+	github.com/larsartmann/go-output/daghtml v0.0.0-00010101000000-000000000000
 	github.com/larsartmann/go-output/escape v0.22.0
 	github.com/larsartmann/go-output/graph v0.22.0
 	github.com/larsartmann/go-output/plantuml v0.22.0
@@ -72,3 +73,5 @@ require (
 )
 
 tool github.com/a-h/templ/cmd/templ
+
+replace github.com/larsartmann/go-output/daghtml => ../go-output/daghtml
