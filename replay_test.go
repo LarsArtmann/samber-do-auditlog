@@ -73,18 +73,25 @@ func mkInvAfterWithDur(seq int, ts time.Time, serviceName, containerID string, d
 	)
 }
 
+// containerIDForTest is the fixed ContainerID used by every nested-invocation
+// replay test. Centralizes the literal so callers stay short.
+const containerIDForTest = "c"
+
 // mkInvAfter is a shorthand for an invocation-after event (no duration).
 // Centralizes the 9-line mkEvent(...) block used by every nested-invocation
-// replay test where only the call order matters.
-func mkInvAfter(seq int, ts time.Time, serviceName, containerID string) auditlog.Event {
-	return mkLazyEvent(seq, ts, auditlog.EventTypeInvocation, auditlog.PhaseAfter, serviceName, containerID)
+// replay test where only the call order matters. ContainerID is fixed to
+// containerIDForTest because every existing caller passes the same value; if
+// a test ever needs a different container, inline a mkLazyEvent call.
+func mkInvAfter(seq int, ts time.Time, serviceName string) auditlog.Event {
+	return mkLazyEvent(seq, ts, auditlog.EventTypeInvocation, auditlog.PhaseAfter, serviceName, containerIDForTest)
 }
 
 // mkInvBefore is a shorthand for an invocation-before event with empty
 // ServiceType (matches what recorder.go emits for the before phase). Used by
 // every nested-invocation replay test for the "push to stack" half of a call.
-func mkInvBefore(seq int, ts time.Time, serviceName, containerID string) auditlog.Event {
-	return mkEvent(seq, ts, auditlog.EventTypeInvocation, auditlog.PhaseBefore, serviceName, containerID, "")
+// ContainerID is fixed to containerIDForTest; see mkInvAfter for rationale.
+func mkInvBefore(seq int, ts time.Time, serviceName string) auditlog.Event {
+	return mkEvent(seq, ts, auditlog.EventTypeInvocation, auditlog.PhaseBefore, serviceName, containerIDForTest, "")
 }
 
 // mkLazyEvent is the shared lazy-provider mkEvent(...) body used by every
@@ -458,11 +465,11 @@ func TestReplayEvents_OutOfOrderStackPop(t *testing.T) {
 	events := []auditlog.Event{
 		mkRegEvent(1, time.Now(), "a", "c"),
 		mkRegEvent(2, time.Now(), "b", "c"),
-		mkInvBefore(3, time.Now(), "a", "c"),
-		mkInvBefore(4, time.Now(), "b", "c"),
+		mkInvBefore(3, time.Now(), "a"),
+		mkInvBefore(4, time.Now(), "b"),
 		// B finishes first (LIFO pop), then A finishes (non-LIFO: index < len-1).
-		mkInvAfter(5, time.Now(), "b", "c"),
-		mkInvAfter(6, time.Now(), "a", "c"),
+		mkInvAfter(5, time.Now(), "b"),
+		mkInvAfter(6, time.Now(), "a"),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -1079,11 +1086,11 @@ func TestReplayEvents_NonLIFOStackPop(t *testing.T) {
 	events := []auditlog.Event{
 		mkRegEvent(1, now, "a", "c"),
 		mkRegEvent(2, now, "b", "c"),
-		mkInvBefore(3, now, "a", "c"),
-		mkInvBefore(4, now, "b", "c"),
+		mkInvBefore(3, now, "a"),
+		mkInvBefore(4, now, "b"),
 		// A finishes while B is still on stack — pops from middle.
-		mkInvAfter(5, now, "a", "c"),
-		mkInvAfter(6, now, "b", "c"),
+		mkInvAfter(5, now, "a"),
+		mkInvAfter(6, now, "b"),
 	}
 
 	report, err := auditlog.ReplayEvents(events)
@@ -1109,10 +1116,10 @@ func TestReplayEvents_DoubleInvocation(t *testing.T) {
 	events := []auditlog.Event{
 		mkRegEvent(1, now, "svc", "c"),
 		// First invocation.
-		mkInvBefore(2, now, "svc", "c"),
+		mkInvBefore(2, now, "svc"),
 		mkInvAfterWithDur(3, now, "svc", "c", 3.3),
 		// Second invocation — firstInvokedAt already set, firstBuildDurationMs already set.
-		mkInvBefore(4, now, "svc", "c"),
+		mkInvBefore(4, now, "svc"),
 		mkInvAfterWithDur(5, now, "svc", "c", 3.3),
 	}
 
@@ -1141,8 +1148,8 @@ func TestReplayEvents_ShutdownWithMatchingBefore(t *testing.T) {
 
 	events := []auditlog.Event{
 		mkRegEvent(1, t0, "svc", "c"),
-		mkInvBefore(2, t0, "svc", "c"),
-		mkInvAfter(3, t0, "svc", "c"),
+		mkInvBefore(2, t0, "svc"),
+		mkInvAfter(3, t0, "svc"),
 		// Shutdown with matching before event.
 		mkEvent(4, t0, auditlog.EventTypeShutdown, auditlog.PhaseBefore, "svc", "c", ""),
 		mkEvent(5, t1, auditlog.EventTypeShutdown, auditlog.PhaseAfter, "svc", "c", auditlog.ProviderTypeLazy),
@@ -1173,7 +1180,7 @@ func TestReplayEvents_InvocationWithoutRegistration(t *testing.T) {
 	now := time.Now()
 
 	events := []auditlog.Event{
-		mkInvBefore(1, now, "ghost", "c"),
+		mkInvBefore(1, now, "ghost"),
 		mkInvAfterWithDur(2, now, "ghost", "c", 2.0),
 	}
 

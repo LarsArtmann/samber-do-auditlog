@@ -17,15 +17,15 @@ func (p *Plugin) ExportToHTML(path string) error {
 	return writeToFile(path, p.WriteHTML)
 }
 
-// WriteHTML writes a self-contained HTML visualization to w.
-func (p *Plugin) WriteHTML(w io.Writer) error {
-	return p.Report().WriteHTML(w)
+// WriteHTML writes a self-contained HTML visualization to writer.
+func (p *Plugin) WriteHTML(writer io.Writer) error {
+	return p.Report().WriteHTML(writer)
 }
 
-// WriteHTML renders a self-contained HTML visualization of the report to w.
+// WriteHTML renders a self-contained HTML visualization of the report to writer.
 // This enables offline report rendering from a loaded Report (e.g. via
 // LoadReport) without a live Plugin/container.
-func (r Report) WriteHTML(w io.Writer) error {
+func (r Report) WriteHTML(writer io.Writer) error {
 	var buf bytes.Buffer
 
 	err := reportHTML(r).Render(context.Background(), &buf)
@@ -38,7 +38,7 @@ func (r Report) WriteHTML(w io.Writer) error {
 	// because templ v0.3.1020 doesn't evaluate expressions inside <script> tags.
 	html := strings.Replace(buf.String(), "// DAGHTML_JS_INJECTION_POINT", daghtml.Script(), 1)
 
-	_, err = w.Write([]byte(html))
+	_, err = writer.Write([]byte(html))
 	if err != nil {
 		return fmt.Errorf("write HTML report: %w", err)
 	}

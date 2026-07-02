@@ -24,15 +24,24 @@ type eventTypeMeta struct {
 	color string
 }
 
+// CSS color tokens used by the HTML visualization. Centralized as constants so
+// the goconst linter recognizes them as repeated literals across files.
+const (
+	cssColorAccent  = "var(--accent)"
+	cssColorSuccess = "var(--success)"
+	cssColorWarning = "var(--warning)"
+	cssColorInfo    = "var(--info)"
+)
+
 // eventTypeMetaTable maps each known EventType to its display metadata.
 // Read-only lookup table — treated as a constant, never mutated at runtime.
 //
 //nolint:gochecknoglobals // read-only enum metadata table, not mutable shared state
 var eventTypeMetaTable = map[EventType]eventTypeMeta{
-	EventTypeRegistration: {label: "Registration", color: "var(--accent)"},
-	EventTypeInvocation:   {label: "Invocation", color: "var(--success)"},
-	EventTypeShutdown:     {label: "Shutdown", color: "var(--warning)"},
-	EventTypeHealthCheck:  {label: "Health", color: "var(--info)"},
+	EventTypeRegistration: {label: "Registration", color: cssColorAccent},
+	EventTypeInvocation:   {label: "Invocation", color: cssColorSuccess},
+	EventTypeShutdown:     {label: "Shutdown", color: cssColorWarning},
+	EventTypeHealthCheck:  {label: "Health", color: cssColorInfo},
 }
 
 // Label returns the human-readable display label for this event type.

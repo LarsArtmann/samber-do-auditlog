@@ -6,18 +6,33 @@ import (
 	"github.com/larsartmann/go-output/daghtml"
 )
 
+// CSS color tokens used by the daghtml visualization. Centralized as constants
+// so the goconst linter recognizes them as repeated literals.
+const (
+	dagColorAccent    = "var(--accent)"
+	dagColorSuccess   = "var(--success)"
+	dagColorTextMuted = "var(--text-muted)"
+	dagColorError     = "var(--error)"
+)
+
 // serviceStatusDAGColor maps a ServiceStatus to the CSS color token used by the
 // daghtml visualization. Matches the statusColors map in the former inline
-// renderGraph() JS.
+// renderGraph() JS. Read-only lookup table — treated as a constant, never
+// mutated at runtime.
+//
+//nolint:gochecknoglobals // read-only lookup table, not mutable shared state
 var serviceStatusDAGColor = map[ServiceStatus]string{
-	ServiceStatusActive:          "var(--success)",
-	ServiceStatusRegistered:      "var(--text-muted)",
-	ServiceStatusShutdown:        "var(--accent)",
-	ServiceStatusInvocationError: "var(--error)",
-	ServiceStatusShutdownError:   "var(--error)",
+	ServiceStatusActive:          dagColorSuccess,
+	ServiceStatusRegistered:      dagColorTextMuted,
+	ServiceStatusShutdown:        dagColorAccent,
+	ServiceStatusInvocationError: dagColorError,
+	ServiceStatusShutdownError:   dagColorError,
 }
 
 // serviceProviderDAGColor maps a ProviderType to its CSS color token.
+// Read-only lookup table — treated as a constant, never mutated at runtime.
+//
+//nolint:gochecknoglobals // read-only lookup table, not mutable shared state
 var serviceProviderDAGColor = map[ProviderType]string{
 	ProviderTypeLazy:      "var(--lazy)",
 	ProviderTypeEager:     "var(--eager)",
@@ -43,7 +58,7 @@ func buildDAGHTML(report Report) daghtml.DAG {
 		}
 
 		if color == "" {
-			color = "var(--accent)"
+			color = dagColorAccent
 		}
 
 		dag.Nodes = append(dag.Nodes, daghtml.Node{

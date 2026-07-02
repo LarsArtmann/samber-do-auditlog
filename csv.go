@@ -122,10 +122,10 @@ func formatServiceRefs(refs []ServiceRef) string {
 		return ""
 	}
 
-	parts := make([]string, len(refs))
+	parts := make([]string, 0, len(refs))
 
-	for i, ref := range refs {
-		parts[i] = ref.String()
+	for _, ref := range refs {
+		parts = append(parts, ref.String())
 	}
 
 	return strings.Join(parts, ";")
