@@ -15,7 +15,7 @@ import (
 // built-in DedupEdges. See also WriteMermaid, WritePlantUML, and WriteDOT for
 // the other diagram formats.
 func (r Report) WriteD2(writer io.Writer) error {
-	renderer := d2.NewD2Diagram()
+	renderer := d2.NewDiagram()
 	renderer.SetTitle(r.ContainerID)
 	renderer.SetNodes(buildDiagramNodes(r))
 	renderer.SetEdges(dedupGraphEdges(buildDiagramEdges(r)))

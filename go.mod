@@ -7,33 +7,33 @@ require (
 	github.com/invopop/jsonschema v0.14.0
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
 	// are tagged together at the same version. Pin them in lockstep.
-	github.com/larsartmann/go-output v0.23.0
-	github.com/larsartmann/go-output/d2 v0.22.0
-	github.com/larsartmann/go-output/daghtml v0.23.1
-	github.com/larsartmann/go-output/escape v0.22.0
-	github.com/larsartmann/go-output/graph v0.22.0
-	github.com/larsartmann/go-output/plantuml v0.22.0
+	github.com/larsartmann/go-output v0.30.0
+	github.com/larsartmann/go-output/d2 v0.30.0
+	github.com/larsartmann/go-output/daghtml v0.30.0
+	github.com/larsartmann/go-output/escape v0.30.0
+	github.com/larsartmann/go-output/graph v0.30.0
+	github.com/larsartmann/go-output/plantuml v0.30.0
 	github.com/samber/do/v2 v2.0.0
 )
 
 require (
-	github.com/larsartmann/go-output/delimited v0.22.0
-	github.com/larsartmann/go-output/markdown v0.22.0
-	github.com/larsartmann/go-output/markup v0.22.0
-	github.com/larsartmann/go-output/serialization v0.22.0
-	github.com/larsartmann/go-output/table v0.22.0
-	github.com/larsartmann/go-output/tree v0.22.0
+	github.com/larsartmann/go-output/delimited v0.30.0
+	github.com/larsartmann/go-output/markdown v0.30.0
+	github.com/larsartmann/go-output/markup v0.30.0
+	github.com/larsartmann/go-output/serialization v0.30.0
+	github.com/larsartmann/go-output/table v0.30.0
+	github.com/larsartmann/go-output/tree v0.30.0
 )
 
 require (
-	charm.land/lipgloss/v2 v2.0.4 // indirect
+	charm.land/lipgloss/v2 v2.0.5 // indirect
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect
 	github.com/andybalholm/brotli v1.2.1 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20260622092850-f39628c8a989 // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260703014108-f5a850f9c2b7 // indirect
 	github.com/charmbracelet/x/ansi v0.11.7 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
@@ -49,6 +49,8 @@ require (
 	github.com/go-faster/yaml v0.4.6 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/larsartmann/go-branded-id v0.3.1 // indirect
+	github.com/larsartmann/go-output/testhelpers v0.30.0 // indirect
+	github.com/larsartmann/go-output/testhelpers/graphtest v0.30.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
@@ -56,7 +58,7 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
 	github.com/pb33f/ordered-map/v2 v2.3.1 // indirect
-	github.com/pelletier/go-toml/v2 v2.4.2 // indirect
+	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/samber/go-type-to-string v1.8.0 // indirect

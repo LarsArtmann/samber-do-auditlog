@@ -15,7 +15,7 @@ import (
 // global theme headers with equivalent per-node styling.
 //
 //nolint:gochecknoglobals // Static theme palette, safe to share across formats.
-var warmAmberNodeStyle = output.GraphStyle{
+var warmAmberNodeStyle = output.NodeStyle{
 	Fill:      "#e8a838",
 	Stroke:    "#4a4030",
 	FontColor: "#14110d",
@@ -117,7 +117,7 @@ func writeRendered(writer io.Writer, renderer output.Renderer) error {
 }
 
 // graphRendererWithDedup is the subset of go-output renderers that embed
-// GraphRendererState (DOT/Mermaid/PlantUML) and therefore have a built-in
+// GraphBuilder (DOT/Mermaid/PlantUML) and therefore have a built-in
 // DedupEdges. D2 doesn't satisfy this and uses the local dedupGraphEdges
 // helper instead.
 type graphRendererWithDedup interface {
@@ -127,7 +127,7 @@ type graphRendererWithDedup interface {
 
 // renderGraphDiagram drives the shared 4-line pipeline (SetNodes / SetEdges /
 // DedupEdges / writeRendered) for any graph renderer that embeds
-// GraphRendererState. DOT/Mermaid/PlantUML all use this; D2 has its own
+// GraphBuilder. DOT/Mermaid/PlantUML all use this; D2 has its own
 // write path because the D2 renderer lacks DedupEdges.
 func renderGraphDiagram(writer io.Writer, r Report, renderer graphRendererWithDedup) error {
 	renderer.SetNodes(buildDiagramNodes(r))

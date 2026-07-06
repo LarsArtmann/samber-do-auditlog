@@ -7,17 +7,17 @@ import (
 	"strings"
 
 	"github.com/larsartmann/go-output"
-	// Blank imports register table data renderers for RenderTableData dispatch.
+	// Blank imports register table data renderers for RenderTable dispatch.
 	_ "github.com/larsartmann/go-output/delimited"
 	_ "github.com/larsartmann/go-output/markdown"
 	_ "github.com/larsartmann/go-output/serialization"
 	_ "github.com/larsartmann/go-output/table"
 )
 
-// buildServiceTableData converts a Report into go-output TableData.
+// buildServiceTableData converts a Report into go-output Table.
 // Columns: Service, Scope, Type, Status, Invocations, Build(ms), Error.
-func (r Report) buildServiceTableData() *output.TableData {
-	data := output.NewTableData([]string{"Service", "Scope", "Type", "Status", "Invocations", "Build(ms)", "Error"})
+func (r Report) buildServiceTableData() *output.Table {
+	data := output.NewTable([]string{"Service", "Scope", "Type", "Status", "Invocations", "Build(ms)", "Error"})
 
 	for _, svc := range r.Services {
 		errStr := ""
@@ -55,7 +55,7 @@ func (r Report) WriteTable(writer io.Writer, format output.Format, opts output.R
 
 	opts.Writer = writer
 
-	err := output.RenderTableData(data, format, opts)
+	err := output.RenderTable(data, format, opts)
 	if err != nil {
 		return fmt.Errorf("render table: %w", err)
 	}
