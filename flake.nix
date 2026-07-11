@@ -102,6 +102,7 @@
             };
           };
 
+          checks.build = config.packages.default;
           checks.format = config.treefmt.build.check self;
         };
     };
