@@ -12,6 +12,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Nix flake modernization**: migrated from `flake-utils`/`eachDefaultSystem` to `flake-parts` with `treefmt-nix` for standardized formatting checks.
+- **Nix build check**: added `build` output as a check in the treefmt configuration.
+- **Dependency updates**: `golang.org/x/sync` v0.21.0 → v0.22.0, `golang.org/x/sys` v0.46.0 → v0.47.0, `golang.org/x/term` v0.44.0 → v0.45.0, nixpkgs bumped to latest.
+
+## [0.5.0] - 2026-07-07
+
+A patch release: go-output hotfix bump. Non-breaking.
+
+### Changed
+
+- **go-output v0.30.0 → v0.30.1**: picked up upstream patch fixes across all go-output modules (root, d2, daghtml, escape, graph, plantuml, delimited, markdown, markup, serialization, table, tree, testhelpers). Fixed stale module checksums.
+
+## [0.4.0] - 2026-07-06
+
+A maintenance release: go-output v0.30.0 API adoption. Non-breaking — internal API renames only, no public API changes.
+
+### Changed
+
+- **go-output v0.23.x → v0.30.0**: adopted the go-output v0.30.0 API across diagram and table rendering code.
+  - `d2.NewD2Diagram()` → `d2.NewDiagram()`.
+  - `output.GraphStyle` → `output.NodeStyle` (diagram theming).
+  - `output.TableData` → `output.Table`, `output.NewTableData()` → `output.NewTable()`, `output.RenderTableData()` → `output.RenderTable()` (table export).
+
+## [0.3.1] - 2026-07-02
+
+A maintenance release: daghtml SDK adoption, hook refactoring, and dependency upgrades. Non-breaking — internal refactors only.
+
+### Changed
+
+- **daghtml SDK adoption**: replaced 306 lines of inline Sugiyama DAG JavaScript in `html.templ` with the `go-output/daghtml` SDK via a new `daghtml_adapter.go`. The graph rendering logic is now maintained upstream, reducing the HTML template from ~950 to ~640 lines.
+- **Hook refactoring**: centralized per-hook preamble logic (context creation, locking, scope recording) into `hookContext` helpers in `hooks.go`, reducing duplication across all six hook handlers.
+- **CSS token extraction**: extracted inline CSS color values into named constants across `html.templ`, `html.go`, and `daghtml_adapter.go` for maintainability.
+- **Test infrastructure**: centralized test fixtures and extracted shared helpers into `helpers_test.go`.
+- **Go 1.26.4**: bumped Go version and updated tooling dependencies.
+
+### Fixed
+
+- **Golden file stability**: updated `testdata/golden/report.html` to reflect the daghtml-rendered graph output.
+
 ## [0.3.0] - 2026-06-21
 
 A feature release: tree and table export formats, plus CLI coverage for all new formats. Non-breaking — additive only.
