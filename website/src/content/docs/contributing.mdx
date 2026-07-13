@@ -1,0 +1,95 @@
+---
+title: Contributing
+description: How to contribute to do-auditlog.
+---
+
+## Development Setup
+
+**Requirements:** Go 1.26+, [Nix](https://nixos.org/) (optional but recommended)
+
+```bash
+git clone https://github.com/LarsArtmann/samber-do-auditlog.git
+cd samber-do-auditlog
+go mod download
+```
+
+### Nix DevShell
+
+For the full toolchain (Go, templ, golangci-lint, govulncheck, actionlint):
+
+```bash
+nix develop
+```
+
+## Building
+
+```bash
+go build ./...
+go generate ./...   # regenerate templ
+```
+
+## Testing
+
+```bash
+# Run all tests
+go test ./...
+
+# With race detector (CI uses this)
+go test -race ./...
+
+# Coverage gate (CI: >= 95% of non-example/ code)
+sh scripts/coverage-gate.sh
+```
+
+## Linting
+
+Uses golangci-lint v2 with nearly every linter enabled:
+
+```bash
+golangci-lint config verify   # validate config
+golangci-lint run             # full lint
+go vet ./...                  # static analysis
+```
+
+## Running the Example
+
+```bash
+DO_AUDITLOG_ENABLED=true go run ./example
+```
+
+The example demonstrates 19 samber/do v2 features with a ride-sharing domain model.
+
+## Code Style
+
+- Table-driven tests with `t.Parallel()` for test isolation
+- Functional options pattern for configuration
+- Strong types over runtime checks
+- Early returns over nested conditionals
+- `exhaustruct`: all struct fields must be explicitly initialized (tests exempted)
+- JSON tags use snake_case via `tagliatelle`
+
+## Pre-Commit Hook
+
+```bash
+git config core.hooksPath scripts/hooks
+```
+
+The hook runs: generate drift check, `go vet`, `golangci-lint`, `go test -race`.
+
+## CI
+
+All pull requests must pass 5 parallel jobs:
+
+1. **test**: `go vet`, `go build`, `go test -race` with coverage gate (>= 95%)
+2. **lint**: `golangci-lint config verify` then `golangci-lint v2.12.2`
+3. **vulncheck**: `govulncheck` via GitHub Action
+4. **mod-tidy**: `go mod tidy` drift check
+5. **stale-generation**: `go generate ./...` diff check
+
+## Pull Requests
+
+- Ensure all tests pass: `go test -race ./...`
+- Ensure linting passes: `golangci-lint run`
+- Add tests for new functionality
+- Keep changes focused and atomic
+- Update `CHANGELOG.md` under `[Unreleased]`

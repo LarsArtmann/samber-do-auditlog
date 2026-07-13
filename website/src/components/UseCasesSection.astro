@@ -1,0 +1,19 @@
+---
+import { useCases } from '../data/sections';
+import Icon from './Icon.astro';
+import SectionHeader from './SectionHeader.astro';
+---
+
+<SectionHeader title="Built for real debugging." subtitle="Drop it into any Go service using samber/do." />
+
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  {useCases.map((useCase) => (
+    <div class="p-5 rounded-xl border border-border bg-bg-card text-center">
+      <div class="mx-auto mb-2 text-text-secondary w-fit">
+        <Icon name={useCase.icon} size={24} />
+      </div>
+      <h3 class="font-semibold text-text-primary text-sm mb-1">{useCase.title}</h3>
+      <p class="text-xs text-text-muted">{useCase.desc}</p>
+    </div>
+  ))}
+</div>

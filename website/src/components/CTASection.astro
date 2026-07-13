@@ -1,0 +1,18 @@
+---
+import Icon from './Icon.astro';
+import SectionHeader from './SectionHeader.astro';
+---
+
+<SectionHeader title="Start auditing in seconds." subtitle="One line to unlock full DI container observability." />
+<div class="text-center">
+  <div class="flex items-center justify-center gap-4 flex-wrap">
+    <a href="/getting-started/quick-start/" data-astro-prefetch class="px-8 py-4 bg-accent text-bg-primary font-semibold rounded-lg text-base hover:bg-accent-hover transition-colors duration-150 inline-flex items-center gap-2 border-none cursor-pointer">
+      Read the Docs
+      <Icon name="arrow-right" size={16} />
+    </a>
+    <a href="/api-reference/" data-astro-prefetch class="px-6 py-4 border border-text-secondary text-text-secondary font-medium rounded-lg text-base hover:border-text-primary hover:text-text-primary transition-colors duration-150 inline-flex items-center gap-2 no-underline">
+      API Reference
+      <Icon name="arrow-external" size={16} />
+    </a>
+  </div>
+</div>

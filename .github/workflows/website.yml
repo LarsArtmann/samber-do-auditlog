@@ -1,0 +1,86 @@
+name: Website
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - website/**
+      - .github/workflows/website.yml
+  pull_request:
+    branches: [master]
+    paths:
+      - website/**
+      - .github/workflows/website.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-website:
+    name: Build Website
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - run: npm install
+        working-directory: website
+
+      - name: npm audit
+        run: npm audit --audit-level=high --omit=dev
+        working-directory: website
+        continue-on-error: true
+
+      - run: npx astro check
+        working-directory: website
+
+      - run: npm run build
+        working-directory: website
+
+      - name: HTML Validation
+        run: npx html-validate --config .htmlvalidate.json "dist/**/*.html"
+        working-directory: website
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: website-dist
+          path: website/dist/
+
+  deploy-website:
+    name: Deploy Website
+    needs: build-website
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: website-dist
+          path: website/dist/
+
+      - name: Deploy to Firebase Hosting
+        working-directory: website
+        run: |
+          npm install -g firebase-tools
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > "$RUNNER_TEMP/gcp-key.json"
+          firebase deploy --only hosting:do-auditlog --project lars-software
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/gcp-key.json

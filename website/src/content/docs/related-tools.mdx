@@ -1,0 +1,63 @@
+---
+title: Related Tools
+description: Tools that complement do-auditlog in your Go ecosystem.
+---
+
+## samber/do
+
+[samber/do](https://github.com/samber/do) is a dependency injection framework based on Go's type system. do-auditlog is a plugin for do v2 — it cannot function without it.
+
+If you're not using samber/do yet, check it out first:
+
+```bash
+go get github.com/samber/do/v2
+```
+
+## go-output
+
+[go-output](https://github.com/larsartmann/go-output) provides the rendering engines for Mermaid, PlantUML, DOT, D2, tree, and table export formats. do-auditlog depends on it for all diagram and table output.
+
+If you need custom diagram generation outside of do-auditlog, go-output is a standalone library with validated escaping for every format.
+
+## md-go-validator
+
+[md-go-validator](https://github.com/larsartmann/md-go-validator) validates code blocks in Markdown and MDX files. This website's CI uses it to ensure code examples are syntactically valid Go.
+
+## Other Go DI Observability Tools
+
+| Tool | Scope | How It Compares |
+| --- | --- | --- |
+| **do-auditlog** | samber/do v2 only | Full lifecycle audit with 9+ export formats and HTML visualization |
+| **wire analyze** | google/wire | Compile-time only — no runtime audit |
+| **dig introspection** | uber/dig | `dig.Container.Visualize` for graph output, no event timeline |
+
+## Complementary Patterns
+
+### Prometheus Integration
+
+Use `Config.OnEvent` to stream metrics:
+
+```go
+plugin, _ := auditlog.New(auditlog.Config{
+    Enabled: true,
+    OnEvent: func(ev auditlog.Event) {
+        if ev.Phase == auditlog.PhaseAfter && ev.EventType == auditlog.EventTypeInvocation {
+            invocationDuration.Observe(ev.Duration().Seconds())
+        }
+    },
+})
+```
+
+### OpenTelemetry Spans
+
+```go
+plugin, _ := auditlog.New(auditlog.Config{
+    Enabled: true,
+    OnEvent: func(ev auditlog.Event) {
+        if ev.EventType == auditlog.EventTypeInvocation && ev.Phase == auditlog.PhaseAfter {
+            _, span := tracer.Start(context.Background(), ev.ServiceName)
+            defer span.End()
+        }
+    },
+})
+```

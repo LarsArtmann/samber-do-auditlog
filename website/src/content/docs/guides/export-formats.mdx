@@ -1,0 +1,138 @@
+---
+title: Export Formats
+description: Choose from JSON, NDJSON, HTML, CSV, TSV, Mermaid, PlantUML, DOT, D2, tree, and table formats.
+---
+
+## Overview
+
+do-auditlog supports multiple export formats for different use cases — from structured data for tooling to visual diagrams for documentation.
+
+## Data Formats
+
+### JSON Report
+
+Full snapshot: event timeline, service summaries with forward and reverse dependencies, scope tree, and aggregate metrics.
+
+```go
+plugin.ExportToFile("audit.json")
+// or to any io.Writer:
+plugin.WriteReportJSON(os.Stdout)
+```
+
+```json
+{
+  "version": "0.2.0",
+  "container_id": "my-app",
+  "service_count": 3,
+  "event_count": 20,
+  "services": [
+    {
+      "service_name": "*main.UserService",
+      "invocation_count": 1,
+      "first_build_duration_ms": 9.079,
+      "dependencies": [
+        { "scope_name": "[root]", "service_name": "*main.Database" }
+      ]
+    }
+  ]
+}
+```
+
+### NDJSON Event Stream
+
+One JSON object per line. Feed it into log aggregators, stream processors, or custom tooling.
+
+```go
+plugin.ExportEventsToNDJSON("events.ndjson")
+```
+
+### CSV / TSV
+
+Tabular export of all services for spreadsheets and data analysis:
+
+```go
+plugin.ExportToCSV("services.csv")
+plugin.ExportToTSV("services.tsv")
+```
+
+## Visualization Formats
+
+### HTML
+
+A single, self-contained dark-themed HTML page. No external JS/CSS. Works offline.
+
+```go
+plugin.ExportToHTML("audit.html")
+```
+
+The HTML includes:
+- Stats cards (services, events, scopes, health status)
+- Services table with type badges, status, build time
+- Scopes tab with collapsible tree
+- Dependency graph with pan/zoom
+- Timeline with dual build+shutdown bars
+- Events table with type filter chips
+
+### Mermaid
+
+Flowchart for GitHub READMEs, GitLab, Notion:
+
+```go
+plugin.Report().WriteMermaid(os.Stdout)
+```
+
+### PlantUML
+
+Component diagram for IntelliJ, GitLab, online editors:
+
+```go
+plugin.Report().WritePlantUML(os.Stdout)
+```
+
+### DOT
+
+Graphviz digraph for `dot -Tsvg graph.dot`:
+
+```go
+plugin.Report().WriteDOT(os.Stdout)
+```
+
+### D2
+
+Modern diagram format for the [D2 playground](https://play.d2lang.com):
+
+```go
+plugin.Report().WriteD2(os.Stdout)
+```
+
+### Tree
+
+ASCII dependency tree or HTML nested list:
+
+```go
+plugin.WriteTree(os.Stdout)      // ASCII tree
+plugin.WriteHTMLTree(os.Stdout)  // HTML nested list
+```
+
+### Table
+
+Service summary in 16+ formats via `go-output`:
+
+```go
+plugin.WriteTable(os.Stdout, "markdown")  // table, json, csv, markdown, yaml, html...
+```
+
+## Diagram Theming
+
+All four diagram formats share the warm-amber per-node style (`fill:#e8a838`, `stroke:#4a4030`, `font:#14110d`) via go-output's `NodeStyle`. Two visual elements are not emitted because go-output's renderers lack graph-level attribute setters: the DOT dark canvas background (`bgcolor`) and edge line-colors.
+
+## Choosing a Format
+
+| Use Case | Format | Why |
+| --- | --- | --- |
+| CI/CD artifact | JSON | Structured, parseable, version-controlled schema |
+| Log aggregator | NDJSON | Line-delimited, stream-friendly |
+| Manual inspection | HTML | Self-contained, visual, offline |
+| Documentation | Mermaid | Renders natively on GitHub |
+| Presentations | PlantUML / D2 | Polished, modern look |
+| Data analysis | CSV / TSV | Spreadsheet-ready |

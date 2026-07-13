@@ -1,0 +1,118 @@
+---
+title: Quick Start
+description: Get started with do-auditlog in under a minute.
+---
+
+## Basic Setup
+
+Create the plugin, pass its options to the container, and you're done:
+
+```go
+package main
+
+import (
+    "os"
+
+    "github.com/larsartmann/samber-do-auditlog"
+    "github.com/samber/do/v2"
+)
+
+func main() {
+    // 1. Create the plugin
+    plugin, err := auditlog.New(auditlog.Config{
+        Enabled:     true,
+        ContainerID: "my-app",
+    })
+    if err != nil {
+        panic(err)
+    }
+
+    // 2. Pass options to the DI container
+    injector := do.NewWithOpts(plugin.Opts())
+
+    // 3. Register and use services as usual
+    do.Provide(injector, func(i do.Injector) (*Database, error) {
+        return &Database{}, nil
+    })
+    do.Provide(injector, func(i do.Injector) (*UserService, error) {
+        db := do.MustInvoke[*Database](i)
+        return &UserService{db: db}, nil
+    })
+
+    svc := do.MustInvoke[*UserService](injector)
+    _ = svc
+
+    // 4. Export when you're done
+    plugin.ExportToFile("audit.json")
+    plugin.ExportToHTML("audit.html")
+}
+```
+
+## Export Formats
+
+```go
+// JSON report — full snapshot
+plugin.ExportToFile("audit.json")
+
+// NDJSON event stream — for log aggregators
+plugin.ExportEventsToNDJSON("events.ndjson")
+
+// HTML visualization — self-contained, offline, dark-themed
+plugin.ExportToHTML("audit.html")
+
+// Mermaid flowchart — paste into GitHub README
+plugin.Report().WriteMermaid(os.Stdout)
+
+// CSV of all services
+plugin.ExportToCSV("services.csv")
+```
+
+## Filtered Reports
+
+Slice the report before exporting with functional options:
+
+```go
+// Only lazy services in scope "drivers"
+plugin.ExportFilteredToFile("lazy.json",
+    auditlog.WithServicesByType(auditlog.ProviderTypeLazy),
+    auditlog.WithScope("drivers"),
+)
+```
+
+## Real-Time Event Streaming
+
+React to events as they happen — no polling required:
+
+```go
+plugin, err := auditlog.New(auditlog.Config{
+    Enabled: true,
+    OnEvent: func(ev auditlog.Event) {
+        log.Printf("event %d: %s %s", ev.Sequence, ev.EventType, ev.ServiceName)
+    },
+})
+```
+
+## Health Checks
+
+Wrap `injector.HealthCheck()` to record per-service audit events:
+
+```go
+err := plugin.RecordHealthCheckWithContext(ctx, injector)
+report := plugin.Report()
+if !report.HealthCheckSucceeded {
+    for _, svc := range report.UnhealthyServices() {
+        log.Printf("unhealthy: %s — %s", svc.ServiceName, *svc.HealthCheckError)
+    }
+}
+```
+
+## Disabled Mode
+
+Set `Enabled: false` and the plugin returns empty hooks — zero cost, zero allocations from the plugin itself:
+
+```go
+plugin, _ := auditlog.New(auditlog.Config{
+    Enabled: false, // no hooks installed
+})
+injector := do.NewWithOpts(plugin.Opts())
+```

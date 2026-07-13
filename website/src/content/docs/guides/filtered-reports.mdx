@@ -1,0 +1,75 @@
+---
+title: Filtered Reports
+description: Slice reports by service name, type, scope, event type, or time range.
+---
+
+## Overview
+
+Functional options let you slice the report before exporting. Filters compose — pass multiple options to intersect them.
+
+## Available Filters
+
+| Option | Filters by |
+| --- | --- |
+| `WithServicesByName(names...)` | Service name(s) |
+| `WithServicesByType(type)` | Provider type (lazy, eager, transient, alias) |
+| `WithEventsByType(type)` | Event type (registration, invocation, shutdown, health_check) |
+| `WithTimeRange(from, to)` | Event timestamp range |
+| `WithScope(scopeID)` | Scope ID |
+
+## Usage
+
+```go
+// Only invocation events in the last 5 minutes
+report := plugin.ReportFiltered(
+    auditlog.WithEventsByType(auditlog.EventTypeInvocation),
+    auditlog.WithTimeRange(time.Now().Add(-5*time.Minute), time.Now()),
+)
+
+// Only eager services
+report = plugin.ReportFiltered(
+    auditlog.WithServicesByType(auditlog.ProviderTypeEager),
+)
+
+// Only services named "*main.Database" in scope "drivers"
+report = plugin.ReportFiltered(
+    auditlog.WithServicesByName("*main.Database"),
+    auditlog.WithScope("drivers"),
+)
+```
+
+## Filtered Export
+
+Export the filtered report directly to a file:
+
+```go
+plugin.ExportFilteredToFile("lazy.json",
+    auditlog.WithServicesByType(auditlog.ProviderTypeLazy),
+)
+```
+
+## Composing Filters
+
+Filters intersect — all conditions must be met:
+
+```go
+// Lazy services with invocation events in the last hour
+report := plugin.ReportFiltered(
+    auditlog.WithServicesByType(auditlog.ProviderTypeLazy),
+    auditlog.WithEventsByType(auditlog.EventTypeInvocation),
+    auditlog.WithTimeRange(time.Now().Add(-time.Hour), time.Now()),
+)
+```
+
+## Report Methods
+
+The `Report` type also has `Filtered()` for chaining:
+
+```go
+report := plugin.Report()
+filtered := report.Filtered(
+    auditlog.WithServicesByType(auditlog.ProviderTypeTransient),
+)
+```
+
+Filtered reports have their counts (`ServiceCount`, `EventCount`, etc.) recomputed to match the filtered data. `Validate()` will pass on filtered reports.

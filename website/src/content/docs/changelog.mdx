@@ -1,0 +1,119 @@
+---
+title: Changelog
+description: All notable changes to do-auditlog.
+---
+
+## [Unreleased]
+
+### Changed
+
+- **Nix flake modernization**: migrated from `flake-utils`/`eachDefaultSystem` to `flake-parts` with `treefmt-nix` for standardized formatting checks.
+- **Dependency updates**: `golang.org/x/sync`, `golang.org/x/sys`, `golang.org/x/term`, nixpkgs bumped to latest.
+
+## [0.5.0] — 2026-07-07
+
+A patch release: go-output hotfix bump. Non-breaking.
+
+### Changed
+
+- **go-output v0.30.0 to v0.30.1**: picked up upstream patch fixes across all go-output modules.
+
+## [0.4.0] — 2026-07-06
+
+A maintenance release: go-output v0.30.0 API adoption. Non-breaking.
+
+### Changed
+
+- **go-output v0.23.x to v0.30.0**: adopted the go-output v0.30.0 API across diagram and table rendering code.
+  - `d2.NewD2Diagram()` to `d2.NewDiagram()`.
+  - `output.GraphStyle` to `output.NodeStyle` (diagram theming).
+  - `output.TableData` to `output.Table`, `output.RenderTableData()` to `output.RenderTable()`.
+
+## [0.3.1] — 2026-07-02
+
+A maintenance release: daghtml SDK adoption, hook refactoring, and dependency upgrades. Non-breaking.
+
+### Changed
+
+- **daghtml SDK adoption**: replaced 306 lines of inline Sugiyama DAG JavaScript in `html.templ` with the `go-output/daghtml` SDK.
+- **Hook refactoring**: centralized per-hook preamble logic into `hookContext` helpers in `hooks.go`.
+- **CSS token extraction**: extracted inline CSS color values into named constants for maintainability.
+- **Test infrastructure**: centralized test fixtures and extracted shared helpers into `helpers_test.go`.
+- **Go 1.26.4**: bumped Go version and updated tooling dependencies.
+
+## [0.3.0] — 2026-06-21
+
+A feature release: tree and table export formats, plus CLI coverage. Non-breaking.
+
+### Added
+
+- **Tree export**: dependency DAG rendered as ASCII tree or HTML nested-list tree.
+- **Table export**: service summary table in 16+ formats (table, json, csv, tsv, markdown, xml, d2, yaml, html, tree, mermaid, dot, jsonl, asciidoc, toml, plantuml).
+- **CLI `convert` subcommand extensions**: `tree`, `htmltree`, and `table` output formats.
+
+## [0.2.0] — 2026-06-21
+
+A feature release: D2 diagram export, go-output adoption, and Plugin API parity. Non-breaking.
+
+### Added
+
+- **D2 diagram export** via `go-output/d2`.
+- **Plugin-level diagram wrappers**: all 9 export formats now have both Write and Export methods.
+
+### Changed
+
+- **Diagram rendering adopted `go-output`**: replaced the hand-rolled `diagramFormatter` interface with validated go-output renderers.
+
+## [0.1.0] — 2026-06-19
+
+A milestone release: CLI tool, replay engine, NDJSON import/export, JSON Schema, CSV/TSV/DOT export.
+
+### Added
+
+- **Replay engine** (`ReplayEvents`): reconstructs a Report from a flat event stream.
+- **NDJSON reader** (`ReadEvents`): line-delimited JSON events with 1 MB max-line guard.
+- **Loader API** (`LoadReport`): auto-detects JSON vs NDJSON.
+- **CSV/TSV export**: service data as delimited values.
+- **DOT diagram export**: Graphviz digraph.
+- **JSON Schema**: Draft 2020-12 schema generated from Go types.
+- **CLI tool** (`cmd/auditlog`): info, convert, diff, validate, schema subcommands.
+- **NewReport constructor**: builds a validated Report from core data.
+- **Real-time event streaming** via `Config.OnEvent` callback.
+
+### Breaking
+
+- Removed `LoadReportFromJSON` (use `MigrateReport`).
+- Removed `LoadReportFromNDJSON` (use `LoadReportFromReader` with `FormatNDJSON`).
+
+## [0.0.4] — 2026-06-17
+
+### Fixed
+
+- **MigrateReport scope counting**: migration now reuses `countScopeNodes`.
+
+## [0.0.3] — 2026-06-17
+
+### Added
+
+- **Filtered reports**: functional options to slice by name, type, scope, event type, time range.
+- **PlantUML export**: component diagram format.
+
+## [0.0.2] — 2026-06-16
+
+### Added
+
+- **Mermaid export**: flowchart format for GitHub/GitLab/Notion.
+- **Health check recording**: `RecordHealthCheck` wrapper.
+- **Config.OnEvent** callback.
+
+## [0.0.1] — 2026-06-15
+
+### Added
+
+- Initial release.
+- Plugin with hooks for registration, invocation, shutdown.
+- JSON and NDJSON export.
+- HTML visualization with warm amber dark theme.
+- Dependency graph inference via invocation stack.
+- Scope tree tracking.
+- Service type detection (lazy, eager, transient, alias).

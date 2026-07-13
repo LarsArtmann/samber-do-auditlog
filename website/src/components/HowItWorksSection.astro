@@ -1,0 +1,16 @@
+---
+import { steps } from '../data/sections';
+import SectionHeader from './SectionHeader.astro';
+---
+
+<SectionHeader title="How it works." subtitle="Three steps from zero to full observability." />
+
+<div class="grid gap-4 text-left sm:grid-cols-3">
+  {steps.map((step) => (
+    <div class="p-6 rounded-xl border border-border bg-bg-card">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-mono font-bold bg-accent-dim text-accent mb-3">{step.step}</div>
+      <h3 class="font-semibold text-text-primary mb-2">{step.title}</h3>
+      <p class="text-sm text-text-muted leading-relaxed">{step.desc}</p>
+    </div>
+  ))}
+</div>

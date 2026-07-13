@@ -1,0 +1,16 @@
+{
+  "name": "do-auditlog",
+  "short_name": "do-auditlog",
+  "description": "Audit-log plugin for samber/do v2",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#14110d",
+  "theme_color": "#e8a838",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

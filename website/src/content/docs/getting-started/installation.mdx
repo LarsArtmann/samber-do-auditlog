@@ -1,0 +1,79 @@
+---
+title: Installation
+description: Install do-auditlog in your Go project.
+---
+
+## Requirements
+
+- Go 1.26 or later
+- [samber/do v2](https://github.com/samber/do) in your project
+- An active Go module (`go.mod`)
+
+## Install
+
+```bash
+go get github.com/larsartmann/samber-do-auditlog
+```
+
+## Quick Usage
+
+```go
+package main
+
+import (
+    "github.com/larsartmann/samber-do-auditlog"
+    "github.com/samber/do/v2"
+)
+
+func main() {
+    plugin, err := auditlog.New(auditlog.Config{
+        Enabled:     true,
+        ContainerID: "my-app",
+    })
+    if err != nil {
+        panic(err)
+    }
+
+    injector := do.NewWithOpts(plugin.Opts())
+
+    // Register services as usual
+    do.Provide(injector, func(i do.Injector) (*Database, error) {
+        return &Database{}, nil
+    })
+
+    // Export when ready
+    plugin.ExportToHTML("audit.html")
+}
+```
+
+## Environment Variable
+
+Control the plugin at runtime without code changes:
+
+```bash
+# Enable (default when Config.Enabled is true)
+DO_AUDITLOG_ENABLED=true
+
+# Disable — zero hooks, zero cost
+DO_AUDITLOG_ENABLED=false
+```
+
+When `DO_AUDITLOG_ENABLED` is set, it overrides `Config.Enabled`. This lets you enable auditing in development and disable it in production without recompiling.
+
+## Import
+
+```go
+import "github.com/larsartmann/samber-do-auditlog"
+```
+
+## Verify Installation
+
+```bash
+go list -m github.com/larsartmann/samber-do-auditlog
+```
+
+## Next Steps
+
+- Follow the [Quick Start](/getting-started/quick-start/) for complete examples
+- Learn about [Export Formats](/guides/export-formats/) to choose the right output
+- See [Dependency Tracking](/guides/dependency-tracking/) to understand graph inference

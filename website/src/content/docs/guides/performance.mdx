@@ -1,0 +1,58 @@
+---
+title: Performance
+description: Benchmark results and performance characteristics.
+---
+
+## Philosophy
+
+do-auditlog is designed for minimal overhead during container operation. All event capture happens in memory — no file I/O during registration, invocation, or shutdown. Export is a single `json.Marshal` or line iteration.
+
+## Benchmarks
+
+Benchmarked on AMD Ryzen AI MAX+ 395:
+
+```
+BenchmarkHookOverhead_Invocation    ~1,658 ns/op    6 allocs    (enabled)
+BenchmarkHookOverhead_Disabled       ~113 ns/op    4 allocs    (disabled)
+BenchmarkHookOverhead_Registration  ~21,982 ns/op   54 allocs    (full container)
+```
+
+**Overhead: ~1.7us per cached invocation** when enabled. Zero cost when disabled.
+
+The disabled cost (~113ns, 4 allocs) is entirely from samber/do's own hook dispatch mechanism — the plugin installs empty hooks that never execute recorder logic.
+
+## Concurrency Model
+
+A single `sync.RWMutex` protects all mutable state. This reduces lock acquisition overhead from 2-4 per hook to exactly 1.
+
+- `sequence` and `invocationSeq` are `atomic.Int64` — no mutex needed for counters.
+- Each hook acquires `mu` once, performs all mutations, then releases.
+- `OnEvent` callback is called outside the lock to avoid blocking the hot path.
+- `BuildReport()` uses `mu.RLock()` for reading — concurrent reads don't block each other.
+
+## Disabled Mode
+
+When `Enabled: false`, the plugin returns empty hooks. samber/do never calls recorder methods. The overhead is entirely samber/do's own hook dispatch (~113ns, 4 allocs).
+
+```go
+plugin, _ := auditlog.New(auditlog.Config{
+    Enabled: false, // zero-cost hooks
+})
+```
+
+## Export Cost
+
+Export is only paid when you need the data:
+
+| Operation | Cost |
+| --- | --- |
+| `plugin.Report()` | One mutex read + struct assembly |
+| `plugin.ExportToFile()` | One `json.MarshalIndent` + file write |
+| `plugin.ExportEventsToNDJSON()` | Line iteration + per-event `json.Marshal` |
+| `plugin.ExportToHTML()` | Template render (templ) |
+
+## Reproducing
+
+```bash
+go test -bench=. -benchmem ./...
+```

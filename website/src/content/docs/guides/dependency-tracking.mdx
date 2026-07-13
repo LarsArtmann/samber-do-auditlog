@@ -1,0 +1,81 @@
+---
+title: Dependency Tracking
+description: How do-auditlog infers the dependency graph without accessing do's internal DAG.
+---
+
+## How It Works
+
+do-auditlog does **not** access samber/do's internal DAG. Instead, it uses a lightweight invocation stack to infer dependencies at runtime:
+
+1. `HookBeforeInvocation` fires for service A. A is pushed onto a stack.
+2. A's provider calls `do.MustInvoke[B](i)`. `HookBeforeInvocation` fires for B while A is still on the stack.
+3. The plugin records: **A depends on B**.
+4. `HookAfterInvocation` fires. The service is popped from the stack.
+
+This correctly reconstructs the dependency graph even for:
+
+- **Cached services** — subsequent invocations of a lazy service are near-instant but still tracked
+- **Cross-scope resolution** — services inherited from parent scopes
+- **Provider errors** — failed invocations are still recorded with error details
+
+## Forward and Reverse Graphs
+
+Every service has both:
+
+```go
+report := plugin.Report()
+svc := report.ServiceByName("*main.UserService")
+
+// Services that UserService depends on
+for _, dep := range svc.Dependencies {
+    fmt.Printf("depends on: %s\n", dep.ServiceName)
+}
+
+// Services that depend on UserService
+for _, dependent := range svc.Dependents {
+    fmt.Printf("depended on by: %s\n", dependent.ServiceName)
+}
+```
+
+The reverse graph (`Dependents`) is computed at report time from the forward dependencies.
+
+## Scope Tree
+
+do-auditlog tracks the full scope hierarchy:
+
+```go
+report := plugin.Report()
+
+// Get all services in a specific scope
+services := report.ServicesByScope("drivers")
+
+// The scope tree is part of the report
+// [root]
+//   ├── *main.Database
+//   └── drivers (child scope)
+//       └── *main.DriverService
+```
+
+## Stack-Based Inference
+
+The invocation stack is LIFO (last-in, first-out) with a fast path:
+
+- **O(1) common case**: The most recently pushed service is the first checked.
+- **Backward search**: Falls back only for unusual invocation orderings.
+
+This means the hot path — a linear chain of `do.MustInvoke` calls — is a single pointer comparison.
+
+## Cross-Scope Dependencies
+
+When a child scope invokes a service from a parent scope, the dependency is recorded with the correct scope information:
+
+```go
+// In scope "drivers":
+db := do.MustInvoke[*Database](i)
+// Records: DriverService (scope: drivers) depends on Database (scope: [root])
+```
+
+## What Is NOT Tracked
+
+- **Lazy providers that are never invoked** — if a service is registered but never resolved, it has no dependencies recorded. This is correct: no provider ran, so no `MustInvoke` calls were intercepted.
+- **Health check capabilities** — `IsHealthchecker` and `IsShutdowner` are populated via `do.ExplainInjector` at report time, not from the stack. Capabilities are only visible for invoked services.

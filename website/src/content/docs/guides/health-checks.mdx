@@ -1,0 +1,65 @@
+---
+title: Health Checks
+description: Wrap injector.HealthCheck() with per-service audit events.
+---
+
+## Overview
+
+samber/do v2 does not expose health-check hooks in `InjectorOpts`. do-auditlog wraps `injector.HealthCheckWithContext()` to record `EventTypeHealthCheck` events per service.
+
+## Usage
+
+```go
+// Instead of: err := injector.HealthCheckWithContext(ctx)
+// Use the plugin wrapper:
+err := plugin.RecordHealthCheckWithContext(ctx, injector)
+if err != nil {
+    log.Printf("health checks failed: %v", err)
+}
+
+report := plugin.Report()
+if !report.HealthCheckSucceeded {
+    for _, svc := range report.UnhealthyServices() {
+        if svc.HealthCheckError != nil {
+            log.Printf("unhealthy: %s — %s", svc.ServiceName, *svc.HealthCheckError)
+        }
+    }
+}
+```
+
+## How It Works
+
+1. The plugin calls `injector.HealthCheckWithContext(ctx)` internally.
+2. For each service that implements `do.Healthchecker` or `do.HealthcheckerWithContext`, a `PhaseAfter` health check event is recorded.
+3. The event captures the service name, scope, and any error from the health check.
+4. `ServiceInfo.HealthCheckCount` is incremented per check.
+5. `ServiceInfo.IsHealthchecker` is set to `true` via `do.ExplainInjector` at report time.
+
+## Important Details
+
+- **PhaseAfter only**: There is no interception point before the bulk health check runs, so there are no `PhaseBefore` events.
+- **No per-service timing**: The bulk `HealthCheckWithContext()` API does not provide per-service duration. `DurationMs` is `nil` for health check events.
+- **HealthCheckSucceeded is `false` when no health checks ran**: The report requires at least one health-checked service to report `true`.
+
+## Disabled Mode
+
+When the plugin is disabled, `RecordHealthCheck` delegates directly to the injector without recording events:
+
+```go
+plugin, _ := auditlog.New(auditlog.Config{
+    Enabled: false,
+})
+
+// Still works — delegates to injector.HealthCheckWithContext(ctx)
+err := plugin.RecordHealthCheckWithContext(ctx, injector)
+```
+
+## Scope Resolution
+
+The plugin resolves scope metadata from its internal `serviceRecord` map:
+
+```go
+// Plugin.ResolveServiceScope resolves scope metadata by service name
+// Handles both *do.RootScope and *do.Scope
+scopeID, scopeName, found := plugin.ResolveServiceScope(scope, "*main.Database")
+```

@@ -1,0 +1,22 @@
+---
+import { features } from '../data/features';
+import Icon from './Icon.astro';
+import Card from './Card.astro';
+import SectionHeader from './SectionHeader.astro';
+---
+
+<div>
+  <SectionHeader title="Everything you need to audit your DI container." subtitle="Drop-in observability with zero ceremony." />
+
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {features.map((feature) => (
+      <Card variant="feature">
+        <div class="text-accent mb-3">
+          <Icon name={feature.icon} />
+        </div>
+        <h3 class="font-semibold text-text-primary mb-2">{feature.title}</h3>
+        <p class="text-sm text-text-muted leading-relaxed">{feature.desc}</p>
+      </Card>
+    ))}
+  </div>
+</div>
