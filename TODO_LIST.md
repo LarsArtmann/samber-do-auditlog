@@ -1,7 +1,7 @@
 # TODO List
 
 Comprehensive list of improvement tasks, verified against actual code state.
-Last updated: 2026-06-18
+Last updated: 2026-07-13
 
 ---
 
@@ -161,6 +161,24 @@ Sorted by impact × value ÷ effort.
 - [x] 7 godoc examples for pkg.go.dev
 - [x] Fix all golangci-lint issues (was 28 → 0)
 - [x] Coverage: 95.5%, ~300 tests, 11 benchmarks
+
+## Completed (2026-07-13 — Website & BuildFlow Remediation)
+
+- [x] **Public documentation website** — Full Astro v7 + Starlight site at `do-auditlog.lars.software` with 11 docs pages, landing page, Firebase hosting, and CI deploy workflow
+- [x] **BuildFlow go-auto-upgrade revert** — Reverted catastrophic `encoding/json/v2` migration; documented the incident in AGENTS.md and committed the revert (commit `fb56b6a`)
+
+## Completed (2026-06-21 – 2026-07-07 — v0.2.0 through v0.5.0)
+
+- [x] **go-output adoption** — All diagram rendering (Mermaid/PlantUML/DOT/D2) migrated to `github.com/larsartmann/go-output` renderers; hand-rolled `diagramFormatter` pipeline removed (~237 LOC)
+- [x] **D2 diagram export** — `Report.WriteD2` as 4th diagram format via `go-output/d2`; CLI `convert -f d2`
+- [x] **Tree export** — `Report.WriteTree` (ASCII) and `Report.WriteHTMLTree` (HTML nested list) via `go-output/tree` and `go-output/markup`
+- [x] **Table export** — `Report.WriteTable` in 16+ formats via `go-output RenderTable`; CLI `convert` extended with `tree`, `htmltree`, `table`
+- [x] **daghtml SDK adoption** — Replaced 306 lines of inline Sugiyama DAG JS in `html.templ` with `go-output/daghtml` SDK via `daghtml_adapter.go` (v0.3.1)
+- [x] **Hook refactoring** — Centralized per-hook preamble into `hookContext` helpers in `hooks.go` (v0.3.1)
+- [x] **go-output v0.30.0 API adoption** — `GraphStyle`→`NodeStyle`, `TableData`→`Table`, `RenderTableData`→`RenderTable` (v0.4.0)
+- [x] **Nix flake modernization** — Migrated from `flake-utils`/`eachDefaultSystem` to `flake-parts` with `treefmt-nix`
+- [x] **CSS token extraction** — Inline CSS color values extracted to named constants across `html.templ`, `html.go`, `daghtml_adapter.go`
+- [x] **Test infrastructure centralization** — Shared fixtures and helpers extracted into `helpers_test.go`
 
 ## Completed (Historical)
 

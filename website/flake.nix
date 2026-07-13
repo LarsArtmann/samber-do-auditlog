@@ -1,27 +1,27 @@
 {
-  "description": "do-auditlog website — Astro + Starlight",
+  description = "do-auditlog website — Astro + Starlight";
 
-  "inputs": {
-    "nixpkgs": {
-      "url": "github:NixOS/nixpkgs/nixos-unstable"
-    },
+  inputs = {
+    nixpkgs = {
+      url = "github:NixOS/nixpkgs/nixos-unstable";
+    };
 
-    "systems": {
-      "url": "github:nix-systems/default"
-    },
+    systems = {
+      url = "github:nix-systems/default";
+    };
 
-    "flake-parts": {
-      "url": "github:hercules-ci/flake-parts",
-      "inputs.nixpkgs-lib.follows": "nixpkgs"
-    },
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
+      inputs.nixpkgs-lib.follows = "nixpkgs";
+    };
 
-    "treefmt-nix": {
-      "url": "github:numtide/treefmt-nix",
-      "inputs.nixpkgs.follows": "nixpkgs"
-    }
-  },
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
 
-  "outputs":
+  outputs =
     inputs@{ self, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = import inputs.systems;

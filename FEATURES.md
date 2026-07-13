@@ -143,46 +143,38 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ### Testing / Infrastructure
 
-| Feature                      | Description                                                                                                                | Verified                   |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| **GitHub Actions CI**        | `go vet`, `go build`, race-detector tests, golangci-lint, govulncheck, generated-code drift checks                         | `.github/workflows/ci.yml` |
-| **golangci-lint config**     | `.golangci.yml` defines lint rules for the project                                                                         | `.golangci.yml`            |
-| **Generated-code check**     | CI runs `go generate ./...` and fails on drift, ensuring `html_templ.go` stays in sync                                     | `.github/workflows/ci.yml` |
-| **templ code generation**    | `//go:generate go tool templ generate` in `html.go` produces `html_templ.go`                                               | `html.go`, `html_templ.go` |
-| **Fuzz tests**               | 3 targets: HTML XSS (service names, error messages, dep chains), `MigrateReport` integrity, Mermaid/PlantUML special chars | `fuzz_test.go`             |
-| **Benchmark tests**          | Performance benchmarks for hot paths                                                                                       | `benchmarks_test.go`       |
-| **Example tests**            | Runnable `Example*` functions for pkg.go.dev                                                                               | `example_test.go`          |
-| **Defensive-copy accessors** | `Plugin.Events()` and `Recorder.Events()` return copied slices; `EventsCount()` avoids copying                             | `plugin.go`, `recorder.go` |
-| **Dropped-event counter**    | `Plugin.DroppedEventCount()` / `Recorder.DroppedEventCount()`                                                              | `plugin.go`, `recorder.go` |
-| **Test parallelism**         | 152 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                        | all `*_test.go`            |
-| **Type metadata assertions** | `TestBuildTypeMetadata` directly asserts provider/status icons, labels, and colors                                         | `metadata_test.go`         |
+| Feature                      | Description                                                                                                                                                                       | Verified                                                |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| **GitHub Actions CI**        | `go vet`, `go build`, race-detector tests, golangci-lint, govulncheck, generated-code drift checks                                                                                | `.github/workflows/ci.yml`                              |
+| **golangci-lint config**     | `.golangci.yml` defines lint rules for the project                                                                                                                                | `.golangci.yml`                                         |
+| **Generated-code check**     | CI runs `go generate ./...` and fails on drift, ensuring `html_templ.go` stays in sync                                                                                            | `.github/workflows/ci.yml`                              |
+| **templ code generation**    | `//go:generate go tool templ generate` in `html.go` produces `html_templ.go`                                                                                                      | `html.go`, `html_templ.go`                              |
+| **Fuzz tests**               | 5 targets: HTML XSS (service names, error messages, dep chains), `MigrateReport` integrity, Mermaid/PlantUML special chars, filter-option combinations, NDJSON parsing resilience | `fuzz_test.go`, `filter_fuzz_test.go`, `replay_test.go` |
+| **Benchmark tests**          | Performance benchmarks for hot paths                                                                                                                                              | `benchmarks_test.go`                                    |
+| **Example tests**            | Runnable `Example*` functions for pkg.go.dev                                                                                                                                      | `example_test.go`                                       |
+| **Defensive-copy accessors** | `Plugin.Events()` and `Recorder.Events()` return copied slices; `EventsCount()` avoids copying                                                                                    | `plugin.go`, `recorder.go`                              |
+| **Dropped-event counter**    | `Plugin.DroppedEventCount()` / `Recorder.DroppedEventCount()`                                                                                                                     | `plugin.go`, `recorder.go`                              |
+| **Test parallelism**         | 152 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                                                                               | all `*_test.go`                                         |
+| **Type metadata assertions** | `TestBuildTypeMetadata` directly asserts provider/status icons, labels, and colors                                                                                                | `metadata_test.go`                                      |
 
 ---
 
 ## PARTIALLY FUNCTIONAL
 
-| Feature            | Description                                                                                                                     | Status            |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| **Filter fuzzing** | `MigrateReport`, HTML XSS, and Mermaid/PlantUML special chars are fuzzed; arbitrary `ReportOption` filter combinations are not. | Could be expanded |
+_None — all tracked features are either fully functional or worth considering for the future._
 
 ---
 
 ## WORTH CONSIDERING
 
-| Feature                                            | Why Not Now                                                               |
-| -------------------------------------------------- | ------------------------------------------------------------------------- |
-| **External storage backends**                      | File/`io.Writer` exports are sufficient for current scope                 |
-| **Prometheus / OpenTelemetry metrics integration** | Users can derive metrics via `Config.OnEvent`; OTel bridge example exists |
-| **Multi-module repository split**                  | Project is one package (~2,500 LOC); revisit at 5+ packages               |
-| **gosec static analysis in CI**                    | Security linting alongside existing govulncheck                           |
-| **CSV / TSV export**                               | Tabular export of services or events for spreadsheets                     |
-| **CLI tool**                                       | Stand-alone binary to convert/export/visualize saved reports              |
-| **NDJSON import**                                  | Enable loading events back from NDJSON for diffing across time            |
-| **JSON Schema file**                               | Machine-readable schema for the report format                             |
-| **Property-based testing**                         | `rapid`/`gopter` tests for `Diff`, `MigrateReport`, filter round-trips    |
-| **WebSocket live stream**                          | Bridge `OnEvent` to real-time dashboards                                  |
-| **v0.1.0 release**                                 | Project meets `STABILITY.md` criteria for a first stable-ish tag          |
+| Feature                                            | Why Not Now                                                                                |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **External storage backends**                      | File/`io.Writer` exports are sufficient for current scope                                  |
+| **Prometheus / OpenTelemetry metrics integration** | Users can derive metrics via `Config.OnEvent`; OTel bridge example exists                  |
+| **Multi-module repository split**                  | Project is one package (~2,500 LOC); revisit at 5+ packages                                |
+| **Property-based testing**                         | `rapid`/`gopter` tests for filter round-trips (`Diff` and `MigrateReport` already covered) |
+| **WebSocket live stream**                          | Reference example exists (`docs/examples/websocket-stream.md`); not a library dependency   |
 
 ---
 
-_Last verified against the codebase on 2026-06-17._
+_Last verified against the codebase on 2026-07-13._

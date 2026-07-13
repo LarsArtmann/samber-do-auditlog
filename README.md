@@ -51,20 +51,20 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 
 ## Features
 
-| Feature                  | Description                                                              |
-| ------------------------ | ------------------------------------------------------------------------ |
-| **Drop-in setup**        | `do.NewWithOpts(plugin.Opts())` — one line, zero config                  |
-| **Dependency graph**     | Infers which service resolved which, without accessing do's internal DAG |
-| **Reverse dependencies** | Every service knows who depends on it                                    |
-| **Scope tree**           | Full hierarchy with per-scope service lists                              |
-| **Service types**        | Auto-detects lazy/eager/transient/alias via `do.ExplainNamedService`     |
-| **Timing**               | First build duration, shutdown duration, invocation count & order        |
-| **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events             |
-| **9 export formats**     | JSON · NDJSON · CSV · TSV · HTML · Mermaid · PlantUML · DOT · D2         |
-| **Filtered reports**     | Functional options to slice by name, type, scope, event type, time range |
-| **~1.7μs overhead**      | In-memory capture, no I/O during container operation                     |
-| **Toggle on/off**        | `Enabled: false` → zero hooks, zero cost                                 |
-| **Minimal deps**         | Only `samber/do/v2` + `a-h/templ` (HTML visualization)                   |
+| Feature                  | Description                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------------- |
+| **Drop-in setup**        | `do.NewWithOpts(plugin.Opts())` — one line, zero config                                           |
+| **Dependency graph**     | Infers which service resolved which, without accessing do's internal DAG                          |
+| **Reverse dependencies** | Every service knows who depends on it                                                             |
+| **Scope tree**           | Full hierarchy with per-scope service lists                                                       |
+| **Service types**        | Auto-detects lazy/eager/transient/alias via `do.ExplainNamedService`                              |
+| **Timing**               | First build duration, shutdown duration, invocation count & order                                 |
+| **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events                                      |
+| **Export formats**       | JSON · NDJSON · CSV · TSV · HTML · Mermaid · PlantUML · DOT · D2 · Tree · Table (16+ sub-formats) |
+| **Filtered reports**     | Functional options to slice by name, type, scope, event type, time range                          |
+| **~1.7μs overhead**      | In-memory capture, no I/O during container operation                                              |
+| **Toggle on/off**        | `Enabled: false` → zero hooks, zero cost                                                          |
+| **Minimal deps**         | `samber/do/v2` + `a-h/templ` + `larsartmann/go-output` (diagrams/tables)                          |
 
 ## Install
 
@@ -357,6 +357,12 @@ The callback is called **outside the mutex** on every event. Keep it fast — do
 | `ExportToPlantUML(path) error`                | PlantUML component diagram to file.                        |
 | `ExportToDOT(path) error`                     | Graphviz DOT digraph to file.                              |
 | `ExportToD2(path) error`                      | D2 diagram to file.                                        |
+| `WriteTree(w) error`                          | ASCII dependency tree to `io.Writer`.                      |
+| `WriteHTMLTree(w) error`                      | HTML nested-list dependency tree to `io.Writer`.           |
+| `WriteTable(w, format, opts) error`           | Multi-format service summary table to `io.Writer`.         |
+| `ExportToTree(path) error`                    | ASCII dependency tree to file.                             |
+| `ExportToHTMLTree(path) error`                | HTML nested-list dependency tree to file.                  |
+| `ExportToTable(path, format, opts) error`     | Multi-format service summary table to file.                |
 | `ExportFilteredToFile(path, opts...) error`   | Filtered JSON report to file.                              |
 
 **Package-level**
@@ -496,7 +502,7 @@ This project enforces security through:
 - **gosec** — security scanner integrated into golangci-lint (108 linters, 0 issues)
 - **CSP** — HTML output includes a strict Content-Security-Policy meta tag
 - **XSS hardening** — all user-controlled strings escaped via templ's context-aware auto-escaping
-- **Fuzz testing** — 3 fuzz targets verify XSS resilience against malicious service names, error messages, and dependency chains
+- **Fuzz testing** — 5 fuzz targets verify resilience against malicious inputs (XSS, schema migration, diagram special chars, filter combinations, NDJSON parsing)
 
 Recommended additional check:
 

@@ -89,6 +89,18 @@ Every term below should mean the **same thing** to everyone who reads it.
 | WriteNDJSON                  | Write NDJSON event stream to an io.Writer               | Export command      |
 | WriteMermaid                 | Export dependency graph as Mermaid flowchart            | Export command      |
 | WritePlantUML                | Export dependency graph as PlantUML component diagram   | Export command      |
+| WriteDOT                     | Export dependency graph as Graphviz DOT digraph         | Export command      |
+| WriteD2                      | Export dependency graph as D2 diagram                   | Export command      |
+| WriteCSV                     | Export all services as comma-separated values           | Export command      |
+| WriteTSV                     | Export all services as tab-separated values             | Export command      |
+| WriteTree                    | Export dependency DAG as ASCII tree                     | Export command      |
+| WriteHTMLTree                | Export dependency DAG as HTML nested-list tree          | Export command      |
+| WriteTable                   | Export service summary table in 16+ formats             | Export command      |
+| ReadEvents                   | Read NDJSON event stream back into memory               | Import command      |
+| ReplayEvents                 | Reconstruct a Report from a flat event stream           | Import command      |
+| LoadReport                   | Auto-detect format and load a report from file          | Import command      |
+| NewReport                    | Construct a validated Report from core data             | Constructor         |
+| JSONSchema                   | Return the canonical JSON Schema for the report format  | Schema command      |
 
 ## Bounded Contexts
 
@@ -96,7 +108,7 @@ Every term below should mean the **same thing** to everyone who reads it.
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Capture       | Hook callbacks, event recording, dependency inference (hooks.go, recorder.go)                                                      |
 | Aggregation   | Building reports, scope trees, dependency graphs (report_builder.go)                                                               |
-| Export        | Formatting and writing: JSON, NDJSON, HTML, Mermaid, PlantUML (plugin.go, html.go, report.go, mermaid.go, plantuml.go, diagram.go) |
+| Export        | Formatting and writing: JSON, NDJSON, CSV, TSV, HTML, Mermaid, PlantUML, DOT, D2, Tree, Table (plugin.go, html.go, report.go, csv.go, mermaid.go, plantuml.go, dot.go, d2.go, tree.go, table.go, diagram.go) |
 | Configuration | Plugin setup, environment variable handling (plugin.go)                                                                            |
 
 ---

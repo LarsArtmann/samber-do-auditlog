@@ -12,11 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Public documentation website**: full Astro v7 + Starlight + Tailwind v4 site deployed at `do-auditlog.lars.software` with 11 docs pages, landing page, Firebase hosting, and CI deploy workflow.
+
 ### Changed
 
 - **Nix flake modernization**: migrated from `flake-utils`/`eachDefaultSystem` to `flake-parts` with `treefmt-nix` for standardized formatting checks.
 - **Nix build check**: added `build` output as a check in the treefmt configuration.
 - **Dependency updates**: `golang.org/x/sync` v0.21.0 → v0.22.0, `golang.org/x/sys` v0.46.0 → v0.47.0, `golang.org/x/term` v0.44.0 → v0.45.0, nixpkgs bumped to latest.
+
+### Fixed
+
+- **BuildFlow `go-auto-upgrade` revert**: reverted a catastrophic automated migration to `encoding/json/v2` + `encoding/json/jsontext` (build-constraint-excluded in Go 1.26.4) that left the project uncompilable. Documented the incident and the `encoding/json/v2` exclusion policy in `AGENTS.md`.
 
 ## [0.5.0] - 2026-07-07
 
