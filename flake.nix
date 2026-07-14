@@ -43,6 +43,7 @@
                 actionlint
                 govulncheck
                 golines
+                nixfmt
                 ;
             };
 
