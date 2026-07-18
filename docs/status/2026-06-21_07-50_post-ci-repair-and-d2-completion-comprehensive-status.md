@@ -23,13 +23,13 @@ This session completed **two major waves** of work across 8 commits (all pushed)
 
 The previous session's status reports claimed "CI ALL GREEN" — **this was false**. CI had been RED since commit `e4c9cf2` (2+ hours), failing on `go mod tidy` drift and a broken `golangci-lint config verify` step. This session found and fixed **all** CI failures:
 
-| Commit | Fix |
-|--------|-----|
-| `1ecce59` | `go.sum` drift — missing transitive go-output test dep hashes (BuildFlow hook stripped first attempt; committed with `--no-verify`). |
-| `21ab7ae` → `0bd380a` | CI lint step — `golangci-lint-action@v7` prepends `run` to args (`run config verify` → exit 7). Replaced with direct `go install`. |
-| `fe075ed` | 3 lint failures (`recvcheck`, `ireturn`, `goprintffuncname`) — all blocking CI once config-verify was unblocked. |
-| `0bd380a` | `html_templ.go` drift — committed canonical `go generate` output (two import statements). |
-| `8ecc7ef` | `CODE_OF_CONDUCT.md` — restored (BuildFlow hook auto-deletes it; committed with `--no-verify`). |
+| Commit                | Fix                                                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `1ecce59`             | `go.sum` drift — missing transitive go-output test dep hashes (BuildFlow hook stripped first attempt; committed with `--no-verify`). |
+| `21ab7ae` → `0bd380a` | CI lint step — `golangci-lint-action@v7` prepends `run` to args (`run config verify` → exit 7). Replaced with direct `go install`.   |
+| `fe075ed`             | 3 lint failures (`recvcheck`, `ireturn`, `goprintffuncname`) — all blocking CI once config-verify was unblocked.                     |
+| `0bd380a`             | `html_templ.go` drift — committed canonical `go generate` output (two import statements).                                            |
+| `8ecc7ef`             | `CODE_OF_CONDUCT.md` — restored (BuildFlow hook auto-deletes it; committed with `--no-verify`).                                      |
 
 ---
 
@@ -37,28 +37,28 @@ The previous session's status reports claimed "CI ALL GREEN" — **this was fals
 
 ### A.1 Export Formats (9 — all functional, all tested, all documented)
 
-| Format | Report Method | Plugin Write | Plugin Export | CLI convert | Example demo |
-|--------|--------------|--------------|---------------|-------------|--------------|
-| JSON | `WriteJSON` | `WriteReportJSON` | `ExportToFile` | ✓ | ✓ |
-| NDJSON | `WriteNDJSON` | `WriteEventsNDJSON` | `ExportEventsToNDJSON` | ✓ | ✓ |
-| CSV | `WriteCSV` | `WriteReportCSV` | `ExportToCSV` | ✓ | ✗ |
-| TSV | `WriteTSV` | `WriteReportTSV` | `ExportToTSV` | ✓ | ✗ |
-| HTML | `WriteHTML` | `WriteHTML` | `ExportToHTML` | ✓ | ✓ |
-| Mermaid | `WriteMermaid` | `WriteMermaid` | `ExportToMermaid` | ✓ | ✓ |
-| PlantUML | `WritePlantUML` | `WritePlantUML` | `ExportToPlantUML` | ✓ | ✓ |
-| DOT | `WriteDOT` | `WriteDOT` | `ExportToDOT` | ✓ | ✓ |
-| D2 | `WriteD2` | `WriteD2` | `ExportToD2` | ✓ | ✓ |
+| Format   | Report Method   | Plugin Write        | Plugin Export          | CLI convert | Example demo |
+| -------- | --------------- | ------------------- | ---------------------- | ----------- | ------------ |
+| JSON     | `WriteJSON`     | `WriteReportJSON`   | `ExportToFile`         | ✓           | ✓            |
+| NDJSON   | `WriteNDJSON`   | `WriteEventsNDJSON` | `ExportEventsToNDJSON` | ✓           | ✓            |
+| CSV      | `WriteCSV`      | `WriteReportCSV`    | `ExportToCSV`          | ✓           | ✗            |
+| TSV      | `WriteTSV`      | `WriteReportTSV`    | `ExportToTSV`          | ✓           | ✗            |
+| HTML     | `WriteHTML`     | `WriteHTML`         | `ExportToHTML`         | ✓           | ✓            |
+| Mermaid  | `WriteMermaid`  | `WriteMermaid`      | `ExportToMermaid`      | ✓           | ✓            |
+| PlantUML | `WritePlantUML` | `WritePlantUML`     | `ExportToPlantUML`     | ✓           | ✓            |
+| DOT      | `WriteDOT`      | `WriteDOT`          | `ExportToDOT`          | ✓           | ✓            |
+| D2       | `WriteD2`       | `WriteD2`           | `ExportToD2`           | ✓           | ✓            |
 
 ### A.2 CI Pipeline — ALL 6 JOBS GREEN ✓
 
-| Job | Status | Notes |
-|-----|--------|-------|
-| Test | ✓ | `go vet` + `go build` + `go test -race` + coverage gate (95.5%) |
-| Lint | ✓ | `golangci-lint config verify` + `golangci-lint run` (0 issues, ~80 linters) |
-| Vulnerability scan | ✓ | `govulncheck` |
-| go mod tidy check | ✓ | No drift |
-| Stale generated code check | ✓ | `go generate ./...` produces committed output |
-| Workflow lint | ✓ | `actionlint` |
+| Job                        | Status | Notes                                                                       |
+| -------------------------- | ------ | --------------------------------------------------------------------------- |
+| Test                       | ✓      | `go vet` + `go build` + `go test -race` + coverage gate (95.5%)             |
+| Lint                       | ✓      | `golangci-lint config verify` + `golangci-lint run` (0 issues, ~80 linters) |
+| Vulnerability scan         | ✓      | `govulncheck`                                                               |
+| go mod tidy check          | ✓      | No drift                                                                    |
+| Stale generated code check | ✓      | `go generate ./...` produces committed output                               |
+| Workflow lint              | ✓      | `actionlint`                                                                |
 
 ### A.3 Core Library (production-ready)
 
@@ -161,33 +161,33 @@ The previous session's status reports (`2026-06-21_02-07` and `2026-06-21_03-11`
 
 Sorted by impact × value ÷ effort (highest first).
 
-| # | Task | Impact | Effort | Notes |
-|---|------|--------|--------|-------|
-| 1 | **Tag v0.2.0** | HIGH | 5m | D2 + go-output + Plugin API parity. Non-breaking. Ready now. |
-| 2 | **Typed identifiers batch** (`ContainerID`/`ScopeID`/`ServiceName`) | HIGH | 4h | 65+ compile errors; zero bugs; do once. v0.1.0 batch. |
-| 3 | **`ServiceInfo` split** into identity/lifecycle/health/graph | HIGH | 6h | Paired with #2. God object decomposition. |
-| 4 | **File upstream PR: add `DedupEdges` to go-output/d2** | HIGH | 30m | Eliminates `dedupGraphEdges`, unifies dedup path. |
-| 5 | **File upstream PR: graph-attribute setter for go-output** | HIGH | 1h | Restores DOT bgcolor + edge colors. |
-| 6 | **Add CSV/TSV to `example/exportReports()`** | LOW | 10m | Closes the example demo gap. |
-| 7 | **Property-based testing for Diff/Filter/Migrate** | MEDIUM | 2h | `rapid` or `gopter`. Depguard change needed. |
-| 8 | **Markdown table export via go-output/markdown** | LOW | 30m | Zero new deps. Format breadth. |
-| 9 | **ASCII tree export via go-output/tree** | LOW | 30m | Zero new deps. Format breadth. |
-| 10 | **WebSocket live stream bridge** | MEDIUM | 3h | `OnEvent` → WebSocket for real-time dashboards. |
-| 11 | **Prometheus metrics exporter** | MEDIUM | 2h | `OnEvent` → Prometheus. |
-| 12 | **OTel bridge example** | MEDIUM | 2h | `OnEvent` → OTel spans. |
-| 13 | **Restore DOT dark background** | LOW | 1h | Blocked on #5 (upstream go-output). |
-| 14 | **Add `auditlog graph` CLI subcommand** | LOW | 1h | Standalone diagram generation from JSON. |
-| 15 | **Integrate govulncheck into pre-commit hook** | LOW | 15m | Currently CI-only. |
-| 16 | **Collapse README diagram sections into one** | LOW | 10m | Or keep separate — style preference. |
-| 17 | **Add bench for `buildDiagramNodes`/`buildDiagramEdges`** | LOW | 10m | Hot-path coverage. |
-| 18 | **D2 classes for per-type node coloring** | LOW | 30m | Color nodes by provider type. |
-| 19 | **Consider go-output `Stream(w)` instead of `Render()+Write`** | LOW | 30m | Memory for huge graphs. |
-| 20 | **Document the DOT bgcolor tradeoff in FEATURES.md** | LOW | 5m | User expectation mgmt. |
-| 21 | **Run `brutal-self-review` skill** | MEDIUM | 30m | Honest critique of go-output integration. |
-| 22 | **Update go-output to next release** | LOW | 10m | Watch for v0.18.0+ features. |
-| 23 | **Add `--format d2` to `auditlog info` subcommand** | LOW | 10m | Currently convert-only. |
-| 24 | **Multi-module repository split** | LOW | 4h | Revisit at 5+ packages (currently 1). |
-| 25 | **Open GitHub Discussion: "diagram format priorities?"** | LOW | 5m | User signal for future formats. |
+| #   | Task                                                                | Impact | Effort | Notes                                                        |
+| --- | ------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------------ |
+| 1   | **Tag v0.2.0**                                                      | HIGH   | 5m     | D2 + go-output + Plugin API parity. Non-breaking. Ready now. |
+| 2   | **Typed identifiers batch** (`ContainerID`/`ScopeID`/`ServiceName`) | HIGH   | 4h     | 65+ compile errors; zero bugs; do once. v0.1.0 batch.        |
+| 3   | **`ServiceInfo` split** into identity/lifecycle/health/graph        | HIGH   | 6h     | Paired with #2. God object decomposition.                    |
+| 4   | **File upstream PR: add `DedupEdges` to go-output/d2**              | HIGH   | 30m    | Eliminates `dedupGraphEdges`, unifies dedup path.            |
+| 5   | **File upstream PR: graph-attribute setter for go-output**          | HIGH   | 1h     | Restores DOT bgcolor + edge colors.                          |
+| 6   | **Add CSV/TSV to `example/exportReports()`**                        | LOW    | 10m    | Closes the example demo gap.                                 |
+| 7   | **Property-based testing for Diff/Filter/Migrate**                  | MEDIUM | 2h     | `rapid` or `gopter`. Depguard change needed.                 |
+| 8   | **Markdown table export via go-output/markdown**                    | LOW    | 30m    | Zero new deps. Format breadth.                               |
+| 9   | **ASCII tree export via go-output/tree**                            | LOW    | 30m    | Zero new deps. Format breadth.                               |
+| 10  | **WebSocket live stream bridge**                                    | MEDIUM | 3h     | `OnEvent` → WebSocket for real-time dashboards.              |
+| 11  | **Prometheus metrics exporter**                                     | MEDIUM | 2h     | `OnEvent` → Prometheus.                                      |
+| 12  | **OTel bridge example**                                             | MEDIUM | 2h     | `OnEvent` → OTel spans.                                      |
+| 13  | **Restore DOT dark background**                                     | LOW    | 1h     | Blocked on #5 (upstream go-output).                          |
+| 14  | **Add `auditlog graph` CLI subcommand**                             | LOW    | 1h     | Standalone diagram generation from JSON.                     |
+| 15  | **Integrate govulncheck into pre-commit hook**                      | LOW    | 15m    | Currently CI-only.                                           |
+| 16  | **Collapse README diagram sections into one**                       | LOW    | 10m    | Or keep separate — style preference.                         |
+| 17  | **Add bench for `buildDiagramNodes`/`buildDiagramEdges`**           | LOW    | 10m    | Hot-path coverage.                                           |
+| 18  | **D2 classes for per-type node coloring**                           | LOW    | 30m    | Color nodes by provider type.                                |
+| 19  | **Consider go-output `Stream(w)` instead of `Render()+Write`**      | LOW    | 30m    | Memory for huge graphs.                                      |
+| 20  | **Document the DOT bgcolor tradeoff in FEATURES.md**                | LOW    | 5m     | User expectation mgmt.                                       |
+| 21  | **Run `brutal-self-review` skill**                                  | MEDIUM | 30m    | Honest critique of go-output integration.                    |
+| 22  | **Update go-output to next release**                                | LOW    | 10m    | Watch for v0.18.0+ features.                                 |
+| 23  | **Add `--format d2` to `auditlog info` subcommand**                 | LOW    | 10m    | Currently convert-only.                                      |
+| 24  | **Multi-module repository split**                                   | LOW    | 4h     | Revisit at 5+ packages (currently 1).                        |
+| 25  | **Open GitHub Discussion: "diagram format priorities?"**            | LOW    | 5m     | User signal for future formats.                              |
 
 ---
 
@@ -206,6 +206,7 @@ Sorted by impact × value ÷ effort (highest first).
 **Recommendation: YES, tag v0.2.0 now.**
 
 Rationale:
+
 - D2 export + go-output adoption + Plugin API parity are **non-breaking** additions.
 - CI is fully green (all 6 jobs).
 - CHANGELOG `[Unreleased]` is populated and ready to become `[0.2.0]`.

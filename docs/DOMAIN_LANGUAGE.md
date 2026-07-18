@@ -104,12 +104,12 @@ Every term below should mean the **same thing** to everyone who reads it.
 
 ## Bounded Contexts
 
-| Context       | Description                                                                                                                        |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Capture       | Hook callbacks, event recording, dependency inference (hooks.go, recorder.go)                                                      |
-| Aggregation   | Building reports, scope trees, dependency graphs (report_builder.go)                                                               |
+| Context       | Description                                                                                                                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Capture       | Hook callbacks, event recording, dependency inference (hooks.go, recorder.go)                                                                                                                                |
+| Aggregation   | Building reports, scope trees, dependency graphs (report_builder.go)                                                                                                                                         |
 | Export        | Formatting and writing: JSON, NDJSON, CSV, TSV, HTML, Mermaid, PlantUML, DOT, D2, Tree, Table (plugin.go, html.go, report.go, csv.go, mermaid.go, plantuml.go, dot.go, d2.go, tree.go, table.go, diagram.go) |
-| Configuration | Plugin setup, environment variable handling (plugin.go)                                                                            |
+| Configuration | Plugin setup, environment variable handling (plugin.go)                                                                                                                                                      |
 
 ---
 

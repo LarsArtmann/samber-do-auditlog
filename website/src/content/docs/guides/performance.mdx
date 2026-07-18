@@ -44,12 +44,12 @@ plugin, _ := auditlog.New(auditlog.Config{
 
 Export is only paid when you need the data:
 
-| Operation | Cost |
-| --- | --- |
-| `plugin.Report()` | One mutex read + struct assembly |
-| `plugin.ExportToFile()` | One `json.MarshalIndent` + file write |
+| Operation                       | Cost                                      |
+| ------------------------------- | ----------------------------------------- |
+| `plugin.Report()`               | One mutex read + struct assembly          |
+| `plugin.ExportToFile()`         | One `json.MarshalIndent` + file write     |
 | `plugin.ExportEventsToNDJSON()` | Line iteration + per-event `json.Marshal` |
-| `plugin.ExportToHTML()` | Template render (templ) |
+| `plugin.ExportToHTML()`         | Template render (templ)                   |
 
 ## Reproducing
 

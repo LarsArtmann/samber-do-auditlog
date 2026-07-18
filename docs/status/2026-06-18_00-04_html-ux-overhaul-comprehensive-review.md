@@ -55,7 +55,7 @@ The HTML export was already a mature, distinctive visualization (warm amber "Con
 | Change                | Details                                                                                                   |
 | --------------------- | --------------------------------------------------------------------------------------------------------- |
 | Timeline empty state  | Shows ⏱ icon + "No timing data recorded" + hint when no services have build/shutdown durations            |
-| Graph empty state     | Shows 🗂 icon + "No services registered" + hint when `report.services` is empty                           |
+| Graph empty state     | Shows 🗂 icon + "No services registered" + hint when `report.services` is empty                            |
 | Scope tree null guard | Shows empty state when `report.scope_tree` is nil (prevents crash)                                        |
 | `.panel-empty` CSS    | Reusable flex column centered layout with icon, text, and hint sub-elements                               |
 | Responsive 768px      | 2-col stats grid, stacked header, smaller tab padding, stacked waveform section, narrower timeline labels |

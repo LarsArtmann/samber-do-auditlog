@@ -213,7 +213,7 @@ remediation, and breaking API cleanup.
 - **Removed `LoadReportFromJSON`**: one-line alias for `MigrateReport`. Use
   `MigrateReport` directly.
 - **Removed `LoadReportFromNDJSON`**: duplicate of `LoadReportFromReader(r,
-  FormatNDJSON)`. Use `LoadReportFromReader` with `FormatNDJSON`.
+FormatNDJSON)`. Use `LoadReportFromReader` with `FormatNDJSON`.
 
 ### Changed
 

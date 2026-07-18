@@ -9,16 +9,17 @@
 
 ### Docs verified and fixed (6 files)
 
-| File | Findings fixed | Details |
-|------|---------------|---------|
-| `README.md` | 4 | Fixed false "Minimal deps" claim (missing `go-output`), added 6 missing Tree/Table API methods to Plugin table, updated "9 export formats" → full list, updated fuzz count 3→5 |
-| `AGENTS.md` | 5 | Added `daghtml_adapter.go` to architecture listing, fixed fuzz count in 2 locations (3→5), added BuildFlow `go-auto-upgrade` incident gotcha, added `encoding/json/v2` exclusion policy gotcha |
-| `FEATURES.md` | 4 | Removed 6 already-shipped features from WORTH CONSIDERING (CSV/TSV, CLI, NDJSON import, JSON Schema, gosec, v0.1.0 release), moved filter fuzzing from PARTIALLY FUNCTIONAL to fully functional, fixed fuzz count 3→5, updated verification date |
-| `TODO_LIST.md` | 2 | Updated stale date (2026-06-18 → 2026-07-13), added 2 completed sections (v0.2.0–v0.5.0 work + website launch) |
-| `docs/DOMAIN_LANGUAGE.md` | 2 | Added 12 missing commands to Commands table (WriteDOT/D2/CSV/TSV/Tree/HTMLTree/Table, ReadEvents, ReplayEvents, LoadReport, NewReport, JSONSchema), updated Export bounded context file list |
-| `CHANGELOG.md` | 1 | Added website launch and BuildFlow revert to [Unreleased] section |
+| File                      | Findings fixed | Details                                                                                                                                                                                                                                          |
+| ------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `README.md`               | 4              | Fixed false "Minimal deps" claim (missing `go-output`), added 6 missing Tree/Table API methods to Plugin table, updated "9 export formats" → full list, updated fuzz count 3→5                                                                   |
+| `AGENTS.md`               | 5              | Added `daghtml_adapter.go` to architecture listing, fixed fuzz count in 2 locations (3→5), added BuildFlow `go-auto-upgrade` incident gotcha, added `encoding/json/v2` exclusion policy gotcha                                                   |
+| `FEATURES.md`             | 4              | Removed 6 already-shipped features from WORTH CONSIDERING (CSV/TSV, CLI, NDJSON import, JSON Schema, gosec, v0.1.0 release), moved filter fuzzing from PARTIALLY FUNCTIONAL to fully functional, fixed fuzz count 3→5, updated verification date |
+| `TODO_LIST.md`            | 2              | Updated stale date (2026-06-18 → 2026-07-13), added 2 completed sections (v0.2.0–v0.5.0 work + website launch)                                                                                                                                   |
+| `docs/DOMAIN_LANGUAGE.md` | 2              | Added 12 missing commands to Commands table (WriteDOT/D2/CSV/TSV/Tree/HTMLTree/Table, ReadEvents, ReplayEvents, LoadReport, NewReport, JSONSchema), updated Export bounded context file list                                                     |
+| `CHANGELOG.md`            | 1              | Added website launch and BuildFlow revert to [Unreleased] section                                                                                                                                                                                |
 
 ### Health score delivered
+
 - **Before**: ~3/10 (extensive drift across all docs)
 - **After (claimed)**: 9.5/10
 
@@ -27,13 +28,17 @@
 ## b) PARTIALLY DONE
 
 ### Cross-file consistency — INCOMPLETE
+
 The skill explicitly instructs: "Check cross-file consistency (docs vs docs). The most common rot: a shipped feature still listed in TODO_LIST.md while FEATURES.md says FULLY_FUNCTIONAL." I reported this step as complete but **I missed the most critical split brain in the entire project** (see section d).
 
 ### Count verification — INCOMPLETE
+
 The skill says: "Never hardcode counts that the repo can compute." I flagged the "108 linters" count as unverifiable but did NOT verify the other hardcoded counts in AGENTS.md. When I checked post-hoc, they were ALL wrong.
 
 ### Additional docs not verified
+
 These project docs exist but were NOT audited:
+
 - `CONTRIBUTING.md` — not checked (stale `New()` example was mentioned as fixed in TODO_LIST, but not verified)
 - `STABILITY.md` — not checked (version references could be stale)
 - `BENCHMARKS.md` — not checked (README cites benchmark numbers that should match)
@@ -54,11 +59,11 @@ These project docs exist but were NOT audited:
 
 This is the exact failure mode the docs-health skill warns about, and I walked right past it.
 
-| Source | What it says about v0.3.0 |
-|--------|--------------------------|
+| Source            | What it says about v0.3.0                                                                                       |
+| ----------------- | --------------------------------------------------------------------------------------------------------------- |
 | `TODO_LIST.md:79` | `[ ] v0.3.0 release (breaking)` — **UNCHECKED**, described as "blocked on typed-identifier + ServiceInfo-split" |
-| `CHANGELOG.md:64` | `## [0.3.0] - 2026-06-21` — "Non-breaking — additive only" (tree/table export) |
-| `git tag` | `v0.3.0` EXISTS (also v0.3.1, v0.4.0, v0.5.0) |
+| `CHANGELOG.md:64` | `## [0.3.0] - 2026-06-21` — "Non-breaking — additive only" (tree/table export)                                  |
+| `git tag`         | `v0.3.0` EXISTS (also v0.3.1, v0.4.0, v0.5.0)                                                                   |
 
 **The v0.3.0 release shipped a month ago as a non-breaking feature release, but the TODO_LIST still shows it as an unchecked, blocked, BREAKING release.** The TODO_LIST conception of v0.3.0 (typed identifiers + ServiceInfo split) is a completely different release than what actually shipped (tree + table export).
 
@@ -70,19 +75,20 @@ Additionally, `TODO_LIST.md:55` and `TODO_LIST.md:58` say typed identifiers and 
 
 When I verified post-hoc:
 
-| Count | AGENTS.md says | Actual (computed) | Delta |
-|-------|----------------|-------------------|-------|
-| Test functions | 146 | 253 | **+107** |
-| Benchmark functions | 11 | 12 | +1 |
-| Example functions | 7 | 8 | +1 |
-| Fuzz functions | 3→5 (I fixed this) | 5 | Correct now |
-| Total top-level functions | 167 | ~278 (253+12+5+8) | **+111** |
+| Count                     | AGENTS.md says     | Actual (computed) | Delta       |
+| ------------------------- | ------------------ | ----------------- | ----------- |
+| Test functions            | 146                | 253               | **+107**    |
+| Benchmark functions       | 11                 | 12                | +1          |
+| Example functions         | 7                  | 8                 | +1          |
+| Fuzz functions            | 3→5 (I fixed this) | 5                 | Correct now |
+| Total top-level functions | 167                | ~278 (253+12+5+8) | **+111**    |
 
 The counts were massively stale — 107 test functions added since the count was last computed. The skill says "Never hardcode counts that the repo can compute." I updated the fuzz count but left the other 4 wrong counts untouched.
 
 ### 3. DOMAIN_LANGUAGE.md MigrateReport description STALE — MISSED
 
 `docs/DOMAIN_LANGUAGE.md:83` says:
+
 > `MigrateReport` — Upgrade a v0.1.0 JSON report to the current schema
 
 But `MigrateReport` now upgrades ANY version and also repairs current-schema reports (re-derives all denormalized fields). The README correctly says: "Normalize/repair a JSON report to the current schema (upgrades v0.1.0 and re-derives all denormalized fields for any input version)." I added 12 commands to this file but didn't fix the one stale description that was already there.

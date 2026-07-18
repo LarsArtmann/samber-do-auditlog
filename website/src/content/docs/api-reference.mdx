@@ -5,81 +5,81 @@ description: Complete API reference for the Plugin and Report types.
 
 ## Plugin
 
-| Method | Description |
-| --- | --- |
-| `New(config Config) (*Plugin, error)` | Create plugin. Validates config, returns error if invalid. |
-| `Opts() *do.InjectorOpts` | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`. |
-| `Report() Report` | In-memory snapshot. No I/O. |
-| `ReportFiltered(opts...) Report` | Filtered snapshot with functional options. |
-| `Events() []Event` | Defensive copy of raw event slice. |
-| `EventsCount() int` | Event count without copying. |
-| `RecordHealthCheck(injector)` | Wrap `injector.HealthCheck()` with audit events. |
-| `RecordHealthCheckWithContext(ctx, injector)` | Same with context. |
-| `ResolveServiceScope(scope, name)` | Resolve scope metadata for a service. |
+| Method                                        | Description                                                |
+| --------------------------------------------- | ---------------------------------------------------------- |
+| `New(config Config) (*Plugin, error)`         | Create plugin. Validates config, returns error if invalid. |
+| `Opts() *do.InjectorOpts`                     | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`.  |
+| `Report() Report`                             | In-memory snapshot. No I/O.                                |
+| `ReportFiltered(opts...) Report`              | Filtered snapshot with functional options.                 |
+| `Events() []Event`                            | Defensive copy of raw event slice.                         |
+| `EventsCount() int`                           | Event count without copying.                               |
+| `RecordHealthCheck(injector)`                 | Wrap `injector.HealthCheck()` with audit events.           |
+| `RecordHealthCheckWithContext(ctx, injector)` | Same with context.                                         |
+| `ResolveServiceScope(scope, name)`            | Resolve scope metadata for a service.                      |
 
 ### Export Methods (to io.Writer)
 
-| Method | Description |
-| --- | --- |
-| `WriteReportJSON(w) error` | Indented JSON to any `io.Writer`. |
-| `WriteEventsNDJSON(w) error` | NDJSON event stream to any `io.Writer`. |
-| `WriteHTML(w) error` | Self-contained HTML visualization. |
-| `WriteReportCSV(w) error` | CSV of all services. |
-| `WriteReportTSV(w) error` | TSV of all services. |
-| `WriteMermaid(w) error` | Mermaid flowchart. |
-| `WritePlantUML(w) error` | PlantUML component diagram. |
-| `WriteDOT(w) error` | Graphviz DOT digraph. |
-| `WriteD2(w) error` | D2 diagram. |
-| `WriteTree(w) error` | ASCII dependency tree. |
-| `WriteHTMLTree(w) error` | HTML nested-list tree. |
-| `WriteTable(w, format, opts) error` | Service summary table (16+ formats). |
+| Method                              | Description                             |
+| ----------------------------------- | --------------------------------------- |
+| `WriteReportJSON(w) error`          | Indented JSON to any `io.Writer`.       |
+| `WriteEventsNDJSON(w) error`        | NDJSON event stream to any `io.Writer`. |
+| `WriteHTML(w) error`                | Self-contained HTML visualization.      |
+| `WriteReportCSV(w) error`           | CSV of all services.                    |
+| `WriteReportTSV(w) error`           | TSV of all services.                    |
+| `WriteMermaid(w) error`             | Mermaid flowchart.                      |
+| `WritePlantUML(w) error`            | PlantUML component diagram.             |
+| `WriteDOT(w) error`                 | Graphviz DOT digraph.                   |
+| `WriteD2(w) error`                  | D2 diagram.                             |
+| `WriteTree(w) error`                | ASCII dependency tree.                  |
+| `WriteHTMLTree(w) error`            | HTML nested-list tree.                  |
+| `WriteTable(w, format, opts) error` | Service summary table (16+ formats).    |
 
 ### Export Methods (to file)
 
-| Method | Description |
-| --- | --- |
-| `ExportToFile(path) error` | JSON report to file. |
-| `ExportEventsToNDJSON(path) error` | NDJSON events to file. |
-| `ExportToHTML(path) error` | HTML visualization to file. |
-| `ExportToCSV(path) error` | CSV of all services. |
-| `ExportToTSV(path) error` | TSV of all services. |
-| `ExportToMermaid(path) error` | Mermaid flowchart to file. |
-| `ExportToPlantUML(path) error` | PlantUML diagram to file. |
-| `ExportToDOT(path) error` | DOT digraph to file. |
-| `ExportToD2(path) error` | D2 diagram to file. |
-| `ExportToTree(path) error` | ASCII tree to file. |
-| `ExportToHTMLTree(path) error` | HTML tree to file. |
-| `ExportToTable(path, format, opts) error` | Service table to file. |
+| Method                                      | Description                   |
+| ------------------------------------------- | ----------------------------- |
+| `ExportToFile(path) error`                  | JSON report to file.          |
+| `ExportEventsToNDJSON(path) error`          | NDJSON events to file.        |
+| `ExportToHTML(path) error`                  | HTML visualization to file.   |
+| `ExportToCSV(path) error`                   | CSV of all services.          |
+| `ExportToTSV(path) error`                   | TSV of all services.          |
+| `ExportToMermaid(path) error`               | Mermaid flowchart to file.    |
+| `ExportToPlantUML(path) error`              | PlantUML diagram to file.     |
+| `ExportToDOT(path) error`                   | DOT digraph to file.          |
+| `ExportToD2(path) error`                    | D2 diagram to file.           |
+| `ExportToTree(path) error`                  | ASCII tree to file.           |
+| `ExportToHTMLTree(path) error`              | HTML tree to file.            |
+| `ExportToTable(path, format, opts) error`   | Service table to file.        |
 | `ExportFilteredToFile(path, opts...) error` | Filtered JSON report to file. |
 
 ## Report
 
-| Method | Description |
-| --- | --- |
-| `Filtered(opts...) Report` | New report with filters applied. |
-| `Validate() error` | Check denormalized counts match actual data. |
-| `Index() ReportIndex` | Build O(1) lookup index. |
-| `ServiceByName(name) *ServiceInfo` | Lookup by service name. |
-| `ServiceByRef(scopeID, name) *ServiceInfo` | Lookup by scope + name. |
-| `ServicesByScope(scopeID) []ServiceInfo` | All services in a scope. |
-| `EventsByService(name) []Event` | All events for a service. |
-| `EventsByRef(scopeID, name) []Event` | All events for a scoped service. |
-| `EventsByType(type) []Event` | All events of a given type. |
-| `FailedServices() []ServiceInfo` | Services with invocation or shutdown errors. |
-| `UnhealthyServices() []ServiceInfo` | Services with health check errors. |
-| `Diff(other Report) DiffResult` | Structural comparison between reports. |
+| Method                                     | Description                                  |
+| ------------------------------------------ | -------------------------------------------- |
+| `Filtered(opts...) Report`                 | New report with filters applied.             |
+| `Validate() error`                         | Check denormalized counts match actual data. |
+| `Index() ReportIndex`                      | Build O(1) lookup index.                     |
+| `ServiceByName(name) *ServiceInfo`         | Lookup by service name.                      |
+| `ServiceByRef(scopeID, name) *ServiceInfo` | Lookup by scope + name.                      |
+| `ServicesByScope(scopeID) []ServiceInfo`   | All services in a scope.                     |
+| `EventsByService(name) []Event`            | All events for a service.                    |
+| `EventsByRef(scopeID, name) []Event`       | All events for a scoped service.             |
+| `EventsByType(type) []Event`               | All events of a given type.                  |
+| `FailedServices() []ServiceInfo`           | Services with invocation or shutdown errors. |
+| `UnhealthyServices() []ServiceInfo`        | Services with health check errors.           |
+| `Diff(other Report) DiffResult`            | Structural comparison between reports.       |
 
 ## Package Functions
 
-| Function | Description |
-| --- | --- |
-| `New(config) (*Plugin, error)` | Construct a plugin from Config (validated). |
-| `NewReport(...) (Report, error)` | Construct a validated Report from core data. |
-| `LoadReport(path, opts...) (Report, Format, error)` | Auto-detect JSON/NDJSON and load. |
-| `ReadEvents(reader) ([]Event, error)` | Read NDJSON event stream. |
-| `ReplayEvents(events) (Report, error)` | Reconstruct a Report from events. |
-| `MigrateReport(data) (Report, error)` | Migrate/repair old JSON reports. |
-| `JSONSchema() string` | Canonical JSON Schema for the report format. |
+| Function                                            | Description                                  |
+| --------------------------------------------------- | -------------------------------------------- |
+| `New(config) (*Plugin, error)`                      | Construct a plugin from Config (validated).  |
+| `NewReport(...) (Report, error)`                    | Construct a validated Report from core data. |
+| `LoadReport(path, opts...) (Report, Format, error)` | Auto-detect JSON/NDJSON and load.            |
+| `ReadEvents(reader) ([]Event, error)`               | Read NDJSON event stream.                    |
+| `ReplayEvents(events) (Report, error)`              | Reconstruct a Report from events.            |
+| `MigrateReport(data) (Report, error)`               | Migrate/repair old JSON reports.             |
+| `JSONSchema() string`                               | Canonical JSON Schema for the report format. |
 
 ## Config
 

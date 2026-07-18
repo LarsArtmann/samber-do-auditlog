@@ -8,16 +8,19 @@
 ## a) FULLY DONE
 
 ### GitHub Repository Metadata
+
 - [x] **Description** updated: "Audit-log plugin for samber/do v2 — track every DI registration, invocation, and shutdown with timestamps, dependency graphs, and self-contained HTML visualization"
 - [x] **Homepage URL** set to `https://do-auditlog.lars.software`
 - [x] **11 topics** added: go, golang, dependency-injection, di, samber-do, observability, audit-log, dependency-graph, visualization, monitoring, plugin
 - [x] Verified via `gh repo view --json`
 
 ### README.md
+
 - [x] Documentation links added below badges: Quick Start, API Reference pointing to the website
 - [x] All existing README content preserved (508 lines intact)
 
 ### Website (`website/`) — Full Astro v7 + Starlight + Tailwind v4 Site
+
 - [x] **Scaffolding**: package.json, astro.config.mjs, tsconfig.json, .node-version, .gitignore, .htmlvalidate.json
 - [x] **Firebase config**: .firebaserc (target: `do-auditlog`, project: `lars-software`), firebase.json (cleanUrls, redirects, security headers, cache rules)
 - [x] **Nix flake**: dev/build/preview/deploy apps, devShell, treefmt
@@ -42,9 +45,11 @@
 ## b) PARTIALLY DONE
 
 ### Documentation content depth
+
 - The 11 docs pages are solid but could go deeper. The gogenfilter website has ~14 docs pages with more detailed guides (e.g., SQLC config discovery, custom filesystems, gitignore composition). do-auditlog's equivalent depth topics exist in AGENTS.md but haven't been ported to website docs yet (e.g., CLI usage details, replay/migration workflows, real-time streaming patterns).
 
 ### Changelog sync
+
 - The website changelog.mdx is a curated summary, not a 1:1 copy of CHANGELOG.md. gogenfilter's CI enforces version-header sync between root CHANGELOG.md and changelog.mdx. We did not add that CI check.
 
 ---
@@ -52,27 +57,35 @@
 ## c) NOT STARTED
 
 ### Firebase deployment
+
 - The domain `do-auditlog.lars.software` is referenced everywhere but has NOT been deployed or configured in Firebase yet. The `FIREBASE_SERVICE_ACCOUNT` secret is NOT set in GitHub. The Firebase hosting target `do-auditlog` does NOT exist in the `lars-software` project yet.
 
 ### Lighthouse CI
+
 - gogenfilter has a `.github/workflows/lighthouse.yml` with `lighthouserc.json`. We did not add Lighthouse CI for this project.
 
 ### OG image generation
+
 - gogenfilter uses `astro-og-canvas` for per-page Open Graph image generation. We omitted this. The landing page has OG tags but no OG image.
 
 ### Docs validation (md-go-validator)
+
 - gogenfilter validates code blocks in docs with md-go-validator via Nix. We did not add this.
 
 ### Code duplication check (jscpd)
+
 - gogenfilter runs jscpd on website source. We did not add this.
 
 ### Dependents page
+
 - gogenfilter has a dynamic `/dependents` page that fetches GitHub code search results. Not applicable yet for this project (ALPHA, no external dependents), but worth noting.
 
 ### package-lock.json
+
 - Not committed. We installed with npm during testing but removed it. CI will generate it on first run. The `cache-dependency-path: website/package-lock.json` in website.yml will warn on first run since the file doesn't exist yet.
 
 ### .npmrc / engine constraints
+
 - No .npmrc file. html-validate requires Node >= 22.22.0 || >= 24.8.0 but CI specifies Node 24. The devShell via Nix may also need nodejs_24.
 
 ---
@@ -80,11 +93,13 @@
 ## d) TOTALLY FUCKED UP
 
 ### Nothing catastrophic
+
 - No destructive operations were performed.
 - The bun install created a `bun.lock` that was cleaned up.
 - One iteration was needed: the initial package.json had `"vite": "7.3.2"` in overrides which conflicted with Astro 7's requirement for Vite 8. Fixed by removing the vite override.
 
 ### Near-miss: Astro version compatibility
+
 - The reference projects (gogenfilter, go-atomic-write) list `"astro": "^7.0.3"` in package.json but their lockfiles actually resolve to Astro 6.3.1. Our package.json also says `^7.0.3` and resolves to Astro 7.0.8 with Vite 8, which works. But this is fragile — the reference projects may break on their next `npm install` if Astro 7 has further breaking changes.
 
 ---
@@ -116,6 +131,7 @@
 ## f) Up to 50 Things We Should Get Done Next
 
 ### Deployment & Infrastructure (must-do)
+
 1. Create Firebase hosting target `do-auditlog` in `lars-software` project
 2. Set `FIREBASE_SERVICE_ACCOUNT` GitHub secret
 3. Configure DNS for `do-auditlog.lars.software` (CNAME to Firebase)
@@ -124,6 +140,7 @@
 6. Verify the website URL works end-to-end from the GitHub homepage link
 
 ### Content Depth (high impact)
+
 7. Add a CLI usage guide page (info, convert, diff, validate, schema subcommands)
 8. Add a Replay & Migration guide page (ReplayEvents, ReadEvents, LoadReport, MigrateReport)
 9. Add a Real-Time Streaming guide (OnEvent callback, Prometheus bridge, OTel spans)
@@ -134,6 +151,7 @@
 14. Add code examples that are testable/validatable
 
 ### Visual & Branding (medium impact)
+
 15. Generate OG images via astro-og-canvas (per-page social preview)
 16. Add a screenshot of the HTML visualization to the landing page
 17. Add a screenshot of the Mermaid/D2 diagram output to docs
@@ -142,6 +160,7 @@
 20. Add a "metrics row" to the hero section (like go-atomic-write: "9 Formats", "~1.7us", "95% Coverage", "0 Deps")
 
 ### CI/CD Hardening (medium impact)
+
 21. Add CHANGELOG sync validation to website.yml CI
 22. Add Lighthouse CI (.github/workflows/lighthouse.yml + lighthouserc.json)
 23. Add HTML validation to CI (already in workflow but verify it runs)
@@ -152,6 +171,7 @@
 28. Pin all GitHub Actions to SHA hashes (currently using @v6/@v7/@v8)
 
 ### SEO & Analytics (lower impact)
+
 29. Add Google Analytics or Plausible (gogenfilter removed Plausible, so maybe skip)
 30. Add a sitemap submission to Google Search Console
 31. Add canonical URLs to all doc pages
@@ -159,6 +179,7 @@
 33. Add FAQ structured data (if we add an FAQ page)
 
 ### Docs Polish (lower impact)
+
 34. Add "Edit this page" links to docs
 35. Add "Last updated" timestamps to docs
 36. Add prev/next navigation at the bottom of doc pages (Starlight does this by default — verify)
@@ -167,6 +188,7 @@
 39. Add a version selector (when v1.0.0 lands)
 
 ### README Enhancements
+
 40. Add a "What it looks like" section with a screenshot of the HTML visualization
 41. Add a coverage badge (95%+)
 42. Add a Go version badge
@@ -176,6 +198,7 @@
 46. Add a "Used by" section (when there are users)
 
 ### Website Architecture
+
 47. Consider extracting shared components to a shared package (go-atomic-write, gogenfilter, this project all share the same Astro component pattern)
 48. Add a 404 page design (Starlight provides a default — verify it matches the theme)
 49. Add a loading state for the GitHub stars API call (currently blocks render)
@@ -188,6 +211,7 @@
 ### Q1: Is the Firebase project `lars-software` set up for a `do-auditlog` hosting target?
 
 The .firebaserc references `lars-software` as the default project and configures a `do-auditlog` hosting target. But I have no access to the Firebase console to verify:
+
 - Does the `lars-software` project exist and is it accessible?
 - Is the `do-auditlog` hosting target created (or will Firebase auto-create it on first deploy)?
 - Is DNS configured for `do-auditlog.lars.software`?
@@ -198,6 +222,7 @@ The .firebaserc references `lars-software` as the default project and configures
 ### Q2: Should the website docs live in this repo or in a separate docs repo?
 
 Both reference projects keep the website in the same repo (`website/` subdirectory). This is the pattern I followed. However, the website has its own package.json, node_modules, and build pipeline — it's a separate project living inside the Go library repo. This means:
+
 - `npm` changes show up in Go repo diffs
 - The Nix flake now has two flake.nix files (root for Go, website/ for Node)
 - CI runs both Go and Node jobs

@@ -1,11 +1,4 @@
-export const featureIconKeys = [
-  "hook",
-  "graph",
-  "scope",
-  "export",
-  "health",
-  "toggle",
-] as const;
+export const featureIconKeys = ["hook", "graph", "scope", "export", "health", "toggle"] as const;
 export type FeatureIcon = (typeof featureIconKeys)[number];
 
 export interface Feature {

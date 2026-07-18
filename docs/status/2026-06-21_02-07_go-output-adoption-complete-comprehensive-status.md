@@ -9,7 +9,7 @@
 
 ## Context: What Just Happened
 
-This session executed the **go-output adoption** — replacing the hand-rolled diagram rendering pipeline (`diagramFormatter` interface + 3 formatter structs + 7 escaping helpers, ~237 LOC) with `github.com/larsartmann/go-output` renderers. The adoption was the §8 condition of `docs/research/go-output-adoption-review.md`: *"adopt when the project needs a 3rd diagram format (e.g. DOT)."* DOT was added locally (commit pre-b283605); the trigger fired; the user directed adoption.
+This session executed the **go-output adoption** — replacing the hand-rolled diagram rendering pipeline (`diagramFormatter` interface + 3 formatter structs + 7 escaping helpers, ~237 LOC) with `github.com/larsartmann/go-output` renderers. The adoption was the §8 condition of `docs/research/go-output-adoption-review.md`: _"adopt when the project needs a 3rd diagram format (e.g. DOT)."_ DOT was added locally (commit pre-b283605); the trigger fired; the user directed adoption.
 
 Commit: `b283605 refactor: adopt go-output for diagram rendering (Mermaid, PlantUML, DOT)` — committed, working tree clean.
 
@@ -19,32 +19,32 @@ Commit: `b283605 refactor: adopt go-output for diagram rendering (Mermaid, Plant
 
 ### A.1 go-output Adoption (this session)
 
-| Item | Status | Evidence |
-|------|--------|----------|
-| Module deps added | ✓ | `go-output` v0.17.0 (root) + `escape`/`graph`/`plantuml` v0.13.0 in `go.mod` |
-| `diagram.go` rewritten | ✓ | `buildDiagramNodes`/`buildDiagramEdges` + `warmAmberNodeStyle` + `writeRendered` (~135 LOC) |
-| `mermaid.go` / `plantuml.go` / `dot.go` | ✓ | Each delegates to a go-output renderer (`graph.MermaidRenderer`, `plantuml.PlantUMLDiagram`, `graph.DOTRenderer`) |
-| Depguard allow-list updated | ✓ | `github.com/larsartmann/go-output` added to main/example/tests rules in `.golangci.yml` |
-| Escaping delegated to `escape` pkg | ✓ | `SlugifyID`+`MermaidID` for IDs; `MermaidText`/`PlantUML`/`DOT` for labels |
-| Tests updated | ✓ | Only `TestWritePlantUML_EscapesSpecialChars` assertion changed (bracket notation); all others passed unmodified |
-| Docs updated | ✓ | `AGENTS.md` (file map + 3 gotcha entries), research doc §9 (adoption log with tradeoffs) |
+| Item                                    | Status | Evidence                                                                                                          |
+| --------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------- |
+| Module deps added                       | ✓      | `go-output` v0.17.0 (root) + `escape`/`graph`/`plantuml` v0.13.0 in `go.mod`                                      |
+| `diagram.go` rewritten                  | ✓      | `buildDiagramNodes`/`buildDiagramEdges` + `warmAmberNodeStyle` + `writeRendered` (~135 LOC)                       |
+| `mermaid.go` / `plantuml.go` / `dot.go` | ✓      | Each delegates to a go-output renderer (`graph.MermaidRenderer`, `plantuml.PlantUMLDiagram`, `graph.DOTRenderer`) |
+| Depguard allow-list updated             | ✓      | `github.com/larsartmann/go-output` added to main/example/tests rules in `.golangci.yml`                           |
+| Escaping delegated to `escape` pkg      | ✓      | `SlugifyID`+`MermaidID` for IDs; `MermaidText`/`PlantUML`/`DOT` for labels                                        |
+| Tests updated                           | ✓      | Only `TestWritePlantUML_EscapesSpecialChars` assertion changed (bracket notation); all others passed unmodified   |
+| Docs updated                            | ✓      | `AGENTS.md` (file map + 3 gotcha entries), research doc §9 (adoption log with tradeoffs)                          |
 
 ### A.2 Verification Matrix (all green)
 
-| Check | Result |
-|-------|--------|
-| `go build ./...` | ✓ clean |
-| `go vet ./...` | ✓ clean |
-| `go test -race ./...` | ✓ all pass |
-| `golangci-lint run` | ✓ 0 issues |
-| `golangci-lint config verify` | ✓ |
-| Coverage gate | ✓ 95.2% (≥95%) |
+| Check                           | Result                 |
+| ------------------------------- | ---------------------- |
+| `go build ./...`                | ✓ clean                |
+| `go vet ./...`                  | ✓ clean                |
+| `go test -race ./...`           | ✓ all pass             |
+| `golangci-lint run`             | ✓ 0 issues             |
+| `golangci-lint config verify`   | ✓                      |
+| Coverage gate                   | ✓ 95.2% (≥95%)         |
 | `FuzzDiagramSpecialChars` (25s) | ✓ 3.9M execs, no crash |
-| `FuzzPluginHTML` (15s) | ✓ no crash |
-| `FuzzMigrateReport` (15s) | ✓ no crash |
-| `go mod tidy` drift | ✓ none |
-| `go generate` (stale check) | ✓ clean |
-| Self-checking example | ✓ exit 0 |
+| `FuzzPluginHTML` (15s)          | ✓ no crash             |
+| `FuzzMigrateReport` (15s)       | ✓ no crash             |
+| `go mod tidy` drift             | ✓ none                 |
+| `go generate` (stale check)     | ✓ clean                |
+| Self-checking example           | ✓ exit 0               |
 
 ### A.3 Core Library (production-ready, pre-existing)
 
@@ -79,7 +79,7 @@ The `[Unreleased]` section of `CHANGELOG.md` is **empty**. Commit `b283605` (go-
 
 ### B.3 TODO_LIST.md is stale re: go-output
 
-Line 44 still reads: *"Viable when a 3rd diagram format is needed (e.g. DOT)."* — but DOT shipped and go-output was adopted this session. Needs updating to reflect the adoption as DONE.
+Line 44 still reads: _"Viable when a 3rd diagram format is needed (e.g. DOT)."_ — but DOT shipped and go-output was adopted this session. Needs updating to reflect the adoption as DONE.
 
 ### B.4 v0.1.0 breaking-change batch (typed identifiers + ServiceInfo split)
 
@@ -130,33 +130,33 @@ Evaluated and **DEFERRED**: blast radius 65+ compile errors across production + 
 
 Sorted by impact × value ÷ effort (highest first).
 
-| # | Task | Impact | Effort | Notes |
-|---|------|--------|--------|-------|
-| 1 | Restore `CODE_OF_CONDUCT.md` (commit `--no-verify`) | High | Trivial | OSS hygiene; currently broken |
-| 2 | Add `[Unreleased]` CHANGELOG entry for go-output adoption | High | Trivial | Significant refactor undocumented |
-| 3 | Update `TODO_LIST.md` — mark go-output DONE, fix stale note | High | Trivial | Doc accuracy |
-| 4 | Contribute graph-attribute setter to go-output upstream | High | Low | Restores DOT bgcolor + edge colors |
-| 5 | Re-baseline `BENCHMARKS.md` post-go-output | Medium | Low | Confirm no perf regression |
-| 6 | Add D2 diagram format via go-output `d2` module | Medium | Low | Near-zero cost now |
-| 7 | `docs-freshness-check` skill run | Medium | Low | Verify all docs match code |
-| 8 | File go-output upstream issue for edge styling API | Medium | Trivial | Unblock DOT edge colors |
-| 9 | Add integration test: go-output render output snapshot | Medium | Medium | Catch upstream format drift |
-| 10 | Typed identifiers batch (`ContainerID`/`ScopeID`/`ServiceName`) | High | High | Deferred v0.1.0 breaking batch |
-| 11 | `ServiceInfo` lifecycle split | High | High | Paired with #10 |
-| 12 | Tag v0.2.0 after #10/#11 (or sooner if non-breaking) | High | Low | First post-adoption release |
-| 13 | Add `WriteD2` + D2 fuzz target | Low | Low | Format breadth |
-| 14 | Explore go-output `markup` streaming HTML | Low | Medium | Large-report streaming |
-| 15 | Pin go-output versions in a comment in go.mod | Low | Trivial | Non-obvious version split |
-| 16 | Audit `example/` — does it demonstrate DOT/Mermaid export? | Medium | Low | Demo completeness |
-| 17 | Add a "diagram formats" section to README | Medium | Low | Discoverability |
-| 18 | Run `brutal-self-review` skill on the go-output integration | Medium | Medium | Honest critique |
-| 19 | Verify go-output v0.14.0+ upgrade path (watch releases) | Low | Trivial | Dependency hygiene |
-| 20 | Add bench for `buildDiagramNodes`/`buildDiagramEdges` | Low | Low | Hot-path coverage |
-| 21 | Consider go-output `Stream(w)` instead of `Render()+Write` | Low | Low | Memory for huge graphs |
-| 22 | Document the DOT bgcolor tradeoff in README/FEATURES | Medium | Trivial | User expectation mgmt |
-| 23 | Run `nix flake check` to confirm Nix build still green | Medium | Trivial | CI parity |
-| 24 | Check `go list -deps` count in CI (dep-bloat guard) | Low | Low | Prevent silent dep growth |
-| 25 | Open GitHub Discussion: "diagram format priorities?" | Low | Trivial | User signal for #6/#13 |
+| #   | Task                                                            | Impact | Effort  | Notes                              |
+| --- | --------------------------------------------------------------- | ------ | ------- | ---------------------------------- |
+| 1   | Restore `CODE_OF_CONDUCT.md` (commit `--no-verify`)             | High   | Trivial | OSS hygiene; currently broken      |
+| 2   | Add `[Unreleased]` CHANGELOG entry for go-output adoption       | High   | Trivial | Significant refactor undocumented  |
+| 3   | Update `TODO_LIST.md` — mark go-output DONE, fix stale note     | High   | Trivial | Doc accuracy                       |
+| 4   | Contribute graph-attribute setter to go-output upstream         | High   | Low     | Restores DOT bgcolor + edge colors |
+| 5   | Re-baseline `BENCHMARKS.md` post-go-output                      | Medium | Low     | Confirm no perf regression         |
+| 6   | Add D2 diagram format via go-output `d2` module                 | Medium | Low     | Near-zero cost now                 |
+| 7   | `docs-freshness-check` skill run                                | Medium | Low     | Verify all docs match code         |
+| 8   | File go-output upstream issue for edge styling API              | Medium | Trivial | Unblock DOT edge colors            |
+| 9   | Add integration test: go-output render output snapshot          | Medium | Medium  | Catch upstream format drift        |
+| 10  | Typed identifiers batch (`ContainerID`/`ScopeID`/`ServiceName`) | High   | High    | Deferred v0.1.0 breaking batch     |
+| 11  | `ServiceInfo` lifecycle split                                   | High   | High    | Paired with #10                    |
+| 12  | Tag v0.2.0 after #10/#11 (or sooner if non-breaking)            | High   | Low     | First post-adoption release        |
+| 13  | Add `WriteD2` + D2 fuzz target                                  | Low    | Low     | Format breadth                     |
+| 14  | Explore go-output `markup` streaming HTML                       | Low    | Medium  | Large-report streaming             |
+| 15  | Pin go-output versions in a comment in go.mod                   | Low    | Trivial | Non-obvious version split          |
+| 16  | Audit `example/` — does it demonstrate DOT/Mermaid export?      | Medium | Low     | Demo completeness                  |
+| 17  | Add a "diagram formats" section to README                       | Medium | Low     | Discoverability                    |
+| 18  | Run `brutal-self-review` skill on the go-output integration     | Medium | Medium  | Honest critique                    |
+| 19  | Verify go-output v0.14.0+ upgrade path (watch releases)         | Low    | Trivial | Dependency hygiene                 |
+| 20  | Add bench for `buildDiagramNodes`/`buildDiagramEdges`           | Low    | Low     | Hot-path coverage                  |
+| 21  | Consider go-output `Stream(w)` instead of `Render()+Write`      | Low    | Low     | Memory for huge graphs             |
+| 22  | Document the DOT bgcolor tradeoff in README/FEATURES            | Medium | Trivial | User expectation mgmt              |
+| 23  | Run `nix flake check` to confirm Nix build still green          | Medium | Trivial | CI parity                          |
+| 24  | Check `go list -deps` count in CI (dep-bloat guard)             | Low    | Low     | Prevent silent dep growth          |
+| 25  | Open GitHub Discussion: "diagram format priorities?"            | Low    | Trivial | User signal for #6/#13             |
 
 ---
 

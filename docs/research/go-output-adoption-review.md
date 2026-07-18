@@ -171,20 +171,20 @@ r.SetCodeFence(false)
 
 ### Dependency cost (re-measured, final)
 
-| Metric                                              | Value                                                        |
-| --------------------------------------------------- | ------------------------------------------------------------ |
-| Net new **external** compiled module                | **1** (`golang.org/x/term`; `x/sys` already present)         |
-| New `larsartmann` compiled modules                  | `go-output` (root) + `escape` + `graph` + `plantuml` + `d2` + `enum` + `envdetect` + `go-branded-id` (all same author; branded-id is zero-dep phantom types) |
-| `delimited`/`markdown`/`tree`/`testhelpers`/`graphtest` | Module-graph verification entries only — **zero packages compiled** (confirmed via `go list -deps`). Root's core invariant (zero sub-module imports) holds. |
+| Metric                                                  | Value                                                                                                                                                        |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Net new **external** compiled module                    | **1** (`golang.org/x/term`; `x/sys` already present)                                                                                                         |
+| New `larsartmann` compiled modules                      | `go-output` (root) + `escape` + `graph` + `plantuml` + `d2` + `enum` + `envdetect` + `go-branded-id` (all same author; branded-id is zero-dep phantom types) |
+| `delimited`/`markdown`/`tree`/`testhelpers`/`graphtest` | Module-graph verification entries only — **zero packages compiled** (confirmed via `go list -deps`). Root's core invariant (zero sub-module imports) holds.  |
 
 ### Output-format changes (documented; project is ALPHA)
 
-| Format   | Before                                              | After (go-output)                                                                                   | Net                                  |
-| -------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| Mermaid  | `%%{init}%%` global theme + `id[label]` + `-->`     | per-node `style <id> fill/stroke/color` + `id[label]` + `-->`                                       | Theming mechanism changes; output stays valid Mermaid |
-| PlantUML | `component "label" as id` (skinparam block)         | `[label] as id #color;line:...;text:...` (skinparam componentStyle uml2)                            | Bracket notation; `\]`/`\"` escaping (more correct) |
-| DOT      | `digraph do_auditlog { bgcolor="#14110d" ... }`     | `digraph do_auditlog { rankdir=LR ... }` per-node `fillcolor`/`color`                               | Dark `bgcolor` + edge color dropped (renderers lack graph-attr setter) |
-| D2       | N/A (new format)                                    | `id: label { style.fill:... }` + `id -> id`                                                        | New format; zero breaking changes to existing outputs |
+| Format   | Before                                          | After (go-output)                                                        | Net                                                                    |
+| -------- | ----------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| Mermaid  | `%%{init}%%` global theme + `id[label]` + `-->` | per-node `style <id> fill/stroke/color` + `id[label]` + `-->`            | Theming mechanism changes; output stays valid Mermaid                  |
+| PlantUML | `component "label" as id` (skinparam block)     | `[label] as id #color;line:...;text:...` (skinparam componentStyle uml2) | Bracket notation; `\]`/`\"` escaping (more correct)                    |
+| DOT      | `digraph do_auditlog { bgcolor="#14110d" ... }` | `digraph do_auditlog { rankdir=LR ... }` per-node `fillcolor`/`color`    | Dark `bgcolor` + edge color dropped (renderers lack graph-attr setter) |
+| D2       | N/A (new format)                                | `id: label { style.fill:... }` + `id -> id`                              | New format; zero breaking changes to existing outputs                  |
 
 ### Tradeoffs accepted
 
@@ -201,4 +201,3 @@ r.SetCodeFence(false)
 - `FuzzDiagramSpecialChars` (25s, 3.9M execs), `FuzzPluginHTML`, `FuzzMigrateReport` — no failures.
 - `go mod tidy` — no drift; `stale-generation` (go generate) — clean.
 - Only one test assertion changed: `TestWritePlantUML_EscapesSpecialChars` (bracket notation `\]`/`\"` replaces the old `"→'` form). All other diagram tests passed unmodified because they assert structural properties (`flowchart TD`, `-->`, `@startuml`/`@enduml`, `digraph do_auditlog`, `label=`, `\"`), which go-output satisfies.
-

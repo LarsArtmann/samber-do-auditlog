@@ -24,7 +24,12 @@ export const comparisons: ComparisonItem[] = [
     price: "DIY",
     accent: false,
     pros: [],
-    cons: ["No built-in hooks consumer", "Manual timestamp wiring", "No dependency graph inference", "No export formats"],
+    cons: [
+      "No built-in hooks consumer",
+      "Manual timestamp wiring",
+      "No dependency graph inference",
+      "No export formats",
+    ],
   },
   {
     variant: "do-auditlog",
@@ -44,7 +49,12 @@ export const comparisons: ComparisonItem[] = [
     price: "Manual",
     accent: false,
     pros: [],
-    cons: ["Hand-roll logging per service", "No visualization", "No replay or migration", "Maintenance burden"],
+    cons: [
+      "Hand-roll logging per service",
+      "No visualization",
+      "No replay or migration",
+      "Maintenance burden",
+    ],
   },
 ];
 
