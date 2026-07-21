@@ -71,12 +71,12 @@ func TestReport_Diff_AddedRemovedDuality(t *testing.T) {
 		a, b := randReport(rng), randReport(rng)
 		forward, reverse := a.Diff(b), b.Diff(a)
 
-		if !refsEqual(forward.AddedServices, reverse.RemovedServices) {
+		if !slices.Equal(forward.AddedServices, reverse.RemovedServices) {
 			t.Errorf("Added(a→b) != Removed(b→a)\n  forward added: %v\n  reverse removed: %v",
 				forward.AddedServices, reverse.RemovedServices)
 		}
 
-		if !refsEqual(forward.RemovedServices, reverse.AddedServices) {
+		if !slices.Equal(forward.RemovedServices, reverse.AddedServices) {
 			t.Errorf("Removed(a→b) != Added(b→a)\n  forward removed: %v\n  reverse added: %v",
 				forward.RemovedServices, reverse.AddedServices)
 		}
@@ -151,22 +151,6 @@ func TestReport_Diff_OutputSorted(t *testing.T) {
 			t.Error("RemovedServices not sorted")
 		}
 	}
-}
-
-// --- helpers ---
-
-func refsEqual(a, b []auditlog.ServiceRef) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
 }
 
 func indexDiffs(diffs []auditlog.ServiceDiff) map[string]auditlog.ServiceDiff {
