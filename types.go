@@ -8,6 +8,15 @@ const SchemaVersion = "0.2.0"
 // RootScopeName is the canonical name for the root scope in samber/do v2.
 const RootScopeName = "[root]"
 
+// ContainerID identifies a DI container instance. Used in Config, Report, and Event.
+type ContainerID string
+
+// ScopeID identifies a scope within the DI hierarchy.
+type ScopeID string
+
+// ServiceName identifies a named service within a scope.
+type ServiceName string
+
 // EventType categorizes audit log events.
 type EventType string
 
