@@ -24,7 +24,7 @@ import (
 //	go build -ldflags "-X main.CLIVersion=v0.1.0" ./cmd/auditlog
 //
 //nolint:gochecknoglobals // build-time overridable via ldflags
-var CLIVersion = "0.1.0-dev"
+var CLIVersion = "0.6.0"
 
 func main() {
 	if len(os.Args) < 2 {
