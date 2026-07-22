@@ -24,7 +24,7 @@ func writeEventsNDJSON(writer io.Writer, events []Event) error {
 
 // serviceLabel returns a service name with its provider-type icon, if known.
 func serviceLabel(svc ServiceInfo) string {
-	name := svc.ServiceName
+	name := string(svc.ServiceName)
 
 	if svc.ServiceType.IsKnown() {
 		name += " " + svc.ServiceType.Icon()

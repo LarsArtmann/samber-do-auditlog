@@ -16,7 +16,7 @@ import (
 // the other diagram formats.
 func (r Report) WriteD2(writer io.Writer) error {
 	renderer := d2.NewDiagram()
-	renderer.SetTitle(r.ContainerID)
+	renderer.SetTitle(string(r.ContainerID))
 	renderer.SetNodes(buildDiagramNodes(r))
 	renderer.SetEdges(dedupGraphEdges(buildDiagramEdges(r)))
 

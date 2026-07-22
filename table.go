@@ -33,7 +33,7 @@ func (r Report) buildServiceTableData() *output.Table {
 		}
 
 		data.AddRow([]string{
-			svc.ServiceName,
+			string(svc.ServiceName),
 			svc.ScopeName,
 			string(svc.ServiceType),
 			string(svc.Status),

@@ -84,7 +84,7 @@ func buildDAGHTML(report Report) daghtml.DAG {
 }
 
 func buildServiceTooltip(svc ServiceInfo) string {
-	tip := svc.ServiceName + " | " + svc.ScopeName + " | status: " + string(svc.Status)
+	tip := string(svc.ServiceName) + " | " + svc.ScopeName + " | status: " + string(svc.Status)
 
 	tip += fmt.Sprintf(" | invocations: %d", svc.InvocationCount)
 	if svc.FirstBuildDurationMs != nil {
