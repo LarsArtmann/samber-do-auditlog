@@ -173,23 +173,28 @@ func (r *Recorder) publishLockedEvent(evt Event) {
 // repeated 5-line `scopeID := ...; scopeName := ...; now := ...; key := ...;
 // seq := ...` that previously appeared in 4 hook methods.
 type hookContext struct {
-	scopeID   string
-	scopeName string
-	key       svcKey
-	now       time.Time
-	seq       int
+	scopeID     ScopeID
+	scopeName   string
+	serviceName ServiceName
+	key         svcKey
+	now         time.Time
+	seq         int
 }
 
 // beginBeforeHook builds a hookContext for a before-hook (no error to
 // pre-stringify). Caller is responsible for r.mu.Lock() and for invoking
 // recordScopeLocked after acquiring the lock.
 func (r *Recorder) beginBeforeHook(scope *do.Scope, serviceName string) hookContext {
+	svcName := ServiceName(serviceName)
+	scopeID := ScopeID(scope.ID())
+
 	return hookContext{
-		scopeID:   scope.ID(),
-		scopeName: scope.Name(),
-		key:       svcKey{scopeID: scope.ID(), name: serviceName},
-		now:       time.Now(),
-		seq:       r.nextSequence(),
+		scopeID:     scopeID,
+		scopeName:   scope.Name(),
+		serviceName: svcName,
+		key:         svcKey{scopeID: scopeID, name: svcName},
+		now:         time.Now(),
+		seq:         r.nextSequence(),
 	}
 }
 
@@ -210,12 +215,16 @@ func (r *Recorder) beginLockedBeforeHook(scope *do.Scope, serviceName string) ho
 // error so callers can pass it straight into newEventFromRef. Caller is
 // responsible for r.mu.Lock().
 func (r *Recorder) beginAfterHook(scope *do.Scope, serviceName string, err error) (hookContext, *string) {
+	svcName := ServiceName(serviceName)
+	scopeID := ScopeID(scope.ID())
+
 	return hookContext{
-		scopeID:   scope.ID(),
-		scopeName: scope.Name(),
-		key:       svcKey{scopeID: scope.ID(), name: serviceName},
-		now:       time.Now(),
-		seq:       r.nextSequence(),
+		scopeID:     scopeID,
+		scopeName:   scope.Name(),
+		serviceName: svcName,
+		key:         svcKey{scopeID: scopeID, name: svcName},
+		now:         time.Now(),
+		seq:         r.nextSequence(),
 	}, errorToStringPtr(err)
 }
 

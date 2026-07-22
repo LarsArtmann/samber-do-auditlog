@@ -120,7 +120,7 @@ func NewRecorder(containerID ContainerID, onEvent func(Event)) *Recorder {
 		mu:            sync.RWMutex{},
 		events:        make([]Event, 0, initialEventCapacity),
 		services:      make(map[svcKey]*serviceRecord),
-		scopes:        make(map[string]scopeMeta),
+		scopes:        make(map[ScopeID]scopeMeta),
 		shutdownStart: make(map[svcKey]time.Time),
 		sequence:      newSequenceCounter(),
 		containerID:   containerID,
@@ -140,7 +140,7 @@ func (r *Recorder) recordScopeLocked(scopeID ScopeID, scopeName string, scope *d
 
 	meta := scopeMeta{id: scopeID, name: scopeName, parentID: "", ref: scope}
 	if ancestors := scope.Ancestors(); len(ancestors) > 0 {
-		meta.parentID = ancestors[0].ID()
+		meta.parentID = ScopeID(ancestors[0].ID())
 	}
 
 	r.scopes[scopeID] = meta
