@@ -331,12 +331,16 @@ func TestNestedScopeExport(t *testing.T) {
 
 			for i := range depth {
 				services = append(services, auditlog.ServiceInfo{
-					ServiceRef: auditlog.ServiceRef{
-						ScopeID:     auditlog.ScopeID(fmt.Sprintf("scope-%d", i)),
-						ScopeName:   fmt.Sprintf("scope-%d", i),
-						ServiceName: auditlog.ServiceName(fmt.Sprintf("svc-%d", i)),
+					ServiceIdentity: auditlog.ServiceIdentity{
+						ServiceRef: auditlog.ServiceRef{
+							ScopeID:     auditlog.ScopeID(fmt.Sprintf("scope-%d", i)),
+							ScopeName:   fmt.Sprintf("scope-%d", i),
+							ServiceName: auditlog.ServiceName(fmt.Sprintf("svc-%d", i)),
+						},
 					},
-					Status: auditlog.ServiceStatusActive,
+					ServiceLifecycle: auditlog.ServiceLifecycle{
+						Status: auditlog.ServiceStatusActive,
+					},
 				})
 			}
 

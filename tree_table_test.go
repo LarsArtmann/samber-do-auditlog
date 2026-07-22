@@ -19,8 +19,12 @@ func activeSvcReport(containerID auditlog.ContainerID, serviceName auditlog.Serv
 		ContainerID: containerID,
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceRef: rootRef(serviceName),
-				Status:     auditlog.ServiceStatusActive,
+				ServiceIdentity: auditlog.ServiceIdentity{
+					ServiceRef: rootRef(serviceName),
+				},
+				ServiceLifecycle: auditlog.ServiceLifecycle{
+					Status: auditlog.ServiceStatusActive,
+				},
 			},
 		},
 	}
@@ -243,10 +247,14 @@ func TestReport_WriteTable_ShutdownError(t *testing.T) {
 		ContainerID: "err-test",
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceRef:           rootRef("crashing-svc"),
-				Status:               auditlog.ServiceStatusShutdownError,
-				ShutdownError:        &shutdownErr,
-				FirstBuildDurationMs: &buildMs,
+				ServiceIdentity: auditlog.ServiceIdentity{
+					ServiceRef: rootRef("crashing-svc"),
+				},
+				ServiceLifecycle: auditlog.ServiceLifecycle{
+					Status:               auditlog.ServiceStatusShutdownError,
+					ShutdownError:        &shutdownErr,
+					FirstBuildDurationMs: &buildMs,
+				},
 			},
 		},
 	}
@@ -275,10 +283,16 @@ func TestReport_WriteTree_AllServicesHaveDeps(t *testing.T) {
 		ContainerID: "all-deps",
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceRef: rootRef("svc-a"),
-				Status:     auditlog.ServiceStatusActive,
-				Dependencies: []auditlog.ServiceRef{
-					{ScopeID: "ext", ScopeName: "external", ServiceName: "ext-svc"},
+				ServiceIdentity: auditlog.ServiceIdentity{
+					ServiceRef: rootRef("svc-a"),
+				},
+				ServiceLifecycle: auditlog.ServiceLifecycle{
+					Status: auditlog.ServiceStatusActive,
+				},
+				ServiceGraph: auditlog.ServiceGraph{
+					Dependencies: []auditlog.ServiceRef{
+						{ScopeID: "ext", ScopeName: "external", ServiceName: "ext-svc"},
+					},
 				},
 			},
 		},
