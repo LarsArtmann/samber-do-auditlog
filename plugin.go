@@ -24,7 +24,7 @@ type Config struct {
 	// If left as zero-value (false), New() checks the DO_AUDITLOG_ENABLED env var.
 	Enabled bool
 	// ContainerID is an optional human-readable identifier for the injector.
-	ContainerID string
+	ContainerID ContainerID
 	// OnEvent is called after each event is captured. Must not block.
 	// Called sequentially in hook order. Nil disables the callback.
 	OnEvent func(Event)
@@ -46,7 +46,7 @@ type Config struct {
 var errContainerIDPathSep = errors.New("config.ContainerID must not contain path separators")
 
 func (c Config) Validate() error {
-	if strings.ContainsAny(c.ContainerID, "/\\") {
+	if strings.ContainsAny(string(c.ContainerID), "/\\") {
 		return fmt.Errorf("%w: %q", errContainerIDPathSep, c.ContainerID)
 	}
 
@@ -54,7 +54,7 @@ func (c Config) Validate() error {
 }
 
 // defaultContainerID is used when Config.ContainerID is empty.
-const defaultContainerID = "default"
+const defaultContainerID ContainerID = "default"
 
 // Plugin wraps a samber/do v2 container with audit logging hooks.
 type Plugin struct {

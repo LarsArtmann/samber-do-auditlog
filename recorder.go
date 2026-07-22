@@ -18,29 +18,29 @@ const (
 )
 
 type stackEntry struct {
-	scopeID     string
+	scopeID     ScopeID
 	scopeName   string
-	serviceName string
+	serviceName ServiceName
 	start       time.Time
 }
 
 // svcKey is a zero-allocation map key for looking up services by scope + name.
 // Unlike a concatenated string key, it requires no heap allocation.
 type svcKey struct {
-	scopeID string
-	name    string
+	scopeID ScopeID
+	name    ServiceName
 }
 
 // serviceKey produces the canonical string key for a service within a scope.
 // Used only by public API surfaces (ReportIndex) that need string keys.
-func serviceKey(scopeID, serviceName string) string {
-	return scopeID + "/" + serviceName
+func serviceKey(scopeID ScopeID, serviceName ServiceName) string {
+	return string(scopeID) + "/" + string(serviceName)
 }
 
 type serviceRecord struct {
-	scopeID              string
+	scopeID              ScopeID
 	scopeName            string
-	serviceName          string
+	serviceName          ServiceName
 	serviceType          ProviderType
 	registeredAt         time.Time
 	firstInvokedAt       *time.Time
@@ -58,9 +58,9 @@ type serviceRecord struct {
 }
 
 type scopeMeta struct {
-	id       string
+	id       ScopeID
 	name     string
-	parentID string
+	parentID ScopeID
 	ref      *do.Scope
 }
 
@@ -97,7 +97,7 @@ type Recorder struct {
 	mu       sync.RWMutex
 	events   []Event
 	services map[svcKey]*serviceRecord
-	scopes   map[string]scopeMeta
+	scopes   map[ScopeID]scopeMeta
 	stack    []stackEntry
 
 	// shutdownStart stores per-service shutdown start times for duration calc.
@@ -105,7 +105,7 @@ type Recorder struct {
 
 	sequence      *atomic.Int64
 	invocationSeq atomic.Int64
-	containerID   string
+	containerID   ContainerID
 	onEvent       func(Event)
 
 	// maxEvents caps the events slice. When > 0, new events are dropped
@@ -115,7 +115,7 @@ type Recorder struct {
 }
 
 // NewRecorder creates a new event recorder.
-func NewRecorder(containerID string, onEvent func(Event)) *Recorder {
+func NewRecorder(containerID ContainerID, onEvent func(Event)) *Recorder {
 	return &Recorder{ //nolint:exhaustruct
 		mu:            sync.RWMutex{},
 		events:        make([]Event, 0, initialEventCapacity),
@@ -133,7 +133,7 @@ func (r *Recorder) nextSequence() int {
 }
 
 // recordScopeLocked records scope metadata. Caller must hold r.mu.
-func (r *Recorder) recordScopeLocked(scopeID, scopeName string, scope *do.Scope) {
+func (r *Recorder) recordScopeLocked(scopeID ScopeID, scopeName string, scope *do.Scope) {
 	if _, ok := r.scopes[scopeID]; ok {
 		return
 	}

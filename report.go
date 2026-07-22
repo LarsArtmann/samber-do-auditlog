@@ -19,8 +19,8 @@ var (
 
 // Report is a consolidated, machine-readable snapshot of the audit log.
 type Report struct {
-	Version                 string    `json:"version"`
-	ContainerID             string    `json:"container_id"`
+	Version                 string      `json:"version"`
+	ContainerID             ContainerID `json:"container_id"`
 	ExportedAt              time.Time `json:"exported_at"`
 	EventCount              int       `json:"event_count"`
 	ServiceCount            int       `json:"service_count"`
