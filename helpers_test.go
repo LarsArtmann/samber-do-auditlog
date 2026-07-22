@@ -172,7 +172,7 @@ func provideCrashing(injector do.Injector, name string) {
 	})
 }
 
-func findServiceByName(t *testing.T, report auditlog.Report, name string) *auditlog.ServiceInfo {
+func findServiceByName(t *testing.T, report auditlog.Report, name auditlog.ServiceName) *auditlog.ServiceInfo {
 	t.Helper()
 
 	for i := range report.Services {
@@ -188,7 +188,7 @@ func findServiceBySuffix(t *testing.T, report auditlog.Report, suffix string) *a
 	t.Helper()
 
 	for i := range report.Services {
-		if strings.HasSuffix(report.Services[i].ServiceName, suffix) {
+		if strings.HasSuffix(string(report.Services[i].ServiceName), suffix) {
 			return &report.Services[i]
 		}
 	}
@@ -216,7 +216,7 @@ func assertAllEventsOfType(t *testing.T, events []auditlog.Event, expected audit
 }
 
 // assertAllEventsForService fails the test if any event in the slice is not for the given service.
-func assertAllEventsForService(t *testing.T, events []auditlog.Event, serviceName string) {
+func assertAllEventsForService(t *testing.T, events []auditlog.Event, serviceName auditlog.ServiceName) {
 	t.Helper()
 
 	for _, evt := range events {
@@ -285,7 +285,7 @@ func assertEventCount(t *testing.T, report auditlog.Report, want int) {
 }
 
 // assertContainerID fails the test if the report's container_id does not match.
-func assertContainerID(t *testing.T, report auditlog.Report, want string) {
+func assertContainerID(t *testing.T, report auditlog.Report, want auditlog.ContainerID) {
 	t.Helper()
 
 	assertEqual(t, "container_id", report.ContainerID, want)
@@ -329,7 +329,7 @@ func assertServiceIntField(t *testing.T, svc *auditlog.ServiceInfo, fieldName st
 
 // assertFilteredServiceCount fails the test unless filtered has exactly one matching service
 // with the given name.
-func assertFilteredServiceCount(t *testing.T, filtered auditlog.Report, wantName string) {
+func assertFilteredServiceCount(t *testing.T, filtered auditlog.Report, wantName auditlog.ServiceName) {
 	t.Helper()
 
 	requireOneService(t, "", filtered.Services)
@@ -380,7 +380,7 @@ func requireOneService(t *testing.T, label string, services []auditlog.ServiceIn
 
 // assertUnhealthyServiceCount fails the test (with Fatalf) if the slice does not have
 // exactly one unhealthy service, then checks the name of that service.
-func assertUnhealthyServiceCount(t *testing.T, unhealthy []auditlog.ServiceInfo, wantName string) {
+func assertUnhealthyServiceCount(t *testing.T, unhealthy []auditlog.ServiceInfo, wantName auditlog.ServiceName) {
 	t.Helper()
 
 	requireOneService(t, "unhealthy", unhealthy)
@@ -413,7 +413,7 @@ func newPluginAndInjector() (*auditlog.Plugin, do.Injector) { //nolint:ireturn
 	return p, do.NewWithOpts(p.Opts())
 }
 
-func newPluginAndInjectorWithID(containerID string) (*auditlog.Plugin, do.Injector) { //nolint:ireturn
+func newPluginAndInjectorWithID(containerID auditlog.ContainerID) (*auditlog.Plugin, do.Injector) { //nolint:ireturn
 	p := mustNew(auditlog.Config{Enabled: true, ContainerID: containerID})
 
 	return p, do.NewWithOpts(p.Opts())

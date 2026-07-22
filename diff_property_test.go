@@ -156,7 +156,7 @@ func TestReport_Diff_OutputSorted(t *testing.T) {
 func indexDiffs(diffs []auditlog.ServiceDiff) map[string]auditlog.ServiceDiff {
 	out := make(map[string]auditlog.ServiceDiff, len(diffs))
 	for _, d := range diffs {
-		out[d.ServiceName] = d
+		out[string(d.ServiceName)] = d
 	}
 
 	return out

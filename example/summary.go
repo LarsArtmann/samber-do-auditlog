@@ -87,3 +87,13 @@ func serviceNamesToStrings(names []auditlog.ServiceName) []string {
 
 	return out
 }
+
+// depRefs formats dependency service names for the summary line.
+func depRefs(refs []auditlog.ServiceRef) []string {
+	out := make([]string, 0, len(refs))
+	for _, r := range refs {
+		out = append(out, string(r.ServiceName))
+	}
+
+	return out
+}

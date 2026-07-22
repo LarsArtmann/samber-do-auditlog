@@ -306,7 +306,7 @@ func TestNestedScopeExport(t *testing.T) {
 		t.Run(fmt.Sprintf("depth-%d", depth), func(t *testing.T) {
 			t.Parallel()
 
-			node := auditlog.ScopeNode{ID: "root", Name: "[root]", Services: []string{"root-svc"}}
+			node := auditlog.ScopeNode{ID: "root", Name: "[root]", Services: []auditlog.ServiceName{"root-svc"}}
 			current := &node
 
 			for i := range depth {

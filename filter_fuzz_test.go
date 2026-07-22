@@ -53,7 +53,11 @@ func FuzzFilterInputs(f *testing.F) {
 
 		var opts []auditlog.ReportOption
 		if len(names) > 0 {
-			opts = append(opts, auditlog.WithServicesByName(names...))
+			svcNames := make([]auditlog.ServiceName, len(names))
+			for i, n := range names {
+				svcNames[i] = auditlog.ServiceName(n)
+			}
+			opts = append(opts, auditlog.WithServicesByName(svcNames...))
 		}
 
 		// Derive an event-type filter from the first byte.
@@ -94,7 +98,7 @@ func FuzzFilterInputs(f *testing.F) {
 		}
 
 		for _, svc := range filtered.Services {
-			if len(nameSet) > 0 && !nameSet[svc.ServiceName] {
+			if len(nameSet) > 0 && !nameSet[string(svc.ServiceName)] {
 				t.Errorf("service %q kept but not in name filter", svc.ServiceName)
 			}
 		}

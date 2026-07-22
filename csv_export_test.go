@@ -187,7 +187,7 @@ func buildCSVTestReport() auditlog.Report {
 // csvServiceRef is a 3-line constructor for the empty-scope ServiceRef that
 // every CSV test fixture shares (ScopeID/ScopeName intentionally blank — the
 // CSV export tests the nil-pointer render path).
-func csvServiceRef(name string) auditlog.ServiceRef {
+func csvServiceRef(name auditlog.ServiceName) auditlog.ServiceRef {
 	return auditlog.ServiceRef{
 		ScopeID:     "",
 		ScopeName:   "",
