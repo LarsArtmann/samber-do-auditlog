@@ -8,9 +8,11 @@ Audit-log plugin for [samber/do v2](https://github.com/samber/do) — track ever
 
 [![CI](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml/badge.svg)](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/samber-do-auditlog.svg)](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog)
+[![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
+[![Coverage](https://img.shields.io/badge/Coverage-94%25-brightgreen)](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[Documentation](https://do-auditlog.lars.software) &middot; [Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/) &middot; [API Reference](https://do-auditlog.lars.software/api-reference/)
+[Documentation](https://do-auditlog.lars.software) &middot; [Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/) &middot; [API Reference](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog)
 
 </div>
 
@@ -55,13 +57,15 @@ A single self-contained HTML file. No server, no dependencies, no external reque
 
 samber/do v2 gives you lifecycle hooks but nothing to consume them. No recorder, no export, no visualization. You're flying blind.
 
-**do-auditlog** wires into those hooks in one line and gives you:
+**do-auditlog** wires into those hooks in one line and tells you:
 
-- What services exist, when they were created, and how long they took to build
-- Which services depend on which — forward and reverse
-- The full scope tree with per-scope service lists
-- A complete chronological event stream
-- A self-contained HTML page you can open in any browser to explore your DI container
+- **What exists** — every service, when it was created, how long it took to build
+- **What depends on what** — forward and reverse dependency graph, auto-inferred
+- **What happened** — a complete chronological event stream with timestamps
+- **What's healthy** — per-service health check results with error details
+- **What the scope tree looks like** — full hierarchy with per-scope service lists
+
+Then export the whole thing as JSON, NDJSON, or a self-contained HTML page you can open in any browser.
 
 ## Install
 
@@ -85,6 +89,8 @@ import (
     "github.com/samber/do/v2"
 )
 
+type Database struct{}
+
 func main() {
     // 1. Create the plugin and pass hooks to the DI container
     plugin, err := auditlog.New(auditlog.Config{
@@ -107,46 +113,57 @@ func main() {
     plugin.ExportToHTML("audit.html")
 
     // Other formats:
-    plugin.ExportToFile("audit.json")             // full JSON snapshot
-    plugin.ExportEventsToNDJSON("events.ndjson")  // streaming format
-    plugin.Report().WriteMermaid(os.Stdout)       // paste into GitHub README
+    plugin.ExportToFile("audit.json")            // full JSON snapshot
+    plugin.ExportEventsToNDJSON("events.ndjson") // streaming format
+    plugin.Report().WriteMermaid(os.Stdout)      // paste into GitHub README
 }
 ```
 
 ## Features
 
-| Feature                  | What it gives you                                                                      |
-| ------------------------ | -------------------------------------------------------------------------------------- |
-| **Drop-in setup**        | `do.NewWithOpts(plugin.Opts())` — one line, zero config                               |
-| **Dependency graph**     | Infers which service resolved which, without touching do's internal DAG                |
-| **Reverse dependencies** | Every service knows who depends on it                                                  |
-| **Scope tree**           | Full hierarchy with per-scope service lists and cross-scope resolution                 |
-| **Service types**        | Auto-detects lazy / eager / transient / alias via `do.ExplainNamedService`             |
-| **Timing**               | First build duration, shutdown duration, invocation count and order                    |
-| **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events                           |
-| **16+ export formats**   | JSON, NDJSON, CSV, TSV, HTML, Mermaid, PlantUML, DOT, D2, tree, table                  |
-| **Filtered reports**     | Slice by name, type, scope, event type, or time range before exporting                 |
-| **Real-time streaming**  | `OnEvent` callback fires on every event — stream to Prometheus, OTel, or dashboards    |
-| **~1.7 us overhead**     | In-memory capture during operation. Toggle off for zero cost                           |
-| **Minimal deps**         | `samber/do/v2` + `a-h/templ` + `larsartmann/go-output` (diagrams and tables)           |
+| Feature                  | What it gives you                                                                   |
+| ------------------------ | ----------------------------------------------------------------------------------- |
+| **Drop-in setup**        | `do.NewWithOpts(plugin.Opts())` — one line, zero config                            |
+| **Dependency graph**     | Infers which service resolved which, without touching do's internal DAG             |
+| **Reverse dependencies** | Every service knows who depends on it                                               |
+| **Scope tree**           | Full hierarchy with per-scope service lists and cross-scope resolution              |
+| **Service types**        | Auto-detects lazy / eager / transient / alias via `do.ExplainNamedService`          |
+| **Timing**               | First build duration, shutdown duration, invocation count and order                 |
+| **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events                        |
+| **16+ export formats**   | JSON, NDJSON, CSV, TSV, HTML, Mermaid, PlantUML, DOT, D2, tree, table               |
+| **Filtered reports**     | Slice by name, type, scope, event type, or time range before exporting              |
+| **Real-time streaming**  | `OnEvent` callback fires on every event — stream to Prometheus, OTel, or dashboards |
+| **~1.7 µs overhead**     | In-memory capture during operation. Toggle off for zero cost                        |
+| **Minimal deps**         | `samber/do/v2` + `a-h/templ` + `larsartmann/go-output` (diagrams and tables)        |
+
+## How It Works
+
+The plugin hooks into samber/do's lifecycle callbacks. It does **not** access do's internal DAG. Instead, it uses a lightweight invocation stack to infer dependencies:
+
+1. Service A's provider starts → A is pushed onto a stack
+2. A calls `do.MustInvoke[B]` → B's hook fires while A is still on the stack
+3. The plugin records: **A depends on B**
+4. A's provider returns → A is popped from the stack
+
+This correctly handles cached services, cross-scope resolution, and provider errors. The reverse graph (`Dependents`) is computed at report time.
 
 ## Export Formats
 
 Every format is a single method call. All write to `io.Writer`; most have a matching `ExportTo*` file helper.
 
-| Format                  | Method                              | Best for                                   |
-| ----------------------- | ----------------------------------- | ------------------------------------------ |
-| **HTML**                | `ExportToHTML(path)`                | Interactive 5-tab visualization, sharing   |
-| **JSON**                | `ExportToFile(path)`                | Full snapshot, programmatic analysis       |
-| **NDJSON**              | `ExportEventsToNDJSON(path)`        | Streaming, log aggregators, replay         |
-| **CSV / TSV**           | `ExportToCSV(path)` / `ExportToTSV`  | Spreadsheets, data pipelines               |
-| **Mermaid**             | `report.WriteMermaid(w)`            | Inline in GitHub, GitLab, Notion           |
-| **PlantUML**            | `report.WritePlantUML(w)`           | IntelliJ, online editors                   |
-| **DOT**                 | `report.WriteDOT(w)`                | Graphviz rendering                         |
-| **D2**                  | `report.WriteD2(w)`                 | Modern diagram rendering                   |
-| **ASCII Tree**          | `report.WriteTree(w)`               | Quick dependency overview in terminal      |
-| **HTML Tree**           | `report.WriteHTMLTree(w)`           | Nested-list dependency tree                |
-| **Table (16+ formats)** | `report.WriteTable(w, format, ...)` | Markdown, YAML, TOML, XML, and more        |
+| Format                  | Method                              | Best for                                    |
+| ----------------------- | ----------------------------------- | ------------------------------------------- |
+| **HTML**                | `ExportToHTML(path)`                | Interactive 5-tab visualization, sharing    |
+| **JSON**                | `ExportToFile(path)`                | Full snapshot, programmatic analysis        |
+| **NDJSON**              | `ExportEventsToNDJSON(path)`        | Streaming, log aggregators, replay          |
+| **CSV / TSV**           | `ExportToCSV(path)` / `ExportToTSV`  | Spreadsheets, data pipelines                |
+| **Mermaid**             | `report.WriteMermaid(w)`            | Inline in GitHub, GitLab, Notion            |
+| **PlantUML**            | `report.WritePlantUML(w)`           | IntelliJ, online editors                    |
+| **DOT**                 | `report.WriteDOT(w)`                | Graphviz rendering                          |
+| **D2**                  | `report.WriteD2(w)`                 | Modern diagram rendering                    |
+| **ASCII Tree**          | `report.WriteTree(w)`               | Quick dependency overview in terminal       |
+| **HTML Tree**           | `report.WriteHTMLTree(w)`           | Nested-list dependency tree                 |
+| **Table (16+ formats)** | `report.WriteTable(w, format, ...)` | Markdown, YAML, TOML, XML, and more         |
 
 The Mermaid output renders natively on GitHub:
 
@@ -155,6 +172,54 @@ flowchart TD
     root_*main.HTTPServer --> root_*main.UserService
     root_*main.HTTPServer --> root_*main.Database
     root_*main.UserService --> root_*main.Database
+```
+
+## Filtered Reports
+
+Slice the report before exporting. Filters compose — pass multiple options to intersect them:
+
+```go
+// Only lazy services in the "drivers" scope
+report := plugin.ReportFiltered(
+    auditlog.WithServicesByType(auditlog.ProviderTypeLazy),
+    auditlog.WithScope("drivers"),
+)
+
+// Only invocation events in the last 5 minutes
+report = plugin.ReportFiltered(
+    auditlog.WithEventsByType(auditlog.EventTypeInvocation),
+    auditlog.WithTimeRange(time.Now().Add(-5*time.Minute), time.Now()),
+)
+
+// Export the filtered slice
+plugin.ExportFilteredToFile("lazy.json",
+    auditlog.WithServicesByType(auditlog.ProviderTypeLazy),
+)
+```
+
+**Available filters:**
+
+| Option                         | Filters by                                                    |
+| ------------------------------ | ------------------------------------------------------------- |
+| `WithServicesByName(names...)` | Service name(s)                                               |
+| `WithServicesByType(type)`     | Provider type (lazy, eager, transient, alias)                 |
+| `WithEventsByType(type)`       | Event type (registration, invocation, shutdown, health_check) |
+| `WithTimeRange(from, to)`      | Event timestamp range                                         |
+| `WithScope(scopeID)`           | Scope ID                                                      |
+
+## Health Checks
+
+samber/do v2 does not expose health-check hooks. do-auditlog wraps `injector.HealthCheck()` to record per-service audit events:
+
+```go
+result := plugin.RecordHealthCheck(injector)
+report := plugin.Report()
+
+if !report.HealthCheckSucceeded {
+    for _, svc := range report.UnhealthyServices() {
+        log.Printf("unhealthy: %s — %s", svc.ServiceName, *svc.HealthCheckError)
+    }
+}
 ```
 
 ## Real-Time Event Streaming
@@ -180,38 +245,36 @@ Inspect, convert, diff, and validate reports from the command line:
 ```bash
 go install ./cmd/auditlog
 
-auditlog info report.json         # summary stats
-auditlog convert report.json -f ndjson   # JSON to NDJSON
-auditlog diff old.json new.json   # structural comparison
-auditlog validate report.json     # schema validation
+auditlog info report.json            # summary stats
+auditlog convert report.json -f ndjson  # JSON → NDJSON
+auditlog diff old.json new.json      # structural comparison
+auditlog validate report.json        # schema validation
 ```
 
 ## Performance
 
-| Path          | Overhead    | Allocs |
-| ------------- | ----------- | ------ |
-| Enabled       | ~1.7 us     | 6      |
-| Disabled      | ~113 ns     | 4      |
+| Path     | Overhead | Allocs |
+| -------- | -------- | ------ |
+| Enabled  | ~1.7 µs  | 6      |
+| Disabled | ~113 ns  | 4      |
 
 In-memory capture — no file I/O during container operation. You pay the cost only when you export. Full benchmarks in [BENCHMARKS.md](BENCHMARKS.md).
 
 ## Documentation
 
-| Guide | What you'll learn |
-| ----- | ----------------- |
+| Resource | What you'll find |
+| -------- | ---------------- |
 | [Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/) | From zero to HTML report in 60 seconds |
-| [Installation](https://do-auditlog.lars.software/getting-started/installation/) | Prerequisites and setup |
 | [Dependency Tracking](https://do-auditlog.lars.software/guides/dependency-tracking/) | How the invocation stack infers the graph |
 | [Export Formats](https://do-auditlog.lars.software/guides/export-formats/) | Every format with examples |
 | [Filtered Reports](https://do-auditlog.lars.software/guides/filtered-reports/) | Slice by name, type, scope, time |
 | [Health Checks](https://do-auditlog.lars.software/guides/health-checks/) | Per-service health audit events |
 | [Performance](https://do-auditlog.lars.software/guides/performance/) | Benchmarks and tuning |
-| [API Reference](https://do-auditlog.lars.software/api-reference/) | Full type and method documentation |
-| [pkg.go.dev](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog) | Godoc |
+| [API Reference](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog) | Full godoc |
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). The project uses strict golangci-lint (109 linters), 94% test coverage gate, and fuzz testing (5 targets).
+See [CONTRIBUTING.md](CONTRIBUTING.md). The project uses strict golangci-lint (109 linters), 94% test coverage gate, and 5 fuzz targets.
 
 ## License
 
