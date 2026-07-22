@@ -36,6 +36,38 @@ Export as JSON, NDJSON, or a self-contained HTML visualization.
 
 ---
 
+## What does it look like?
+
+A single self-contained HTML file. No server, no dependencies, no external requests.
+
+<img src="docs/images/html-services.jpg" alt="Services tab — waveform, stats cards, and service table with type badges, status indicators, and dependency columns" width="800">
+
+<details>
+<summary><b>More screenshots</b></summary>
+
+<table>
+<tr>
+<td align="center"><b>Dependency Graph</b></td>
+<td align="center"><b>Timeline</b></td>
+</tr>
+<tr>
+<td><img src="docs/images/html-graph.jpg" alt="Interactive Sugiyama-layered DAG with type-colored nodes and pan/zoom" width="400"></td>
+<td><img src="docs/images/html-timeline.jpg" alt="Dual build + shutdown horizontal timeline bars with type icons" width="400"></td>
+</tr>
+<tr>
+<td align="center"><b>Events Stream</b></td>
+<td align="center"><b>Real-World Usage</b></td>
+</tr>
+<tr>
+<td><img src="docs/images/html-events.jpg" alt="Full chronological event log with type filter chips and keyboard navigation" width="400"></td>
+<td><img src="docs/images/html-realworld.jpg" alt="Real-world report from a BuildFlow workflow audit log" width="400"></td>
+</tr>
+</table>
+
+</details>
+
+---
+
 ## Why?
 
 samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, but no recorder, no export, no visualization.
@@ -72,6 +104,8 @@ go get github.com/larsartmann/samber-do-auditlog
 ```
 
 Requires Go 1.26+ and samber/do v2.
+
+> **Try the demo**: `git clone` this repo and run `DO_AUDITLOG_ENABLED=true go run ./example` to see it in action with 20 services across 4 scopes.
 
 ## Quick Start
 
@@ -171,18 +205,25 @@ One JSON object per line. Feed it into log aggregators, stream processors, or cu
 
 ### HTML Visualization
 
-A single, self-contained dark-themed HTML page. No external JS/CSS. Works offline.
+A single, self-contained dark-themed HTML page with a warm-amber aesthetic. No external JS/CSS. Works offline. See the [screenshots above](#what-does-it-look-like).
 
-**What you get:**
+**Five interactive tabs:**
 
-- **Stats cards** — services, events, scopes, dependency count, health check status
-- **Services table** — name, type badge, scope, invocation order, count, build time, deps, status, health
-- **Scopes tab** — collapsible scope tree with type emoji chips
-- **Dependency graph** — Sugiyama layered DAG layout with type-colored nodes, pan/zoom, click-to-highlight
-- **Timeline** — dual build+shutdown horizontal bars with type icons
-- **Events table** — full chronological log with type filter chips and keyboard navigation
+| Tab                  | What it shows                                                              |
+| -------------------- | -------------------------------------------------------------------------- |
+| **Services**         | Sortable table: name, type badge, scope, status, build time, deps, health  |
+| **Scopes**           | Collapsible scope tree with type emoji chips                               |
+| **Dependency Graph** | Sugiyama-layered DAG with type-colored nodes, pan/zoom, click-to-highlight |
+| **Timeline**         | Dual build + shutdown horizontal bars with type icons                      |
+| **Events**           | Full chronological log with type filter chips and keyboard navigation      |
 
-Open the file in any browser. No server needed.
+Plus a **lifecycle waveform** at the top — every event plotted as a colored vertical mark on a timeline, height-encoded by duration, errors in coral.
+
+Generate it with one line:
+
+```go
+plugin.ExportToHTML("audit.html")   // open in any browser
+```
 
 ### Mermaid Flowchart
 
@@ -222,7 +263,7 @@ report.WritePlantUML(os.Stdout)
 
 ### DOT Digraph
 
-Writes a Graphviz DOT digraph. Render with `dot -Tsvg graph.dot -o graph.svg` or any Graphviz viewer. Each node is styled with the warm-amber fill; note that the dark canvas background is not emitted (go-output has no graph-level `bgcolor` setter — see [Diagram theming](#diagram-theming) below).
+Writes a Graphviz DOT digraph. Render with `dot -Tsvg graph.dot -o graph.svg` or any Graphviz viewer.
 
 ```go
 report := plugin.Report()
@@ -231,7 +272,7 @@ report.WriteDOT(os.Stdout)
 
 ### D2 Diagram
 
-Writes a [D2](https://d2lang.com) diagram — the most modern of the four formats, with native Markdown labels and a polished default renderer. Render with `d2 graph.d2 graph.svg` or the [D2 playground](https://play.d2lang.com). The diagram title is set to the container ID for self-documenting output.
+Writes a [D2](https://d2lang.com) diagram — the most modern of the four formats, with native Markdown labels and a polished default renderer. Render with `d2 graph.d2 graph.svg` or the [D2 playground](https://play.d2lang.com).
 
 ```go
 report := plugin.Report()
@@ -246,10 +287,6 @@ title: do-auditlog
 "root/*main.HTTPServer 🔄" -> "root/*main.Database 😴"
 "root/*main.UserService 😴" -> "root/*main.Database 😴"
 ```
-
-### Diagram theming
-
-All four diagram formats share the warm-amber per-node style (`fill:#e8a838`, `stroke:#4a4030`, `font:#14110d`) via go-output's `NodeStyle`. Two visual elements are not emitted because go-output's renderers lack graph-level attribute setters: the DOT dark canvas background (`bgcolor`) and edge line-colors. Restoring these requires an upstream contribution to `go-output`.
 
 ### Filtered Reports
 
@@ -323,6 +360,20 @@ if err != nil {
 ```
 
 The callback is called **outside the mutex** on every event. Keep it fast — do not block the hot path.
+
+## CLI Tool
+
+Inspect, convert, diff, and validate reports from the command line:
+
+```bash
+go install ./cmd/auditlog
+
+auditlog info audit-report.json         # summary stats
+auditlog convert report.json -f ndjson  # JSON → NDJSON
+auditlog diff old.json new.json         # structural comparison
+auditlog validate report.json           # schema validation
+auditlog schema                          # print JSON Schema
+```
 
 ## API Reference
 
@@ -439,7 +490,8 @@ BenchmarkHookOverhead_Registration  ~21,982 ns/op   54 allocs    (full container
 
 No file I/O happens during container operation. Export is a single `json.Marshal` or line iteration — you pay the cost only when you need the data.
 
-## Data Model
+<details>
+<summary><b>Data Model</b></summary>
 
 ```
 Report
@@ -493,6 +545,8 @@ Report
 ```
 
 > **Schema migration**: Reports exported with v0.1.0 can be upgraded to the current schema with `auditlog.MigrateReport(oldJSONBytes)`. `MigrateReport` also repairs current-schema reports — it re-derives every denormalized field, so stale or hand-edited reports that would fail `Validate()` are normalized to a valid report.
+
+</details>
 
 ## Security
 
