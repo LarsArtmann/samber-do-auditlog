@@ -36,10 +36,16 @@ func randReport(rng *rand.Rand) auditlog.Report {
 	services := make([]auditlog.ServiceInfo, 0, n)
 	for i := range n {
 		services = append(services, auditlog.ServiceInfo{
-			ServiceRef:       rootRef(auditlog.ServiceName(namePool[i])),
-			Status:           diffStatuses[rng.IntN(len(diffStatuses))],
-			InvocationCount:  rng.IntN(10),
-			HealthCheckCount: rng.IntN(5),
+			ServiceIdentity: auditlog.ServiceIdentity{
+				ServiceRef: rootRef(auditlog.ServiceName(namePool[i])),
+			},
+			ServiceLifecycle: auditlog.ServiceLifecycle{
+				Status:          diffStatuses[rng.IntN(len(diffStatuses))],
+				InvocationCount: rng.IntN(10),
+			},
+			ServiceHealth: auditlog.ServiceHealth{
+				HealthCheckCount: rng.IntN(5),
+			},
 		})
 	}
 

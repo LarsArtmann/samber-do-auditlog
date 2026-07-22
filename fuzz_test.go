@@ -321,8 +321,12 @@ func TestNestedScopeExport(t *testing.T) {
 
 			services := make([]auditlog.ServiceInfo, 0, depth+1)
 			services = append(services, auditlog.ServiceInfo{
-				ServiceRef: rootRef("root-svc"),
-				Status:     auditlog.ServiceStatusActive,
+				ServiceIdentity: auditlog.ServiceIdentity{
+					ServiceRef: rootRef("root-svc"),
+				},
+				ServiceLifecycle: auditlog.ServiceLifecycle{
+					Status: auditlog.ServiceStatusActive,
+				},
 			})
 
 			for i := range depth {
