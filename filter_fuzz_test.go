@@ -52,11 +52,13 @@ func FuzzFilterInputs(f *testing.F) {
 		names := tokenize(data)
 
 		var opts []auditlog.ReportOption
+
 		if len(names) > 0 {
-			svcNames := make([]auditlog.ServiceName, len(names))
-			for i, n := range names {
-				svcNames[i] = auditlog.ServiceName(n)
+			svcNames := make([]auditlog.ServiceName, 0, len(names))
+			for _, n := range names {
+				svcNames = append(svcNames, auditlog.ServiceName(n))
 			}
+
 			opts = append(opts, auditlog.WithServicesByName(svcNames...))
 		}
 

@@ -289,6 +289,7 @@ func (p *Plugin) RecordHealthCheckWithContext(ctx context.Context, injector do.I
 	for svcName, svcErr := range results {
 		name := ServiceName(svcName)
 		scopeID, scopeName, found := p.recorder.ResolveServiceScope(injector, name)
+
 		if !found {
 			continue
 		}

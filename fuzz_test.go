@@ -311,7 +311,7 @@ func TestNestedScopeExport(t *testing.T) {
 
 			for i := range depth {
 				child := auditlog.ScopeNode{
-					ID:       auditlog.ScopeID(auditlog.ScopeID(fmt.Sprintf("scope-%d", i))),
+					ID:       auditlog.ScopeID(fmt.Sprintf("scope-%d", i)),
 					Name:     fmt.Sprintf("scope-%d", i),
 					Services: []auditlog.ServiceName{auditlog.ServiceName(fmt.Sprintf("svc-%d", i))},
 				}
