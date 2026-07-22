@@ -17,7 +17,7 @@ Audit-log plugin for [samber/do v2](https://github.com/samber/do) — track ever
 </div>
 
 > [!CAUTION]
-> **Alpha.** The API may change between releases. Pin to a specific commit if you use this in production. Feedback welcome in [Issues](https://github.com/larsartmann/samber-do-auditlog/issues).
+> **Alpha.** The API may change between releases. Pin to a specific commit if you use this in production. See [STABILITY.md](STABILITY.md) for the stability promise. Feedback welcome in [Issues](https://github.com/larsartmann/samber-do-auditlog/issues) — [CONTRIBUTING.md](CONTRIBUTING.md) has everything you need to get started.
 
 ---
 
@@ -119,6 +119,9 @@ func main() {
 }
 ```
 
+> [!TIP]
+> **Toggle without code changes:** Set `Enabled: false` (the zero value) and control via the `DO_AUDITLOG_ENABLED=true` environment variable. Ship the plugin wired in production and flip the switch at deploy time — no code change, no recompile.
+
 ## Features
 
 | Feature                  | What it gives you                                                                   |
@@ -133,6 +136,9 @@ func main() {
 | **16+ export formats**   | JSON, NDJSON, CSV, TSV, HTML, Mermaid, PlantUML, DOT, D2, tree, table               |
 | **Filtered reports**     | Slice by name, type, scope, event type, or time range before exporting              |
 | **Real-time streaming**  | `OnEvent` callback fires on every event — stream to Prometheus, OTel, or dashboards |
+| **Env var toggle**       | `DO_AUDITLOG_ENABLED=true` activates the plugin without code changes                |
+| **Bounded memory**       | `MaxEvents` caps in-memory events; `DroppedEventCount()` tracks overflow             |
+| **Report diffing**       | `Report.Diff(other)` detects added, removed, and changed services for CI/CD         |
 | **~1.7 µs overhead**     | In-memory capture during operation. Toggle off for zero cost                        |
 | **Minimal deps**         | `samber/do/v2` + `a-h/templ` + `larsartmann/go-output` (diagrams and tables)        |
 
@@ -253,6 +259,29 @@ auditlog diff old.json new.json      # structural comparison
 auditlog validate report.json        # schema validation
 ```
 
+## Loading & Migrating Reports
+
+Export a report, then load it back. `LoadReport` auto-detects JSON vs NDJSON:
+
+```go
+// Load any report file — JSON or NDJSON, v0.1.0 or v0.2.0 schema
+report, format, err := auditlog.LoadReport("audit.json")
+if err != nil {
+    panic(err)
+}
+fmt.Printf("loaded %s: %d services, %d events\n", format, report.ServiceCount, report.EventCount)
+
+// Migrate an old v0.1.0 report to the current schema
+migrated, err := auditlog.MigrateReport(oldJSONBytes)
+
+// Replay NDJSON events back into a full Report
+events, err := auditlog.ReadEvents(ndjsonFile)
+report, err := auditlog.ReplayEvents(events)
+
+// Get the canonical JSON Schema for validation
+schema := auditlog.JSONSchema()
+```
+
 ## Performance
 
 | Path     | Overhead | Allocs |
@@ -261,6 +290,17 @@ auditlog validate report.json        # schema validation
 | Disabled | ~113 ns  | 4      |
 
 In-memory capture — no file I/O during container operation. You pay the cost only when you export. Full benchmarks in [BENCHMARKS.md](BENCHMARKS.md).
+
+## Security & Quality
+
+| Signal                  | Detail                                                              |
+| ----------------------- | ------------------------------------------------------------------- |
+| **CSP hardened**        | HTML reports use `base-uri 'none'; frame-ancestors 'none'`          |
+| **Fuzz tested**         | 5 fuzz targets covering HTML XSS, migration, diagrams, NDJSON       |
+| **govulncheck**         | Runs on every CI push — zero known vulnerabilities                   |
+| **109 linters**         | golangci-lint v2 with near-exhaustive linter set, zero exemptions    |
+| **94% coverage gate**   | CI fails if coverage drops below 94% of non-example/cmd statements  |
+| **JSON Schema**         | Canonical Draft 2020-12 schema generated from Go types              |
 
 ## Documentation
 
@@ -272,8 +312,11 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 | [Filtered Reports](https://do-auditlog.lars.software/guides/filtered-reports/)       | Slice by name, type, scope, time          |
 | [Health Checks](https://do-auditlog.lars.software/guides/health-checks/)             | Per-service health audit events           |
 | [Performance](https://do-auditlog.lars.software/guides/performance/)                 | Benchmarks and tuning                     |
-| [API Reference](https://do-auditlog.lars.software/api-reference/)                   | Full API docs with examples               |
+| [API Reference](https://do-auditlog.lars.software/api-reference/)                    | Full API docs with examples               |
 | [pkg.go.dev](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog)           | Generated godoc                           |
+| [STABILITY.md](STABILITY.md)                                                         | API stability promise                     |
+| [CHANGELOG.md](CHANGELOG.md)                                                         | Release history                           |
+| [BENCHMARKS.md](BENCHMARKS.md)                                                       | Detailed benchmark numbers                |
 
 ## Contributing
 
