@@ -2,29 +2,57 @@ package auditlog
 
 import "time"
 
-// ServiceInfo aggregates all observed data for a single service.
-type ServiceInfo struct {
+// ServiceIdentity holds the immutable identity of a service: its scope
+// reference and provider type. Embedded in ServiceInfo.
+type ServiceIdentity struct {
 	ServiceRef
 
+	ServiceType ProviderType `json:"service_type"`
+}
+
+// ServiceLifecycle holds the lifecycle state of a service: registration,
+// invocation, and shutdown data including errors and durations. Embedded
+// in ServiceInfo.
+type ServiceLifecycle struct {
 	Status               ServiceStatus `json:"status"`
-	ServiceType          ProviderType  `json:"service_type"`
 	RegisteredAt         time.Time     `json:"registered_at"`
 	FirstInvokedAt       *time.Time    `json:"first_invoked_at,omitempty"`
 	InvocationCount      int           `json:"invocation_count"`
 	InvocationOrder      int           `json:"invocation_order"`
 	FirstBuildDurationMs *float64      `json:"first_build_duration_ms,omitempty"`
-	Dependencies         []ServiceRef  `json:"dependencies,omitempty"`
-	Dependents           []ServiceRef  `json:"dependents,omitempty"`
 	ShutdownAt           *time.Time    `json:"shutdown_at,omitempty"`
 	ShutdownDurationMs   *float64      `json:"shutdown_duration_ms,omitempty"`
 	ShutdownError        *string       `json:"shutdown_error,omitempty"`
 	InvocationError      *string       `json:"invocation_error,omitempty"`
-	IsHealthchecker      bool          `json:"is_healthchecker"`
 	IsShutdowner         bool          `json:"is_shutdowner"`
+}
 
+// ServiceHealth holds health-check data for a service. Embedded in
+// ServiceInfo.
+type ServiceHealth struct {
+	IsHealthchecker   bool       `json:"is_healthchecker"`
 	LastHealthCheckAt *time.Time `json:"last_health_check_at,omitempty"`
 	HealthCheckError  *string    `json:"health_check_error,omitempty"`
 	HealthCheckCount  int        `json:"health_check_count"`
+}
+
+// ServiceGraph holds the dependency relationships of a service: which
+// services it depends on and which services depend on it. Embedded in
+// ServiceInfo.
+type ServiceGraph struct {
+	Dependencies []ServiceRef `json:"dependencies,omitempty"`
+	Dependents   []ServiceRef `json:"dependents,omitempty"`
+}
+
+// ServiceInfo aggregates all observed data for a single service. The four
+// embedded structs (ServiceIdentity, ServiceLifecycle, ServiceHealth,
+// ServiceGraph) keep related fields grouped while preserving flat field
+// access and flat JSON output via Go's struct embedding.
+type ServiceInfo struct {
+	ServiceIdentity
+	ServiceLifecycle
+	ServiceHealth
+	ServiceGraph
 }
 
 // Uptime returns the duration since the service was registered.
