@@ -266,6 +266,9 @@ linters:
           - noinlineerr
           - gosec
           - varnamelen
+      - text: "package has more than one godoc"
+        linters:
+          - godoclint
     paths:
       - _templ\.go$
       - \.gen\.go$

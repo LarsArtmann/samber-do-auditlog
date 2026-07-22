@@ -2,7 +2,7 @@
 
 Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI container lifecycle event (registration, invocation, shutdown) with timestamps, dependency graph inference, build duration tracking, and export to JSON / NDJSON / self-contained HTML.
 
-**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.26.3 (go.mod) / 1.26.4 (devShell) · **Status**: ALPHA
+**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.26.4 (go.mod + devShell) · **Status**: ALPHA
 
 ---
 
@@ -15,7 +15,7 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | `go test -race ./...` | Run all tests with race detector (CI uses this) |
 
 | `go test -race -coverprofile=cover.out \\
-  -covermode=atomic ./...` | Run tests with coverage (CI gate: ≥95% of non-`example/` code) |
+  -covermode=atomic ./...` | Run tests with coverage (CI gate: ≥94% of non-`example/`/`cmd/` code) |
 | `go test -run TestPlugin_DisabledIsNoOp` | Run single test |
 | `go vet ./...` | Static analysis |
 | `golangci-lint config verify` | Validate the lint config (CI runs this before `lint run`) |
@@ -27,7 +27,7 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | `go install ./cmd/auditlog` | Install the `auditlog` CLI to `$GOBIN` |
 | `nix run .#auditlog -- help` | Run the CLI via Nix (no install) |
 | `nix run .#coverage` | Run the CI-equivalent coverage gate via Nix |
-| `sh scripts/coverage-gate.sh` | Coverage gate (excludes example/ + cmd/; ≥95%) |
+| `sh scripts/coverage-gate.sh` | Coverage gate (excludes example/ + cmd/; ≥94%) |
 | `git config core.hooksPath scripts/hooks` | Install the pre-commit hook |
 
 A `flake.nix` devShell is available for Nix users. No Makefile, no justfile.
@@ -74,7 +74,7 @@ schema/             — report.schema.json: Draft 2020-12 JSON Schema generated 
 cmd/genschema/      — JSON Schema generator (invoked by `go generate`; imports invopop/jsonschema — depguard-restricted to cmd/)
 cmd/auditlog/       — CLI binary: info/convert/diff/validate/schema subcommands (stdlib flag, no deps)
 scripts/hooks/      — pre-commit hook (generate drift check + vet + lint + test); install via `git config core.hooksPath scripts/hooks`
-scripts/coverage-gate.sh — CI-equivalent coverage gate (excludes example/ + cmd/; ≥95% threshold)
+scripts/coverage-gate.sh — CI-equivalent coverage gate (excludes example/ + cmd/; ≥94% threshold)
 doc.go              — Package doc comment
 example/            — Self-checking demo with 19 samber/do v2 features
 ```
@@ -102,7 +102,7 @@ example/            — Self-checking demo with 19 samber/do v2 features
 
 GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and PR with 5 parallel jobs:
 
-- **test**: `go vet`, `go build`, `go test -race` with a coverage profile, and a **coverage gate** that fails if non-`example/` statement coverage drops below 95%.
+- **test**: `go vet`, `go build`, `go test -race` with a coverage profile, and a **coverage gate** that fails if non-`example/`/`cmd/` statement coverage drops below 94%.
 - **lint**: `golangci-lint config verify` then `golangci-lint v2.12.2` run (pinned to match local dev).
 - **vulncheck**: `govulncheck` via `golang/govulncheck-action`.
 - **mod-tidy**: runs `go mod tidy` and fails if `go.sum` drifts from the committed version.
@@ -176,7 +176,7 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **`Plugin.WriteReportJSON()` and `ExportFilteredToFile()`** delegate to `Report.WriteJSON()` — single JSON encoding path.
 - **CSP hardened**: `base-uri 'none'; frame-ancestors 'none'` added to prevent base injection and clickjacking.
 - **JSON Schema** (`schema/report.schema.json`) is GENERATED from Go types by `cmd/genschema` (invoked via `//go:generate go run ./cmd/genschema` in `schema.go`). It is `go:embed`ded and exposed via `JSONSchema()`. Never hand-edit it — change the Go struct tags and regenerate. The `invopop/jsonschema` dependency is depguard-restricted to `cmd/` only; the library never imports it.
-- **`cmd/` packages are tooling, not library code** — `cmd/genschema` (schema generator) and `cmd/auditlog` (CLI binary). The `.golangci.yml` `cmd/` path excludes pragmatic tooling linters (forbidigo, exhaustruct, gosec, err113, errcheck, wrapcheck, nlreturn, goconst). `cmd/` and `example/` are EXCLUDED from the 95% coverage gate (their logic is exercised by integration/golden tests that exec a built binary, not in-process).
+- **`cmd/` packages are tooling, not library code** — `cmd/genschema` (schema generator) and `cmd/auditlog` (CLI binary). The `.golangci.yml` `cmd/` path excludes pragmatic tooling linters (forbidigo, exhaustruct, gosec, err113, errcheck, wrapcheck, nlreturn, goconst). `cmd/` and `example/` are EXCLUDED from the 94% coverage gate (their logic is exercised by integration/golden tests that exec a built binary, not in-process).
 - **Adding a 4th diagram format** — DONE: D2 export added via `go-output/d2` (`Report.WriteD2()`). For formats that lack built-in edge dedup (like D2), use the `dedupGraphEdges()` helper before `SetEdges()`. Node IDs via `diagramNodeID(scopeID, serviceName)` (SlugifyID+MermaidID); labels via `serviceLabel(svc)` (with type icon) or bare `dep.ServiceName` for external deps.
 - **Typed identifiers / ServiceInfo split are DEFERRED to v0.3.0** — `ContainerID`/`ScopeID`/`ServiceName` named string types and splitting `ServiceInfo` into identity/lifecycle/health/graph structs were evaluated: blast radius measured at 65+ compile errors across production + tests + generated templ, with **zero existing bugs** from string/monolith usage. These are the next breaking-change batch (do together, post-v0.2.0). The full analysis lives in `docs/status/` reports.
 - **`.prettierignore`** excludes `testdata/`, `schema/`, `docs/`, and `CHANGELOG.md` from oxfmt (which reads `.prettierignore` by default). Without this, oxfmt pretty-prints the golden HTML test fixture (breaking `TestReport_WriteHTML_GoldenFile`), reformats generated JSON schema (breaking `stale-generation` CI check), and pads markdown tables (noise in docs/status reports).
@@ -184,6 +184,8 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **BuildFlow `go-auto-upgrade` is DANGEROUS**: The `go-auto-upgrade` migrator migrated `encoding/json` → `encoding/json/v2` + `encoding/json/jsontext` (build-constraint-excluded in Go 1.26.4 — they require `GOEXPERIMENT=jsonv2` which the devShell does not enable). It also deleted `CompareServiceRefs()` from `diff.go` (breaking 4 call sites) and bumped `go-output` to v0.30.4 (which transitively imports the same unavailable packages). The project was left completely uncompilable. Incident post-mortem: `docs/status/2026-07-13_21-28_buildflow-go-auto-upgrade-breakage-remediation.md`. Either exclude `go-auto-upgrade` from BuildFlow `--fix` or run it in detect-only mode.
 - **`encoding/json/v2` exclusion policy**: No `.go` file in this project may import `encoding/json/v2` or `encoding/json/jsontext`. These packages are behind `//go:build goexperiment.jsonv2` which is not enabled. The project targets Go 1.26.x. Revisit when Go 1.27 stabilizes json/v2.
 - **Test helpers**: `mkEvent` (replay_test.go, `auditlog_test` package) and `mkRegEvent` (cli_integration_test.go, `main` package) create standard event structs. `mkEventWithDur` extends `mkEvent` with `DurationMs`. `mkInvAfterWithDur` extends with invocation-after semantics. `setupWithDB(url)` wraps `newPluginAndInjector + provideDB + invoke` (the standard 4-line plugin preamble). `replayFromPlugin(t, p)` wraps `WriteEventsNDJSON → ReadEvents → ReplayEvents` (the standard 8-line round-trip). `assertWriteFails`/`assertErrIs`/`assertLen`/`assertReportValidNoFatal` centralize the most common assertions. `csvServiceRef`/`rootRef`/`rootScopeTree`/`csvSplitLines`/`mkNewReport`/`assertMetadataLabel` centralize struct creation. Use these instead of inline struct literals to keep art-dupl clone-free.
+- **godoclint false positive**: `godoclint` reports "package has more than one godoc" because it counts the `// templ: version:` header in the generated `html_templ.go` as a second package doc. A text-based exclusion rule (`text: 'package has more than one godoc'`) in `.golangci.yml` suppresses this. The path exclusion `_templ\.go$` doesn't catch it because the issue is reported on `doc.go`, not the generated file.
+- **Pre-commit hook auto-commits**: The hook at `scripts/hooks/pre-commit` runs formatters and then stages ALL changes in the working tree before committing. This means doc-only edits get auto-committed alongside any formatter-applied changes (e.g., `.golangci.yml` reformatting). Review `git show HEAD` after every commit to verify no unexpected changes were included.
 
 ---
 
@@ -201,7 +203,7 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
   - **Assertion helpers** — `assertVersion`, `assertIntField`, `assertStringField`, `assertContainerID`, `assertServiceCount`, `assertEventCount`, `assertDependenciesCount`, `assertServiceIntField`, `assertServiceInvocationCount`, `assertServiceHealthCheckCount`, `assertReportServiceCount`, `assertFilteredServiceCount`, `assertUnhealthyServiceCount`, `assertHTMLContains`, `assertStringContains`, `assertAllEventsOfType`, `assertAllEventsForService`, `assertErrorExpected`, `assertReportValid`, `requireOneService`, `unmarshalJSONForTest`.
 - Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (clean and error), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations, ServiceStatus computation across all states, transient and value providers, health checks (healthy/unhealthy/multiple/disabled/count/report/scope/UnhealthyServices).
 - **Duplication policy**: art-dupl at `-t 15` with `--semantic` is the standard gate; the codebase is also clone-free at the aggressive `-t 3` threshold (zero groups, zero occurrences in production AND test code). **Zero harmful clones.** Test helpers (`mkEvent`, `mkEventWithDur`, `mkRegEvent`, `rootRef`, `assertEqual[T comparable]`, `newPluginAndInjector`, assertion wrappers) centralize struct creation, plugin setup, and assertions to prevent drift. Shared production helpers: `getOrCreateServiceRecord(evt)` (replay path), `recordDependencyFromStack`, `buildServiceDeps`, `depRecToRef`, `sortServiceInfos`, `buildScopeTreeFromMeta` (generic), `newFlagSet` (cmd/), `fireEvent` (hooks), `publishLockedEvent` (hooks — append + unlock + fire), `beginLockedBeforeHook` (hooks — context + lock + recordScope), `renderGraphDiagram` (diagram.go — SetNodes + SetEdges + DedupEdges + writeRendered for DOT/Mermaid/PlantUML), `graphRendererWithDedup` interface (subset of go-output renderers embedding `GraphRendererState`). Enum metadata uses map-based lookups (`eventTypeMetaTable`, `providerTypeMeta`, `serviceStatusIcons`) — single source of truth for Label/Icon/Color.
-- **Coverage: ~95%** of statements, 278 top-level functions (253 Test + 12 Benchmark + 5 Fuzz + 8 Example), 14 `t.Run` subtests, and 3 `b.Run` sub-benchmarks (BenchmarkBuildReport at 50/100/500 services); 262 `t.Parallel()` calls (~97% of eligible tests — only `t.Setenv()` env-var tests run sequentially).
+- **Coverage: ~94%** of statements, 278 top-level functions (253 Test + 12 Benchmark + 5 Fuzz + 8 Example), 14 `t.Run` subtests, and 3 `b.Run` sub-benchmarks (BenchmarkBuildReport at 50/100/500 services); 262 `t.Parallel()` calls (~97% of eligible tests — only `t.Setenv()` env-var tests run sequentially).
 - **HTML visualization features**: 5-tab layout (Services/Scopes/Graph/Timeline/Events), services table with type badges + status badges + shutdown duration + reverse deps + health column + search filter, collapsible scope tree with type emoji chips, Sugiyama layered DAG graph with type-colored nodes + pan/zoom + click-to-highlight, dual build+shutdown timeline bars with type icons, event type filter chips (registration/invocation/shutdown/health_check), keyboard nav (1-5), animated tab transitions, stat cards (including health checks when checked), responsive layout, footer with schema version.
 - **Tree export** (`WriteTree` / `WriteHTMLTree`): ASCII tree and HTML nested-list tree of the service dependency DAG, via go-output renderers. Available on both `Report` and `Plugin`.
 - **Table export** (`WriteTable`): 16+ format table export of service summary (Service, Scope, Type, Status, Invocations, Build(ms), Error) via go-output `RenderTable`. Formats include: table, json, csv, tsv, markdown, xml, d2, yaml, html, tree, mermaid, dot, jsonl, asciidoc, toml, plantuml. Available on both `Report` and `Plugin`.

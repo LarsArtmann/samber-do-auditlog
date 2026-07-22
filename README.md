@@ -249,7 +249,7 @@ title: do-auditlog
 
 ### Diagram theming
 
-All four diagram formats share the warm-amber per-node style (`fill:#e8a838`, `stroke:#4a4030`, `font:#14110d`) via go-output's `GraphStyle`. Two visual elements are not emitted because go-output's renderers lack graph-level attribute setters: the DOT dark canvas background (`bgcolor`) and edge line-colors. Restoring these requires an upstream contribution to `go-output`.
+All four diagram formats share the warm-amber per-node style (`fill:#e8a838`, `stroke:#4a4030`, `font:#14110d`) via go-output's `NodeStyle`. Two visual elements are not emitted because go-output's renderers lack graph-level attribute setters: the DOT dark canvas background (`bgcolor`) and edge line-colors. Restoring these requires an upstream contribution to `go-output`.
 
 ### Filtered Reports
 
@@ -498,7 +498,7 @@ Report
 
 This project enforces security through:
 
-- **gosec** — security scanner integrated into golangci-lint (108 linters, 0 issues)
+- **gosec** — security scanner integrated into golangci-lint (109 linters, 0 issues)
 - **CSP** — HTML output includes a strict Content-Security-Policy meta tag
 - **XSS hardening** — all user-controlled strings escaped via templ's context-aware auto-escaping
 - **Fuzz testing** — 5 fuzz targets verify resilience against malicious inputs (XSS, schema migration, diagram special chars, filter combinations, NDJSON parsing)
