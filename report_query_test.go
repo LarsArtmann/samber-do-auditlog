@@ -39,7 +39,7 @@ func TestReport_ServiceByRef(t *testing.T) {
 
 	report := p.Report()
 
-	rootSvc := report.ServiceByRef(injector.ID(), "db")
+	rootSvc := report.ServiceByRef(auditlog.ScopeID(injector.ID()), "db")
 	if rootSvc == nil {
 		t.Fatal("root db not found by ref")
 	}
@@ -48,7 +48,7 @@ func TestReport_ServiceByRef(t *testing.T) {
 		t.Errorf("root db name: want db, got %s", rootSvc.ServiceName)
 	}
 
-	childSvc := report.ServiceByRef(child.ID(), "db")
+	childSvc := report.ServiceByRef(auditlog.ScopeID(child.ID()), "db")
 	if childSvc == nil {
 		t.Fatal("child db not found by ref")
 	}
@@ -76,13 +76,13 @@ func TestReport_ServicesByScope(t *testing.T) {
 
 	report := p.Report()
 
-	rootServices := report.ServicesByScope(injector.ID())
+	rootServices := report.ServicesByScope(auditlog.ScopeID(injector.ID()))
 
 	if len(rootServices) < 1 {
 		t.Fatalf("expected at least 1 root service, got %d", len(rootServices))
 	}
 
-	childServices := report.ServicesByScope(child.ID())
+	childServices := report.ServicesByScope(auditlog.ScopeID(child.ID()))
 	requireOneService(t, "child", childServices)
 
 	if childServices[0].ServiceName != "child-svc" {
@@ -155,7 +155,7 @@ func TestReport_EventsByRef(t *testing.T) {
 
 	report := p.Report()
 
-	events := report.EventsByRef(injector.ID(), "db")
+	events := report.EventsByRef(auditlog.ScopeID(injector.ID()), "db")
 	if len(events) == 0 {
 		t.Error("expected events for db in root scope")
 	}
@@ -248,7 +248,7 @@ func TestReport_Index(t *testing.T) {
 	}
 
 	// EventsByRef
-	if len(idx.EventsByRef[rootScope+"/db"]) == 0 {
+	if len(idx.EventsByRef[string(rootScope)+"/db"]) == 0 {
 		t.Error("Index.EventsByRef: expected events for root/db")
 	}
 

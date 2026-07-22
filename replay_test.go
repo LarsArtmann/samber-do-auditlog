@@ -91,7 +91,7 @@ func mkInvAfter(seq int, ts time.Time, serviceName string) auditlog.Event {
 // every nested-invocation replay test for the "push to stack" half of a call.
 // ContainerID is fixed to containerIDForTest; see mkInvAfter for rationale.
 func mkInvBefore(seq int, ts time.Time, serviceName string) auditlog.Event {
-	return mkEvent(seq, ts, auditlog.EventTypeInvocation, auditlog.PhaseBefore, serviceName, containerIDForTest, "")
+	return mkEvent(seq, ts, auditlog.EventTypeInvocation, auditlog.PhaseBefore, auditlog.ServiceName(serviceName), containerIDForTest, "")
 }
 
 // mkLazyEvent is the shared lazy-provider mkEvent(...) body used by every
@@ -1021,7 +1021,7 @@ func TestDiff_MultipleChanged(t *testing.T) {
 
 	now := time.Now()
 	mk := func(seq int, name string, eventType auditlog.EventType, phase auditlog.Phase) auditlog.Event {
-		return mkEvent(seq, now, eventType, phase, name, "c", auditlog.ProviderTypeLazy)
+		return mkEvent(seq, now, eventType, phase, auditlog.ServiceName(name), auditlog.ContainerID("c"), auditlog.ProviderTypeLazy)
 	}
 
 	sharedRegInv := []auditlog.Event{
@@ -1263,7 +1263,7 @@ func TestReplayEvents_InvocationOrder(t *testing.T) {
 	// Two services invoked in sequence: config first, then db.
 	// invocationOrder must reflect the global invocation sequence, not per-service count.
 	mk := func(seq int, name string, offset time.Duration, eventType auditlog.EventType, phase auditlog.Phase) auditlog.Event {
-		return mkEvent(seq, base.Add(offset), eventType, phase, name, "test", auditlog.ProviderTypeLazy)
+		return mkEvent(seq, base.Add(offset), eventType, phase, auditlog.ServiceName(name), auditlog.ContainerID("test"), auditlog.ProviderTypeLazy)
 	}
 
 	events := []auditlog.Event{

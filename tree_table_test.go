@@ -13,7 +13,7 @@ import (
 // activeSvcReport builds a minimal Report with one Active service in the root
 // scope. Centralizes the 6-line struct literal repeated by every tree/table
 // string-returning test.
-func activeSvcReport(containerID, serviceName string) auditlog.Report {
+func activeSvcReport(containerID auditlog.ContainerID, serviceName auditlog.ServiceName) auditlog.Report {
 	return auditlog.Report{
 		Version:     auditlog.SchemaVersion,
 		ContainerID: containerID,
