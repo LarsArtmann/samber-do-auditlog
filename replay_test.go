@@ -24,7 +24,7 @@ func mkEvent(
 	ts time.Time,
 	eventType auditlog.EventType,
 	phase auditlog.Phase,
-	serviceName, containerID string,
+	serviceName auditlog.ServiceName, containerID auditlog.ContainerID,
 	svcType auditlog.ProviderType,
 ) auditlog.Event {
 	return auditlog.Event{
@@ -45,7 +45,7 @@ func mkEventWithDur(
 	ts time.Time,
 	eventType auditlog.EventType,
 	phase auditlog.Phase,
-	serviceName, containerID string,
+	serviceName auditlog.ServiceName, containerID auditlog.ContainerID,
 	svcType auditlog.ProviderType,
 	dur float64,
 ) auditlog.Event {
@@ -57,14 +57,14 @@ func mkEventWithDur(
 
 // mkRegEvent is a shorthand for a registration-after event. Centralizes the
 // 9-line mkEvent(...) block used by every manual event-fixture test.
-func mkRegEvent(seq int, ts time.Time, serviceName, containerID string) auditlog.Event {
+func mkRegEvent(seq int, ts time.Time, serviceName auditlog.ServiceName, containerID auditlog.ContainerID) auditlog.Event {
 	return mkLazyEvent(seq, ts, auditlog.EventTypeRegistration, auditlog.PhaseAfter, serviceName, containerID)
 }
 
 // mkInvAfterWithDur is a shorthand for an invocation-after event with duration.
 // Centralizes the 9-line mkEventWithDur(...) block used by every
 // double-invocation replay test.
-func mkInvAfterWithDur(seq int, ts time.Time, serviceName, containerID string, dur float64) auditlog.Event {
+func mkInvAfterWithDur(seq int, ts time.Time, serviceName auditlog.ServiceName, containerID auditlog.ContainerID, dur float64) auditlog.Event {
 	return mkLazyEventWithDur(
 		seq, ts,
 		auditlog.EventTypeInvocation, auditlog.PhaseAfter,
@@ -83,7 +83,7 @@ const containerIDForTest = "c"
 // containerIDForTest because every existing caller passes the same value; if
 // a test ever needs a different container, inline a mkLazyEvent call.
 func mkInvAfter(seq int, ts time.Time, serviceName string) auditlog.Event {
-	return mkLazyEvent(seq, ts, auditlog.EventTypeInvocation, auditlog.PhaseAfter, serviceName, containerIDForTest)
+	return mkLazyEvent(seq, ts, auditlog.EventTypeInvocation, auditlog.PhaseAfter, auditlog.ServiceName(serviceName), containerIDForTest)
 }
 
 // mkInvBefore is a shorthand for an invocation-before event with empty
@@ -102,7 +102,7 @@ func mkLazyEvent(
 	ts time.Time,
 	eventType auditlog.EventType,
 	phase auditlog.Phase,
-	serviceName, containerID string,
+	serviceName auditlog.ServiceName, containerID auditlog.ContainerID,
 ) auditlog.Event {
 	return mkEvent(seq, ts, eventType, phase, serviceName, containerID, auditlog.ProviderTypeLazy)
 }
@@ -114,7 +114,7 @@ func mkLazyEventWithDur(
 	ts time.Time,
 	eventType auditlog.EventType,
 	phase auditlog.Phase,
-	serviceName, containerID string,
+	serviceName auditlog.ServiceName, containerID auditlog.ContainerID,
 	dur float64,
 ) auditlog.Event {
 	return mkEventWithDur(seq, ts, eventType, phase, serviceName, containerID, auditlog.ProviderTypeLazy, dur)

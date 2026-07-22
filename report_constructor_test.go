@@ -65,7 +65,7 @@ func TestNewReport_ReDerivesStatus(t *testing.T) {
 
 // rootRef is a 1-line ServiceRef constructor for the root scope ("root" /
 // auditlog.RootScopeName). Used by every test that builds a fixture by hand.
-func rootRef(serviceName string) auditlog.ServiceRef {
+func rootRef(serviceName auditlog.ServiceName) auditlog.ServiceRef {
 	return auditlog.ServiceRef{
 		ScopeID:     "root",
 		ScopeName:   auditlog.RootScopeName,
@@ -75,7 +75,7 @@ func rootRef(serviceName string) auditlog.ServiceRef {
 
 // rootScopeTree is a 1-line ScopeNode constructor for the root scope with
 // the given service names. Shared by every NewReport fixture test.
-func rootScopeTree(services ...string) auditlog.ScopeNode {
+func rootScopeTree(services ...auditlog.ServiceName) auditlog.ScopeNode {
 	return auditlog.ScopeNode{
 		ID:       "root",
 		Name:     auditlog.RootScopeName,
@@ -87,7 +87,7 @@ func rootScopeTree(services ...string) auditlog.ScopeNode {
 // on any error. Centralizes the 7-line call used by every NewReport fixture.
 func mkNewReport(
 	t *testing.T,
-	containerID string,
+	containerID auditlog.ContainerID,
 	exported time.Time,
 	services []auditlog.ServiceInfo,
 	scopeTree auditlog.ScopeNode,

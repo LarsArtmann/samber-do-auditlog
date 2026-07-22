@@ -32,7 +32,7 @@ func goldenEvent(
 	name string,
 ) auditlog.Event {
 	return auditlog.Event{
-		ServiceRef:  rootRef(name),
+		ServiceRef:  rootRef(auditlog.ServiceName(name)),
 		Sequence:    seq,
 		Timestamp:   goldenExportedAt.Add(offsetMs),
 		EventType:   eventType,

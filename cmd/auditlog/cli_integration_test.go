@@ -59,7 +59,7 @@ func mkRegEvent(seq int, ts time.Time, serviceName auditlog.ServiceName, contain
 }
 
 // writeSampleReport builds a deterministic report and writes it as JSON.
-func writeSampleReport(t *testing.T, path, containerID string) {
+func writeSampleReport(t *testing.T, path string, containerID auditlog.ContainerID) {
 	t.Helper()
 
 	events := []auditlog.Event{

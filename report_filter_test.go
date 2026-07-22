@@ -46,7 +46,7 @@ func TestReport_FilteredByType(t *testing.T) {
 
 	requireOneService(t, "eager", filtered.Services)
 
-	if !strings.Contains(filtered.Services[0].ServiceName, "Cache") {
+	if !strings.Contains(string(filtered.Services[0].ServiceName), "Cache") {
 		t.Errorf("expected Cache in service name, got %s", filtered.Services[0].ServiceName)
 	}
 }
@@ -101,7 +101,7 @@ func TestReport_FilteredByScope(t *testing.T) {
 	_ = do.MustInvokeNamed[*Database](injector, "root-svc")
 	_ = do.MustInvokeNamed[*Database](child, "child-svc")
 
-	filtered := p.Report().Filtered(auditlog.WithScope(child.ID()))
+	filtered := p.Report().Filtered(auditlog.WithScope(auditlog.ScopeID(child.ID())))
 	assertFilteredServiceCount(t, filtered, "child-svc")
 
 	// Scope tree preserves hierarchy: root scope remains root, child is pruned to matching scope.
