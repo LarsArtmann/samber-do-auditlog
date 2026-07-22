@@ -111,7 +111,7 @@ func finalizeDenormalized(report *Report) {
 // and MigrateReport — guaranteeing that count/summary fields can never drift
 // from the underlying data.
 func buildReportFromCore(
-	version, containerID string,
+	version string, containerID ContainerID,
 	exportedAt time.Time,
 	droppedEventCount int64,
 	events []Event,
@@ -146,7 +146,7 @@ func buildReportFromCore(
 // Returns an error if the inputs are structurally inconsistent in a way that
 // cannot be repaired by re-derivation.
 func NewReport(
-	version, containerID string,
+	version string, containerID ContainerID,
 	exportedAt time.Time,
 	events []Event,
 	services []ServiceInfo,
@@ -279,7 +279,7 @@ func countScopeNodes(node ScopeNode) int {
 
 // ServiceByName returns the first ServiceInfo matching the given exact service name.
 // Returns nil if no service matches. For scoped lookup, use ServiceByRef.
-func (r Report) ServiceByName(name string) *ServiceInfo {
+func (r Report) ServiceByName(name ServiceName) *ServiceInfo {
 	for i := range r.Services {
 		if r.Services[i].ServiceName == name {
 			return &r.Services[i]
@@ -291,7 +291,7 @@ func (r Report) ServiceByName(name string) *ServiceInfo {
 
 // ServiceByRef returns the ServiceInfo matching the given scope ID and service name.
 // Returns nil if no service matches.
-func (r Report) ServiceByRef(scopeID, serviceName string) *ServiceInfo {
+func (r Report) ServiceByRef(scopeID ScopeID, serviceName ServiceName) *ServiceInfo {
 	for i := range r.Services {
 		if r.Services[i].ScopeID == scopeID && r.Services[i].ServiceName == serviceName {
 			return &r.Services[i]
@@ -302,7 +302,7 @@ func (r Report) ServiceByRef(scopeID, serviceName string) *ServiceInfo {
 }
 
 // ServicesByScope returns all services in the given scope.
-func (r Report) ServicesByScope(scopeID string) []ServiceInfo {
+func (r Report) ServicesByScope(scopeID ScopeID) []ServiceInfo {
 	var result []ServiceInfo
 
 	for _, s := range r.Services {
@@ -315,7 +315,7 @@ func (r Report) ServicesByScope(scopeID string) []ServiceInfo {
 }
 
 // EventsByService returns all events for the given service name.
-func (r Report) EventsByService(serviceName string) []Event {
+func (r Report) EventsByService(serviceName ServiceName) []Event {
 	var result []Event
 
 	for _, e := range r.Events {
@@ -367,7 +367,7 @@ func (r Report) UnhealthyServices() []ServiceInfo {
 }
 
 // EventsByRef returns all events for the given scope ID and service name.
-func (r Report) EventsByRef(scopeID, serviceName string) []Event {
+func (r Report) EventsByRef(scopeID ScopeID, serviceName ServiceName) []Event {
 	var result []Event
 
 	for _, e := range r.Events {
@@ -382,10 +382,10 @@ func (r Report) EventsByRef(scopeID, serviceName string) []Event {
 // ReportIndex provides O(1) lookups into a Report.
 // Build it once with report.Index() and reuse it for multiple queries.
 type ReportIndex struct {
-	ByName       map[string]*ServiceInfo
+	ByName       map[ServiceName]*ServiceInfo
 	ByRef        map[string]*ServiceInfo
-	ByScope      map[string][]ServiceInfo
-	EventsByName map[string][]Event
+	ByScope      map[ScopeID][]ServiceInfo
+	EventsByName map[ServiceName][]Event
 	EventsByRef  map[string][]Event
 	EventsByType map[EventType][]Event
 }
@@ -394,10 +394,10 @@ type ReportIndex struct {
 // Useful when performing multiple lookups on the same report.
 func (r Report) Index() ReportIndex {
 	idx := ReportIndex{
-		ByName:       make(map[string]*ServiceInfo, len(r.Services)),
+		ByName:       make(map[ServiceName]*ServiceInfo, len(r.Services)),
 		ByRef:        make(map[string]*ServiceInfo, len(r.Services)),
-		ByScope:      make(map[string][]ServiceInfo),
-		EventsByName: make(map[string][]Event),
+		ByScope:      make(map[ScopeID][]ServiceInfo),
+		EventsByName: make(map[ServiceName][]Event),
 		EventsByRef:  make(map[string][]Event),
 		EventsByType: make(map[EventType][]Event),
 	}

@@ -15,10 +15,10 @@ var errReplayValidationFailed = errors.New("replayed report failed validation")
 // primitives — replay is a single-threaded, pure transformation.
 type replayState struct {
 	services      map[svcKey]*serviceRecord
-	scopes        map[string]scopeMeta
+	scopes        map[ScopeID]scopeMeta
 	stack         []stackEntry
 	shutdownStart map[svcKey]time.Time
-	containerID   string
+	containerID   ContainerID
 	// invocationSeq is a cross-service counter matching the live Recorder's
 	// invocationSeq. Each service gets its invocationOrder from this counter
 	// the first time it is invoked, preserving global build ordering.
@@ -29,7 +29,7 @@ type replayState struct {
 func newReplayState() *replayState {
 	return &replayState{ //nolint:exhaustruct
 		services:      make(map[svcKey]*serviceRecord),
-		scopes:        make(map[string]scopeMeta),
+		scopes:        make(map[ScopeID]scopeMeta),
 		shutdownStart: make(map[svcKey]time.Time),
 	}
 }
@@ -135,7 +135,7 @@ func applyEvent(evt Event, state *replayState) {
 
 // recordScope records a scope if not already seen. The first scope becomes
 // root (parentID=""); all subsequent scopes are parented to the root.
-func (state *replayState) recordScope(scopeID, scopeName string) {
+func (state *replayState) recordScope(scopeID ScopeID, scopeName string) {
 	if _, exists := state.scopes[scopeID]; exists {
 		return
 	}
@@ -162,7 +162,7 @@ func (state *replayState) recordScope(scopeID, scopeName string) {
 }
 
 // firstScopeID returns the ID of the first-recorded scope, or "" if none yet.
-func (state *replayState) firstScopeID() string {
+func (state *replayState) firstScopeID() ScopeID {
 	if len(state.scopes) == 0 {
 		return ""
 	}

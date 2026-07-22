@@ -4,10 +4,10 @@ import "time"
 
 // reportFilter holds parsed filter criteria for Report.Filtered.
 type reportFilter struct {
-	serviceNames map[string]struct{}
+	serviceNames map[ServiceName]struct{}
 	serviceTypes map[ProviderType]struct{}
 	eventTypes   map[EventType]struct{}
-	scopeIDs     map[string]struct{}
+	scopeIDs     map[ScopeID]struct{}
 	timeFrom     *time.Time
 	timeTo       *time.Time
 }
@@ -16,10 +16,10 @@ type reportFilter struct {
 type ReportOption func(*reportFilter)
 
 // WithServicesByName filters the report to only include services with the given names.
-func WithServicesByName(names ...string) ReportOption {
+func WithServicesByName(names ...ServiceName) ReportOption {
 	return func(filter *reportFilter) {
 		if filter.serviceNames == nil {
-			filter.serviceNames = make(map[string]struct{}, len(names))
+			filter.serviceNames = make(map[ServiceName]struct{}, len(names))
 		}
 
 		for _, name := range names {
@@ -59,10 +59,10 @@ func WithTimeRange(from, to time.Time) ReportOption {
 }
 
 // WithScope filters the report to only include services and events in the given scope.
-func WithScope(scopeID string) ReportOption {
+func WithScope(scopeID ScopeID) ReportOption {
 	return func(filter *reportFilter) {
 		if filter.scopeIDs == nil {
-			filter.scopeIDs = make(map[string]struct{})
+			filter.scopeIDs = make(map[ScopeID]struct{})
 		}
 
 		filter.scopeIDs[scopeID] = struct{}{}
