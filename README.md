@@ -1,38 +1,21 @@
 <div align="center">
 
-# 🔍 do-auditlog
+# do-auditlog
 
-**Audit-log plugin for [samber/do v2](https://github.com/samber/do)**
+**See every dependency, every event.**
 
-Track every service registration, invocation, and shutdown.
-Get timestamps, build durations, dependency graphs, and scope trees.
-Export as JSON, NDJSON, or a self-contained HTML visualization.
+Audit-log plugin for [samber/do v2](https://github.com/samber/do) — track every registration, invocation, and shutdown with timestamps, dependency graphs, and self-contained HTML visualization.
 
 [![CI](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml/badge.svg)](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/samber-do-auditlog.svg)](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-📖 **[Documentation](https://do-auditlog.lars.software)** · **[Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/)** · **[API Reference](https://do-auditlog.lars.software/api-reference/)**
+[Documentation](https://do-auditlog.lars.software) &middot; [Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/) &middot; [API Reference](https://do-auditlog.lars.software/api-reference/)
 
 </div>
 
----
-
 > [!CAUTION]
->
-> ## 🚧 ALPHA — WORK IN PROGRESS 🚧
->
-> This project is in **early development**. The API may change at any time without notice.
->
-> **No guarantees** are made regarding:
->
-> - Backward compatibility between versions
-> - Stability of exported types and functions
-> - Correctness in all edge cases
->
-> **Use at your own risk.** Pin your dependency to a specific commit hash if you depend on this in production.
->
-> Feedback, bug reports, and breaking-change requests are very welcome in [Issues](https://github.com/larsartmann/samber-do-auditlog/issues).
+> **Alpha.** The API may change between releases. Pin to a specific commit if you use this in production. Feedback welcome in [Issues](https://github.com/larsartmann/samber-do-auditlog/issues).
 
 ---
 
@@ -70,32 +53,15 @@ A single self-contained HTML file. No server, no dependencies, no external reque
 
 ## Why?
 
-samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, but no recorder, no export, no visualization.
+samber/do v2 gives you lifecycle hooks but nothing to consume them. No recorder, no export, no visualization. You're flying blind.
 
 **do-auditlog** wires into those hooks in one line and gives you:
 
 - What services exist, when they were created, and how long they took to build
 - Which services depend on which — forward and reverse
-- The scope tree with per-scope service lists
+- The full scope tree with per-scope service lists
 - A complete chronological event stream
 - A self-contained HTML page you can open in any browser to explore your DI container
-
-## Features
-
-| Feature                  | Description                                                                                       |
-| ------------------------ | ------------------------------------------------------------------------------------------------- |
-| **Drop-in setup**        | `do.NewWithOpts(plugin.Opts())` — one line, zero config                                           |
-| **Dependency graph**     | Infers which service resolved which, without accessing do's internal DAG                          |
-| **Reverse dependencies** | Every service knows who depends on it                                                             |
-| **Scope tree**           | Full hierarchy with per-scope service lists                                                       |
-| **Service types**        | Auto-detects lazy/eager/transient/alias via `do.ExplainNamedService`                              |
-| **Timing**               | First build duration, shutdown duration, invocation count & order                                 |
-| **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events                                      |
-| **Export formats**       | JSON · NDJSON · CSV · TSV · HTML · Mermaid · PlantUML · DOT · D2 · Tree · Table (16+ sub-formats) |
-| **Filtered reports**     | Functional options to slice by name, type, scope, event type, time range                          |
-| **~1.7μs overhead**      | In-memory capture, no I/O during container operation                                              |
-| **Toggle on/off**        | `Enabled: false` → zero hooks, zero cost                                                          |
-| **Minimal deps**         | `samber/do/v2` + `a-h/templ` + `larsartmann/go-output` (diagrams/tables)                          |
 
 ## Install
 
@@ -103,9 +69,9 @@ samber/do v2 has lifecycle hooks but no built-in observability. You get hooks, b
 go get github.com/larsartmann/samber-do-auditlog
 ```
 
-Requires Go 1.26+ and samber/do v2.
+Requires Go 1.26+ and [samber/do v2](https://github.com/samber/do).
 
-> **Try the demo**: `git clone` this repo and run `DO_AUDITLOG_ENABLED=true go run ./example` to see it in action with 20 services across 4 scopes.
+> **Try the demo:** `git clone` this repo and run `DO_AUDITLOG_ENABLED=true go run ./example` — 20 services across 4 scopes with health checks, shutdowns, and invocation errors.
 
 ## Quick Start
 
@@ -115,124 +81,74 @@ package main
 import (
     "os"
 
-    "github.com/larsartmann/samber-do-auditlog"
+    auditlog "github.com/larsartmann/samber-do-auditlog"
     "github.com/samber/do/v2"
 )
 
 func main() {
-    // 1. Create the plugin (validates config, returns error on invalid input)
+    // 1. Create the plugin and pass hooks to the DI container
     plugin, err := auditlog.New(auditlog.Config{
-        Enabled:     true,           // flip to false in production
+        Enabled:     true,
         ContainerID: "my-app",
     })
     if err != nil {
         panic(err)
     }
 
-    // 2. Pass options to the DI container
     injector := do.NewWithOpts(plugin.Opts())
 
-    // 3. Register and use services as usual
-    do.Provide(injector, func(i do.Injector) (*MyService, error) {
-        return &MyService{}, nil
+    // 2. Register and invoke services as usual
+    do.Provide(injector, func(i do.Injector) (*Database, error) {
+        return &Database{}, nil
     })
-    svc := do.MustInvoke[*MyService](injector)
-    _ = svc
+    do.MustInvoke[*Database](injector)
 
-    // 4. Export when you're done
-    plugin.ExportToFile("audit.json")              // full report
-    plugin.ExportEventsToNDJSON("events.ndjson")   // streaming format
-    plugin.ExportToHTML("audit.html")              // open in browser
+    // 3. Export — open in any browser
+    plugin.ExportToHTML("audit.html")
 
-    // 5. Filtered export — only lazy services in a specific scope
-    plugin.ExportFilteredToFile("lazy.json",
-        auditlog.WithServicesByType(auditlog.ProviderTypeLazy),
-        auditlog.WithScope("drivers"),
-    )
-
-    // 6. Mermaid dependency graph
-    report := plugin.Report()
-    report.WriteMermaid(os.Stdout)                 // paste into GitHub README
+    // Other formats:
+    plugin.ExportToFile("audit.json")             // full JSON snapshot
+    plugin.ExportEventsToNDJSON("events.ndjson")  // streaming format
+    plugin.Report().WriteMermaid(os.Stdout)       // paste into GitHub README
 }
 ```
+
+## Features
+
+| Feature                  | What it gives you                                                                      |
+| ------------------------ | -------------------------------------------------------------------------------------- |
+| **Drop-in setup**        | `do.NewWithOpts(plugin.Opts())` — one line, zero config                               |
+| **Dependency graph**     | Infers which service resolved which, without touching do's internal DAG                |
+| **Reverse dependencies** | Every service knows who depends on it                                                  |
+| **Scope tree**           | Full hierarchy with per-scope service lists and cross-scope resolution                 |
+| **Service types**        | Auto-detects lazy / eager / transient / alias via `do.ExplainNamedService`             |
+| **Timing**               | First build duration, shutdown duration, invocation count and order                    |
+| **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events                           |
+| **16+ export formats**   | JSON, NDJSON, CSV, TSV, HTML, Mermaid, PlantUML, DOT, D2, tree, table                  |
+| **Filtered reports**     | Slice by name, type, scope, event type, or time range before exporting                 |
+| **Real-time streaming**  | `OnEvent` callback fires on every event — stream to Prometheus, OTel, or dashboards    |
+| **~1.7 us overhead**     | In-memory capture during operation. Toggle off for zero cost                           |
+| **Minimal deps**         | `samber/do/v2` + `a-h/templ` + `larsartmann/go-output` (diagrams and tables)           |
 
 ## Export Formats
 
-### JSON Report
+Every format is a single method call. All write to `io.Writer`; most have a matching `ExportTo*` file helper.
 
-Full snapshot: event timeline, service summaries, scope tree.
+| Format                  | Method                              | Best for                                   |
+| ----------------------- | ----------------------------------- | ------------------------------------------ |
+| **HTML**                | `ExportToHTML(path)`                | Interactive 5-tab visualization, sharing   |
+| **JSON**                | `ExportToFile(path)`                | Full snapshot, programmatic analysis       |
+| **NDJSON**              | `ExportEventsToNDJSON(path)`        | Streaming, log aggregators, replay         |
+| **CSV / TSV**           | `ExportToCSV(path)` / `ExportToTSV`  | Spreadsheets, data pipelines               |
+| **Mermaid**             | `report.WriteMermaid(w)`            | Inline in GitHub, GitLab, Notion           |
+| **PlantUML**            | `report.WritePlantUML(w)`           | IntelliJ, online editors                   |
+| **DOT**                 | `report.WriteDOT(w)`                | Graphviz rendering                         |
+| **D2**                  | `report.WriteD2(w)`                 | Modern diagram rendering                   |
+| **ASCII Tree**          | `report.WriteTree(w)`               | Quick dependency overview in terminal      |
+| **HTML Tree**           | `report.WriteHTMLTree(w)`           | Nested-list dependency tree                |
+| **Table (16+ formats)** | `report.WriteTable(w, format, ...)` | Markdown, YAML, TOML, XML, and more        |
 
-```json
-{
-  "version": "0.2.0",
-  "container_id": "my-app",
-  "exported_at": "2026-06-09T22:18:00Z",
-  "service_count": 3,
-  "event_count": 20,
-  "services": [
-    {
-      "service_name": "*main.UserService",
-      "invocation_count": 1,
-      "invocation_order": 2,
-      "first_build_duration_ms": 9.079,
-      "dependencies": [
-        { "scope_id": "...", "scope_name": "[root]", "service_name": "*main.Database" },
-        { "scope_id": "...", "scope_name": "[root]", "service_name": "*main.Cache" }
-      ],
-      "dependents": [
-        { "scope_id": "...", "scope_name": "[root]", "service_name": "*main.HTTPServer" }
-      ]
-    }
-  ],
-  "scope_tree": {
-    "name": "[root]",
-    "services": ["*main.Config", "*main.Database", "*main.Cache"],
-    "children": []
-  }
-}
-```
-
-### NDJSON Event Stream
-
-One JSON object per line. Feed it into log aggregators, stream processors, or custom tooling.
-
-```ndjson
-{"sequence":1,"timestamp":"...","event_type":"registration","phase":"before","container_id":"my-app","scope_id":"...","scope_name":"[root]","service_name":"*main.Config"}
-{"sequence":2,"timestamp":"...","event_type":"registration","phase":"after","container_id":"my-app","scope_id":"...","scope_name":"[root]","service_name":"*main.Config"}
-{"sequence":3,"timestamp":"...","event_type":"invocation","phase":"before","container_id":"my-app","scope_id":"...","scope_name":"[root]","service_name":"*main.Database"}
-{"sequence":4,"timestamp":"...","event_type":"invocation","phase":"after","container_id":"my-app","scope_id":"...","scope_name":"[root]","duration_ms":5.196,"service_name":"*main.Database"}
-```
-
-### HTML Visualization
-
-A single, self-contained dark-themed HTML page with a warm-amber aesthetic. No external JS/CSS. Works offline. See the [screenshots above](#what-does-it-look-like).
-
-**Five interactive tabs:**
-
-| Tab                  | What it shows                                                              |
-| -------------------- | -------------------------------------------------------------------------- |
-| **Services**         | Sortable table: name, type badge, scope, status, build time, deps, health  |
-| **Scopes**           | Collapsible scope tree with type emoji chips                               |
-| **Dependency Graph** | Sugiyama-layered DAG with type-colored nodes, pan/zoom, click-to-highlight |
-| **Timeline**         | Dual build + shutdown horizontal bars with type icons                      |
-| **Events**           | Full chronological log with type filter chips and keyboard navigation      |
-
-Plus a **lifecycle waveform** at the top — every event plotted as a colored vertical mark on a timeline, height-encoded by duration, errors in coral.
-
-Generate it with one line:
-
-```go
-plugin.ExportToHTML("audit.html")   // open in any browser
-```
-
-### Mermaid Flowchart
-
-Writes a `flowchart TD` representing the dependency graph. Paste it into any Markdown file that renders Mermaid (GitHub, GitLab, Notion).
-
-```go
-report := plugin.Report()
-report.WriteMermaid(os.Stdout)
-```
+The Mermaid output renders natively on GitHub:
 
 ```mermaid
 flowchart TD
@@ -241,125 +157,21 @@ flowchart TD
     root_*main.UserService --> root_*main.Database
 ```
 
-### PlantUML Component Diagram
-
-Writes a PlantUML component diagram. Paste it into any PlantUML renderer (GitHub with plugin, GitLab, IntelliJ, online editors).
-
-```go
-report := plugin.Report()
-report.WritePlantUML(os.Stdout)
-```
-
-```plantuml
-@startuml
-    component "*main.HTTPServer 🔄" as root__main_HTTPServer
-    component "*main.UserService 😴" as root__main_UserService
-    component "*main.Database 😴" as root__main_Database
-    root__main_HTTPServer --> root__main_UserService
-    root__main_HTTPServer --> root__main_Database
-    root__main_UserService --> root__main_Database
-@enduml
-```
-
-### DOT Digraph
-
-Writes a Graphviz DOT digraph. Render with `dot -Tsvg graph.dot -o graph.svg` or any Graphviz viewer.
-
-```go
-report := plugin.Report()
-report.WriteDOT(os.Stdout)
-```
-
-### D2 Diagram
-
-Writes a [D2](https://d2lang.com) diagram — the most modern of the four formats, with native Markdown labels and a polished default renderer. Render with `d2 graph.d2 graph.svg` or the [D2 playground](https://play.d2lang.com).
-
-```go
-report := plugin.Report()
-report.WriteD2(os.Stdout)
-```
-
-```d2
-direction: right
-title: do-auditlog
-"root/*main.HTTPServer 🔄": { style.fill: "#e8a838"; ... }
-"root/*main.HTTPServer 🔄" -> "root/*main.UserService 😴"
-"root/*main.HTTPServer 🔄" -> "root/*main.Database 😴"
-"root/*main.UserService 😴" -> "root/*main.Database 😴"
-```
-
-### Filtered Reports
-
-Functional options let you slice the report before exporting. Filters compose — pass multiple options to intersect them.
-
-```go
-// Only invocation events in the last 5 minutes
-report := plugin.ReportFiltered(
-    auditlog.WithEventsByType(auditlog.EventTypeInvocation),
-    auditlog.WithTimeRange(time.Now().Add(-5*time.Minute), time.Now()),
-)
-
-// Only eager services
-report = plugin.ReportFiltered(
-    auditlog.WithServicesByType(auditlog.ProviderTypeEager),
-)
-
-// Only services named "*main.Database" in scope "drivers"
-report = plugin.ReportFiltered(
-    auditlog.WithServicesByName("*main.Database"),
-    auditlog.WithScope("drivers"),
-)
-
-// Export the filtered report
-plugin.ExportFilteredToFile("filtered.json",
-    auditlog.WithServicesByType(auditlog.ProviderTypeLazy),
-)
-```
-
-**Available filters:**
-
-| Option                         | Filters by                                                    |
-| ------------------------------ | ------------------------------------------------------------- |
-| `WithServicesByName(names...)` | Service name(s)                                               |
-| `WithServicesByType(type)`     | Provider type (lazy, eager, transient, alias)                 |
-| `WithEventsByType(type)`       | Event type (registration, invocation, shutdown, health_check) |
-| `WithTimeRange(from, to)`      | Event timestamp range                                         |
-| `WithScope(scopeID)`           | Scope ID                                                      |
-
-## Health Checks
-
-samber/do v2 does not expose health-check hooks. do-auditlog wraps `injector.HealthCheckWithContext()` to record `EventTypeHealthCheck` events per service.
-
-```go
-err := plugin.RecordHealthCheckWithContext(ctx, injector)
-report := plugin.Report()
-if !report.HealthCheckSucceeded {
-    for _, svc := range report.UnhealthyServices() {
-        log.Printf("unhealthy: %s — %s", svc.ServiceName, *svc.HealthCheckError)
-    }
-}
-```
-
-Health check events are `PhaseAfter` only (there is no before-hook). Per-service timing is unavailable from the bulk API, so `DurationMs` is `nil` for health check events.
-
 ## Real-Time Event Streaming
 
-Provide an `OnEvent` callback to react to events as they happen — no polling required.
+Pass an `OnEvent` callback to react to events as they happen — no polling, no background goroutines:
 
 ```go
 plugin, err := auditlog.New(auditlog.Config{
     Enabled: true,
     OnEvent: func(ev auditlog.Event) {
-        // Stream to Prometheus, OTel, a live dashboard, or custom tooling
+        // Stream to Prometheus, OpenTelemetry, a live dashboard...
         log.Printf("event %d: %s %s", ev.Sequence, ev.EventType, ev.ServiceName)
     },
 })
-if err != nil {
-    log.Fatalf("create auditlog plugin: %v", err)
-}
 ```
 
-The callback is called **outside the mutex** on every event. Keep it fast — do not block the hot path.
+The callback fires **outside the mutex** on every event. Keep it fast.
 
 ## CLI Tool
 
@@ -368,200 +180,38 @@ Inspect, convert, diff, and validate reports from the command line:
 ```bash
 go install ./cmd/auditlog
 
-auditlog info audit-report.json         # summary stats
-auditlog convert report.json -f ndjson  # JSON → NDJSON
-auditlog diff old.json new.json         # structural comparison
-auditlog validate report.json           # schema validation
-auditlog schema                          # print JSON Schema
+auditlog info report.json         # summary stats
+auditlog convert report.json -f ndjson   # JSON to NDJSON
+auditlog diff old.json new.json   # structural comparison
+auditlog validate report.json     # schema validation
 ```
-
-## API Reference
-
-### Plugin
-
-| Method                                        | Description                                                |
-| --------------------------------------------- | ---------------------------------------------------------- |
-| `New(config Config) (*Plugin, error)`         | Create plugin. Validates config, returns error if invalid. |
-| `Opts() *do.InjectorOpts`                     | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`.  |
-| `Report() Report`                             | In-memory snapshot. No I/O.                                |
-| `ReportFiltered(opts...) Report`              | Filtered snapshot with functional options.                 |
-| `Events() []Event`                            | Defensive copy of raw event slice.                         |
-| `EventsCount() int`                           | Event count without copying.                               |
-| `RecordHealthCheck(injector)`                 | Wrap `injector.HealthCheck()` with audit events.           |
-| `RecordHealthCheckWithContext(ctx, injector)` | Same with context.                                         |
-| `WriteReportJSON(w) error`                    | Indented JSON to any `io.Writer`.                          |
-| `WriteEventsNDJSON(w) error`                  | NDJSON event stream to any `io.Writer`.                    |
-| `WriteHTML(w) error`                          | Self-contained HTML visualization to any `io.Writer`.      |
-| `WriteReportCSV(w) error`                     | CSV of all services to `io.Writer`.                        |
-| `WriteReportTSV(w) error`                     | TSV of all services to `io.Writer`.                        |
-| `WriteMermaid(w) error`                       | Mermaid flowchart to `io.Writer`.                          |
-| `WritePlantUML(w) error`                      | PlantUML component diagram to `io.Writer`.                 |
-| `WriteDOT(w) error`                           | Graphviz DOT digraph to `io.Writer`.                       |
-| `WriteD2(w) error`                            | D2 diagram to `io.Writer`.                                 |
-| `ExportToFile(path) error`                    | JSON report to file.                                       |
-| `ExportEventsToNDJSON(path) error`            | NDJSON events to file.                                     |
-| `ExportToHTML(path) error`                    | HTML visualization to file.                                |
-| `ExportToCSV(path) error`                     | CSV of all services to file.                               |
-| `ExportToTSV(path) error`                     | TSV of all services to file.                               |
-| `ExportToMermaid(path) error`                 | Mermaid flowchart to file.                                 |
-| `ExportToPlantUML(path) error`                | PlantUML component diagram to file.                        |
-| `ExportToDOT(path) error`                     | Graphviz DOT digraph to file.                              |
-| `ExportToD2(path) error`                      | D2 diagram to file.                                        |
-| `WriteTree(w) error`                          | ASCII dependency tree to `io.Writer`.                      |
-| `WriteHTMLTree(w) error`                      | HTML nested-list dependency tree to `io.Writer`.           |
-| `WriteTable(w, format, opts) error`           | Multi-format service summary table to `io.Writer`.         |
-| `ExportToTree(path) error`                    | ASCII dependency tree to file.                             |
-| `ExportToHTMLTree(path) error`                | HTML nested-list dependency tree to file.                  |
-| `ExportToTable(path, format, opts) error`     | Multi-format service summary table to file.                |
-| `ExportFilteredToFile(path, opts...) error`   | Filtered JSON report to file.                              |
-
-**Package-level**
-
-| Function                                     | Description                                                                                                                          |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `MigrateReport(data []byte) (Report, error)` | Normalize/repair a JSON report to the current schema (upgrades v0.1.0 and re-derives all denormalized fields for any input version). |
-
-### Report
-
-| Method                                     | Description                                         |
-| ------------------------------------------ | --------------------------------------------------- |
-| `Filtered(opts...) Report`                 | New report with filters applied, counts recomputed. |
-| `Validate() error`                         | Check denormalized counts match actual data.        |
-| `Index() ReportIndex`                      | Build O(1) lookup index for multiple queries.       |
-| `ServiceByName(name) *ServiceInfo`         | Lookup by service name.                             |
-| `ServiceByRef(scopeID, name) *ServiceInfo` | Lookup by scope + name.                             |
-| `ServicesByScope(scopeID) []ServiceInfo`   | All services in a scope.                            |
-| `EventsByService(name) []Event`            | All events for a service.                           |
-| `EventsByRef(scopeID, name) []Event`       | All events for a scoped service.                    |
-| `EventsByType(type) []Event`               | All events of a given type.                         |
-| `FailedServices() []ServiceInfo`           | Services with invocation or shutdown errors.        |
-| `UnhealthyServices() []ServiceInfo`        | Services with health check errors.                  |
-| `WriteJSON(w) error`                       | Indented JSON report to `io.Writer`.                |
-| `WriteNDJSON(w) error`                     | NDJSON event stream to `io.Writer`.                 |
-| `WriteHTML(w) error`                       | Self-contained HTML visualization to `io.Writer`.   |
-| `WriteCSV(w) error`                        | Comma-separated values (all services).              |
-| `WriteTSV(w) error`                        | Tab-separated values (all services).                |
-| `WriteMermaid(w) error`                    | Mermaid flowchart to `io.Writer`.                   |
-| `WritePlantUML(w) error`                   | PlantUML component diagram to `io.Writer`.          |
-| `WriteDOT(w) error`                        | Graphviz DOT digraph to `io.Writer`.                |
-| `WriteD2(w) error`                         | D2 diagram to `io.Writer`.                          |
-| `Diff(other Report) DiffResult`            | Structural comparison between two reports.          |
-
-### Package Functions
-
-| Function                                            | Purpose                                      |
-| --------------------------------------------------- | -------------------------------------------- |
-| `New(...) (*Plugin, error)`                         | Construct a plugin from Config (validated).  |
-| `NewReport(...) (Report, error)`                    | Construct a validated Report from core data. |
-| `LoadReport(path, opts...) (Report, Format, error)` | Auto-detect JSON/NDJSON and load.            |
-| `ReadEvents(reader) ([]Event, error)`               | Read NDJSON event stream.                    |
-| `ReplayEvents(events) (Report, error)`              | Reconstruct a Report from events.            |
-| `MigrateReport(data) (Report, error)`               | Migrate/repair old or stale JSON.            |
-| `JSONSchema() string`                               | Canonical JSON Schema for the report format. |
-
-## How Dependency Tracking Works
-
-do-auditlog does **not** access samber/do's internal DAG. Instead, it uses a lightweight invocation stack:
-
-1. `HookBeforeInvocation` fires for service A → A is pushed onto a stack
-2. A's provider calls `do.MustInvoke[B](i)` → `HookBeforeInvocation` fires for B while A is still on the stack
-3. The plugin records: **A depends on B**
-4. `HookAfterInvocation` fires → service is popped from the stack
-
-This correctly reconstructs the dependency graph even for:
-
-- **Cached services** — subsequent invocations of a lazy service are near-instant but still tracked
-- **Cross-scope resolution** — services inherited from parent scopes
-- **Provider errors** — failed invocations are still recorded with error details
-
-The reverse graph (`Dependents`) is computed at report time from the forward dependencies.
 
 ## Performance
 
-Benchmarks from a real run (AMD Ryzen AI MAX+ 395):
+| Path          | Overhead    | Allocs |
+| ------------- | ----------- | ------ |
+| Enabled       | ~1.7 us     | 6      |
+| Disabled      | ~113 ns     | 4      |
 
-```
-BenchmarkHookOverhead_Invocation    ~1,658 ns/op    6 allocs    (enabled)
-BenchmarkHookOverhead_Disabled       ~113 ns/op    4 allocs    (disabled)
-BenchmarkHookOverhead_Registration  ~21,982 ns/op   54 allocs    (full container)
-```
+In-memory capture — no file I/O during container operation. You pay the cost only when you export. Full benchmarks in [BENCHMARKS.md](BENCHMARKS.md).
 
-**Overhead: ~1.7μs per cached invocation** when enabled. Zero cost when disabled.
+## Documentation
 
-No file I/O happens during container operation. Export is a single `json.Marshal` or line iteration — you pay the cost only when you need the data.
+| Guide | What you'll learn |
+| ----- | ----------------- |
+| [Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/) | From zero to HTML report in 60 seconds |
+| [Installation](https://do-auditlog.lars.software/getting-started/installation/) | Prerequisites and setup |
+| [Dependency Tracking](https://do-auditlog.lars.software/guides/dependency-tracking/) | How the invocation stack infers the graph |
+| [Export Formats](https://do-auditlog.lars.software/guides/export-formats/) | Every format with examples |
+| [Filtered Reports](https://do-auditlog.lars.software/guides/filtered-reports/) | Slice by name, type, scope, time |
+| [Health Checks](https://do-auditlog.lars.software/guides/health-checks/) | Per-service health audit events |
+| [Performance](https://do-auditlog.lars.software/guides/performance/) | Benchmarks and tuning |
+| [API Reference](https://do-auditlog.lars.software/api-reference/) | Full type and method documentation |
+| [pkg.go.dev](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog) | Godoc |
 
-<details>
-<summary><b>Data Model</b></summary>
+## Contributing
 
-```
-Report
-├── version                    string (schema version, e.g. "0.2.0")
-├── container_id               string
-├── exported_at                time
-├── service_count              int
-├── event_count                int
-├── scope_count                int
-├── total_build_duration_ms    float64
-├── total_shutdown_duration_ms float64
-├── shutdown_succeeded         bool
-├── health_check_succeeded     bool
-├── health_checked_count       int
-├── services[]                 ServiceInfo
-│   ├── service_name           string
-│   ├── scope_id               string
-│   ├── scope_name             string
-│   ├── service_type           string (lazy, eager, transient, alias)
-│   ├── status                 string (registered, active, invocation_error, shutdown, shutdown_error)
-│   ├── registered_at          time
-│   ├── invocation_count       int
-│   ├── invocation_order       int
-│   ├── first_build_duration_ms float64
-│   ├── shutdown_duration_ms   float64
-│   ├── invocation_error       string (on failure)
-│   ├── shutdown_error         string (on failure)
-│   ├── dependencies[]         {scope_id, scope_name, service_name}
-│   ├── dependents[]           {scope_id, scope_name, service_name}
-│   ├── health_check_count     int
-│   ├── health_check_error     string (on failure)
-│   ├── is_healthchecker       bool
-│   └── is_shutdowner          bool
-├── events[]                   Event
-│   ├── sequence               int (monotonic)
-│   ├── timestamp              time
-│   ├── container_id           string
-│   ├── scope_id               string
-│   ├── scope_name             string
-│   ├── service_name           string
-│   ├── service_type           string
-│   ├── event_type             registration | invocation | shutdown | health_check
-│   ├── phase                  before | after
-│   ├── duration_ms            float64 (after-invocation/shutdown only)
-│   └── error                  string (on failure only)
-└── scope_tree                 ScopeNode
-    ├── id                     string
-    ├── name                   string
-    ├── services[]             string
-    └── children[]             ScopeNode (recursive)
-```
-
-> **Schema migration**: Reports exported with v0.1.0 can be upgraded to the current schema with `auditlog.MigrateReport(oldJSONBytes)`. `MigrateReport` also repairs current-schema reports — it re-derives every denormalized field, so stale or hand-edited reports that would fail `Validate()` are normalized to a valid report.
-
-</details>
-
-## Security
-
-This project enforces security through:
-
-- **gosec** — security scanner integrated into golangci-lint (109 linters, 0 issues)
-- **CSP** — HTML output includes a strict Content-Security-Policy meta tag
-- **XSS hardening** — all user-controlled strings escaped via templ's context-aware auto-escaping
-- **Fuzz testing** — 5 fuzz targets verify resilience against malicious inputs (XSS, schema migration, diagram special chars, filter combinations, NDJSON parsing)
-
-Recommended additional check:
-
-```bash
-govulncheck ./...  # requires: go install golang.org/x/vuln/cmd/govulncheck@latest
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md). The project uses strict golangci-lint (109 linters), 94% test coverage gate, and fuzz testing (5 targets).
 
 ## License
 
