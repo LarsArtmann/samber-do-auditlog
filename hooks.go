@@ -246,7 +246,7 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 	var svcType ProviderType
 
 	if !ok {
-		svcType = inferServiceType(scope, serviceName)
+		svcType = inferServiceType(scope, ctx.serviceName)
 		rec = newServiceRecordCore(ctx.scopeID, ctx.scopeName, ctx.serviceName, svcType, ctx.now)
 		r.services[ctx.key] = rec
 	} else {
