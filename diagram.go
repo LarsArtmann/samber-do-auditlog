@@ -73,7 +73,7 @@ func buildDiagramNodes(report Report) []output.GraphNode {
 
 		for _, dep := range svc.Dependencies {
 			toID := diagramNodeID(dep.ScopeID, dep.ServiceName)
-			addNode(toID, dep.ServiceName)
+			addNode(toID, string(dep.ServiceName))
 		}
 	}
 

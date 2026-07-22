@@ -49,7 +49,7 @@ func printSummary(report auditlog.Report, eventLog *[]string) {
 	fmt.Println("  Scope tree: " + report.ScopeTree.Name)
 
 	for _, child := range report.ScopeTree.Children {
-		fmt.Printf("    └── %s (services: %s)\n", child.Name, strings.Join(child.Services, " "))
+		fmt.Printf("    └── %s (services: %s)\n", child.Name, strings.Join(serviceNamesToStrings(child.Services), " "))
 	}
 
 	// Convenience method demos
@@ -79,11 +79,10 @@ func printSummary(report auditlog.Report, eventLog *[]string) {
 	}
 }
 
-// depRefs formats dependency service names for the summary line.
-func depRefs(refs []auditlog.ServiceRef) []string {
-	out := make([]string, 0, len(refs))
-	for _, r := range refs {
-		out = append(out, r.ServiceName)
+func serviceNamesToStrings(names []auditlog.ServiceName) []string {
+	out := make([]string, len(names))
+	for i, n := range names {
+		out[i] = string(n)
 	}
 
 	return out

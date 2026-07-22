@@ -62,7 +62,7 @@ func setupPlugin() (*auditlog.Plugin, do.Injector, *[]string) { //nolint:ireturn
 		InitialEventCapacity: 1024,
 		OnEvent: func(e auditlog.Event) {
 			if e.IsAfter() && e.IsInvocation() {
-				*eventLog = append(*eventLog, e.ServiceName)
+				*eventLog = append(*eventLog, string(e.ServiceName))
 			}
 		},
 	})
