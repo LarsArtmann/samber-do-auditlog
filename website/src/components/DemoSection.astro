@@ -1,0 +1,83 @@
+---
+import Icon from './Icon.astro';
+import SectionHeader from './SectionHeader.astro';
+import { siteConfig } from '../data/config';
+
+const exampleURL = `${siteConfig.github}/tree/master/example`;
+const command = 'DO_AUDITLOG_ENABLED=true go run ./example';
+
+const checks = [
+  '20 services across 4 scopes',
+  'Dependency graph inference',
+  'Health checks \u0026 shutdown errors',
+  'Self-contained HTML export',
+];
+---
+
+<section class="pb-8">
+  <SectionHeader title="Try it in 30 seconds." subtitle="Clone the repo and run the self-checking example." />
+
+  <div class="max-w-3xl mx-auto">
+    <div class="rounded-xl border border-border bg-bg-card-solid overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-border">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-code-dot"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-code-dot"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-code-dot"></span>
+        </div>
+        <button
+          id="copy-demo-command"
+          class="text-xs font-mono text-text-muted hover:text-accent transition-colors duration-150 flex items-center gap-1.5 cursor-pointer bg-transparent border-none"
+          data-code={command}
+          aria-label="Copy demo command to clipboard"
+        >
+          <span id="copy-demo-label">Copy</span>
+        </button>
+      </div>
+      <div class="p-4 font-mono text-sm text-text-primary overflow-x-auto bg-bg-code">
+        <span class="text-text-muted">$</span> <span id="demo-command-text">{command}</span>
+      </div>
+      <div class="p-5 border-t border-border">
+        <p class="text-sm text-text-muted mb-4 leading-relaxed">
+          The example exercises 19 samber/do v2 features — eager and lazy providers, named services, transients, aliases, child scopes, cross-scope dependencies, health checks, and shutdown errors — then writes an HTML report you can open in any browser.
+        </p>
+        <div class="grid gap-2 sm:grid-cols-2 mb-5">
+          {checks.map((check) => (
+            <div class="flex items-center gap-2 text-sm text-text-secondary">
+              <span class="text-success" aria-hidden="true">✓</span>
+              {check}
+            </div>
+          ))}
+        </div>
+        <a
+          href={exampleURL}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-colors duration-150"
+        >
+          Browse the example source
+          <Icon name="arrow-external" size={14} />
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  (function() {
+    const btn = document.getElementById('copy-demo-command');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      const code = btn.getAttribute('data-code');
+      if (!code) return;
+      navigator.clipboard.writeText(code).then(function() {
+        const label = btn.querySelector('span');
+        const original = label ? label.textContent : 'Copy';
+        if (label) label.textContent = 'Copied';
+        setTimeout(function() {
+          if (label) label.textContent = original;
+        }, 1500);
+      });
+    });
+  })();
+</script>
