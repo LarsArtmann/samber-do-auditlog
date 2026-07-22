@@ -182,6 +182,30 @@ flowchart TD
     Notifier["Notifier"] --> EmailNotifier["EmailNotifier 😴"]
 ```
 
+<details>
+<summary><b>JSON output shape</b> (click to expand)</summary>
+
+Each service in the JSON report carries its full lifecycle data:
+
+```json
+{
+  "service_name": "*main.HTTPServer",
+  "scope_name": "[root]",
+  "status": "shutdown",
+  "service_type": "lazy",
+  "invocation_count": 1,
+  "first_build_duration_ms": 0.06,
+  "shutdown_duration_ms": 0.003,
+  "dependencies": [
+    {"service_name": "*main.Database"},
+    {"service_name": "*main.Cache"}
+  ],
+  "health_check_count": 1
+}
+```
+
+</details>
+
 ## Filtered Reports
 
 Slice the report before exporting. Filters compose — pass multiple options to intersect them:
