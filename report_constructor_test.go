@@ -14,13 +14,21 @@ func TestNewReport_ValidAndDerivesAggregates(t *testing.T) {
 
 	services := []auditlog.ServiceInfo{
 		{
-			ServiceRef:      rootRef("db"),
-			RegisteredAt:    exported,
-			InvocationCount: 3,
+			ServiceIdentity: auditlog.ServiceIdentity{
+				ServiceRef: rootRef("db"),
+			},
+			ServiceLifecycle: auditlog.ServiceLifecycle{
+				RegisteredAt:    exported,
+				InvocationCount: 3,
+			},
 		},
 		{
-			ServiceRef:   rootRef("cache"),
-			RegisteredAt: exported,
+			ServiceIdentity: auditlog.ServiceIdentity{
+				ServiceRef: rootRef("cache"),
+			},
+			ServiceLifecycle: auditlog.ServiceLifecycle{
+				RegisteredAt: exported,
+			},
 		},
 	}
 
@@ -45,11 +53,15 @@ func TestNewReport_ReDerivesStatus(t *testing.T) {
 
 	services := []auditlog.ServiceInfo{
 		{
-			ServiceRef:      rootRef("db"),
-			RegisteredAt:    exported,
-			FirstInvokedAt:  &invokedAt,
-			InvocationCount: 1,
-			Status:          auditlog.ServiceStatusShutdown, // wrong — should become Active
+			ServiceIdentity: auditlog.ServiceIdentity{
+				ServiceRef: rootRef("db"),
+			},
+			ServiceLifecycle: auditlog.ServiceLifecycle{
+				RegisteredAt:    exported,
+				FirstInvokedAt:  &invokedAt,
+				InvocationCount: 1,
+				Status:          auditlog.ServiceStatusShutdown, // wrong — should become Active
+			},
 		},
 	}
 

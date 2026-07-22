@@ -78,32 +78,40 @@ func buildServicesFromMap(services map[svcKey]*serviceRecord) []ServiceInfo {
 // this function.
 func serviceRecordToInfo(rec *serviceRecord) ServiceInfo {
 	return ServiceInfo{
-		ServiceRef: ServiceRef{
-			ServiceName: rec.serviceName,
-			ScopeID:     rec.scopeID,
-			ScopeName:   rec.scopeName,
+		ServiceIdentity: ServiceIdentity{
+			ServiceRef: ServiceRef{
+				ServiceName: rec.serviceName,
+				ScopeID:     rec.scopeID,
+				ScopeName:   rec.scopeName,
+			},
+			ServiceType: rec.serviceType,
 		},
-		Status: deriveServiceStatus(
-			rec.invocationError, rec.shutdownError,
-			rec.shutdownAt, rec.firstInvokedAt,
-		),
-		ServiceType:          rec.serviceType,
-		RegisteredAt:         rec.registeredAt,
-		FirstInvokedAt:       rec.firstInvokedAt,
-		InvocationCount:      rec.invocationCount,
-		InvocationOrder:      rec.invocationOrder,
-		FirstBuildDurationMs: rec.firstBuildDurationMs,
-		Dependencies:         nil,
-		Dependents:           nil,
-		ShutdownAt:           rec.shutdownAt,
-		ShutdownDurationMs:   rec.shutdownDurationMs,
-		ShutdownError:        rec.shutdownError,
-		InvocationError:      rec.invocationError,
-		IsHealthchecker:      false,
-		IsShutdowner:         false,
-		LastHealthCheckAt:    rec.lastHealthCheckAt,
-		HealthCheckError:     rec.healthCheckError,
-		HealthCheckCount:     rec.healthCheckCount,
+		ServiceLifecycle: ServiceLifecycle{
+			Status: deriveServiceStatus(
+				rec.invocationError, rec.shutdownError,
+				rec.shutdownAt, rec.firstInvokedAt,
+			),
+			RegisteredAt:         rec.registeredAt,
+			FirstInvokedAt:       rec.firstInvokedAt,
+			InvocationCount:      rec.invocationCount,
+			InvocationOrder:      rec.invocationOrder,
+			FirstBuildDurationMs: rec.firstBuildDurationMs,
+			ShutdownAt:           rec.shutdownAt,
+			ShutdownDurationMs:   rec.shutdownDurationMs,
+			ShutdownError:        rec.shutdownError,
+			InvocationError:      rec.invocationError,
+			IsShutdowner:         false,
+		},
+		ServiceHealth: ServiceHealth{
+			IsHealthchecker:   false,
+			LastHealthCheckAt: rec.lastHealthCheckAt,
+			HealthCheckError:  rec.healthCheckError,
+			HealthCheckCount:  rec.healthCheckCount,
+		},
+		ServiceGraph: ServiceGraph{
+			Dependencies: nil,
+			Dependents:   nil,
+		},
 	}
 }
 
@@ -167,8 +175,8 @@ func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 }
 
 // scopeMetaID, scopeMetaName, scopeMetaParentID are field accessors for scopeMeta.
-func scopeMetaID(m scopeMeta) ScopeID   { return m.id }
-func scopeMetaName(m scopeMeta) string   { return m.name }
+func scopeMetaID(m scopeMeta) ScopeID       { return m.id }
+func scopeMetaName(m scopeMeta) string      { return m.name }
 func scopeMetaParentID(m scopeMeta) ScopeID { return m.parentID }
 
 // scopeServicesForServices groups service names by their scopeID.
