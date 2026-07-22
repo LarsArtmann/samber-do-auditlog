@@ -193,7 +193,7 @@ func MergeReports(reports []Report) (Report, error) {
 		allServices []ServiceInfo
 	)
 
-	scopeSet := make(map[string]ScopeNode)
+	scopeSet := make(map[ScopeID]ScopeNode)
 	seqOffset := 0
 	maxExportedAt := reports[0].ExportedAt
 
@@ -218,14 +218,14 @@ func MergeReports(reports []Report) (Report, error) {
 	rootScope := buildMergedRootScope(scopeSet)
 
 	return buildReportFromCore(
-		SchemaVersion, "merged", maxExportedAt, 0,
+		SchemaVersion, ContainerID("merged"), maxExportedAt, 0,
 		allEvents, allServices, rootScope,
 	), nil
 }
 
 // buildMergedRootScope collects scopes from the set, sorts them, and returns
 // the first as the root.
-func buildMergedRootScope(scopeSet map[string]ScopeNode) ScopeNode {
+func buildMergedRootScope(scopeSet map[ScopeID]ScopeNode) ScopeNode {
 	scopes := make([]ScopeNode, 0, len(scopeSet))
 
 	for _, sc := range scopeSet {
@@ -242,7 +242,7 @@ func buildMergedRootScope(scopeSet map[string]ScopeNode) ScopeNode {
 }
 
 // mergeScopeTree adds all scopes from a tree into the scope set.
-func mergeScopeTree(scopeSet map[string]ScopeNode, tree ScopeNode) {
+func mergeScopeTree(scopeSet map[ScopeID]ScopeNode, tree ScopeNode) {
 	if tree.ID == "" {
 		return
 	}

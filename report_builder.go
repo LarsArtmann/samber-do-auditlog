@@ -15,7 +15,7 @@ func (r *Recorder) BuildReport() Report {
 	services := r.buildServicesLocked()
 	scopeTree := r.buildScopeTreeLocked()
 	events := append([]Event(nil), r.events...)
-	scopesCopy := make(map[string]scopeMeta, len(r.scopes))
+	scopesCopy := make(map[ScopeID]scopeMeta, len(r.scopes))
 	maps.Copy(scopesCopy, r.scopes)
 
 	r.mu.RUnlock()
@@ -167,13 +167,13 @@ func (r *Recorder) buildScopeTreeLocked() ScopeNode {
 }
 
 // scopeMetaID, scopeMetaName, scopeMetaParentID are field accessors for scopeMeta.
-func scopeMetaID(m scopeMeta) string       { return m.id }
-func scopeMetaName(m scopeMeta) string     { return m.name }
-func scopeMetaParentID(m scopeMeta) string { return m.parentID }
+func scopeMetaID(m scopeMeta) ScopeID   { return m.id }
+func scopeMetaName(m scopeMeta) string   { return m.name }
+func scopeMetaParentID(m scopeMeta) ScopeID { return m.parentID }
 
 // scopeServicesForServices groups service names by their scopeID.
-func scopeServicesForServices(services map[svcKey]*serviceRecord) map[string][]string {
-	scopeServices := make(map[string][]string)
+func scopeServicesForServices(services map[svcKey]*serviceRecord) map[ScopeID][]ServiceName {
+	scopeServices := make(map[ScopeID][]ServiceName)
 	for _, rec := range services {
 		scopeServices[rec.scopeID] = append(scopeServices[rec.scopeID], rec.serviceName)
 	}
@@ -188,7 +188,7 @@ func scopeServicesForServices(services map[svcKey]*serviceRecord) map[string][]s
 
 // findRootScope returns the first meta with an empty parentID, or false
 // if none found. Sorted iteration keeps the result deterministic.
-func findRootScope[T any](sorted []T, parentOf func(T) string) (T, bool) {
+func findRootScope[T any](sorted []T, parentOf func(T) ScopeID) (T, bool) {
 	for _, meta := range sorted {
 		if parentOf(meta) == "" {
 			return meta, true
@@ -204,10 +204,12 @@ func findRootScope[T any](sorted []T, parentOf func(T) string) (T, bool) {
 // cycle guard (metaID(meta) != parentID) prevents infinite recursion on
 // self-referential entries where both IDs are empty.
 func buildScopeChildren[T any](
-	parentID string,
+	parentID ScopeID,
 	sorted []T,
-	metaID, metaName, metaParent func(T) string,
-	scopeServices map[string][]string,
+	metaID func(T) ScopeID,
+	metaName func(T) string,
+	metaParent func(T) ScopeID,
+	scopeServices map[ScopeID][]ServiceName,
 ) []ScopeNode {
 	var children []ScopeNode
 
@@ -239,8 +241,10 @@ func buildScopeChildren[T any](
 // whichever scope matches their parentID.
 func buildScopeTreeFromMeta[T any](
 	sorted []T,
-	metaID, metaName, metaParent func(T) string,
-	scopeServices map[string][]string,
+	metaID func(T) ScopeID,
+	metaName func(T) string,
+	metaParent func(T) ScopeID,
+	scopeServices map[ScopeID][]ServiceName,
 ) ScopeNode {
 	if len(sorted) == 0 {
 		return ScopeNode{} //nolint:exhaustruct
@@ -261,7 +265,7 @@ func buildScopeTreeFromMeta[T any](
 	}
 }
 
-func sortedScopes(scopes map[string]scopeMeta) []scopeMeta {
+func sortedScopes(scopes map[ScopeID]scopeMeta) []scopeMeta {
 	result := make([]scopeMeta, 0, len(scopes))
 
 	for _, meta := range scopes {
@@ -292,7 +296,7 @@ func sortScopeNodes(nodes []ScopeNode) []ScopeNode {
 // enrichCapabilities populates IsHealthchecker and IsShutdowner on each ServiceInfo
 // by calling do.ExplainInjector on each stored scope reference. Must be called
 // outside the recorder mutex to avoid deadlocking with samber/do's internal locks.
-func enrichCapabilities(scopes map[string]scopeMeta, services []ServiceInfo) {
+func enrichCapabilities(scopes map[ScopeID]scopeMeta, services []ServiceInfo) {
 	// Sort scope iteration for deterministic output across runs.
 	sorted := sortedScopes(scopes)
 
@@ -326,8 +330,8 @@ type capabilityFlags struct {
 	isShutdowner    bool
 }
 
-func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[string]capabilityFlags {
-	result := make(map[string]capabilityFlags)
+func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[ServiceName]capabilityFlags {
+	result := make(map[ServiceName]capabilityFlags)
 	queue := scopes
 
 	for len(queue) > 0 {
@@ -335,7 +339,7 @@ func buildCapabilityMap(scopes []do.ExplainInjectorScopeOutput) map[string]capab
 		queue = queue[1:]
 
 		for _, svc := range scope.Services {
-			result[svc.ServiceName] = capabilityFlags{
+			result[ServiceName(svc.ServiceName)] = capabilityFlags{
 				isHealthchecker: svc.IsHealthchecker,
 				isShutdowner:    svc.IsShutdowner,
 			}

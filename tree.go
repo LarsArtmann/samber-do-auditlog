@@ -45,7 +45,7 @@ func addTreeChildren(
 // their dependents (services that depend on the parent). The result is wrapped
 // in a single root node for the renderer.
 func (r Report) buildServiceTreeNodes() *output.TreeNode {
-	title := r.ContainerID
+	title := string(r.ContainerID)
 	if title == "" {
 		title = "container"
 	}
