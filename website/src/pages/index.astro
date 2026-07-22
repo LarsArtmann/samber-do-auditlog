@@ -2,6 +2,7 @@
 import LandingLayout from '../layouts/LandingLayout.astro';
 import HeroSection from '../components/HeroSection.astro';
 import FeatureGrid from '../components/FeatureGrid.astro';
+import ShowcaseSection from '../components/ShowcaseSection.astro';
 import Sections from '../components/Sections.astro';
 import Section from '../components/Section.astro';
 import { siteConfig } from '../data/config';
@@ -12,6 +13,10 @@ import { siteConfig } from '../data/config';
 
   <Section width="wide">
     <FeatureGrid />
+  </Section>
+
+  <Section width="wide">
+    <ShowcaseSection />
   </Section>
 
   <Sections />

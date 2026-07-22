@@ -18,7 +18,7 @@ export const features: Feature[] = [
   },
   {
     icon: "export",
-    title: "9+ Export Formats",
+    title: "16+ Export Formats",
     desc: "JSON, NDJSON, CSV, TSV, HTML, Mermaid, PlantUML, DOT, D2, tree, and table.",
   },
   {

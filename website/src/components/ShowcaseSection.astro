@@ -1,0 +1,64 @@
+---
+import SectionHeader from './SectionHeader.astro';
+
+const screenshots = [
+  { src: '/images/html-services.jpg', alt: 'Services tab — waveform, stats cards, and service table with type badges, status indicators, and dependency columns', label: 'Services' },
+  { src: '/images/html-graph.jpg', alt: 'Dependency Graph tab — interactive Sugiyama-layered DAG with type-colored nodes and pan/zoom controls', label: 'Dependency Graph' },
+  { src: '/images/html-timeline.jpg', alt: 'Timeline tab — dual build and shutdown horizontal bars with type icons and durations', label: 'Timeline' },
+  { src: '/images/html-events.jpg', alt: 'Events tab — chronological event log with type filter chips, provider badges, and phase icons', label: 'Events' },
+];
+
+const main = screenshots[0];
+const thumbs = screenshots.slice(1);
+---
+
+<section class="pb-8">
+  <SectionHeader title="What does it look like?" subtitle="One self-contained HTML file. No server, no runtime dependencies, no external requests." />
+
+  <div class="relative mx-auto max-w-5xl">
+    <div class="absolute -inset-3 bg-gradient-to-b from-accent/5 via-transparent to-transparent rounded-2xl blur-2xl pointer-events-none"></div>
+
+    <div class="relative rounded-xl border border-border bg-bg-card-solid overflow-hidden shadow-2xl">
+      <div class="flex items-center gap-1.5 px-4 py-3 border-b border-border">
+        <span class="w-2.5 h-2.5 rounded-full bg-code-dot"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-code-dot"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-code-dot"></span>
+        <span class="ml-3 text-xs text-text-muted font-mono">audit-report.html</span>
+      </div>
+      <a href={main.src} target="_blank" rel="noopener" class="block group relative">
+        <img
+          src={main.src}
+          alt={main.alt}
+          class="w-full h-auto block transition-transform duration-300 group-hover:scale-[1.01]"
+          loading="eager"
+          width="1400"
+          height="1300"
+        />
+        <div class="absolute inset-0 bg-accent/0 group-hover:bg-accent/5 transition-colors duration-300"></div>
+      </a>
+    </div>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-3 mt-4 max-w-5xl mx-auto">
+    {thumbs.map((shot) => (
+      <a
+        href={shot.src}
+        target="_blank"
+        rel="noopener"
+        class="group rounded-xl border border-border bg-bg-card-solid overflow-hidden hover:border-border-hover transition-colors duration-150"
+      >
+        <img
+          src={shot.src}
+          alt={shot.alt}
+          class="w-full h-auto block opacity-90 group-hover:opacity-100 transition-opacity duration-150"
+          loading="lazy"
+          width="400"
+          height="400"
+        />
+        <div class="px-3 py-2 text-xs font-medium text-text-secondary border-t border-border group-hover:text-accent transition-colors duration-150">
+          {shot.label}
+        </div>
+      </a>
+    ))}
+  </div>
+</section>
