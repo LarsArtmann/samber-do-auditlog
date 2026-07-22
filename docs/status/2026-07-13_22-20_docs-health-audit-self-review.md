@@ -23,6 +23,12 @@
 - **Before**: ~3/10 (extensive drift across all docs)
 - **After (claimed)**: 9.5/10
 
+> **Update 2026-07-22 (follow-up docs-health audit):** the 9.5/10 was inflated.
+> Section d) below identified 4 critical/medium issues that this session missed:
+> the v0.3.0 split brain, stale AGENTS.md counts, stale DOMAIN_LANGUAGE
+> MigrateReport description, and FEATURES.md DroppedEventCount misclassification.
+> All 4 have now been FIXED in the follow-up audit. See [Resolution](#resolution-2026-07-22) below.
+
 ---
 
 ## b) PARTIALLY DONE
@@ -219,3 +225,25 @@ AGENTS.md line 201 says "167 top-level functions (146 Test + 11 Benchmark + 5 Fu
 - **Keep but add a "last computed" date** — makes staleness visible
 
 **Why it matters**: Hardcoded counts in AGENTS.md will be wrong again within a week of active development. The skill explicitly says "Never hardcode counts that the repo can compute." But the counts do provide useful context about test suite size. The right tradeoff isn't obvious.
+
+---
+
+## Resolution (2026-07-22)
+
+Follow-up docs-health audit session. All 4 critical/medium issues identified in section d) have been fixed:
+
+| Issue | Section | Resolution | File fixed |
+| ----- | ------- | ---------- | ---------- |
+| v0.3.0 release split brain | §d.1 | FIXED: `TODO_LIST.md` v0.3.0 marked done as non-breaking tree/table release; "DEFERRED to v0.3.0" references on typed-identifier + ServiceInfo-split items corrected to "DEFERRED to a future breaking release" | `TODO_LIST.md` |
+| AGENTS.md hardcoded counts | §d.2 | FIXED: updated 167→278 top-level functions (253 Test + 12 Benchmark + 5 Fuzz + 8 Example), 11→14 `t.Run` subtests, 152→262 `t.Parallel()` calls | `AGENTS.md` |
+| DOMAIN_LANGUAGE.md MigrateReport stale | §d.3 | FIXED: "Upgrade a v0.1.0 JSON report" → "Normalize/repair any JSON report to the current schema" | `docs/DOMAIN_LANGUAGE.md` |
+| FEATURES.md DroppedEventCount misclassified | §d.4 | FIXED: removed `DroppedEventCount` from "Health-check report fields" row (already correctly listed under "Dropped-event counter") | `FEATURES.md` |
+
+**Additional fixes in the same session** (not identified in this report):
+
+- `AGENTS.md`: `RenderTableData` → `RenderTable` (renamed in go-output v0.30.0 / release v0.4.0)
+- `FEATURES.md`: stale parallelism count 152 → 262
+- `CONTRIBUTING.md`: Go 1.26.3 → 1.26.4 (devShell), added `go-output` to depuard list, `v0.0.x` → `v0.x.y` release versioning pattern
+- `STABILITY.md`: `v0.0.x` → `v0.x.y` release versioning pattern
+
+**Open items from the "50 things" list**: CONTRIBUTING.md, STABILITY.md, and BENCHMARKS.md were audited in the follow-up session (items 13-15). OG images, Lighthouse CI, and deeper website docs remain open (items 15-20 in the public-presence report).

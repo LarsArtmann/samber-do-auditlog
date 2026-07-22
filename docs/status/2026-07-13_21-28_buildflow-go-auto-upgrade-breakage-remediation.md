@@ -216,3 +216,19 @@ This requires your decision on the Go version / json/v2 adoption timeline.
 | Files kept     | 2 (.gitignore, flake.lock)                                          |
 | Verification   | `go vet` + `go build` + `go test -race` + `go generate` — all green |
 | Time to fix    | ~3 minutes (diagnosis + revert + verification)                      |
+
+---
+
+## Resolution (2026-07-22)
+
+The revert was committed and follow-up hardening was applied.
+
+| Item | Section | Resolution | Commit |
+| ---- | ------- | ---------- | ------ |
+| Committing the revert | §c NOT STARTED | DONE: revert committed with full documentation of the incident | `fb56b6a` |
+| `.gitignore` + `flake.lock` changes | §g Q1 | DONE: committed alongside the revert and subsequent commits | `c272da5` |
+| `GOEXPERIMENT=jsonv2` in devShell | §f item 4 | DONE: added to flake.nix to unblock potential go-output v0.30.4+ adoption | `c5e1f2c` |
+| govulncheck CI | §e item 2 | DONE: replaced `govulncheck-action@v1` with `go run golang.org/x/vuln/cmd/govulncheck` approach | `c5e1f2c` |
+| `encoding/json/v2` exclusion policy | §f item 23 | DONE: documented in AGENTS.md Gotchas (this session's remediation already added it) | `fb56b6a` |
+
+**Still open** (lower priority): `go-auto-upgrade` exclusion from BuildFlow config (item 1), go-output v0.30.4 evaluation (item 3), `nix-fmt` failure on `website/flake.nix` (item 5).

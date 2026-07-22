@@ -46,7 +46,7 @@ These surfaces are functional but their exact shape may change:
 The JSON report format has its own version (`schema_version`, currently `0.2.0`)
 that is **independent** of release tags:
 
-- Release tags: `v0.0.x` (Git/GitHub releases)
+- Release tags: `v0.x.y` (Git/GitHub releases)
 - Schema version: `0.2.0` (in the JSON `version` field)
 
 A schema bump (e.g. `0.2.0` → `0.3.0`) does NOT require a release tag bump.

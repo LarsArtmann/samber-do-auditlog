@@ -80,7 +80,7 @@ Every term below should mean the **same thing** to everyone who reads it.
 | Events                       | Defensive copy of captured events                       | Read operation      |
 | EventsCount                  | Count of captured events                                | Read operation      |
 | DroppedEventCount            | Count of events dropped due to MaxEvents                | Read operation      |
-| MigrateReport                | Upgrade a v0.1.0 JSON report to the current schema      | Migration command   |
+| MigrateReport                | Normalize/repair any JSON report to the current schema (upgrades v0.1.0 and re-derives all denormalized fields for any input version) | Migration command   |
 | Filtered                     | Apply functional filter options to a Report             | Query command       |
 | Validate                     | Check report denormalized counts match actual data      | Validation command  |
 | Index                        | Build O(1) lookup index for report queries              | Query command       |

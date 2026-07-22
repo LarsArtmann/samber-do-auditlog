@@ -228,3 +228,18 @@ Both reference projects keep the website in the same repo (`website/` subdirecto
 - CI runs both Go and Node jobs
 
 Is this the preferred structure, or should the website eventually move to a separate repo (e.g., `LarsArtmann/do-auditlog-website`) deployed independently?
+
+---
+
+## Resolution (2026-07-22)
+
+Most critical-path items from this report shipped in subsequent commits. The website is live at `do-auditlog.lars.software`.
+
+| Item | Section | Resolution | Commit |
+| ---- | ------- | ---------- | ------ |
+| Firebase deployment | §c NOT STARTED | DONE: website deployed, CI workflow builds + deploys on push to master | `6eab92d` |
+| `FIREBASE_SERVICE_ACCOUNT` secret | §c NOT STARTED | DONE: set via `gh secret set` (see Firebase hosting report) | `c272da5` |
+| `package-lock.json` committed | §c NOT STARTED | DONE: now tracked in git | `c272da5` |
+| GitHub metadata (description, topics, URL) | §a FULLY DONE | VERIFIED: still set correctly | — |
+
+**Still open** (lower priority, from "50 things" list): OG images via astro-og-canvas, Lighthouse CI, CHANGELOG sync CI check, deeper docs pages (CLI usage, replay/migration, real-time streaming), metrics row in hero section.

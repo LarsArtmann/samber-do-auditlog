@@ -137,7 +137,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | -------------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------- |
 | **Health-check wrapper methods** | `Plugin.RecordHealthCheck(injector)` and `RecordHealthCheckWithContext(ctx, injector)`                | `plugin.go`      |
 | **Health-check event recording** | `Recorder.RecordHealthCheck` emits `EventTypeHealthCheck` events and updates per-service health state | `healthcheck.go` |
-| **Health-check report fields**   | `Report.HealthCheckSucceeded`, `HealthCheckedCount`, `DroppedEventCount`                              | `report.go`      |
+| **Health-check report fields**   | `Report.HealthCheckSucceeded`, `HealthCheckedCount`                                                   | `report.go`      |
 | **Health-check service fields**  | `ServiceInfo.LastHealthCheckAt`, `HealthCheckError`, `HealthCheckCount`, `HasHealthError()`           | `service.go`     |
 | **Unhealthy service lookup**     | `Report.UnhealthyServices()`                                                                          | `report.go`      |
 
@@ -154,7 +154,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Example tests**            | Runnable `Example*` functions for pkg.go.dev                                                                                                                                      | `example_test.go`                                       |
 | **Defensive-copy accessors** | `Plugin.Events()` and `Recorder.Events()` return copied slices; `EventsCount()` avoids copying                                                                                    | `plugin.go`, `recorder.go`                              |
 | **Dropped-event counter**    | `Plugin.DroppedEventCount()` / `Recorder.DroppedEventCount()`                                                                                                                     | `plugin.go`, `recorder.go`                              |
-| **Test parallelism**         | 152 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                                                                               | all `*_test.go`                                         |
+| **Test parallelism**         | 262 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                                                                               | all `*_test.go`                                         |
 | **Type metadata assertions** | `TestBuildTypeMetadata` directly asserts provider/status icons, labels, and colors                                                                                                | `metadata_test.go`                                      |
 
 ---

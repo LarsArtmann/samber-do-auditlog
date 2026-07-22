@@ -12,7 +12,7 @@ This project uses the standard Go toolchain. A `flake.nix` devShell is available
 - [golangci-lint](https://golangci-lint.run/usage/install/) (latest v2.x)
 - [templ](https://templ.guide/) (only if you edit `html.templ`)
 
-**Nix users:** Run `nix develop` to get Go 1.26.3, golangci-lint, govulncheck, and golines pinned in `flake.nix`.
+**Nix users:** Run `nix develop` to get Go 1.26.4, golangci-lint, govulncheck, and golines pinned in `flake.nix`.
 
 Verify your setup:
 
@@ -66,7 +66,7 @@ Follow the existing code. The project enforces style through `.golangci.yml`, bu
 ### Lint Highlights
 
 - `exhaustruct` — every struct field must be explicitly initialized (tests are exempt)
-- `depguard` — only stdlib, `samber/do`, `a-h/templ`, and this module are allowed
+- `depguard` — only stdlib, `samber/do`, `a-h/templ`, `larsartmann/go-output`, and this module are allowed
 - `noinlineerr` — declare `err` on its own line, then check it
 - `forbidigo` — no `fmt.Print*` in production code
 - `tagliatelle` — JSON tags use `snake_case`
@@ -132,16 +132,16 @@ events and updates ServiceInfo health fields without modifying the core hook flo
 
 Release tags and the report schema version are **independent**:
 
-- **Release tags** follow `v0.0.x` (e.g. `v0.0.3`). These mark GitHub releases.
+- **Release tags** follow `v0.x.y` (e.g. `v0.5.0`). These mark GitHub releases.
 - **Schema version** (currently `0.2.0`, in `types.go`) versions the JSON report format. It is upgraded via `MigrateReport` and has no relation to release tags.
 
 ### Release Procedure
 
-1. **Update `CHANGELOG.md`** — move `[Unreleased]` items under a new `[0.0.x]` heading with today's date.
+1. **Update `CHANGELOG.md`** — move `[Unreleased]` items under a new `[0.x.y]` heading with today's date.
 2. **Commit** the changelog update.
 3. **Tag** the release (signed):
    ```bash
-   git tag -s v0.0.x -m "v0.0.x — short description"
+   git tag -s v0.x.y -m "v0.x.y — short description"
    ```
 4. **Push** the tag and master:
    ```bash
@@ -150,7 +150,7 @@ Release tags and the report schema version are **independent**:
 5. **Create a GitHub Release** using `gh release create` with the changelog body as notes. Attach the example HTML artifact:
    ```bash
    DO_AUDITLOG_ENABLED=true go run ./example
-   gh release create v0.0.x --notes-file <notes> /tmp/.../audit-report.html
+   gh release create v0.x.y --notes-file <notes> /tmp/.../audit-report.html
    ```
 6. **Verify** the CI badge is green and the release appears on the releases page.
 
