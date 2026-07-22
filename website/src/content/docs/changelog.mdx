@@ -5,10 +5,29 @@ description: All notable changes to do-auditlog.
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-07-22
+
+A feature release: public documentation website, Nix flake modernization, and comprehensive docs-accuracy audit. Non-breaking.
+
+### Added
+
+- **Public documentation website**: full Astro v7 + Starlight + Tailwind v4 site deployed at `do-auditlog.lars.software` with 11 docs pages, landing page, Firebase hosting, and CI deploy workflow.
+- **Newsletter subscription** component on the project website.
+
 ### Changed
 
 - **Nix flake modernization**: migrated from `flake-utils`/`eachDefaultSystem` to `flake-parts` with `treefmt-nix` for standardized formatting checks.
-- **Dependency updates**: `golang.org/x/sync`, `golang.org/x/sys`, `golang.org/x/term`, nixpkgs bumped to latest.
+- **Nix build check**: added `build` output as a check in the treefmt configuration.
+- **Dependency updates**: `golang.org/x/sync` v0.21.0 to v0.22.0, `golang.org/x/sys` v0.46.0 to v0.47.0, `golang.org/x/term` v0.44.0 to v0.45.0, nixpkgs bumped to latest.
+- **TODO_LIST.md cleanup**: all 127 completed items removed — they are comprehensively documented in this CHANGELOG. The file now contains only the 2 genuinely deferred items and 5 explicitly rejected proposals.
+- **Docs-accuracy audit**: corrected linter count (108 to 109), `GraphStyle` to `NodeStyle` (renamed in go-output v0.30.0), Go version (1.26.3 to 1.26.4 in `go.mod`), coverage gate threshold (95% to 94% in 4 locations to match actual CI config), `MigrateReport` description, `RenderTableData` to `RenderTable`, stale test/parallelism counts, release versioning pattern (`v0.0.x` to `v0.x.y`).
+
+### Fixed
+
+- **BuildFlow `go-auto-upgrade` revert**: reverted a catastrophic automated migration to `encoding/json/v2` + `encoding/json/jsontext` (build-constraint-excluded in Go 1.26.4) that left the project uncompilable. Documented the incident and the `encoding/json/v2` exclusion policy in `AGENTS.md`.
+- **godoclint false positive**: `godoclint` reported "package has more than one godoc" because it counted the `// templ: version:` header in generated `html_templ.go` as a second package doc. Added a text-based exclusion rule in `.golangci.yml`.
+- **Stale HTML golden file**: `testdata/golden/report.html` was from a pre-formatting-normalization commit, causing `TestReport_WriteHTML_GoldenFile` to fail. Regenerated via `UPDATE_GOLDEN=1`.
+- **govulncheck CI**: replaced `golang/govulncheck-action@v1` with direct `go run golang.org/x/vuln/cmd/govulncheck@latest` to avoid action version drift.
 
 ## [0.5.0] — 2026-07-07
 
