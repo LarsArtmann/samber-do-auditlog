@@ -7,3 +7,7 @@ docs/status/*.md linguist-documentation
 # stats, and signals editors/CI to skip formatting. Prevents the recurring
 # html_templ.go format drift that breaks the stale-generation CI check.
 *_templ.go linguist-generated=true
+# Enforce consistent line endings across all platforms
+* text=auto eol=lf
+# Binary files should not be diffed or merged
+*.woff2 binary
