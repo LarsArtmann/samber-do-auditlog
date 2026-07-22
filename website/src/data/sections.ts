@@ -38,7 +38,7 @@ export const comparisons: ComparisonItem[] = [
     pros: [
       "One-line setup",
       "Auto-inferred dependency graph",
-      "9+ export formats including HTML",
+      "16+ export formats including HTML",
       "Health check audit",
       "Real-time event streaming",
     ],
