@@ -1090,7 +1090,6 @@ templ reportHTML(report Report) {
 
 	// DAGHTML_JS_INJECTION_POINT
 	function renderGraph(){initDAGGraph("graph-container","dag-data");}
-	}
 
 	document.getElementById('footer-ts').textContent = new Date().toLocaleString();
 	document.getElementById('footer-stats').textContent = 'Schema v'+report.version+' \u00b7 '+report.event_count+' events \u00b7 '+report.service_count+' services';
