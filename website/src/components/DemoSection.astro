@@ -17,9 +17,9 @@ const checks = [
 <section class="pb-8">
   <SectionHeader title="Try it in 30 seconds." subtitle="Clone the repo and run the self-checking example." />
 
-  <div class="max-w-3xl mx-auto">
-    <div class="rounded-xl border border-border bg-bg-card-solid overflow-hidden">
-      <div class="flex items-center justify-between px-4 py-3 border-b border-border">
+  <div class="grid gap-5 lg:grid-cols-2 items-start">
+    <div class="rounded-xl border border-border bg-bg-card-solid overflow-hidden shadow-lg">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-border bg-bg-code">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-code-dot"></span>
           <span class="w-2.5 h-2.5 rounded-full bg-code-dot"></span>
@@ -34,31 +34,38 @@ const checks = [
           <span id="copy-demo-label">Copy</span>
         </button>
       </div>
-      <div class="p-4 font-mono text-sm text-text-primary overflow-x-auto bg-bg-code">
-        <span class="text-text-muted">$</span> <span id="demo-command-text">{command}</span>
+      <div class="p-4 font-mono text-sm text-text-primary overflow-x-auto bg-bg-code leading-relaxed">
+        <div><span class="text-text-muted">$</span> <span id="demo-command-text">{command}</span></div>
+        <div class="text-text-muted mt-2"><span class="text-success">===</span> Audit Summary <span class="text-success">===</span></div>
+        <div class="text-text-muted">  Services:  <span class="text-text-secondary">20</span></div>
+        <div class="text-text-muted">  Events:    <span class="text-text-secondary">146</span></div>
+        <div class="text-text-muted">  Scopes:    <span class="text-text-secondary">4</span></div>
+        <div class="text-text-muted">  Build:     <span class="text-text-secondary">45.2ms</span></div>
+        <div class="text-text-muted">  HTML:      <span class="text-accent">audit-report.html</span></div>
       </div>
-      <div class="p-5 border-t border-border">
-        <p class="text-sm text-text-muted mb-4 leading-relaxed">
-          The example exercises 19 samber/do v2 features — eager and lazy providers, named services, transients, aliases, child scopes, cross-scope dependencies, health checks, and shutdown errors — then writes an HTML report you can open in any browser.
-        </p>
-        <div class="grid gap-2 sm:grid-cols-2 mb-5">
-          {checks.map((check) => (
-            <div class="flex items-center gap-2 text-sm text-text-secondary">
-              <span class="text-success" aria-hidden="true">✓</span>
-              {check}
-            </div>
-          ))}
-        </div>
-        <a
-          href={exampleURL}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-colors duration-150"
-        >
-          Browse the example source
-          <Icon name="arrow-external" size={14} />
-        </a>
+    </div>
+
+    <div class="pt-1">
+      <p class="text-sm text-text-muted mb-5 leading-relaxed">
+        The example exercises 19 samber/do v2 features - eager and lazy providers, named services, transients, aliases, child scopes, cross-scope dependencies, health checks, and shutdown errors - then writes an HTML report you can open in any browser.
+      </p>
+      <div class="grid gap-2.5 sm:grid-cols-2 mb-6">
+        {checks.map((check) => (
+          <div class="flex items-center gap-2 text-sm text-text-secondary">
+            <span class="text-success shrink-0" aria-hidden="true">✓</span>
+            {check}
+          </div>
+        ))}
       </div>
+      <a
+        href={exampleURL}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-colors duration-150"
+      >
+        Browse the example source
+        <Icon name="arrow-external" size={14} />
+      </a>
     </div>
   </div>
 </section>
