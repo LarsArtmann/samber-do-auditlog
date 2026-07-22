@@ -45,7 +45,7 @@ hooks.go            — Hook methods + shared helpers (newEventFromRef, newServi
 types.go            — Domain enums: EventType, Phase, ProviderType, ServiceStatus, ServiceRef
 metadata.go         — TypeMetadata struct + BuildTypeMetadata() — Go enum display metadata for HTML
 event.go            — Event type + convenience methods (IsRegistration, Duration, etc.)
-service.go          — ServiceInfo, ScopeNode types + methods (Uptime, HasHealthError, DeriveStatus)
+service.go          — ServiceInfo (split into ServiceIdentity/ServiceLifecycle/ServiceHealth/ServiceGraph embedded structs), ScopeNode types + methods (Uptime, HasHealthError, DeriveStatus)
 report.go           — Report type + Validate() + query methods (ServiceByName, EventsByType, Index, WriteNDJSON, WriteJSON, etc.) + buildReportFromCore/finalizeDenormalized (unified construction)
 diff.go             — Report.Diff(other) + DiffResult/ServiceDiff types
 report_builder.go   — BuildReport assembly: services, scope tree (generic buildScopeTreeFromMeta), capability enrichment, shared helpers (serviceRecordToInfo, buildServiceDeps, depRecToRef, sortServiceInfos)
