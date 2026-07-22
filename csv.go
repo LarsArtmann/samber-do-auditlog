@@ -64,9 +64,9 @@ func (r Report) writeDelimited(writer io.Writer, comma rune) error {
 // serviceToCSVRow converts a ServiceInfo to a string slice matching the header.
 func serviceToCSVRow(svc ServiceInfo) []string {
 	return []string{
-		svc.ScopeID,
+		string(svc.ScopeID),
 		svc.ScopeName,
-		svc.ServiceName,
+		string(svc.ServiceName),
 		string(svc.Status),
 		string(svc.ServiceType),
 		svc.RegisteredAt.Format(time.RFC3339Nano),

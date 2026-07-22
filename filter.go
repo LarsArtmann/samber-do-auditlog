@@ -165,10 +165,10 @@ func (r Report) Filtered(opts ...ReportOption) Report {
 // keeping only nodes that have at least one service in the filtered set.
 // Returns the pruned tree and the count of remaining scope nodes.
 func pruneScopeTree(original ScopeNode, filteredServices []ServiceInfo) (ScopeNode, int) {
-	allowed := make(map[string]map[string]struct{}, len(filteredServices))
+	allowed := make(map[ScopeID]map[ServiceName]struct{}, len(filteredServices))
 	for _, svc := range filteredServices {
 		if allowed[svc.ScopeID] == nil {
-			allowed[svc.ScopeID] = make(map[string]struct{})
+			allowed[svc.ScopeID] = make(map[ServiceName]struct{})
 		}
 
 		allowed[svc.ScopeID][svc.ServiceName] = struct{}{}
@@ -179,8 +179,8 @@ func pruneScopeTree(original ScopeNode, filteredServices []ServiceInfo) (ScopeNo
 	return pruned, count
 }
 
-func pruneScopeTreeRecursive(node ScopeNode, allowed map[string]map[string]struct{}) (ScopeNode, int) {
-	var filteredServices []string
+func pruneScopeTreeRecursive(node ScopeNode, allowed map[ScopeID]map[ServiceName]struct{}) (ScopeNode, int) {
+	var filteredServices []ServiceName
 
 	if svcSet, ok := allowed[node.ID]; ok {
 		for _, name := range node.Services {

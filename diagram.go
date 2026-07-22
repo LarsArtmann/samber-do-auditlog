@@ -27,8 +27,8 @@ var warmAmberNodeStyle = output.NodeStyle{
 // and space) to underscores to preserve word boundaries, then MermaidID strips
 // any remaining non-identifier rune. The result is valid across Mermaid,
 // PlantUML, and DOT. Returns "node" if everything is stripped (via MermaidID).
-func diagramNodeID(scopeID, serviceName string) string {
-	return escape.MermaidID(escape.SlugifyID(scopeID + "_" + serviceName))
+func diagramNodeID(scopeID ScopeID, serviceName ServiceName) string {
+	return escape.MermaidID(escape.SlugifyID(string(scopeID) + "_" + string(serviceName)))
 }
 
 // newGraphNode constructs a boxed graph node with the warm-amber style applied.
