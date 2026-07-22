@@ -76,7 +76,7 @@ func TestPlugin_InvocationOrder(t *testing.T) {
 
 	orderMap := map[string]int{}
 	for _, svc := range report.Services {
-		orderMap[svc.ServiceName] = svc.InvocationOrder
+		orderMap[string(svc.ServiceName)] = svc.InvocationOrder
 	}
 
 	if orderMap["a"] >= orderMap["b"] {

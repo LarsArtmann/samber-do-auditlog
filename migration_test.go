@@ -427,11 +427,11 @@ func TestMigrateReport_FullRoundTrip(t *testing.T) {
 	origNames := make(map[string]bool)
 
 	for _, svc := range original.Services {
-		origNames[svc.ServiceName] = true
+		origNames[string(svc.ServiceName)] = true
 	}
 
 	for _, svc := range migrated.Services {
-		if !origNames[svc.ServiceName] {
+		if !origNames[string(svc.ServiceName)] {
 			t.Errorf("migrated has unexpected service %q", svc.ServiceName)
 		}
 	}

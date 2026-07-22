@@ -44,7 +44,7 @@ func assertCLIOutputContains(t *testing.T, label, output, want string) {
 }
 
 // mkRegEvent creates a registration-after event for CLI test fixtures.
-func mkRegEvent(seq int, ts time.Time, serviceName, containerID string) auditlog.Event {
+func mkRegEvent(seq int, ts time.Time, serviceName auditlog.ServiceName, containerID auditlog.ContainerID) auditlog.Event {
 	return auditlog.Event{
 		ServiceRef: auditlog.ServiceRef{
 			ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: serviceName,

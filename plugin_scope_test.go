@@ -113,12 +113,12 @@ func TestPlugin_ResolveServiceScopeFromChildScope(t *testing.T) {
 
 	report := p.Report()
 
-	rootSvc := report.ServiceByRef(injector.ID(), "root-db")
+	rootSvc := report.ServiceByRef(auditlog.ScopeID(injector.ID()), "root-db")
 	if rootSvc == nil {
 		t.Fatal("root-db not found in root scope")
 	}
 
-	childSvc := report.ServiceByRef(child.ID(), "child-db")
+	childSvc := report.ServiceByRef(auditlog.ScopeID(child.ID()), "child-db")
 	if childSvc == nil {
 		t.Fatal("child-db not found in child scope")
 	}
@@ -130,7 +130,7 @@ func TestPlugin_ResolveServiceScopeFromChildScope(t *testing.T) {
 
 	report2 := p.Report()
 
-	childDbReport := report2.ServiceByRef(child.ID(), "child-db")
+	childDbReport := report2.ServiceByRef(auditlog.ScopeID(child.ID()), "child-db")
 	if childDbReport == nil {
 		t.Fatal("child-db not found after health check")
 	}
@@ -178,7 +178,7 @@ func TestResolveServiceScope_ParentScopeService(t *testing.T) {
 
 	report := p.Report()
 
-	rootSvc := report.ServiceByRef(injector.ID(), "root-db")
+	rootSvc := report.ServiceByRef(auditlog.ScopeID(injector.ID()), "root-db")
 	if rootSvc == nil {
 		t.Fatal("root-db should exist in report")
 	}
@@ -206,7 +206,7 @@ func TestResolveServiceScope_GrandparentScopeService(t *testing.T) {
 
 	report := p.Report()
 
-	gpSvc := report.ServiceByRef(injector.ID(), "grandparent-db")
+	gpSvc := report.ServiceByRef(auditlog.ScopeID(injector.ID()), "grandparent-db")
 	if gpSvc == nil {
 		t.Fatal("grandparent-db should exist in report")
 	}

@@ -166,11 +166,11 @@ func TestMigrateReport_PreservesCoreData(t *testing.T) {
 		// Every source service name must appear in the migrated report.
 		migratedNames := make(map[string]bool, len(migrated.Services))
 		for _, svc := range migrated.Services {
-			migratedNames[svc.ServiceName] = true
+			migratedNames[string(svc.ServiceName)] = true
 		}
 
 		for _, svc := range src.Services {
-			if !migratedNames[svc.ServiceName] {
+			if !migratedNames[string(svc.ServiceName)] {
 				t.Errorf("service %q lost during migration", svc.ServiceName)
 			}
 		}

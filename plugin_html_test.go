@@ -128,7 +128,7 @@ func TestWriteHTML_MultiServiceIntegration(t *testing.T) {
 	assertHTMLContains(t, html, "scope_count")
 
 	report := p.Report()
-	assertHTMLContains(t, html, report.ContainerID)
+	assertHTMLContains(t, html, string(report.ContainerID))
 
 	for _, tab := range []string{"tab-services", "tab-scopes", "tab-graph", "tab-timeline", "tab-events"} {
 		assertHTMLContains(t, html, tab)
