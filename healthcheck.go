@@ -14,7 +14,7 @@ type scopeAncestorWalker interface {
 }
 
 // RecordHealthCheck records a single health check result for a service.
-func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err error) {
+func (r *Recorder) RecordHealthCheck(scopeID ScopeID, scopeName string, serviceName ServiceName, err error) {
 	now := time.Now()
 	errStr := errorToStringPtr(err)
 	seq := r.nextSequence()
@@ -52,18 +52,18 @@ func (r *Recorder) RecordHealthCheck(scopeID, scopeName, serviceName string, err
 
 // ResolveServiceScope finds the scope metadata for a service by name.
 // Returns (scopeID, scopeName, true) if found, or ("", "", false) otherwise.
-func (r *Recorder) ResolveServiceScope(injector do.Injector, serviceName string) (string, string, bool) {
+func (r *Recorder) ResolveServiceScope(injector do.Injector, serviceName ServiceName) (ScopeID, string, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	injectorScopeID := injector.ID()
+	injectorScopeID := ScopeID(injector.ID())
 	if rec, ok := r.services[svcKey{scopeID: injectorScopeID, name: serviceName}]; ok {
 		return rec.scopeID, rec.scopeName, true
 	}
 
 	if walker, ok := injector.(scopeAncestorWalker); ok {
 		for _, ancestor := range walker.Ancestors() {
-			if rec, ok := r.services[svcKey{scopeID: ancestor.ID(), name: serviceName}]; ok {
+			if rec, ok := r.services[svcKey{scopeID: ScopeID(ancestor.ID()), name: serviceName}]; ok {
 				return rec.scopeID, rec.scopeName, true
 			}
 		}

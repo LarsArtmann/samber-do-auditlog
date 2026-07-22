@@ -137,7 +137,7 @@ func main() {
 | **Filtered reports**     | Slice by name, type, scope, event type, or time range before exporting              |
 | **Real-time streaming**  | `OnEvent` callback fires on every event — stream to Prometheus, OTel, or dashboards |
 | **Env var toggle**       | `DO_AUDITLOG_ENABLED=true` activates the plugin without code changes                |
-| **Bounded memory**       | `MaxEvents` caps in-memory events; `DroppedEventCount()` tracks overflow             |
+| **Bounded memory**       | `MaxEvents` caps in-memory events; `DroppedEventCount()` tracks overflow            |
 | **Report diffing**       | `Report.Diff(other)` detects added, removed, and changed services for CI/CD         |
 | **~1.7 µs overhead**     | In-memory capture during operation. Toggle off for zero cost                        |
 | **Minimal deps**         | `samber/do/v2` + `a-h/templ` + `larsartmann/go-output` (diagrams and tables)        |
@@ -196,10 +196,7 @@ Each service in the JSON report carries its full lifecycle data:
   "invocation_count": 1,
   "first_build_duration_ms": 0.06,
   "shutdown_duration_ms": 0.003,
-  "dependencies": [
-    {"service_name": "*main.Database"},
-    {"service_name": "*main.Cache"}
-  ],
+  "dependencies": [{ "service_name": "*main.Database" }, { "service_name": "*main.Cache" }],
   "health_check_count": 1
 }
 ```
@@ -317,14 +314,14 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 
 ## Security & Quality
 
-| Signal                  | Detail                                                              |
-| ----------------------- | ------------------------------------------------------------------- |
-| **CSP hardened**        | HTML reports use `base-uri 'none'; frame-ancestors 'none'`          |
-| **Fuzz tested**         | 5 fuzz targets covering HTML XSS, migration, diagrams, NDJSON       |
-| **govulncheck**         | Runs on every CI push — zero known vulnerabilities                   |
-| **109 linters**         | golangci-lint v2 with near-exhaustive linter set, zero exemptions    |
-| **94% coverage gate**   | CI fails if coverage drops below 94% of non-example/cmd statements  |
-| **JSON Schema**         | Canonical Draft 2020-12 schema generated from Go types              |
+| Signal                | Detail                                                             |
+| --------------------- | ------------------------------------------------------------------ |
+| **CSP hardened**      | HTML reports use `base-uri 'none'; frame-ancestors 'none'`         |
+| **Fuzz tested**       | 5 fuzz targets covering HTML XSS, migration, diagrams, NDJSON      |
+| **govulncheck**       | Runs on every CI push — zero known vulnerabilities                 |
+| **109 linters**       | golangci-lint v2 with near-exhaustive linter set, zero exemptions  |
+| **94% coverage gate** | CI fails if coverage drops below 94% of non-example/cmd statements |
+| **JSON Schema**       | Canonical Draft 2020-12 schema generated from Go types             |
 
 ## Documentation
 

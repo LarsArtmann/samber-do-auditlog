@@ -52,8 +52,8 @@ func (s *ServiceInfo) RederiveStatus() {
 
 // ScopeNode represents the scope hierarchy for visualization.
 type ScopeNode struct {
-	ID       ScopeID      `json:"id"`
-	Name     string       `json:"name"`
+	ID       ScopeID       `json:"id"`
+	Name     string        `json:"name"`
 	Services []ServiceName `json:"services,omitempty"`
-	Children []ScopeNode  `json:"children,omitempty"`
+	Children []ScopeNode   `json:"children,omitempty"`
 }

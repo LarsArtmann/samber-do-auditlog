@@ -21,13 +21,13 @@ var (
 type Report struct {
 	Version                 string      `json:"version"`
 	ContainerID             ContainerID `json:"container_id"`
-	ExportedAt              time.Time `json:"exported_at"`
-	EventCount              int       `json:"event_count"`
-	ServiceCount            int       `json:"service_count"`
-	ScopeCount              int       `json:"scope_count"`
-	TotalBuildDurationMs    float64   `json:"total_build_duration_ms"`
-	TotalShutdownDurationMs float64   `json:"total_shutdown_duration_ms"`
-	ShutdownSucceeded       bool      `json:"shutdown_succeeded"`
+	ExportedAt              time.Time   `json:"exported_at"`
+	EventCount              int         `json:"event_count"`
+	ServiceCount            int         `json:"service_count"`
+	ScopeCount              int         `json:"scope_count"`
+	TotalBuildDurationMs    float64     `json:"total_build_duration_ms"`
+	TotalShutdownDurationMs float64     `json:"total_shutdown_duration_ms"`
+	ShutdownSucceeded       bool        `json:"shutdown_succeeded"`
 	// HealthCheckSucceeded is true when at least one service was health-checked
 	// and all passed. It is false when no health checks ran (HealthCheckedCount == 0)
 	// or when any service failed its check.

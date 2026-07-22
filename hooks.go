@@ -16,7 +16,7 @@ func newEventFromRef(
 	eventType EventType,
 	phase Phase,
 	ref ServiceRef,
-	containerID string,
+	containerID ContainerID,
 	svcType ProviderType,
 	dur *float64,
 	errStr *string,
@@ -57,7 +57,7 @@ func getOrCreateServiceRecord(
 // LIFO search. Returns the updated slice, the removed frame, and true if
 // found. Used by both the live Recorder path (under r.mu) and the replay
 // path (no lock).
-func popStackFrame(stack []stackEntry, scopeID, serviceName string) ([]stackEntry, stackEntry, bool) {
+func popStackFrame(stack []stackEntry, scopeID ScopeID, serviceName ServiceName) ([]stackEntry, stackEntry, bool) {
 	for i, frame := range slices.Backward(stack) {
 		if frame.serviceName == serviceName && frame.scopeID == scopeID {
 			if i == len(stack)-1 {
@@ -102,7 +102,7 @@ func recordDependencyFromStack(
 }
 
 // newServiceRecordCore constructs a serviceRecord with lazy deps map.
-func newServiceRecordCore(scopeID, scopeName, serviceName string, svcType ProviderType, now time.Time) *serviceRecord {
+func newServiceRecordCore(scopeID ScopeID, scopeName string, serviceName ServiceName, svcType ProviderType, now time.Time) *serviceRecord {
 	return &serviceRecord{
 		scopeID:              scopeID,
 		scopeName:            scopeName,
@@ -138,8 +138,8 @@ func errorToStringPtr(err error) *string {
 
 // inferServiceType uses do.ExplainNamedService to determine the provider type
 // (lazy, eager, transient, alias). Returns empty string if unknown.
-func inferServiceType(scope *do.Scope, serviceName string) ProviderType {
-	desc, ok := do.ExplainNamedService(scope, serviceName)
+func inferServiceType(scope *do.Scope, serviceName ServiceName) ProviderType {
+	desc, ok := do.ExplainNamedService(scope, string(serviceName))
 	if !ok {
 		return ""
 	}
@@ -231,7 +231,7 @@ func (r *Recorder) beginAfterHook(scope *do.Scope, serviceName string, err error
 func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
 	ctx := r.beginLockedBeforeHook(scope, serviceName)
 
-	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
+	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: ctx.serviceName}
 	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeRegistration, PhaseBefore, ref, r.containerID, "", nil, nil)
 	r.publishLockedEvent(evt)
 }
@@ -247,13 +247,13 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 
 	if !ok {
 		svcType = inferServiceType(scope, serviceName)
-		rec = newServiceRecordCore(ctx.scopeID, ctx.scopeName, serviceName, svcType, ctx.now)
+		rec = newServiceRecordCore(ctx.scopeID, ctx.scopeName, ctx.serviceName, svcType, ctx.now)
 		r.services[ctx.key] = rec
 	} else {
 		svcType = rec.serviceType
 	}
 
-	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
+	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: ctx.serviceName}
 	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeRegistration, PhaseAfter, ref, r.containerID, svcType, nil, nil)
 	r.publishLockedEvent(evt)
 }
@@ -266,14 +266,14 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 	r.stack = append(r.stack, stackEntry{
 		scopeID:     ctx.scopeID,
 		scopeName:   ctx.scopeName,
-		serviceName: serviceName,
+		serviceName: ctx.serviceName,
 		start:       ctx.now,
 	})
 
 	// Look up service type from existing record.
 	svcType := r.serviceTypeForLocked(ctx.key)
 
-	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
+	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: ctx.serviceName}
 	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeInvocation, PhaseBefore, ref, r.containerID, svcType, nil, nil)
 	r.publishLockedEvent(evt)
 }
@@ -286,7 +286,7 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 	// Pop matching stack frame (LIFO fast path).
 	var durationMs *float64
 
-	newStack, frame, found := popStackFrame(r.stack, ctx.scopeID, serviceName)
+	newStack, frame, found := popStackFrame(r.stack, ctx.scopeID, ctx.serviceName)
 	if found {
 		r.stack = newStack
 		d := float64(ctx.now.Sub(frame.start).Microseconds()) / microsPerMs
@@ -296,14 +296,14 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 	// Look up service type.
 	svcType := r.serviceTypeForLocked(ctx.key)
 
-	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
+	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: ctx.serviceName}
 	evt := newEventFromRef(
 		ctx.seq, ctx.now, EventTypeInvocation, PhaseAfter,
 		ref, r.containerID, svcType, durationMs, errStr,
 	)
 	r.appendEventLocked(evt)
 
-	r.updateInvocationAggregate(ctx.scopeID, ctx.scopeName, serviceName, ctx.now, svcType, durationMs, errStr)
+	r.updateInvocationAggregate(ctx.scopeID, ctx.scopeName, ctx.serviceName, ctx.now, svcType, durationMs, errStr)
 
 	r.mu.Unlock()
 
@@ -313,7 +313,7 @@ func (r *Recorder) OnAfterInvocation(scope *do.Scope, serviceName string, err er
 // updateInvocationAggregate updates the per-service aggregate after an invocation.
 // Caller must hold r.mu.
 func (r *Recorder) updateInvocationAggregate(
-	scopeID, scopeName, serviceName string,
+	scopeID ScopeID, scopeName string, serviceName ServiceName,
 	now time.Time,
 	svcType ProviderType,
 	durationMs *float64,
@@ -349,7 +349,7 @@ func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
 
 	svcType := r.serviceTypeForLocked(ctx.key)
 
-	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
+	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: ctx.serviceName}
 	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeShutdown, PhaseBefore, ref, r.containerID, svcType, nil, nil)
 	r.publishLockedEvent(evt)
 }
@@ -374,7 +374,7 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 
 	svcType := r.serviceTypeForLocked(ctx.key)
 
-	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: serviceName}
+	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: ctx.serviceName}
 	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeShutdown, PhaseAfter, ref, r.containerID, svcType, nil, errStr)
 	r.appendEventLocked(evt)
 
