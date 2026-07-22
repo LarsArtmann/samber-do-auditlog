@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **README rewrite**: Condensed from 569 to ~300 lines as a high-conversion landing page. All code snippets compile-verified. Fixed incorrect Mermaid example (used fake node IDs instead of slugified output). Restored API Reference link to the documentation website. Added sections for Loading & Migrating Reports, env var toggle, MaxEvents, Report.Diff, Security & Quality, and STABILITY.md link.
+
 ## [0.6.0] - 2026-07-22
 
 A feature release: public documentation website, Nix flake modernization, and comprehensive docs-accuracy audit. Non-breaking.

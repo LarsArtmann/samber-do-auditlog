@@ -12,7 +12,7 @@ Audit-log plugin for [samber/do v2](https://github.com/samber/do) — track ever
 [![Coverage](https://img.shields.io/badge/Coverage-94%25-brightgreen)](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[Documentation](https://do-auditlog.lars.software) &middot; [Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/) &middot; [API Reference](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog)
+[Documentation](https://do-auditlog.lars.software) &middot; [Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/) &middot; [API Reference](https://do-auditlog.lars.software/api-reference/)
 
 </div>
 
@@ -165,13 +165,15 @@ Every format is a single method call. All write to `io.Writer`; most have a matc
 | **HTML Tree**           | `report.WriteHTMLTree(w)`           | Nested-list dependency tree              |
 | **Table (16+ formats)** | `report.WriteTable(w, format, ...)` | Markdown, YAML, TOML, XML, and more      |
 
-The Mermaid output renders natively on GitHub:
+The Mermaid output renders natively on GitHub. Node labels include the provider-type emoji (😴 lazy, 🔁 eager, 🏭 transient):
 
 ```mermaid
 flowchart TD
-    root_*main.HTTPServer --> root_*main.UserService
-    root_*main.HTTPServer --> root_*main.Database
-    root_*main.UserService --> root_*main.Database
+    HTTPServer["HTTPServer 😴"] --> AppConfig["AppConfig 🔁"]
+    HTTPServer --> Cache["Cache 😴"]
+    HTTPServer --> Database["Database 😴"]
+    Database --> Logger["Logger"]
+    Notifier["Notifier"] --> EmailNotifier["EmailNotifier 😴"]
 ```
 
 ## Filtered Reports
@@ -270,7 +272,8 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 | [Filtered Reports](https://do-auditlog.lars.software/guides/filtered-reports/)       | Slice by name, type, scope, time          |
 | [Health Checks](https://do-auditlog.lars.software/guides/health-checks/)             | Per-service health audit events           |
 | [Performance](https://do-auditlog.lars.software/guides/performance/)                 | Benchmarks and tuning                     |
-| [API Reference](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog)        | Full godoc                                |
+| [API Reference](https://do-auditlog.lars.software/api-reference/)                   | Full API docs with examples               |
+| [pkg.go.dev](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog)           | Generated godoc                           |
 
 ## Contributing
 
