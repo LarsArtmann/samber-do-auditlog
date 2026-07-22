@@ -13,7 +13,7 @@ func TestMergeReports_TwoReports(t *testing.T) {
 
 	makeReport := func(containerID string, seq int, svcName string) auditlog.Report {
 		events := []auditlog.Event{
-			mkRegEvent(seq, base, svcName, containerID),
+			mkRegEvent(seq, base, auditlog.ServiceName(svcName), auditlog.ContainerID(containerID)),
 		}
 
 		report, err := auditlog.ReplayEvents(events)

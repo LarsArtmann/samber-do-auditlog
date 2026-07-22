@@ -230,7 +230,7 @@ func TestReport_Index(t *testing.T) {
 
 	// ByRef
 	for i := range report.Services {
-		key := report.Services[i].ScopeID + "/" + report.Services[i].ServiceName
+		key := string(report.Services[i].ScopeID) + "/" + string(report.Services[i].ServiceName)
 		if idx.ByRef[key] == nil {
 			t.Errorf("Index.ByRef: expected %q", key)
 		}

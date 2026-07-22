@@ -113,7 +113,7 @@ func TestReport_FilteredByScope(t *testing.T) {
 		t.Fatalf("scope_tree: expected 1 child, got %d", len(filtered.ScopeTree.Children))
 	}
 
-	if filtered.ScopeTree.Children[0].ID != child.ID() {
+	if filtered.ScopeTree.Children[0].ID != auditlog.ScopeID(child.ID()) {
 		t.Errorf("scope_tree child: expected %s, got %s", child.ID(), filtered.ScopeTree.Children[0].ID)
 	}
 }
