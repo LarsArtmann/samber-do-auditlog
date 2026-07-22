@@ -11,7 +11,7 @@ type Event struct {
 	EventType   EventType    `json:"event_type"`
 	Phase       Phase        `json:"phase"`
 	ServiceType ProviderType `json:"service_type,omitempty"`
-	ContainerID string       `json:"container_id"`
+	ContainerID ContainerID  `json:"container_id"`
 	DurationMs  *float64     `json:"duration_ms,omitempty"`
 	Error       *string      `json:"error,omitempty"`
 }

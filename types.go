@@ -175,9 +175,9 @@ func (s ServiceStatus) Icon() string {
 // ServiceRef identifies a service within a specific scope.
 // Embedded in Event and ServiceInfo for JSON flattening.
 type ServiceRef struct {
-	ScopeID     string `json:"scope_id"`
-	ScopeName   string `json:"scope_name"`
-	ServiceName string `json:"service_name"`
+	ScopeID     ScopeID     `json:"scope_id"`
+	ScopeName   string      `json:"scope_name"`
+	ServiceName ServiceName `json:"service_name"`
 }
 
 // String returns a human-readable "scope/name" format for the service reference.
@@ -187,7 +187,7 @@ func (r ServiceRef) String() string {
 		return fmt.Sprintf("%s/%s", r.ScopeName, r.ServiceName)
 	}
 
-	return r.ServiceName
+	return string(r.ServiceName)
 }
 
 // IsRoot returns true if the service belongs to the root scope.
