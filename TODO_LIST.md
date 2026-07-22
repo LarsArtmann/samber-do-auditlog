@@ -6,12 +6,12 @@ Last updated: 2026-07-22
 
 ---
 
-## Future Architecture (Deferred to Next Breaking Release)
+## Completed Architecture Changes (Shipped)
 
-These two items are paired and should ship together as a single breaking-change batch.
+Both items shipped together as a single breaking-change batch.
 
-- [ ] **Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` as distinct named string types. Compiler rejects accidental swaps; validation moves into constructors. Low effort, high safety. **DEFERRED**: blast radius measured at 65+ compile errors across production + tests + generated templ, with zero existing bugs from string usage.
-- [ ] **Split `ServiceInfo` lifecycle concerns** — 19-field struct into `ServiceIdentity` / `ServiceLifecycle` / `ServiceHealth` / `ServiceGraph`. Breaking API change. **DEFERRED**: embedding breaks all struct literals (~50 sites), nesting breaks all field access; YAGNI applies (no consumer complaints, JSON flattens fine). Do alongside typed identifiers.
+- [x] **Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` are now distinct named string types. Compiler rejects accidental swaps at every boundary. External library calls wrap with `string()` at the IO boundary.
+- [x] **Split `ServiceInfo` lifecycle concerns** — 19-field struct is now four embedded structs: `ServiceIdentity` / `ServiceLifecycle` / `ServiceHealth` / `ServiceGraph`. JSON output stays flat via Go embedding.
 
 ---
 

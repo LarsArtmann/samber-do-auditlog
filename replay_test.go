@@ -57,14 +57,25 @@ func mkEventWithDur(
 
 // mkRegEvent is a shorthand for a registration-after event. Centralizes the
 // 9-line mkEvent(...) block used by every manual event-fixture test.
-func mkRegEvent(seq int, ts time.Time, serviceName auditlog.ServiceName, containerID auditlog.ContainerID) auditlog.Event {
+func mkRegEvent(
+	seq int,
+	ts time.Time,
+	serviceName auditlog.ServiceName,
+	containerID auditlog.ContainerID,
+) auditlog.Event {
 	return mkLazyEvent(seq, ts, auditlog.EventTypeRegistration, auditlog.PhaseAfter, serviceName, containerID)
 }
 
 // mkInvAfterWithDur is a shorthand for an invocation-after event with duration.
 // Centralizes the 9-line mkEventWithDur(...) block used by every
 // double-invocation replay test.
-func mkInvAfterWithDur(seq int, ts time.Time, serviceName auditlog.ServiceName, containerID auditlog.ContainerID, dur float64) auditlog.Event {
+func mkInvAfterWithDur(
+	seq int,
+	ts time.Time,
+	serviceName auditlog.ServiceName,
+	containerID auditlog.ContainerID,
+	dur float64,
+) auditlog.Event {
 	return mkLazyEventWithDur(
 		seq, ts,
 		auditlog.EventTypeInvocation, auditlog.PhaseAfter,
@@ -83,7 +94,14 @@ const containerIDForTest = "c"
 // containerIDForTest because every existing caller passes the same value; if
 // a test ever needs a different container, inline a mkLazyEvent call.
 func mkInvAfter(seq int, ts time.Time, serviceName string) auditlog.Event {
-	return mkLazyEvent(seq, ts, auditlog.EventTypeInvocation, auditlog.PhaseAfter, auditlog.ServiceName(serviceName), containerIDForTest)
+	return mkLazyEvent(
+		seq,
+		ts,
+		auditlog.EventTypeInvocation,
+		auditlog.PhaseAfter,
+		auditlog.ServiceName(serviceName),
+		containerIDForTest,
+	)
 }
 
 // mkInvBefore is a shorthand for an invocation-before event with empty
@@ -91,7 +109,15 @@ func mkInvAfter(seq int, ts time.Time, serviceName string) auditlog.Event {
 // every nested-invocation replay test for the "push to stack" half of a call.
 // ContainerID is fixed to containerIDForTest; see mkInvAfter for rationale.
 func mkInvBefore(seq int, ts time.Time, serviceName string) auditlog.Event {
-	return mkEvent(seq, ts, auditlog.EventTypeInvocation, auditlog.PhaseBefore, auditlog.ServiceName(serviceName), containerIDForTest, "")
+	return mkEvent(
+		seq,
+		ts,
+		auditlog.EventTypeInvocation,
+		auditlog.PhaseBefore,
+		auditlog.ServiceName(serviceName),
+		containerIDForTest,
+		"",
+	)
 }
 
 // mkLazyEvent is the shared lazy-provider mkEvent(...) body used by every
@@ -1021,7 +1047,15 @@ func TestDiff_MultipleChanged(t *testing.T) {
 
 	now := time.Now()
 	mk := func(seq int, name string, eventType auditlog.EventType, phase auditlog.Phase) auditlog.Event {
-		return mkEvent(seq, now, eventType, phase, auditlog.ServiceName(name), auditlog.ContainerID("c"), auditlog.ProviderTypeLazy)
+		return mkEvent(
+			seq,
+			now,
+			eventType,
+			phase,
+			auditlog.ServiceName(name),
+			auditlog.ContainerID("c"),
+			auditlog.ProviderTypeLazy,
+		)
 	}
 
 	sharedRegInv := []auditlog.Event{
@@ -1263,7 +1297,15 @@ func TestReplayEvents_InvocationOrder(t *testing.T) {
 	// Two services invoked in sequence: config first, then db.
 	// invocationOrder must reflect the global invocation sequence, not per-service count.
 	mk := func(seq int, name string, offset time.Duration, eventType auditlog.EventType, phase auditlog.Phase) auditlog.Event {
-		return mkEvent(seq, base.Add(offset), eventType, phase, auditlog.ServiceName(name), auditlog.ContainerID("test"), auditlog.ProviderTypeLazy)
+		return mkEvent(
+			seq,
+			base.Add(offset),
+			eventType,
+			phase,
+			auditlog.ServiceName(name),
+			auditlog.ContainerID("test"),
+			auditlog.ProviderTypeLazy,
+		)
 	}
 
 	events := []auditlog.Event{

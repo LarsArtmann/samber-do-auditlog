@@ -102,7 +102,13 @@ func recordDependencyFromStack(
 }
 
 // newServiceRecordCore constructs a serviceRecord with lazy deps map.
-func newServiceRecordCore(scopeID ScopeID, scopeName string, serviceName ServiceName, svcType ProviderType, now time.Time) *serviceRecord {
+func newServiceRecordCore(
+	scopeID ScopeID,
+	scopeName string,
+	serviceName ServiceName,
+	svcType ProviderType,
+	now time.Time,
+) *serviceRecord {
 	return &serviceRecord{
 		scopeID:              scopeID,
 		scopeName:            scopeName,

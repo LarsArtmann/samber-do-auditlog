@@ -80,9 +80,9 @@ func printSummary(report auditlog.Report, eventLog *[]string) {
 }
 
 func serviceNamesToStrings(names []auditlog.ServiceName) []string {
-	out := make([]string, len(names))
-	for i, n := range names {
-		out[i] = string(n)
+	out := make([]string, 0, len(names))
+	for _, n := range names {
+		out = append(out, string(n))
 	}
 
 	return out
