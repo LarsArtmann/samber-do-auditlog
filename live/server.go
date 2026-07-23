@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -17,6 +18,7 @@ const (
 	defaultReadHeaderTimeout = 5 * time.Second
 	defaultHeartbeatInterval = 15 * time.Second
 	defaultAddr              = ":0"
+	defaultPrefix            = "/debug/di"
 )
 
 // ErrServerAlreadyRunning is returned when ListenAndServe is called on a
@@ -28,6 +30,11 @@ type Config struct {
 	// Addr is the TCP address to listen on. Default ":0" (random port).
 	// Use ":8080" for a fixed port.
 	Addr string
+	// Prefix is the URL path prefix for all dashboard routes.
+	// Default "/debug/di". Routes: {prefix}/, {prefix}/api/report,
+	// {prefix}/api/events, {prefix}/api/health.
+	// Set to "/" to mount at root. Trailing slash is stripped.
+	Prefix string
 	// ReadHeaderTimeout is the maximum duration for reading the request
 	// headers. Default 5 seconds. Set to 0 to disable.
 	ReadHeaderTimeout time.Duration
@@ -102,6 +109,12 @@ func NewServer(hub *Hub, plugin *auditlog.Plugin, cfg Config) *Server {
 		cfg.HeartbeatInterval = defaultHeartbeatInterval
 	}
 
+	if cfg.Prefix == "" {
+		cfg.Prefix = defaultPrefix
+	}
+
+	cfg.Prefix = normalizePrefix(cfg.Prefix)
+
 	s := &Server{
 		hub:    hub,
 		plugin: plugin,
@@ -109,17 +122,18 @@ func NewServer(hub *Hub, plugin *auditlog.Plugin, cfg Config) *Server {
 		mux:    http.NewServeMux(),
 	}
 
-	s.dashboardHTML = renderDashboardHTML()
+	s.dashboardHTML = renderDashboardHTML(cfg.Prefix)
 	s.setupRoutes()
 
 	return s
 }
 
 func (s *Server) setupRoutes() {
-	s.mux.HandleFunc("/", s.handleDashboard)
-	s.mux.HandleFunc("/api/report", s.handleReport)
-	s.mux.HandleFunc("/api/events", s.handleSSE)
-	s.mux.HandleFunc("/api/health", s.handleHealth)
+	pfx := s.config.Prefix
+	s.mux.HandleFunc(pfx+"/", s.handleDashboard)
+	s.mux.HandleFunc(pfx+"/api/report", s.handleReport)
+	s.mux.HandleFunc(pfx+"/api/events", s.handleSSE)
+	s.mux.HandleFunc(pfx+"/api/health", s.handleHealth)
 }
 
 // ListenAndServe starts the HTTP server. It blocks until Shutdown is called
@@ -204,7 +218,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // --- HTTP Handlers ---
 
 func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" && r.URL.Path != "/index.html" {
+	pfx := s.config.Prefix
+	if r.URL.Path != pfx && r.URL.Path != pfx+"/" {
 		http.NotFound(w, r)
 
 		return
@@ -375,4 +390,19 @@ func writeSSE(w http.ResponseWriter, eventName string, data any) error {
 	}
 
 	return nil
+}
+
+// normalizePrefix ensures the prefix starts with "/" and has no trailing "/".
+func normalizePrefix(prefix string) string {
+	if prefix == "/" {
+		return "/"
+	}
+
+	prefix = strings.TrimRight(prefix, "/")
+
+	if !strings.HasPrefix(prefix, "/") {
+		prefix = "/" + prefix
+	}
+
+	return prefix
 }

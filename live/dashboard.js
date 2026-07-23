@@ -101,6 +101,7 @@
 
   // === SSE Connection ===
 
+  var basePath = (window.__LIVE_PREFIX || "").replace(/\/+$/, "");
   var eventSource = null;
   var reconnectDelay = 1000;
   var maxReconnectDelay = 10000;
@@ -108,7 +109,7 @@
   function connect() {
     setConnStatus("connecting", "connecting...");
 
-    eventSource = new EventSource("/api/events");
+    eventSource = new EventSource(basePath + "/api/events");
 
     eventSource.addEventListener("snapshot", function (e) {
       setConnStatus("connected", "connected");

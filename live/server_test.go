@@ -41,7 +41,7 @@ func TestServer_DashboardHTML(t *testing.T) {
 
 	ctx := t.Context()
 
-	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/", nil)
 	rec := httptest.NewRecorder()
 
 	server.ServeHTTP(rec, req)
@@ -62,6 +62,10 @@ func TestServer_DashboardHTML(t *testing.T) {
 	if !strings.Contains(ct, "text/html") {
 		t.Errorf("expected text/html content-type, got %s", ct)
 	}
+
+	if !strings.Contains(body, `__LIVE_PREFIX="/debug/di"`) {
+		t.Error("dashboard HTML missing prefix JS variable")
+	}
 }
 
 func TestServer_HealthEndpoint(t *testing.T) {
@@ -71,7 +75,7 @@ func TestServer_HealthEndpoint(t *testing.T) {
 
 	ctx := t.Context()
 
-	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/api/health", nil)
+	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/api/health", nil)
 	rec := httptest.NewRecorder()
 
 	server.ServeHTTP(rec, req)
@@ -96,7 +100,7 @@ func TestServer_ReportEndpoint(t *testing.T) {
 
 	ctx := t.Context()
 
-	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/api/report", nil)
+	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/api/report", nil)
 	rec := httptest.NewRecorder()
 
 	server.ServeHTTP(rec, req)

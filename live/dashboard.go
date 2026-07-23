@@ -15,9 +15,9 @@ var liveCSS string
 //go:embed dashboard.js
 var liveJS string
 
-// liveTemplate is the HTML skeleton for the live dashboard. The six %s verbs
-// receive: 1) base CSS, 2) live-specific CSS, 3) schema version, 4) type-metadata
-// JSON, 5) live JS, 6) daghtml graph JS.
+// liveTemplate is the HTML skeleton for the live dashboard. The seven %s verbs
+// receive: 1) base CSS, 2) live-specific CSS, 3) schema version, 4) prefix
+// (injected as JS variable), 5) type-metadata JSON, 6) live JS, 7) daghtml graph JS.
 //
 // Unlike the static dashboard, no report data is embedded — all data
 // arrives via SSE at runtime.
@@ -115,6 +115,7 @@ const liveTemplate = `<!DOCTYPE html>
   </div>
 </div>
 <script type="application/json" id="type-metadata">%s</script>
+<script>window.__LIVE_PREFIX="%s";</script>
 <script>
 %s</script>
 <script>
@@ -128,7 +129,7 @@ const liveTemplate = `<!DOCTYPE html>
 
 // renderDashboardHTML builds the static HTML dashboard string. This is called
 // once at server startup (not per-request) since all dynamic data flows via SSE.
-func renderDashboardHTML() string {
+func renderDashboardHTML(prefix string) string {
 	metadata := auditlog.BuildTypeMetadata()
 
 	metadataJSON, err := json.Marshal(metadata)
@@ -141,6 +142,7 @@ func renderDashboardHTML() string {
 		baseCSS,
 		liveCSS,
 		auditlog.SchemaVersion,
+		prefix,
 		metadataJSON,
 		liveJS,
 		daghtml.Script(),
