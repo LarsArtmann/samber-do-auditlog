@@ -142,8 +142,8 @@ func renderDashboardHTML(prefix string) string {
 		baseCSS,
 		liveCSS,
 		auditlog.SchemaVersion,
-		prefix,
 		metadataJSON,
+		prefix,
 		liveJS,
 		daghtml.Script(),
 	)
