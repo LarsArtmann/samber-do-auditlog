@@ -143,11 +143,6 @@ func renderDashboardHTML() string {
 		auditlog.SchemaVersion,
 		metadataJSON,
 		liveJS,
-		daghtmlScript(),
+		daghtml.Script(),
 	)
-}
-
-// daghtmlScript returns the daghtml SDK's interactive graph JavaScript.
-func daghtmlScript() string {
-	return daghtml.Script()
 }
