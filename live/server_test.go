@@ -243,7 +243,7 @@ func sseConnect(t *testing.T, url string) (*bufio.Scanner, func()) {
 		t.Fatalf("create request: %v", err)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req) //nolint:bodyclose // closed via returned cleanup
 	if err != nil {
 		t.Fatalf("connect SSE: %v", err)
 	}
