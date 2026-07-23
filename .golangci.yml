@@ -152,11 +152,10 @@ linters:
           allow:
             - $gostd
             - github.com/a-h/templ
-            - github.com/larsartmann/auditlog-core
-            - github.com/larsartmann/auditlog-core/live
             - github.com/larsartmann/go-ndjson/loader
             - github.com/larsartmann/go-ndjson
             - github.com/larsartmann/go-output
+            - github.com/larsartmann/go-sse
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
           files:
@@ -167,9 +166,8 @@ linters:
           allow:
             - $gostd
             - github.com/a-h/templ
-            - github.com/larsartmann/auditlog-core
-            - github.com/larsartmann/auditlog-core/live
             - github.com/larsartmann/go-output
+            - github.com/larsartmann/go-sse
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
           files:
@@ -232,7 +230,7 @@ linters:
     wrapcheck:
       ignore-package-globs:
         - github.com/larsartmann/samber-do-auditlog
-        - github.com/larsartmann/auditlog-core/live
+        - github.com/larsartmann/go-sse
   exclusions:
     generated: lax
     rules:

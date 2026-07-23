@@ -14,10 +14,10 @@ import (
 var errUnsupportedFormat = errors.New("unsupported format")
 
 // Format identifies the serialization format of a report file.
-// Re-exported from auditlog-core/loader so existing callers are unaffected.
+// Re-exported from go-ndjson/loader so existing callers are unaffected.
 type Format = loader.Format
 
-// Format constants (re-exported from auditlog-core/loader).
+// Format constants (re-exported from go-ndjson/loader).
 const (
 	// FormatAuto auto-detects JSON vs NDJSON by inspecting the first line.
 	FormatAuto = loader.FormatAuto

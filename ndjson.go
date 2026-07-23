@@ -8,7 +8,7 @@ import (
 	"github.com/larsartmann/go-ndjson"
 )
 
-// Sentinel errors for NDJSON reading. Re-exported from auditlog-core/ndjson
+// Sentinel errors for NDJSON reading. Re-exported from go-ndjson
 // so existing callers can continue to match with errors.Is.
 var (
 	ErrEmpty         = ndjson.ErrEmpty
