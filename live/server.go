@@ -79,7 +79,7 @@ func New(auditCfg auditlog.Config, serverCfg Config) (*Server, *auditlog.Plugin,
 
 // NewServer creates a Server from an existing Hub and Plugin.
 func NewServer(hub *Hub, plugin *auditlog.Plugin, cfg Config) *Server {
-	s := &Server{
+	server := &Server{
 		hub:    hub,
 		plugin: plugin,
 	}
@@ -88,7 +88,61 @@ func NewServer(hub *Hub, plugin *auditlog.Plugin, cfg Config) *Server {
 		cfg.Prefix = "/debug/di"
 	}
 
-	reportProvider := func() ([]byte, error) {
+	coreCfg := corelive.Config{
+		Addr:              cfg.Addr,
+		Prefix:            cfg.Prefix,
+		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
+		HeartbeatInterval: cfg.HeartbeatInterval,
+	}
+
+	server.core = corelive.New(hub.core, coreCfg,
+		corelive.WithReportProvider(makeReportProvider(plugin)),
+		corelive.WithSnapshotProvider(makeSnapshotProvider(plugin)),
+		corelive.WithCompleteProvider(makeCompleteProvider(plugin)),
+		corelive.WithDashboardProvider(func() string { return renderDashboardHTML(cfg.Prefix) }),
+		corelive.WithHealthProvider(makeHealthProvider(plugin)),
+	)
+
+	return server
+}
+
+// SignalComplete marks the container lifecycle as finished.
+func (srv *Server) SignalComplete() {
+	srv.core.SignalComplete()
+}
+
+// OnEvent broadcasts an event to all connected SSE clients.
+func (srv *Server) OnEvent(evt auditlog.Event) {
+	srv.hub.OnEvent(evt)
+}
+
+// ClientCount returns the number of currently connected SSE clients.
+func (srv *Server) ClientCount() int {
+	return srv.core.ClientCount()
+}
+
+// ServeHTTP implements http.Handler, delegating to the core server.
+func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	srv.core.ServeHTTP(w, r)
+}
+
+// ListenAndServe starts the HTTP server.
+func (srv *Server) ListenAndServe() error {
+	return srv.core.ListenAndServe()
+}
+
+// Addr returns the server's listen address.
+func (srv *Server) Addr() string {
+	return srv.core.Addr()
+}
+
+// Shutdown gracefully shuts down the server.
+func (srv *Server) Shutdown(ctx context.Context) error {
+	return srv.core.Shutdown(ctx)
+}
+
+func makeReportProvider(plugin *auditlog.Plugin) corelive.ReportProvider {
+	return func() ([]byte, error) {
 		report := plugin.Report()
 
 		var buf bytes.Buffer
@@ -101,8 +155,10 @@ func NewServer(hub *Hub, plugin *auditlog.Plugin, cfg Config) *Server {
 
 		return buf.Bytes(), nil
 	}
+}
 
-	snapshotProvider := func(isComplete bool) (json.RawMessage, error) {
+func makeSnapshotProvider(plugin *auditlog.Plugin) corelive.SnapshotProvider {
+	return func(isComplete bool) (json.RawMessage, error) {
 		report := plugin.Report()
 		events := plugin.Events()
 
@@ -116,8 +172,10 @@ func NewServer(hub *Hub, plugin *auditlog.Plugin, cfg Config) *Server {
 
 		return json.Marshal(data)
 	}
+}
 
-	completeProvider := func() (json.RawMessage, error) {
+func makeCompleteProvider(plugin *auditlog.Plugin) corelive.CompleteProvider {
+	return func() (json.RawMessage, error) {
 		report := plugin.Report()
 
 		data := completeData{
@@ -127,63 +185,13 @@ func NewServer(hub *Hub, plugin *auditlog.Plugin, cfg Config) *Server {
 
 		return json.Marshal(data)
 	}
+}
 
-	healthProvider := func() corelive.HealthInfo {
+func makeHealthProvider(plugin *auditlog.Plugin) corelive.HealthProvider {
+	return func() corelive.HealthInfo {
 		return corelive.HealthInfo{
 			Events:  plugin.EventsCount(),
 			Dropped: plugin.DroppedEventCount(),
 		}
 	}
-
-	coreCfg := corelive.Config{
-		Addr:              cfg.Addr,
-		Prefix:            cfg.Prefix,
-		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
-		HeartbeatInterval: cfg.HeartbeatInterval,
-	}
-
-	s.core = corelive.New(hub.core, coreCfg,
-		corelive.WithReportProvider(reportProvider),
-		corelive.WithSnapshotProvider(snapshotProvider),
-		corelive.WithCompleteProvider(completeProvider),
-		corelive.WithDashboardProvider(func() string { return renderDashboardHTML(cfg.Prefix) }),
-		corelive.WithHealthProvider(healthProvider),
-	)
-
-	return s
-}
-
-// SignalComplete marks the container lifecycle as finished.
-func (s *Server) SignalComplete() {
-	s.core.SignalComplete()
-}
-
-// OnEvent broadcasts an event to all connected SSE clients.
-func (s *Server) OnEvent(evt auditlog.Event) {
-	s.hub.OnEvent(evt)
-}
-
-// ClientCount returns the number of currently connected SSE clients.
-func (s *Server) ClientCount() int {
-	return s.core.ClientCount()
-}
-
-// ServeHTTP implements http.Handler, delegating to the core server.
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.core.ServeHTTP(w, r)
-}
-
-// ListenAndServe starts the HTTP server.
-func (s *Server) ListenAndServe() error {
-	return s.core.ListenAndServe()
-}
-
-// Addr returns the server's listen address.
-func (s *Server) Addr() string {
-	return s.core.Addr()
-}
-
-// Shutdown gracefully shuts down the server.
-func (s *Server) Shutdown(ctx context.Context) error {
-	return s.core.Shutdown(ctx)
 }

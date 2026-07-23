@@ -227,6 +227,10 @@ linters:
         - b
         - v
       ignore-type-assert-ok: true
+    wrapcheck:
+      ignore-package-globs:
+        - github.com/larsartmann/samber-do-auditlog
+        - github.com/larsartmann/auditlog-core/live
   exclusions:
     generated: lax
     rules:
