@@ -52,7 +52,7 @@ type Hub struct {
 // The hub does not take ownership of the plugin — it only reads from it.
 // Pass nil when using live.New() (the plugin is set internally).
 func NewHub(plugin *auditlog.Plugin) *Hub {
-	return &Hub{
+	return &Hub{ //nolint:exhaustruct
 		plugin:  plugin,
 		clients: make(map[uint64]*subscriber),
 	}
@@ -94,32 +94,32 @@ func (h *Hub) Subscribe() *subscriber {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	id := h.nextID
+	subID := h.nextID
 	h.nextID++
 
-	sub := &subscriber{
-		id:   id,
+	sub := &subscriber{ //nolint:exhaustruct
+		id:   subID,
 		ch:   make(chan auditlog.Event, subscriberBufferSize),
 		done: make(chan struct{}),
 	}
-	h.clients[id] = sub
+	h.clients[subID] = sub
 
 	return sub
 }
 
 // Unsubscribe removes a subscriber by ID and signals its done channel.
 // Safe to call multiple times — subsequent calls are no-ops.
-func (h *Hub) Unsubscribe(id uint64) {
+func (h *Hub) Unsubscribe(subscriberID uint64) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	sub, ok := h.clients[id]
+	sub, ok := h.clients[subscriberID]
 	if !ok {
 		return
 	}
 
 	sub.closeDone()
-	delete(h.clients, id)
+	delete(h.clients, subscriberID)
 }
 
 // SignalComplete marks the container lifecycle as finished. All subscribers
