@@ -40,10 +40,10 @@ var serviceProviderDAGColor = map[ProviderType]string{
 	ProviderTypeAlias:     "var(--alias)",
 }
 
-// buildDAGHTML converts a Report into a daghtml.DAG for the interactive graph
+// BuildDAGHTML converts a Report into a daghtml.DAG for the interactive graph
 // renderer. Each service becomes a node; each dependency edge points from the
-// dependent to its dependency.
-func buildDAGHTML(report Report) daghtml.DAG {
+// dependent to its dependency. Exported for use by the live/ sub-package.
+func BuildDAGHTML(report Report) daghtml.DAG {
 	dag := daghtml.DAG{
 		Nodes: make([]daghtml.Node, 0, len(report.Services)),
 		Edges: make([]daghtml.Edge, 0),

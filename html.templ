@@ -671,7 +671,7 @@ templ reportHTML(report Report) {
 			<div id="error-tooltip" class="tooltip"></div>
 			@templ.JSONScript("report-data", report)
 			@templ.JSONScript("type-metadata", BuildTypeMetadata())
-			@templ.JSONScript("dag-data", buildDAGHTML(report))
+			@templ.JSONScript("dag-data", BuildDAGHTML(report))
 			<script>
 	const report = JSON.parse(document.getElementById('report-data').textContent);
 	const meta = JSON.parse(document.getElementById('type-metadata').textContent);

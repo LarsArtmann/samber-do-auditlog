@@ -1,0 +1,181 @@
+/* live/dashboard.css — Live-specific styles layered on top of viz base CSS */
+
+/* === Live Badge === */
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: var(--error-dim);
+  color: var(--error);
+  border: 1px solid rgba(224, 112, 96, 0.3);
+  vertical-align: middle;
+}
+.live-badge.completed {
+  background: var(--success-dim);
+  color: var(--success);
+  border-color: rgba(111, 191, 142, 0.3);
+}
+.live-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: live-pulse 1.5s ease-in-out infinite;
+}
+.live-badge.completed .live-pulse {
+  animation: none;
+}
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.3); }
+}
+
+/* === Pulsing Logo Dot === */
+.live-dot {
+  animation: live-dot-pulse 2s ease-in-out infinite;
+}
+@keyframes live-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 168, 56, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(232, 168, 56, 0); }
+}
+
+/* === Connection Status === */
+.conn-status {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.conn-status.connecting {
+  color: var(--warning);
+  background: var(--warning-dim);
+}
+.conn-status.connected {
+  color: var(--success);
+  background: var(--success-dim);
+}
+.conn-status.reconnecting {
+  color: var(--warning);
+  background: var(--warning-dim);
+  animation: conn-blink 1s ease-in-out infinite;
+}
+.conn-status.disconnected {
+  color: var(--error);
+  background: var(--error-dim);
+}
+@keyframes conn-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* === Placeholders === */
+.stat-placeholder,
+.graph-placeholder,
+.waveform-placeholder {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-style: italic;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+.graph-placeholder {
+  padding: 4rem 1rem;
+}
+
+/* === Service Row Animations === */
+@keyframes step-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.step-row-new {
+  animation: step-fade-in 0.3s ease-out;
+}
+
+/* === Status Change Flash === */
+@keyframes status-flash-success {
+  0% { background-color: transparent; }
+  30% { background-color: var(--success-dim); }
+  100% { background-color: transparent; }
+}
+@keyframes status-flash-fail {
+  0% { background-color: transparent; }
+  30% { background-color: var(--error-dim); }
+  100% { background-color: transparent; }
+}
+.step-flash-success {
+  animation: status-flash-success 0.6s ease-out;
+}
+.step-flash-fail {
+  animation: status-flash-fail 0.6s ease-out;
+}
+
+/* === Event Row Animation === */
+@keyframes event-slide-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.event-row-new {
+  animation: event-slide-in 0.2s ease-out;
+}
+
+/* === Stats Grid Enhancement === */
+.stats .stat {
+  transition: all var(--transition);
+}
+.stats .stat-value {
+  transition: color var(--transition);
+}
+.stat-value-up {
+  animation: stat-pop 0.3s ease-out;
+}
+@keyframes stat-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* === Waveform Live Update === */
+.waveform-bar {
+  transition: height var(--transition);
+}
+.waveform-bar-new {
+  animation: waveform-pop 0.3s ease-out;
+}
+@keyframes waveform-pop {
+  from { transform: scaleY(0); transform-origin: bottom; }
+  to { transform: scaleY(1); transform-origin: bottom; }
+}
+
+/* === Graph Container === */
+#graph-container {
+  min-height: 500px;
+}
+.graph-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+/* === Timeline Container === */
+#timeline-container {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === Complete State === */
+body.lifecycle-complete .live-badge {
+  animation: none;
+}
+body.lifecycle-complete .live-dot {
+  animation: none;
+}
