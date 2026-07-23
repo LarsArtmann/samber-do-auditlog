@@ -130,10 +130,17 @@ func NewServer(hub *Hub, plugin *auditlog.Plugin, cfg Config) *Server {
 
 func (s *Server) setupRoutes() {
 	pfx := s.config.Prefix
-	s.mux.HandleFunc(pfx+"/", s.handleDashboard)
-	s.mux.HandleFunc(pfx+"/api/report", s.handleReport)
-	s.mux.HandleFunc(pfx+"/api/events", s.handleSSE)
-	s.mux.HandleFunc(pfx+"/api/health", s.handleHealth)
+	if pfx == "/" {
+		s.mux.HandleFunc("/", s.handleDashboard)
+		s.mux.HandleFunc("/api/report", s.handleReport)
+		s.mux.HandleFunc("/api/events", s.handleSSE)
+		s.mux.HandleFunc("/api/health", s.handleHealth)
+	} else {
+		s.mux.HandleFunc(pfx+"/", s.handleDashboard)
+		s.mux.HandleFunc(pfx+"/api/report", s.handleReport)
+		s.mux.HandleFunc(pfx+"/api/events", s.handleSSE)
+		s.mux.HandleFunc(pfx+"/api/health", s.handleHealth)
+	}
 }
 
 // ListenAndServe starts the HTTP server. It blocks until Shutdown is called

@@ -152,6 +152,82 @@ func TestServer_NewConvenience(t *testing.T) {
 	}
 }
 
+func TestServer_CustomPrefix(t *testing.T) {
+	t.Parallel()
+
+	hub := live.NewHub(nil)
+	plugin, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "prefix-test",
+		OnEvent:     hub.OnEvent,
+	})
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+
+	hub.SetPlugin(plugin)
+
+	server := live.NewServer(hub, plugin, live.Config{Prefix: "/my/debug"})
+
+	ts := httptest.NewServer(server)
+	defer ts.Close()
+
+	ctx := t.Context()
+
+	req := httptest.NewRequestWithContext(ctx, http.MethodGet, ts.URL+"/my/debug/api/health", nil)
+	rec := httptest.NewRecorder()
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	if !strings.Contains(rec.Body.String(), `"ok"`) {
+		t.Error("health response missing ok")
+	}
+
+	req2 := httptest.NewRequestWithContext(ctx, http.MethodGet, ts.URL+"/", nil)
+	rec2 := httptest.NewRecorder()
+	server.ServeHTTP(rec2, req2)
+
+	if rec2.Code != http.StatusNotFound {
+		t.Fatalf("root without prefix should 404, got %d", rec2.Code)
+	}
+}
+
+func TestServer_RootPrefix(t *testing.T) {
+	t.Parallel()
+
+	hub := live.NewHub(nil)
+	plugin, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "root-test",
+		OnEvent:     hub.OnEvent,
+	})
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+
+	hub.SetPlugin(plugin)
+
+	server := live.NewServer(hub, plugin, live.Config{Prefix: "/"})
+
+	ctx := t.Context()
+
+	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/", nil)
+	rec := httptest.NewRecorder()
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, `__LIVE_PREFIX="/"`) {
+		t.Error("dashboard HTML missing root prefix JS variable")
+	}
+}
+
 // --- SSE Tests (use httptest.NewServer for real HTTP streaming) ---
 
 func sseConnect(t *testing.T, url string) *bufio.Scanner {
@@ -233,7 +309,7 @@ func TestServer_SSE_SnapshotOnConnect(t *testing.T) {
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner := sseConnect(t, ts.URL+"/api/events")
+	scanner := sseConnect(t, ts.URL+"/debug/di/api/events")
 
 	data, found := readSSEEvent(scanner, "snapshot")
 	if !found {
@@ -253,7 +329,7 @@ func TestServer_SSE_LiveEventDelivery(t *testing.T) {
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner := sseConnect(t, ts.URL+"/api/events")
+	scanner := sseConnect(t, ts.URL+"/debug/di/api/events")
 
 	skipSnapshot(scanner)
 
@@ -286,7 +362,7 @@ func TestServer_SSE_CompleteEvent(t *testing.T) {
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner := sseConnect(t, ts.URL+"/api/events")
+	scanner := sseConnect(t, ts.URL+"/debug/di/api/events")
 
 	skipSnapshot(scanner)
 
@@ -306,8 +382,8 @@ func TestServer_SSE_FanOut(t *testing.T) {
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner1 := sseConnect(t, ts.URL+"/api/events")
-	scanner2 := sseConnect(t, ts.URL+"/api/events")
+	scanner1 := sseConnect(t, ts.URL+"/debug/di/api/events")
+	scanner2 := sseConnect(t, ts.URL+"/debug/di/api/events")
 
 	skipSnapshot(scanner1)
 	skipSnapshot(scanner2)
@@ -342,7 +418,7 @@ func TestServer_GracefulShutdown(t *testing.T) {
 
 	ctx := t.Context()
 
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, ts.URL+"/api/health", nil)
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, ts.URL+"/debug/di/api/health", nil)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
