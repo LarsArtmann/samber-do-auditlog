@@ -156,6 +156,7 @@ func TestServer_CustomPrefix(t *testing.T) {
 	t.Parallel()
 
 	hub := live.NewHub(nil)
+
 	plugin, err := auditlog.New(auditlog.Config{
 		Enabled:     true,
 		ContainerID: "prefix-test",
@@ -199,6 +200,7 @@ func TestServer_RootPrefix(t *testing.T) {
 	t.Parallel()
 
 	hub := live.NewHub(nil)
+
 	plugin, err := auditlog.New(auditlog.Config{
 		Enabled:     true,
 		ContainerID: "root-test",
