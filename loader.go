@@ -90,7 +90,6 @@ func LoadReportFromBytes(data []byte, format Format) (Report, Format, error) {
 		format = detected
 	}
 
-	//nolint:exhaustive // FormatAuto is handled above; only JSON/NDJSON reach here
 	switch format {
 	case FormatJSON:
 		return loadJSONFromBytes(data)

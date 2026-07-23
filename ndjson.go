@@ -29,7 +29,12 @@ var (
 // Returns ErrEmpty if the input contains no bytes, ErrNoEvents if all lines
 // were blank, or ErrOversizedLine if any line exceeds 1 MB.
 func ReadEvents(reader io.Reader) ([]Event, error) {
-	return ndjson.Read(reader, validateEvent)
+	events, err := ndjson.Read(reader, validateEvent)
+	if err != nil {
+		return nil, fmt.Errorf("read ndjson events: %w", err)
+	}
+
+	return events, nil
 }
 
 // validateEvent checks that event_type and phase are recognized values.
