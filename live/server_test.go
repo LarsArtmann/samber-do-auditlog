@@ -3,6 +3,7 @@ package live_test
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -484,8 +485,15 @@ func TestHub_OnEventDelivery(t *testing.T) {
 
 	select {
 	case received := <-sub.Events():
-		if received.Sequence != 42 {
-			t.Errorf("expected sequence 42, got %d", received.Sequence)
+		var parsed struct {
+			Sequence int `json:"sequence"`
+		}
+		if err := json.Unmarshal(received, &parsed); err != nil {
+			t.Fatalf("failed to unmarshal event: %v", err)
+		}
+
+		if parsed.Sequence != 42 {
+			t.Errorf("expected sequence 42, got %d", parsed.Sequence)
 		}
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting for event")
