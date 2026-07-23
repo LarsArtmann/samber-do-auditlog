@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"time"
 
+	corelive "github.com/larsartmann/auditlog-core/live"
 	"github.com/larsartmann/go-output/daghtml"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
-	corelive "github.com/larsartmann/auditlog-core/live"
 )
 
 // ErrServerAlreadyRunning is returned when ListenAndServe is called on a

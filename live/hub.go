@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"sync"
 
-	auditlog "github.com/larsartmann/samber-do-auditlog"
 	corelive "github.com/larsartmann/auditlog-core/live"
+	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
 // Hub wraps corelive.Hub, adding domain-specific OnEvent method.
 type Hub struct {
-	core    *corelive.Hub
-	plugin  *auditlog.Plugin
-	mu      sync.RWMutex
+	core   *corelive.Hub
+	plugin *auditlog.Plugin
+	mu     sync.RWMutex
 }
 
 // NewHub creates a Hub. Pass nil when using live.New() (set internally).
