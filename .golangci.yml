@@ -152,6 +152,8 @@ linters:
           allow:
             - $gostd
             - github.com/a-h/templ
+            - github.com/larsartmann/auditlog-core
+            - github.com/larsartmann/auditlog-core/live
             - github.com/larsartmann/go-output
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
@@ -163,6 +165,8 @@ linters:
           allow:
             - $gostd
             - github.com/a-h/templ
+            - github.com/larsartmann/auditlog-core
+            - github.com/larsartmann/auditlog-core/live
             - github.com/larsartmann/go-output
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber
@@ -175,6 +179,8 @@ linters:
         - sync.RWMutex
         - sync.Mutex
         - atomic.Int64
+        - github.com/larsartmann/samber-do-auditlog/live.Hub
+        - github.com/larsartmann/samber-do-auditlog/live.Server
     ginkgolinter:
       forbid-focus-container: true
       forbid-spec-pollution: true
