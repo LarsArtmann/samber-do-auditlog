@@ -1,42 +1,31 @@
 package auditlog
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+
+	"github.com/larsartmann/auditlog-core/loader"
 )
 
 // errUnsupportedFormat is returned when the format value is not recognized.
 var errUnsupportedFormat = errors.New("unsupported format")
 
 // Format identifies the serialization format of a report file.
-type Format int
+// Re-exported from auditlog-core/loader so existing callers are unaffected.
+type Format = loader.Format
 
+// Format constants (re-exported from auditlog-core/loader).
 const (
 	// FormatAuto auto-detects JSON vs NDJSON by inspecting the first line.
-	FormatAuto Format = iota
+	FormatAuto = loader.FormatAuto
 	// FormatJSON is a single JSON Report object (contains "version" key).
-	FormatJSON
+	FormatJSON = loader.FormatJSON
 	// FormatNDJSON is newline-delimited Event objects (contains "event_type" key).
-	FormatNDJSON
+	FormatNDJSON = loader.FormatNDJSON
 )
-
-// String returns the human-readable format name.
-func (f Format) String() string {
-	switch f {
-	case FormatAuto:
-		return "auto"
-	case FormatJSON:
-		return "json"
-	case FormatNDJSON:
-		return "ndjson"
-	default:
-		return "unknown"
-	}
-}
 
 // LoadOption configures LoadReport behavior.
 type LoadOption func(*loadConfig)
@@ -89,9 +78,13 @@ func LoadReportFromReader(reader io.Reader, format Format) (Report, Format, erro
 // LoadReportFromBytes loads a report from raw bytes with format detection.
 func LoadReportFromBytes(data []byte, format Format) (Report, Format, error) {
 	if format == FormatAuto {
-		detected, err := detectFormatFromBytes(data)
+		detected, err := loader.Detect(data)
 		if err != nil {
-			return Report{}, FormatAuto, err
+			if errors.Is(err, loader.ErrNoContent) {
+				return Report{}, FormatAuto, ErrEmpty
+			}
+
+			return Report{}, FormatAuto, fmt.Errorf("detect format: %w", err)
 		}
 
 		format = detected
@@ -129,46 +122,4 @@ func loadNDJSONFromBytes(data []byte) (Report, Format, error) {
 	}
 
 	return report, FormatNDJSON, nil
-}
-
-// detectFormatFromBytes inspects the first non-blank line to determine format.
-// A JSON Report contains a "version" field at the top level; an NDJSON
-// event line contains "event_type" or "sequence".
-func detectFormatFromBytes(data []byte) (Format, error) {
-	content := string(data)
-	for line := range strings.SplitSeq(content, "\n") {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" {
-			continue
-		}
-
-		return detectLineFormat([]byte(trimmed)), nil
-	}
-
-	return FormatAuto, ErrEmpty
-}
-
-// detectLineFormat inspects a single JSON line for Report vs Event keys.
-func detectLineFormat(line []byte) Format {
-	var probe struct {
-		Version   string `json:"version"`
-		EventType string `json:"event_type"`
-	}
-
-	err := json.Unmarshal(line, &probe)
-	if err != nil {
-		// Not valid single-line JSON — probably a multi-line JSON Report.
-		return FormatJSON
-	}
-
-	if probe.Version != "" {
-		return FormatJSON
-	}
-
-	if probe.EventType != "" {
-		return FormatNDJSON
-	}
-
-	// Default: single-line object without version or event_type.
-	return FormatNDJSON
 }
