@@ -2,6 +2,7 @@ package live_test
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -232,10 +233,12 @@ func TestServer_RootPrefix(t *testing.T) {
 
 // --- SSE Tests (use httptest.NewServer for real HTTP streaming) ---
 
-func sseConnect(t *testing.T, url string) *bufio.Scanner {
+func sseConnect(t *testing.T, url string) (*bufio.Scanner, func()) {
 	t.Helper()
 
-	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, url, nil)
+	ctx, cancel := context.WithCancel(t.Context())
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		t.Fatalf("create request: %v", err)
 	}
@@ -245,11 +248,13 @@ func sseConnect(t *testing.T, url string) *bufio.Scanner {
 		t.Fatalf("connect SSE: %v", err)
 	}
 
-	t.Cleanup(func() {
-		_ = resp.Body.Close()
-	})
+	cleanup := func() {
+		cancel()
 
-	return bufio.NewScanner(resp.Body)
+		_ = resp.Body.Close()
+	}
+
+	return bufio.NewScanner(resp.Body), cleanup
 }
 
 func skipSnapshot(scanner *bufio.Scanner) {
@@ -307,7 +312,8 @@ func TestServer_SSE_SnapshotOnConnect(t *testing.T) {
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner := sseConnect(t, ts.URL+"/debug/di/api/events")
+	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	defer closeSSE()
 
 	data, found := readSSEEvent(scanner, "snapshot")
 	if !found {
@@ -327,7 +333,8 @@ func TestServer_SSE_LiveEventDelivery(t *testing.T) {
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner := sseConnect(t, ts.URL+"/debug/di/api/events")
+	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	defer closeSSE()
 
 	skipSnapshot(scanner)
 
@@ -360,7 +367,8 @@ func TestServer_SSE_CompleteEvent(t *testing.T) {
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner := sseConnect(t, ts.URL+"/debug/di/api/events")
+	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	defer closeSSE()
 
 	skipSnapshot(scanner)
 
@@ -380,8 +388,11 @@ func TestServer_SSE_FanOut(t *testing.T) {
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner1 := sseConnect(t, ts.URL+"/debug/di/api/events")
-	scanner2 := sseConnect(t, ts.URL+"/debug/di/api/events")
+	scanner1, closeSSE1 := sseConnect(t, ts.URL+"/debug/di/api/events")
+	defer closeSSE1()
+
+	scanner2, closeSSE2 := sseConnect(t, ts.URL+"/debug/di/api/events")
+	defer closeSSE2()
 
 	skipSnapshot(scanner1)
 	skipSnapshot(scanner2)
