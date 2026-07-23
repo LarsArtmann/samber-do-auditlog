@@ -96,6 +96,17 @@ example/            — Self-checking demo with 19 samber/do v2 features
 - `onEvent` callback is always called outside the lock to avoid blocking the hot path.
 - `BuildReport()` uses `mu.RLock()` for reading — concurrent reads don't block each other.
 
+### Shared infrastructure: `auditlog-core`
+
+The `live/` sub-package depends on [`github.com/larsartmann/auditlog-core`](https://github.com/larsartmann/auditlog-core),
+a zero-dependency library providing the domain-agnostic SSE hub, HTTP server skeleton, and
+atomic file-write helpers. The live module wraps `corelive.Hub` and `corelive.Server` with
+samber/do-specific domain logic (service events, scope tree, dashboard HTML).
+
+A `go.work` workspace at the parent directory links all three projects for local development.
+The `replace` directive in `go.mod` will be removed once `auditlog-core` is published
+with a stable tag.
+
 ---
 
 ## CI
