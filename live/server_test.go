@@ -17,7 +17,7 @@ import (
 func newTestServer(t *testing.T) *live.Server {
 	t.Helper()
 
-	hub := live.NewHub(nil)
+	hub := live.NewHub()
 
 	plugin, err := auditlog.New(auditlog.Config{
 		Enabled:     true,
@@ -28,7 +28,6 @@ func newTestServer(t *testing.T) *live.Server {
 		t.Fatalf("create plugin: %v", err)
 	}
 
-	hub.SetPlugin(plugin)
 
 	server := live.NewServer(hub, plugin, live.Config{})
 
@@ -156,7 +155,7 @@ func TestServer_NewConvenience(t *testing.T) {
 func TestServer_CustomPrefix(t *testing.T) {
 	t.Parallel()
 
-	hub := live.NewHub(nil)
+	hub := live.NewHub()
 
 	plugin, err := auditlog.New(auditlog.Config{
 		Enabled:     true,
@@ -167,7 +166,6 @@ func TestServer_CustomPrefix(t *testing.T) {
 		t.Fatalf("create plugin: %v", err)
 	}
 
-	hub.SetPlugin(plugin)
 
 	server := live.NewServer(hub, plugin, live.Config{Prefix: "/my/debug"})
 
@@ -200,7 +198,7 @@ func TestServer_CustomPrefix(t *testing.T) {
 func TestServer_RootPrefix(t *testing.T) {
 	t.Parallel()
 
-	hub := live.NewHub(nil)
+	hub := live.NewHub()
 
 	plugin, err := auditlog.New(auditlog.Config{
 		Enabled:     true,
@@ -211,7 +209,6 @@ func TestServer_RootPrefix(t *testing.T) {
 		t.Fatalf("create plugin: %v", err)
 	}
 
-	hub.SetPlugin(plugin)
 
 	server := live.NewServer(hub, plugin, live.Config{Prefix: "/"})
 
@@ -452,7 +449,7 @@ func TestServer_ClientCount(t *testing.T) {
 func TestHub_SubscribeUnsubscribe(t *testing.T) {
 	t.Parallel()
 
-	hub := live.NewHub(nil)
+	hub := live.NewHub()
 
 	sub := hub.Subscribe()
 	if sub == nil {
@@ -473,7 +470,7 @@ func TestHub_SubscribeUnsubscribe(t *testing.T) {
 func TestHub_OnEventDelivery(t *testing.T) {
 	t.Parallel()
 
-	hub := live.NewHub(nil)
+	hub := live.NewHub()
 
 	sub := hub.Subscribe()
 	defer hub.Unsubscribe(sub.ID())
@@ -509,7 +506,7 @@ func TestHub_OnEventDelivery(t *testing.T) {
 func TestHub_SignalComplete(t *testing.T) {
 	t.Parallel()
 
-	hub := live.NewHub(nil)
+	hub := live.NewHub()
 
 	sub := hub.Subscribe()
 	defer hub.Unsubscribe(sub.ID())
@@ -530,7 +527,7 @@ func TestHub_SignalComplete(t *testing.T) {
 func TestHub_BufferOverflow(t *testing.T) {
 	t.Parallel()
 
-	hub := live.NewHub(nil)
+	hub := live.NewHub()
 
 	sub := hub.Subscribe()
 	defer hub.Unsubscribe(sub.ID())

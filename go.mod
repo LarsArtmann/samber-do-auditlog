@@ -2,7 +2,7 @@ module github.com/larsartmann/samber-do-auditlog
 
 go 1.26.4
 
-require github.com/larsartmann/auditlog-core v0.0.0-00010101000000-000000000000
+require github.com/larsartmann/go-sse v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/a-h/templ v0.3.1020
@@ -78,6 +78,6 @@ require (
 
 tool github.com/a-h/templ/cmd/templ
 
-replace github.com/larsartmann/auditlog-core => ../auditlog-core
+replace github.com/larsartmann/go-sse => ../go-sse
 
 replace github.com/larsartmann/go-ndjson => ../go-ndjson

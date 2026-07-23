@@ -368,6 +368,12 @@ func (srv *Server) sendSnapshot(w http.ResponseWriter, flusher http.Flusher) err
 func (srv *Server) sendComplete(w http.ResponseWriter, flusher http.Flusher) {
 	plugin := srv.plugin
 	if plugin == nil {
+		return
+	}
+
+	report := plugin.Report()
+
+	data := completeData{
 		Report: report,
 		DAG:    auditlog.BuildDAGHTML(report),
 	}
