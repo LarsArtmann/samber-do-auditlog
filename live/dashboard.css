@@ -32,8 +32,15 @@
   animation: none;
 }
 @keyframes live-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.3); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.3);
+  }
 }
 
 /* === Pulsing Logo Dot === */
@@ -41,8 +48,13 @@
   animation: live-dot-pulse 2s ease-in-out infinite;
 }
 @keyframes live-dot-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 168, 56, 0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(232, 168, 56, 0); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(232, 168, 56, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(232, 168, 56, 0);
+  }
 }
 
 /* === Connection Status === */
@@ -71,8 +83,13 @@
   background: var(--error-dim);
 }
 @keyframes conn-blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* === Placeholders === */
@@ -91,8 +108,14 @@
 
 /* === Service Row Animations === */
 @keyframes step-fade-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .step-row-new {
   animation: step-fade-in 0.3s ease-out;
@@ -100,14 +123,26 @@
 
 /* === Status Change Flash === */
 @keyframes status-flash-success {
-  0% { background-color: transparent; }
-  30% { background-color: var(--success-dim); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: transparent;
+  }
+  30% {
+    background-color: var(--success-dim);
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 @keyframes status-flash-fail {
-  0% { background-color: transparent; }
-  30% { background-color: var(--error-dim); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: transparent;
+  }
+  30% {
+    background-color: var(--error-dim);
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 .step-flash-success {
   animation: status-flash-success 0.6s ease-out;
@@ -118,8 +153,14 @@
 
 /* === Event Row Animation === */
 @keyframes event-slide-in {
-  from { opacity: 0; transform: translateX(-8px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 .event-row-new {
   animation: event-slide-in 0.2s ease-out;
@@ -136,9 +177,15 @@
   animation: stat-pop 0.3s ease-out;
 }
 @keyframes stat-pop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* === Waveform Live Update === */
@@ -149,8 +196,14 @@
   animation: waveform-pop 0.3s ease-out;
 }
 @keyframes waveform-pop {
-  from { transform: scaleY(0); transform-origin: bottom; }
-  to { transform: scaleY(1); transform-origin: bottom; }
+  from {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+  to {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
 }
 
 /* === Graph Container === */

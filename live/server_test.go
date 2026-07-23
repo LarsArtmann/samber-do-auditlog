@@ -444,6 +444,7 @@ func TestHub_BufferOverflow(t *testing.T) {
 	}
 
 	received := 0
+
 	for {
 		select {
 		case <-sub.Events():
@@ -452,6 +453,7 @@ func TestHub_BufferOverflow(t *testing.T) {
 			goto done
 		}
 	}
+
 done:
 	if received != 128 {
 		t.Errorf("expected 128 (buffer size), got %d", received)

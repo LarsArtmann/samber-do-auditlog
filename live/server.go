@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/larsartmann/go-output/daghtml"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
@@ -134,7 +135,7 @@ func (s *Server) ListenAndServe() error {
 
 	s.startTime = time.Now()
 
-	s.httpServer = &http.Server{
+	s.httpServer = &http.Server{ //nolint:exhaustruct // stdlib http.Server with minimal config
 		Addr:              s.config.Addr,
 		Handler:           s.mux,
 		ReadHeaderTimeout: s.config.ReadHeaderTimeout,
@@ -179,12 +180,6 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 // SignalComplete marks the container lifecycle as finished. All connected SSE
 // clients receive the final report.
-//
-// Typical usage:
-//
-//	injector := do.NewWithOpts(plugin.Opts())
-//	// ... register and invoke services ...
-//	server.SignalComplete()
 func (s *Server) SignalComplete() {
 	s.hub.SignalComplete()
 }
@@ -264,17 +259,17 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 
 // snapshotData is the payload sent as the initial SSE event.
 type snapshotData struct {
-	Report   auditlog.Report   `json:"report"`
-	Events   []auditlog.Event  `json:"events"`
+	Report   auditlog.Report       `json:"report"`
+	Events   []auditlog.Event      `json:"events"`
 	Metadata auditlog.TypeMetadata `json:"metadata"`
-	DAG      interface{}       `json:"dag"`
-	Complete bool              `json:"complete"`
+	DAG      daghtml.DAG           `json:"dag"`
+	Complete bool                  `json:"complete"`
 }
 
 // completeData is the payload sent when the container lifecycle finishes.
 type completeData struct {
 	Report auditlog.Report `json:"report"`
-	DAG    interface{}     `json:"dag"`
+	DAG    daghtml.DAG     `json:"dag"`
 }
 
 func (s *Server) handleSSE(w http.ResponseWriter, r *http.Request) {

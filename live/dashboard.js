@@ -198,7 +198,8 @@
       var invKey = evt.scope_id + "/" + evt.service_name;
       if (state.services[invKey]) {
         state.services[invKey].status = evt.error ? "invocation_error" : "active";
-        state.services[invKey].invocation_count = (state.services[invKey].invocation_count || 0) + 1;
+        state.services[invKey].invocation_count =
+          (state.services[invKey].invocation_count || 0) + 1;
         if (evt.duration_ms != null && !state.services[invKey].first_build_duration_ms) {
           state.services[invKey].first_build_duration_ms = evt.duration_ms;
         }
@@ -302,7 +303,11 @@
     ];
 
     if (r.health_checked_count > 0) {
-      stats.push({ label: "Health", value: r.health_check_succeeded ? "Pass" : "Fail", cls: r.health_check_succeeded ? "success" : "error" });
+      stats.push({
+        label: "Health",
+        value: r.health_check_succeeded ? "Pass" : "Fail",
+        cls: r.health_check_succeeded ? "success" : "error",
+      });
     }
 
     els.stats.innerHTML = stats
@@ -330,15 +335,21 @@
     var placeholder = waveform.querySelector(".waveform-placeholder");
     if (placeholder) placeholder.remove();
 
-    var ts = events.map(function (e) { return new Date(e.timestamp).getTime(); });
+    var ts = events.map(function (e) {
+      return new Date(e.timestamp).getTime();
+    });
     var minT = Math.min.apply(null, ts);
     var maxT = Math.max.apply(null, ts);
     var range = maxT - minT || 1;
     var maxDur = Math.max.apply(
       null,
       events
-        .filter(function (e) { return e.duration_ms; })
-        .map(function (e) { return e.duration_ms; })
+        .filter(function (e) {
+          return e.duration_ms;
+        })
+        .map(function (e) {
+          return e.duration_ms;
+        })
         .concat([1]),
     );
 
@@ -423,7 +434,8 @@
     }
 
     filtered.sort(function (a, b) {
-      var sa = state.services[a], sb = state.services[b];
+      var sa = state.services[a],
+        sb = state.services[b];
       if (sa.scope_name !== sb.scope_name) return sa.scope_name < sb.scope_name ? -1 : 1;
       return sa.service_name < sb.service_name ? -1 : 1;
     });
@@ -433,23 +445,56 @@
         var s = state.services[k];
         var icon = typeIcons[s.service_type] || "";
         var statusIcon = statusIcons[s.status] || "";
-        var depNames = (s.dependencies || []).map(function (d) { return esc(typeof d === "string" ? d : d.service_name); }).join(", ");
-        var dependentNames = (s.dependents || []).map(function (d) { return esc(typeof d === "string" ? d : d.service_name); }).join(", ");
-        var buildMs = s.first_build_duration_ms != null ? humanizeDuration(s.first_build_duration_ms) : "\u2014";
+        var depNames = (s.dependencies || [])
+          .map(function (d) {
+            return esc(typeof d === "string" ? d : d.service_name);
+          })
+          .join(", ");
+        var dependentNames = (s.dependents || [])
+          .map(function (d) {
+            return esc(typeof d === "string" ? d : d.service_name);
+          })
+          .join(", ");
+        var buildMs =
+          s.first_build_duration_ms != null
+            ? humanizeDuration(s.first_build_duration_ms)
+            : "\u2014";
         var invocErr = s.invocation_error ? esc(s.invocation_error) : "";
         var shutdownErr = s.shutdown_error ? esc(s.shutdown_error) : "";
         var error = invocErr || shutdownErr || "";
 
         return (
           "<tr>" +
-          "<td>" + icon + " " + esc(s.service_name) + "</td>" +
-          "<td>" + esc(s.scope_name) + "</td>" +
-          "<td>" + esc(s.service_type || "") + "</td>" +
-          "<td>" + statusIcon + " " + esc(s.status || "") + "</td>" +
-          "<td>" + (s.invocation_count || 0) + "</td>" +
-          "<td>" + buildMs + "</td>" +
-          "<td>" + depNames + "</td>" +
-          "<td title='" + esc(error) + "'>" + (error ? "\u26A0 " + error.substring(0, 40) : "\u2014") + "</td>" +
+          "<td>" +
+          icon +
+          " " +
+          esc(s.service_name) +
+          "</td>" +
+          "<td>" +
+          esc(s.scope_name) +
+          "</td>" +
+          "<td>" +
+          esc(s.service_type || "") +
+          "</td>" +
+          "<td>" +
+          statusIcon +
+          " " +
+          esc(s.status || "") +
+          "</td>" +
+          "<td>" +
+          (s.invocation_count || 0) +
+          "</td>" +
+          "<td>" +
+          buildMs +
+          "</td>" +
+          "<td>" +
+          depNames +
+          "</td>" +
+          "<td title='" +
+          esc(error) +
+          "'>" +
+          (error ? "\u26A0 " + error.substring(0, 40) : "\u2014") +
+          "</td>" +
           "</tr>"
         );
       })
@@ -472,7 +517,9 @@
 
     var filtered = state.events;
     if (filterType) {
-      filtered = filtered.filter(function (e) { return e.event_type === filterType; });
+      filtered = filtered.filter(function (e) {
+        return e.event_type === filterType;
+      });
     }
 
     els.eventsTbody.innerHTML = filtered
@@ -485,13 +532,33 @@
 
         return (
           "<tr>" +
-          "<td>" + (idx + 1) + "</td>" +
-          "<td>" + new Date(e.timestamp).toLocaleTimeString() + "</td>" +
-          "<td><span class='event-badge' style='background:" + color + "'>" + esc(label) + "</span></td>" +
-          "<td>" + phase + " " + esc(e.phase) + "</td>" +
-          "<td>" + esc(e.service_name) + "</td>" +
-          "<td>" + dur + "</td>" +
-          "<td title='" + esc(err) + "'>" + (err ? "\u26A0 " + err.substring(0, 30) : "") + "</td>" +
+          "<td>" +
+          (idx + 1) +
+          "</td>" +
+          "<td>" +
+          new Date(e.timestamp).toLocaleTimeString() +
+          "</td>" +
+          "<td><span class='event-badge' style='background:" +
+          color +
+          "'>" +
+          esc(label) +
+          "</span></td>" +
+          "<td>" +
+          phase +
+          " " +
+          esc(e.phase) +
+          "</td>" +
+          "<td>" +
+          esc(e.service_name) +
+          "</td>" +
+          "<td>" +
+          dur +
+          "</td>" +
+          "<td title='" +
+          esc(err) +
+          "'>" +
+          (err ? "\u26A0 " + err.substring(0, 30) : "") +
+          "</td>" +
           "</tr>"
         );
       })
@@ -522,7 +589,14 @@
       els.footerTs.textContent = new Date().toLocaleString();
     }
     if (els.footerStats && state.report) {
-      els.footerStats.textContent = "Schema v" + (state.report.version || "?") + " | " + state.events.length + " events | " + Object.keys(state.services).length + " services";
+      els.footerStats.textContent =
+        "Schema v" +
+        (state.report.version || "?") +
+        " | " +
+        state.events.length +
+        " events | " +
+        Object.keys(state.services).length +
+        " services";
     }
   }
 
@@ -544,7 +618,11 @@
         var label = eventLabels[t] || t;
         var color = eventColors[t] || "var(--text-muted)";
         return (
-          "<button class='chip' data-type='" + t + "' style='border-color:" + color + "'>" +
+          "<button class='chip' data-type='" +
+          t +
+          "' style='border-color:" +
+          color +
+          "'>" +
           esc(label) +
           "</button>"
         );
@@ -556,7 +634,9 @@
       if (!chip) return;
 
       var isActive = chip.classList.contains("active");
-      els.eventFilters.querySelectorAll(".chip").forEach(function (c) { c.classList.remove("active"); });
+      els.eventFilters.querySelectorAll(".chip").forEach(function (c) {
+        c.classList.remove("active");
+      });
       if (!isActive) chip.classList.add("active");
 
       renderEventsTable();
