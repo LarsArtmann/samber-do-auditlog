@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/larsartmann/auditlog-core/ndjson"
+	"github.com/larsartmann/go-ndjson"
 )
 
 // Sentinel errors for NDJSON reading. Re-exported from auditlog-core/ndjson

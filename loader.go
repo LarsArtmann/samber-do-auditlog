@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/larsartmann/auditlog-core/loader"
+	"github.com/larsartmann/go-ndjson/loader"
 )
 
 // errUnsupportedFormat is returned when the format value is not recognized.

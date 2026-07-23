@@ -154,8 +154,8 @@ linters:
             - github.com/a-h/templ
             - github.com/larsartmann/auditlog-core
             - github.com/larsartmann/auditlog-core/live
-            - github.com/larsartmann/auditlog-core/loader
-            - github.com/larsartmann/auditlog-core/ndjson
+            - github.com/larsartmann/go-ndjson/loader
+            - github.com/larsartmann/go-ndjson
             - github.com/larsartmann/go-output
             - github.com/larsartmann/samber-do-auditlog
             - github.com/samber

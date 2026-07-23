@@ -19,6 +19,7 @@ require (
 )
 
 require (
+	github.com/larsartmann/go-ndjson v0.0.0-00010101000000-000000000000
 	github.com/larsartmann/go-output/delimited v0.30.1
 	github.com/larsartmann/go-output/markdown v0.30.1
 	github.com/larsartmann/go-output/markup v0.30.1
@@ -78,3 +79,5 @@ require (
 tool github.com/a-h/templ/cmd/templ
 
 replace github.com/larsartmann/auditlog-core => ../auditlog-core
+
+replace github.com/larsartmann/go-ndjson => ../go-ndjson
