@@ -8,13 +8,13 @@ Last updated: 2026-07-24
 
 ## live/ Sub-Package
 
-- [ ] **Create `live/demo/main.go`** — Self-contained example that registers services with delays, invokes them, and shuts down, showing the live dashboard updating in real time. This is the most important missing UX artifact.
-- [ ] **Add scope tree tab** to the live dashboard JS (present in the static templ dashboard but missing from the live version).
-- [ ] **Add "Show all" pagination** for services and events tables in the live dashboard.
+- [x] **Create `live/demo/main.go`** — Self-contained demo that registers services with delays and shows the dashboard updating in real time.
+- [x] **Add scope tree tab** to the live dashboard JS.
+- [x] **Add "Show all" pagination** for services and events tables in the live dashboard.
 - [ ] **Share CSS** between the static templ dashboard and the live dashboard to prevent drift. Extract common design tokens into a shared file or `go:embed`.
-- [ ] **Add CORS headers** for cross-origin dashboard embedding (currently missing on all `live/` API endpoints).
-- [ ] **Integrate live dashboard into `example/` app** — Add a `--live` flag or a live endpoint to show the dashboard alongside the existing ride-sharing domain demo.
-- [ ] **Add export buttons** (JSON/NDJSON/HTML) to the live dashboard for downloading the current report snapshot.
+- [x] **Add CORS headers** for cross-origin dashboard embedding.
+- [x] **Integrate live dashboard into `example/` app** — Added `--live` flag to show the dashboard alongside the existing ride-sharing domain demo.
+- [x] **Add export buttons** (JSON/NDJSON/HTML) to the live dashboard for downloading the current report snapshot.
 
 ## Publishing & Release
 
@@ -24,7 +24,7 @@ Last updated: 2026-07-24
 
 ## Quality
 
-- [ ] **Pin GitHub Actions to SHA hashes** — Workflows in `.github/workflows/` use `@v4`/`@v5` tag versions, which are vulnerable to supply-chain attacks. Pin all actions to commit SHAs.
+- [x] **Pin GitHub Actions to SHA hashes** — All actions pinned to commit SHAs with version comments.
 - [ ] **Add headless browser test** for the HTML report's JavaScript execution. The golden test only checks byte-for-byte equality, not JS runtime correctness. A stray `}` syntax error shipped undetected because of this gap.
 - [ ] **Add a note to the README Mermaid example** — The node IDs are simplified for readability; real output includes UUID-based scope prefixes. Users who copy the example see different output.
 - [ ] **Fix timeline screenshot aspect ratio** — 1400x1100 vs 1400x1300 mismatch creates visual inconsistency in the website showcase grid.

@@ -267,6 +267,48 @@ plugin, err := auditlog.New(auditlog.Config{
 
 The callback fires **outside the mutex** on every event. Keep it fast.
 
+## Live Dashboard
+
+The `live/` sub-package provides a real-time SSE-powered dashboard that shows your DI container lifecycle as it happens:
+
+```go
+import "github.com/larsartmann/samber-do-auditlog/live"
+
+server, plugin, err := live.New(
+    auditlog.Config{Enabled: true, ContainerID: "my-app"},
+    live.Config{Addr: ":7777"},
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+injector := do.NewWithOpts(plugin.Opts())
+// Register and invoke services...
+
+go server.ListenAndServe()
+// Open http://localhost:7777/debug/di/ in your browser
+```
+
+Features:
+- **Real-time SSE** — events stream live as services register, invoke, and shut down
+- **Interactive graph** — Sugiyama layered DAG with pan/zoom
+- **Event waveform** — timeline of all events with duration-encoded height
+- **Export buttons** — download JSON/NDJSON/HTML snapshots
+- **Pagination** — handles 100+ services without overwhelming the browser
+- **CORS support** — embed the dashboard in external dashboards
+
+Run the standalone demo:
+
+```bash
+go run ./live/demo
+```
+
+Or add `--live` to the example app:
+
+```bash
+go run ./example --live --live-addr :7777
+```
+
 ## CLI Tool
 
 Inspect, convert, diff, and validate reports from the command line:

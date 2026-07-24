@@ -8,11 +8,20 @@ This project uses the standard Go toolchain. A `flake.nix` devShell is available
 
 ## Prerequisites
 
-- [Go 1.26+](https://go.dev/dl/)
+- [Go 1.26.4](https://go.dev/dl/) (exact version — see `go.mod`)
 - [golangci-lint](https://golangci-lint.run/usage/install/) (latest v2.x)
 - [templ](https://templ.guide/) (only if you edit `html.templ`)
 
 **Nix users:** Run `nix develop` to get Go 1.26.4, golangci-lint, govulncheck, and golines pinned in `flake.nix`.
+
+### GOEXPERIMENT=jsonv2 (required)
+
+This project must be built with `GOEXPERIMENT=jsonv2`. A transitive dependency (`larsartmann/go-output`) imports `encoding/json/v2`, which requires the build experiment flag in Go 1.26. Without it, compilation fails.
+
+This is **temporary** — `encoding/json/v2` is expected to stabilize in Go 1.27, at which point this requirement will be removed.
+
+- **Nix devShell**: sets `GOEXPERIMENT=jsonv2` automatically
+- **Manual**: `export GOEXPERIMENT=jsonv2` in every terminal session
 
 Verify your setup:
 
