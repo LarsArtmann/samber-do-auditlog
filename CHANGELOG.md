@@ -14,7 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Real-time live dashboard** (`live/` sub-package): SSE streaming HTTP server with an interactive warm-amber HTML dashboard. Four endpoints: dashboard HTML (`GET {prefix}/`), JSON report snapshot (`GET {prefix}/api/report`), SSE event stream (`GET {prefix}/api/events`), health (`GET {prefix}/api/health`). Configurable route prefix (default `/debug/di`). 24 tests covering snapshot-on-connect, live event delivery, fan-out, graceful shutdown, heartbeat, buffer overflow, and handler edge cases. Depends on `go-sse` for wire-format primitives.
+- **Real-time live dashboard** (`live/` sub-package): SSE streaming HTTP server with an interactive warm-amber HTML dashboard. Six endpoints: dashboard HTML (`GET {prefix}/`), JSON report snapshot (`GET {prefix}/api/report`), SSE event stream (`GET {prefix}/api/events`), health (`GET {prefix}/api/health`), NDJSON export (`GET {prefix}/api/export/ndjson`), HTML export (`GET {prefix}/api/export/html`). Configurable route prefix (default `/debug/di`). 35 tests covering snapshot-on-connect, live event delivery, fan-out, graceful shutdown, heartbeat, buffer overflow, CORS, export endpoints, and handler edge cases. Depends on `go-sse` for wire-format primitives.
+- **Live dashboard CORS support**: Configurable `CORSAllowedOrigins` field (default `*`) adds `Access-Control-Allow-Origin` headers and handles OPTIONS preflight (204) on all API endpoints. Set to `""` to disable.
+- **Live dashboard export endpoints**: `GET {prefix}/api/export/ndjson` and `GET {prefix}/api/export/html` serve downloadable report snapshots with `Content-Disposition` headers. Three export buttons in the dashboard UI (JSON via report endpoint, NDJSON, HTML) trigger client-side downloads.
+- **Live dashboard pagination**: Services table paginates at 50 rows, events at 100, with "Show all" buttons that reveal hidden rows. Search and filter bypass pagination.
+- **Live dashboard scope tree tab**: Fifth tab (Services/Scopes/Graph/Timeline/Events) with a recursive scope-tree renderer showing nested scopes, service counts, and provider-type icons.
+- **Live demo application** (`live/demo/main.go`): Standalone demo that registers services with 200-400ms delays, invokes them, runs health checks, signals complete, and serves the dashboard until Ctrl+C.
+- **Example `--live` flag**: `go run ./example --live` starts the dashboard server alongside the existing ride-sharing domain demo, registering all 20 services across 4 scopes with live SSE updates.
+- **GitHub Actions SHA pinning**: All `uses:` references in `.github/workflows/ci.yml` pinned to commit SHAs with version comments (supply-chain hardening).
+- **CONTRIBUTING.md GOEXPERIMENT note**: Documents the `GOEXPERIMENT=jsonv2` requirement and where it is set automatically.
 
 ### Breaking
 
@@ -35,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **README "zero exemptions" claim**: Corrected the false claim about golangci-lint config to "minimal exemptions for tests and tooling" — the config does have path exclusions for `*_test.go`, `cmd/`, and `example/`.
 - **live/server.go `Shutdown` bug**: `fmt.Errorf("shutdown: %w", nil)` returned a non-nil error on successful shutdown. Now only wraps when the underlying error is non-nil.
 - **live/server.go `handleReport` nil-plugin crash**: Added nil-check returning HTTP 503 instead of panicking when a server is created without a plugin.
-- **Coverage gate restored**: Combined coverage brought back above the 94% gate (94.2%) by adding 13 tests for `live/` server lifecycle, handler edge cases, SSE heartbeat, and 5 Plugin tree/table export wrappers.
+- **Coverage gate restored**: Combined coverage brought back above the 94% gate (94.1%) by adding 13 tests for `live/` server lifecycle, handler edge cases, SSE heartbeat, and 5 Plugin tree/table export wrappers.
 
 ## [0.6.0] - 2026-07-22
 
