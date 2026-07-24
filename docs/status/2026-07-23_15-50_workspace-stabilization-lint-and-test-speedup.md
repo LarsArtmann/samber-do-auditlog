@@ -125,3 +125,9 @@
 2. **Should go-workflow's root module (not just `live/`) depend on `auditlog-core`?** Currently only `live/go.mod` imports core. But the root module has its own duplicate `WriteToFile` (`helpers.go:82`) that should delegate to core. Adding core as a root dependency would allow consolidation, but it also means the root module (which has no json/v2 dependency today) would pull in a module that's still pre-v1. Is this acceptable, or should the root module stay decoupled until core is published?
 
 3. **Should the `go.work` file live in `/home/lars/projects/` (where it is now, covering all repos) or should each repo have its own smaller `go.work`?** The current setup works for local dev but `go.work` in a parent directory affects ALL Go projects under it (I verified this — `cd AI-Speed-Test && go list ./...` shows the workspace warning). This could cause confusion if unrelated projects are added to `/home/lars/projects/` later. Should I move it, gitignore it, or leave it?
+
+---
+
+## Resolution (2026-07-24)
+
+The SSE test deadlock fix (835× speedup via returned cleanup func instead of `t.Cleanup`) and the 40 lint-issue cleanup are in production. However, two key claims did not hold: (1) the `go.work` workspace at `/home/lars/projects/go.work` **does not exist** — it was either removed or never committed; (2) the `auditlog-core` `.golangci.yml` and module are not referenced in the current `go.mod`. A subsequent commit added `go-ndjson` as a `replace` dependency that imports `encoding/json/v2`, which is excluded by build constraints in Go 1.26.4 — **the build is currently broken** (`go build ./...` fails). This regression is the top-priority open item in TODO_LIST.

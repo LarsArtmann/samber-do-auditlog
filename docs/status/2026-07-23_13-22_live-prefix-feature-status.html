@@ -419,5 +419,13 @@
         sections.forEach(function (s) { observer.observe(s); });
       })();
     </script>
+    <!--
+      Resolution (2026-07-24): The live/ sub-package with Config.Prefix shipped. Default prefix
+      is /debug/di; routes: {prefix}/, {prefix}/api/report, {prefix}/api/events (SSE),
+      {prefix}/api/health. Server uses go-sse for SSE wire-format. normalizePrefix handles root "/"
+      and trailing-slash stripping. Lint warnings were cleaned up in the 14:42/15:50 sessions.
+      This is the latest live/ status report. The auditlog-core extraction described in later
+      2026-07-23 reports was NOT retained — live/ stays self-contained.
+    -->
   </body>
 </html>

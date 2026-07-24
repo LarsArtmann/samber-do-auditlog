@@ -130,3 +130,9 @@
 2. **Should `auditlog-core` be published FIRST (current plan: remove `replace` directives after publish) or should we set up a `go.work` workspace FIRST** (allows all three to develop in lockstep without permanent replace directives in `go.mod`)? Each path has different implications: publish-first forces version coordination, workspace-first makes a `v0.1.0` tag meaningless.
 
 3. **Should the BuildFlow "root-package-files" warnings (every `.go` file in project root should be in `internal/`) be addressed now in `go-workflow-auditlog` and `samber-do-auditlog`** (this would mean restructuring into `internal/auditlog/` package — a breaking change to imports in both projects and their downstream consumers), **OR should they be accepted as the project's chosen layout**? The current layout is intentional in many Go projects.
+
+---
+
+## Resolution (2026-07-24)
+
+The lint and build fixes described here were applied, but the auditlog-core module was **not retained** as a dependency. The current `go.mod` has no `auditlog-core` entry — the `live/` package is self-contained with local Hub/Server implementations on top of `go-sse`. The `go-workflow-auditlog` cross-repo compilation that this report fixed (removing unused `errors` import for `GOEXPERIMENT=jsonv2`) is moot — that project is separate. The lessons learned about trusting stale summaries and multi-module test verification remain valid guidance.

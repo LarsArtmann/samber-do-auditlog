@@ -347,3 +347,9 @@ graph TD
 - [ ] Both projects import auditlog-core and pass all existing tests
 - [ ] Zero duplicated infrastructure LOC between the two projects
 - [ ] All lint checks pass
+
+---
+
+## Resolution (2026-07-24)
+
+The plan was partially executed (tasks T1–T18 were attempted across three sessions on 2026-07-23) but the extraction **was not retained**. The current `go.mod` has no `auditlog-core` dependency. The `live/` package is self-contained: Hub and Server are implemented locally in `live/hub.go` and `live/server.go`, using `github.com/larsartmann/go-sse` for SSE wire-format primitives only. The Pareto analysis (1%→51% for Hub, 4%→64% for Server+Helpers) was valid for understanding the duplication, but the decision was to keep the code local rather than maintain a separate shared module. The success criteria checkboxes above were met during the extraction sessions but the extracted module was subsequently abandoned.

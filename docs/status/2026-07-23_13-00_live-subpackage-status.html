@@ -414,5 +414,11 @@
         sections.forEach(function (s) { observer.observe(s); });
       })();
     </script>
+    <!--
+      Resolution (2026-07-24): The live/ sub-package shipped. Hub (live/hub.go) and Server
+      (live/server.go) are self-contained on go-sse primitives. Lint warnings resolved in
+      the 14:42/15:50 sessions. This report is superseded by the 13:22 report (adds Config.Prefix).
+      The auditlog-core extraction from later reports was NOT retained — live/ stays self-contained.
+    -->
   </body>
 </html>

@@ -120,3 +120,9 @@
 2. **Should the `encoding/json/v2` / `jsontext` usage in `go-workflow-auditlog/live/dashboard.go` be migrated to standard `encoding/json`** (like samber-do does) to fix the build issue, or is json/v2 intentional for performance/escaping reasons that must be preserved?
 
 3. **Should we proceed with NDJSON/loader extraction now** (plan phase 2, ~300 more LOC) or defer it until the core module is published and proven in production first?
+
+---
+
+## Resolution (2026-07-24)
+
+The auditlog-core extraction was attempted but **did not land as a separate module**. The current `go.mod` has no `auditlog-core` dependency — the `live/` package is self-contained, using `github.com/larsartmann/go-sse` for SSE wire-format primitives only. The Hub and Server are implemented locally in `live/hub.go` and `live/server.go`. The decision was to keep the code local rather than extract to a shared core module. The `replace` directives for `go-sse` and `go-ndjson` remain (both are private repos). The NDJSON/loader extraction (phase 2) was also not extracted — a `go-ndjson` replace dependency was later added directly to `go.mod`, but it currently breaks the build (imports `encoding/json/v2`, excluded by build constraints in Go 1.26.4).
