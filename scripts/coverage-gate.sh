@@ -15,7 +15,7 @@ go test -race -count=1 -coverprofile=cover.out -covermode=atomic ./...
 
 # Exclude the example/ (demo) and cmd/ (tooling) packages from the gate.
 # Their logic is exercised by integration/golden tests that run a built binary.
-grep -v -e '/example/' -e '/cmd/' cover.out > cover-filtered.out
+grep -v -e '/example/' -e '/cmd/' -e '/live/demo/' cover.out > cover-filtered.out
 
 coverage=$(go tool cover -func=cover-filtered.out | grep '^total:' | awk '{print $3}' | tr -d '%')
 echo "Total coverage (non-example): ${coverage}%"

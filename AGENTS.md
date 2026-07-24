@@ -83,13 +83,14 @@ live/               — Real-time SSE dashboard sub-package (see below)
 
 ```
 live/hub.go         — Hub: fan-out SSE broadcaster with subscriber buffer (128 events), SignalComplete, OnEvent callback
-live/server.go      — HTTP server with 4 endpoints (dashboard, report JSON, SSE events, health), configurable prefix, graceful shutdown
+live/server.go      — HTTP server with 6 endpoints (dashboard, report JSON, SSE events, health, export NDJSON, export HTML), configurable prefix, CORS middleware, graceful shutdown
 live/dashboard.go   — Dashboard HTML renderer (embeds CSS + JS, injects route prefix)
 live/dashboard.css  — Dashboard stylesheet (warm amber theme, responsive layout)
 live/dashboard.js   — Dashboard JavaScript (SSE client, real-time updates, DOM rendering)
 live/base_css.go    — Shared CSS constants for the live dashboard
 live/doc.go         — Package doc comment
-live/server_test.go — External tests: server lifecycle, SSE streaming, handler edge cases, hub unit tests
+live/server_test.go — External tests: server lifecycle, SSE streaming, handler edge cases, hub unit tests, CORS, export endpoints
+live/demo/          — Self-contained real-time demo (registers services with delays, shows dashboard updating live)
 ```
 
 ### Data Flow
