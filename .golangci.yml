@@ -259,6 +259,18 @@ linters:
           - unparam
           - varnamelen
           - noinlineerr
+      - path: live/demo/
+        linters:
+          - forbidigo
+          - funlen
+          - mnd
+          - unparam
+          - varnamelen
+          - noinlineerr
+          - exhaustruct
+          - errcheck
+          - nlreturn
+          - goconst
       - path: cmd/
         linters:
           - forbidigo

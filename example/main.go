@@ -23,16 +23,29 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"time"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
+	"github.com/larsartmann/samber-do-auditlog/live"
 	"github.com/samber/do/v2"
 )
 
 func main() {
+	liveMode := flag.Bool("live", false, "Start the live dashboard server instead of batch export")
+	liveAddr := flag.String("live-addr", ":7777", "Address for the live dashboard server")
+
+	flag.Parse()
+
+	if *liveMode {
+		runLive(*liveAddr)
+
+		return
+	}
+
 	fmt.Println("=== samber/do v2 + audit-log — comprehensive demo ===")
 	fmt.Println()
 
@@ -45,6 +58,53 @@ func main() {
 	exportReports(plugin)
 
 	printSummary(plugin.Report(), eventLog)
+}
+
+func runLive(addr string) {
+	fmt.Printf("=== samber-do-auditlog LIVE dashboard ===\n")
+	fmt.Printf("Open http://localhost%s/debug/di/ in your browser\n", addr)
+	fmt.Println()
+
+	hub := live.NewHub()
+
+	plugin, err := auditlog.New(auditlog.Config{
+		Enabled:              true,
+		ContainerID:          "ride-share-live",
+		MaxEvents:            0,
+		InitialEventCapacity: 1024,
+		OnEvent:              hub.OnEvent,
+	})
+	if err != nil {
+		log.Fatalf("create plugin: %v", err)
+	}
+
+	injector := do.NewWithOpts(plugin.Opts())
+
+	server := live.NewServer(hub, plugin, live.Config{Addr: addr})
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- server.ListenAndServe()
+	}()
+
+	fmt.Printf("Listening on %s\n", server.Addr())
+	time.Sleep(200 * time.Millisecond)
+
+	matchingScope := registerServices(injector)
+	runInvocations(injector, matchingScope)
+	runHealthChecks(plugin, injector)
+	runShutdown(injector)
+
+	server.SignalComplete()
+	fmt.Println("\nLifecycle complete. Dashboard shows final state.")
+	fmt.Println("Press Ctrl+C to exit.")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Printf("shutdown: %v", err)
+	}
 }
 
 // setupPlugin creates the audit-log plugin and the DI container with an

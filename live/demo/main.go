@@ -36,8 +36,8 @@ func main() {
 			ContainerID: "live-demo",
 		},
 		live.Config{
-			Addr:               ":7777",
-			HeartbeatInterval:  5 * time.Second,
+			Addr:              ":7777",
+			HeartbeatInterval: 5 * time.Second,
 		},
 	)
 	if err != nil {
@@ -108,6 +108,7 @@ func registerDemoServices(injector do.Injector) {
 	do.ProvideNamed(injector, "user-service", func(i do.Injector) (*UserService, error) {
 		repo := do.MustInvokeNamed[*UserRepo](i, "user-repo")
 		cache := do.MustInvokeNamed[*Cache](i, "cache")
+
 		return &UserService{repo: repo, cache: cache}, nil
 	})
 	step()
@@ -123,15 +124,19 @@ func invokeDemoServices(injector do.Injector) {
 	fmt.Print("Invoking services")
 
 	_, _ = do.InvokeNamed[*Database](injector, "database")
+
 	step()
 
 	_, _ = do.InvokeNamed[*Cache](injector, "cache")
+
 	step()
 
 	_, _ = do.InvokeNamed[*UserService](injector, "user-service")
+
 	step()
 
 	_, _ = do.InvokeNamed[*EmailNotifier](injector, "email-notifier")
+
 	step()
 
 	fmt.Println(" done.")
@@ -142,10 +147,12 @@ func runHealthChecks(plugin *auditlog.Plugin, injector do.Injector) {
 
 	results := plugin.RecordHealthCheck(injector)
 	healthy := 0
+
 	for _, err := range results {
 		if err == nil {
 			healthy++
 		}
+
 		step()
 	}
 
@@ -154,7 +161,9 @@ func runHealthChecks(plugin *auditlog.Plugin, injector do.Injector) {
 
 func step() {
 	fmt.Print(".")
-	os.Stdout.Sync()
+
+	_ = os.Stdout.Sync()
+
 	time.Sleep(400 * time.Millisecond)
 }
 
