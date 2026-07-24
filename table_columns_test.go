@@ -33,7 +33,8 @@ func TestTableColumns_CustomSelection(t *testing.T) {
 
 	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	err := report.WriteTable(buf, output.FormatCSV, auditlog.DefaultTableOpts(),
+	err := report.WriteTable(
+		buf, output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnService, auditlog.ColumnStatus),
 	)
 	if err != nil {
@@ -62,7 +63,8 @@ func TestTableColumns_AllColumns(t *testing.T) {
 
 	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	err := report.WriteTable(buf, output.FormatCSV, auditlog.DefaultTableOpts(),
+	err := report.WriteTable(
+		buf, output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.AllTableColumns()...),
 	)
 	if err != nil {
@@ -83,7 +85,8 @@ func TestTableColumns_ColumnOrderPreserved(t *testing.T) {
 
 	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	err := report.WriteTable(buf, output.FormatCSV, auditlog.DefaultTableOpts(),
+	err := report.WriteTable(
+		buf, output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnError, auditlog.ColumnService),
 	)
 	if err != nil {
@@ -121,7 +124,8 @@ func TestTableColumns_WithDependentsColumn(t *testing.T) {
 
 	var buf bytes.Buffer
 
-	err := report.WriteTable(&buf, output.FormatCSV, auditlog.DefaultTableOpts(),
+	err := report.WriteTable(
+		&buf, output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnService, auditlog.ColumnDependencies, auditlog.ColumnDependents),
 	)
 	if err != nil {
@@ -149,7 +153,8 @@ func TestTableColumns_WriteTableString(t *testing.T) {
 
 	report := singleServiceWithExternalDepReport()
 
-	result, err := report.WriteTableString(output.FormatCSV, auditlog.DefaultTableOpts(),
+	result, err := report.WriteTableString(
+		output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnService),
 	)
 	if err != nil {
@@ -178,7 +183,8 @@ func TestTableColumns_DefaultTableColumnsImmutable(t *testing.T) {
 	// Call WithColumns with a custom selection that should NOT affect the default.
 	var buf1 bytes.Buffer
 
-	err := report.WriteTable(&buf1, output.FormatCSV, auditlog.DefaultTableOpts(),
+	err := report.WriteTable(
+		&buf1, output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnService),
 	)
 	if err != nil {

@@ -463,9 +463,11 @@ func writeHTMLToString(t *testing.T) string {
 // This is the shared preamble for the four "exercise the scope tree" tests
 // that otherwise duplicate the same 8 lines of provideDB + MustInvokeNamed
 // boilerplate.
+//
+//nolint:ireturn // do.Injector is part of the public plugin API surface
 func setupRootAndChildScopeDBs(
 	rootName, rootURL, childName, childURL string,
-) (*auditlog.Plugin, do.Injector, *do.Scope) { //nolint:ireturn
+) (*auditlog.Plugin, do.Injector, *do.Scope) {
 	p, injector := newPluginAndInjector()
 	child := injector.Scope("child")
 
