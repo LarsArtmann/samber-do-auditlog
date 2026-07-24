@@ -13,11 +13,9 @@ import (
 func TestTableColumns_DefaultColumns(t *testing.T) {
 	t.Parallel()
 
-	report := singleServiceWithExternalDepReport()
+	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	var buf bytes.Buffer
-
-	err := report.WriteTable(&buf, output.FormatCSV, auditlog.DefaultTableOpts())
+	err := report.WriteTable(buf, output.FormatCSV, auditlog.DefaultTableOpts())
 	if err != nil {
 		t.Fatalf("WriteTable: %v", err)
 	}
@@ -33,11 +31,9 @@ func TestTableColumns_DefaultColumns(t *testing.T) {
 func TestTableColumns_CustomSelection(t *testing.T) {
 	t.Parallel()
 
-	report := singleServiceWithExternalDepReport()
+	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	var buf bytes.Buffer
-
-	err := report.WriteTable(&buf, output.FormatCSV, auditlog.DefaultTableOpts(),
+	err := report.WriteTable(buf, output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnService, auditlog.ColumnStatus),
 	)
 	if err != nil {
@@ -64,11 +60,9 @@ func TestTableColumns_CustomSelection(t *testing.T) {
 func TestTableColumns_AllColumns(t *testing.T) {
 	t.Parallel()
 
-	report := singleServiceWithExternalDepReport()
+	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	var buf bytes.Buffer
-
-	err := report.WriteTable(&buf, output.FormatCSV, auditlog.DefaultTableOpts(),
+	err := report.WriteTable(buf, output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.AllTableColumns()...),
 	)
 	if err != nil {
@@ -87,11 +81,9 @@ func TestTableColumns_AllColumns(t *testing.T) {
 func TestTableColumns_ColumnOrderPreserved(t *testing.T) {
 	t.Parallel()
 
-	report := singleServiceWithExternalDepReport()
+	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	var buf bytes.Buffer
-
-	err := report.WriteTable(&buf, output.FormatCSV, auditlog.DefaultTableOpts(),
+	err := report.WriteTable(buf, output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnError, auditlog.ColumnService),
 	)
 	if err != nil {

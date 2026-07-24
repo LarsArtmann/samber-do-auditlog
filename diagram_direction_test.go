@@ -12,11 +12,9 @@ import (
 func TestDiagram_MermaidDefaultDirectionTD(t *testing.T) {
 	t.Parallel()
 
-	report := singleServiceWithExternalDepReport()
+	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	var buf bytes.Buffer
-
-	err := report.WriteMermaid(&buf)
+	err := report.WriteMermaid(buf)
 	if err != nil {
 		t.Fatalf("WriteMermaid: %v", err)
 	}
@@ -29,11 +27,9 @@ func TestDiagram_MermaidDefaultDirectionTD(t *testing.T) {
 func TestDiagram_MermaidDirectionRight(t *testing.T) {
 	t.Parallel()
 
-	report := singleServiceWithExternalDepReport()
+	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	var buf bytes.Buffer
-
-	err := report.WriteMermaid(&buf, auditlog.WithDirection(output.DirectionRight))
+	err := report.WriteMermaid(buf, auditlog.WithDirection(output.DirectionRight))
 	if err != nil {
 		t.Fatalf("WriteMermaid: %v", err)
 	}
@@ -50,11 +46,9 @@ func TestDiagram_MermaidDirectionRight(t *testing.T) {
 func TestDiagram_DOTDefaultDirectionLR(t *testing.T) {
 	t.Parallel()
 
-	report := singleServiceWithExternalDepReport()
+	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	var buf bytes.Buffer
-
-	err := report.WriteDOT(&buf)
+	err := report.WriteDOT(buf)
 	if err != nil {
 		t.Fatalf("WriteDOT: %v", err)
 	}
@@ -67,11 +61,9 @@ func TestDiagram_DOTDefaultDirectionLR(t *testing.T) {
 func TestDiagram_DOTDirectionDown(t *testing.T) {
 	t.Parallel()
 
-	report := singleServiceWithExternalDepReport()
+	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	var buf bytes.Buffer
-
-	err := report.WriteDOT(&buf, auditlog.WithDirection(output.DirectionUp))
+	err := report.WriteDOT(buf, auditlog.WithDirection(output.DirectionUp))
 	if err != nil {
 		t.Fatalf("WriteDOT: %v", err)
 	}
@@ -84,11 +76,9 @@ func TestDiagram_DOTDirectionDown(t *testing.T) {
 func TestDiagram_D2DirectionRight(t *testing.T) {
 	t.Parallel()
 
-	report := singleServiceWithExternalDepReport()
+	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	var buf bytes.Buffer
-
-	err := report.WriteD2(&buf, auditlog.WithDirection(output.DirectionRight))
+	err := report.WriteD2(buf, auditlog.WithDirection(output.DirectionRight))
 	if err != nil {
 		t.Fatalf("WriteD2: %v", err)
 	}
@@ -101,11 +91,9 @@ func TestDiagram_D2DirectionRight(t *testing.T) {
 func TestDiagram_D2DefaultNoDirection(t *testing.T) {
 	t.Parallel()
 
-	report := singleServiceWithExternalDepReport()
+	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	var buf bytes.Buffer
-
-	err := report.WriteD2(&buf)
+	err := report.WriteD2(buf)
 	if err != nil {
 		t.Fatalf("WriteD2: %v", err)
 	}
@@ -118,11 +106,9 @@ func TestDiagram_D2DefaultNoDirection(t *testing.T) {
 func TestDiagram_PlantUMLDirectionRight(t *testing.T) {
 	t.Parallel()
 
-	report := singleServiceWithExternalDepReport()
+	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	var buf bytes.Buffer
-
-	err := report.WritePlantUML(&buf, auditlog.WithDirection(output.DirectionRight))
+	err := report.WritePlantUML(buf, auditlog.WithDirection(output.DirectionRight))
 	if err != nil {
 		t.Fatalf("WritePlantUML: %v", err)
 	}
@@ -135,11 +121,9 @@ func TestDiagram_PlantUMLDirectionRight(t *testing.T) {
 func TestDiagram_PlantUMLDefaultNoDirectionCommand(t *testing.T) {
 	t.Parallel()
 
-	report := singleServiceWithExternalDepReport()
+	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	var buf bytes.Buffer
-
-	err := report.WritePlantUML(&buf)
+	err := report.WritePlantUML(buf)
 	if err != nil {
 		t.Fatalf("WritePlantUML: %v", err)
 	}
