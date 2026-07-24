@@ -27,6 +27,9 @@ Every term below should mean the **same thing** to everyone who reads it.
 | Provider Type  | How a service was registered: lazy, eager, transient, or alias        | Service metadata             |
 | Service Status | Computed lifecycle state: registered, active, invocation_error, etc.  | Service metadata             |
 | Capability     | Whether a service implements Healthchecker or Shutdowner interfaces   | Service metadata             |
+| Live Dashboard | Real-time SSE-powered visualization of the DI container lifecycle     | `live/` sub-package          |
+| Hub            | Fan-out broadcaster that delivers events to all connected SSE clients | Live dashboard infrastructure |
+| SSE            | Server-Sent Events — the transport for real-time dashboard updates    | Live dashboard transport     |
 | Report         | A consolidated snapshot of all captured events and service metadata   | Export output                |
 | Schema Version | The version of the report data format                                 | Forward compatibility        |
 

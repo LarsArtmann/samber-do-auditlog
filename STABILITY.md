@@ -34,6 +34,18 @@ These surfaces are functional but their exact shape may change:
 | `Event`, `ServiceInfo`, `ServiceRef` field set | New fields may be added. Existing JSON tags are stable.                                                          |
 | HTML report visual design                      | The self-contained HTML output is regenerated from `html.templ` and its appearance will change between releases. |
 
+## `live/` Sub-Package (Evolving)
+
+The `live/` sub-package is newer than the core library. Its public API may change:
+
+| Surface                                                              | Reason                                                              |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `live.New(auditlog.Config, live.Config) (*Server, *Plugin, error)`   | Convenience constructor. Signature stable, but `Config` may grow.   |
+| `live.Config{Addr, Prefix, CORSAllowedOrigins}`                      | All current fields stable. New fields may be added.                 |
+| `live.Server.ListenAndServe()` / `Shutdown(ctx)`                     | Stable lifecycle methods.                                           |
+| `live.Server.ServeHTTP`                                              | Stable — enables `httptest` and mux embedding.                      |
+| `live.Hub`                                                            | Evolving — internal event broadcaster. May gain metrics hooks.      |
+
 ## Unstable / Internal (no stability guarantee)
 
 - All unexported types and functions.
