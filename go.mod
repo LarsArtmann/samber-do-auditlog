@@ -1,6 +1,6 @@
 module github.com/larsartmann/samber-do-auditlog
 
-go 1.26.4
+go 1.26.5
 
 require github.com/larsartmann/go-sse v0.2.0
 
