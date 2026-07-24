@@ -7,13 +7,12 @@ For short-term work, see [TODO_LIST.md](TODO_LIST.md). For shipped features, see
 
 ## Stability Path
 
-The project is in **ALPHA**. The path to BETA is:
+The project is in **ALPHA**. The path to BETA requires:
 
-1. ~~Coverage gate above 94%~~ (currently 94.1% — margin is thin, see [TODO_LIST.md](TODO_LIST.md))
-2. ~~Build works without `GOEXPERIMENT=jsonv2`~~ (resolved: flag is set automatically in Nix devShell + CI; will be removed when Go 1.27 stabilizes json/v2)
-3. `go-sse` and `go-ndjson` published to GitHub with stable tags (remove `replace` directives)
-4. `live/` sub-package coverage above 90% (currently 89.7%)
-5. ~~Live dashboard JS feature-parity with the static templ version~~ (shipped: scope tree, pagination, export buttons, CORS)
+1. `go-sse` and `go-ndjson` published to GitHub with stable tags (remove `replace` directives)
+2. `live/` sub-package coverage above 90% (currently 89.7%)
+
+The coverage gate (94%) and `GOEXPERIMENT=jsonv2` flag are already stable in CI. The live dashboard has reached feature parity with the static HTML export.
 
 The path from BETA to 1.0 is:
 
@@ -67,6 +66,18 @@ Ideas for deeper documentation (website + README):
 - **Comparison section** — Real competitor analysis vs manual logging, vs OpenTelemetry, vs pprof
 - **Migration guide** — Step-by-step for v0.1.0 to v0.2.0+ (MigrateReport exists but has no docs page)
 - **Architecture deep-dive** — Single-package design, concurrency model, hook system, invocation-stack dependency inference
+
+---
+
+## Explicitly Rejected
+
+Proposals evaluated and deliberately not pursued. Documented here so they are not re-proposed without new context.
+
+- **Multi-module split** — Project is too small (1 package, ~2500 LOC core + live/ sub-package). Revisit at 5+ packages.
+- **External storage backends** — File and `io.Writer` exports are sufficient.
+- **Prometheus/OpenTelemetry integration as a dependency** — Out of scope. Use `OnEvent` callback instead.
+- **`samber/lo` dependency** — Current stdlib `slices`/`cmp` usage is sufficient.
+- **`encoding/json/v2` migration in this project** — Current `encoding/json` works fine. The transitive dependency through `go-output` requires `GOEXPERIMENT=jsonv2` but this project's own code does not and should not import `encoding/json/v2`. Risk of breaking JSON output format for consumers.
 
 ---
 
