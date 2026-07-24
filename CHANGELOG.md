@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Example `--live` flag**: `go run ./example --live` starts the dashboard server alongside the existing ride-sharing domain demo, registering all 20 services across 4 scopes with live SSE updates.
 - **GitHub Actions SHA pinning**: All `uses:` references in `.github/workflows/ci.yml` pinned to commit SHAs with version comments (supply-chain hardening).
 - **CONTRIBUTING.md GOEXPERIMENT note**: Documents the `GOEXPERIMENT=jsonv2` requirement and where it is set automatically.
+- **Shared CSS design tokens** (`design_tokens.go`): `DesignTokensCSS` is the single source of truth for the warm amber "Container Telemetry" palette. `TestDesignTokensInSync` verifies the html.templ inline `:root` block matches. `live/base_css.go` composes the shared tokens + live-specific aliases.
+- **JS syntax validation tests** (`plugin_html_syntax_test.go`): Extracts `<script>` content from the HTML report, strips strings/comments/regexes via a `jsStripper` state machine, and asserts delimiters are balanced. Catches syntax errors the golden byte-for-byte test misses.
+- **Demo Healthchecker implementations**: All `live/demo` services (Database, Cache, UserService, EmailNotifier) now implement `do.Healthchecker`, so health checks populate the dashboard.
+- **Touch-accessible website screenshots**: "Click to enlarge" hint now visible on touch devices via `@media(hover:none)`.
 
 ### Breaking
 
@@ -31,7 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Shared module delegation**: NDJSON read/write and format-detection logic now delegate to the external `go-ndjson` module (`go-ndjson/loader`, `go-ndjson`). The local `loader.go` and `ndjson.go` re-export the public API so existing callers are unaffected. The `go-ndjson` module itself uses standard `encoding/json`.
+- **Shared module delegation**: NDJSON read/write and format-detection logic now delegate to the external `go-ndjson` module (`go-ndjson/loader`, `go-ndjson`, v0.0.1 public). The local `loader.go` and `ndjson.go` re-export the public API so existing callers are unaffected.
+- **`go-ndjson` replace directive removed**: The module is now public at v0.0.1. Only the `go-sse` replace directive remains (repo is still private).
+- **`live/base_css.go` uses shared design tokens**: Now composes `auditlog.DesignTokensCSS` + live-specific aliases instead of maintaining its own `:root` block. Prevents visual drift between dashboards.
+- **`.golangci.yml`**: `err113` added to `live/demo/` exclusions (demo code, consistent with `cmd/` exclusions).
+- **GitHub Releases**: Created releases for v0.1.0 through v0.6.0 (previously only v0.0.3 and v0.0.4 had releases). v0.6.0 is now correctly marked as Latest.
 - **`BuildDAGHTML` exported**: Renamed from `buildDAGHTML` so the `live/` sub-package can call it for the SSE snapshot graph data. Updated `html.templ` and regenerated `html_templ.go`.
 - **README rewrite**: Condensed from 569 to ~350 lines as a high-conversion landing page. All Quick Start code compile-verified. Fixed incorrect Mermaid example (replaced invalid node IDs with quoted syntax). Restored API Reference link to the documentation website. Added sections for Loading & Migrating Reports, env-var toggle, MaxEvents, Report.Diff, Security & Quality, and STABILITY.md link.
 - **GOEXPERIMENT=jsonv2 enabled in Nix devShell and CI**: The Nix devShell (`flake.nix`), CI workflow (`.github/workflows/ci.yml`), and coverage-gate script (`scripts/coverage-gate.sh`) now set `GOEXPERIMENT=jsonv2` automatically. Required because `go-output` (used for diagram/table rendering) transitively depends on `encoding/json/v2`. Build commands work without manually setting the flag inside the Nix devShell.
@@ -44,6 +52,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **live/server.go `Shutdown` bug**: `fmt.Errorf("shutdown: %w", nil)` returned a non-nil error on successful shutdown. Now only wraps when the underlying error is non-nil.
 - **live/server.go `handleReport` nil-plugin crash**: Added nil-check returning HTTP 503 instead of panicking when a server is created without a plugin.
 - **Coverage gate restored**: Combined coverage brought back above the 94% gate (94.1%) by adding 13 tests for `live/` server lifecycle, handler edge cases, SSE heartbeat, and 5 Plugin tree/table export wrappers.
+- **`example/ --live` premature shutdown**: The `runLive()` function immediately called `server.Shutdown()` after lifecycle completion. Now waits for SIGINT/SIGTERM (like `live/demo/main.go`), so the dashboard stays visible.
+- **Timeline + real-world screenshot aspect ratio**: Padded 1400x1100 images to 1400x1300 (background color) for visual consistency in the website showcase grid.
+- **README Mermaid example note**: Added note that node IDs are simplified — real output includes UUID-based scope prefixes.
 
 ## [0.6.0] - 2026-07-22
 
