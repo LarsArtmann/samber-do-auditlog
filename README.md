@@ -182,6 +182,8 @@ flowchart TD
     Notifier["Notifier"] --> EmailNotifier["EmailNotifier 😴"]
 ```
 
+> **Note:** Node IDs above are simplified for readability. Real output includes scope prefixes (e.g., `[root]/HTTPServer`) when child scopes are involved.
+
 <details>
 <summary><b>JSON output shape</b> (click to expand)</summary>
 

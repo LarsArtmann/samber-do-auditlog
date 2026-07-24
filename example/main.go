@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
@@ -104,6 +106,11 @@ func runLive(addr string) {
 	server.SignalComplete()
 	fmt.Println("\nLifecycle complete. Dashboard shows final state.")
 	fmt.Println("Press Ctrl+C to exit.")
+
+	// Wait for interrupt signal (like live/demo/main.go).
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	<-sigCh
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

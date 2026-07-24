@@ -173,8 +173,24 @@ type Database struct {
 	DSN string
 }
 
+func (d *Database) HealthCheck() error {
+	if d.DSN == "" {
+		return fmt.Errorf("database: no DSN configured")
+	}
+
+	return nil
+}
+
 type Cache struct {
 	Addr string
+}
+
+func (c *Cache) HealthCheck() error {
+	if c.Addr == "" {
+		return fmt.Errorf("cache: no address configured")
+	}
+
+	return nil
 }
 
 type UserRepo struct {
@@ -186,6 +202,26 @@ type UserService struct {
 	cache *Cache
 }
 
+func (s *UserService) HealthCheck() error {
+	if s.repo == nil {
+		return fmt.Errorf("user-service: no repository")
+	}
+
+	if s.cache == nil {
+		return fmt.Errorf("user-service: no cache")
+	}
+
+	return nil
+}
+
 type EmailNotifier struct {
 	SMTP string
+}
+
+func (n *EmailNotifier) HealthCheck() error {
+	if n.SMTP == "" {
+		return fmt.Errorf("email-notifier: no SMTP server configured")
+	}
+
+	return nil
 }
