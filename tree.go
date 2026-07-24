@@ -89,42 +89,38 @@ func (r Report) buildServiceTreeNodes() *output.TreeNode {
 
 // writeTree renders the dependency DAG with the given renderer and writes the
 // output to writer. Shared implementation for WriteTree and WriteHTMLTree.
-func (r Report) writeTree(writer io.Writer, renderer output.TreeRenderer, renderErrFmt, writeErrFmt string) error {
+func (r Report) writeTree(writer io.Writer, renderer output.TreeRenderer) error {
 	root := r.buildServiceTreeNodes()
 	renderer.SetRoot(root)
 
 	out, err := renderer.Render()
 	if err != nil {
-		return fmt.Errorf(renderErrFmt, err)
+		return err
 	}
 
-	if _, err = fmt.Fprintln(writer, out); err != nil {
-		return fmt.Errorf(writeErrFmt, err)
-	}
+	_, err = fmt.Fprintln(writer, out)
 
-	return nil
+	return err
 }
 
 // WriteTree writes the service dependency DAG as an ASCII tree.
 // Nodes are labeled with service name and provider-type icon.
 func (r Report) WriteTree(writer io.Writer) error {
-	return r.writeTree(
-		writer,
-		tree.NewASCIITreeRenderer(),
-		"render tree: %w",
-		"write tree output: %w",
-	)
+	if err := r.writeTree(writer, tree.NewASCIITreeRenderer()); err != nil {
+		return fmt.Errorf("write tree output: %w", err)
+	}
+
+	return nil
 }
 
 // WriteHTMLTree writes the service dependency DAG as an HTML nested list tree.
 // Nodes are labeled with service name and provider-type icon.
 func (r Report) WriteHTMLTree(writer io.Writer) error {
-	return r.writeTree(
-		writer,
-		markup.NewHTMLTreeRenderer(),
-		"render html tree: %w",
-		"write html tree output: %w",
-	)
+	if err := r.writeTree(writer, markup.NewHTMLTreeRenderer()); err != nil {
+		return fmt.Errorf("write html tree output: %w", err)
+	}
+
+	return nil
 }
 
 // WriteTreeString returns the ASCII tree as a string.

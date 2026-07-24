@@ -1,6 +1,7 @@
 package auditlog
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/larsartmann/go-output/plantuml"
@@ -27,5 +28,9 @@ func (r Report) WritePlantUML(writer io.Writer, opts ...DiagramOption) error {
 		}
 	}
 
-	return renderTransformWithErr(writer, r, renderer, transform, "write plantuml diagram: %w")
+	if err := renderGraphDiagramTransform(writer, r, renderer, transform); err != nil {
+		return fmt.Errorf("write plantuml diagram: %w", err)
+	}
+
+	return nil
 }
