@@ -20,10 +20,10 @@ Last updated: 2026-07-24
 
 ## Cross-Project Feature Gaps (from go-workflow-auditlog)
 
-Identified during cross-project review. These patterns exist in the sibling project [`go-workflow-auditlog`](https://github.com/larsartmann/go-workflow-auditlog) and would improve this project.
+Identified during cross-project review. These patterns existed in the sibling project [`go-workflow-auditlog`](https://github.com/larsartmann/go-workflow-auditlog) and have now been ported.
 
-- [ ] **Adopt go-error-family classification** — Port the `classify.go` pattern: register sentinel errors into families for automatic error classification (e.g., `IsRetryable`, `IsTransient`). This project has `go-error-family` only as a transitive v0.8.0 dependency.
-- [ ] **Adopt go-atomic-write** — Replace the custom `writeToFile()` helper in `plugin.go` with the shared `go-atomic-write` library for crash-safe file writes. The sibling project uses this for all file I/O.
-- [ ] **Add NDJSON streaming** — Port the `NDJSONStreamer` pattern from `go-workflow-auditlog/stream.go`: configurable auto-flush and buffer size for streaming events to a file or writer as they occur, instead of batch export.
-- [ ] **Add diagram direction option** — Add `WithDirection(output.Direction)` across all 4 diagram formats (Mermaid, PlantUML, DOT, D2). Currently rankdir/direction is hardcoded (DOT=LR, Mermaid=TD).
-- [ ] **Add table column selection** — Add `WithColumns(TableColumn...)` option to `WriteTable` for selectable columns (currently fixed to 7 columns). The sibling project supports 10 columns.
+- [x] **Adopt go-error-family classification** — Ported the `classify.go` pattern: all sentinel errors are registered into families (Corruption/Rejection) via `ErrorClassifications()` and auto-registered in `init()`. Upgraded `go-error-family` from v0.8.0 to v0.9.0 (direct dependency).
+- [x] **Adopt go-atomic-write** — Replaced the custom `writeToFile()` helper in `plugin.go` with `go-atomic-write` v0.3.0 (`atomicwrite.WriteFunc`) for crash-safe file writes with fsync durability and cross-platform atomic rename.
+- [x] **Add NDJSON streaming** — Ported the `NDJSONStreamer` pattern from `go-workflow-auditlog/stream.go`: configurable auto-flush and buffer size for streaming events to a file or writer as they occur. Uses standard `encoding/json` (no `jsontext` dependency, respecting the project's `encoding/json/v2` exclusion policy).
+- [x] **Add diagram direction option** — Added `WithDirection(output.Direction)` across all 4 diagram formats (Mermaid, PlantUML, DOT, D2).
+- [x] **Add table column selection** — Added `WithColumns(TableColumn...)` option to `WriteTable` for selectable columns (10 available). The sibling project's pattern was fully ported.
