@@ -4,8 +4,10 @@ Baseline benchmark results for `samber-do-auditlog`, captured post-v0.0.3.
 
 These serve as a regression detection baseline. Re-run with:
 
+> **Requires `GOEXPERIMENT=jsonv2`** — set in the Nix devShell automatically, or `export GOEXPERIMENT=jsonv2` manually. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ```bash
-go test -bench=. -benchmem -count=3 -run=^$ ./...
+GOEXPERIMENT=jsonv2 go test -bench=. -benchmem -count=3 -run=^$ ./...
 ```
 
 Compare against this file with `benchstat`:
