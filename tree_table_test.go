@@ -432,6 +432,47 @@ func TestReport_WriteCSV_FailingWriter(t *testing.T) {
 	}
 }
 
+func TestReport_WriteCSV_WithErrors(t *testing.T) {
+	t.Parallel()
+
+	invErr := "connection refused"
+	shutdownErr := "timeout"
+	hcErr := "unhealthy"
+
+	report := auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: "csv-errors",
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceIdentity: auditlog.ServiceIdentity{
+					ServiceRef: rootRef("failing-svc"),
+				},
+				ServiceLifecycle: auditlog.ServiceLifecycle{
+					Status:               auditlog.ServiceStatusInvocationError,
+					InvocationError:      &invErr,
+					ShutdownError:        &shutdownErr,
+				},
+				ServiceHealth: auditlog.ServiceHealth{
+					HealthCheckError: &hcErr,
+					HealthCheckCount: 3,
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+
+	err := report.WriteCSV(&buf)
+	if err != nil {
+		t.Fatalf("WriteCSV error: %v", err)
+	}
+
+	out := buf.String()
+	assertOutputContains(t, "csv-errors", out, "connection refused")
+	assertOutputContains(t, "csv-errors", out, "timeout")
+	assertOutputContains(t, "csv-errors", out, "unhealthy")
+}
+
 func TestReport_WriteHTMLTree_FailingWriter(t *testing.T) {
 	t.Parallel()
 
