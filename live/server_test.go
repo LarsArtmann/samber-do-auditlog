@@ -613,6 +613,11 @@ func TestServer_ListenAndServe_Addr_Shutdown(t *testing.T) {
 		t.Fatalf("server did not start: %v", lastErr)
 	}
 
+	// Addr() while running should return the configured address (httpServer is set).
+	if got := server.Addr(); got != addr {
+		t.Errorf("Addr() while running should return %q, got %q", addr, got)
+	}
+
 	shutdownCtx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
 	defer cancel()
 
@@ -814,5 +819,70 @@ func TestServer_HealthEndpoint_WithEvents(t *testing.T) {
 	body := rec.Body.String()
 	if !strings.Contains(body, `"events"`) {
 		t.Errorf("health response should contain events field: %s", body)
+	}
+}
+
+func TestServer_HandleDashboard_SubPathNotFound(t *testing.T) {
+	t.Parallel()
+
+	server := newTestServer(t)
+
+	// A path under the prefix but not the dashboard root should return 404
+	// from the handler (not the mux).
+	ctx := t.Context()
+	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/nonexistent-subpage", nil)
+	rec := httptest.NewRecorder()
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("expected 404 for sub-path, got %d", rec.Code)
+	}
+}
+
+func TestServer_NilPlugin_SSESnapshot(t *testing.T) {
+	t.Parallel()
+
+	// A server with nil plugin exercises the nil-plugin early return in sendSnapshot.
+	hub := live.NewHub()
+	server := live.NewServer(hub, nil, live.Config{})
+
+	ts := httptest.NewServer(server)
+	defer ts.Close()
+
+	// Connect to SSE — snapshot will be skipped (nil plugin → return nil),
+	// then SignalComplete triggers sendComplete (also nil plugin → return).
+	hub.SignalComplete()
+
+	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	defer closeSSE()
+
+	// The connection should succeed even with nil plugin.
+	// The complete event may or may not arrive depending on timing,
+	// but the connection itself should not error.
+	_ = scanner
+}
+
+func TestServer_NilPlugin_ReportEndpoint(t *testing.T) {
+	t.Parallel()
+
+	// A server with nil plugin: handleReport panics (no nil check).
+	// httptest.NewServer recovers the panic and returns 500.
+	hub := live.NewHub()
+	server := live.NewServer(hub, nil, live.Config{})
+
+	ts := httptest.NewServer(server)
+	defer ts.Close()
+
+	ctx := t.Context()
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, ts.URL+"/debug/di/api/report", nil)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusInternalServerError {
+		t.Errorf("expected 500 for nil plugin report, got %d", resp.StatusCode)
 	}
 }

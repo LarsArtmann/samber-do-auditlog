@@ -241,6 +241,12 @@ func (srv *Server) handleReport(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-cache")
 
+	if srv.plugin == nil {
+		http.Error(w, "no plugin available", http.StatusServiceUnavailable)
+
+		return
+	}
+
 	data, err := makeReportJSON(srv.plugin)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("generate report: %v", err), http.StatusInternalServerError)
