@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **D2 hex-color quoting**: Upgraded go-output to v0.31.1 which fixes unquoted hex colors in D2 output. Previously `style.fill: #e8a838` was treated as a comment by D2 (the `#` starts a comment); now properly quoted as `style.fill: "#e8a838"`. The same fix applies to DOT node attributes (`fillcolor="#e8a838"`). Regression tests: `TestWriteD2_HexColorsQuoted`, `TestWriteDOT_HexColorsQuoted`.
 - **HTML footer timestamp**: Fixed `html.templ` footer to use `report.exported_at` (generation time) instead of `new Date().toLocaleString()` (viewer's local time). Offline reports now show the correct generation timestamp.
 - **README "Loading & Migrating Reports" code block**: Fixed undefined variables (`oldJSONBytes`, `ndjsonFile`) — the code block now shows complete, compile-verified examples with proper file reading.
 - **README "zero exemptions" claim**: Corrected the false claim about golangci-lint config to "minimal exemptions for tests and tooling" — the config does have path exclusions for `*_test.go`, `cmd/`, and `example/`.

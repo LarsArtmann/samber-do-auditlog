@@ -479,3 +479,50 @@ func TestWriteD2_ExternalDependency(t *testing.T) {
 	assertStringContains(t, output, "external-dep")
 	assertStringContains(t, output, "->")
 }
+
+func TestWriteD2_HexColorsQuoted(t *testing.T) {
+	t.Parallel()
+
+	report := singleServiceWithExternalDepReport()
+
+	var buf bytes.Buffer
+
+	err := report.WriteD2(&buf)
+	if err != nil {
+		t.Fatalf("WriteD2: %v", err)
+	}
+
+	output := buf.String()
+	// D2 treats # as a comment character, so hex color values MUST be
+	// double-quoted or the rest of the line is silently ignored.
+	// Regression test for go-output v0.31.1 d2Quote() fix.
+	assertStringContains(t, output, `style.fill: "#e8a838"`)
+	assertStringContains(t, output, `style.stroke: "#4a4030"`)
+
+	if strings.Contains(output, `style.fill: #`) {
+		t.Errorf("D2 hex color must be quoted — unquoted form is treated as a comment:\n%s", output)
+	}
+}
+
+func TestWriteDOT_HexColorsQuoted(t *testing.T) {
+	t.Parallel()
+
+	report := singleServiceWithExternalDepReport()
+
+	var buf bytes.Buffer
+
+	err := report.WriteDOT(&buf)
+	if err != nil {
+		t.Fatalf("WriteDOT: %v", err)
+	}
+
+	output := buf.String()
+	// DOT hex color values must be double-quoted for standards compliance.
+	// Regression test for go-output v0.31.1 quoting fix.
+	assertStringContains(t, output, `fillcolor="#e8a838"`)
+	assertStringContains(t, output, `color="#4a4030"`)
+
+	if strings.Contains(output, `fillcolor=#`) {
+		t.Errorf("DOT hex color must be quoted:\n%s", output)
+	}
+}
