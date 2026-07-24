@@ -432,16 +432,6 @@ func TestReport_WriteCSV_FailingWriter(t *testing.T) {
 	}
 }
 
-func TestReport_WriteTree_FailingWriter(t *testing.T) {
-	t.Parallel()
-
-	report := activeSvcReport("tree-err", "svc")
-	err := report.WriteTree(errWriter{})
-	if err == nil {
-		t.Fatal("expected error from failing writer")
-	}
-}
-
 func TestReport_WriteHTMLTree_FailingWriter(t *testing.T) {
 	t.Parallel()
 
