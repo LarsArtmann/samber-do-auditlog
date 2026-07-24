@@ -80,7 +80,13 @@ func runLive(addr string) {
 
 	injector := do.NewWithOpts(plugin.Opts())
 
-	server := live.NewServer(hub, plugin, live.Config{Addr: addr})
+	server := live.NewServer(hub, plugin, live.Config{
+		Addr:               addr,
+		Prefix:             "/debug/di",
+		ReadHeaderTimeout:  5 * time.Second,
+		HeartbeatInterval:  15 * time.Second,
+		CORSAllowedOrigins: "*",
+	})
 
 	errCh := make(chan error, 1)
 	go func() {
