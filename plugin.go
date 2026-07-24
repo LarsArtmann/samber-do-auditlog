@@ -185,43 +185,51 @@ func (p *Plugin) ExportToTSV(path string) error {
 }
 
 // WriteMermaid writes the dependency graph as a Mermaid flowchart to writer.
-func (p *Plugin) WriteMermaid(writer io.Writer) error {
-	return p.Report().WriteMermaid(writer)
+func (p *Plugin) WriteMermaid(writer io.Writer, opts ...DiagramOption) error {
+	return p.Report().WriteMermaid(writer, opts...)
 }
 
 // WritePlantUML writes the dependency graph as a PlantUML component diagram to writer.
-func (p *Plugin) WritePlantUML(writer io.Writer) error {
-	return p.Report().WritePlantUML(writer)
+func (p *Plugin) WritePlantUML(writer io.Writer, opts ...DiagramOption) error {
+	return p.Report().WritePlantUML(writer, opts...)
 }
 
 // WriteDOT writes the dependency graph as a Graphviz DOT digraph to writer.
-func (p *Plugin) WriteDOT(writer io.Writer) error {
-	return p.Report().WriteDOT(writer)
+func (p *Plugin) WriteDOT(writer io.Writer, opts ...DiagramOption) error {
+	return p.Report().WriteDOT(writer, opts...)
 }
 
 // WriteD2 writes the dependency graph as a D2 diagram to writer.
-func (p *Plugin) WriteD2(writer io.Writer) error {
-	return p.Report().WriteD2(writer)
+func (p *Plugin) WriteD2(writer io.Writer, opts ...DiagramOption) error {
+	return p.Report().WriteD2(writer, opts...)
 }
 
 // ExportToMermaid writes the dependency graph as a Mermaid flowchart to path.
-func (p *Plugin) ExportToMermaid(path string) error {
-	return writeToFile(path, p.WriteMermaid)
+func (p *Plugin) ExportToMermaid(path string, opts ...DiagramOption) error {
+	return writeToFile(path, func(w io.Writer) error {
+		return p.WriteMermaid(w, opts...)
+	})
 }
 
 // ExportToPlantUML writes the dependency graph as a PlantUML component diagram to path.
-func (p *Plugin) ExportToPlantUML(path string) error {
-	return writeToFile(path, p.WritePlantUML)
+func (p *Plugin) ExportToPlantUML(path string, opts ...DiagramOption) error {
+	return writeToFile(path, func(w io.Writer) error {
+		return p.WritePlantUML(w, opts...)
+	})
 }
 
 // ExportToDOT writes the dependency graph as a Graphviz DOT digraph to path.
-func (p *Plugin) ExportToDOT(path string) error {
-	return writeToFile(path, p.WriteDOT)
+func (p *Plugin) ExportToDOT(path string, opts ...DiagramOption) error {
+	return writeToFile(path, func(w io.Writer) error {
+		return p.WriteDOT(w, opts...)
+	})
 }
 
 // ExportToD2 writes the dependency graph as a D2 diagram to path.
-func (p *Plugin) ExportToD2(path string) error {
-	return writeToFile(path, p.WriteD2)
+func (p *Plugin) ExportToD2(path string, opts ...DiagramOption) error {
+	return writeToFile(path, func(w io.Writer) error {
+		return p.WriteD2(w, opts...)
+	})
 }
 
 // WriteTree writes the service dependency DAG as an ASCII tree to writer.

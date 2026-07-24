@@ -14,9 +14,19 @@ import (
 // deduplicated locally via dedupGraphEdges because the D2 renderer has no
 // built-in DedupEdges. See also WriteMermaid, WritePlantUML, and WriteDOT for
 // the other diagram formats.
-func (r Report) WriteD2(writer io.Writer) error {
+//
+// Use [WithDirection] to change the layout direction (default: down):
+//
+//	report.WriteD2(w, auditlog.WithDirection(output.DirectionRight))
+func (r Report) WriteD2(writer io.Writer, opts ...DiagramOption) error {
+	cfg := applyDiagramOpts(opts)
 	renderer := d2.NewDiagram()
 	renderer.SetTitle(string(r.ContainerID))
+
+	if cfg.hasDirection() {
+		renderer.SetDirection(d2.Direction(cfg.direction))
+	}
+
 	renderer.SetNodes(buildDiagramNodes(r))
 	renderer.SetEdges(dedupGraphEdges(buildDiagramEdges(r)))
 

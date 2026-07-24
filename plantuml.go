@@ -11,10 +11,23 @@ import (
 // graph. Each service is a component; edges point from dependent -> dependency.
 // The warm-amber palette is applied per-node via PlantUML color specs.
 // Paste the output into any tool that renders PlantUML.
-func (r Report) WritePlantUML(writer io.Writer) error {
+//
+// Use [WithDirection] to change the layout direction (default: top-down):
+//
+//	report.WritePlantUML(w, auditlog.WithDirection(output.DirectionRight))
+func (r Report) WritePlantUML(writer io.Writer, opts ...DiagramOption) error {
+	cfg := applyDiagramOpts(opts)
 	renderer := plantuml.NewPlantUMLDiagram()
 
-	err := renderGraphDiagram(writer, r, renderer)
+	var transform func(string) string
+	if cfg.hasDirection() {
+		cmd := plantumlDirectionCommand(cfg.direction)
+		transform = func(out string) string {
+			return applyPlantumlDirection(out, cmd)
+		}
+	}
+
+	err := renderGraphDiagramTransform(writer, r, renderer, transform)
 	if err != nil {
 		return fmt.Errorf("write plantuml diagram: %w", err)
 	}

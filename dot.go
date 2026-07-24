@@ -11,10 +11,20 @@ import (
 // Each service is a node; edges point from dependent -> dependency. The output
 // is valid input for `dot -Tsvg` / `dot -Tpng`. Nodes carry the warm-amber
 // palette via per-node fillcolor/color attributes.
-func (r Report) WriteDOT(writer io.Writer) error {
+//
+// Use [WithDirection] to change the layout direction (default: left-to-right):
+//
+//	report.WriteDOT(w, auditlog.WithDirection(output.DirectionDown))
+func (r Report) WriteDOT(writer io.Writer, opts ...DiagramOption) error {
+	cfg := applyDiagramOpts(opts)
 	renderer := graph.NewDOTRenderer()
 	renderer.SetGraphID("do_auditlog")
-	renderer.SetRankDir(graph.RankDirLR)
+
+	if cfg.hasDirection() {
+		renderer.SetDirection(cfg.direction)
+	} else {
+		renderer.SetRankDir(graph.RankDirLR)
+	}
 
 	err := renderGraphDiagram(writer, r, renderer)
 	if err != nil {

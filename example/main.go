@@ -261,10 +261,10 @@ func exportReports(plugin *auditlog.Plugin) {
 		ext string
 		fn  func(string) error
 	}{
-		{"mermaid", plugin.ExportToMermaid},
-		{"puml", plugin.ExportToPlantUML},
-		{"dot", plugin.ExportToDOT},
-		{"d2", plugin.ExportToD2},
+		{"mermaid", func(p string) error { return plugin.ExportToMermaid(p) }},
+		{"puml", func(p string) error { return plugin.ExportToPlantUML(p) }},
+		{"dot", func(p string) error { return plugin.ExportToDOT(p) }},
+		{"d2", func(p string) error { return plugin.ExportToD2(p) }},
 	}
 	for _, d := range diagrams {
 		path := tmpDir + "/dependency-graph." + d.ext
