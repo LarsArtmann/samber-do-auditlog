@@ -150,8 +150,8 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 | Feature                     | Description                                                                                                          | Verified              |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| **go-ndjson loader**        | `LoadReport` and format detection delegate to `go-ndjson/loader`. Local `loader.go` re-exports the public API        | `loader.go`, `go.mod` |
-| **go-ndjson reader/writer** | `ReadEvents` and NDJSON writing delegate to the `go-ndjson` module. Local `ndjson.go` re-exports sentinels and types | `ndjson.go`, `go.mod` |
+| **go-ndjson loader**        | `LoadReport` and format detection delegate to `go-ndjson/loader`. Local `loader.go` re-exports the public API. go-ndjson uses stdlib `encoding/json` (migrated from json/v2)        | `loader.go`, `go.mod` |
+| **go-ndjson reader/writer** | `ReadEvents` and NDJSON writing delegate to the `go-ndjson` module. Local `ndjson.go` re-exports sentinels and types. **Note**: `GOEXPERIMENT=jsonv2` is required at build time — the requirement comes from `go-output` (via `go-branded-id`), not from go-ndjson | `ndjson.go`, `go.mod` |
 
 ### Schema Migration
 
