@@ -47,7 +47,7 @@ type Hub struct {
 
 // NewHub creates a Hub ready for use.
 func NewHub() *Hub {
-	return &Hub{ //nolint:exhaustruct
+	return &Hub{
 		clients: make(map[uint64]*Subscriber),
 	}
 }

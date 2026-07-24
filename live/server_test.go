@@ -28,7 +28,6 @@ func newTestServer(t *testing.T) *live.Server {
 		t.Fatalf("create plugin: %v", err)
 	}
 
-
 	server := live.NewServer(hub, plugin, live.Config{})
 
 	return server
@@ -166,7 +165,6 @@ func TestServer_CustomPrefix(t *testing.T) {
 		t.Fatalf("create plugin: %v", err)
 	}
 
-
 	server := live.NewServer(hub, plugin, live.Config{Prefix: "/my/debug"})
 
 	ts := httptest.NewServer(server)
@@ -208,7 +206,6 @@ func TestServer_RootPrefix(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create plugin: %v", err)
 	}
-
 
 	server := live.NewServer(hub, plugin, live.Config{Prefix: "/"})
 

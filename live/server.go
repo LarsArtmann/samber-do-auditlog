@@ -120,12 +120,12 @@ func NewServer(hub *Hub, plugin *auditlog.Plugin, cfg Config) *Server {
 		cfg.HeartbeatInterval = defaultHeartbeatInterval
 	}
 
-	srv := &Server{ //nolint:exhaustruct
-		hub:     hub,
-		plugin:  plugin,
-		config:  cfg,
-		mux:     http.NewServeMux(),
-		prefix:  cfg.Prefix,
+	srv := &Server{
+		hub:    hub,
+		plugin: plugin,
+		config: cfg,
+		mux:    http.NewServeMux(),
+		prefix: cfg.Prefix,
 	}
 
 	srv.dashboardHTML = renderDashboardHTML(cfg.Prefix)
