@@ -1,8 +1,8 @@
 # API Stability Promise (0.x)
 
-> **Pre-1.0 notice.** This library is in ALPHA. The public API may change
-> between minor releases. This document defines what you can rely on and what
-> may evolve.
+> **Pre-1.0 notice.** This library is in BETA. The public API is stabilizing
+> but may still change between minor releases before 1.0. This document defines
+> what you can rely on and what may evolve.
 
 ## Stable API (breaking changes require a major version bump or deprecation cycle)
 

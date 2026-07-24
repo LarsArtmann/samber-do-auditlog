@@ -12,6 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Promoted project status from ALPHA to BETA. The public API has been stabilizing
+across v0.3.0 → v0.7.0 with non-breaking feature releases dominating and only
+two intentional breaking changes (typed identifiers and `ServiceInfo` domain
+split in v0.7.0). `STABILITY.md` now reflects the BETA promise: API is
+stabilizing, but breaking changes remain possible before 1.0.
+
+### Changed
+
+- **Project status: ALPHA → BETA.** The `README.md` and `STABILITY.md`
+  pre-1.0 notices have been updated accordingly. The API surface listed as
+  "stable" in `STABILITY.md` remains the de-facto commitment; consumers should
+  still pin to a specific version tag.
+
 ## [0.7.0] - 2026-07-25
 
 A feature release: real-time SSE live dashboard, cross-project feature ports (error classification, atomic writes, NDJSON streaming, diagram direction, table column selection), typed identifiers, ServiceInfo domain split, and go-output v0.31.1. Includes breaking changes for typed identifiers and the ServiceInfo split.

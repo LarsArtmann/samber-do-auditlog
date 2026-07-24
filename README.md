@@ -17,7 +17,7 @@ Audit-log plugin for [samber/do v2](https://github.com/samber/do) — track ever
 </div>
 
 > [!CAUTION]
-> **Alpha.** The API may change between releases. Pin to a specific commit if you use this in production. See [STABILITY.md](STABILITY.md) for the stability promise. Feedback welcome in [Issues](https://github.com/larsartmann/samber-do-auditlog/issues) — [CONTRIBUTING.md](CONTRIBUTING.md) has everything you need to get started.
+> **Beta.** The API is stabilizing but breaking changes are still possible before 1.0. Pin to a specific version (`go get github.com/larsartmann/samber-do-auditlog@vX.Y.Z`) if you depend on it in production. See [STABILITY.md](STABILITY.md) for the stability promise. Feedback welcome in [Issues](https://github.com/larsartmann/samber-do-auditlog/issues) — [CONTRIBUTING.md](CONTRIBUTING.md) has everything you need to get started.
 
 ---
 
