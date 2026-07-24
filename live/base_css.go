@@ -1,38 +1,26 @@
 package live
 
-// baseCSS contains the essential CSS custom properties and base styles
-// extracted from the static HTML dashboard. This is the warm amber "Container
-// Telemetry" aesthetic shared between the static and live dashboards.
-//
-//nolint:gochecknoglobals // read-only CSS constant, not mutable shared state
-var baseCSS = `/* samber-do-auditlog base CSS — warm amber Container Telemetry aesthetic */
+import auditlog "github.com/larsartmann/samber-do-auditlog"
+
+// liveTokenAliases maps canonical design token names (from
+// auditlog.DesignTokensCSS) to the variable names used by the live dashboard's
+// component CSS. This keeps both dashboards on the same palette without
+// duplicating color values.
+const liveTokenAliases = `
 :root {
-  --bg: #14110d;
-  --bg-card: #1c1914;
-  --bg-hover: #252118;
-  --text: #e8dcc8;
-  --text-dim: #a09080;
-  --text-muted: #6b5f52;
-  --accent: #e8a838;
-  --accent-dim: rgba(232, 168, 56, 0.12);
-  --success: #6fbf8e;
-  --success-dim: rgba(111, 191, 142, 0.12);
-  --warning: #e8a838;
-  --warning-dim: rgba(232, 168, 56, 0.12);
-  --error: #e07060;
-  --error-dim: rgba(224, 112, 96, 0.12);
-  --info: #7eb8d8;
-  --lazy: #b89fd8;
-  --eager: #e8a838;
-  --transient: #d8976b;
-  --alias: #6fbf8e;
-  --border: #2a2520;
-  --border-light: #3a3530;
+  --bg-card: var(--bg-elevated);
+  --bg-hover: var(--surface-hover);
+  --border-light: var(--border-active);
   --font: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'IBM Plex Mono', 'Fira Code', monospace;
-  --transition: 0.2s ease;
-  --radius: 6px;
-}
+}`
+
+// baseCSS composes the shared design tokens (auditlog.DesignTokensCSS) with
+// live-dashboard-specific aliases and base component styles. The shared tokens
+// guarantee visual consistency with the static HTML report.
+//
+//nolint:gochecknoglobals // read-only CSS constant, not mutable shared state
+var baseCSS = auditlog.DesignTokensCSS + liveTokenAliases + `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: var(--font);
