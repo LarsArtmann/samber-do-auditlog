@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`BuildDAGHTML` exported**: Renamed from `buildDAGHTML` so the `live/` sub-package can call it for the SSE snapshot graph data. Updated `html.templ` and regenerated `html_templ.go`.
 - **README rewrite**: Condensed from 569 to ~350 lines as a high-conversion landing page. All Quick Start code compile-verified. Fixed incorrect Mermaid example (replaced invalid node IDs with quoted syntax). Restored API Reference link to the documentation website. Added sections for Loading & Migrating Reports, env-var toggle, MaxEvents, Report.Diff, Security & Quality, and STABILITY.md link.
 - **GOEXPERIMENT=jsonv2 enabled in Nix devShell and CI**: The Nix devShell (`flake.nix`), CI workflow (`.github/workflows/ci.yml`), and coverage-gate script (`scripts/coverage-gate.sh`) now set `GOEXPERIMENT=jsonv2` automatically. Required because `go-output` (used for diagram/table rendering) transitively depends on `encoding/json/v2`. Build commands work without manually setting the flag inside the Nix devShell.
+- **go-output v0.30.1 → v0.31.1**: All 12 go-output sub-modules bumped in lockstep. Fixes D2 hex-color quoting (see Fixed below). Two `replace` directives added for `go-output/testhelpers` and `go-output/testhelpers/graphtest` as a workaround for a go-output release bug (broken pseudo-versions `v0.0.0-00010101000000-000000000000` in published tags). The `.golangci.yml` `gomoddirectives.replace-allow-list` whitelists these modules.
 
 ### Fixed
 
