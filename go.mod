@@ -9,12 +9,12 @@ require (
 	github.com/invopop/jsonschema v0.14.0
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
 	// are tagged together at the same version. Pin them in lockstep.
-	github.com/larsartmann/go-output v0.30.1
-	github.com/larsartmann/go-output/d2 v0.30.1
-	github.com/larsartmann/go-output/daghtml v0.30.1
+	github.com/larsartmann/go-output v0.31.1
+	github.com/larsartmann/go-output/d2 v0.31.1
+	github.com/larsartmann/go-output/daghtml v0.31.1
 	github.com/larsartmann/go-output/escape v0.30.1
-	github.com/larsartmann/go-output/graph v0.30.1
-	github.com/larsartmann/go-output/plantuml v0.30.1
+	github.com/larsartmann/go-output/graph v0.31.1
+	github.com/larsartmann/go-output/plantuml v0.31.1
 	github.com/samber/do/v2 v2.0.0
 )
 
