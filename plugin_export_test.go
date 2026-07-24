@@ -238,10 +238,10 @@ func TestPlugin_WriteDiagram(t *testing.T) {
 		name string
 		fn   func(io.Writer) error
 	}{
-		{"Mermaid", p.WriteMermaid},
-		{"PlantUML", p.WritePlantUML},
-		{"DOT", p.WriteDOT},
-		{"D2", p.WriteD2},
+		{"Mermaid", func(w io.Writer) error { return p.WriteMermaid(w) }},
+		{"PlantUML", func(w io.Writer) error { return p.WritePlantUML(w) }},
+		{"DOT", func(w io.Writer) error { return p.WriteDOT(w) }},
+		{"D2", func(w io.Writer) error { return p.WriteD2(w) }},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -271,10 +271,10 @@ func TestPlugin_ExportToDiagram(t *testing.T) {
 		ext  string
 		fn   func(string) error
 	}{
-		{"Mermaid", ".mmd", p.ExportToMermaid},
-		{"PlantUML", ".puml", p.ExportToPlantUML},
-		{"DOT", ".dot", p.ExportToDOT},
-		{"D2", ".d2", p.ExportToD2},
+		{"Mermaid", ".mmd", func(path string) error { return p.ExportToMermaid(path) }},
+		{"PlantUML", ".puml", func(path string) error { return p.ExportToPlantUML(path) }},
+		{"DOT", ".dot", func(path string) error { return p.ExportToDOT(path) }},
+		{"D2", ".d2", func(path string) error { return p.ExportToD2(path) }},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
