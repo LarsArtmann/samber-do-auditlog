@@ -195,3 +195,9 @@ Commits `ac48b84`, `4388c0e`, `02b8afb`, `6cd41a8` have AI-generated messages wi
 **What went wrong**: A parallel process auto-committed work with hallucinated commit messages, created a broken `flake.lock` git state, and nothing was pushed. The live site remains unchanged. The timeline screenshot has a mismatched aspect ratio that creates visual inconsistency in the grid.
 
 **What I'd do differently**: Verify git state before declaring done. Push immediately after build verification. Intercept or disable auto-commit processes that generate garbage messages. Check image dimensions before placing them in a grid layout.
+
+---
+
+## Resolution (2026-07-24)
+
+The landing-page redesign shipped: ShowcaseSection moved above FeatureGrid, redesigned to a 2×2 grid with browser-chrome mockups and hover zoom. DemoSection redesigned to a 2-column layout. The `sections.ts` "9+" → "16+" fix was applied. The website builds successfully (13 pages in ~2.4s). The `website/flake.lock` git-state issue was eventually resolved. The garbage auto-commit messages from the parallel process were left in history (no rewrite performed). The timeline screenshot aspect-ratio mismatch (1400×1100 vs 1400×1300) and the hover-only "Click to enlarge" touch-accessibility gap remained open at time of writing.

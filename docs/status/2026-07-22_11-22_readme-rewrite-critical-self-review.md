@@ -191,3 +191,9 @@ The rewrite removed ALL of these. These are critical for anyone who wants to pro
 2. **Should the README include condensed JSON/output examples, or should ALL detailed examples live exclusively on the documentation website?** The current rewrite sends everything to the website. Some users prefer self-contained READMEs. This is an information-density vs. brevity tradeoff.
 
 3. **Should the package-level functions (`LoadReport`, `MigrateReport`, `ReplayEvents`, `JSONSchema`) be documented in the README, or are they considered "advanced usage" that belongs only in the docs website?** The old README had them; the rewrite dropped them entirely. This affects discoverability for programmatic use cases.
+
+---
+
+## Resolution (2026-07-24)
+
+All three P0 defects identified in this self-review were addressed in the 11:47 session: (1) Mermaid example node IDs replaced with quoted syntax + provider-type emoji legend, (2) API Reference link restored to documentation website (`do-auditlog.lars.software/api-reference/`), (3) "Loading & Migrating Reports" section added covering `LoadReport`, `MigrateReport`, `ReadEvents`, `ReplayEvents`, `JSONSchema()`. The 11:47 session then identified NEW defects it introduced (broken code block, false "zero exemptions" claim) — see that report's own resolution. README is currently ~350 lines.
