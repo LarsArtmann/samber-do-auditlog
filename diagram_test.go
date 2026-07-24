@@ -159,6 +159,7 @@ func TestWriteDOT_WriterError(t *testing.T) {
 	t.Parallel()
 
 	p, _ := setupWithDB("test")
+
 	assertWriteFails(t, "WriteDOT", func(w io.Writer) error { return p.Report().WriteDOT(w) })
 }
 
@@ -197,6 +198,7 @@ func TestWriteMermaid_WriterError(t *testing.T) {
 	t.Parallel()
 
 	p, _ := setupWithDB("test")
+
 	assertWriteFails(t, "WriteMermaid", func(w io.Writer) error { return p.Report().WriteMermaid(w) })
 }
 
@@ -204,6 +206,7 @@ func TestWritePlantUML_WriterError(t *testing.T) {
 	t.Parallel()
 
 	p, _ := setupWithDB("test")
+
 	assertWriteFails(t, "WritePlantUML", func(w io.Writer) error { return p.Report().WritePlantUML(w) })
 }
 
@@ -275,6 +278,7 @@ func TestWriteMermaid_DuplicateEdges(t *testing.T) {
 	t.Parallel()
 
 	report := reportWithDuplicateEdges()
+
 	assertSingleEdge(t, "root_svc_a --> root_svc_b", func(w io.Writer) error { return report.WriteMermaid(w) })
 }
 
@@ -452,6 +456,7 @@ func TestWriteD2_WriterError(t *testing.T) {
 	t.Parallel()
 
 	p, _ := setupWithDB("test")
+
 	assertWriteFails(t, "WriteD2", func(w io.Writer) error { return p.Report().WriteD2(w) })
 }
 
@@ -459,6 +464,7 @@ func TestWriteD2_DuplicateEdges(t *testing.T) {
 	t.Parallel()
 
 	report := reportWithDuplicateEdges()
+
 	assertSingleEdge(t, "root_svc_a -> root_svc_b", func(w io.Writer) error { return report.WriteD2(w) })
 }
 

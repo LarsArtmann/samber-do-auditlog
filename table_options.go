@@ -82,23 +82,23 @@ type columnDefinition struct {
 var columnDefs = map[TableColumn]columnDefinition{
 	ColumnService: {
 		header:  "Service",
-		extract: func(s ServiceInfo) string { return string(s.ServiceName) },
+		extract: func(svc ServiceInfo) string { return string(svc.ServiceName) },
 	},
 	ColumnScope: {
 		header:  "Scope",
-		extract: func(s ServiceInfo) string { return s.ScopeName },
+		extract: func(svc ServiceInfo) string { return svc.ScopeName },
 	},
 	ColumnType: {
 		header:  "Type",
-		extract: func(s ServiceInfo) string { return string(s.ServiceType) },
+		extract: func(svc ServiceInfo) string { return string(svc.ServiceType) },
 	},
 	ColumnStatus: {
 		header:  "Status",
-		extract: func(s ServiceInfo) string { return string(s.Status) },
+		extract: func(svc ServiceInfo) string { return string(svc.Status) },
 	},
 	ColumnInvocations: {
 		header:  "Invocations",
-		extract: func(s ServiceInfo) string { return strconv.Itoa(s.InvocationCount) },
+		extract: func(svc ServiceInfo) string { return strconv.Itoa(svc.InvocationCount) },
 	},
 	ColumnBuildMs: {
 		header:  "Build(ms)",
@@ -118,50 +118,50 @@ var columnDefs = map[TableColumn]columnDefinition{
 	},
 	ColumnHealthChecks: {
 		header:  "Health Checks",
-		extract: func(s ServiceInfo) string { return strconv.Itoa(s.HealthCheckCount) },
+		extract: func(svc ServiceInfo) string { return strconv.Itoa(svc.HealthCheckCount) },
 	},
 }
 
-func extractBuildMsCell(s ServiceInfo) string {
-	if s.FirstBuildDurationMs != nil {
-		return strconv.FormatFloat(*s.FirstBuildDurationMs, 'f', 2, 64)
+func extractBuildMsCell(svc ServiceInfo) string {
+	if svc.FirstBuildDurationMs != nil {
+		return strconv.FormatFloat(*svc.FirstBuildDurationMs, 'f', 2, 64)
 	}
 
 	return ""
 }
 
-func extractErrorCell(s ServiceInfo) string {
-	if s.InvocationError != nil {
-		return *s.InvocationError
+func extractErrorCell(svc ServiceInfo) string {
+	if svc.InvocationError != nil {
+		return *svc.InvocationError
 	}
 
-	if s.ShutdownError != nil {
-		return *s.ShutdownError
+	if svc.ShutdownError != nil {
+		return *svc.ShutdownError
 	}
 
 	return ""
 }
 
-func extractDependenciesCell(s ServiceInfo) string {
-	if len(s.Dependencies) == 0 {
+func extractDependenciesCell(svc ServiceInfo) string {
+	if len(svc.Dependencies) == 0 {
 		return ""
 	}
 
-	names := make([]string, 0, len(s.Dependencies))
-	for _, dep := range s.Dependencies {
+	names := make([]string, 0, len(svc.Dependencies))
+	for _, dep := range svc.Dependencies {
 		names = append(names, string(dep.ServiceName))
 	}
 
 	return strings.Join(names, ", ")
 }
 
-func extractDependentsCell(s ServiceInfo) string {
-	if len(s.Dependents) == 0 {
+func extractDependentsCell(svc ServiceInfo) string {
+	if len(svc.Dependents) == 0 {
 		return ""
 	}
 
-	names := make([]string, 0, len(s.Dependents))
-	for _, dep := range s.Dependents {
+	names := make([]string, 0, len(svc.Dependents))
+	for _, dep := range svc.Dependents {
 		names = append(names, string(dep.ServiceName))
 	}
 

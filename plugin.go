@@ -243,7 +243,12 @@ func (p *Plugin) WriteHTMLTree(writer io.Writer) error {
 }
 
 // WriteTable writes the service summary as a table in the specified format to writer.
-func (p *Plugin) WriteTable(writer io.Writer, format output.Format, opts output.RenderOptions, tableOpts ...TableOption) error {
+func (p *Plugin) WriteTable(
+	writer io.Writer,
+	format output.Format,
+	opts output.RenderOptions,
+	tableOpts ...TableOption,
+) error {
 	return p.Report().WriteTable(writer, format, opts, tableOpts...)
 }
 
@@ -258,7 +263,12 @@ func (p *Plugin) ExportToHTMLTree(path string) error {
 }
 
 // ExportToTable writes the service summary table to path in the specified format.
-func (p *Plugin) ExportToTable(path string, format output.Format, opts output.RenderOptions, tableOpts ...TableOption) error {
+func (p *Plugin) ExportToTable(
+	path string,
+	format output.Format,
+	opts output.RenderOptions,
+	tableOpts ...TableOption,
+) error {
 	return writeToFile(path, func(w io.Writer) error {
 		return p.WriteTable(w, format, opts, tableOpts...)
 	})

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/larsartmann/go-output"
+	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
 func TestDiagram_MermaidDefaultDirectionTD(t *testing.T) {
@@ -15,6 +15,7 @@ func TestDiagram_MermaidDefaultDirectionTD(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
+
 	err := report.WriteMermaid(&buf)
 	if err != nil {
 		t.Fatalf("WriteMermaid: %v", err)
@@ -31,6 +32,7 @@ func TestDiagram_MermaidDirectionRight(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
+
 	err := report.WriteMermaid(&buf, auditlog.WithDirection(output.DirectionRight))
 	if err != nil {
 		t.Fatalf("WriteMermaid: %v", err)
@@ -51,6 +53,7 @@ func TestDiagram_DOTDefaultDirectionLR(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
+
 	err := report.WriteDOT(&buf)
 	if err != nil {
 		t.Fatalf("WriteDOT: %v", err)
@@ -67,6 +70,7 @@ func TestDiagram_DOTDirectionDown(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
+
 	err := report.WriteDOT(&buf, auditlog.WithDirection(output.DirectionUp))
 	if err != nil {
 		t.Fatalf("WriteDOT: %v", err)
@@ -83,6 +87,7 @@ func TestDiagram_D2DirectionRight(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
+
 	err := report.WriteD2(&buf, auditlog.WithDirection(output.DirectionRight))
 	if err != nil {
 		t.Fatalf("WriteD2: %v", err)
@@ -99,6 +104,7 @@ func TestDiagram_D2DefaultNoDirection(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
+
 	err := report.WriteD2(&buf)
 	if err != nil {
 		t.Fatalf("WriteD2: %v", err)
@@ -115,6 +121,7 @@ func TestDiagram_PlantUMLDirectionRight(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
+
 	err := report.WritePlantUML(&buf, auditlog.WithDirection(output.DirectionRight))
 	if err != nil {
 		t.Fatalf("WritePlantUML: %v", err)
@@ -131,6 +138,7 @@ func TestDiagram_PlantUMLDefaultNoDirectionCommand(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
+
 	err := report.WritePlantUML(&buf)
 	if err != nil {
 		t.Fatalf("WritePlantUML: %v", err)
@@ -162,6 +170,7 @@ func TestDiagram_AllFormatsAcceptDirectionOption(t *testing.T) {
 			t.Parallel()
 
 			var buf bytes.Buffer
+
 			err := tt.fn(&buf)
 			if err != nil {
 				t.Fatalf("%s: %v", tt.name, err)

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/larsartmann/go-output"
+	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
 func TestTableColumns_DefaultColumns(t *testing.T) {
@@ -15,6 +15,7 @@ func TestTableColumns_DefaultColumns(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
+
 	err := report.WriteTable(&buf, output.FormatCSV, auditlog.DefaultTableOpts())
 	if err != nil {
 		t.Fatalf("WriteTable: %v", err)
@@ -34,6 +35,7 @@ func TestTableColumns_CustomSelection(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
+
 	err := report.WriteTable(&buf, output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnService, auditlog.ColumnStatus),
 	)
@@ -64,6 +66,7 @@ func TestTableColumns_AllColumns(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
+
 	err := report.WriteTable(&buf, output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.AllTableColumns()...),
 	)
@@ -86,6 +89,7 @@ func TestTableColumns_ColumnOrderPreserved(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
+
 	err := report.WriteTable(&buf, output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnError, auditlog.ColumnService),
 	)
@@ -119,6 +123,7 @@ func TestTableColumns_DefaultTableColumnsImmutable(t *testing.T) {
 
 	// Call WithColumns with a custom selection that should NOT affect the default.
 	var buf1 bytes.Buffer
+
 	err := report.WriteTable(&buf1, output.FormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnService),
 	)
@@ -128,6 +133,7 @@ func TestTableColumns_DefaultTableColumnsImmutable(t *testing.T) {
 
 	// Now call without WithColumns — should use the original default columns.
 	var buf2 bytes.Buffer
+
 	err = report.WriteTable(&buf2, output.FormatCSV, auditlog.DefaultTableOpts())
 	if err != nil {
 		t.Fatalf("WriteTable (default): %v", err)

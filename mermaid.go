@@ -20,6 +20,7 @@ func (r Report) WriteMermaid(writer io.Writer, opts ...DiagramOption) error {
 	renderer := graph.NewMermaidRenderer().SetCodeFence(false)
 
 	var transform func(string) string
+
 	if cfg.hasDirection() {
 		keyword := mermaidDirection(cfg.direction)
 		transform = func(out string) string {

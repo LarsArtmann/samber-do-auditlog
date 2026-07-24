@@ -89,11 +89,14 @@ func TestClassify_RejectionErrors(t *testing.T) {
 	}
 }
 
+// errInnerTest is a static sentinel used in wrapped-error classification tests.
+var errInnerTest = errors.New("inner")
+
 func TestClassify_WrappedErrorPreservesClassification(t *testing.T) {
 	t.Parallel()
 
 	for sentinel, family := range auditlog.ErrorClassifications() {
-		wrapped := fmt.Errorf("%w: extra context: %w", sentinel, errors.New("inner"))
+		wrapped := fmt.Errorf("%w: extra context: %w", sentinel, errInnerTest)
 
 		t.Run(family.String(), func(t *testing.T) {
 			t.Parallel()

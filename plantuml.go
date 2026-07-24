@@ -20,6 +20,7 @@ func (r Report) WritePlantUML(writer io.Writer, opts ...DiagramOption) error {
 	renderer := plantuml.NewPlantUMLDiagram()
 
 	var transform func(string) string
+
 	if cfg.hasDirection() {
 		cmd := plantumlDirectionCommand(cfg.direction)
 		transform = func(out string) string {

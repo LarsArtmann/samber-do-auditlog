@@ -20,17 +20,17 @@ func (r Report) buildServiceTableData(columns []TableColumn) *output.Table {
 		columns = append([]TableColumn(nil), DefaultTableColumns...)
 	}
 
-	headers := make([]string, len(columns))
-	for i, col := range columns {
-		headers[i] = columnDefs[col].header
+	headers := make([]string, 0, len(columns))
+	for _, col := range columns {
+		headers = append(headers, columnDefs[col].header)
 	}
 
 	data := output.NewTable(headers)
 
 	for _, svc := range r.Services {
-		row := make([]string, len(columns))
-		for i, col := range columns {
-			row[i] = columnDefs[col].extract(svc)
+		row := make([]string, 0, len(columns))
+		for _, col := range columns {
+			row = append(row, columnDefs[col].extract(svc))
 		}
 
 		data.AddRow(row)
@@ -46,7 +46,12 @@ func (r Report) buildServiceTableData(columns []TableColumn) *output.Table {
 //
 // Use [WithColumns] to customize which columns appear (default: Service,
 // Scope, Type, Status, Invocations, Build(ms), Error).
-func (r Report) WriteTable(writer io.Writer, format output.Format, opts output.RenderOptions, tableOpts ...TableOption) error {
+func (r Report) WriteTable(
+	writer io.Writer,
+	format output.Format,
+	opts output.RenderOptions,
+	tableOpts ...TableOption,
+) error {
 	cfg := applyTableOpts(tableOpts)
 	data := r.buildServiceTableData(cfg.columns)
 
@@ -62,7 +67,11 @@ func (r Report) WriteTable(writer io.Writer, format output.Format, opts output.R
 
 // WriteTableString returns the service summary table as a string in the
 // specified format. See WriteTable for supported formats.
-func (r Report) WriteTableString(format output.Format, opts output.RenderOptions, tableOpts ...TableOption) (string, error) {
+func (r Report) WriteTableString(
+	format output.Format,
+	opts output.RenderOptions,
+	tableOpts ...TableOption,
+) (string, error) {
 	var buf strings.Builder
 
 	err := r.WriteTable(&buf, format, opts, tableOpts...)

@@ -60,7 +60,7 @@ type NDJSONStreamerOption func(*NDJSONStreamer)
 // latency at the cost of throughput. Use this for real-time monitoring
 // pipelines where consumers tail the output file.
 func WithAutoFlush() NDJSONStreamerOption {
-	return func(s *NDJSONStreamer) { s.autoFlush = true }
+	return func(s *NDJSONStreamer) { streamer.autoFlush = true }
 }
 
 // WithStreamBufferSize sets the internal buffer size in bytes. The default is
@@ -70,7 +70,7 @@ func WithAutoFlush() NDJSONStreamerOption {
 func WithStreamBufferSize(size int) NDJSONStreamerOption {
 	return func(s *NDJSONStreamer) {
 		if size > 0 {
-			s.buf = bufio.NewWriterSize(s.writer, size)
+			streamer.buf = bufio.NewWriterSize(streamer.writer, size)
 		}
 	}
 }
@@ -80,21 +80,21 @@ func WithStreamBufferSize(size int) NDJSONStreamerOption {
 // [NDJSONStreamer.Flush] or [NDJSONStreamer.Close] to guarantee all buffered
 // data is written.
 func NewNDJSONStreamer(w io.Writer, opts ...NDJSONStreamerOption) *NDJSONStreamer {
-	s := &NDJSONStreamer{
+	streamer := &NDJSONStreamer{
 		writer: w,
 	}
 
 	for _, opt := range opts {
-		opt(s)
+		opt(streamer)
 	}
 
-	if s.buf == nil {
-		s.buf = bufio.NewWriterSize(w, ndjsonStreamBufferSize)
+	if streamer.buf == nil {
+		streamer.buf = bufio.NewWriterSize(w, ndjsonStreamBufferSize)
 	}
 
-	s.encoder = json.NewEncoder(s.buf)
+	streamer.encoder = json.NewEncoder(streamer.buf)
 
-	return s
+	return streamer
 }
 
 // CreateNDJSONStreamer creates a file at path and returns an [NDJSONStreamer]
@@ -117,44 +117,44 @@ func CreateNDJSONStreamer(path string, opts ...NDJSONStreamerOption) (*NDJSONStr
 //
 // If a previous write failed (see [NDJSONStreamer.Err]), subsequent events
 // are silently dropped to avoid cascading errors.
-func (s *NDJSONStreamer) OnEvent(evt Event) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (streamer *NDJSONStreamer) OnEvent(evt Event) {
+	streamer.mu.Lock()
+	defer streamer.mu.Unlock()
 
-	if s.err != nil || s.closed {
+	if streamer.err != nil || streamer.closed {
 		return
 	}
 
-	encodeErr := s.encoder.Encode(evt)
+	encodeErr := streamer.encoder.Encode(evt)
 	if encodeErr != nil {
-		s.err = fmt.Errorf("encode event %d: %w", evt.Sequence, encodeErr)
+		streamer.err = fmt.Errorf("encode event %d: %w", evt.Sequence, encodeErr)
 
 		return
 	}
 
-	if s.autoFlush {
-		flushErr := s.buf.Flush()
+	if streamer.autoFlush {
+		flushErr := streamer.buf.Flush()
 		if flushErr != nil {
-			s.err = fmt.Errorf("flush ndjson stream: %w", flushErr)
+			streamer.err = fmt.Errorf("flush ndjson stream: %w", flushErr)
 		}
 	}
 }
 
 // Flush writes any buffered data to the underlying [io.Writer].
 // Returns the first error encountered during streaming, if any.
-func (s *NDJSONStreamer) Flush() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (streamer *NDJSONStreamer) Flush() error {
+	streamer.mu.Lock()
+	defer streamer.mu.Unlock()
 
-	if s.err != nil {
-		return s.err
+	if streamer.err != nil {
+		return streamer.err
 	}
 
-	err := s.buf.Flush()
+	err := streamer.buf.Flush()
 	if err != nil {
-		s.err = fmt.Errorf("flush ndjson stream: %w", err)
+		streamer.err = fmt.Errorf("flush ndjson stream: %w", err)
 
-		return s.err
+		return streamer.err
 	}
 
 	return nil
@@ -164,41 +164,41 @@ func (s *NDJSONStreamer) Flush() error {
 // [io.Closer], closes it. After Close, further calls to OnEvent are silently
 // dropped. Close is idempotent — calling it multiple times returns the same
 // error (or nil).
-func (s *NDJSONStreamer) Close() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (streamer *NDJSONStreamer) Close() error {
+	streamer.mu.Lock()
+	defer streamer.mu.Unlock()
 
-	if s.closed {
-		return s.err
+	if streamer.closed {
+		return streamer.err
 	}
 
-	s.closed = true
+	streamer.closed = true
 
-	if s.err == nil {
-		err := s.buf.Flush()
+	if streamer.err == nil {
+		err := streamer.buf.Flush()
 		if err != nil {
-			s.err = fmt.Errorf("flush ndjson stream on close: %w", err)
+			streamer.err = fmt.Errorf("flush ndjson stream on close: %w", err)
 		}
 	}
 
-	closer, ok := s.writer.(io.Closer)
+	closer, ok := streamer.writer.(io.Closer)
 	if !ok {
-		return s.err
+		return streamer.err
 	}
 
 	err := closer.Close()
-	if err != nil && s.err == nil {
-		s.err = fmt.Errorf("close ndjson stream writer: %w", err)
+	if err != nil && streamer.err == nil {
+		streamer.err = fmt.Errorf("close ndjson stream writer: %w", err)
 	}
 
-	return s.err
+	return streamer.err
 }
 
 // Err returns the first error encountered during streaming, or nil if all
 // writes succeeded.
-func (s *NDJSONStreamer) Err() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func (streamer *NDJSONStreamer) Err() error {
+	streamer.mu.Lock()
+	defer streamer.mu.Unlock()
 
-	return s.err
+	return streamer.err
 }
