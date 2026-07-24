@@ -9,6 +9,8 @@
 
 set -e
 
+export GOEXPERIMENT=jsonv2
+
 go test -race -count=1 -coverprofile=cover.out -covermode=atomic ./...
 
 # Exclude the example/ (demo) and cmd/ (tooling) packages from the gate.

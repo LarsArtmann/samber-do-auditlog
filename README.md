@@ -293,11 +293,20 @@ if err != nil {
 fmt.Printf("loaded %s: %d services, %d events\n", format, report.ServiceCount, report.EventCount)
 
 // Migrate an old v0.1.0 report to the current schema
+oldJSONBytes, err := os.ReadFile("old-report.json")
+if err != nil {
+    panic(err)
+}
 migrated, err := auditlog.MigrateReport(oldJSONBytes)
 
 // Replay NDJSON events back into a full Report
+ndjsonFile, err := os.Open("events.ndjson")
+if err != nil {
+    panic(err)
+}
+defer ndjsonFile.Close()
 events, err := auditlog.ReadEvents(ndjsonFile)
-report, err := auditlog.ReplayEvents(events)
+report, err = auditlog.ReplayEvents(events)
 
 // Get the canonical JSON Schema for validation
 schema := auditlog.JSONSchema()
@@ -319,7 +328,7 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 | **CSP hardened**      | HTML reports use `base-uri 'none'; frame-ancestors 'none'`         |
 | **Fuzz tested**       | 5 fuzz targets covering HTML XSS, migration, diagrams, NDJSON      |
 | **govulncheck**       | Runs on every CI push — zero known vulnerabilities                 |
-| **109 linters**       | golangci-lint v2 with near-exhaustive linter set, zero exemptions  |
+| **109 linters**       | golangci-lint v2 with near-exhaustive linter set, minimal exemptions for tests and tooling |
 | **94% coverage gate** | CI fails if coverage drops below 94% of non-example/cmd statements |
 | **JSON Schema**       | Canonical Draft 2020-12 schema generated from Go types             |
 
