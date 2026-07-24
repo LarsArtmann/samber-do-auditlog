@@ -195,7 +195,11 @@ func (srv *Server) Shutdown(ctx context.Context) error {
 		return nil
 	}
 
-	return fmt.Errorf("shutdown: %w", server.Shutdown(ctx))
+	if err := server.Shutdown(ctx); err != nil {
+		return fmt.Errorf("shutdown: %w", err)
+	}
+
+	return nil
 }
 
 // SignalComplete marks the container lifecycle as finished.
