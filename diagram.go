@@ -103,9 +103,21 @@ func buildDiagramEdges(report Report) []output.GraphEdge {
 // writeRendered renders a graph renderer to writer with consistent error
 // wrapping shared by WriteMermaid, WritePlantUML, WriteDOT, and WriteD2.
 func writeRendered(writer io.Writer, renderer output.Renderer) error {
+	return writeRenderedTransform(writer, renderer, nil)
+}
+
+// writeRenderedTransform is the transform-aware variant of writeRendered.
+// If transform is non-nil, it is applied to the rendered string before
+// writing. Used by WriteMermaid and WritePlantUML to post-process direction
+// keywords.
+func writeRenderedTransform(writer io.Writer, renderer output.Renderer, transform func(string) string) error {
 	out, err := renderer.Render()
 	if err != nil {
 		return fmt.Errorf("render diagram: %w", err)
+	}
+
+	if transform != nil {
+		out = transform(out)
 	}
 
 	_, err = writer.Write([]byte(out))
@@ -130,11 +142,22 @@ type graphRendererWithDedup interface {
 // GraphBuilder. DOT/Mermaid/PlantUML all use this; D2 has its own
 // write path because the D2 renderer lacks DedupEdges.
 func renderGraphDiagram(writer io.Writer, r Report, renderer graphRendererWithDedup) error {
+	return renderGraphDiagramTransform(writer, r, renderer, nil)
+}
+
+// renderGraphDiagramTransform is the transform-aware variant, used by Mermaid
+// and PlantUML to post-process direction keywords in the rendered output.
+func renderGraphDiagramTransform(
+	writer io.Writer,
+	r Report,
+	renderer graphRendererWithDedup,
+	transform func(string) string,
+) error {
 	renderer.SetNodes(buildDiagramNodes(r))
 	renderer.SetEdges(buildDiagramEdges(r))
 	renderer.DedupEdges()
 
-	return writeRendered(writer, renderer)
+	return writeRenderedTransform(writer, renderer, transform)
 }
 
 // dedupGraphEdges removes duplicate edges (same from/to pair) while preserving
