@@ -15,7 +15,7 @@ require (
 	github.com/larsartmann/go-output/escape v0.31.1
 	github.com/larsartmann/go-output/graph v0.31.1
 	github.com/larsartmann/go-output/plantuml v0.31.1
-	github.com/samber/do/v2 v2.0.0
+	github.com/samber/do/v2 v2.1.0
 )
 
 require (
@@ -50,7 +50,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
-	github.com/go-faster/errors v0.7.1 // indirect
+	github.com/go-faster/errors v0.8.0 // indirect
 	github.com/go-faster/jx v1.2.0 // indirect
 	github.com/go-faster/yaml v0.4.6 // indirect
 	github.com/gofrs/flock v0.13.0 // indirect
@@ -59,7 +59,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
-	github.com/mattn/go-runewidth v0.0.24 // indirect
+	github.com/mattn/go-runewidth v0.0.27 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
 	github.com/pb33f/ordered-map/v2 v2.3.1 // indirect
