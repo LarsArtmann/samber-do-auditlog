@@ -44,8 +44,7 @@ func ErrorClassifications() map[error]errorfamily.Family {
 		errContainerIDPathSep:    errorfamily.Rejection,
 		errMigrationEmptyInput:   errorfamily.Rejection,
 		errMigrationMissingVersion: errorfamily.Rejection,
-		errUnsupportedFormat:     errorfamily.Rejection,
-		ErrServerAlreadyRunning:  errorfamily.Rejection,
+		errUnsupportedFormat:   errorfamily.Rejection,
 	}
 }
 
