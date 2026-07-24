@@ -96,16 +96,17 @@ example/            — Self-checking demo with 19 samber/do v2 features
 - `onEvent` callback is always called outside the lock to avoid blocking the hot path.
 - `BuildReport()` uses `mu.RLock()` for reading — concurrent reads don't block each other.
 
-### Shared infrastructure: `auditlog-core`
+### Shared infrastructure: `go-sse`
 
-The `live/` sub-package depends on [`github.com/larsartmann/auditlog-core`](https://github.com/larsartmann/auditlog-core),
-a zero-dependency library providing the domain-agnostic SSE hub, HTTP server skeleton, and
-atomic file-write helpers. The live module wraps `corelive.Hub` and `corelive.Server` with
-samber/do-specific domain logic (service events, scope tree, dashboard HTML).
+The `live/` sub-package depends on [`github.com/larsartmann/go-sse`](https://github.com/larsartmann/go-sse)
+(v0.1.0, currently private) for the SSE wire-format primitives — `sse.Event`, `sse.WriteEvent`,
+and `sse.ContentType`. The domain-specific Hub and Server are implemented locally in `live/`
+(samber/do service events, scope tree, dashboard HTML) on top of those primitives; go-sse
+itself is transport-only and owns no domain types here.
 
-A `go.work` workspace at the parent directory links all three projects for local development.
-The `replace` directive in `go.mod` will be removed once `auditlog-core` is published
-with a stable tag.
+A `go.work` workspace at the parent directory links the projects for local development.
+The `replace` directive in `go.mod` (`go-sse => ../go-sse`) remains because go-sse is private;
+it will be removed once the repo is made public (see the go-sse `ROADMAP.md`).
 
 ---
 
