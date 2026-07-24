@@ -290,6 +290,7 @@ go server.ListenAndServe()
 ```
 
 Features:
+
 - **Real-time SSE** — events stream live as services register, invoke, and shut down
 - **Interactive graph** — Sugiyama layered DAG with pan/zoom
 - **Event waveform** — timeline of all events with duration-encoded height
@@ -365,14 +366,14 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 
 ## Security & Quality
 
-| Signal                | Detail                                                             |
-| --------------------- | ------------------------------------------------------------------ |
-| **CSP hardened**      | HTML reports use `base-uri 'none'; frame-ancestors 'none'`         |
-| **Fuzz tested**       | 5 fuzz targets covering HTML XSS, migration, diagrams, NDJSON      |
-| **govulncheck**       | Runs on every CI push — zero known vulnerabilities                 |
+| Signal                | Detail                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------ |
+| **CSP hardened**      | HTML reports use `base-uri 'none'; frame-ancestors 'none'`                                 |
+| **Fuzz tested**       | 5 fuzz targets covering HTML XSS, migration, diagrams, NDJSON                              |
+| **govulncheck**       | Runs on every CI push — zero known vulnerabilities                                         |
 | **109 linters**       | golangci-lint v2 with near-exhaustive linter set, minimal exemptions for tests and tooling |
-| **94% coverage gate** | CI fails if coverage drops below 94% of non-example/cmd statements |
-| **JSON Schema**       | Canonical Draft 2020-12 schema generated from Go types             |
+| **94% coverage gate** | CI fails if coverage drops below 94% of non-example/cmd statements                         |
+| **JSON Schema**       | Canonical Draft 2020-12 schema generated from Go types                                     |
 
 ## Documentation
 

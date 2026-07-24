@@ -133,6 +133,7 @@ public API so existing callers are unaffected. The `go-ndjson` module itself use
 ### GOEXPERIMENT=jsonv2 requirement
 
 **The project requires `GOEXPERIMENT=jsonv2` to build.** This is set automatically in:
+
 - The Nix devShell (`flake.nix` sets `GOEXPERIMENT = "jsonv2"`)
 - CI workflows (`.github/workflows/ci.yml` sets `env: GOEXPERIMENT: jsonv2` at the workflow level)
 - The coverage-gate script (`scripts/coverage-gate.sh` exports it)

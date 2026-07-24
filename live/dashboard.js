@@ -650,9 +650,7 @@
     var services = (node.services || [])
       .map(function (s) {
         var icon = typeIcons[s.service_type] || "";
-        return (
-          '<span class="scope-service-chip">' + icon + " " + esc(s.service_name) + "</span>"
-        );
+        return '<span class="scope-service-chip">' + icon + " " + esc(s.service_name) + "</span>";
       })
       .join("");
 
