@@ -355,6 +355,7 @@ func TestPlugin_ExportToTree(t *testing.T) {
 	_, _ = do.InvokeNamed[*Database](injector, "db")
 
 	path := t.TempDir() + "/tree.txt"
+
 	err := plugin.ExportToTree(path)
 	if err != nil {
 		t.Fatalf("Plugin.ExportToTree error: %v", err)
@@ -378,6 +379,7 @@ func TestPlugin_ExportToHTMLTree(t *testing.T) {
 	_, _ = do.InvokeNamed[*Database](injector, "db")
 
 	path := t.TempDir() + "/tree.html"
+
 	err := plugin.ExportToHTMLTree(path)
 	if err != nil {
 		t.Fatalf("Plugin.ExportToHTMLTree error: %v", err)
@@ -401,6 +403,7 @@ func TestPlugin_ExportToTable(t *testing.T) {
 	_, _ = do.InvokeNamed[*Database](injector, "db")
 
 	path := t.TempDir() + "/table.csv"
+
 	err := plugin.ExportToTable(path, "csv", auditlog.DefaultTableOpts())
 	if err != nil {
 		t.Fatalf("Plugin.ExportToTable error: %v", err)

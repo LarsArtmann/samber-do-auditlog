@@ -23,7 +23,7 @@ func (r Report) WriteTSV(writer io.Writer) error {
 }
 
 func (r Report) writeDelimited(writer io.Writer, comma rune) error {
-	w := csv.NewWriter(writer) //nolint:varnamelen // idiomatic short name for csv.Writer
+	w := csv.NewWriter(writer)
 	w.Comma = comma
 
 	header := []string{

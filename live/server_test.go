@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -610,7 +611,9 @@ func TestServer_ListenAndServe_Addr_Shutdown(t *testing.T) {
 	t.Parallel()
 
 	// Get a free port to avoid conflicts.
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	lc := net.ListenConfig{}
+
+	ln, err := lc.Listen(t.Context(), "tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("get free port: %v", err)
 	}
@@ -694,7 +697,9 @@ func TestServer_ListenAndServe_AlreadyRunning(t *testing.T) {
 	t.Parallel()
 
 	// Get a free port.
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	lc := net.ListenConfig{}
+
+	ln, err := lc.Listen(t.Context(), "tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("get free port: %v", err)
 	}
@@ -777,7 +782,7 @@ func TestServer_HandleSSE_NoFlusher(t *testing.T) {
 		headerMap: make(http.Header),
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/debug/di/api/events", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/debug/di/api/events", nil)
 	server.ServeHTTP(rec, req)
 
 	if rec.code != http.StatusInternalServerError {
@@ -797,7 +802,14 @@ type noFlushRecorder struct {
 }
 
 func (r *noFlushRecorder) Header() http.Header           { return r.headerMap }
-func (r *noFlushRecorder) Write(buf []byte) (int, error) { return r.body.Write(buf) }
+func (r *noFlushRecorder) Write(buf []byte) (int, error) {
+	n, err := r.body.Write(buf)
+	if err != nil {
+		return n, fmt.Errorf("noFlushRecorder write: %w", err)
+	}
+
+	return n, nil
+}
 func (r *noFlushRecorder) WriteHeader(code int)          { r.code = code }
 
 func TestServer_NormalizePrefix(t *testing.T) {
@@ -936,7 +948,7 @@ func TestServer_NilPlugin_ReportEndpoint(t *testing.T) {
 		t.Fatalf("request failed: %v", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusServiceUnavailable {
 		t.Errorf("expected 503 for nil plugin report, got %d", resp.StatusCode)
