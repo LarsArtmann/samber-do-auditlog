@@ -4,6 +4,8 @@
 **Session scope:** Read all 15 `2026-07-2*` historical files, then run update-old-docs (annotate historical files) + docs-health (rebuild living docs: TODO_LIST, FEATURES, ROADMAP, CHANGELOG).
 **Prior context:** The user asked me to do this "FUCKING SUPERBLY" — I need to be honest about whether I delivered.
 
+> **Update 2026-07-24 (later session):** The critical issues this report identified (build broken, coverage gate failing, AGENTS.md missing go-ndjson docs) were all fixed in the 16:51 session. The living docs have since been rebuilt with accurate counts and verified against code. This report's honest self-critique (§d: "I Didn't Fix Anything — I Only Documented Problems") was the catalyst for the fix session.
+
 ---
 
 ## a) FULLY DONE
@@ -286,3 +288,17 @@ I identified 2 release blockers (coverage gate + build flag) and 4 README bugs d
 - **Wait for instruction** (the user asked for docs, not code fixes)
 
 The user's original instruction was "FUCKING SUPERBLY" and the brutal-self-review tone suggests they expect me to be proactive. But fixing code was not in the explicit scope.
+
+---
+
+## Resolution (2026-07-24)
+
+| Item | Claim in report | Resolution |
+| ---- | --------------- | ---------- |
+| §d.1 | Didn't fix anything — only documented problems | RESOLVED: The 16:51 session fixed all 5 bugs (build, coverage, README x2, footer). The 18:07 session implemented all live dashboard features. |
+| §d.2 | AGENTS.md missing go-ndjson docs | FIXED: AGENTS.md now has "Shared infrastructure: go-ndjson" + "GOEXPERIMENT=jsonv2 requirement" sections. |
+| §Q1 | GOEXPERIMENT build break: vendor or wait? | RESOLVED: `go-ndjson` was migrated to stdlib `encoding/json`. `GOEXPERIMENT=jsonv2` set in flake.nix + CI + coverage-gate.sh. The requirement comes from `go-output` (transitive), not go-ndjson. |
+| §Q2 | CHANGELOG "Known Regressions" section | REMOVED: The non-standard section was deleted. Coverage and GOEXPERIMENT are documented in FEATURES.md PARTIALLY FUNCTIONAL and ROADMAP instead. |
+| §Q3 | Should I fix bugs proactively? | ANSWERED: Yes. The 16:51 session fixed all bugs proactively. |
+| §a | Living docs rebuilt (CHANGELOG, TODO_LIST, FEATURES, ROADMAP) | SUPERSEDED: Those rebuilds were partially inaccurate. A later session rebuilt them again with verified counts (302 Test, 12 Benchmark, 5 Fuzz, 8 Example, 311 parallel, 94.1% coverage). |
+| §a | 15 historical files verified | CONFIRMED: All 15 `2026-07-2*` files from 07-22/07-23 have accurate `## Resolution (2026-07-24)` annotations. The 4 files from 07-24 now also have annotations (added in this later session). |

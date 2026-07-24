@@ -5,6 +5,8 @@
 **Starting state:** All P0 items from prior session completed. Quality gate green (8/8). 50 future items identified.
 **Ending state:** Quality gate green (8/8 at 94.1%). 19 items completed. 3 significant issues found. CHANGELOG and FEATURES.md NOT updated for new features.
 
+> **Update 2026-07-24 (later session):** CHANGELOG.md `[Unreleased]` now includes all 7 features (CORS, export endpoints, pagination, scope tree, demo, `--live` flag, SHA pinning). FEATURES.md PARTIALLY items corrected — scope tree, pagination, and export buttons moved to FULLY FUNCTIONAL. The `example/ --live` premature-shutdown bug and the `live/demo` missing-`Healthchecker` gap are recorded as open items in TODO_LIST. Full item-by-item status in [Resolution](#resolution-2026-07-24) below.
+
 ---
 
 ## a) FULLY DONE
@@ -321,3 +323,19 @@ I chose "immediate shutdown" which is clearly wrong, but I don't know which alte
 | CHANGELOG updated | **NO** (critical failure) |
 | FEATURES.md updated | **PARTIAL** (3 stale PARTIALLY items not marked done) |
 | Docs accuracy | **MISLEADING** (reported 94.6%, actual is 94.1%; claimed duration bars "done" without doing anything) |
+
+---
+
+## Resolution (2026-07-24)
+
+| Item | Claim in report | Resolution |
+| ---- | --------------- | ---------- |
+| §d.1 | CHANGELOG.md NOT updated for ANY feature | FIXED: All 7 features added to `[Unreleased]` — CORS, export endpoints, pagination, scope tree, live demo, `--live` flag, SHA pinning |
+| §d.2 | FEATURES.md PARTIALLY items are lying | FIXED: Scope tree, pagination, export buttons moved to FULLY FUNCTIONAL. PARTIALLY section now has only genuine gaps (shared CSS drift, private repos, coverage margin) |
+| §d.3 | Coverage gate margin too thin (94.1% vs 94%) | CONFIRMED ACCURATE: Coverage verified at 94.1% (root 95.0%, live 89.7%). Margin is thin but passing. |
+| §d.4 | Reported "duration bars" as done without doing anything | Noted: the waveform already had height-encoded bars; no additional work was done. No resolution needed — the claim was withdrawn by this report itself. |
+| §d.5 | `example/ --live` mode fundamentally broken | OPEN: Recorded in TODO_LIST "Fix `example/ --live` premature shutdown" — server shuts down immediately after lifecycle completes instead of waiting for Ctrl+C |
+| §b.4 | `live/demo` services don't implement Healthchecker | OPEN: Recorded in TODO_LIST "Add Healthchecker implementations to live/demo services" |
+| §b.1 | Live dashboard JS is untested | OPEN: Recorded in TODO_LIST "Add headless browser test" |
+| §b.3 | CSP `connect-src 'self'` blocks cross-origin CORS | OPEN: Recorded in ROADMAP "Cross-origin CSP" |
+| §c.1-c.10 | 10 items not started | Items 1-7 (CSS sharing, headless test, publish repos, GitHub releases, tag v0.7.0, property tests, SSE benchmark) remain open in TODO_LIST/ROADMAP. Items 8-10 (fuzz live SSE, architecture improvements, website UX) are in ROADMAP. |

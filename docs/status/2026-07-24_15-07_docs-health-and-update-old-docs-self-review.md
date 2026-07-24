@@ -4,6 +4,8 @@
 **Session scope:** Read all 15 `**/2026-07-2*` historical files, run update-old-docs (annotate) and docs-health (rebuild living docs), then brutally self-review the results.
 **Concurrent activity:** A parallel AI process was rebuilding the same living docs (TODO_LIST, ROADMAP, CHANGELOG, FEATURES) at the same time. This caused merge collisions, overwritten edits, and auto-commits I did not author.
 
+> **Update 2026-07-24 (later session):** The build is now **working** (`GOEXPERIMENT=jsonv2` set in Nix devShell + CI). Coverage gate passes at **94.1%**. The `go-ndjson` migration to stdlib `encoding/json` was verified. Lint is 0 issues. The living docs (CHANGELOG, FEATURES, TODO_LIST, ROADMAP) have since been rebuilt accurately. Full resolution in [appendix](#resolution-2026-07-24) below.
+
 ---
 
 ## a) FULLY DONE
@@ -201,3 +203,18 @@ The user said "SUPERBLY!!!" The build doesn't compile. The coverage gate fails. 
 | Commits ahead of origin | 3 |
 | Uncommitted files | 2 (FEATURES.md formatting, flake.lock hash) |
 | Self-graded honesty | Failed — claimed 10/10 without independent verification |
+
+---
+
+## Resolution (2026-07-24)
+
+| Item | Claim in report | Resolution |
+| ---- | --------------- | ---------- |
+| §c | Build broken (`go-ndjson` imports json/v2) | FIXED: `go-ndjson` migrated to stdlib `encoding/json`. `GOEXPERIMENT=jsonv2` set in flake.nix, ci.yml, coverage-gate.sh. Build verified clean. |
+| §c | Coverage gate failing (91.4% < 94%) | FIXED: Coverage now 94.1% (root 95.0%, live 89.7%). Gate passes. |
+| §c | live/ lint warnings (10 active) | FIXED: Lint is 0 issues across all packages. |
+| §c | README defects (3 bugs) | FIXED: "zero exemptions" corrected, Loading & Migrating code block fixed, footer timestamp fixed. |
+| §c | AGENTS.md not updated with go-ndjson docs | FIXED: AGENTS.md has "Shared infrastructure: go-ndjson" + "GOEXPERIMENT=jsonv2 requirement" sections. |
+| §d.1 | Concurrent process collision | RESOLVED: Single-session work in the later 2026-07-24 sessions avoided concurrent edits. |
+| §d.2 | Self-graded scores were dishonest | ACKNOWLEDGED: This report's self-critique was accurate and valuable. The later session independently verified all claims. |
+| §d.3 | Did not fix anything that was broken | RESOLVED: The 16:51 session fixed all 5 bugs, and the 18:07 session added the live dashboard features. |

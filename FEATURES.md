@@ -135,16 +135,23 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ### Live Dashboard (`live/` Sub-Package)
 
-| Feature                          | Description                                                                                                               | Verified                                 |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| **SSE event hub**                | `Hub` broadcasts `auditlog.Event` to all connected SSE clients with non-blocking sends and 128-event buffer per client    | `live/hub.go`                            |
-| **HTTP server with prefix**      | `Server` serves dashboard, report JSON, SSE stream, and health endpoints. Configurable route prefix (default `/debug/di`) | `live/server.go`                         |
-| **Interactive HTML dashboard**   | Self-contained 4-tab dashboard (Services/Graph/Timeline/Events) with SSE client, reconnection, incremental rendering      | `live/dashboard.go`, `live/dashboard.js` |
-| **Warm amber CSS design**        | Full CSS design system matching the static HTML dashboard aesthetic (phosphor amber on dark charcoal)                     | `live/base_css.go`                       |
-| **Graceful shutdown**            | `Server.Shutdown(ctx)` stops HTTP server and waits for active SSE connections to drain                                    | `live/server.go`                         |
-| **Health endpoint**              | `GET {prefix}/api/health` returns uptime, connected client count, total events, and dropped events                        | `live/server.go`                         |
-| **`http.Handler` compatibility** | `Server` implements `ServeHTTP` for `httptest` compatibility and embedding in existing mux chains                         | `live/server.go`                         |
-| **go-sse delegation**            | SSE wire-format primitives (`sse.Event`, `sse.WriteEvent`, `sse.ContentType`) come from the external `go-sse` module      | `live/server.go`, `go.mod`               |
+| Feature                          | Description                                                                                                                  | Verified                                 |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| **SSE event hub**                | `Hub` broadcasts `auditlog.Event` to all connected SSE clients with non-blocking sends and 128-event buffer per client       | `live/hub.go`                            |
+| **HTTP server with prefix**      | `Server` serves dashboard, report, SSE stream, health, and export endpoints. Configurable route prefix (default `/debug/di`) | `live/server.go`                         |
+| **Interactive HTML dashboard**   | Self-contained 5-tab dashboard (Services/Scopes/Graph/Timeline/Events) with SSE client, reconnection, incremental rendering  | `live/dashboard.go`, `live/dashboard.js` |
+| **CORS support**                 | Configurable `CORSAllowedOrigins` (default `*`) adds CORS headers and OPTIONS preflight to all API endpoints                 | `live/server.go`                         |
+| **Export endpoints**             | `GET {prefix}/api/export/ndjson` and `GET {prefix}/api/export/html` serve downloadable snapshots with `Content-Disposition`  | `live/server.go`                         |
+| **Dashboard export buttons**     | Three buttons (JSON/NDJSON/HTML) in dashboard header trigger client-side downloads via the export API                        | `live/dashboard.go`, `live/dashboard.js` |
+| **Pagination**                   | Services table paginates at 50 rows, events at 100, with "Show all" buttons. Search and filter bypass pagination             | `live/dashboard.js`                      |
+| **Scope tree tab**               | Recursive scope-tree renderer showing nested scopes, service counts, and provider-type icons                                 | `live/dashboard.js`                      |
+| **Warm amber CSS design**        | Full CSS design system matching the static HTML dashboard aesthetic (phosphor amber on dark charcoal)                        | `live/base_css.go`                       |
+| **Graceful shutdown**            | `Server.Shutdown(ctx)` stops HTTP server and waits for active SSE connections to drain                                       | `live/server.go`                         |
+| **Health endpoint**              | `GET {prefix}/api/health` returns uptime, connected client count, total events, and dropped events                           | `live/server.go`                         |
+| **`http.Handler` compatibility** | `Server` implements `ServeHTTP` for `httptest` compatibility and embedding in existing mux chains                            | `live/server.go`                         |
+| **go-sse delegation**            | SSE wire-format primitives (`sse.Event`, `sse.WriteEvent`, `sse.ContentType`) come from the external `go-sse` module         | `live/server.go`, `go.mod`               |
+| **Live demo application**        | `live/demo/main.go` registers services with delays, invokes them, runs health checks, serves dashboard until Ctrl+C          | `live/demo/main.go`                      |
+| **Example `--live` flag**        | `go run ./example --live` starts the dashboard alongside the ride-sharing demo, registering 20 services across 4 scopes      | `example/main.go`                        |
 
 ### Shared Module Delegation
 
@@ -172,32 +179,30 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ### Testing / Infrastructure
 
-| Feature                      | Description                                                                                                                                                                                                   | Verified                                                |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| **GitHub Actions CI**        | `go vet`, `go build`, race-detector tests, golangci-lint, govulncheck, generated-code drift checks                                                                                                            | `.github/workflows/ci.yml`                              |
-| **golangci-lint config**     | `.golangci.yml` defines lint rules for the project (109 linters)                                                                                                                                              | `.golangci.yml`                                         |
-| **Generated-code check**     | CI runs `go generate ./...` and fails on drift, ensuring `html_templ.go` stays in sync                                                                                                                        | `.github/workflows/ci.yml`                              |
-| **templ code generation**    | `//go:generate go tool templ generate` in `html.go` produces `html_templ.go`                                                                                                                                  | `html.go`, `html_templ.go`                              |
-| **Fuzz tests**               | 5 targets: HTML XSS (service names, error messages, dep chains), `MigrateReport` integrity, Mermaid/PlantUML special chars, filter-option combinations, NDJSON parsing resilience                             | `fuzz_test.go`, `filter_fuzz_test.go`, `replay_test.go` |
-| **Benchmark tests**          | 12 performance benchmarks for hot paths (invocation, disabled, registration, concurrent, BuildReport at 50/100/500 services, events copy, health check)                                                       | `benchmarks_test.go`                                    |
-| **Example tests**            | 8 runnable `Example*` functions for pkg.go.dev                                                                                                                                                                | `example_test.go`                                       |
-| **Defensive-copy accessors** | `Plugin.Events()` and `Recorder.Events()` return copied slices; `EventsCount()` avoids copying                                                                                                                | `plugin.go`, `recorder.go`                              |
-| **Dropped-event counter**    | `Plugin.DroppedEventCount()` / `Recorder.DroppedEventCount()`                                                                                                                                                 | `plugin.go`, `recorder.go`                              |
-| **Test parallelism**         | 288 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                                                                                                           | all `*_test.go`                                         |
-| **Type metadata assertions** | `TestBuildTypeMetadata` directly asserts provider/status icons, labels, and colors                                                                                                                            | `metadata_test.go`                                      |
-| **live/ sub-package tests**  | 24 tests covering dashboard HTML, health, report, 404, SSE snapshot/live/complete/fan-out/heartbeat, graceful shutdown, client count, server lifecycle, nil-plugin edge cases, hub lifecycle, buffer overflow | `live/server_test.go`                                   |
+| Feature                      | Description                                                                                                                                                                                                                           | Verified                                                |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| **GitHub Actions CI**        | `go vet`, `go build`, race-detector tests, golangci-lint, govulncheck, generated-code drift checks. All actions pinned to commit SHAs for supply-chain security.                                                                      | `.github/workflows/ci.yml`                              |
+| **golangci-lint config**     | `.golangci.yml` defines lint rules for the project (109 linters)                                                                                                                                                                      | `.golangci.yml`                                         |
+| **Generated-code check**     | CI runs `go generate ./...` and fails on drift, ensuring `html_templ.go` stays in sync                                                                                                                                                | `.github/workflows/ci.yml`                              |
+| **templ code generation**    | `//go:generate go tool templ generate` in `html.go` produces `html_templ.go`                                                                                                                                                          | `html.go`, `html_templ.go`                              |
+| **Fuzz tests**               | 5 targets: HTML XSS (service names, error messages, dep chains), `MigrateReport` integrity, Mermaid/PlantUML special chars, filter-option combinations, NDJSON parsing resilience                                                     | `fuzz_test.go`, `filter_fuzz_test.go`, `replay_test.go` |
+| **Benchmark tests**          | 12 performance benchmarks for hot paths (invocation, disabled, registration, concurrent, BuildReport at 50/100/500 services, events copy, health check)                                                                               | `benchmarks_test.go`                                    |
+| **Example tests**            | 8 runnable `Example*` functions for pkg.go.dev                                                                                                                                                                                        | `example_test.go`                                       |
+| **Defensive-copy accessors** | `Plugin.Events()` and `Recorder.Events()` return copied slices; `EventsCount()` avoids copying                                                                                                                                        | `plugin.go`, `recorder.go`                              |
+| **Dropped-event counter**    | `Plugin.DroppedEventCount()` / `Recorder.DroppedEventCount()`                                                                                                                                                                         | `plugin.go`, `recorder.go`                              |
+| **Test parallelism**         | 311 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                                                                                                                                   | all `*_test.go`                                         |
+| **Type metadata assertions** | `TestBuildTypeMetadata` directly asserts provider/status icons, labels, and colors                                                                                                                                                    | `metadata_test.go`                                      |
+| **live/ sub-package tests**  | 35 tests covering dashboard HTML, health, report, 404, SSE snapshot/live/complete/fan-out/heartbeat, graceful shutdown, client count, server lifecycle, nil-plugin edge cases, CORS, export endpoints, hub lifecycle, buffer overflow | `live/server_test.go`                                   |
 
 ---
 
 ## PARTIALLY FUNCTIONAL
 
-| Feature                                | Status     | Note                                                                                |
-| -------------------------------------- | ---------- | ----------------------------------------------------------------------------------- |
-| Live dashboard scope tree tab          | Missing    | Static templ dashboard has it; live dashboard JS does not yet render the scope tree |
-| Live dashboard pagination              | Missing    | Services/events tables show all rows (static dashboard paginates at 50/100)         |
-| Live dashboard export buttons          | Missing    | No download buttons for JSON/NDJSON/HTML in the live dashboard                      |
-| Shared CSS between dashboards          | Drift risk | Static templ and live dashboards have separate CSS that can drift                   |
-| `go-sse` and `go-ndjson` private repos | Blocked    | Both use `replace` directives in `go.mod`; must be published before public release  |
+| Feature                                | Status     | Note                                                                               |
+| -------------------------------------- | ---------- | ---------------------------------------------------------------------------------- |
+| Shared CSS between dashboards          | Drift risk | Static templ and live dashboards have separate CSS that can drift                  |
+| `go-sse` and `go-ndjson` private repos | Blocked    | Both use `replace` directives in `go.mod`; must be published before public release |
+| Coverage gate margin thin              | Headroom   | 94.1% vs 94% threshold; adding code without tests risks dropping below the gate    |
 
 ---
 
@@ -213,4 +218,4 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ---
 
-_Last verified against the codebase on 2026-07-24. Test counts: 288 Test + 12 Benchmark + 5 Fuzz + 8 Example = 313 top-level functions. Coverage: 94.2% combined (root 94.5%, live 92.1%). 297 `t.Parallel()` calls._
+_Last verified against the codebase on 2026-07-24. Test counts: 302 Test + 12 Benchmark + 5 Fuzz + 8 Example = 327 top-level functions. Coverage: 94.1% combined (root 95.0%, live 89.7%). 311 `t.Parallel()` calls._

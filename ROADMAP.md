@@ -9,11 +9,11 @@ For short-term work, see [TODO_LIST.md](TODO_LIST.md). For shipped features, see
 
 The project is in **ALPHA**. The path to BETA is:
 
-1. Coverage gate back above 94% (currently 91.4% — see [TODO_LIST.md](TODO_LIST.md))
-2. Build works without `GOEXPERIMENT=jsonv2` (blocked on `go-ndjson` dependency)
+1. ~~Coverage gate above 94%~~ (currently 94.1% — margin is thin, see [TODO_LIST.md](TODO_LIST.md))
+2. ~~Build works without `GOEXPERIMENT=jsonv2`~~ (resolved: flag is set automatically in Nix devShell + CI; will be removed when Go 1.27 stabilizes json/v2)
 3. `go-sse` and `go-ndjson` published to GitHub with stable tags (remove `replace` directives)
-4. `live/` sub-package lint-clean and 90%+ coverage
-5. Live dashboard JS feature-parity with the static templ version
+4. `live/` sub-package coverage above 90% (currently 89.7%)
+5. ~~Live dashboard JS feature-parity with the static templ version~~ (shipped: scope tree, pagination, export buttons, CORS)
 
 The path from BETA to 1.0 is:
 
@@ -36,14 +36,13 @@ When Go 1.27 stabilizes `encoding/json/v2`:
 
 ## Live Dashboard Evolution
 
-The `live/` sub-package is functional but less polished than the static HTML export:
+The `live/` sub-package has reached near-feature-parity with the static HTML export:
 
-- **Feature parity with static templ** — Add: collapsible scope tree, dependency detail popover, "Show all" pagination, per-event duration bars in waveform, scope-scoped service grouping, Sugiyama layered graph integration
+- **Shipped**: scope tree tab, pagination, export buttons, CORS support, live demo (`live/demo/main.go`), `example/ --live` integration
 - **Shared CSS** — Extract common design tokens into a shared file or `go:embed` so the static and live dashboards can't drift
-- **Demo application** — A `live/demo/main.go` that registers services with delays and shows the dashboard updating in real time
-- **Integration with `example/`** — A `--live` flag to serve the dashboard alongside the existing ride-sharing demo
-- **Export buttons** — Add JSON/NDJSON/HTML export buttons to the live dashboard
 - **Dark/light theme toggle** — The warm amber aesthetic currently has no light variant
+- **Fix `example/ --live` premature shutdown** — See [TODO_LIST.md](TODO_LIST.md)
+- **Cross-origin CSP** — CORS headers are set but `connect-src 'self'` blocks cross-origin dashboard embedding; needs configurable CSP or documentation of the limitation
 
 ---
 

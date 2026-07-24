@@ -14,6 +14,8 @@ Last updated: 2026-07-24
 - [ ] **Share CSS** between the static templ dashboard and the live dashboard to prevent drift. Extract common design tokens into a shared file or `go:embed`.
 - [x] **Add CORS headers** for cross-origin dashboard embedding.
 - [x] **Integrate live dashboard into `example/` app** — Added `--live` flag to show the dashboard alongside the existing ride-sharing domain demo.
+- [ ] **Fix `example/ --live` premature shutdown** — The `runLive()` function immediately calls `server.Shutdown()` after the lifecycle completes, making the dashboard disappear within seconds. Should wait for Ctrl+C (like `live/demo/main.go` does).
+- [ ] **Add `Healthchecker` implementations to `live/demo` services** — The demo calls `plugin.RecordHealthCheck(injector)` but none of the demo service structs implement `do.Healthchecker`, so the health-check section of the dashboard shows nothing.
 - [x] **Add export buttons** (JSON/NDJSON/HTML) to the live dashboard for downloading the current report snapshot.
 
 ## Publishing & Release

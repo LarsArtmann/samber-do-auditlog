@@ -5,6 +5,8 @@
 **Starting state:** Build broken without `GOEXPERIMENT=jsonv2`, coverage gate failing at 91.4%, 21 lint warnings in `live/`, 3 README bugs, HTML footer timestamp bug, AGENTS.md missing go-ndjson docs, CHANGELOG format violations.
 **Ending state:** Build works (GOEXPERIMENT set in Nix + CI), coverage gate passes at 94.2%, lint is 0 issues, all README bugs fixed, all docs updated.
 
+> **Update 2026-07-24 (later session):** Coverage is actually **94.1%** (root 95.0%, live 89.7%) — the 94.2% figure was an intermediate measurement. "All docs updated" was partially overstated: the subsequent session (18:07) found CHANGELOG and FEATURES.md were missing the live dashboard features. Both are now corrected. Full resolution in [appendix](#resolution-2026-07-24) below.
+
 ---
 
 ## a) FULLY DONE
@@ -275,3 +277,19 @@ I don't know when Go 1.27 ships or whether the user wants to track it.
 | Commits created | 13 (all auto-committed, 0 reviewed) |
 | Quality gate | All 8 checks pass |
 | Docs updated | 5 (AGENTS, CHANGELOG, FEATURES, TODO_LIST, + prior session ROADMAP) |
+
+---
+
+## Resolution (2026-07-24)
+
+| Item | Claim in report | Resolution |
+| ---- | --------------- | ---------- |
+| §a | All 5 bugs fixed | CONFIRMED: Build works with `GOEXPERIMENT=jsonv2` (set in flake.nix, ci.yml, coverage-gate.sh). Coverage gate passes. README bugs fixed. Footer timestamp fixed. Lint 0 issues. |
+| Coverage | 91.4% → 94.2% | CORRECTED: Actual coverage is **94.1%** (root 95.0%, live 89.7%). The 94.2% was an intermediate measurement. |
+| §d.1 | `encoding/json/v2` exclusion policy is misleading | RESOLVED: AGENTS.md now has a dedicated "GOEXPERIMENT=jsonv2 requirement" section explaining the transitive dependency chain (go-output → go-branded-id → json/v2). |
+| §d.2 | GOEXPERIMENT "fix" is a config workaround | ACKNOWLEDGED: The setting is documented as temporary in ROADMAP "Go 1.27+ Migration" — will be removed when Go stabilizes json/v2. |
+| §d.3 | Did not verify go-ndjson migration | RESOLVED: go-ndjson tests confirmed passing in a subsequent session. |
+| §d.4 | Coverage gate barely passing | CONFIRMED: Still 94.1% vs 94% threshold. Thin margin documented in FEATURES.md PARTIALLY FUNCTIONAL. |
+| §Q1 | Pre-commit hook auto-commits | RESOLVED: The hook was later corrected — it runs checks only (generate drift, vet, lint, test), does NOT auto-commit. Documented in AGENTS.md. |
+| §Q2 | Coverage gate threshold | KEPT AT 94%: No change to threshold. Margin is thin but the gate catches regressions. |
+| §Q3 | GOEXPERIMENT temporary vs permanent | DOCUMENTED: Treated as temporary — ROADMAP "Go 1.27+ Migration" section tracks removal. |
