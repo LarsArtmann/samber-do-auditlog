@@ -12,6 +12,50 @@ import (
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
+func TestNDJSONStreamer_AutoFlushError(t *testing.T) {
+	t.Parallel()
+
+	streamer := auditlog.NewNDJSONStreamer(failingWriter{}, auditlog.WithAutoFlush())
+
+	streamer.OnEvent(
+		mkEvent(
+			1,
+			time.Now(),
+			auditlog.EventTypeRegistration,
+			auditlog.PhaseAfter,
+			"svc",
+			"c",
+			auditlog.ProviderTypeLazy,
+		),
+	)
+
+	if streamer.Err() == nil {
+		t.Error("expected error from autoflush with failing writer")
+	}
+}
+
+func TestNDJSONStreamer_CloseCloserError(t *testing.T) {
+	t.Parallel()
+
+	streamer := auditlog.NewNDJSONStreamer(&errorCloser{})
+
+	err := streamer.Close()
+	if err == nil {
+		t.Fatal("expected error from closer")
+	}
+}
+
+// errorCloser returns an error on both Write and Close.
+type errorCloser struct{}
+
+func (errorCloser) Write([]byte) (int, error) {
+	return 0, nil
+}
+
+func (errorCloser) Close() error {
+	return errWriteFailed
+}
+
 func TestNDJSONStreamer_CreateError(t *testing.T) {
 	t.Parallel()
 

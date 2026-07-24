@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/larsartmann/go-output"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
@@ -114,6 +113,34 @@ func TestTableColumns_ColumnOrderPreserved(t *testing.T) {
 
 	if errorIdx > serviceIdx {
 		t.Errorf("expected Error before Service, got header: %s", header)
+	}
+}
+
+func TestTableColumns_WithDependentsColumn(t *testing.T) {
+	t.Parallel()
+
+	p, _ := setupWithDB("test")
+	report := p.Report()
+
+	// The setup creates a service that depends on "db", so db should have
+	// Dependents populated.
+	var buf bytes.Buffer
+
+	err := report.WriteTable(&buf, output.FormatCSV, auditlog.DefaultTableOpts(),
+		auditlog.WithColumns(auditlog.ColumnService, auditlog.ColumnDependencies, auditlog.ColumnDependents),
+	)
+	if err != nil {
+		t.Fatalf("WriteTable: %v", err)
+	}
+
+	result := buf.String()
+
+	if !strings.Contains(result, "Dependencies") {
+		t.Error("expected 'Dependencies' header")
+	}
+
+	if !strings.Contains(result, "Dependents") {
+		t.Error("expected 'Dependents' header")
 	}
 }
 
