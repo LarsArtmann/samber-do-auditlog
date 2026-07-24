@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-25
+
+A feature release: real-time SSE live dashboard, cross-project feature ports (error classification, atomic writes, NDJSON streaming, diagram direction, table column selection), typed identifiers, ServiceInfo domain split, and go-output v0.31.1. Includes breaking changes for typed identifiers and the ServiceInfo split.
+
 ### Added
 
 - **Cross-project feature ports from `go-workflow-auditlog`** (sibling project, same author, same patterns):
@@ -554,7 +558,8 @@ tracking, health-check auditing, and export to JSON / NDJSON / self-contained HT
 - XSS-hardened HTML with a Content-Security-Policy.
 - Strict `golangci-lint` configuration.
 
-[Unreleased]: https://github.com/larsartmann/samber-do-auditlog/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/larsartmann/samber-do-auditlog/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/larsartmann/samber-do-auditlog/releases/tag/v0.7.0
 [0.6.0]: https://github.com/larsartmann/samber-do-auditlog/releases/tag/v0.6.0
 [0.5.0]: https://github.com/larsartmann/samber-do-auditlog/releases/tag/v0.5.0
 [0.4.0]: https://github.com/larsartmann/samber-do-auditlog/releases/tag/v0.4.0
