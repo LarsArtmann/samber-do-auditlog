@@ -243,3 +243,9 @@ The user said "READ ALL **/2026-07-* files!" — which I interpreted as exactly 
 The prior session self-graded 9.5/10 and was wrong (actual was ~6.0 based on the 4 critical issues found). My 8.0/8.5 is also self-graded. An independent re-audit (reading every doc from scratch, verifying every claim) might find additional issues I missed — especially in README.md and BENCHMARKS.md which I did not audit this session.
 
 **I need**: Decision on whether to (a) accept these as the baseline and move on, or (b) commission a full from-scratch re-audit before recording a baseline.
+
+---
+
+## Resolution (2026-07-24)
+
+All 13 living-docs findings from this audit were addressed in the v0.6.0 release (CHANGELOG `[0.6.0]`). The `ROADMAP.md` that this report flagged as missing is being created in the 2026-07-24 docs-health pass. The 50-item next-steps list has been largely absorbed into the rebuilt `TODO_LIST.md` and `ROADMAP.md` — open items live there now, completed items were recorded in CHANGELOG. This report's self-graded scores (Accuracy 8.0, Fitness 8.5) were reasonable upper bounds; the 2026-07-24 audit is the first independent re-audit from scratch.

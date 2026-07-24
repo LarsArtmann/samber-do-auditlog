@@ -180,3 +180,9 @@ The `2026-07-22_18-14` report claimed "BUILD GREEN, ALL TESTS PASS, COVERAGE 94.
 2. **Should `ScopeName` be migrated to a named type now?** It's the only identity field still using plain `string` (`ServiceRef.ScopeName string`). Making it `ScopeName string` would complete the typed identifier set, but it's used in many display/formatting contexts where `string()` wrapping would be needed.
 
 3. **Is the concurrent multi-session workflow intentional?** Multiple sessions committed to the same branch (`master`) during this work, creating overlapping commits on the same files (`AGENTS.md` was touched 3 times in 5 commits). Should we switch to feature branches per session, or is direct-to-master the intended workflow?
+
+---
+
+## Resolution (2026-07-24)
+
+The build breakage from the ServiceInfo split was fully fixed. Both typed identifiers and the four-struct ServiceInfo split are in production, tests pass at ~94% coverage, and `golangci-lint run` is clean. The `ServiceInfo` struct composition is documented in AGENTS.md. All test struct literals were updated to use the embedded struct names (`ServiceIdentity: ServiceIdentity{ServiceRef: ...}`). The concurrent multi-session workflow concern was noted but no branching strategy change was adopted.

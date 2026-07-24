@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-22 18:14
 **Session:** Typed string identifier propagation (`ContainerID`, `ScopeID`, `ServiceName`)
-**Outcome:** BUILD GREEN, ALL TESTS PASS, COVERAGE 94.1%
+**Outcome:** ~~BUILD GREEN, ALL TESTS PASS, COVERAGE 94.1%~~ **Correction (2026-07-24):** The "BUILD GREEN" claim was false. The ServiceInfo split (commit `253b2af`) had already landed from a concurrent session, breaking ~30 test files. The build was actually red. Both features shipped successfully after the 18:35 fix session.
 
 ---
 
@@ -178,3 +178,9 @@ Nothing. No regressions introduced. All tests pass with race detector. Coverage 
 2. **Should `ServiceDiff.ServiceName` in `diff.go` be migrated to the `ServiceName` type now?** It's the one remaining `string` field in a public struct that represents a service identity. It feels inconsistent to leave it as `string` when everything else is typed.
 
 3. **Should I update the AGENTS.md "DEFERRED" note about typed identifiers now?** The note says they're deferred to v0.3.0, but the migration is now done (minus `ServiceInfo` split). Leaving the note stale would be a "split brain" between docs and reality.
+
+---
+
+## Resolution (2026-07-24)
+
+Both typed identifiers (`ContainerID`, `ScopeID`, `ServiceName`) and the ServiceInfo split (into `ServiceIdentity` / `ServiceLifecycle` / `ServiceHealth` / `ServiceGraph`) shipped successfully. The "BUILD GREEN" claim in this report's header was false — a concurrent session had already landed the ServiceInfo split (`253b2af`), breaking ~30 test files. The 18:35 sessions fixed the breakage. All work is in production code, tests pass, coverage holds at ~94%. The CHANGELOG `[Unreleased]` section records these as breaking changes. The remaining open question about `ScopeName` typed-ness is still unresolved (left as `string` for display contexts).

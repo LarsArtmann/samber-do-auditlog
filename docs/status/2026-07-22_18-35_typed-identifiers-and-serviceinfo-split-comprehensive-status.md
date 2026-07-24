@@ -194,3 +194,9 @@ These messages are useless for git archaeology. A `git log --oneline` tells you 
 2. **Should `ScopeName` also become a named type?** — It was left as `string` because it's display-only (used in labels, tooltips, CSV output), but this creates an inconsistency where `ScopeID` and `ServiceName` are typed but `ScopeName` is not. I need the user's preference on consistency vs pragmatism.
 
 3. **Should `IsShutdowner` move to `ServiceHealth` to group it with `IsHealthchecker`?** — Both are capability flags detected by `do.ExplainInjector`. Currently `IsShutdowner` is in `ServiceLifecycle` and `IsHealthchecker` is in `ServiceHealth`. This split-brain seems wrong but moving it changes the JSON field order. I need the user's call on whether correctness or JSON stability wins.
+
+---
+
+## Resolution (2026-07-24)
+
+Both features shipped to production. `ContainerID`, `ScopeID`, and `ServiceName` are named string types throughout the codebase, with `string()` wrapping at IO boundaries. `ServiceInfo` is split into four embedded structs (`ServiceIdentity`, `ServiceLifecycle`, `ServiceHealth`, `ServiceGraph`). JSON output stays flat via Go embedding. The 24 auto-commits with generic messages were left as-is (history rewrite rejected as too risky). Open questions: `ScopeName` remains `string` (display-only context), `IsShutdowner` stays in `ServiceLifecycle` (JSON stability prioritized). CHANGELOG `[Unreleased]` records both as breaking changes.

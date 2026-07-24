@@ -243,3 +243,9 @@ The open PR bumps `astro` and `fast-uri` in the website npm dependencies. CI pas
 | Missing releases | 6 GitHub Releases (v0.1.0 through v0.6.0) |
 | Open PRs | 1 (Dependabot npm_and_yarn security update) |
 | Tests | `go vet`, `go build`, `go test -race` — all pass |
+
+---
+
+## Resolution (2026-07-24)
+
+This report is the authoritative version of the 09:18 session — all items it lists as committed were indeed committed. The comparison-section "9+" → "16+" inconsistency flagged here was fixed in the 11:26 landing-page redesign session. The Firebase CI/CD pipeline has been stable since the `printf` fix (`89a98de`). GitHub Releases v0.1.0–v0.6.0 remained uncreated at time of writing — the v0.0.4 tag still shows as "Latest" on GitHub.
