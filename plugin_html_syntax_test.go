@@ -33,15 +33,16 @@ func extractExecutableJS(t *testing.T, html string) string {
 
 		end += start
 
-		tag := html[start : strings.Index(html[start:end], ">")+start+1]
+		tagClose := strings.Index(html[start:end], ">")
+		tag := html[start : tagClose+start+1]
 
-		// Skip JSON data scripts.
 		if strings.Contains(tag, `type="application/json"`) {
 			idx = end + len("</script>")
+
 			continue
 		}
 
-		contentStart := strings.Index(html[start:end], ">") + start + 1
+		contentStart := tagClose + start + 1
 		sb.WriteString(html[contentStart:end])
 		sb.WriteByte('\n')
 
@@ -51,10 +52,89 @@ func extractExecutableJS(t *testing.T, html string) string {
 	return sb.String()
 }
 
-// isRegexContext returns true if a / at this position would start a regex
-// literal rather than a division operator. The decision is based on the last
-// significant character: after operators, openers, and statement boundaries,
-// / introduces a regex.
+// jsStripper is a stateful scanner that removes string literals, comments,
+// and regex literals from JavaScript source, leaving only structural delimiters.
+type jsStripper struct {
+	src    string
+	pos    int
+	out    strings.Builder
+	lastCh byte
+}
+
+// stripJSNoise removes string literals, comments, and regex literals so that
+// delimiter balancing only counts structural braces/parens/brackets.
+func stripJSNoise(js string) string {
+	s := &jsStripper{src: js}
+
+	for s.pos < len(s.src) {
+		if s.skipLineComment() {
+			continue
+		}
+
+		if s.skipBlockComment() {
+			continue
+		}
+
+		if s.skipRegex() {
+			continue
+		}
+
+		if s.skipQuoted('\'') {
+			continue
+		}
+
+		if s.skipQuoted('"') {
+			continue
+		}
+
+		if s.skipQuoted('`') {
+			continue
+		}
+
+		s.copyByte()
+	}
+
+	return s.out.String()
+}
+
+func (s *jsStripper) remaining() bool { return s.pos < len(s.src) }
+
+func (s *jsStripper) at(p int) byte {
+	if p < len(s.src) {
+		return s.src[p]
+	}
+
+	return 0
+}
+
+func (s *jsStripper) skipLineComment() bool {
+	if s.at(s.pos) != '/' || s.at(s.pos+1) != '/' {
+		return false
+	}
+
+	for s.remaining() && s.src[s.pos] != '\n' {
+		s.pos++
+	}
+
+	return true
+}
+
+func (s *jsStripper) skipBlockComment() bool {
+	if s.at(s.pos) != '/' || s.at(s.pos+1) != '*' {
+		return false
+	}
+
+	s.pos += 2
+
+	for s.pos+1 < len(s.src) && !(s.src[s.pos] == '*' && s.src[s.pos+1] == '/') {
+		s.pos++
+	}
+
+	s.pos += 2
+
+	return true
+}
+
 func isRegexContext(last byte) bool {
 	switch last {
 	case 0, '(', '[', '{', ',', ';', '=', '!', '&', '|', '?', ':',
@@ -65,129 +145,84 @@ func isRegexContext(last byte) bool {
 	}
 }
 
-// stripJSNoise removes string literals, comments, and regex literals from
-// JavaScript so that delimiter balancing only counts structural
-// braces/parens/brackets.
-func stripJSNoise(js string) string {
-	var sb strings.Builder
-
-	i := 0
-	n := len(js)
-	lastChar := byte(0) // last non-whitespace byte written to output
-
-	for i < n {
-		// Line comment.
-		if i+1 < n && js[i] == '/' && js[i+1] == '/' {
-			for i < n && js[i] != '\n' {
-				i++
-			}
-
-			continue
-		}
-
-		// Block comment.
-		if i+1 < n && js[i] == '/' && js[i+1] == '*' {
-			i += 2
-			for i+1 < n && !(js[i] == '*' && js[i+1] == '/') {
-				i++
-			}
-
-			i += 2
-			continue
-		}
-
-		// Regex literal — / is a regex when preceded by an operator or opener.
-		if js[i] == '/' && isRegexContext(lastChar) {
-			i++ // skip opening /
-
-			for i < n && js[i] != '/' && js[i] != '\n' {
-				if js[i] == '\\' && i+1 < n {
-					i += 2
-					continue
-				}
-
-				// Character class [a-z] — skip to closing ].
-				if js[i] == '[' {
-					i++
-					for i < n && js[i] != ']' {
-						if js[i] == '\\' && i+1 < n {
-							i++
-						}
-						i++
-					}
-				}
-
-				i++
-			}
-
-			i++ // skip closing /
-			// Skip regex flags.
-			for i < n && isASCIILetter(js[i]) {
-				i++
-			}
-
-			sb.WriteByte(' ')
-			lastChar = ' '
-			continue
-		}
-
-		// Single-quoted string.
-		if js[i] == '\'' {
-			i++
-			for i < n && js[i] != '\'' {
-				if js[i] == '\\' && i+1 < n {
-					i++
-				}
-				i++
-			}
-
-			i++
-			sb.WriteByte(' ')
-			lastChar = ' '
-			continue
-		}
-
-		// Double-quoted string.
-		if js[i] == '"' {
-			i++
-			for i < n && js[i] != '"' {
-				if js[i] == '\\' && i+1 < n {
-					i++
-				}
-				i++
-			}
-
-			i++
-			sb.WriteByte(' ')
-			lastChar = ' '
-			continue
-		}
-
-		// Template literal.
-		if js[i] == '`' {
-			i++
-			for i < n && js[i] != '`' {
-				if js[i] == '\\' && i+1 < n {
-					i++
-				}
-				i++
-			}
-
-			i++
-			sb.WriteByte(' ')
-			lastChar = ' '
-			continue
-		}
-
-		sb.WriteByte(js[i])
-		if js[i] != ' ' && js[i] != '\t' && js[i] != '\n' && js[i] != '\r' {
-			lastChar = js[i]
-		}
-
-		i++
+func (s *jsStripper) skipRegex() bool {
+	if s.at(s.pos) != '/' || !isRegexContext(s.lastCh) {
+		return false
 	}
 
-	return sb.String()
+	s.pos++ // opening /
+
+	for s.remaining() && s.src[s.pos] != '/' && s.src[s.pos] != '\n' {
+		if s.src[s.pos] == '\\' {
+			s.pos += 2
+
+			continue
+		}
+
+		if s.src[s.pos] == '[' {
+			s.skipCharClass()
+		}
+
+		s.pos++
+	}
+
+	s.pos++ // closing /
+
+	// Skip regex flags.
+	for s.remaining() && isASCIILetter(s.src[s.pos]) {
+		s.pos++
+	}
+
+	s.out.WriteByte(' ')
+	s.lastCh = ' '
+
+	return true
+}
+
+func (s *jsStripper) skipCharClass() {
+	s.pos++ // [
+
+	for s.remaining() && s.src[s.pos] != ']' {
+		if s.src[s.pos] == '\\' {
+			s.pos++
+		}
+
+		s.pos++
+	}
+}
+
+func (s *jsStripper) skipQuoted(quote byte) bool {
+	if s.at(s.pos) != quote {
+		return false
+	}
+
+	s.pos++
+
+	for s.remaining() && s.src[s.pos] != quote {
+		if s.src[s.pos] == '\\' {
+			s.pos++
+		}
+
+		s.pos++
+	}
+
+	s.pos++
+
+	s.out.WriteByte(' ')
+	s.lastCh = ' '
+
+	return true
+}
+
+func (s *jsStripper) copyByte() {
+	b := s.src[s.pos]
+	s.out.WriteByte(b)
+
+	if b != ' ' && b != '\t' && b != '\n' && b != '\r' {
+		s.lastCh = b
+	}
+
+	s.pos++
 }
 
 func isASCIILetter(b byte) bool {
@@ -202,6 +237,7 @@ func assertJSBalanced(t *testing.T, js string) {
 	cleaned := stripJSNoise(js)
 
 	pairs := map[rune]rune{'}': '{', ')': '(', ']': '['}
+
 	var stack []rune
 
 	for _, ch := range cleaned {
@@ -211,12 +247,14 @@ func assertJSBalanced(t *testing.T, js string) {
 		case '}', ')', ']':
 			if len(stack) == 0 {
 				t.Errorf("unbalanced %q in JS — closing with empty stack (stray delimiter)", ch)
+
 				return
 			}
 
 			top := stack[len(stack)-1]
 			if top != pairs[ch] {
 				t.Errorf("unbalanced %q in JS — expected closing for %q, got %q", ch, top, ch)
+
 				return
 			}
 

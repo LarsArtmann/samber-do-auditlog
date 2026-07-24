@@ -269,6 +269,7 @@ linters:
           - noinlineerr
           - exhaustruct
           - errcheck
+          - err113
           - nlreturn
           - goconst
       - path: cmd/

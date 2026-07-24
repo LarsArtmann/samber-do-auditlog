@@ -6,6 +6,8 @@ import auditlog "github.com/larsartmann/samber-do-auditlog"
 // auditlog.DesignTokensCSS) to the variable names used by the live dashboard's
 // component CSS. This keeps both dashboards on the same palette without
 // duplicating color values.
+//
+//nolint:gosec // G101 false positive: CSS tokens, not credentials
 const liveTokenAliases = `
 :root {
   --bg-card: var(--bg-elevated);
