@@ -1,15 +1,14 @@
 package auditlog
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
+	atomicwrite "github.com/larsartmann/go-atomic-write"
 	"github.com/larsartmann/go-output"
 	"github.com/samber/do/v2"
 )
@@ -311,59 +310,10 @@ func (p *Plugin) RecordHealthCheck(injector do.Injector) map[string]error {
 	return p.RecordHealthCheckWithContext(context.Background(), injector)
 }
 
-// fileWriteBufferSize is the bufio buffer size used for atomic file exports.
-const fileWriteBufferSize = 65536
-
-// writeToFile creates a file at path and calls fn with a buffered writer.
-// The bufio.Writer batches small writes into 64KB blocks, reducing syscall count
-// by 10-100x compared to writing directly to os.File.
-//
-// Writes are atomic: data is written to a temporary file in the same directory,
-// then atomically renamed to the final path. A crash during write leaves the
-// previous file (if any) intact rather than a partial file.
+// writeToFile creates a file at path and writes to it atomically via a
+// streaming callback. Delegates to go-atomic-write for TOCTOU-safe writes
+// with fsync durability and cross-platform atomic rename. A crash during
+// write leaves the previous file (if any) intact rather than a partial file.
 func writeToFile(path string, fn func(io.Writer) error) error {
-	dir := filepath.Dir(path)
-
-	tmpFile, err := os.CreateTemp(dir, ".tmp-auditlog-*")
-	if err != nil {
-		return fmt.Errorf("create temp file in %q: %w", dir, err)
-	}
-
-	tmpPath := tmpFile.Name()
-	cleanup := true
-
-	defer func() {
-		if cleanup {
-			_ = os.Remove(tmpPath)
-		}
-	}()
-
-	bw := bufio.NewWriterSize(tmpFile, fileWriteBufferSize)
-
-	writeErr := fn(bw)
-
-	flushErr := bw.Flush()
-
-	closeErr := tmpFile.Close()
-
-	if writeErr != nil {
-		return writeErr
-	}
-
-	if flushErr != nil {
-		return fmt.Errorf("flush temp file %q: %w", tmpPath, flushErr)
-	}
-
-	if closeErr != nil {
-		return fmt.Errorf("close temp file %q: %w", tmpPath, closeErr)
-	}
-
-	renameErr := os.Rename(tmpPath, path)
-	if renameErr != nil {
-		return fmt.Errorf("rename %q → %q: %w", tmpPath, path, renameErr)
-	}
-
-	cleanup = false
-
-	return nil
+	return atomicwrite.WriteFunc(path, fn, atomicwrite.Fingerprint{})
 }

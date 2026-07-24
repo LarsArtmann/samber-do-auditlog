@@ -184,6 +184,7 @@ linters:
         - github.com/larsartmann/samber-do-auditlog/live.Hub
         - github.com/larsartmann/samber-do-auditlog/live.Server
         - github.com/larsartmann/samber-do-auditlog/live.healthResponse
+        - github.com/larsartmann/samber-do-auditlog.NDJSONStreamer
     ginkgolinter:
       forbid-focus-container: true
       forbid-spec-pollution: true
