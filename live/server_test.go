@@ -588,7 +588,7 @@ func TestServer_SSE_Heartbeat(t *testing.T) {
 	// Wait for a heartbeat comment line.
 	foundHeartbeat := false
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		if scanner.Scan() {
 			line := scanner.Text()
 			if strings.HasPrefix(line, ": heartbeat") {
@@ -645,8 +645,9 @@ func TestServer_ListenAndServe_Addr_Shutdown(t *testing.T) {
 
 	var lastErr error
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "http://"+addr+"/debug/di/api/health", nil)
+
 		resp, err := http.DefaultClient.Do(req)
 		if err == nil {
 			_ = resp.Body.Close()
@@ -659,6 +660,7 @@ func TestServer_ListenAndServe_Addr_Shutdown(t *testing.T) {
 		}
 
 		lastErr = err
+
 		time.Sleep(10 * time.Millisecond)
 	}
 
@@ -794,9 +796,9 @@ type noFlushRecorder struct {
 	code      int
 }
 
-func (r *noFlushRecorder) Header() http.Header        { return r.headerMap }
+func (r *noFlushRecorder) Header() http.Header           { return r.headerMap }
 func (r *noFlushRecorder) Write(buf []byte) (int, error) { return r.body.Write(buf) }
-func (r *noFlushRecorder) WriteHeader(code int)         { r.code = code }
+func (r *noFlushRecorder) WriteHeader(code int)          { r.code = code }
 
 func TestServer_NormalizePrefix(t *testing.T) {
 	t.Parallel()
@@ -928,6 +930,7 @@ func TestServer_NilPlugin_ReportEndpoint(t *testing.T) {
 
 	ctx := t.Context()
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, ts.URL+"/debug/di/api/report", nil)
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("request failed: %v", err)

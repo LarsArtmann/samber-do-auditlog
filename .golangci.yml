@@ -179,8 +179,10 @@ linters:
         - sync.RWMutex
         - sync.Mutex
         - atomic.Int64
+        - github.com/larsartmann/go-sse.Event
         - github.com/larsartmann/samber-do-auditlog/live.Hub
         - github.com/larsartmann/samber-do-auditlog/live.Server
+        - github.com/larsartmann/samber-do-auditlog/live.healthResponse
     ginkgolinter:
       forbid-focus-container: true
       forbid-spec-pollution: true
@@ -217,6 +219,8 @@ linters:
       ignore-names:
         - err
         - ok
+        - w
+        - r
         - tt
         - fn
         - t
