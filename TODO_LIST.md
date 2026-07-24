@@ -2,19 +2,13 @@
 
 Short- and mid-term improvement tasks, verified against actual code state.
 Completed items are in [CHANGELOG.md](CHANGELOG.md). Rejected proposals are in [ROADMAP.md](ROADMAP.md).
-Last updated: 2026-07-24
+Last updated: 2026-07-25
 
 ---
 
 ## Publishing & Release
 
-- [ ] **Tag and release v0.7.0** — All [Unreleased] items in CHANGELOG.md are complete. Two `replace` directives for `go-output/testhelpers` (release-bug workaround) remain — these are technical debt, not a release blocker, since they redirect broken pseudo-versions to real published tags. Verify the full test/lint/coverage suite passes, then tag and release.
-
----
-
-## Technical Debt
-
-- [ ] **Remove go-output testhelpers replace directives** — Two `replace` directives in `go.mod` (`go-output/testhelpers` and `go-output/testhelpers/graphtest`) redirect broken pseudo-versions (`v0.0.0-00010101000000-000000000000`) to real tags (`v0.31.1`). Remove them — and the `replace-allow-list` entry in `.golangci.yml` — once go-output fixes their release process (strip local `replace` directives before tagging).
+- [ ] **Tag and release v0.7.0** — All [Unreleased] items in CHANGELOG.md are complete. Verify the full test/lint/coverage suite passes, then tag and release.
 
 ---
 

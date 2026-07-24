@@ -87,46 +87,44 @@ func (r Report) buildServiceTreeNodes() *output.TreeNode {
 	return forestRoot
 }
 
-// WriteTree writes the service dependency DAG as an ASCII tree.
-// Nodes are labeled with service name and provider-type icon.
-func (r Report) WriteTree(writer io.Writer) error {
+// writeTree renders the dependency DAG with the given renderer and writes the
+// output to writer. Shared implementation for WriteTree and WriteHTMLTree.
+func (r Report) writeTree(writer io.Writer, renderer output.TreeRenderer, renderErrFmt, writeErrFmt string) error {
 	root := r.buildServiceTreeNodes()
-
-	renderer := tree.NewASCIITreeRenderer()
 	renderer.SetRoot(root)
 
 	out, err := renderer.Render()
 	if err != nil {
-		return fmt.Errorf("render tree: %w", err)
+		return fmt.Errorf(renderErrFmt, err)
 	}
 
-	_, err = fmt.Fprintln(writer, out)
-	if err != nil {
-		return fmt.Errorf("write tree output: %w", err)
+	if _, err = fmt.Fprintln(writer, out); err != nil {
+		return fmt.Errorf(writeErrFmt, err)
 	}
 
 	return nil
 }
 
+// WriteTree writes the service dependency DAG as an ASCII tree.
+// Nodes are labeled with service name and provider-type icon.
+func (r Report) WriteTree(writer io.Writer) error {
+	return r.writeTree(
+		writer,
+		tree.NewASCIITreeRenderer(),
+		"render tree: %w",
+		"write tree output: %w",
+	)
+}
+
 // WriteHTMLTree writes the service dependency DAG as an HTML nested list tree.
 // Nodes are labeled with service name and provider-type icon.
 func (r Report) WriteHTMLTree(writer io.Writer) error {
-	root := r.buildServiceTreeNodes()
-
-	renderer := markup.NewHTMLTreeRenderer()
-	renderer.SetRoot(root)
-
-	out, err := renderer.Render()
-	if err != nil {
-		return fmt.Errorf("render html tree: %w", err)
-	}
-
-	_, err = fmt.Fprintln(writer, out)
-	if err != nil {
-		return fmt.Errorf("write html tree output: %w", err)
-	}
-
-	return nil
+	return r.writeTree(
+		writer,
+		markup.NewHTMLTreeRenderer(),
+		"render html tree: %w",
+		"write html tree output: %w",
+	)
 }
 
 // WriteTreeString returns the ASCII tree as a string.

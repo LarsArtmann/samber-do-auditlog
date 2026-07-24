@@ -56,6 +56,8 @@ require (
 	github.com/gofrs/flock v0.13.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/larsartmann/go-branded-id v0.3.2 // indirect
+	github.com/larsartmann/go-output/testhelpers v0.31.1 // indirect
+	github.com/larsartmann/go-output/testhelpers/graphtest v0.31.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
@@ -80,7 +82,3 @@ require (
 )
 
 tool github.com/a-h/templ/cmd/templ
-
-replace github.com/larsartmann/go-output/testhelpers v0.0.0-00010101000000-000000000000 => github.com/larsartmann/go-output/testhelpers v0.31.1
-
-replace github.com/larsartmann/go-output/testhelpers/graphtest v0.0.0-00010101000000-000000000000 => github.com/larsartmann/go-output/testhelpers/graphtest v0.31.1

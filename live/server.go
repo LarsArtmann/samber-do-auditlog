@@ -275,9 +275,7 @@ func (srv *Server) handleReport(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-cache")
 
-	if srv.plugin == nil {
-		http.Error(w, "no plugin available", http.StatusServiceUnavailable)
-
+	if !srv.requirePlugin(w) {
 		return
 	}
 
@@ -291,16 +289,32 @@ func (srv *Server) handleReport(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write(data)
 }
 
-func (srv *Server) handleExportNDJSON(w http.ResponseWriter, _ *http.Request) {
+// requirePlugin writes a 503 if no plugin is available and returns false.
+// Returns true when the plugin is present and the handler may continue.
+func (srv *Server) requirePlugin(w http.ResponseWriter) bool {
 	if srv.plugin == nil {
 		http.Error(w, "no plugin available", http.StatusServiceUnavailable)
 
+		return false
+	}
+
+	return true
+}
+
+// setDownloadHeaders configures response headers for an attachment download
+// of the given content type and filename.
+func setDownloadHeaders(w http.ResponseWriter, contentType, filename string) {
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename=%q`, filename))
+}
+
+func (srv *Server) handleExportNDJSON(w http.ResponseWriter, _ *http.Request) {
+	if !srv.requirePlugin(w) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/x-ndjson")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Content-Disposition", `attachment; filename="auditlog-events.ndjson"`)
+	setDownloadHeaders(w, "application/x-ndjson", "auditlog-events.ndjson")
 
 	if err := srv.plugin.WriteEventsNDJSON(w); err != nil {
 		http.Error(w, fmt.Sprintf("export ndjson: %v", err), http.StatusInternalServerError)
@@ -310,15 +324,11 @@ func (srv *Server) handleExportNDJSON(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (srv *Server) handleExportHTML(w http.ResponseWriter, _ *http.Request) {
-	if srv.plugin == nil {
-		http.Error(w, "no plugin available", http.StatusServiceUnavailable)
-
+	if !srv.requirePlugin(w) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Content-Disposition", `attachment; filename="auditlog-report.html"`)
+	setDownloadHeaders(w, "text/html; charset=utf-8", "auditlog-report.html")
 
 	if err := srv.plugin.WriteHTML(w); err != nil { //nolint:contextcheck // WriteHTML takes io.Writer, not context
 		http.Error(w, fmt.Sprintf("export html: %v", err), http.StatusInternalServerError)

@@ -9,7 +9,7 @@ For short-term work, see [TODO_LIST.md](TODO_LIST.md). For shipped features, see
 
 The project is in **ALPHA**. The path to BETA requires:
 
-1. `go-sse` and `go-ndjson` published to GitHub with stable tags ✓ (replace directives removed). Two `go-output/testhelpers` replace directives remain as a release-bug workaround (see [TODO_LIST.md](TODO_LIST.md) > Technical Debt).
+1. `go-sse` and `go-ndjson` published to GitHub with stable tags ✓ (replace directives removed). The temporary `go-output/testhelpers` replacements have also been removed; explicit indirect requirements select their valid published tags over upstream's broken pseudo-versions.
 2. `live/` sub-package coverage above 90% (currently 89.7%)
 
 The coverage gate (94%) and `GOEXPERIMENT=jsonv2` flag are already stable in CI. The live dashboard has reached feature parity with the static HTML export.

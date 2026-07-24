@@ -27,3 +27,27 @@ func loadFile(path string) (auditlog.Report, error) {
 
 	return report, nil
 }
+
+// parseAndLoadSingleReport parses args for a single-report subcommand and
+// loads the report at the given positional index. Returns the report, its
+// source path, and any error. The expectedNArg guard ensures exactly N
+// positional arguments (use 1 for `cmd <file>`, 2 for `cmd <a> <b>`).
+func parseAndLoadSingleReport(name string, args []string, expectedNArg int, usage string) (auditlog.Report, string, error) {
+	fs := newFlagSet(name)
+
+	if err := fs.Parse(args); err != nil {
+		return auditlog.Report{}, "", err
+	}
+
+	if fs.NArg() != expectedNArg {
+		return auditlog.Report{}, "", errors.New(usage)
+	}
+
+	path := fs.Arg(0)
+	report, err := loadFile(path)
+	if err != nil {
+		return auditlog.Report{}, "", err
+	}
+
+	return report, path, nil
+}
