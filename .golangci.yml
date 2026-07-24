@@ -150,6 +150,8 @@ linters:
           allow:
             - $gostd
             - github.com/a-h/templ
+            - github.com/larsartmann/go-atomic-write
+            - github.com/larsartmann/go-error-family
             - github.com/larsartmann/go-ndjson/loader
             - github.com/larsartmann/go-ndjson
             - github.com/larsartmann/go-output
@@ -164,6 +166,7 @@ linters:
           allow:
             - $gostd
             - github.com/a-h/templ
+            - github.com/larsartmann/go-error-family
             - github.com/larsartmann/go-output
             - github.com/larsartmann/go-sse
             - github.com/larsartmann/samber-do-auditlog

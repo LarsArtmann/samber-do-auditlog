@@ -35,6 +35,7 @@ require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
 	github.com/charmbracelet/ultraviolet v0.0.0-20260720091822-7cc6674724ac // indirect
 	github.com/charmbracelet/x/ansi v0.11.7 // indirect
@@ -50,9 +51,11 @@ require (
 	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/go-faster/jx v1.2.0 // indirect
 	github.com/go-faster/yaml v0.4.6 // indirect
+	github.com/gofrs/flock v0.13.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
+	github.com/larsartmann/go-atomic-write v0.3.0 // indirect
 	github.com/larsartmann/go-branded-id v0.3.2 // indirect
-	github.com/larsartmann/go-error-family v0.8.0 // indirect
+	github.com/larsartmann/go-error-family v0.9.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
