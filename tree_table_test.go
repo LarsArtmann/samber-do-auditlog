@@ -426,6 +426,7 @@ func TestReport_WriteCSV_FailingWriter(t *testing.T) {
 	t.Parallel()
 
 	report := activeSvcReport("csv-err", "svc")
+
 	err := report.WriteCSV(errWriter{})
 	if err == nil {
 		t.Fatal("expected error from failing writer")
@@ -448,9 +449,9 @@ func TestReport_WriteCSV_WithErrors(t *testing.T) {
 					ServiceRef: rootRef("failing-svc"),
 				},
 				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status:               auditlog.ServiceStatusInvocationError,
-					InvocationError:      &invErr,
-					ShutdownError:        &shutdownErr,
+					Status:          auditlog.ServiceStatusInvocationError,
+					InvocationError: &invErr,
+					ShutdownError:   &shutdownErr,
 				},
 				ServiceHealth: auditlog.ServiceHealth{
 					HealthCheckError: &hcErr,
@@ -477,6 +478,7 @@ func TestReport_WriteHTMLTree_FailingWriter(t *testing.T) {
 	t.Parallel()
 
 	report := activeSvcReport("htmltree-err", "svc")
+
 	err := report.WriteHTMLTree(errWriter{})
 	if err == nil {
 		t.Fatal("expected error from failing writer")
