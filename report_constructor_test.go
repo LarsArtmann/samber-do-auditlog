@@ -116,3 +116,57 @@ func mkNewReport(
 
 	return report
 }
+
+func TestNewReport_ValidationFailure(t *testing.T) {
+	t.Parallel()
+
+	// A report with mismatched ServiceCount should fail validation.
+	report, err := auditlog.NewReport(
+		auditlog.SchemaVersion, "bad-container", epochTime,
+		nil,
+		[]auditlog.ServiceInfo{
+			{
+				ServiceIdentity: auditlog.ServiceIdentity{ServiceRef: rootRef("svc")},
+				ServiceLifecycle: auditlog.ServiceLifecycle{
+					RegisteredAt: epochTime,
+				},
+			},
+		},
+		rootScopeTree("svc"),
+	)
+	if err != nil {
+		t.Fatalf("NewReport: %v", err)
+	}
+
+	// Corrupt the report to make Validate fail.
+	report.ServiceCount = 99
+
+	if validateErr := report.Validate(); validateErr == nil {
+		t.Fatal("expected validation error for corrupted ServiceCount")
+	}
+}
+
+func TestValidate_StatusDrift(t *testing.T) {
+	t.Parallel()
+
+	report := mkNewReport(t, "drift-test", epochTime,
+		[]auditlog.ServiceInfo{
+			{
+				ServiceIdentity: auditlog.ServiceIdentity{ServiceRef: rootRef("svc")},
+				ServiceLifecycle: auditlog.ServiceLifecycle{
+					RegisteredAt:    epochTime,
+					InvocationCount: 1,
+					FirstInvokedAt:  &epochTime,
+				},
+			},
+		},
+		rootScopeTree("svc"),
+	)
+
+	// Corrupt one service's Status so it no longer matches DeriveStatus().
+	report.Services[0].Status = auditlog.ServiceStatusShutdown
+
+	if err := report.Validate(); err == nil {
+		t.Fatal("expected validation error for status drift")
+	}
+}

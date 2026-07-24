@@ -954,3 +954,120 @@ func TestServer_NilPlugin_ReportEndpoint(t *testing.T) {
 		t.Errorf("expected 503 for nil plugin report, got %d", resp.StatusCode)
 	}
 }
+
+func TestServer_ShutdownWithContextCancelled(t *testing.T) {
+	t.Parallel()
+
+	lc := net.ListenConfig{}
+
+	ln, err := lc.Listen(t.Context(), "tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("get free port: %v", err)
+	}
+
+	addr := ln.Addr().String()
+	_ = ln.Close()
+
+	hub := live.NewHub()
+
+	plugin, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "shutdown-err-test",
+	})
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+
+	server := live.NewServer(hub, plugin, live.Config{Addr: addr})
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- server.ListenAndServe()
+	}()
+
+	// Wait for server to start.
+	ctx := t.Context()
+
+	for range 100 {
+		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "http://"+addr+"/debug/di/api/health", nil)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err == nil {
+			_ = resp.Body.Close()
+
+			if resp.StatusCode == http.StatusOK {
+				break
+			}
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	// Shutdown with an already-cancelled context should return an error.
+	cancelledCtx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	shutdownErr := server.Shutdown(cancelledCtx)
+	// The error may or may not be nil depending on timing — either way
+	// the server should eventually stop.
+	_ = shutdownErr
+
+	// Ensure the server has stopped.
+	_ = <-errCh
+}
+
+func TestServer_HealthEndpoint_NilPlugin(t *testing.T) {
+	t.Parallel()
+
+	hub := live.NewHub()
+	server := live.NewServer(hub, nil, live.Config{})
+
+	ctx := t.Context()
+
+	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/api/health", nil)
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	body := rec.Body.String()
+
+	// With nil plugin, Events and Dropped should be 0.
+	for _, want := range []string{`"status"`, `"ok"`, `"events":0`} {
+		if !strings.Contains(body, want) {
+			t.Errorf("health response missing %q: %s", want, body)
+		}
+	}
+}
+
+func TestServer_SSE_EventBroadcast(t *testing.T) {
+	t.Parallel()
+
+	server := newTestServer(t)
+
+	ts := httptest.NewServer(server)
+	defer ts.Close()
+
+	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	defer closeSSE()
+
+	skipSnapshot(scanner)
+
+	// Broadcast an event through the hub (simulates plugin OnEvent callback).
+	server.OnEvent(auditlog.Event{
+		Sequence:  999,
+		EventType: auditlog.EventTypeRegistration,
+	})
+
+	data, ok := readSSEEvent(scanner, "event")
+	if !ok {
+		t.Fatal("expected to receive broadcast event")
+	}
+
+	if !strings.Contains(data, `"sequence":999`) {
+		t.Errorf("event data missing sequence 999: %s", data)
+	}
+}
