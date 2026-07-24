@@ -28,14 +28,7 @@ func TestReport_ServiceByName(t *testing.T) {
 func TestReport_ServiceByRef(t *testing.T) {
 	t.Parallel()
 
-	p, injector := newPluginAndInjector()
-	child := injector.Scope("child")
-
-	provideDB(injector, "db", "root-db")
-	provideDB(child, "db", "child-db")
-
-	_ = do.MustInvokeNamed[*Database](injector, "db")
-	_ = do.MustInvokeNamed[*Database](child, "db")
+	p, injector, child := setupRootAndChildScopeDBs("db", "root-db", "db", "child-db")
 
 	report := p.Report()
 
@@ -65,14 +58,9 @@ func TestReport_ServiceByRef(t *testing.T) {
 func TestReport_ServicesByScope(t *testing.T) {
 	t.Parallel()
 
-	p, injector := newPluginAndInjector()
-	child := injector.Scope("child")
-
-	provideDB(injector, "root-svc", "test")
-	provideDB(child, "child-svc", "child")
-
-	_ = do.MustInvokeNamed[*Database](injector, "root-svc")
-	_ = do.MustInvokeNamed[*Database](child, "child-svc")
+	p, injector, child := setupRootAndChildScopeDBs("root-svc", "test", "child-svc", "child")
+	_ = injector
+	_ = child
 
 	report := p.Report()
 

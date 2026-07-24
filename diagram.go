@@ -160,6 +160,23 @@ func renderGraphDiagramTransform(
 	return writeRenderedTransform(writer, renderer, transform)
 }
 
+// renderTransformWithErr calls renderGraphDiagramTransform and wraps the
+// returned error with errFmt. Centralizes the "call render + wrap error"
+// boilerplate shared by WriteMermaid and WritePlantUML.
+func renderTransformWithErr(
+	writer io.Writer,
+	r Report,
+	renderer graphRendererWithDedup,
+	transform func(string) string,
+	errFmt string,
+) error {
+	if err := renderGraphDiagramTransform(writer, r, renderer, transform); err != nil {
+		return fmt.Errorf(errFmt, err)
+	}
+
+	return nil
+}
+
 // dedupGraphEdges removes duplicate edges (same from/to pair) while preserving
 // order. Used by WriteD2 since go-output's D2 renderer lacks built-in
 // DedupEdges (unlike Mermaid/PlantUML/DOT which call renderer.DedupEdges()).

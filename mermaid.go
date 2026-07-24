@@ -1,7 +1,6 @@
 package auditlog
 
 import (
-	"fmt"
 	"io"
 	"strings"
 
@@ -28,10 +27,7 @@ func (r Report) WriteMermaid(writer io.Writer, opts ...DiagramOption) error {
 		}
 	}
 
-	err := renderGraphDiagramTransform(writer, r, renderer, transform)
-	if err != nil {
-		return fmt.Errorf("write mermaid diagram: %w", err)
-	}
+	err := renderTransformWithErr(writer, r, renderer, transform, "write mermaid diagram: %w")
 
-	return nil
+	return err
 }

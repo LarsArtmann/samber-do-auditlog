@@ -10,15 +10,7 @@ import (
 func TestPlugin_ScopeTree(t *testing.T) {
 	t.Parallel()
 
-	p, injector := newPluginAndInjector()
-
-	child := injector.Scope("child")
-
-	provideDB(injector, "root-svc", "root")
-	provideDB(child, "child-svc", "child")
-
-	_ = do.MustInvokeNamed[*Database](injector, "root-svc")
-	_ = do.MustInvokeNamed[*Database](child, "child-svc")
+	p, _, _ := setupRootAndChildScopeDBs("root-svc", "root", "child-svc", "child")
 
 	report := p.Report()
 	if report.ScopeTree.Name != auditlog.RootScopeName {
@@ -43,15 +35,7 @@ func TestPlugin_ScopeTree(t *testing.T) {
 func TestPlugin_ScopeID(t *testing.T) {
 	t.Parallel()
 
-	p, injector := newPluginAndInjector()
-
-	child := injector.Scope("child")
-
-	provideDB(injector, "root-svc", "root")
-	provideDB(child, "child-svc", "child")
-
-	_ = do.MustInvokeNamed[*Database](injector, "root-svc")
-	_ = do.MustInvokeNamed[*Database](child, "child-svc")
+	p, _, _ := setupRootAndChildScopeDBs("root-svc", "root", "child-svc", "child")
 
 	report := p.Report()
 
