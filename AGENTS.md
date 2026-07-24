@@ -292,4 +292,4 @@ The `example/` package (split across `main.go`, `register.go`, `services.go`, an
 | Report filtering         | `Report.Filtered(opts...)`, `Plugin.ReportFiltered(opts...)` with 5 filter options                                                  |
 | Export enhancements      | `ExportFilteredToFile(path, opts...)`, `Report.WriteMermaid(writer)`                                                                |
 | Service type tracking    | Auto-detected via `do.ExplainNamedService`                                                                                          |
-| Live dashboard           | `go run ./example --live` starts the real-time SSE dashboard alongside the demo                                                      |
+| Live dashboard           | `go run ./example --live` starts the real-time SSE dashboard alongside the demo                                                     |
