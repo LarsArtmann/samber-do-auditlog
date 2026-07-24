@@ -1,0 +1,3 @@
+# Copy to .envrc and run `direnv allow` to auto-load the Nix devShell on cd.
+# Sets GOEXPERIMENT=jsonv2 (required to build) plus all devShell tools.
+use flake
