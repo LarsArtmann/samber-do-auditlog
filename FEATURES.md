@@ -185,17 +185,19 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Dropped-event counter**    | `Plugin.DroppedEventCount()` / `Recorder.DroppedEventCount()`                                                                                                                     | `plugin.go`, `recorder.go`                              |
 | **Test parallelism**         | 288 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                                                                               | all `*_test.go`                                         |
 | **Type metadata assertions** | `TestBuildTypeMetadata` directly asserts provider/status icons, labels, and colors                                                                                                | `metadata_test.go`                                      |
-| **live/ sub-package tests**  | 17 tests covering dashboard HTML, health, report, 404, SSE snapshot/live/complete/fan-out, graceful shutdown, client count, hub lifecycle, buffer overflow                        | `live/server_test.go`                                   |
+| **live/ sub-package tests**  | 24 tests covering dashboard HTML, health, report, 404, SSE snapshot/live/complete/fan-out/heartbeat, graceful shutdown, client count, server lifecycle, nil-plugin edge cases, hub lifecycle, buffer overflow                        | `live/server_test.go`                                   |
 
 ---
 
 ## PARTIALLY FUNCTIONAL
 
-- **Coverage gate**: Combined coverage is **91.4%**, below the 94% CI gate. Root package is 93.9%; `live/` sub-package is 76.6%. The gate fails until `live/` coverage improves.
-- **Build requires `GOEXPERIMENT=jsonv2`**: The `go-ndjson` dependency imports `encoding/json/v2`. Build and test commands require the experimental flag in Go 1.26.x.
-- **live/ lint warnings**: ~14 golangci-lint warnings remain in `live/` (exhaustruct, varnamelen, gci, errchkjson, modernize). All non-blocking; code compiles and tests pass.
-- **live/ dashboard JS**: Functional first pass but lacks features from the static templ version (collapsible scope tree, dependency detail popover, "Show all" pagination, per-event duration bars in waveform).
-- **live/ CSS drift risk**: `base_css.go` is manually extracted from the static dashboard's `html.templ`, not derived from a shared source. If the static dashboard CSS changes, the live version drifts.
+| Feature | Status | Note |
+| ------- | ------ | ---- |
+| Live dashboard scope tree tab | Missing | Static templ dashboard has it; live dashboard JS does not yet render the scope tree |
+| Live dashboard pagination | Missing | Services/events tables show all rows (static dashboard paginates at 50/100) |
+| Live dashboard export buttons | Missing | No download buttons for JSON/NDJSON/HTML in the live dashboard |
+| Shared CSS between dashboards | Drift risk | Static templ and live dashboards have separate CSS that can drift |
+| `go-sse` and `go-ndjson` private repos | Blocked | Both use `replace` directives in `go.mod`; must be published before public release |
 
 ---
 
@@ -211,4 +213,4 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ---
 
-_Last verified against the codebase on 2026-07-24. Test counts: 278 Test + 12 Benchmark + 5 Fuzz + 8 Example = 303 top-level functions. Coverage: 91.4% (root 93.9%, live 76.6%)._
+_Last verified against the codebase on 2026-07-24. Test counts: 288 Test + 12 Benchmark + 5 Fuzz + 8 Example = 313 top-level functions. Coverage: 94.2% combined (root 94.5%, live 92.1%). 297 `t.Parallel()` calls._

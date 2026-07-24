@@ -801,7 +801,7 @@ type noFlushRecorder struct {
 	code      int
 }
 
-func (r *noFlushRecorder) Header() http.Header           { return r.headerMap }
+func (r *noFlushRecorder) Header() http.Header { return r.headerMap }
 func (r *noFlushRecorder) Write(buf []byte) (int, error) {
 	n, err := r.body.Write(buf)
 	if err != nil {
@@ -810,7 +810,7 @@ func (r *noFlushRecorder) Write(buf []byte) (int, error) {
 
 	return n, nil
 }
-func (r *noFlushRecorder) WriteHeader(code int)          { r.code = code }
+func (r *noFlushRecorder) WriteHeader(code int) { r.code = code }
 
 func TestServer_NormalizePrefix(t *testing.T) {
 	t.Parallel()
