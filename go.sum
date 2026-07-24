@@ -54,6 +54,8 @@ github.com/larsartmann/go-branded-id v0.3.2 h1:Vbe5/LRuR2ycDFpDKuuuG8brBRYvSYcOU
 github.com/larsartmann/go-branded-id v0.3.2/go.mod h1:xoQYcGTGrMqRYB8cMKHe2efq8S6stQGg3nW4DzXVWpA=
 github.com/larsartmann/go-error-family v0.8.0 h1:dBdOJ4VKINK/90JJqSJb5LwEW5fnU9wzU23rLp2FGp4=
 github.com/larsartmann/go-error-family v0.8.0/go.mod h1:JEvLiYWT8p9WrNXrD1Ow97DphYsB9Bksr2lNmwG3Vm4=
+github.com/larsartmann/go-ndjson v0.0.1 h1:wchwH5pv+0ZnFem/WrlGZA8dDGvZumT+OcVn5dbou3A=
+github.com/larsartmann/go-ndjson v0.0.1/go.mod h1:ueEJJ39Jei+zfPCEx455kpunYWZf/pkwn7HqETHrQkU=
 github.com/larsartmann/go-output v0.30.1 h1:2sM5u2piCsT1pSfg8qyySzrmC3jhL85lsWUnJpvN0Ck=
 github.com/larsartmann/go-output v0.30.1/go.mod h1:s2JOFFpjYigmkmzE+/7q35lBNFpCt7tw6GEP/K43jms=
 github.com/larsartmann/go-output/d2 v0.30.1 h1:JaEyDxcyGIQW/C71HpG5Wg69MHOwodEOtVCW3a9xMPI=
