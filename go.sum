@@ -84,6 +84,8 @@ github.com/larsartmann/go-output/testhelpers/graphtest v0.30.0 h1:imEEgHHDuE+qlC
 github.com/larsartmann/go-output/testhelpers/graphtest v0.30.0/go.mod h1:xRI3bvxpEYsMFn9l4xAVdFKRVxWwam9O5eclu4VTXic=
 github.com/larsartmann/go-output/tree v0.30.1 h1:EqMFlIYbOjdIm7UdQRoMYwlpHi/3++oa01GcW6/kRy8=
 github.com/larsartmann/go-output/tree v0.30.1/go.mod h1:dav+1/dQUq5UziZ7lgZPrLRykGpcoON2NYfrNYRIJlA=
+github.com/larsartmann/go-sse v0.2.0 h1:d77B+rtOmM27MZHSy7YG9Ygl3hriAWaf0cD0o+ejw4M=
+github.com/larsartmann/go-sse v0.2.0/go.mod h1:qFY1CWP8caGmjKwKG4JqNn5tfFRqU5yQGx3xUQ1tGj4=
 github.com/lucasb-eyer/go-colorful v1.4.0 h1:UtrWVfLdarDgc44HcS7pYloGHJUjHV/4FwW4TvVgFr4=
 github.com/lucasb-eyer/go-colorful v1.4.0/go.mod h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=
 github.com/mattn/go-colorable v0.1.15 h1:+u9SLTRGnXv73cEsnsmoZBom+dMU88B2M0aDcWy0/jY=
