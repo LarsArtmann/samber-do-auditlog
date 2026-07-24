@@ -41,6 +41,13 @@ func singleServiceWithExternalDepReport() auditlog.Report {
 	}
 }
 
+// singleServiceWithExternalDepReportAndBuf is the standard preamble for tests
+// that render the singleServiceWithExternalDepReport into a bytes.Buffer — it
+// returns both so each test can keep its own setup boilerplate-free.
+func singleServiceWithExternalDepReportAndBuf() (auditlog.Report, *bytes.Buffer) {
+	return singleServiceWithExternalDepReport(), &bytes.Buffer{}
+}
+
 func TestReport_WriteMermaid(t *testing.T) {
 	t.Parallel()
 
