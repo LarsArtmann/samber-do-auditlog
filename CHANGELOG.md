@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **JS syntax validation tests** (`plugin_html_syntax_test.go`): Extracts `<script>` content from the HTML report, strips strings/comments/regexes via a `jsStripper` state machine, and asserts delimiters are balanced. Catches syntax errors the golden byte-for-byte test misses.
 - **Demo Healthchecker implementations**: All `live/demo` services (Database, Cache, UserService, EmailNotifier) now implement `do.Healthchecker`, so health checks populate the dashboard.
 - **Touch-accessible website screenshots**: "Click to enlarge" hint now visible on touch devices via `@media(hover:none)`.
+- **Error classification** (`classify.go`): All sentinel errors are registered into `go-error-family` families (Corruption/Rejection) via `ErrorClassifications()` and auto-registered in `init()`. Consumers get `errorfamily.Classify`, `errorfamily.IsRetryable`, and `errorfamily.ExitCode` on auditlog errors without additional setup. Follows the standard Go driver-registration pattern.
+- **NDJSON streaming** (`stream.go`): `NDJSONStreamer` writes events as newline-delimited JSON in real time via `Config.OnEvent`. Thread-safe with configurable auto-flush and buffer size. `CreateNDJSONStreamer` opens a file for tailing. Uses standard `encoding/json` (no `jsontext` dependency).
+- **Diagram direction option** (`diagram_options.go`): `WithDirection(output.Direction)` applies to all 4 diagram formats (Mermaid, PlantUML, DOT, D2). DOT uses `renderer.SetDirection()`, D2 uses `diagram.SetDirection()`, Mermaid replaces the `flowchart TD` keyword, PlantUML inserts `left to right direction`.
+- **Table column selection** (`table_options.go`): `WithColumns(TableColumn...)` allows selecting which columns appear in `WriteTable` output. 10 columns available (Service, Scope, Type, Status, Invocations, Build(ms), Error, Dependencies, Dependents, Health Checks). Default matches the original 7-column layout.
 
 ### Breaking
 

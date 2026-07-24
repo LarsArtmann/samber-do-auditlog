@@ -7,6 +7,7 @@ import (
 
 	"github.com/larsartmann/go-output"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
+	"github.com/samber/do/v2"
 )
 
 func TestTableColumns_DefaultColumns(t *testing.T) {
