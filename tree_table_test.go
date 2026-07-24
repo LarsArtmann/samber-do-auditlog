@@ -416,3 +416,102 @@ func TestPlugin_ExportToTable(t *testing.T) {
 
 	assertOutputContains(t, "Plugin.ExportToTable", string(data), "db")
 }
+
+// errWriter is an io.Writer that always returns an error.
+type errWriter struct{}
+
+func (errWriter) Write([]byte) (int, error) { return 0, io.ErrUnexpectedEOF }
+
+func TestReport_WriteCSV_FailingWriter(t *testing.T) {
+	t.Parallel()
+
+	report := activeSvcReport("csv-err", "svc")
+	err := report.WriteCSV(errWriter{})
+	if err == nil {
+		t.Fatal("expected error from failing writer")
+	}
+}
+
+func TestReport_WriteTree_FailingWriter(t *testing.T) {
+	t.Parallel()
+
+	report := activeSvcReport("tree-err", "svc")
+	err := report.WriteTree(errWriter{})
+	if err == nil {
+		t.Fatal("expected error from failing writer")
+	}
+}
+
+func TestReport_WriteHTMLTree_FailingWriter(t *testing.T) {
+	t.Parallel()
+
+	report := activeSvcReport("htmltree-err", "svc")
+	err := report.WriteHTMLTree(errWriter{})
+	if err == nil {
+		t.Fatal("expected error from failing writer")
+	}
+}
+
+func TestReport_WriteTree_EmptyContainerID(t *testing.T) {
+	t.Parallel()
+
+	report := auditlog.Report{
+		Version: auditlog.SchemaVersion,
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceIdentity: auditlog.ServiceIdentity{
+					ServiceRef: rootRef("svc"),
+				},
+				ServiceLifecycle: auditlog.ServiceLifecycle{
+					Status: auditlog.ServiceStatusRegistered,
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+
+	err := report.WriteTree(&buf)
+	if err != nil {
+		t.Fatalf("WriteTree error: %v", err)
+	}
+
+	out := buf.String()
+	assertOutputContains(t, "tree-empty-cid", out, "container")
+	assertOutputContains(t, "tree-empty-cid", out, "svc")
+}
+
+func TestReport_WriteTree_DanglingDependent(t *testing.T) {
+	t.Parallel()
+
+	report := auditlog.Report{
+		Version:     auditlog.SchemaVersion,
+		ContainerID: "dangling-test",
+		Services: []auditlog.ServiceInfo{
+			{
+				ServiceIdentity: auditlog.ServiceIdentity{
+					ServiceRef: rootRef("root-svc"),
+				},
+				ServiceLifecycle: auditlog.ServiceLifecycle{
+					Status: auditlog.ServiceStatusRegistered,
+				},
+				ServiceGraph: auditlog.ServiceGraph{
+					Dependents: []auditlog.ServiceRef{
+						rootRef("nonexistent-service"),
+					},
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+
+	err := report.WriteTree(&buf)
+	if err != nil {
+		t.Fatalf("WriteTree error: %v", err)
+	}
+
+	// Should still render without crashing.
+	out := buf.String()
+	assertOutputContains(t, "dangling", out, "root-svc")
+}
