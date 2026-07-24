@@ -42,6 +42,11 @@ type Config struct {
 	// HeartbeatInterval is how often to send SSE keepalive comments.
 	// Default 15 seconds. Set 0 to disable heartbeats.
 	HeartbeatInterval time.Duration
+	// CORSAllowedOrigins controls the Access-Control-Allow-Origin header
+	// on all API endpoints. Default "*" (allow all origins). Set to a
+	// specific origin (e.g. "https://dashboard.example.com") to restrict.
+	// Set to "" to disable CORS headers entirely.
+	CORSAllowedOrigins string
 }
 
 // HealthInfo provides dynamic health check data.
@@ -120,6 +125,10 @@ func NewServer(hub *Hub, plugin *auditlog.Plugin, cfg Config) *Server {
 		cfg.HeartbeatInterval = defaultHeartbeatInterval
 	}
 
+	if cfg.CORSAllowedOrigins == "" {
+		cfg.CORSAllowedOrigins = "*"
+	}
+
 	srv := &Server{
 		hub:    hub,
 		plugin: plugin,
@@ -139,14 +148,35 @@ func (srv *Server) setupRoutes() {
 	pfx := srv.config.Prefix
 	if pfx == "/" {
 		srv.mux.HandleFunc("/", srv.handleDashboard)
-		srv.mux.HandleFunc("/api/report", srv.handleReport)
-		srv.mux.HandleFunc("/api/events", srv.handleSSE)
-		srv.mux.HandleFunc("/api/health", srv.handleHealth)
+		srv.mux.HandleFunc("/api/report", srv.corsMiddleware(srv.handleReport))
+		srv.mux.HandleFunc("/api/events", srv.corsMiddleware(srv.handleSSE))
+		srv.mux.HandleFunc("/api/health", srv.corsMiddleware(srv.handleHealth))
 	} else {
 		srv.mux.HandleFunc(pfx+"/", srv.handleDashboard)
-		srv.mux.HandleFunc(pfx+"/api/report", srv.handleReport)
-		srv.mux.HandleFunc(pfx+"/api/events", srv.handleSSE)
-		srv.mux.HandleFunc(pfx+"/api/health", srv.handleHealth)
+		srv.mux.HandleFunc(pfx+"/api/report", srv.corsMiddleware(srv.handleReport))
+		srv.mux.HandleFunc(pfx+"/api/events", srv.corsMiddleware(srv.handleSSE))
+		srv.mux.HandleFunc(pfx+"/api/health", srv.corsMiddleware(srv.handleHealth))
+	}
+}
+
+// corsMiddleware adds CORS headers and handles OPTIONS preflight for API endpoints.
+func (srv *Server) corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	origin := srv.config.CORSAllowedOrigins
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
+		}
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+
+			return
+		}
+
+		next(w, r)
 	}
 }
 

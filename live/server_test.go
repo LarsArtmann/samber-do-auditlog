@@ -1071,3 +1071,32 @@ func TestServer_SSE_EventBroadcast(t *testing.T) {
 		t.Errorf("event data missing sequence 999: %s", data)
 	}
 }
+
+func TestServer_CORSHeaders(t *testing.T) {
+	t.Parallel()
+
+	server := newTestServer(t)
+
+	ctx := t.Context()
+
+	// Verify CORS headers on health endpoint.
+	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/api/health", nil)
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	origin := rec.Header().Get("Access-Control-Allow-Origin")
+	if origin != "*" {
+		t.Errorf("expected Access-Control-Allow-Origin *, got %q", origin)
+	}
+
+	// Verify OPTIONS preflight returns 204.
+	reqOpts := httptest.NewRequestWithContext(ctx, http.MethodOptions, "/debug/di/api/health", nil)
+	recOpts := httptest.NewRecorder()
+
+	server.ServeHTTP(recOpts, reqOpts)
+
+	if recOpts.Code != http.StatusNoContent {
+		t.Errorf("expected 204 for OPTIONS, got %d", recOpts.Code)
+	}
+}
