@@ -320,7 +320,7 @@ func (srv *Server) handleExportHTML(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Content-Disposition", `attachment; filename="auditlog-report.html"`)
 
-	if err := srv.plugin.WriteHTML(w); err != nil {
+	if err := srv.plugin.WriteHTML(w); err != nil { //nolint:contextcheck // WriteHTML takes io.Writer, not context
 		http.Error(w, fmt.Sprintf("export html: %v", err), http.StatusInternalServerError)
 
 		return

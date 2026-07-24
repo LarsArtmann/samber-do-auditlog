@@ -1112,6 +1112,7 @@ func TestServer_ExportEndpoints(t *testing.T) {
 	reqJSON := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/api/report", nil)
 	recJSON := httptest.NewRecorder()
 	server.ServeHTTP(recJSON, reqJSON)
+
 	if recJSON.Code != http.StatusOK {
 		t.Fatalf("JSON export: expected 200, got %d", recJSON.Code)
 	}
@@ -1120,6 +1121,7 @@ func TestServer_ExportEndpoints(t *testing.T) {
 	reqNDJSON := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/api/export/ndjson", nil)
 	recNDJSON := httptest.NewRecorder()
 	server.ServeHTTP(recNDJSON, reqNDJSON)
+
 	if recNDJSON.Code != http.StatusOK {
 		t.Fatalf("NDJSON export: expected 200, got %d", recNDJSON.Code)
 	}
@@ -1132,6 +1134,7 @@ func TestServer_ExportEndpoints(t *testing.T) {
 	reqHTML := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/api/export/html", nil)
 	recHTML := httptest.NewRecorder()
 	server.ServeHTTP(recHTML, reqHTML)
+
 	if recHTML.Code != http.StatusOK {
 		t.Fatalf("HTML export: expected 200, got %d", recHTML.Code)
 	}
