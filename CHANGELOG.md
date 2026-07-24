@@ -15,19 +15,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Real-time live dashboard** (`live/` sub-package): SSE streaming HTTP server with an interactive warm-amber HTML dashboard. Four endpoints: dashboard HTML (`GET {prefix}/`), JSON report snapshot (`GET {prefix}/api/report`), SSE event stream (`GET {prefix}/api/events`), health (`GET {prefix}/api/health`). Configurable route prefix (default `/debug/di`). 17 tests covering snapshot-on-connect, live event delivery, fan-out, graceful shutdown, and buffer overflow. Depends on `go-sse` for wire-format primitives.
-- **Typed identifiers**: `ContainerID`, `ScopeID`, and `ServiceName` are now distinct named string types propagated through the entire codebase (production, tests, CLI, example). The Go compiler rejects accidental type swaps at every boundary. External library calls wrap typed values with `string()` at the IO boundary.
-- **ServiceInfo domain split**: The 19-field `ServiceInfo` monolith is now four embedded structs — `ServiceIdentity` (ServiceRef + ServiceType), `ServiceLifecycle` (status, timestamps, errors, durations), `ServiceHealth` (health check fields), `ServiceGraph` (Dependencies + Dependents). JSON output stays flat via Go embedding; field access stays flat via promotion.
-- **Shared module delegation**: NDJSON read/write and format-detection/loader logic now delegate to the external `go-ndjson` module (`go-ndjson/loader`, `go-ndjson`). The local `loader.go` and `ndjson.go` re-export the public API so existing callers are unaffected.
+
+### Breaking
+
+- **Typed identifiers**: `ContainerID`, `ScopeID`, and `ServiceName` are now distinct named string types propagated through the entire codebase (production, tests, CLI, example). The Go compiler rejects accidental type swaps at every boundary. External library calls wrap typed values with `string()` at the IO boundary. Existing code passing plain `string` to typed-parameter functions must adapt.
+- **ServiceInfo domain split**: The 19-field `ServiceInfo` monolith is now four embedded structs — `ServiceIdentity` (ServiceRef + ServiceType), `ServiceLifecycle` (status, timestamps, errors, durations), `ServiceHealth` (health check fields), `ServiceGraph` (Dependencies + Dependents). JSON output stays flat via Go embedding; field access stays flat via promotion. Test struct literals must use the embedded struct names (e.g. `ServiceIdentity: ServiceIdentity{ServiceRef: ...}`).
 
 ### Changed
 
+- **Shared module delegation**: NDJSON read/write and format-detection/loader logic now delegate to the external `go-ndjson` module (`go-ndjson/loader`, `go-ndjson`). The local `loader.go` and `ndjson.go` re-export the public API so existing callers are unaffected.
 - **`BuildDAGHTML` exported**: Renamed from `buildDAGHTML` so the `live/` sub-package can call it for the SSE snapshot graph data. Updated `html.templ` and regenerated `html_templ.go`.
 - **README rewrite**: Condensed from 569 to ~350 lines as a high-conversion landing page. All Quick Start code compile-verified. Fixed incorrect Mermaid example (replaced invalid node IDs with quoted syntax). Restored API Reference link to the documentation website. Added sections for Loading & Migrating Reports, env-var toggle, MaxEvents, Report.Diff, Security & Quality, and STABILITY.md link.
 
 ### Known Regressions
 
 - **Coverage gate**: Combined coverage dropped to **91.4%**, below the 94% gate. Root-package coverage is 93.9%; `live/` sub-package is 76.6%. The `scripts/coverage-gate.sh` script fails until `live/` coverage improves.
-- **Build requires `GOEXPERIMENT=jsonv2`**: The `go-ndjson` shared module imports `encoding/json/v2`, which requires the experimental flag in Go 1.26.x. Build and test commands must be run with `GOEXPERIMENT=jsonv2 go test ./...` until Go 1.27 stabilizes json/v2 or `go-ndjson` drops the dependency.
+- **Build requires `GOEXPERIMENT=jsonv2`**: The `go-ndjson` shared module imports `encoding/json/v2`, which requires the experimental flag in Go 1.26.x. Build and test commands must be run with `GOEXPERIMENT=jsonv2 go test ./...` until Go 1.27 stabilizes json/v2 or `go-ndjson` drops the dependency. This conflicts with the `encoding/json/v2` exclusion policy documented in AGENTS.md — resolution is the top-priority open item.
 
 ## [0.6.0] - 2026-07-22
 

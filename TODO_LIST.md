@@ -2,6 +2,7 @@
 
 Short- and mid-term improvement tasks, verified against actual code state.
 Completed items are in [CHANGELOG.md](CHANGELOG.md).
+Last updated: 2026-07-24
 
 ---
 
@@ -33,6 +34,8 @@ Completed items are in [CHANGELOG.md](CHANGELOG.md).
 - [ ] **Pin GitHub Actions to SHA hashes** — Workflows in `.github/workflows/` use `@v6`/`@v7`/`@v8` tag versions, which are vulnerable to supply-chain attacks. Pin all actions to commit SHAs.
 - [ ] **Add headless browser test** for the HTML report's JavaScript execution. The golden test only checks byte-for-byte equality, not JS runtime correctness. A stray `}` syntax error shipped undetected because of this gap.
 - [ ] **Add a note to the README Mermaid example** — The node IDs are simplified for readability; real output includes UUID-based scope prefixes. Users who copy the example see different output.
+- [ ] **Fix timeline screenshot aspect ratio** — 1400×1100 vs 1400×1300 mismatch creates visual inconsistency in the website showcase grid.
+- [ ] **Touch-accessible "Click to enlarge"** — The website screenshot hover-zoom is not discoverable on touch devices. Add a tap handler or visible affordance.
 
 ---
 

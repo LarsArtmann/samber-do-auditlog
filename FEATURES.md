@@ -124,6 +124,35 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Content Security Policy** | CSP meta tag with `base-uri 'none'`, `frame-ancestors 'none'`, and inline style/script allowances                                                   | `html.templ`                |
 | **XSS hardening**           | All user-controlled strings escaped via `esc()` before DOM insertion                                                                                | `html.templ`                |
 
+### Type Safety
+
+| Feature                       | Description                                                                                            | Verified                         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------- |
+| **Typed identifiers**         | `ContainerID`, `ScopeID`, `ServiceName` are distinct named string types throughout the entire codebase | `types.go`, all signatures       |
+| **IO-boundary `string()` convention** | External library calls (go-output, csv, fmt) wrap typed values with `string()` at the IO boundary | `csv.go`, `d2.go`, `diagram.go`  |
+| **ServiceInfo domain split**  | 19-field struct split into four embedded structs: `ServiceIdentity`/`ServiceLifecycle`/`ServiceHealth`/`ServiceGraph`. JSON stays flat via embedding | `service.go` |
+| **Service status derivation** | `ServiceInfo.DeriveStatus()` is the canonical entry point for computing status from underlying fields  | `service.go`                     |
+
+### Live Dashboard (`live/` Sub-Package)
+
+| Feature                       | Description                                                                                                          | Verified                        |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| **SSE event hub**             | `Hub` broadcasts `auditlog.Event` to all connected SSE clients with non-blocking sends and 128-event buffer per client | `live/hub.go`                  |
+| **HTTP server with prefix**   | `Server` serves dashboard, report JSON, SSE stream, and health endpoints. Configurable route prefix (default `/debug/di`) | `live/server.go`               |
+| **Interactive HTML dashboard** | Self-contained 4-tab dashboard (Services/Graph/Timeline/Events) with SSE client, reconnection, incremental rendering   | `live/dashboard.go`, `live/dashboard.js` |
+| **Warm amber CSS design**     | Full CSS design system matching the static HTML dashboard aesthetic (phosphor amber on dark charcoal)              | `live/base_css.go`             |
+| **Graceful shutdown**         | `Server.Shutdown(ctx)` stops HTTP server and waits for active SSE connections to drain                              | `live/server.go`               |
+| **Health endpoint**           | `GET {prefix}/api/health` returns uptime, connected client count, total events, and dropped events                 | `live/server.go`               |
+| **`http.Handler` compatibility** | `Server` implements `ServeHTTP` for `httptest` compatibility and embedding in existing mux chains               | `live/server.go`               |
+| **go-sse delegation**         | SSE wire-format primitives (`sse.Event`, `sse.WriteEvent`, `sse.ContentType`) come from the external `go-sse` module | `live/server.go`, `go.mod`     |
+
+### Shared Module Delegation
+
+| Feature                       | Description                                                                                                          | Verified                        |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| **go-ndjson loader**          | `LoadReport` and format detection delegate to `go-ndjson/loader`. Local `loader.go` re-exports the public API        | `loader.go`, `go.mod`          |
+| **go-ndjson reader/writer**   | `ReadEvents` and NDJSON writing delegate to the `go-ndjson` module. Local `ndjson.go` re-exports sentinels and types | `ndjson.go`, `go.mod`          |
+
 ### Schema Migration
 
 | Feature                                | Description                                                                                                  | Verified                            |
@@ -146,22 +175,27 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | Feature                      | Description                                                                                                                                                                       | Verified                                                |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | **GitHub Actions CI**        | `go vet`, `go build`, race-detector tests, golangci-lint, govulncheck, generated-code drift checks                                                                                | `.github/workflows/ci.yml`                              |
-| **golangci-lint config**     | `.golangci.yml` defines lint rules for the project                                                                                                                                | `.golangci.yml`                                         |
+| **golangci-lint config**     | `.golangci.yml` defines lint rules for the project (109 linters)                                                                                                                  | `.golangci.yml`                                         |
 | **Generated-code check**     | CI runs `go generate ./...` and fails on drift, ensuring `html_templ.go` stays in sync                                                                                            | `.github/workflows/ci.yml`                              |
 | **templ code generation**    | `//go:generate go tool templ generate` in `html.go` produces `html_templ.go`                                                                                                      | `html.go`, `html_templ.go`                              |
 | **Fuzz tests**               | 5 targets: HTML XSS (service names, error messages, dep chains), `MigrateReport` integrity, Mermaid/PlantUML special chars, filter-option combinations, NDJSON parsing resilience | `fuzz_test.go`, `filter_fuzz_test.go`, `replay_test.go` |
-| **Benchmark tests**          | Performance benchmarks for hot paths                                                                                                                                              | `benchmarks_test.go`                                    |
-| **Example tests**            | Runnable `Example*` functions for pkg.go.dev                                                                                                                                      | `example_test.go`                                       |
+| **Benchmark tests**          | 12 performance benchmarks for hot paths (invocation, disabled, registration, concurrent, BuildReport at 50/100/500 services, events copy, health check)                          | `benchmarks_test.go`                                    |
+| **Example tests**            | 8 runnable `Example*` functions for pkg.go.dev                                                                                                                                    | `example_test.go`                                       |
 | **Defensive-copy accessors** | `Plugin.Events()` and `Recorder.Events()` return copied slices; `EventsCount()` avoids copying                                                                                    | `plugin.go`, `recorder.go`                              |
 | **Dropped-event counter**    | `Plugin.DroppedEventCount()` / `Recorder.DroppedEventCount()`                                                                                                                     | `plugin.go`, `recorder.go`                              |
-| **Test parallelism**         | 262 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                                                                               | all `*_test.go`                                         |
+| **Test parallelism**         | 279 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                                                                               | all `*_test.go`                                         |
 | **Type metadata assertions** | `TestBuildTypeMetadata` directly asserts provider/status icons, labels, and colors                                                                                                | `metadata_test.go`                                      |
+| **live/ sub-package tests**  | 17 tests covering dashboard HTML, health, report, 404, SSE snapshot/live/complete/fan-out, graceful shutdown, client count, hub lifecycle, buffer overflow                        | `live/server_test.go`                                   |
 
 ---
 
 ## PARTIALLY FUNCTIONAL
 
-_None — all tracked features are either fully functional or worth considering for the future._
+- **Coverage gate**: Combined coverage is **91.4%**, below the 94% CI gate. Root package is 93.9%; `live/` sub-package is 76.6%. The gate fails until `live/` coverage improves.
+- **Build requires `GOEXPERIMENT=jsonv2`**: The `go-ndjson` dependency imports `encoding/json/v2`. Build and test commands require the experimental flag in Go 1.26.x.
+- **live/ lint warnings**: ~14 golangci-lint warnings remain in `live/` (exhaustruct, varnamelen, gci, errchkjson, modernize). All non-blocking; code compiles and tests pass.
+- **live/ dashboard JS**: Functional first pass but lacks features from the static templ version (collapsible scope tree, dependency detail popover, "Show all" pagination, per-event duration bars in waveform).
+- **live/ CSS drift risk**: `base_css.go` is manually extracted from the static dashboard's `html.templ`, not derived from a shared source. If the static dashboard CSS changes, the live version drifts.
 
 ---
 
@@ -171,10 +205,10 @@ _None — all tracked features are either fully functional or worth considering 
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | **External storage backends**                      | File/`io.Writer` exports are sufficient for current scope                                  |
 | **Prometheus / OpenTelemetry metrics integration** | Users can derive metrics via `Config.OnEvent`; OTel bridge example exists                  |
-| **Multi-module repository split**                  | Project is one package (~2,500 LOC); revisit at 5+ packages                                |
+| **Multi-module repository split**                  | Project is one package + live/ sub-package (~2,500 LOC core); revisit at 5+ packages        |
 | **Property-based testing**                         | `rapid`/`gopter` tests for filter round-trips (`Diff` and `MigrateReport` already covered) |
-| **WebSocket live stream**                          | Reference example exists (`docs/examples/websocket-stream.md`); not a library dependency   |
+| **NDJSON/loader extraction from go-ndjson**        | Currently delegated to `go-ndjson`; further extraction (consolidating all JSON I/O) blocked by json/v1 vs json/v2 divergence |
 
 ---
 
-_Last verified against the codebase on 2026-07-13._
+_Last verified against the codebase on 2026-07-24. Test counts: 270 Test + 12 Benchmark + 5 Fuzz + 8 Example = 295 top-level functions. Coverage: 91.4% (root 93.9%, live 76.6%)._
