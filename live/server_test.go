@@ -551,6 +551,59 @@ done:
 	}
 }
 
+func TestHub_UnsubscribeUnknownID(t *testing.T) {
+	t.Parallel()
+
+	hub := live.NewHub()
+
+	// Unsubscribing a non-existent ID should be a no-op (no panic).
+	hub.Unsubscribe(99999)
+}
+
+func TestServer_SSE_Heartbeat(t *testing.T) {
+	t.Parallel()
+
+	hub := live.NewHub()
+
+	plugin, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "heartbeat-test",
+	})
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+
+	// Use a very short heartbeat interval to trigger the heartbeat path quickly.
+	server := live.NewServer(hub, plugin, live.Config{HeartbeatInterval: 50 * time.Millisecond})
+
+	ts := httptest.NewServer(server)
+	defer ts.Close()
+
+	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	defer closeSSE()
+
+	// Skip the snapshot event.
+	skipSnapshot(scanner)
+
+	// Wait for a heartbeat comment line.
+	foundHeartbeat := false
+
+	for i := 0; i < 100; i++ {
+		if scanner.Scan() {
+			line := scanner.Text()
+			if strings.HasPrefix(line, ": heartbeat") {
+				foundHeartbeat = true
+
+				break
+			}
+		}
+	}
+
+	if !foundHeartbeat {
+		t.Error("did not receive heartbeat within timeout")
+	}
+}
+
 // --- Server lifecycle tests ---
 
 func TestServer_ListenAndServe_Addr_Shutdown(t *testing.T) {
@@ -882,7 +935,7 @@ func TestServer_NilPlugin_ReportEndpoint(t *testing.T) {
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusInternalServerError {
-		t.Errorf("expected 500 for nil plugin report, got %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusServiceUnavailable {
+		t.Errorf("expected 503 for nil plugin report, got %d", resp.StatusCode)
 	}
 }
