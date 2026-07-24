@@ -458,6 +458,24 @@ func writeHTMLToString(t *testing.T) string {
 	return buf.String()
 }
 
+// setupRootAndChildScopeDBs returns a plugin + injector + child scope wired
+// with a named *Database in each scope (root and child) and both invoked.
+// This is the shared preamble for the four "exercise the scope tree" tests
+// that otherwise duplicate the same 8 lines of provideDB + MustInvokeNamed
+// boilerplate.
+func setupRootAndChildScopeDBs(rootName, rootURL, childName, childURL string) (*auditlog.Plugin, do.Injector, *do.Scope) { //nolint:ireturn
+	p, injector := newPluginAndInjector()
+	child := injector.Scope("child")
+
+	provideDB(injector, rootName, rootURL)
+	provideDB(child, childName, childURL)
+
+	_ = do.MustInvokeNamed[*Database](injector, rootName)
+	_ = do.MustInvokeNamed[*Database](child, childName)
+
+	return p, injector, child
+}
+
 // replayFromPlugin drives the standard round-trip: writes plugin events to
 // NDJSON, reads them back, and replays them into a Report. Centralizes the
 // 8-line preamble that opens every replay round-trip test.
