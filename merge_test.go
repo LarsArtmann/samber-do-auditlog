@@ -2,6 +2,7 @@ package auditlog_test
 
 import (
 	"testing"
+	"time"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
@@ -96,6 +97,81 @@ func TestValidate_EmptyVersion(t *testing.T) {
 	err := report.Validate()
 	if err == nil {
 		t.Fatal("expected error for empty version, got nil")
+	}
+}
+
+func TestMergeReports_WithChildScopes(t *testing.T) {
+	t.Parallel()
+
+	base := epochTime
+
+	makeScopedReport := func(containerID string, svcName auditlog.ServiceName) auditlog.Report {
+		events := []auditlog.Event{
+			mkRegEvent(1, base, svcName, auditlog.ContainerID(containerID)),
+		}
+
+		report, err := auditlog.ReplayEvents(events)
+		if err != nil {
+			t.Fatalf("ReplayEvents: %v", err)
+		}
+
+		report.ExportedAt = base
+
+		return report
+	}
+
+	reports := []auditlog.Report{
+		makeScopedReport("container-a", "svc-a"),
+		makeScopedReport("container-b", "svc-b"),
+	}
+
+	merged, err := auditlog.MergeReports(reports)
+	if err != nil {
+		t.Fatalf("MergeReports: %v", err)
+	}
+
+	if err := merged.Validate(); err != nil {
+		t.Errorf("merged report invalid: %v", err)
+	}
+
+	if merged.ScopeCount < 1 {
+		t.Errorf("expected at least 1 scope, got %d", merged.ScopeCount)
+	}
+}
+
+func TestMergeReports_EarlierExportedAtPreserved(t *testing.T) {
+	t.Parallel()
+
+	base := epochTime
+	earlier := base.Add(-time.Hour)
+
+	r1 := mkNewReport(t, "c1", base, []auditlog.ServiceInfo{
+		{
+			ServiceIdentity: auditlog.ServiceIdentity{ServiceRef: rootRef("svc-a")},
+			ServiceLifecycle: auditlog.ServiceLifecycle{
+				RegisteredAt: base,
+			},
+		},
+	}, rootScopeTree("svc-a"))
+	r1.ExportedAt = base
+
+	r2 := mkNewReport(t, "c2", earlier, []auditlog.ServiceInfo{
+		{
+			ServiceIdentity: auditlog.ServiceIdentity{ServiceRef: rootRef("svc-b")},
+			ServiceLifecycle: auditlog.ServiceLifecycle{
+				RegisteredAt: earlier,
+			},
+		},
+	}, rootScopeTree("svc-b"))
+	r2.ExportedAt = earlier
+
+	merged, err := auditlog.MergeReports([]auditlog.Report{r1, r2})
+	if err != nil {
+		t.Fatalf("MergeReports: %v", err)
+	}
+
+	if !merged.ExportedAt.Equal(base) {
+		t.Errorf("ExportedAt: want %v (latest), got %v", base, merged.ExportedAt)
 	}
 }
 
