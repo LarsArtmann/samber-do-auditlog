@@ -115,15 +115,10 @@ live/demo/          — Self-contained real-time demo (registers services with d
 ### Shared infrastructure: `go-sse`
 
 The `live/` sub-package depends on [`github.com/larsartmann/go-sse`](https://github.com/larsartmann/go-sse)
-(v0.1.0, currently private) for the SSE wire-format primitives — `sse.Event`, `sse.WriteEvent`,
+(v0.2.0, public) for the SSE wire-format primitives — `sse.Event`, `sse.WriteEvent`,
 and `sse.ContentType`. The domain-specific Hub and Server are implemented locally in `live/`
 (samber/do service events, scope tree, dashboard HTML) on top of those primitives; go-sse
 itself is transport-only and owns no domain types here.
-
-A `go.work` workspace at the parent directory links the projects for local development.
-The `replace` directive in `go.mod` (`go-sse => ../go-sse`) remains because the repo is
-private; it will be removed once the repo is made public. The `go-ndjson` replace was
-removed — the module is now public at v0.0.1.
 
 ### Shared infrastructure: `go-ndjson`
 
@@ -131,6 +126,9 @@ NDJSON read/write and format-detection logic delegate to the external
 [`github.com/larsartmann/go-ndjson`](https://github.com/larsartmann/go-ndjson) module
 (public, v0.0.1). The local `loader.go` and `ndjson.go` re-export the
 public API so existing callers are unaffected.
+
+Both `go-sse` and `go-ndjson` are now public — no `replace` directives remain in `go.mod`.
+A `go.work` workspace at the parent directory may still link the projects for local development.
 
 ### GOEXPERIMENT=jsonv2 requirement
 
