@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/larsartmann/go-output"
 	auditlog "github.com/larsartmann/samber-do-auditlog"

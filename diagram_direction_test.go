@@ -149,6 +149,40 @@ func TestDiagram_PlantUMLDefaultNoDirectionCommand(t *testing.T) {
 	}
 }
 
+func TestDiagram_MermaidAllDirections(t *testing.T) {
+	t.Parallel()
+
+	report := singleServiceWithExternalDepReport()
+
+	tests := []struct {
+		name      string
+		direction output.Direction
+		keyword   string
+	}{
+		{"Down", output.DirectionDown, "flowchart TD"},
+		{"Up", output.DirectionUp, "flowchart BT"},
+		{"Left", output.DirectionLeft, "flowchart RL"},
+		{"Right", output.DirectionRight, "flowchart LR"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var buf bytes.Buffer
+
+			err := report.WriteMermaid(&buf, auditlog.WithDirection(tt.direction))
+			if err != nil {
+				t.Fatalf("WriteMermaid: %v", err)
+			}
+
+			if !strings.Contains(buf.String(), tt.keyword) {
+				t.Errorf("expected %q in output for direction %v", tt.keyword, tt.direction)
+			}
+		})
+	}
+}
+
 func TestDiagram_AllFormatsAcceptDirectionOption(t *testing.T) {
 	t.Parallel()
 

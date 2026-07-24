@@ -12,6 +12,16 @@ import (
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
+func TestNDJSONStreamer_CreateError(t *testing.T) {
+	t.Parallel()
+
+	// Invalid path (directory as file) should return an error.
+	_, err := auditlog.CreateNDJSONStreamer("/nonexistent_dir/stream.ndjson")
+	if err == nil {
+		t.Fatal("expected error creating streamer with invalid path")
+	}
+}
+
 func TestNDJSONStreamer_BasicRoundTrip(t *testing.T) {
 	t.Parallel()
 
