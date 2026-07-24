@@ -3,7 +3,6 @@ package auditlog
 import (
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 
 	"github.com/larsartmann/go-output"
@@ -14,33 +13,27 @@ import (
 	_ "github.com/larsartmann/go-output/table"
 )
 
-// buildServiceTableData converts a Report into go-output Table.
-// Columns: Service, Scope, Type, Status, Invocations, Build(ms), Error.
-func (r Report) buildServiceTableData() *output.Table {
-	data := output.NewTable([]string{"Service", "Scope", "Type", "Status", "Invocations", "Build(ms)", "Error"})
+// buildServiceTableData converts a Report into go-output Table using the
+// specified columns. If columns is empty, DefaultTableColumns is used.
+func (r Report) buildServiceTableData(columns []TableColumn) *output.Table {
+	if len(columns) == 0 {
+		columns = append([]TableColumn(nil), DefaultTableColumns...)
+	}
+
+	headers := make([]string, len(columns))
+	for i, col := range columns {
+		headers[i] = columnDefs[col].header
+	}
+
+	data := output.NewTable(headers)
 
 	for _, svc := range r.Services {
-		errStr := ""
-		if svc.InvocationError != nil {
-			errStr = *svc.InvocationError
-		} else if svc.ShutdownError != nil {
-			errStr = *svc.ShutdownError
+		row := make([]string, len(columns))
+		for i, col := range columns {
+			row[i] = columnDefs[col].extract(svc)
 		}
 
-		buildStr := ""
-		if svc.FirstBuildDurationMs != nil {
-			buildStr = fmt.Sprintf("%.2f", *svc.FirstBuildDurationMs)
-		}
-
-		data.AddRow([]string{
-			string(svc.ServiceName),
-			svc.ScopeName,
-			string(svc.ServiceType),
-			string(svc.Status),
-			strconv.Itoa(svc.InvocationCount),
-			buildStr,
-			errStr,
-		})
+		data.AddRow(row)
 	}
 
 	return data
@@ -50,8 +43,12 @@ func (r Report) buildServiceTableData() *output.Table {
 // Supported formats (when respective sub-modules are imported): table,
 // json, csv, tsv, markdown, xml, d2, yaml, html, tree, mermaid, dot,
 // jsonl, asciidoc, toml, plantuml.
-func (r Report) WriteTable(writer io.Writer, format output.Format, opts output.RenderOptions) error {
-	data := r.buildServiceTableData()
+//
+// Use [WithColumns] to customize which columns appear (default: Service,
+// Scope, Type, Status, Invocations, Build(ms), Error).
+func (r Report) WriteTable(writer io.Writer, format output.Format, opts output.RenderOptions, tableOpts ...TableOption) error {
+	cfg := applyTableOpts(tableOpts)
+	data := r.buildServiceTableData(cfg.columns)
 
 	opts.Writer = writer
 
@@ -65,10 +62,10 @@ func (r Report) WriteTable(writer io.Writer, format output.Format, opts output.R
 
 // WriteTableString returns the service summary table as a string in the
 // specified format. See WriteTable for supported formats.
-func (r Report) WriteTableString(format output.Format, opts output.RenderOptions) (string, error) {
+func (r Report) WriteTableString(format output.Format, opts output.RenderOptions, tableOpts ...TableOption) (string, error) {
 	var buf strings.Builder
 
-	err := r.WriteTable(&buf, format, opts)
+	err := r.WriteTable(&buf, format, opts, tableOpts...)
 	if err != nil {
 		return "", err
 	}

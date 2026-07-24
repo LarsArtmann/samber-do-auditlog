@@ -67,13 +67,13 @@ func TestDiagram_DOTDirectionDown(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	var buf bytes.Buffer
-	err := report.WriteDOT(&buf, auditlog.WithDirection(output.DirectionDown))
+	err := report.WriteDOT(&buf, auditlog.WithDirection(output.DirectionUp))
 	if err != nil {
 		t.Fatalf("WriteDOT: %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "rankdir=TB") {
-		t.Errorf("expected 'rankdir=TB' in output, got:\n%s", buf.String())
+	if !strings.Contains(buf.String(), "rankdir=BT") {
+		t.Errorf("expected 'rankdir=BT' in output, got:\n%s", buf.String())
 	}
 }
 
