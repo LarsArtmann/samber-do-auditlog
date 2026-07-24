@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
@@ -9,17 +8,7 @@ import (
 
 // runStats prints aggregate statistics for a report.
 func runStats(args []string) error {
-	fs := newFlagSet("stats")
-
-	if err := fs.Parse(args); err != nil {
-		return err
-	}
-
-	if fs.NArg() != 1 {
-		return errors.New("usage: auditlog stats <file>")
-	}
-
-	report, err := loadFile(fs.Arg(0))
+	report, _, err := loadSingleReportSubcommand("stats", args, "usage: auditlog stats <file>")
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
@@ -9,17 +8,7 @@ import (
 
 // runInfo prints a human-readable summary of a report.
 func runInfo(args []string) error {
-	fs := newFlagSet("info")
-
-	if err := fs.Parse(args); err != nil {
-		return err
-	}
-
-	if fs.NArg() != 1 {
-		return errors.New("usage: auditlog info <file>")
-	}
-
-	report, err := loadFile(fs.Arg(0))
+	report, _, err := loadSingleReportSubcommand("info", args, "usage: auditlog info <file>")
 	if err != nil {
 		return err
 	}

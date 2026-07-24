@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 
@@ -29,26 +30,38 @@ func loadFile(path string) (auditlog.Report, error) {
 	return report, nil
 }
 
-// parseAndLoadSingleReport parses args for a single-report subcommand and
-// loads the report at the given positional index. Returns the report, its
-// source path, and any error. The expectedNArg guard ensures exactly N
-// positional arguments (use 1 for `cmd <file>`, 2 for `cmd <a> <b>`).
-func parseAndLoadSingleReport(name string, args []string, expectedNArg int, usage string) (auditlog.Report, string, error) {
+// parseFlagSet parses flags for a subcommand and verifies the positional
+// argument count. Returns the flag set so callers can read the positional
+// arguments themselves (used for both single-report subcommands like `info`
+// and two-report subcommands like `diff`).
+func parseFlagSet(name string, args []string, expectedNArg int, usage string) (*flag.FlagSet, error) {
 	fs := newFlagSet(name)
 
 	if err := fs.Parse(args); err != nil {
-		return auditlog.Report{}, "", err
+		return nil, err
 	}
 
 	if fs.NArg() != expectedNArg {
-		return auditlog.Report{}, "", errors.New(usage)
+		return nil, errors.New(usage)
 	}
 
-	path := fs.Arg(0)
-	report, err := loadFile(path)
+	return fs, nil
+}
+
+// loadSingleReportSubcommand is the common preamble for subcommands that take
+// exactly one positional report file: parse flags, enforce the arg count,
+// load the report, and return it together with the source path. The usage
+// string is used in the "usage: ..." error returned when the arg count is wrong.
+func loadSingleReportSubcommand(name string, args []string, usage string) (auditlog.Report, string, error) {
+	fs, err := parseFlagSet(name, args, 1, usage)
 	if err != nil {
 		return auditlog.Report{}, "", err
 	}
 
-	return report, path, nil
+	report, err := loadFile(fs.Arg(0))
+	if err != nil {
+		return auditlog.Report{}, "", err
+	}
+
+	return report, fs.Arg(0), nil
 }

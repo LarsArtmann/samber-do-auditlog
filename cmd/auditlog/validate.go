@@ -1,25 +1,12 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 )
 
 // runValidate loads a report and verifies internal consistency via Validate().
 func runValidate(args []string) error {
-	fs := newFlagSet("validate")
-
-	if err := fs.Parse(args); err != nil {
-		return err
-	}
-
-	if fs.NArg() != 1 {
-		return errors.New("usage: auditlog validate <file>")
-	}
-
-	path := fs.Arg(0)
-
-	report, err := loadFile(path)
+	report, path, err := loadSingleReportSubcommand("validate", args, "usage: auditlog validate <file>")
 	if err != nil {
 		return err
 	}
