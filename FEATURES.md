@@ -183,7 +183,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Example tests**            | 8 runnable `Example*` functions for pkg.go.dev                                                                                                                                    | `example_test.go`                                       |
 | **Defensive-copy accessors** | `Plugin.Events()` and `Recorder.Events()` return copied slices; `EventsCount()` avoids copying                                                                                    | `plugin.go`, `recorder.go`                              |
 | **Dropped-event counter**    | `Plugin.DroppedEventCount()` / `Recorder.DroppedEventCount()`                                                                                                                     | `plugin.go`, `recorder.go`                              |
-| **Test parallelism**         | 279 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                                                                               | all `*_test.go`                                         |
+| **Test parallelism**         | 288 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                                                                               | all `*_test.go`                                         |
 | **Type metadata assertions** | `TestBuildTypeMetadata` directly asserts provider/status icons, labels, and colors                                                                                                | `metadata_test.go`                                      |
 | **live/ sub-package tests**  | 17 tests covering dashboard HTML, health, report, 404, SSE snapshot/live/complete/fan-out, graceful shutdown, client count, hub lifecycle, buffer overflow                        | `live/server_test.go`                                   |
 
@@ -211,4 +211,4 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ---
 
-_Last verified against the codebase on 2026-07-24. Test counts: 270 Test + 12 Benchmark + 5 Fuzz + 8 Example = 295 top-level functions. Coverage: 91.4% (root 93.9%, live 76.6%)._
+_Last verified against the codebase on 2026-07-24. Test counts: 278 Test + 12 Benchmark + 5 Fuzz + 8 Example = 303 top-level functions. Coverage: 91.4% (root 93.9%, live 76.6%)._
