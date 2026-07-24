@@ -60,7 +60,7 @@ type NDJSONStreamerOption func(*NDJSONStreamer)
 // latency at the cost of throughput. Use this for real-time monitoring
 // pipelines where consumers tail the output file.
 func WithAutoFlush() NDJSONStreamerOption {
-	return func(s *NDJSONStreamer) { streamer.autoFlush = true }
+	return func(streamer *NDJSONStreamer) { streamer.autoFlush = true }
 }
 
 // WithStreamBufferSize sets the internal buffer size in bytes. The default is
@@ -68,7 +68,7 @@ func WithAutoFlush() NDJSONStreamerOption {
 // buffer for lower-latency streaming. Values <= 0 are ignored and keep the
 // default.
 func WithStreamBufferSize(size int) NDJSONStreamerOption {
-	return func(s *NDJSONStreamer) {
+	return func(streamer *NDJSONStreamer) {
 		if size > 0 {
 			streamer.buf = bufio.NewWriterSize(streamer.writer, size)
 		}
