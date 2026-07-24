@@ -189,6 +189,13 @@ linters:
         - ifElseChain
     gomoddirectives:
       replace-local: true
+      replace-allow-list:
+        # go-output v0.31.1 published go.mod files with broken pseudo-versions
+        # for testhelpers/graphtest. These replaces redirect them to the real
+        # tags that exist on the proxy. Remove once go-output fixes their
+        # release process (see AGENTS.md).
+        - github.com/larsartmann/go-output/testhelpers
+        - github.com/larsartmann/go-output/testhelpers/graphtest
     ireturn:
       allow:
         - error
