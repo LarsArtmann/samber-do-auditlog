@@ -119,11 +119,13 @@ func TestTableColumns_ColumnOrderPreserved(t *testing.T) {
 func TestTableColumns_WithDependentsColumn(t *testing.T) {
 	t.Parallel()
 
-	p, _ := setupWithDB("test")
+	p, injector := newPluginAndInjector()
+	provideDB(injector, "db", "test")
+	provideUserServiceWithDB(injector, "users", "db")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+	_ = do.MustInvokeNamed[*UserService](injector, "users")
 	report := p.Report()
 
-	// The setup creates a service that depends on "db", so db should have
-	// Dependents populated.
 	var buf bytes.Buffer
 
 	err := report.WriteTable(&buf, output.FormatCSV, auditlog.DefaultTableOpts(),
@@ -141,6 +143,37 @@ func TestTableColumns_WithDependentsColumn(t *testing.T) {
 
 	if !strings.Contains(result, "Dependents") {
 		t.Error("expected 'Dependents' header")
+	}
+
+	// The "db" service should have "users" in its Dependents.
+	if !strings.Contains(result, "users") {
+		t.Error("expected 'users' in dependents data")
+	}
+}
+
+func TestTableColumns_WriteTableString(t *testing.T) {
+	t.Parallel()
+
+	report := singleServiceWithExternalDepReport()
+
+	result, err := report.WriteTableString(output.FormatCSV, auditlog.DefaultTableOpts(),
+		auditlog.WithColumns(auditlog.ColumnService),
+	)
+	if err != nil {
+		t.Fatalf("WriteTableString: %v", err)
+	}
+
+	if !strings.Contains(result, "Service") {
+		t.Error("expected 'Service' header in WriteTableString output")
+	}
+}
+
+func TestTableColumns_UnknownColumnString(t *testing.T) {
+	t.Parallel()
+
+	col := auditlog.TableColumn(999)
+	if col.String() != "Unknown" {
+		t.Errorf("expected 'Unknown' for invalid column, got %q", col.String())
 	}
 }
 
