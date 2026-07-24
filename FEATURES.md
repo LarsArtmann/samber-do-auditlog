@@ -126,32 +126,32 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ### Type Safety
 
-| Feature                       | Description                                                                                            | Verified                         |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------- |
-| **Typed identifiers**         | `ContainerID`, `ScopeID`, `ServiceName` are distinct named string types throughout the entire codebase | `types.go`, all signatures       |
-| **IO-boundary `string()` convention** | External library calls (go-output, csv, fmt) wrap typed values with `string()` at the IO boundary | `csv.go`, `d2.go`, `diagram.go`  |
-| **ServiceInfo domain split**  | 19-field struct split into four embedded structs: `ServiceIdentity`/`ServiceLifecycle`/`ServiceHealth`/`ServiceGraph`. JSON stays flat via embedding | `service.go` |
-| **Service status derivation** | `ServiceInfo.DeriveStatus()` is the canonical entry point for computing status from underlying fields  | `service.go`                     |
+| Feature                               | Description                                                                                                                                          | Verified                        |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| **Typed identifiers**                 | `ContainerID`, `ScopeID`, `ServiceName` are distinct named string types throughout the entire codebase                                               | `types.go`, all signatures      |
+| **IO-boundary `string()` convention** | External library calls (go-output, csv, fmt) wrap typed values with `string()` at the IO boundary                                                    | `csv.go`, `d2.go`, `diagram.go` |
+| **ServiceInfo domain split**          | 19-field struct split into four embedded structs: `ServiceIdentity`/`ServiceLifecycle`/`ServiceHealth`/`ServiceGraph`. JSON stays flat via embedding | `service.go`                    |
+| **Service status derivation**         | `ServiceInfo.DeriveStatus()` is the canonical entry point for computing status from underlying fields                                                | `service.go`                    |
 
 ### Live Dashboard (`live/` Sub-Package)
 
-| Feature                       | Description                                                                                                          | Verified                        |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| **SSE event hub**             | `Hub` broadcasts `auditlog.Event` to all connected SSE clients with non-blocking sends and 128-event buffer per client | `live/hub.go`                  |
-| **HTTP server with prefix**   | `Server` serves dashboard, report JSON, SSE stream, and health endpoints. Configurable route prefix (default `/debug/di`) | `live/server.go`               |
-| **Interactive HTML dashboard** | Self-contained 4-tab dashboard (Services/Graph/Timeline/Events) with SSE client, reconnection, incremental rendering   | `live/dashboard.go`, `live/dashboard.js` |
-| **Warm amber CSS design**     | Full CSS design system matching the static HTML dashboard aesthetic (phosphor amber on dark charcoal)              | `live/base_css.go`             |
-| **Graceful shutdown**         | `Server.Shutdown(ctx)` stops HTTP server and waits for active SSE connections to drain                              | `live/server.go`               |
-| **Health endpoint**           | `GET {prefix}/api/health` returns uptime, connected client count, total events, and dropped events                 | `live/server.go`               |
-| **`http.Handler` compatibility** | `Server` implements `ServeHTTP` for `httptest` compatibility and embedding in existing mux chains               | `live/server.go`               |
-| **go-sse delegation**         | SSE wire-format primitives (`sse.Event`, `sse.WriteEvent`, `sse.ContentType`) come from the external `go-sse` module | `live/server.go`, `go.mod`     |
+| Feature                          | Description                                                                                                               | Verified                                 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| **SSE event hub**                | `Hub` broadcasts `auditlog.Event` to all connected SSE clients with non-blocking sends and 128-event buffer per client    | `live/hub.go`                            |
+| **HTTP server with prefix**      | `Server` serves dashboard, report JSON, SSE stream, and health endpoints. Configurable route prefix (default `/debug/di`) | `live/server.go`                         |
+| **Interactive HTML dashboard**   | Self-contained 4-tab dashboard (Services/Graph/Timeline/Events) with SSE client, reconnection, incremental rendering      | `live/dashboard.go`, `live/dashboard.js` |
+| **Warm amber CSS design**        | Full CSS design system matching the static HTML dashboard aesthetic (phosphor amber on dark charcoal)                     | `live/base_css.go`                       |
+| **Graceful shutdown**            | `Server.Shutdown(ctx)` stops HTTP server and waits for active SSE connections to drain                                    | `live/server.go`                         |
+| **Health endpoint**              | `GET {prefix}/api/health` returns uptime, connected client count, total events, and dropped events                        | `live/server.go`                         |
+| **`http.Handler` compatibility** | `Server` implements `ServeHTTP` for `httptest` compatibility and embedding in existing mux chains                         | `live/server.go`                         |
+| **go-sse delegation**            | SSE wire-format primitives (`sse.Event`, `sse.WriteEvent`, `sse.ContentType`) come from the external `go-sse` module      | `live/server.go`, `go.mod`               |
 
 ### Shared Module Delegation
 
-| Feature                       | Description                                                                                                          | Verified                        |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| **go-ndjson loader**          | `LoadReport` and format detection delegate to `go-ndjson/loader`. Local `loader.go` re-exports the public API        | `loader.go`, `go.mod`          |
-| **go-ndjson reader/writer**   | `ReadEvents` and NDJSON writing delegate to the `go-ndjson` module. Local `ndjson.go` re-exports sentinels and types | `ndjson.go`, `go.mod`          |
+| Feature                     | Description                                                                                                          | Verified              |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| **go-ndjson loader**        | `LoadReport` and format detection delegate to `go-ndjson/loader`. Local `loader.go` re-exports the public API        | `loader.go`, `go.mod` |
+| **go-ndjson reader/writer** | `ReadEvents` and NDJSON writing delegate to the `go-ndjson` module. Local `ndjson.go` re-exports sentinels and types | `ndjson.go`, `go.mod` |
 
 ### Schema Migration
 
@@ -179,7 +179,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Generated-code check**     | CI runs `go generate ./...` and fails on drift, ensuring `html_templ.go` stays in sync                                                                                            | `.github/workflows/ci.yml`                              |
 | **templ code generation**    | `//go:generate go tool templ generate` in `html.go` produces `html_templ.go`                                                                                                      | `html.go`, `html_templ.go`                              |
 | **Fuzz tests**               | 5 targets: HTML XSS (service names, error messages, dep chains), `MigrateReport` integrity, Mermaid/PlantUML special chars, filter-option combinations, NDJSON parsing resilience | `fuzz_test.go`, `filter_fuzz_test.go`, `replay_test.go` |
-| **Benchmark tests**          | 12 performance benchmarks for hot paths (invocation, disabled, registration, concurrent, BuildReport at 50/100/500 services, events copy, health check)                          | `benchmarks_test.go`                                    |
+| **Benchmark tests**          | 12 performance benchmarks for hot paths (invocation, disabled, registration, concurrent, BuildReport at 50/100/500 services, events copy, health check)                           | `benchmarks_test.go`                                    |
 | **Example tests**            | 8 runnable `Example*` functions for pkg.go.dev                                                                                                                                    | `example_test.go`                                       |
 | **Defensive-copy accessors** | `Plugin.Events()` and `Recorder.Events()` return copied slices; `EventsCount()` avoids copying                                                                                    | `plugin.go`, `recorder.go`                              |
 | **Dropped-event counter**    | `Plugin.DroppedEventCount()` / `Recorder.DroppedEventCount()`                                                                                                                     | `plugin.go`, `recorder.go`                              |
@@ -201,12 +201,12 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ## WORTH CONSIDERING
 
-| Feature                                            | Why Not Now                                                                                |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| **External storage backends**                      | File/`io.Writer` exports are sufficient for current scope                                  |
-| **Prometheus / OpenTelemetry metrics integration** | Users can derive metrics via `Config.OnEvent`; OTel bridge example exists                  |
-| **Multi-module repository split**                  | Project is one package + live/ sub-package (~2,500 LOC core); revisit at 5+ packages        |
-| **Property-based testing**                         | `rapid`/`gopter` tests for filter round-trips (`Diff` and `MigrateReport` already covered) |
+| Feature                                            | Why Not Now                                                                                                                  |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **External storage backends**                      | File/`io.Writer` exports are sufficient for current scope                                                                    |
+| **Prometheus / OpenTelemetry metrics integration** | Users can derive metrics via `Config.OnEvent`; OTel bridge example exists                                                    |
+| **Multi-module repository split**                  | Project is one package + live/ sub-package (~2,500 LOC core); revisit at 5+ packages                                         |
+| **Property-based testing**                         | `rapid`/`gopter` tests for filter round-trips (`Diff` and `MigrateReport` already covered)                                   |
 | **NDJSON/loader extraction from go-ndjson**        | Currently delegated to `go-ndjson`; further extraction (consolidating all JSON I/O) blocked by json/v1 vs json/v2 divergence |
 
 ---
