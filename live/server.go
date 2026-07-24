@@ -151,11 +151,15 @@ func (srv *Server) setupRoutes() {
 		srv.mux.HandleFunc("/api/report", srv.corsMiddleware(srv.handleReport))
 		srv.mux.HandleFunc("/api/events", srv.corsMiddleware(srv.handleSSE))
 		srv.mux.HandleFunc("/api/health", srv.corsMiddleware(srv.handleHealth))
+		srv.mux.HandleFunc("/api/export/ndjson", srv.corsMiddleware(srv.handleExportNDJSON))
+		srv.mux.HandleFunc("/api/export/html", srv.corsMiddleware(srv.handleExportHTML))
 	} else {
 		srv.mux.HandleFunc(pfx+"/", srv.handleDashboard)
 		srv.mux.HandleFunc(pfx+"/api/report", srv.corsMiddleware(srv.handleReport))
 		srv.mux.HandleFunc(pfx+"/api/events", srv.corsMiddleware(srv.handleSSE))
 		srv.mux.HandleFunc(pfx+"/api/health", srv.corsMiddleware(srv.handleHealth))
+		srv.mux.HandleFunc(pfx+"/api/export/ndjson", srv.corsMiddleware(srv.handleExportNDJSON))
+		srv.mux.HandleFunc(pfx+"/api/export/html", srv.corsMiddleware(srv.handleExportHTML))
 	}
 }
 
@@ -285,6 +289,42 @@ func (srv *Server) handleReport(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	_, _ = w.Write(data)
+}
+
+func (srv *Server) handleExportNDJSON(w http.ResponseWriter, _ *http.Request) {
+	if srv.plugin == nil {
+		http.Error(w, "no plugin available", http.StatusServiceUnavailable)
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/x-ndjson")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Content-Disposition", `attachment; filename="auditlog-events.ndjson"`)
+
+	if err := srv.plugin.WriteEventsNDJSON(w); err != nil {
+		http.Error(w, fmt.Sprintf("export ndjson: %v", err), http.StatusInternalServerError)
+
+		return
+	}
+}
+
+func (srv *Server) handleExportHTML(w http.ResponseWriter, _ *http.Request) {
+	if srv.plugin == nil {
+		http.Error(w, "no plugin available", http.StatusServiceUnavailable)
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Content-Disposition", `attachment; filename="auditlog-report.html"`)
+
+	if err := srv.plugin.WriteHTML(w); err != nil {
+		http.Error(w, fmt.Sprintf("export html: %v", err), http.StatusInternalServerError)
+
+		return
+	}
 }
 
 type healthResponse struct {

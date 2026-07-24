@@ -38,6 +38,11 @@ const liveTemplate = `<!DOCTYPE html>
     <h1><span class="logo-dot live-dot"></span>samber-do-auditlog<span class="version">v%s</span> <span class="live-badge" id="live-badge"><span class="live-pulse"></span>LIVE</span></h1>
     <p class="subtitle">Container <span class="mono" id="container-id">&mdash;</span> &mdash; <span id="connection-status" class="conn-status connecting">connecting...</span></p>
   </div>
+  <div class="header-actions">
+    <button class="export-btn" data-export="json" title="Download report as JSON">JSON</button>
+    <button class="export-btn" data-export="ndjson" title="Download events as NDJSON">NDJSON</button>
+    <button class="export-btn" data-export="html" title="Download self-contained HTML report">HTML</button>
+  </div>
   <div class="legend" id="legend"></div>
 </header>
 <div class="waveform-section">
@@ -56,10 +61,11 @@ const liveTemplate = `<!DOCTYPE html>
   <div class="stat-placeholder">Connect to see live stats...</div>
 </div>
 <div class="tab-bar" role="tablist" aria-label="Report sections">
-  <button class="tab active" data-tab="services" role="tab" aria-selected="true" aria-controls="tab-services" id="tab-btn-services">Services (1)</button>
-  <button class="tab" data-tab="graph" role="tab" aria-selected="false" aria-controls="tab-graph" id="tab-btn-graph">Graph (2)</button>
-  <button class="tab" data-tab="timeline" role="tab" aria-selected="false" aria-controls="tab-timeline" id="tab-btn-timeline">Timeline (3)</button>
-  <button class="tab" data-tab="events" role="tab" aria-selected="false" aria-controls="tab-events" id="tab-btn-events">Events (4)</button>
+  <button class="tab" data-tab="services" role="tab" aria-selected="true" aria-controls="tab-services" id="tab-btn-services">Services (1)</button>
+  <button class="tab" data-tab="scopes" role="tab" aria-selected="false" aria-controls="tab-scopes" id="tab-btn-scopes">Scopes (2)</button>
+  <button class="tab" data-tab="graph" role="tab" aria-selected="false" aria-controls="tab-graph" id="tab-btn-graph">Graph (3)</button>
+  <button class="tab" data-tab="timeline" role="tab" aria-selected="false" aria-controls="tab-timeline" id="tab-btn-timeline">Timeline (4)</button>
+  <button class="tab" data-tab="events" role="tab" aria-selected="false" aria-controls="tab-events" id="tab-btn-events">Events (5)</button>
 </div>
 <div class="tab-content active" id="tab-services" role="tabpanel" aria-labelledby="tab-btn-services">
   <div class="filter-bar">
@@ -84,6 +90,14 @@ const liveTemplate = `<!DOCTYPE html>
       <tbody id="services-tbody"></tbody>
       <tbody id="services-empty" class="empty-state" style="display:none"><tr><td colspan="8">No services registered yet.</td></tr></tbody>
     </table>
+  </div>
+  <div class="pagination-bar" id="services-pagination" style="display:none">
+    <button class="show-all-btn">Show all <span id="services-hidden-count"></span></button>
+  </div>
+</div>
+<div class="tab-content" id="tab-scopes" role="tabpanel" aria-labelledby="tab-btn-scopes">
+  <div id="scope-tree-container">
+    <div class="graph-placeholder">Scope tree will appear here once services register...</div>
   </div>
 </div>
 <div class="tab-content" id="tab-graph" role="tabpanel" aria-labelledby="tab-btn-graph">
@@ -112,6 +126,9 @@ const liveTemplate = `<!DOCTYPE html>
       <tbody id="events-tbody"></tbody>
       <tbody id="events-empty" class="empty-state" style="display:none"><tr><td colspan="7">No events recorded yet.</td></tr></tbody>
     </table>
+  </div>
+  <div class="pagination-bar" id="events-pagination" style="display:none">
+    <button class="show-all-btn">Show all <span id="events-hidden-count"></span></button>
   </div>
 </div>
 <script type="application/json" id="type-metadata">%s</script>

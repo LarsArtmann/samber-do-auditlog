@@ -60,6 +60,11 @@
 
   // === State ===
 
+  var maxServiceRows = 50;
+  var maxEventRows = 100;
+  var showAllServices = false;
+  var showAllEvents = false;
+
   var state = {
     report: null,
     events: [],
@@ -270,6 +275,7 @@
     renderWaveform();
     renderLegend();
     renderServicesTable();
+    renderScopeTree();
     renderEventsTable();
     renderFooter();
   }
