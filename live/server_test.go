@@ -1100,3 +1100,43 @@ func TestServer_CORSHeaders(t *testing.T) {
 		t.Errorf("expected 204 for OPTIONS, got %d", recOpts.Code)
 	}
 }
+
+func TestServer_ExportEndpoints(t *testing.T) {
+	t.Parallel()
+
+	server := newTestServer(t)
+
+	ctx := t.Context()
+
+	// Test JSON export (same as /api/report but test via export path)
+	reqJSON := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/api/report", nil)
+	recJSON := httptest.NewRecorder()
+	server.ServeHTTP(recJSON, reqJSON)
+	if recJSON.Code != http.StatusOK {
+		t.Fatalf("JSON export: expected 200, got %d", recJSON.Code)
+	}
+
+	// Test NDJSON export
+	reqNDJSON := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/api/export/ndjson", nil)
+	recNDJSON := httptest.NewRecorder()
+	server.ServeHTTP(recNDJSON, reqNDJSON)
+	if recNDJSON.Code != http.StatusOK {
+		t.Fatalf("NDJSON export: expected 200, got %d", recNDJSON.Code)
+	}
+
+	if !strings.Contains(recNDJSON.Header().Get("Content-Type"), "ndjson") {
+		t.Errorf("NDJSON export: expected ndjson content-type, got %q", recNDJSON.Header().Get("Content-Type"))
+	}
+
+	// Test HTML export
+	reqHTML := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/api/export/html", nil)
+	recHTML := httptest.NewRecorder()
+	server.ServeHTTP(recHTML, reqHTML)
+	if recHTML.Code != http.StatusOK {
+		t.Fatalf("HTML export: expected 200, got %d", recHTML.Code)
+	}
+
+	if !strings.Contains(recHTML.Header().Get("Content-Type"), "text/html") {
+		t.Errorf("HTML export: expected text/html content-type, got %q", recHTML.Header().Get("Content-Type"))
+	}
+}

@@ -447,7 +447,19 @@
       return sa.service_name < sb.service_name ? -1 : 1;
     });
 
-    els.servicesTbody.innerHTML = filtered
+    var totalCount = filtered.length;
+    var visible = showAllServices ? filtered : filtered.slice(0, maxServiceRows);
+
+    var pagBar = document.getElementById("services-pagination");
+    var hiddenCount = document.getElementById("services-hidden-count");
+    if (totalCount > maxServiceRows && !showAllServices) {
+      if (pagBar) pagBar.style.display = "";
+      if (hiddenCount) hiddenCount.textContent = "(" + (totalCount - maxServiceRows) + " hidden)";
+    } else {
+      if (pagBar) pagBar.style.display = "none";
+    }
+
+    els.servicesTbody.innerHTML = visible
       .map(function (k) {
         var s = state.services[k];
         var icon = typeIcons[s.service_type] || "";
@@ -529,7 +541,19 @@
       });
     }
 
-    els.eventsTbody.innerHTML = filtered
+    var totalCount = filtered.length;
+    var visible = showAllEvents ? filtered : filtered.slice(0, maxEventRows);
+
+    var pagBar = document.getElementById("events-pagination");
+    var hiddenCount = document.getElementById("events-hidden-count");
+    if (totalCount > maxEventRows && !showAllEvents) {
+      if (pagBar) pagBar.style.display = "";
+      if (hiddenCount) hiddenCount.textContent = "(" + (totalCount - maxEventRows) + " hidden)";
+    } else {
+      if (pagBar) pagBar.style.display = "none";
+    }
+
+    els.eventsTbody.innerHTML = visible
       .map(function (e, idx) {
         var label = eventLabels[e.event_type] || e.event_type;
         var color = eventColors[e.event_type] || "var(--text-muted)";
@@ -605,6 +629,82 @@
         Object.keys(state.services).length +
         " services";
     }
+  }
+
+  // === Scope Tree ===
+
+  function renderScopeTree() {
+    var container = document.getElementById("scope-tree-container");
+    if (!container || !state.report || !state.report.scope_tree) return;
+
+    var tree = state.report.scope_tree;
+    if (!tree.id && !tree.name && !(tree.children && tree.children.length)) return;
+
+    var placeholder = container.querySelector(".graph-placeholder");
+    if (placeholder) placeholder.remove();
+
+    container.innerHTML = renderScopeNode(tree, 0);
+  }
+
+  function renderScopeNode(node, depth) {
+    var services = (node.services || [])
+      .map(function (s) {
+        var icon = typeIcons[s.service_type] || "";
+        return (
+          '<span class="scope-service-chip">' + icon + " " + esc(s.service_name) + "</span>"
+        );
+      })
+      .join("");
+
+    var children = (node.children || [])
+      .map(function (c) {
+        return renderScopeNode(c, depth + 1);
+      })
+      .join("");
+
+    return (
+      '<div class="scope-node" style="margin-left:' +
+      depth * 20 +
+      'px">' +
+      '<div class="scope-label">' +
+      '<span class="scope-icon">\u25BC</span>' +
+      esc(node.name || node.id || "scope") +
+      "</div>" +
+      (services ? '<div class="scope-services">' + services + "</div>" : "") +
+      "</div>" +
+      children
+    );
+  }
+
+  // === Export ===
+
+  function downloadBlob(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportReport(format) {
+    var path = basePath + "/api/export/" + format;
+    if (format === "json") path = basePath + "/api/report";
+
+    fetch(path)
+      .then(function (res) {
+        if (!res.ok) throw new Error("export failed: " + res.status);
+        return res.blob();
+      })
+      .then(function (blob) {
+        var ext = format === "json" ? "json" : format === "ndjson" ? "ndjson" : "html";
+        downloadBlob(blob, "auditlog-report." + ext);
+      })
+      .catch(function (err) {
+        if (window.console) console.error("export error:", err);
+      });
   }
 
   // === Service search ===
@@ -684,5 +784,30 @@
   // === Init ===
 
   setupEventFilters();
+
+  // Export button handlers
+  document.querySelectorAll(".export-btn[data-export]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      exportReport(btn.getAttribute("data-export"));
+    });
+  });
+
+  // Pagination "Show all" handlers
+  var svcPagBtn = document.querySelector("#services-pagination .show-all-btn");
+  if (svcPagBtn) {
+    svcPagBtn.addEventListener("click", function () {
+      showAllServices = true;
+      renderServicesTable();
+    });
+  }
+
+  var evtPagBtn = document.querySelector("#events-pagination .show-all-btn");
+  if (evtPagBtn) {
+    evtPagBtn.addEventListener("click", function () {
+      showAllEvents = true;
+      renderEventsTable();
+    });
+  }
+
   connect();
 })();

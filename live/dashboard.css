@@ -232,3 +232,83 @@ body.lifecycle-complete .live-badge {
 body.lifecycle-complete .live-dot {
   animation: none;
 }
+
+/* === Export Buttons === */
+.header-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+.export-btn {
+  padding: 0.3rem 0.7rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.export-btn:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* === Pagination === */
+.pagination-bar {
+  text-align: center;
+  padding: 0.5rem;
+}
+.show-all-btn {
+  padding: 0.35rem 1rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--bg-card);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.show-all-btn:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+
+/* === Scope Tree === */
+.scope-node {
+  padding: 0.4rem 0;
+}
+.scope-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.scope-icon {
+  font-size: 0.65rem;
+  opacity: 0.6;
+}
+.scope-services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  margin-left: 1.2rem;
+}
+.scope-service-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
