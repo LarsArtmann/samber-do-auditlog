@@ -154,6 +154,14 @@ for this project's `.go` files. The dependency is purely transitive through `go-
 When Go 1.27 stabilizes `json/v2`, the `GOEXPERIMENT` flag requirement will be removed
 automatically.
 
+### Go 1.26.4 toolchain pin
+
+**The canonical Go version is 1.26.4** — pinned across (1) `go.mod` `go` directive, (2) `.github/workflows/ci.yml` (`go-version: "1.26.4"` in all 6 jobs), (3) `flake.nix` (`pkgs.go_1_26` resolves to nixpkgs's 1.26.4), (4) nixpkgs `go` / `go_latest` (both 1.26.4), (5) `CONTRIBUTING.md` / `BENCHMARKS.md` / `README.md` / `STABILITY.md`, (6) `flake.nix` `GOTOOLCHAIN=go1.26.4` env var.
+
+**Gotcha:** A separately-installed `go-1.26.5` nix-store derivation (e.g. from `nix profile install nixpkgs#go`) can shadow the devShell's `go_1_26` on PATH. Without `GOTOOLCHAIN=go1.26.4`, `go mod tidy` with the shadowed toolchain rewrites `go.mod` to `go 1.26.5`, drifting from the canonical pin. The `GOTOOLCHAIN` env var in `flake.nix` (devShell + `coverage` app + `auditlog` app) forces Go's toolchain auto-download to 1.26.4 even when the wrong `go` is on PATH. If you must run `go mod tidy` outside the devShell, prefix it with `GOTOOLCHAIN=go1.26.4 go mod tidy`.
+
+History: v0.7.0 shipped with `go 1.26.5` in `go.mod` (drift, not a security fix). v0.7.1 reverted the directive and added the `GOTOOLCHAIN` pin to prevent recurrence.
+
 ---
 
 ## CI
