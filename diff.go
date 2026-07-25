@@ -36,6 +36,13 @@ func (d DiffResult) IsEmpty() bool {
 		d.EventCountDelta == 0
 }
 
+// HasChanges returns true if the diff found any differences.
+// This is the logical inverse of IsEmpty, provided for parity with the
+// go-workflow-auditlog twin API.
+func (d DiffResult) HasChanges() bool {
+	return !d.IsEmpty()
+}
+
 // Diff compares this report with another and returns the structural and
 // status differences. Useful for regression-testing DI graphs across deploys.
 //
