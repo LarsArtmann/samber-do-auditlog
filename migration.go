@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-var errMigrationEmptyInput = errors.New("migration input is empty")
+var ErrMigrationEmptyInput = errors.New("migration input is empty")
 
-var errMigrationMissingVersion = errors.New("migration input has no version field")
+var ErrMigrationMissingVersion = errors.New("migration input has no version field")
 
 // RedriveReportStatuses calls RederiveStatus on every service in the report.
 // Used by MigrateReport (repair) and property-test fixture builders (sanitize).
@@ -37,7 +37,7 @@ func RedriveReportStatuses(report *Report) {
 //   - service_type, status, is_healthchecker, is_shutdowner (zero values)
 func MigrateReport(data []byte) (Report, error) {
 	if len(data) == 0 {
-		return Report{}, errMigrationEmptyInput
+		return Report{}, ErrMigrationEmptyInput
 	}
 
 	var report Report
@@ -48,7 +48,7 @@ func MigrateReport(data []byte) (Report, error) {
 	}
 
 	if report.Version == "" {
-		return Report{}, errMigrationMissingVersion
+		return Report{}, ErrMigrationMissingVersion
 	}
 
 	// Normalize the report to the current schema regardless of the input

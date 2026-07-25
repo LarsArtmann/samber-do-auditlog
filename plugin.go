@@ -42,11 +42,11 @@ type Config struct {
 //
 // Checks that ContainerID does not contain path separators ("/" or "\")
 // since it is used in file export paths and event metadata.
-var errContainerIDPathSep = errors.New("config.ContainerID must not contain path separators")
+var ErrContainerIDPathSep = errors.New("config.ContainerID must not contain path separators")
 
 func (c Config) Validate() error {
 	if strings.ContainsAny(string(c.ContainerID), "/\\") {
-		return fmt.Errorf("%w: %q", errContainerIDPathSep, c.ContainerID)
+		return fmt.Errorf("%w: %q", ErrContainerIDPathSep, c.ContainerID)
 	}
 
 	return nil

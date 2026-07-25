@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// errReplayValidationFailed indicates the replayed report failed internal validation.
-var errReplayValidationFailed = errors.New("replayed report failed validation")
+// ErrReplayValidationFailed indicates the replayed report failed internal validation.
+var ErrReplayValidationFailed = errors.New("replayed report failed validation")
 
 // replayState holds the mutable state accumulated by replaying events.
 // It mirrors the Recorder's internal state but without any concurrency
@@ -54,7 +54,7 @@ func newReplayState() *replayState {
 // these limitations.
 func ReplayEvents(events []Event) (Report, error) {
 	if len(events) == 0 {
-		return Report{}, fmt.Errorf("%w: no events to replay", errReplayValidationFailed)
+		return Report{}, fmt.Errorf("%w: no events to replay", ErrReplayValidationFailed)
 	}
 
 	state := newReplayState()
@@ -88,7 +88,7 @@ func ReplayEvents(events []Event) (Report, error) {
 
 	err := report.Validate()
 	if err != nil {
-		return report, fmt.Errorf("%w: %w", errReplayValidationFailed, err)
+		return report, fmt.Errorf("%w: %w", ErrReplayValidationFailed, err)
 	}
 
 	return report, nil

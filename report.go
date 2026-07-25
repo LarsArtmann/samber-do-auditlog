@@ -9,12 +9,12 @@ import (
 )
 
 var (
-	errReportEventCountMismatch    = errors.New("event_count does not match len(events)")
-	errReportServiceCountMismatch  = errors.New("service_count does not match len(services)")
-	errReportScopeCountMismatch    = errors.New("scope_count does not match scope tree")
-	errReportHealthCheckedMismatch = errors.New("health_checked_count does not match services with health checks")
-	errReportStatusDrift           = errors.New("service status does not match derived status")
-	errReportEmptyVersion          = errors.New("report version is empty")
+	ErrReportEventCountMismatch    = errors.New("event_count does not match len(events)")
+	ErrReportServiceCountMismatch  = errors.New("service_count does not match len(services)")
+	ErrReportScopeCountMismatch    = errors.New("scope_count does not match scope tree")
+	ErrReportHealthCheckedMismatch = errors.New("health_checked_count does not match services with health checks")
+	ErrReportStatusDrift           = errors.New("service status does not match derived status")
+	ErrReportEmptyVersion          = errors.New("report version is empty")
 )
 
 // Report is a consolidated, machine-readable snapshot of the audit log.
@@ -51,20 +51,20 @@ type Report struct {
 // error describing the first discrepancy found.
 func (r Report) Validate() error {
 	if r.Version == "" {
-		return errReportEmptyVersion
+		return ErrReportEmptyVersion
 	}
 
 	if r.EventCount != len(r.Events) {
-		return fmt.Errorf("%w: got %d, want %d", errReportEventCountMismatch, r.EventCount, len(r.Events))
+		return fmt.Errorf("%w: got %d, want %d", ErrReportEventCountMismatch, r.EventCount, len(r.Events))
 	}
 
 	if r.ServiceCount != len(r.Services) {
-		return fmt.Errorf("%w: got %d, want %d", errReportServiceCountMismatch, r.ServiceCount, len(r.Services))
+		return fmt.Errorf("%w: got %d, want %d", ErrReportServiceCountMismatch, r.ServiceCount, len(r.Services))
 	}
 
 	treeLen := countScopeNodes(r.ScopeTree)
 	if r.ScopeCount != treeLen {
-		return fmt.Errorf("%w: got %d, want %d", errReportScopeCountMismatch, r.ScopeCount, treeLen)
+		return fmt.Errorf("%w: got %d, want %d", ErrReportScopeCountMismatch, r.ScopeCount, treeLen)
 	}
 
 	healthChecked := 0
@@ -76,14 +76,14 @@ func (r Report) Validate() error {
 	}
 
 	if r.HealthCheckedCount != healthChecked {
-		return fmt.Errorf("%w: got %d, want %d", errReportHealthCheckedMismatch, r.HealthCheckedCount, healthChecked)
+		return fmt.Errorf("%w: got %d, want %d", ErrReportHealthCheckedMismatch, r.HealthCheckedCount, healthChecked)
 	}
 
 	for _, svc := range r.Services {
 		derived := svc.DeriveStatus()
 		if svc.Status != derived {
 			return fmt.Errorf("%w: service %q has status %q but derived status is %q",
-				errReportStatusDrift, svc.ServiceName, svc.Status, derived)
+				ErrReportStatusDrift, svc.ServiceName, svc.Status, derived)
 		}
 	}
 
@@ -181,7 +181,7 @@ func NewReport(
 // combined containerID ("merged"). All aggregate fields are recomputed.
 func MergeReports(reports []Report) (Report, error) {
 	if len(reports) == 0 {
-		return Report{}, fmt.Errorf("merge: %w", errMigrationEmptyInput)
+		return Report{}, fmt.Errorf("merge: %w", ErrMigrationEmptyInput)
 	}
 
 	if len(reports) == 1 {

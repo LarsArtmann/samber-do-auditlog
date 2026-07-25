@@ -28,23 +28,23 @@ func ErrorClassifications() map[error]errorfamily.Family {
 		// Corruption — internal data integrity violations. The report or
 		// event stream is structurally invalid; no caller action can fix it
 		// short of regenerating the data.
-		errReportEventCountMismatch:    errorfamily.Corruption,
-		errReportServiceCountMismatch:  errorfamily.Corruption,
-		errReportScopeCountMismatch:    errorfamily.Corruption,
-		errReportHealthCheckedMismatch: errorfamily.Corruption,
-		errReportStatusDrift:           errorfamily.Corruption,
-		errReportEmptyVersion:          errorfamily.Corruption,
+		ErrReportEventCountMismatch:    errorfamily.Corruption,
+		ErrReportServiceCountMismatch:  errorfamily.Corruption,
+		ErrReportScopeCountMismatch:    errorfamily.Corruption,
+		ErrReportHealthCheckedMismatch: errorfamily.Corruption,
+		ErrReportStatusDrift:           errorfamily.Corruption,
+		ErrReportEmptyVersion:          errorfamily.Corruption,
 		errUnknownEventType:            errorfamily.Corruption,
 		errUnknownPhase:                errorfamily.Corruption,
-		errReplayValidationFailed:      errorfamily.Corruption,
+		ErrReplayValidationFailed:      errorfamily.Corruption,
 
 		// Rejection — bad caller input or invalid operation. The caller sent
 		// empty data, invalid config, an unsupported format, or attempted an
 		// impossible operation.
-		errContainerIDPathSep:      errorfamily.Rejection,
-		errMigrationEmptyInput:     errorfamily.Rejection,
-		errMigrationMissingVersion: errorfamily.Rejection,
-		errUnsupportedFormat:       errorfamily.Rejection,
+		ErrContainerIDPathSep:      errorfamily.Rejection,
+		ErrMigrationEmptyInput:     errorfamily.Rejection,
+		ErrMigrationMissingVersion: errorfamily.Rejection,
+		ErrUnsupportedFormat:       errorfamily.Rejection,
 	}
 }
 

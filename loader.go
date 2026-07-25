@@ -10,8 +10,8 @@ import (
 	"github.com/larsartmann/go-ndjson/loader"
 )
 
-// errUnsupportedFormat is returned when the format value is not recognized.
-var errUnsupportedFormat = errors.New("unsupported format")
+// ErrUnsupportedFormat is returned when the format value is not recognized.
+var ErrUnsupportedFormat = errors.New("unsupported format")
 
 // Format identifies the serialization format of a report file.
 // Re-exported from go-ndjson/loader so existing callers are unaffected.
@@ -96,7 +96,7 @@ func LoadReportFromBytes(data []byte, format Format) (Report, Format, error) {
 	case FormatNDJSON:
 		return loadNDJSONFromBytes(data)
 	default:
-		return Report{}, FormatAuto, fmt.Errorf("%w: %s", errUnsupportedFormat, format)
+		return Report{}, FormatAuto, fmt.Errorf("%w: %s", ErrUnsupportedFormat, format)
 	}
 }
 
