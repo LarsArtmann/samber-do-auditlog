@@ -25,6 +25,17 @@ stabilizing, but breaking changes remain possible before 1.0.
   "stable" in `STABILITY.md` remains the de-facto commitment; consumers should
   still pin to a specific version tag.
 
+## [0.7.1] - 2026-07-25
+
+A patch release: Go version regression. Non-breaking.
+
+### Changed
+
+- **Go 1.26.5 → 1.26.4** in `go.mod`. The 1.26.5 directive was unintentionally
+  bumped by a local toolchain; `go.mod` now aligns with the documented Nix
+  devShell pin (Go 1.26.4) and the Go 1.26.4 reference across `AGENTS.md`,
+  `CONTRIBUTING.md`, `BENCHMARKS.md`, `CI`, and the documentation website.
+
 ## [0.7.0] - 2026-07-25
 
 A feature release: real-time SSE live dashboard, cross-project feature ports (error classification, atomic writes, NDJSON streaming, diagram direction, table column selection), typed identifiers, ServiceInfo domain split, and go-output v0.31.1. Includes breaking changes for typed identifiers and the ServiceInfo split.
