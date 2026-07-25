@@ -333,7 +333,7 @@ func (p *Plugin) RecordHealthCheck(injector do.Injector) map[string]error {
 // with fsync durability and cross-platform atomic rename. A crash during
 // write leaves the previous file (if any) intact rather than a partial file.
 func writeToFile(path string, fn func(io.Writer) error) error {
-	err := atomicwrite.WriteFunc(path, fn)
+	err := atomicwrite.WriteFunc(path, fn, atomicwrite.Fingerprint{})
 	if err != nil {
 		return fmt.Errorf("atomic write %q: %w", path, err)
 	}
