@@ -24,6 +24,12 @@ stabilizing, but breaking changes remain possible before 1.0.
   pre-1.0 notices have been updated accordingly. The API surface listed as
   "stable" in `STABILITY.md` remains the de-facto commitment; consumers should
   still pin to a specific version tag.
+- **Exported sentinel errors** (`plugin.go`, `loader.go`, `replay.go`, `migration.go`, `report.go`, `classify.go`) — 11 previously-unexported sentinels (e.g. `errContainerIDPathSep` → `ErrContainerIDPathSep`) are now exported so consumers can match them with `errors.Is`. The `ndjson.go` sentinels remain unexported, matching the `go-workflow-auditlog` twin's deliberate choice.
+- **Adopted the new `go-atomic-write` API** (`plugin.go`) — `WriteFunc(path, fn, Fingerprint{})` migrated to the plain `WriteFunc(path, fn)` variant.
+
+### Added
+
+- **`DiffResult.HasChanges()`** — polarity reconciliation with the `go-workflow-auditlog` twin (which exposes `IsEmpty()`). Both twins now offer both methods.
 
 ## [0.7.1] - 2026-07-25
 
