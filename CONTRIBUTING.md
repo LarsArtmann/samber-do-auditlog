@@ -147,21 +147,39 @@ Release tags and the report schema version are **independent**:
 ### Release Procedure
 
 1. **Update `CHANGELOG.md`** — move `[Unreleased]` items under a new `[0.x.y]` heading with today's date.
-2. **Commit** the changelog update.
-3. **Tag** the release (signed):
+2. **Verify changelog claims against reality.** Open every file the changelog cites (README, STABILITY, FEATURES, etc.) and confirm the claims are true. Inherited `[Unreleased]` text is untrusted until verified.
+3. **Commit** the changelog update yourself with a descriptive `release: v0.x.y — …` message (do not let the auto-git daemon commit release artifacts with a generic message).
+4. **Re-run every gate from scratch.** Do not trust a prior session's "green" — re-run `go generate ./...`, `go vet ./...`, `go test -race ./...`, `golangci-lint config verify`, and `golangci-lint run`. **Capture each exit code directly from the command, never from a downstream pipe element** (`cmd | tail; echo $?` reports `tail`'s exit, not `cmd`'s). Use `cmd >/tmp/out 2>&1; ec=$?; cat /tmp/out; echo "exit $ec"` or `set -o pipefail`.
+5. **Tag** the release (signed):
    ```bash
    git tag -s v0.x.y -m "v0.x.y — short description"
    ```
-4. **Push** the tag and master:
+6. **Verify the tag signature:**
+   ```bash
+   git tag -v v0.x.y
+   ```
+7. **Push** the tag and master:
    ```bash
    git push origin master --tags
    ```
-5. **Create a GitHub Release** using `gh release create` with the changelog body as notes. Attach the example HTML artifact:
+8. **Create a GitHub Release** using `gh release create` with the changelog body as notes. Attach the example HTML artifact:
    ```bash
    DO_AUDITLOG_ENABLED=true go run ./example
    gh release create v0.x.y --notes-file <notes> /tmp/.../audit-report.html
    ```
-6. **Verify** the CI badge is green and the release appears on the releases page.
+9. **Verify** the CI badge is green, the release appears on the releases page, and (if you sign with SSH) the tag shows as "Verified" on GitHub. GitHub-side verification requires the signing key to be registered as a **Signing Key** (not an Authentication Key) under Settings → SSH and GPG keys.
+
+### Release integrity checklist
+
+Before tagging, confirm:
+
+- [ ] `go.mod` `go` directive == `flake.nix` `GOTOOLCHAIN` == `ci.yml` `go-version` (no version split-brain)
+- [ ] `[Unreleased]` is empty and the new version section is dated
+- [ ] Every file the changelog names has been opened and the claim verified
+- [ ] `golangci-lint run` exits 0 (exit code captured directly, not via pipe)
+- [ ] `go test -race ./...` exits 0
+- [ ] `go generate ./...` produces no diff (generated code in sync)
+- [ ] Dependabot/security alerts triaged or explicitly deferred
 
 ## Questions?
 

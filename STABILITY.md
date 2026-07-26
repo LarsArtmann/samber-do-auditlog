@@ -20,6 +20,7 @@ the 0.x series:
 | `ExportToFile`, `ExportToHTML`, `ExportEventsToNDJSON`                   | Stable method signatures. Output format may evolve (see below).                           |
 | `Plugin.RecordHealthCheck` / `RecordHealthCheckWithContext`              | Stable.                                                                                   |
 | `Config{Enabled, ContainerID, MaxEvents, InitialEventCapacity, OnEvent}` | All current fields are stable. New fields may be added.                                   |
+| Exported sentinel errors (`Err*`)                                        | Stable identity for `errors.Is` matching (e.g. `ErrContainerIDPathSep`, `ErrReport*`, `ErrReplayValidationFailed`, `ErrMigration*`, `ErrUnsupportedFormat`). The set may grow; existing sentinels keep their identity. |
 
 ## Evolving API (may change between 0.x releases)
 

@@ -84,10 +84,10 @@ github.com/larsartmann/go-output/serialization v0.32.0 h1:oL50gutqhx8NDFW1zbfxYW
 github.com/larsartmann/go-output/serialization v0.32.0/go.mod h1:h5+AceyBD/ZL7NrfDuJVw+vzv/PRZt4v4nv0d+uTOxE=
 github.com/larsartmann/go-output/table v0.32.0 h1:b6YZqwBOphvyBHS9LL/3c4qpxdLOskg9aY8GbHOShAU=
 github.com/larsartmann/go-output/table v0.32.0/go.mod h1:ylSAOC/8vOi3M8q2FPm3bPgp0/DWFIPTtr6LLA2+C7I=
-github.com/larsartmann/go-output/testhelpers v0.31.1 h1:MJBYLI+m2wTqmipWSaqBcReLc3wqGW9jHsXRTCrr3S0=
-github.com/larsartmann/go-output/testhelpers v0.31.1/go.mod h1:W4rI3kVhlLVH69t6ueNIPg64sE17fsgtPB3qUyvxgos=
-github.com/larsartmann/go-output/testhelpers/graphtest v0.31.1 h1:cTWMwX/FrjEeS2mVNYjCPIzkjBakK0zoy6HvbNzunv8=
-github.com/larsartmann/go-output/testhelpers/graphtest v0.31.1/go.mod h1:I8YbntjJ83AbIzXpz9aSpnthhKc+0Vd2zxHOCcG7LbI=
+github.com/larsartmann/go-output/testhelpers v0.32.0 h1:gyZ+7F6qnNS0VT4KOHWzSPJvz9eAaq4MXBFC+KDY8QA=
+github.com/larsartmann/go-output/testhelpers v0.32.0/go.mod h1:CtP2aiCXEjiH/rh1cO2UJ0H8bW0eoqoqcTpUxqG6O6w=
+github.com/larsartmann/go-output/testhelpers/graphtest v0.32.0 h1:3Vp6LUAw1zASbum4WbDT0aKZLoj5lq0eA2w36u4cFwI=
+github.com/larsartmann/go-output/testhelpers/graphtest v0.32.0/go.mod h1:XEyOYdZP9iknlAPSG1IZM+cwnqzp1w68Ym9YxjJNPqo=
 github.com/larsartmann/go-output/tree v0.32.0 h1:lI6kwsB5URw8713+2H/uBOUz2TKMxA8UUeTYoqi22BU=
 github.com/larsartmann/go-output/tree v0.32.0/go.mod h1:hjY6BEkRvPEQf0ZPQ2EWQjq1ycqiVoyXFCz6tuZe40Y=
 github.com/larsartmann/go-sse v0.2.1 h1:cvqViY+2MgTSHU3PgpFAHHtT56hYazom2Ky8ZPL+258=

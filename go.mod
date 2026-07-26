@@ -7,27 +7,24 @@ require github.com/larsartmann/go-sse v0.2.1
 require (
 	github.com/a-h/templ v0.3.1020
 	github.com/invopop/jsonschema v0.14.0
+	github.com/larsartmann/go-atomic-write v0.4.0
+	github.com/larsartmann/go-error-family v0.10.0
+	github.com/larsartmann/go-ndjson v0.0.1
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
 	// are tagged together at the same version. Pin them in lockstep.
 	github.com/larsartmann/go-output v0.32.0
 	github.com/larsartmann/go-output/d2 v0.32.0
 	github.com/larsartmann/go-output/daghtml v0.32.0
+	github.com/larsartmann/go-output/delimited v0.32.0
 	github.com/larsartmann/go-output/escape v0.32.0
 	github.com/larsartmann/go-output/graph v0.32.0
-	github.com/larsartmann/go-output/plantuml v0.32.0
-	github.com/samber/do/v2 v2.1.0
-)
-
-require (
-	github.com/larsartmann/go-atomic-write v0.4.0
-	github.com/larsartmann/go-error-family v0.10.0
-	github.com/larsartmann/go-ndjson v0.0.1
-	github.com/larsartmann/go-output/delimited v0.32.0
 	github.com/larsartmann/go-output/markdown v0.32.0
 	github.com/larsartmann/go-output/markup v0.32.0
+	github.com/larsartmann/go-output/plantuml v0.32.0
 	github.com/larsartmann/go-output/serialization v0.32.0
 	github.com/larsartmann/go-output/table v0.32.0
 	github.com/larsartmann/go-output/tree v0.32.0
+	github.com/samber/do/v2 v2.1.0
 )
 
 require (
@@ -56,7 +53,8 @@ require (
 	github.com/gofrs/flock v0.13.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/larsartmann/go-branded-id v0.3.2 // indirect
-	github.com/larsartmann/go-output/testhelpers/graphtest v0.31.1 // indirect
+	github.com/larsartmann/go-output/testhelpers v0.32.0 // indirect
+	github.com/larsartmann/go-output/testhelpers/graphtest v0.32.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
