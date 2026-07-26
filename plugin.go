@@ -38,12 +38,15 @@ type Config struct {
 	InitialEventCapacity int
 }
 
+// ErrContainerIDPathSep is returned by [Config.Validate] when ContainerID
+// contains a path separator ("/" or "\"), which is forbidden because
+// ContainerID is used in file export paths and event metadata.
+var ErrContainerIDPathSep = errors.New("config.ContainerID must not contain path separators")
+
 // Validate returns an error if the config is invalid.
 //
 // Checks that ContainerID does not contain path separators ("/" or "\")
 // since it is used in file export paths and event metadata.
-var ErrContainerIDPathSep = errors.New("config.ContainerID must not contain path separators")
-
 func (c Config) Validate() error {
 	if strings.ContainsAny(string(c.ContainerID), "/\\") {
 		return fmt.Errorf("%w: %q", ErrContainerIDPathSep, c.ContainerID)
