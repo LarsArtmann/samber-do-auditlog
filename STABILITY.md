@@ -9,17 +9,17 @@
 These surfaces are used by every consumer and follow semantic versioning within
 the 0.x series:
 
-| Surface                                                                  | Contract                                                                                  |
-| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| `New(Config) (*Plugin, error)`                                           | Signature is stable. New `Config` fields may be added (zero-valued = opt-in).             |
-| `Plugin.Opts() do.InjectorOpts`                                          | Stable — this is the primary integration point.                                           |
-| `Plugin.Report() Report`                                                 | Stable. The `Report` struct may gain new fields but existing fields keep their JSON keys. |
-| `Plugin.Events() []Event`                                                | Stable.                                                                                   |
-| `Plugin.EventsCount() int`                                               | Stable.                                                                                   |
-| `Plugin.DroppedEventCount() int64`                                       | Stable.                                                                                   |
-| `ExportToFile`, `ExportToHTML`, `ExportEventsToNDJSON`                   | Stable method signatures. Output format may evolve (see below).                           |
-| `Plugin.RecordHealthCheck` / `RecordHealthCheckWithContext`              | Stable.                                                                                   |
-| `Config{Enabled, ContainerID, MaxEvents, InitialEventCapacity, OnEvent}` | All current fields are stable. New fields may be added.                                   |
+| Surface                                                                  | Contract                                                                                                                                                                                                               |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `New(Config) (*Plugin, error)`                                           | Signature is stable. New `Config` fields may be added (zero-valued = opt-in).                                                                                                                                          |
+| `Plugin.Opts() do.InjectorOpts`                                          | Stable — this is the primary integration point.                                                                                                                                                                        |
+| `Plugin.Report() Report`                                                 | Stable. The `Report` struct may gain new fields but existing fields keep their JSON keys.                                                                                                                              |
+| `Plugin.Events() []Event`                                                | Stable.                                                                                                                                                                                                                |
+| `Plugin.EventsCount() int`                                               | Stable.                                                                                                                                                                                                                |
+| `Plugin.DroppedEventCount() int64`                                       | Stable.                                                                                                                                                                                                                |
+| `ExportToFile`, `ExportToHTML`, `ExportEventsToNDJSON`                   | Stable method signatures. Output format may evolve (see below).                                                                                                                                                        |
+| `Plugin.RecordHealthCheck` / `RecordHealthCheckWithContext`              | Stable.                                                                                                                                                                                                                |
+| `Config{Enabled, ContainerID, MaxEvents, InitialEventCapacity, OnEvent}` | All current fields are stable. New fields may be added.                                                                                                                                                                |
 | Exported sentinel errors (`Err*`)                                        | Stable identity for `errors.Is` matching (e.g. `ErrContainerIDPathSep`, `ErrReport*`, `ErrReplayValidationFailed`, `ErrMigration*`, `ErrUnsupportedFormat`). The set may grow; existing sentinels keep their identity. |
 
 ## Evolving API (may change between 0.x releases)
