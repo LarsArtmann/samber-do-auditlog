@@ -48,7 +48,7 @@
             };
 
             GOEXPERIMENT = "jsonv2";
-            GOTOOLCHAIN = "go1.26.4";
+            GOTOOLCHAIN = "go1.26.5";
             BUILDFLOW_LANGUAGE = "go";
           };
 
@@ -75,7 +75,7 @@
                   runtimeInputs = [ goPkg ];
                   text = ''
                     export CGO_ENABLED=0
-                    export GOTOOLCHAIN=go1.26.4
+                    export GOTOOLCHAIN=go1.26.5
                     exec sh ./scripts/coverage-gate.sh "$@"
                   '';
                 }
@@ -90,7 +90,7 @@
                   runtimeInputs = [ goPkg ];
                   text = ''
                     export CGO_ENABLED=0
-                    export GOTOOLCHAIN=go1.26.4
+                    export GOTOOLCHAIN=go1.26.5
                     exec go run ./cmd/auditlog "$@"
                   '';
                 }
