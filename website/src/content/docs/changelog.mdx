@@ -5,6 +5,44 @@ description: All notable changes to do-auditlog.
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-07-26
+
+A minor release: ALPHA→BETA status promotion, exported sentinel errors, and
+dependency upgrades (`go-atomic-write` v0.4.0, `go-error-family` v0.10.0,
+`go-output` v0.32.0, `go-sse` v0.2.1). Go 1.26.5 is now the required minimum.
+Non-breaking.
+
+### Changed
+
+- **Project status: ALPHA → BETA.** The `README.md` and `STABILITY.md`
+  pre-1.0 notices have been updated accordingly.
+- **Exported sentinel errors** — 11 previously-unexported sentinels (e.g. `errContainerIDPathSep` → `ErrContainerIDPathSep`) are now exported so consumers can match them with `errors.Is`.
+- **Adopted the new `go-atomic-write` API** — `WriteFunc(path, fn, Fingerprint{})` migrated to the plain `WriteFunc(path, fn)` variant.
+- **Go 1.26.5 required minimum** across `go.mod`, the Nix devShell, CI, and docs.
+
+### Added
+
+- **`DiffResult.HasChanges()`** — polarity reconciliation with the `go-workflow-auditlog` twin.
+
+## [0.7.1] — 2026-07-25
+
+A patch release: Go version regression. Non-breaking.
+
+### Changed
+
+- **Go 1.26.5 → 1.26.4** in `go.mod`, aligning with the documented Nix devShell pin and docs. (Re-bumped to 1.26.5 in v0.8.0 — see above.)
+
+## [0.7.0] — 2026-07-25
+
+A feature release: real-time SSE live dashboard, cross-project feature ports (error classification, atomic writes, NDJSON streaming, diagram direction, table column selection), typed identifiers, ServiceInfo domain split, and go-output v0.31.1. Includes breaking changes for typed identifiers and the ServiceInfo split.
+
+### Added
+
+- **Real-time live dashboard** (`live/` sub-package): SSE streaming HTTP server with an interactive warm-amber HTML dashboard. Six endpoints with configurable route prefix. 35 tests.
+- **Cross-project feature ports from `go-workflow-auditlog`**: `go-error-family` classification, `go-atomic-write` crash-safe writes, NDJSON streaming, diagram direction option, table column selection.
+- **Typed identifiers + ServiceInfo domain split** (`ContainerID`/`ScopeID`/`ServiceName` named string types; `ServiceInfo` split into `ServiceIdentity`/`ServiceLifecycle`/`ServiceHealth`/`ServiceGraph` embedded structs). **Breaking** for composite literals.
+- **GitHub Actions SHA pinning** in `ci.yml`.
+
 ## [0.6.0] — 2026-07-22
 
 A feature release: public documentation website, Nix flake modernization, and comprehensive docs-accuracy audit. Non-breaking.

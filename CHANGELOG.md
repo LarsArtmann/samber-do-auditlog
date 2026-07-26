@@ -43,6 +43,10 @@ stabilizing, but breaking changes remain possible before 1.0.
 
 - **`DiffResult.HasChanges()`** — polarity reconciliation with the `go-workflow-auditlog` twin (which exposes `IsEmpty()`). Both twins now offer both methods.
 
+### Fixed
+
+- **Lint unblock for sentinel export** (`plugin.go`) — exporting `ErrContainerIDPathSep` in this release had stolen the `Validate` godoc comment; restored the `Validate` comment and added a conformant doc comment to the exported var so `golangci-lint`/`godoclint` passes. Internal fix; no behavior change.
+
 ## [0.7.1] - 2026-07-25
 
 A patch release: Go version regression. Non-breaking.

@@ -60,7 +60,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Report convenience queries** | `ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByRef`, `EventsByType`, `FailedServices`, `UnhealthyServices` | `report.go`                     |
 | **Event convenience helpers**  | `IsRegistration`, `IsInvocation`, `IsShutdown`, `IsHealthCheck`, `IsBefore`, `IsAfter`, `HasError`, `Duration`                              | `event.go`                      |
 | **Service info helpers**       | `Uptime()`, `HasHealthError()`                                                                                                              | `service.go`                    |
-| **Report diff**                | `Report.Diff(other)` returns added/removed/changed services and event-count delta                                                           | `diff.go`                       |
+| **Report diff**                | `Report.Diff(other)` returns added/removed/changed services and event-count delta. `DiffResult.HasChanges()` / `IsEmpty()` give polarity-agnostic checks | `diff.go`                       |
 
 ### Report Filtering
 
@@ -132,6 +132,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **IO-boundary `string()` convention** | External library calls (go-output, csv, fmt) wrap typed values with `string()` at the IO boundary                                                    | `csv.go`, `d2.go`, `diagram.go` |
 | **ServiceInfo domain split**          | 19-field struct split into four embedded structs: `ServiceIdentity`/`ServiceLifecycle`/`ServiceHealth`/`ServiceGraph`. JSON stays flat via embedding | `service.go`                    |
 | **Service status derivation**         | `ServiceInfo.DeriveStatus()` is the canonical entry point for computing status from underlying fields                                                | `service.go`                    |
+| **Exported sentinel errors**           | 11 exported sentinels (e.g. `ErrContainerIDPathSep`, `ErrReplayValidationFailed`, `ErrReport*`) matchable via `errors.Is` for programmatic error handling | `plugin.go`, `report.go`, `loader.go`, `migration.go`, `replay.go` |
 
 ### Live Dashboard (`live/` Sub-Package)
 
@@ -198,11 +199,10 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ## PARTIALLY FUNCTIONAL
 
-| Feature                                | Status     | Note                                                                               |
-| -------------------------------------- | ---------- | ---------------------------------------------------------------------------------- |
-| Shared CSS between dashboards          | Drift risk | Static templ and live dashboards have separate CSS that can drift                  |
-| `go-sse` and `go-ndjson` private repos | Blocked    | Both use `replace` directives in `go.mod`; must be published before public release |
-| Coverage gate margin thin              | Headroom   | 94.1% vs 94% threshold; adding code without tests risks dropping below the gate    |
+| Feature                                | Status     | Note                                                                          |
+| -------------------------------------- | ---------- | ----------------------------------------------------------------------------- |
+| Shared CSS between dashboards          | Drift risk | Static templ and live dashboards have separate CSS that can drift             |
+| Coverage gate margin thin              | Headroom   | 94.1% vs 94% threshold; adding code without tests risks dropping below the gate |
 
 ---
 
