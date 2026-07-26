@@ -2,7 +2,7 @@
 
 Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI container lifecycle event (registration, invocation, shutdown) with timestamps, dependency graph inference, build duration tracking, and export to JSON / NDJSON / self-contained HTML.
 
-**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.26.4 (go.mod + devShell) · **Status**: ALPHA
+**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.26.5 (go.mod + devShell) · **Status**: ALPHA
 
 ---
 
@@ -21,7 +21,7 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | `golangci-lint config verify` | Validate the lint config (CI runs this before `lint run`) |
 | `golangci-lint run` | Full lint (heavy config, see below) |
 | `go mod tidy` | Sync `go.sum` (CI `mod-tidy` job fails on drift) |
-| `nix develop` | Enter devShell (Go 1.26.4, templ, golangci-lint, govulncheck, actionlint, **GOEXPERIMENT=jsonv2 enabled**) |
+| `nix develop` | Enter devShell (Go 1.26.5, templ, golangci-lint, govulncheck, actionlint, **GOEXPERIMENT=jsonv2 enabled**) |
 | `go run ./example` | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
 | `go run ./cmd/auditlog help` | CLI: inspect/convert/diff/validate reports |
 | `go install ./cmd/auditlog` | Install the `auditlog` CLI to `$GOBIN` |
@@ -119,7 +119,7 @@ live/demo/          — Self-contained real-time demo (registers services with d
 ### Shared infrastructure: `go-sse`
 
 The `live/` sub-package depends on [`github.com/larsartmann/go-sse`](https://github.com/larsartmann/go-sse)
-(v0.2.0, public) for the SSE wire-format primitives — `sse.Event`, `sse.WriteEvent`,
+(v0.2.1, public) for the SSE wire-format primitives — `sse.Event`, `sse.WriteEvent`,
 and `sse.ContentType`. The domain-specific Hub and Server are implemented locally in `live/`
 (samber/do service events, scope tree, dashboard HTML) on top of those primitives; go-sse
 itself is transport-only and owns no domain types here.
@@ -256,7 +256,7 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **CSS design tokens are shared**: `DesignTokensCSS` in `design_tokens.go` is the single source of truth for the warm amber color palette. The static HTML report (`html.templ`) embeds these tokens inline (necessary for self-contained HTML). The live dashboard (`live/base_css.go`) composes them from `auditlog.DesignTokensCSS` + live-specific aliases (`--bg-card`, `--bg-hover`, `--border-light`, `--font`, `--font-mono`). `TestDesignTokensInSync` verifies the html.templ inline `:root` block matches `DesignTokensCSS` exactly — if you change a color in one, update both or the test fails.
 - **JS syntax validation test**: `TestHTMLJavaScriptSyntax` and `TestHTMLJavaScriptSyntax_MultiService` in `plugin_html_syntax_test.go` extract `<script>` content from the HTML report, strip strings/comments/regexes via a `jsStripper` state machine, and assert `{}`, `()`, `[]` delimiters are balanced. This catches syntax errors (like a stray `}`) that the golden byte-for-byte test misses.
 - **go-output v0.31.1 release metadata**: go-output was upgraded from v0.30.1 → v0.31.1 (all sub-modules in lockstep via `go mod edit`). v0.31.1 adds `d2Quote()` which fixes D2 hex-color/label quoting (previously `#e8a838` was treated as a comment by D2). The published root and graphtest module manifests contain broken zero pseudo-versions because local `replace` directives were not stripped before tagging. Consumer-side `replace` directives are no longer needed: explicit indirect requirements on `testhelpers/v0.31.1` and `testhelpers/graphtest/v0.31.1` let minimal version selection override the bad pseudo-versions. Keep these indirect pins until upstream publishes corrected manifests.
-- **Cross-project feature ports from `go-workflow-auditlog`** (sibling project, same author, same patterns): Five patterns were ported from the sibling project: (1) **`go-error-family` classification** — `classify.go` registers all sentinel errors into Families (Corruption/Rejection) with auto-registration in `init()`; upgraded to v0.9.0 (direct dep). (2) **`go-atomic-write`** — `writeToFile()` in `plugin.go` now delegates to `atomicwrite.WriteFunc` v0.3.0 for TOCTOU-safe writes with fsync durability. (3) **NDJSON streaming** — `stream.go` provides `NDJSONStreamer` for real-time event streaming via `Config.OnEvent` with `WithAutoFlush`/`WithStreamBufferSize`; uses standard `encoding/json` (no `jsontext` dependency). (4) **Diagram direction** — `diagram_options.go` provides `WithDirection(output.Direction)` across all 4 diagram formats. (5) **Table column selection** — `table_options.go` provides `WithColumns(TableColumn...)` with 10 selectable columns.
+- **Cross-project feature ports from `go-workflow-auditlog`** (sibling project, same author, same patterns): Five patterns were ported from the sibling project: (1) **`go-error-family` classification** — `classify.go` registers all sentinel errors into Families (Corruption/Rejection) with auto-registration in `init()`; upgraded to v0.10.0 (direct dep). (2) **`go-atomic-write`** — `writeToFile()` in `plugin.go` now delegates to `atomicwrite.WriteFunc` v0.4.0 for crash-durable atomic writes. Note: v0.4.0 split the API — `WriteFunc(path, fn)` is the plain 2-arg write; `WriteFuncVerified` adds fingerprint TOCTOU protection. Audit exports use plain writes (no read-modify-write cycle).. (3) **NDJSON streaming** — `stream.go` provides `NDJSONStreamer` for real-time event streaming via `Config.OnEvent` with `WithAutoFlush`/`WithStreamBufferSize`; uses standard `encoding/json` (no `jsontext` dependency). (4) **Diagram direction** — `diagram_options.go` provides `WithDirection(output.Direction)` across all 4 diagram formats. (5) **Table column selection** — `table_options.go` provides `WithColumns(TableColumn...)` with 10 selectable columns.
 
 ---
 
