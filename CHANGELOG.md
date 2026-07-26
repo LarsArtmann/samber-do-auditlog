@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.8.0] - 2026-07-26
+
+A minor release: ALPHA→BETA status promotion, exported sentinel errors, and
+dependency upgrades (`go-atomic-write` v0.4.0, `go-error-family` v0.10.0,
+`go-output` v0.32.0, `go-sse` v0.2.1). Go 1.26.5 is now the required minimum
+(mandatory — all four upgraded deps declare `go 1.26.5`, and Go's module system
+computes the main module's language version as the max across dependencies).
+Non-breaking.
+
 Promoted project status from ALPHA to BETA. The public API has been stabilizing
 across v0.3.0 → v0.7.0 with non-breaking feature releases dominating and only
 two intentional breaking changes (typed identifiers and `ServiceInfo` domain
@@ -26,6 +37,7 @@ stabilizing, but breaking changes remain possible before 1.0.
   still pin to a specific version tag.
 - **Exported sentinel errors** (`plugin.go`, `loader.go`, `replay.go`, `migration.go`, `report.go`, `classify.go`) — 11 previously-unexported sentinels (e.g. `errContainerIDPathSep` → `ErrContainerIDPathSep`) are now exported so consumers can match them with `errors.Is`. The `ndjson.go` sentinels remain unexported, matching the `go-workflow-auditlog` twin's deliberate choice.
 - **Adopted the new `go-atomic-write` API** (`plugin.go`) — `WriteFunc(path, fn, Fingerprint{})` migrated to the plain `WriteFunc(path, fn)` variant.
+- **Go 1.26.5 required minimum** (`go.mod`, `flake.nix`, `.github/workflows/ci.yml`, `CONTRIBUTING.md`, `BENCHMARKS.md`, `AGENTS.md`) — reverses the v0.7.1 revert. All four upgraded dependencies declare `go 1.26.5` in their own `go.mod`, so `go mod tidy` auto-bumps `go 1.26.4` back to `1.26.5` and `GOTOOLCHAIN=go1.26.4` fails the build with `go.mod requires go >= 1.26.5`. The canonical pin now matches at 1.26.5 across go.mod, the Nix devShell + apps, CI, and docs.
 
 ### Added
 
