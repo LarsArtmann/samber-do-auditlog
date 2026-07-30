@@ -786,7 +786,7 @@
   // === Keyboard navigation ===
 
   var tabList = Array.prototype.slice.call(document.querySelectorAll(".tab[data-tab]"));
-  var tabIndexByKey = { "1": 0, "2": 1, "3": 2, "4": 3, "5": 4 };
+  var tabIndexByKey = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4 };
 
   function isTypingElement(el) {
     var tag = el.tagName;
@@ -846,17 +846,17 @@
     div.setAttribute("aria-label", "Keyboard shortcuts");
     div.innerHTML =
       '<div class="kbd-help-content">' +
-      '<h2>Keyboard shortcuts</h2>' +
-      '<ul>' +
-      '<li><span>Switch to tab 1–5</span><kbd>1</kbd>–<kbd>5</kbd></li>' +
-      '<li><span>Next / previous tab</span><kbd>←</kbd> <kbd>→</kbd></li>' +
-      '<li><span>First / last tab</span><kbd>Home</kbd> <kbd>End</kbd></li>' +
-      '<li><span>Focus service search</span><kbd>/</kbd></li>' +
-      '<li><span>Show this help</span><kbd>?</kbd></li>' +
-      '<li><span>Close help</span><kbd>Esc</kbd></li>' +
-      '</ul>' +
+      "<h2>Keyboard shortcuts</h2>" +
+      "<ul>" +
+      "<li><span>Switch to tab 1–5</span><kbd>1</kbd>–<kbd>5</kbd></li>" +
+      "<li><span>Next / previous tab</span><kbd>←</kbd> <kbd>→</kbd></li>" +
+      "<li><span>First / last tab</span><kbd>Home</kbd> <kbd>End</kbd></li>" +
+      "<li><span>Focus service search</span><kbd>/</kbd></li>" +
+      "<li><span>Show this help</span><kbd>?</kbd></li>" +
+      "<li><span>Close help</span><kbd>Esc</kbd></li>" +
+      "</ul>" +
       '<button class="chip" id="kbd-help-close">Close</button>' +
-      '</div>';
+      "</div>";
     document.body.appendChild(div);
     var closeBtn = document.getElementById("kbd-help-close");
     closeBtn.addEventListener("click", closeKbdHelp);
@@ -864,7 +864,7 @@
     div.addEventListener("keydown", function (e) {
       if (e.key !== "Tab") return;
       var f = div.querySelectorAll(
-        'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])'
+        'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])',
       );
       if (f.length === 0) return;
       if (e.shiftKey && document.activeElement === f[0]) {
