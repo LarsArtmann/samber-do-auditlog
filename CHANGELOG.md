@@ -12,7 +12,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added — Keyboard Navigation & Accessibility
+
+- **Skip link** (`<a href="#main-content">`) in both static and live dashboards for keyboard users to jump directly to main content.
+- **`<main>` landmark** with `tabindex="-1"` as skip-link target in both dashboards.
+- **ARIA tablist pattern**: ArrowLeft/ArrowRight/Home/End navigation with roving tabindex across both dashboards.
+- **`?` keyboard shortcuts help dialog**: modal overlay (`role="dialog"`, `aria-modal="true"`) listing all shortcuts. Includes **focus trap** (Tab cycles within dialog) and **focus restoration** (returns focus to triggering element on close).
+- **`/` focus search**: pressing `/` anywhere outside form controls focuses the service filter input.
+- **`e` toggle errors-only** (static report): pressing `e` toggles the "Errors only" filter chip.
+- **Escape closes overlays**: help dialog and error tooltip (static), help dialog (live).
+- **Sortable column headers are keyboard-accessible**: `tabindex="0"`, Enter/Space activation, `aria-sort` state management (`ascending`/`descending`/`none`).
+- **Collapsible scope tree nodes** (live): `role="button"`, `tabindex="0"`, `aria-expanded`, Enter/Space toggle.
+- **`aria-pressed`** on event filter chips (live dashboard).
+- **`:focus-visible`** styling on interactive elements in both dashboards.
+- **Keyboard hint in footer**: "Press ? for keyboard shortcuts" in both dashboards.
+
+### Added — Code Quality
+
+- **`SharedComponentCSS` constant** (`shared_components.go`): single source of truth for keyboard-navigation overlay CSS (`.skip-link`, `.kbd-help`, `.kbd-help-content`). Eliminates CSS duplication between static and live dashboards.
+- **`TestSharedComponentCSSInSync`**: enforces that inline CSS in `html.templ` matches the `SharedComponentCSS` constant, following the `DesignTokensCSS` / `TestDesignTokensInSync` pattern.
+
+### Fixed
+
+- **Footer/`<main>` split-brain** in `live/dashboard.go`: `</main>` was placed after the footer (footer inside `<main>`); moved before footer to match the static report's structure.
 
 ## [0.8.0] - 2026-07-26
 
