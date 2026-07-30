@@ -14,7 +14,7 @@ import (
 func ExtractExecutableJS(t *testing.T, html string) string {
 	t.Helper()
 
-	var sb strings.Builder
+	var out strings.Builder
 
 	idx := 0
 
@@ -43,13 +43,13 @@ func ExtractExecutableJS(t *testing.T, html string) string {
 		}
 
 		contentStart := tagClose + start + 1
-		sb.WriteString(html[contentStart:end])
-		sb.WriteByte('\n')
+		out.WriteString(html[contentStart:end])
+		out.WriteByte('\n')
 
 		idx = end + len("</script>")
 	}
 
-	return sb.String()
+	return out.String()
 }
 
 // jsStripper is a stateful scanner that removes string literals, comments,
@@ -64,7 +64,12 @@ type jsStripper struct {
 // stripJSNoise removes string literals, comments, and regex literals so that
 // delimiter balancing only counts structural braces/parens/brackets.
 func stripJSNoise(js string) string {
-	s := &jsStripper{src: js}
+	s := &jsStripper{
+		src:    js,
+		pos:    0,
+		out:    strings.Builder{},
+		lastCh: 0,
+	}
 
 	for s.pos < len(s.src) {
 		if s.skipLineComment() {
@@ -126,7 +131,7 @@ func (s *jsStripper) skipBlockComment() bool {
 
 	s.pos += 2
 
-	for s.pos+1 < len(s.src) && !(s.src[s.pos] == '*' && s.src[s.pos+1] == '/') {
+	for s.pos+1 < len(s.src) && (s.src[s.pos] != '*' || s.src[s.pos+1] != '/') {
 		s.pos++
 	}
 
@@ -240,20 +245,20 @@ func AssertJSBalanced(t *testing.T, js string) {
 
 	var stack []rune
 
-	for _, ch := range cleaned {
-		switch ch {
+	for _, char := range cleaned {
+		switch char {
 		case '{', '(', '[':
-			stack = append(stack, ch)
+			stack = append(stack, char)
 		case '}', ')', ']':
 			if len(stack) == 0 {
-				t.Errorf("unbalanced %q in JS — closing with empty stack (stray delimiter)", ch)
+				t.Errorf("unbalanced %q in JS — closing with empty stack (stray delimiter)", char)
 
 				return
 			}
 
 			top := stack[len(stack)-1]
-			if top != pairs[ch] {
-				t.Errorf("unbalanced %q in JS — expected closing for %q, got %q", ch, top, ch)
+			if top != pairs[char] {
+				t.Errorf("unbalanced %q in JS — expected closing for %q, got %q", char, top, char)
 
 				return
 			}
