@@ -660,18 +660,49 @@
       })
       .join("");
 
+    var hasChildren = (node.children && node.children.length) || services;
+
     return (
       '<div class="scope-node" style="margin-left:' +
       depth * 20 +
       'px">' +
-      '<div class="scope-label">' +
-      '<span class="scope-icon">\u25BC</span>' +
+      '<div class="scope-label" role="button" tabindex="0" aria-expanded="true">' +
+      '<span class="scope-icon" aria-hidden="true">\u25BC</span>' +
       esc(node.name || node.id || "scope") +
       "</div>" +
+      '<div class="scope-body">' +
       (services ? '<div class="scope-services">' + services + "</div>" : "") +
+      (children ? '<div class="scope-children">' + children + "</div>" : "") +
       "</div>" +
-      children
+      "</div>"
     );
+  }
+
+  document.addEventListener("click", function (e) {
+    var header = e.target.closest(".scope-label");
+    if (!header) return;
+    toggleScopeNode(header);
+  });
+
+  document.addEventListener("keydown", function (e) {
+    var header = e.target.closest(".scope-label");
+    if (!header) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleScopeNode(header);
+    }
+  });
+
+  function toggleScopeNode(header) {
+    var node = header.parentElement;
+    if (!node) return;
+    var body = node.querySelector(".scope-body");
+    if (!body) return;
+    var collapsed = body.style.display === "none";
+    body.style.display = collapsed ? "" : "none";
+    header.setAttribute("aria-expanded", collapsed ? "true" : "false");
+    var icon = header.querySelector(".scope-icon");
+    if (icon) icon.textContent = collapsed ? "\u25BC" : "\u25B6";
   }
 
   // === Export ===

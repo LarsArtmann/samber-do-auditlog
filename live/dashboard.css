@@ -285,13 +285,28 @@ body.lifecycle-complete .live-dot {
   font-weight: 600;
   font-size: 0.85rem;
   color: var(--accent);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 0.15rem 0.35rem;
+  margin-left: -0.35rem;
+  transition: background var(--transition);
+}
+.scope-label:hover {
+  background: var(--surface-hover);
+}
+.scope-label:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .scope-icon {
   font-size: 0.65rem;
   opacity: 0.6;
+}
+.scope-body {
+  overflow: hidden;
 }
 .scope-services {
   display: flex;
@@ -299,6 +314,11 @@ body.lifecycle-complete .live-dot {
   gap: 0.3rem;
   margin-top: 0.3rem;
   margin-left: 1.2rem;
+}
+.scope-children {
+  margin-left: 1.2rem;
+  border-left: 1px solid var(--border);
+  padding-left: 0.5rem;
 }
 .scope-service-chip {
   display: inline-flex;
