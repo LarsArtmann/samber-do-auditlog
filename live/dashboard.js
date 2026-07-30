@@ -781,34 +781,140 @@
 
   // === Keyboard navigation ===
 
+  var tabList = Array.prototype.slice.call(document.querySelectorAll(".tab[data-tab]"));
+  var tabIndexByKey = { "1": 0, "2": 1, "3": 2, "4": 3, "5": 4 };
+
+  function isTypingElement(el) {
+    var tag = el.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+  }
+
+  function switchTab(index) {
+    if (index < 0 || index >= tabList.length) return;
+    var tab = tabList[index];
+    tabList.forEach(function (t) {
+      t.classList.remove("active");
+      t.setAttribute("aria-selected", "false");
+      t.setAttribute("tabindex", "-1");
+    });
+    document.querySelectorAll(".tab-content").forEach(function (c) {
+      c.classList.remove("active");
+    });
+    tab.classList.add("active");
+    tab.setAttribute("aria-selected", "true");
+    tab.setAttribute("tabindex", "0");
+    tab.focus();
+    var panelId = "tab-" + tab.getAttribute("data-tab");
+    var panel = document.getElementById(panelId);
+    if (panel) panel.classList.add("active");
+  }
+
+  function initTabAttributes() {
+    tabList.forEach(function (tab, i) {
+      tab.setAttribute("tabindex", i === 0 ? "0" : "-1");
+    });
+  }
+
+  function showShortcutsHelp() {
+    var existing = document.getElementById("kbd-help");
+    if (existing) {
+      existing.remove();
+      return;
+    }
+    var div = document.createElement("div");
+    div.id = "kbd-help";
+    div.className = "kbd-help";
+    div.setAttribute("role", "dialog");
+    div.setAttribute("aria-modal", "true");
+    div.setAttribute("aria-label", "Keyboard shortcuts");
+    div.innerHTML =
+      '<div class="kbd-help-content">' +
+      '<h2>Keyboard shortcuts</h2>' +
+      '<ul>' +
+      '<li><span>Switch to tab 1–5</span><kbd>1</kbd>–<kbd>5</kbd></li>' +
+      '<li><span>Next / previous tab</span><kbd>←</kbd> <kbd>→</kbd></li>' +
+      '<li><span>First / last tab</span><kbd>Home</kbd> <kbd>End</kbd></li>' +
+      '<li><span>Focus service search</span><kbd>/</kbd></li>' +
+      '<li><span>Show this help</span><kbd>?</kbd></li>' +
+      '<li><span>Close help</span><kbd>Esc</kbd></li>' +
+      '</ul>' +
+      '<button class="chip" id="kbd-help-close">Close</button>' +
+      '</div>';
+    document.body.appendChild(div);
+    document.getElementById("kbd-help-close").addEventListener("click", function () {
+      div.remove();
+    });
+    document.getElementById("kbd-help-close").focus();
+  }
+
   document.addEventListener("keydown", function (e) {
-    if (e.target.tagName === "INPUT") return;
-    var tabs = document.querySelectorAll(".tab[data-tab]");
-    var num = parseInt(e.key, 10);
-    if (num >= 1 && num <= tabs.length) {
-      tabs[num - 1].click();
+    var target = e.target;
+    var onTab = target.classList && target.classList.contains("tab");
+
+    if (onTab) {
+      var cur = tabList.indexOf(target);
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        switchTab((cur + 1) % tabList.length);
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        switchTab((cur - 1 + tabList.length) % tabList.length);
+        return;
+      }
+      if (e.key === "Home") {
+        e.preventDefault();
+        switchTab(0);
+        return;
+      }
+      if (e.key === "End") {
+        e.preventDefault();
+        switchTab(tabList.length - 1);
+        return;
+      }
+    }
+
+    if (e.key === "Escape") {
+      var help = document.getElementById("kbd-help");
+      if (help) {
+        e.preventDefault();
+        help.remove();
+        return;
+      }
+    }
+
+    if (isTypingElement(target)) return;
+
+    if (e.key === "?") {
+      e.preventDefault();
+      showShortcutsHelp();
+      return;
+    }
+
+    if (e.key === "/") {
+      e.preventDefault();
+      var search = document.getElementById("service-search");
+      if (search) search.focus();
+      return;
+    }
+
+    var tabIdx = tabIndexByKey[e.key];
+    if (tabIdx != null && tabIdx < tabList.length) {
+      e.preventDefault();
+      switchTab(tabIdx);
     }
   });
 
   // === Tab switching ===
 
-  document.querySelectorAll(".tab[data-tab]").forEach(function (tab) {
+  document.querySelectorAll(".tab[data-tab]").forEach(function (tab, i) {
     tab.addEventListener("click", function () {
-      document.querySelectorAll(".tab").forEach(function (t) {
-        t.classList.remove("active");
-        t.setAttribute("aria-selected", "false");
-      });
-      document.querySelectorAll(".tab-content").forEach(function (c) {
-        c.classList.remove("active");
-      });
-
-      tab.classList.add("active");
-      tab.setAttribute("aria-selected", "true");
-      var panelId = "tab-" + tab.getAttribute("data-tab");
-      var panel = document.getElementById(panelId);
-      if (panel) panel.classList.add("active");
+      switchTab(i);
     });
   });
+
+  initTabAttributes();
 
   // === Init ===
 
