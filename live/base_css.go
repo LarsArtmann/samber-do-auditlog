@@ -24,6 +24,9 @@ const liveTokenAliases = `
 //nolint:gochecknoglobals // read-only CSS constant, not mutable shared state
 var baseCSS = auditlog.DesignTokensCSS + liveTokenAliases + `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+.skip-link { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; z-index: 100; font-family: var(--font); }
+.skip-link:focus { position: fixed; left: 1rem; top: 1rem; width: auto; height: auto; padding: 0.75rem 1rem; background: var(--accent); color: var(--bg); font-weight: 600; border-radius: var(--radius); text-decoration: none; outline: none; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
 body {
   font-family: var(--font);
   background: var(--bg);
