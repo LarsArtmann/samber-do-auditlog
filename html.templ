@@ -633,14 +633,14 @@ templ reportHTML(report Report) {
 					<table>
 						<thead>
 							<tr>
-								<th class="sortable" data-sort="name">Service</th>
-								<th class="sortable" data-sort="type">Type</th>
-								<th class="sortable" data-sort="scope">Scope</th>
-								<th class="sortable" data-sort="status">Status</th>
-								<th class="sortable" data-sort="order">Order</th>
-								<th class="sortable" data-sort="invocations">Invocations</th>
-								<th class="sortable" data-sort="build">Build (ms)</th>
-								<th class="sortable" data-sort="shutdown">Shutdown (ms)</th>
+								<th class="sortable" data-sort="name" scope="col" tabindex="0" aria-sort="none">Service</th>
+								<th class="sortable" data-sort="type" scope="col" tabindex="0" aria-sort="none">Type</th>
+								<th class="sortable" data-sort="scope" scope="col" tabindex="0" aria-sort="none">Scope</th>
+								<th class="sortable" data-sort="status" scope="col" tabindex="0" aria-sort="none">Status</th>
+								<th class="sortable" data-sort="order" scope="col" tabindex="0" aria-sort="none">Order</th>
+								<th class="sortable" data-sort="invocations" scope="col" tabindex="0" aria-sort="none">Invocations</th>
+								<th class="sortable" data-sort="build" scope="col" tabindex="0" aria-sort="none">Build (ms)</th>
+								<th class="sortable" data-sort="shutdown" scope="col" tabindex="0" aria-sort="none">Shutdown (ms)</th>
 								<th>Dependencies</th>
 								<th>Dependents</th>
 								<th>Health</th>
@@ -754,9 +754,17 @@ templ reportHTML(report Report) {
 	    document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
 	    if(tab.dataset.tab==='graph')renderGraph();
 	}
+	var kbdHelpPrevFocus=null;
+	function closeKbdHelp(){
+	    var help=document.getElementById('kbd-help');
+	    if(!help)return;
+	    help.remove();
+	    if(kbdHelpPrevFocus){kbdHelpPrevFocus.focus();kbdHelpPrevFocus=null;}
+	}
 	function showShortcutsHelp(){
 	    var existing=document.getElementById('kbd-help');
-	    if(existing){existing.remove();return;}
+	    if(existing){closeKbdHelp();return;}
+	    kbdHelpPrevFocus=document.activeElement;
 	    var div=document.createElement('div');
 	    div.id='kbd-help';
 	    div.className='kbd-help';
@@ -773,8 +781,16 @@ templ reportHTML(report Report) {
 	      '<li><span>Close help / tooltip</span><kbd>Esc</kbd></li>'+
 	      '</ul><button class="chip" id="kbd-help-close">Close</button></div>';
 	    document.body.appendChild(div);
-	    document.getElementById('kbd-help-close').addEventListener('click',function(){div.remove();});
-	    document.getElementById('kbd-help-close').focus();
+	    var closeBtn=document.getElementById('kbd-help-close');
+	    closeBtn.addEventListener('click',closeKbdHelp);
+	    closeBtn.focus();
+	    div.addEventListener('keydown',function(e){
+	      if(e.key!=='Tab')return;
+	      var f=div.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');
+	      if(f.length===0)return;
+	      if(e.shiftKey&&document.activeElement===f[0]){e.preventDefault();f[f.length-1].focus();}
+	      else if(!e.shiftKey&&document.activeElement===f[f.length-1]){e.preventDefault();f[0].focus();}
+	    });
 	}
 	// ARIA tabs keyboard navigation: Arrow/Home/End on tabs, number keys anywhere
 	const tabList=[...document.querySelectorAll('.tab')];
@@ -789,8 +805,7 @@ templ reportHTML(report Report) {
 	    if(e.key==='End'){e.preventDefault();switchTab(tabList[tabList.length-1]);return;}
 	  }
 	  if(e.key==='Escape'){
-	    var help=document.getElementById('kbd-help');
-	    if(help){help.remove();return;}
+	    if(document.getElementById('kbd-help')){closeKbdHelp();return;}
 	    if(tooltip.classList.contains('visible')){tooltip.classList.remove('visible');return;}
 	  }
 	  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||tag==='BUTTON')return;
@@ -926,7 +941,12 @@ templ reportHTML(report Report) {
 		// Update sort indicators
 		document.querySelectorAll('#tab-services th.sortable').forEach(th=>{
 			th.classList.remove('sort-asc','sort-desc');
-			if(th.dataset.sort===svcSortKey)th.classList.add(svcSortDir===1?'sort-asc':'sort-desc');
+			if(th.dataset.sort===svcSortKey){
+				th.classList.add(svcSortDir===1?'sort-asc':'sort-desc');
+				th.setAttribute('aria-sort',svcSortDir===1?'ascending':'descending');
+			}else{
+				th.setAttribute('aria-sort','none');
+			}
 		});
 		// Filter + paginate
 		const q=document.getElementById('service-search').value.toLowerCase();
@@ -954,12 +974,15 @@ templ reportHTML(report Report) {
 		syncSvcMoreBar(visible);
 	}
 
-	// Sort header clicks
+	// Sort header clicks + keyboard activation
 	document.querySelectorAll('#tab-services th.sortable').forEach(th=>{
 		th.addEventListener('click',()=>{
 			const key=th.dataset.sort;
 			if(svcSortKey===key){svcSortDir*=-1;}else{svcSortKey=key;svcSortDir=1;}
 			applySvcView();
+		});
+		th.addEventListener('keydown',e=>{
+			if(e.key==='Enter'||e.key===' '){e.preventDefault();th.click();}
 		});
 	});
 

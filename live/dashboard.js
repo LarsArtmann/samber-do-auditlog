@@ -819,12 +819,25 @@
     });
   }
 
+  var kbdHelpPrevFocus = null;
+
+  function closeKbdHelp() {
+    var help = document.getElementById("kbd-help");
+    if (!help) return;
+    help.remove();
+    if (kbdHelpPrevFocus) {
+      kbdHelpPrevFocus.focus();
+      kbdHelpPrevFocus = null;
+    }
+  }
+
   function showShortcutsHelp() {
     var existing = document.getElementById("kbd-help");
     if (existing) {
-      existing.remove();
+      closeKbdHelp();
       return;
     }
+    kbdHelpPrevFocus = document.activeElement;
     var div = document.createElement("div");
     div.id = "kbd-help";
     div.className = "kbd-help";
@@ -845,10 +858,23 @@
       '<button class="chip" id="kbd-help-close">Close</button>' +
       '</div>';
     document.body.appendChild(div);
-    document.getElementById("kbd-help-close").addEventListener("click", function () {
-      div.remove();
+    var closeBtn = document.getElementById("kbd-help-close");
+    closeBtn.addEventListener("click", closeKbdHelp);
+    closeBtn.focus();
+    div.addEventListener("keydown", function (e) {
+      if (e.key !== "Tab") return;
+      var f = div.querySelectorAll(
+        'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])'
+      );
+      if (f.length === 0) return;
+      if (e.shiftKey && document.activeElement === f[0]) {
+        e.preventDefault();
+        f[f.length - 1].focus();
+      } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) {
+        e.preventDefault();
+        f[0].focus();
+      }
     });
-    document.getElementById("kbd-help-close").focus();
   }
 
   document.addEventListener("keydown", function (e) {
@@ -880,10 +906,9 @@
     }
 
     if (e.key === "Escape") {
-      var help = document.getElementById("kbd-help");
-      if (help) {
+      if (document.getElementById("kbd-help")) {
         e.preventDefault();
-        help.remove();
+        closeKbdHelp();
         return;
       }
     }
