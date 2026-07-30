@@ -144,8 +144,10 @@ func TestIsASCIILetter(t *testing.T) {
 func TestIsRegexContext(t *testing.T) {
 	t.Parallel()
 
-	regexChars := []byte{0, '(', '[', '{', ',', ';', '=', '!', '&', '|', '?', ':',
-		'+', '*', '%', '~', '^', '<', '>', '\n', '\t', ' '}
+	regexChars := []byte{
+		0, '(', '[', '{', ',', ';', '=', '!', '&', '|', '?', ':',
+		'+', '*', '%', '~', '^', '<', '>', '\n', '\t', ' ',
+	}
 
 	for _, ch := range regexChars {
 		if !isRegexContext(ch) {
