@@ -154,8 +154,11 @@ func TestWriteHTML_KeyboardNavigation(t *testing.T) {
 	assertHTMLContains(t, html, "tabindex=\"-1\"")
 
 	assertHTMLContains(t, html, "showShortcutsHelp")
+	assertHTMLContains(t, html, "closeKbdHelp")
+	assertHTMLContains(t, html, "kbdHelpPrevFocus")
 	assertHTMLContains(t, html, "kbd-help")
 	assertHTMLContains(t, html, "Keyboard shortcuts")
+	assertHTMLContains(t, html, "e.key!=='Tab'")
 
 	assertHTMLContains(t, html, "e.key==='?'")
 	assertHTMLContains(t, html, "e.key==='/'")
@@ -166,6 +169,10 @@ func TestWriteHTML_KeyboardNavigation(t *testing.T) {
 	assertHTMLContains(t, html, "role=\"tab\"")
 	assertHTMLContains(t, html, "aria-selected")
 	assertHTMLContains(t, html, "aria-controls")
+
+	assertHTMLContains(t, html, `class="sortable"`)
+	assertHTMLContains(t, html, "aria-sort")
+	assertHTMLContains(t, html, "e.key==='Enter'")
 
 	assertHTMLContains(t, html, "Press ? for keyboard shortcuts")
 }

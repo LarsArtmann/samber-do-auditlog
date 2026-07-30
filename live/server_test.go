@@ -54,7 +54,7 @@ func TestServer_DashboardHTML(t *testing.T) {
 
 	body := rec.Body.String()
 
-	for _, want := range []string{"<!DOCTYPE html>", "samber-do-auditlog", "LIVE", "skip-link", "Skip to main content", "main-content", "role=\"tab\"", "aria-selected", "aria-controls", "tabindex", "showShortcutsHelp", "Keyboard shortcuts", "ArrowRight", "ArrowLeft", "Press ? for keyboard shortcuts"} {
+	for _, want := range []string{"<!DOCTYPE html>", "samber-do-auditlog", "LIVE", "skip-link", "Skip to main content", "main-content", "role=\"tab\"", "aria-selected", "aria-controls", "tabindex", "showShortcutsHelp", "closeKbdHelp", "kbdHelpPrevFocus", "Keyboard shortcuts", "ArrowRight", "ArrowLeft", "Press ? for keyboard shortcuts"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("dashboard HTML missing %q", want)
 		}

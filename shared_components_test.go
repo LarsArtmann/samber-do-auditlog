@@ -21,6 +21,7 @@ func parseCSSRules(t *testing.T, css string) map[string]string {
 	for _, m := range matches {
 		selector := collapseWhitespace(m[1])
 		declarations := collapseWhitespace(m[2])
+
 		if selector != "" && declarations != "" {
 			result[selector] = declarations
 		}
@@ -30,9 +31,7 @@ func parseCSSRules(t *testing.T, css string) map[string]string {
 }
 
 func collapseWhitespace(s string) string {
-	s = strings.TrimSpace(s)
-	fields := strings.Fields(s)
-	return strings.Join(fields, " ")
+	return strings.Join(strings.Fields(strings.TrimSpace(s)), " ")
 }
 
 // TestSharedComponentCSSInSync verifies that the keyboard-navigation overlay
