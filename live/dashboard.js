@@ -758,7 +758,7 @@
           t +
           "' style='border-color:" +
           color +
-          "'>" +
+          "' aria-pressed='false'>" +
           esc(label) +
           "</button>"
         );
@@ -772,8 +772,12 @@
       var isActive = chip.classList.contains("active");
       els.eventFilters.querySelectorAll(".chip").forEach(function (c) {
         c.classList.remove("active");
+        c.setAttribute("aria-pressed", "false");
       });
-      if (!isActive) chip.classList.add("active");
+      if (!isActive) {
+        chip.classList.add("active");
+        chip.setAttribute("aria-pressed", "true");
+      }
 
       renderEventsTable();
     });
