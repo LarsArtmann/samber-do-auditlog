@@ -64,78 +64,78 @@ type jsStripper struct {
 // stripJSNoise removes string literals, comments, and regex literals so that
 // delimiter balancing only counts structural braces/parens/brackets.
 func stripJSNoise(js string) string {
-	s := &jsStripper{
+	scanner := &jsStripper{
 		src:    js,
 		pos:    0,
 		out:    strings.Builder{},
 		lastCh: 0,
 	}
 
-	for s.pos < len(s.src) {
-		if s.skipLineComment() {
+	for scanner.pos < len(scanner.src) {
+		if scanner.skipLineComment() {
 			continue
 		}
 
-		if s.skipBlockComment() {
+		if scanner.skipBlockComment() {
 			continue
 		}
 
-		if s.skipRegex() {
+		if scanner.skipRegex() {
 			continue
 		}
 
-		if s.skipQuoted('\'') {
+		if scanner.skipQuoted('\'') {
 			continue
 		}
 
-		if s.skipQuoted('"') {
+		if scanner.skipQuoted('"') {
 			continue
 		}
 
-		if s.skipQuoted('`') {
+		if scanner.skipQuoted('`') {
 			continue
 		}
 
-		s.copyByte()
+		scanner.copyByte()
 	}
 
-	return s.out.String()
+	return scanner.out.String()
 }
 
-func (s *jsStripper) remaining() bool { return s.pos < len(s.src) }
+func (scanner *jsStripper) remaining() bool { return scanner.pos < len(scanner.src) }
 
-func (s *jsStripper) at(p int) byte {
-	if p < len(s.src) {
-		return s.src[p]
+func (scanner *jsStripper) at(p int) byte {
+	if p < len(scanner.src) {
+		return scanner.src[p]
 	}
 
 	return 0
 }
 
-func (s *jsStripper) skipLineComment() bool {
-	if s.at(s.pos) != '/' || s.at(s.pos+1) != '/' {
+func (scanner *jsStripper) skipLineComment() bool {
+	if scanner.at(scanner.pos) != '/' || scanner.at(scanner.pos+1) != '/' {
 		return false
 	}
 
-	for s.remaining() && s.src[s.pos] != '\n' {
-		s.pos++
+	for scanner.remaining() && scanner.src[scanner.pos] != '\n' {
+		scanner.pos++
 	}
 
 	return true
 }
 
-func (s *jsStripper) skipBlockComment() bool {
-	if s.at(s.pos) != '/' || s.at(s.pos+1) != '*' {
+func (scanner *jsStripper) skipBlockComment() bool {
+	if scanner.at(scanner.pos) != '/' || scanner.at(scanner.pos+1) != '*' {
 		return false
 	}
 
-	s.pos += 2
+	scanner.pos += 2
 
-	for s.pos+1 < len(s.src) && (s.src[s.pos] != '*' || s.src[s.pos+1] != '/') {
-		s.pos++
+	for scanner.pos+1 < len(scanner.src) && (scanner.src[scanner.pos] != '*' || scanner.src[scanner.pos+1] != '/') {
+		scanner.pos++
 	}
 
-	s.pos += 2
+	scanner.pos += 2
 
 	return true
 }
@@ -150,88 +150,88 @@ func isRegexContext(last byte) bool {
 	}
 }
 
-func (s *jsStripper) skipRegex() bool {
-	if s.at(s.pos) != '/' || !isRegexContext(s.lastCh) {
+func (scanner *jsStripper) skipRegex() bool {
+	if scanner.at(scanner.pos) != '/' || !isRegexContext(scanner.lastCh) {
 		return false
 	}
 
-	s.pos++ // opening /
+	scanner.pos++ // opening /
 
-	for s.remaining() && s.src[s.pos] != '/' && s.src[s.pos] != '\n' {
-		if s.src[s.pos] == '\\' {
-			s.pos += 2
+	for scanner.remaining() && scanner.src[scanner.pos] != '/' && scanner.src[scanner.pos] != '\n' {
+		if scanner.src[scanner.pos] == '\\' {
+			scanner.pos += 2
 
 			continue
 		}
 
-		if s.src[s.pos] == '[' {
-			s.skipCharClass()
+		if scanner.src[scanner.pos] == '[' {
+			scanner.skipCharClass()
 		}
 
-		s.pos++
+		scanner.pos++
 	}
 
-	s.pos++ // closing /
+	scanner.pos++ // closing /
 
 	// Skip regex flags.
-	for s.remaining() && isASCIILetter(s.src[s.pos]) {
-		s.pos++
+	for scanner.remaining() && isASCIILetter(scanner.src[scanner.pos]) {
+		scanner.pos++
 	}
 
-	s.out.WriteByte(' ')
-	s.lastCh = ' '
+	scanner.out.WriteByte(' ')
+	scanner.lastCh = ' '
 
 	return true
 }
 
-func (s *jsStripper) skipCharClass() {
-	s.pos++ // [
+func (scanner *jsStripper) skipCharClass() {
+	scanner.pos++ // [
 
-	for s.remaining() && s.src[s.pos] != ']' {
-		if s.src[s.pos] == '\\' {
-			s.pos++
+	for scanner.remaining() && scanner.src[scanner.pos] != ']' {
+		if scanner.src[scanner.pos] == '\\' {
+			scanner.pos++
 		}
 
-		s.pos++
+		scanner.pos++
 	}
 }
 
-func (s *jsStripper) skipQuoted(quote byte) bool {
-	if s.at(s.pos) != quote {
+func (scanner *jsStripper) skipQuoted(quote byte) bool {
+	if scanner.at(scanner.pos) != quote {
 		return false
 	}
 
-	s.pos++
+	scanner.pos++
 
-	for s.remaining() && s.src[s.pos] != quote {
-		if s.src[s.pos] == '\\' {
-			s.pos++
+	for scanner.remaining() && scanner.src[scanner.pos] != quote {
+		if scanner.src[scanner.pos] == '\\' {
+			scanner.pos++
 		}
 
-		s.pos++
+		scanner.pos++
 	}
 
-	s.pos++
+	scanner.pos++
 
-	s.out.WriteByte(' ')
-	s.lastCh = ' '
+	scanner.out.WriteByte(' ')
+	scanner.lastCh = ' '
 
 	return true
 }
 
-func (s *jsStripper) copyByte() {
-	b := s.src[s.pos]
-	s.out.WriteByte(b)
+func (scanner *jsStripper) copyByte() {
+	byteVal := scanner.src[scanner.pos]
+	scanner.out.WriteByte(byteVal)
 
-	if b != ' ' && b != '\t' && b != '\n' && b != '\r' {
-		s.lastCh = b
+	if byteVal != ' ' && byteVal != '\t' && byteVal != '\n' && byteVal != '\r' {
+		scanner.lastCh = byteVal
 	}
 
-	s.pos++
+	scanner.pos++
 }
 
-func isASCIILetter(b byte) bool {
-	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
+func isASCIILetter(byteVal byte) bool {
+	return (byteVal >= 'a' && byteVal <= 'z') || (byteVal >= 'A' && byteVal <= 'Z')
 }
 
 // AssertJSBalanced checks that braces, parens, and brackets are balanced
