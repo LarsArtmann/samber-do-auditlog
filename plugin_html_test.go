@@ -142,3 +142,30 @@ func TestWriteHTML_MultiServiceIntegration(t *testing.T) {
 	assertHTMLContains(t, html, "event-filters")
 	assertHTMLContains(t, html, "service-search")
 }
+
+func TestWriteHTML_KeyboardNavigation(t *testing.T) {
+	t.Parallel()
+
+	html := writeHTMLToString(t)
+
+	assertHTMLContains(t, html, "skip-link")
+	assertHTMLContains(t, html, "Skip to main content")
+	assertHTMLContains(t, html, `id="main-content"`)
+	assertHTMLContains(t, html, "tabindex=\"-1\"")
+
+	assertHTMLContains(t, html, "showShortcutsHelp")
+	assertHTMLContains(t, html, "kbd-help")
+	assertHTMLContains(t, html, "Keyboard shortcuts")
+
+	assertHTMLContains(t, html, "e.key==='?'")
+	assertHTMLContains(t, html, "e.key==='/'")
+	assertHTMLContains(t, html, "e.key==='e'")
+	assertHTMLContains(t, html, "ArrowRight")
+	assertHTMLContains(t, html, "ArrowLeft")
+	assertHTMLContains(t, html, "tabindex")
+	assertHTMLContains(t, html, "role=\"tab\"")
+	assertHTMLContains(t, html, "aria-selected")
+	assertHTMLContains(t, html, "aria-controls")
+
+	assertHTMLContains(t, html, "Press ? for keyboard shortcuts")
+}
