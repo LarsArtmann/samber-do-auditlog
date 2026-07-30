@@ -71,7 +71,11 @@ func TestHTMLKeyboardShortcutsSyntax(t *testing.T) {
 		t.Fatal("keyboard shortcut help function missing from HTML")
 	}
 
-	if !strings.Contains(html, "e.key==='?'") || !strings.Contains(html, "e.key==='/'") || !strings.Contains(html, "e.key==='e'") {
+	hasQuestion := strings.Contains(html, "e.key==='?'")
+	hasSlash := strings.Contains(html, "e.key==='/'")
+	hasE := strings.Contains(html, "e.key==='e'")
+
+	if !hasQuestion || !hasSlash || !hasE {
 		t.Fatal("keyboard shortcuts missing from HTML")
 	}
 
