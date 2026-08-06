@@ -394,6 +394,16 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Replay missed events for reconnecting clients (AD4: subscribe-first
+	// pattern — the broadcaster is already buffering live events above).
+	lastID := stream.LastEventID()
+	if !lastID.IsZero() && srv.plugin != nil {
+		store := &eventStore{events: srv.plugin.Events()}
+		if _, err := sse.Replay(stream, store, lastID); err != nil {
+			return
+		}
+	}
+
 	go stream.Heartbeat(stream.Context(), srv.config.HeartbeatInterval)
 
 	ctx := stream.Context()

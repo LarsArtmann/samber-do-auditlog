@@ -23,7 +23,6 @@ const subscriberBufferSize = 128
 // callbacks, and Subscribe/Unsubscribe are called from HTTP handler goroutines.
 type Hub struct {
 	bc       *sse.Broadcaster[sse.Event]
-	seq      atomic.Int64
 	complete atomic.Bool
 	doneCh   chan struct{}
 }
@@ -32,27 +31,25 @@ type Hub struct {
 func NewHub() *Hub {
 	return &Hub{
 		bc:       sse.NewBroadcaster[sse.Event](sse.WithBufferSize[sse.Event](subscriberBufferSize)),
-		seq:      atomic.Int64{},
 		complete: atomic.Bool{},
 		doneCh:   make(chan struct{}),
 	}
 }
 
 // OnEvent marshals an auditlog.Event to JSON and broadcasts it to all
-// connected SSE clients as a ready-to-send sse.Event tagged with a
-// sequential ID for reconnection replay.
+// connected SSE clients as a ready-to-send sse.Event. The auditlog
+// event's Sequence is used as the SSE event ID so that reconnection
+// replay can filter by sequence number.
 func (h *Hub) OnEvent(evt auditlog.Event) {
 	payload, err := json.Marshal(evt)
 	if err != nil {
 		return
 	}
 
-	id := sse.NewEventID(strconv.FormatInt(h.seq.Add(1), 10))
-
 	h.bc.Broadcast(sse.Event{
 		Event: "event",
 		Data:  string(payload),
-		ID:    id,
+		ID:    sse.NewEventID(strconv.Itoa(evt.Sequence)),
 	})
 }
 
