@@ -219,7 +219,7 @@ func (srv *Server) Addr() string {
 	return srv.httpServer.Addr
 }
 
-// Shutdown gracefully shuts down the server.
+// Shutdown gracefully shuts down the server and drains the broadcaster.
 func (srv *Server) Shutdown(ctx context.Context) error {
 	srv.serverMu.Lock()
 	server := srv.httpServer
@@ -231,6 +231,10 @@ func (srv *Server) Shutdown(ctx context.Context) error {
 
 	if err := server.Shutdown(ctx); err != nil {
 		return fmt.Errorf("shutdown: %w", err)
+	}
+
+	if err := srv.hub.Shutdown(ctx); err != nil {
+		return fmt.Errorf("drain broadcaster: %w", err)
 	}
 
 	return nil
@@ -338,22 +342,28 @@ func (srv *Server) handleExportHTML(w http.ResponseWriter, _ *http.Request) {
 }
 
 type healthResponse struct {
-	Status   string  `json:"status"`
-	UptimeS  float64 `json:"uptime_s"`
-	Clients  int     `json:"clients"`
-	Events   int     `json:"events"`
-	Complete bool    `json:"complete"`
-	Dropped  int64   `json:"dropped"`
+	Status    string  `json:"status"`
+	UptimeS   float64 `json:"uptime_s"`
+	Clients   int     `json:"clients"`
+	Events    int     `json:"events"`
+	Complete  bool    `json:"complete"`
+	Dropped   int64   `json:"dropped"`
+	Draining  bool    `json:"draining"`
+	BufferSz  int     `json:"buffer_size"`
 }
 
 func (srv *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
+	bcHealth := srv.hub.Health()
 
 	resp := healthResponse{
 		Status:   "ok",
 		UptimeS:  time.Since(srv.startTime).Seconds(),
 		Clients:  srv.hub.ClientCount(),
 		Complete: srv.hub.IsComplete(),
+		Draining: bcHealth.Draining,
+		BufferSz: bcHealth.BufferSize,
 	}
 
 	plugin := srv.plugin

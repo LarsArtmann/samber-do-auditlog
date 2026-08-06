@@ -924,6 +924,10 @@ func TestServer_HealthEndpoint_WithEvents(t *testing.T) {
 	if !strings.Contains(body, `"events"`) {
 		t.Errorf("health response should contain events field: %s", body)
 	}
+
+	if !strings.Contains(body, `"buffer_size"`) {
+		t.Errorf("health response should contain buffer_size field: %s", body)
+	}
 }
 
 func TestServer_HandleDashboard_SubPathNotFound(t *testing.T) {
