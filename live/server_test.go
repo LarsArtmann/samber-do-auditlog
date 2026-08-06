@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -16,6 +17,7 @@ import (
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/larsartmann/samber-do-auditlog/internal/testhelpers"
 	"github.com/larsartmann/samber-do-auditlog/live"
+	"github.com/samber/do/v2"
 )
 
 func newTestServer(t *testing.T) *live.Server {
@@ -240,6 +242,32 @@ func sseConnect(t *testing.T, url string) (*bufio.Scanner, func()) {
 	if err != nil {
 		t.Fatalf("create request: %v", err)
 	}
+
+	resp, err := http.DefaultClient.Do(req) //nolint:bodyclose // closed via returned cleanup
+	if err != nil {
+		t.Fatalf("connect SSE: %v", err)
+	}
+
+	cleanup := func() {
+		cancel()
+
+		_ = resp.Body.Close()
+	}
+
+	return bufio.NewScanner(resp.Body), cleanup
+}
+
+func sseConnectWithLastID(t *testing.T, url, lastEventID string) (*bufio.Scanner, func()) {
+	t.Helper()
+
+	ctx, cancel := context.WithCancel(t.Context())
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		t.Fatalf("create request: %v", err)
+	}
+
+	req.Header.Set("Last-Event-ID", lastEventID)
 
 	resp, err := http.DefaultClient.Do(req) //nolint:bodyclose // closed via returned cleanup
 	if err != nil {
@@ -1078,6 +1106,91 @@ func TestServer_SSE_EventBroadcast(t *testing.T) {
 
 	if !strings.Contains(data, `"sequence":999`) {
 		t.Errorf("event data missing sequence 999: %s", data)
+	}
+}
+
+func TestServer_SSE_ReconnectReplay(t *testing.T) {
+	t.Parallel()
+
+	hub := live.NewHub()
+
+	plugin, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "replay-test",
+		OnEvent:     hub.OnEvent,
+	})
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+
+	// Register services to generate events with real sequences.
+	injector := do.NewWithOpts(plugin.Opts())
+
+	do.ProvideNamedValue(injector, "svc-1", 1)
+	do.ProvideNamedValue(injector, "svc-2", 2)
+	do.ProvideNamedValue(injector, "svc-3", 3)
+
+	events := plugin.Events()
+	if len(events) < 2 {
+		t.Fatalf("expected at least 2 events from registrations, got %d", len(events))
+	}
+
+	server := live.NewServer(hub, plugin, live.Config{})
+
+	ts := httptest.NewServer(server)
+	defer ts.Close()
+
+	// Reconnect with Last-Event-ID = first event's sequence.
+	// Should replay all events after that sequence.
+	firstSeq := strconv.Itoa(events[0].Sequence)
+	expectedReplay := len(events) - 1
+
+	scanner, closeSSE := sseConnectWithLastID(t, ts.URL+"/debug/di/api/events", firstSeq)
+	defer closeSSE()
+
+	skipSnapshot(scanner)
+
+	// Count replayed "event" messages.
+	replayed := 0
+
+	for range 200 {
+		if !scanner.Scan() {
+			break
+		}
+
+		if strings.HasPrefix(scanner.Text(), "event: event") {
+			replayed++
+		}
+
+		if replayed >= expectedReplay {
+			break
+		}
+	}
+
+	if replayed != expectedReplay {
+		t.Errorf("expected %d replayed events, got %d", expectedReplay, replayed)
+	}
+}
+
+func TestServer_SSE_ReconnectNoLastEventID(t *testing.T) {
+	t.Parallel()
+
+	server := newTestServer(t)
+
+	ts := httptest.NewServer(server)
+	defer ts.Close()
+
+	// Connect without Last-Event-ID — should get snapshot only, no replay.
+	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	defer closeSSE()
+
+	data, found := readSSEEvent(scanner, "snapshot")
+	if !found {
+		t.Fatal("did not receive snapshot")
+	}
+
+	if !strings.Contains(data, `"report"`) {
+		t.Error("snapshot should contain report field")
 	}
 }
 

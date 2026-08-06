@@ -1,6 +1,7 @@
 package live
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
 	"sync/atomic"
@@ -92,4 +93,17 @@ func (h *Hub) IsComplete() bool {
 // ClientCount returns the number of currently connected subscribers.
 func (h *Hub) ClientCount() int {
 	return h.bc.SubscriberCount()
+}
+
+// Shutdown gracefully drains the broadcaster: stops accepting new subscribers,
+// waits for active subscriber buffers to empty, then closes all channels.
+// Returns ctx.Err() if the context fires before the drain completes.
+func (h *Hub) Shutdown(ctx context.Context) error {
+	return h.bc.Shutdown(ctx)
+}
+
+// Health returns a structured snapshot of the broadcaster's lifecycle state
+// for health checks and observability dashboards.
+func (h *Hub) Health() sse.BroadcasterHealth {
+	return h.bc.Health()
 }
