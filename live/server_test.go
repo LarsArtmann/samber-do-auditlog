@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/larsartmann/go-sse"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/larsartmann/samber-do-auditlog/internal/testhelpers"
 	"github.com/larsartmann/samber-do-auditlog/live"
@@ -451,16 +452,13 @@ func TestHub_SubscribeUnsubscribe(t *testing.T) {
 
 	hub := live.NewHub()
 
-	sub := hub.Subscribe()
-	if sub == nil {
-		t.Fatal("Subscribe returned nil")
-	}
+	ch := hub.Subscribe()
 
 	if hub.ClientCount() != 1 {
 		t.Errorf("expected 1 client, got %d", hub.ClientCount())
 	}
 
-	hub.Unsubscribe(sub.ID())
+	hub.Unsubscribe(ch)
 
 	if hub.ClientCount() != 0 {
 		t.Errorf("expected 0 clients after unsubscribe, got %d", hub.ClientCount())
@@ -472,8 +470,8 @@ func TestHub_OnEventDelivery(t *testing.T) {
 
 	hub := live.NewHub()
 
-	sub := hub.Subscribe()
-	defer hub.Unsubscribe(sub.ID())
+	ch := hub.Subscribe()
+	defer hub.Unsubscribe(ch)
 
 	evt := auditlog.Event{
 		Sequence: 42,
@@ -487,17 +485,26 @@ func TestHub_OnEventDelivery(t *testing.T) {
 	hub.OnEvent(evt)
 
 	select {
-	case received := <-sub.Events():
+	case received := <-ch:
 		var parsed struct {
 			Sequence int `json:"sequence"`
 		}
-		if err := json.Unmarshal(received, &parsed); err != nil {
+		if err := json.Unmarshal([]byte(received.Data), &parsed); err != nil {
 			t.Fatalf("failed to unmarshal event: %v", err)
 		}
 
 		if parsed.Sequence != 42 {
 			t.Errorf("expected sequence 42, got %d", parsed.Sequence)
 		}
+
+		if received.Event != "event" {
+			t.Errorf("expected event type %q, got %q", "event", received.Event)
+		}
+
+		if received.ID.IsZero() {
+			t.Error("expected non-zero event ID for replay support")
+		}
+
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting for event")
 	}
@@ -508,13 +515,13 @@ func TestHub_SignalComplete(t *testing.T) {
 
 	hub := live.NewHub()
 
-	sub := hub.Subscribe()
-	defer hub.Unsubscribe(sub.ID())
+	ch := hub.Subscribe()
+	defer hub.Unsubscribe(ch)
 
 	hub.SignalComplete()
 
 	select {
-	case <-sub.Done():
+	case <-hub.Done():
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting for done signal")
 	}
@@ -529,8 +536,8 @@ func TestHub_BufferOverflow(t *testing.T) {
 
 	hub := live.NewHub()
 
-	sub := hub.Subscribe()
-	defer hub.Unsubscribe(sub.ID())
+	ch := hub.Subscribe()
+	defer hub.Unsubscribe(ch)
 
 	for i := range 200 {
 		hub.OnEvent(auditlog.Event{Sequence: i})
@@ -540,7 +547,7 @@ func TestHub_BufferOverflow(t *testing.T) {
 
 	for {
 		select {
-		case <-sub.Events():
+		case <-ch:
 			received++
 		default:
 			goto done
@@ -553,13 +560,14 @@ done:
 	}
 }
 
-func TestHub_UnsubscribeUnknownID(t *testing.T) {
+func TestHub_UnsubscribeUnknownChannel(t *testing.T) {
 	t.Parallel()
 
 	hub := live.NewHub()
 
-	// Unsubscribing a non-existent ID should be a no-op (no panic).
-	hub.Unsubscribe(99999)
+	// Unsubscribing a never-subscribed channel should be a no-op (no panic).
+	ch := make(chan sse.Event, 1)
+	hub.Unsubscribe(ch)
 }
 
 func TestServer_SSE_Heartbeat(t *testing.T) {

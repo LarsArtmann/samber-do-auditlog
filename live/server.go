@@ -373,58 +373,50 @@ func (srv *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
-	flusher, ok := w.(http.Flusher)
+	_, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "streaming not supported", http.StatusInternalServerError)
 
 		return
 	}
 
-	w.Header().Set("Content-Type", sse.ContentType)
-	w.Header().Set("Cache-Control", "no-cache, no-transform")
-	w.Header().Set("Connection", "keep-alive")
+	// X-Accel-Buffering tells Nginx not to buffer this response.
+	// Must be set before NewStream, which calls WriteHeader internally.
 	w.Header().Set("X-Accel-Buffering", "no")
 
-	sub := srv.hub.Subscribe()
-	defer srv.hub.Unsubscribe(sub.id)
+	stream := sse.NewStream(w, r)
+	defer func() { _ = stream.Close() }()
 
-	if err := srv.sendSnapshot(w, flusher); err != nil {
+	ch := srv.hub.Subscribe()
+	defer srv.hub.Unsubscribe(ch)
+
+	if err := srv.sendSnapshot(stream); err != nil {
 		return
 	}
 
-	heartbeat := time.NewTicker(srv.config.HeartbeatInterval)
-	defer heartbeat.Stop()
+	go stream.Heartbeat(stream.Context(), srv.config.HeartbeatInterval)
 
-	ctx := r.Context()
+	ctx := stream.Context()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 
-		case <-sub.done:
-			srv.sendComplete(w, flusher)
+		case <-srv.hub.Done():
+			srv.sendComplete(stream)
 
 			return
 
-		case evt := <-sub.ch:
-			if err := sse.WriteEvent(w, sse.Event{Event: "event", Data: string(evt)}); err != nil {
+		case evt := <-ch:
+			if err := stream.Send(evt); err != nil {
 				return
 			}
-
-			flusher.Flush()
-
-		case <-heartbeat.C:
-			if _, err := w.Write([]byte(": heartbeat\n\n")); err != nil {
-				return
-			}
-
-			flusher.Flush()
 		}
 	}
 }
 
-func (srv *Server) sendSnapshot(w http.ResponseWriter, flusher http.Flusher) error {
+func (srv *Server) sendSnapshot(stream *sse.Stream) error {
 	plugin := srv.plugin
 	if plugin == nil {
 		return nil
@@ -441,21 +433,10 @@ func (srv *Server) sendSnapshot(w http.ResponseWriter, flusher http.Flusher) err
 		Complete: srv.hub.IsComplete(),
 	}
 
-	payload, err := json.Marshal(data)
-	if err != nil {
-		return fmt.Errorf("build snapshot: %w", err)
-	}
-
-	if err := sse.WriteEvent(w, sse.Event{Event: "snapshot", Data: string(payload)}); err != nil {
-		return err
-	}
-
-	flusher.Flush()
-
-	return nil
+	return stream.SendJSON("snapshot", data)
 }
 
-func (srv *Server) sendComplete(w http.ResponseWriter, flusher http.Flusher) {
+func (srv *Server) sendComplete(stream *sse.Stream) {
 	plugin := srv.plugin
 	if plugin == nil {
 		return
@@ -468,14 +449,7 @@ func (srv *Server) sendComplete(w http.ResponseWriter, flusher http.Flusher) {
 		DAG:    auditlog.BuildDAGHTML(report),
 	}
 
-	payload, err := json.Marshal(data)
-	if err != nil {
-		return
-	}
-
-	_ = sse.WriteEvent(w, sse.Event{Event: "complete", Data: string(payload)})
-
-	flusher.Flush()
+	_ = stream.SendJSON("complete", data)
 }
 
 // --- Helpers ---
