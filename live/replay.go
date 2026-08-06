@@ -8,6 +8,8 @@ import (
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
+const sseEventType = "event"
+
 // eventStore adapts a snapshot of auditlog events into sse.EventStore
 // for reconnection replay. The snapshot is taken at handler entry — events
 // before the handler call are available for replay; events after arrive
@@ -26,9 +28,9 @@ func (s *eventStore) EventsAfter(lastID sse.EventID) ([]sse.Event, error) {
 		return nil, nil
 	}
 
-	after, err := strconv.ParseInt(lastID.Get(), 10, 64)
-	if err != nil {
-		return nil, nil
+	after, parseErr := strconv.ParseInt(lastID.Get(), 10, 64)
+	if parseErr != nil {
+		return nil, nil //nolint:nilerr // non-integer ID means no events to replay
 	}
 
 	var result []sse.Event
@@ -44,7 +46,7 @@ func (s *eventStore) EventsAfter(lastID sse.EventID) ([]sse.Event, error) {
 		}
 
 		result = append(result, sse.Event{
-			Event: "event",
+			Event: sseEventType,
 			Data:  string(payload),
 			ID:    sse.NewEventID(strconv.Itoa(evt.Sequence)),
 		})

@@ -342,14 +342,14 @@ func (srv *Server) handleExportHTML(w http.ResponseWriter, _ *http.Request) {
 }
 
 type healthResponse struct {
-	Status    string  `json:"status"`
-	UptimeS   float64 `json:"uptime_s"`
-	Clients   int     `json:"clients"`
-	Events    int     `json:"events"`
-	Complete  bool    `json:"complete"`
-	Dropped   int64   `json:"dropped"`
-	Draining  bool    `json:"draining"`
-	BufferSz  int     `json:"buffer_size"`
+	Status   string  `json:"status"`
+	UptimeS  float64 `json:"uptime_s"`
+	Clients  int     `json:"clients"`
+	Events   int     `json:"events"`
+	Complete bool    `json:"complete"`
+	Dropped  int64   `json:"dropped"`
+	Draining bool    `json:"draining"`
+	BufferSz int     `json:"buffer_size"`
 }
 
 func (srv *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
@@ -397,8 +397,8 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 	stream := sse.NewStream(w, r)
 	defer func() { _ = stream.Close() }()
 
-	ch := srv.hub.Subscribe()
-	defer srv.hub.Unsubscribe(ch)
+	eventCh := srv.hub.Subscribe()
+	defer srv.hub.Unsubscribe(eventCh)
 
 	if err := srv.sendSnapshot(stream); err != nil {
 		return
@@ -414,7 +414,7 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	go stream.Heartbeat(stream.Context(), srv.config.HeartbeatInterval)
+	go stream.Heartbeat(r.Context(), srv.config.HeartbeatInterval)
 
 	ctx := stream.Context()
 
@@ -428,7 +428,7 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 
 			return
 
-		case evt := <-ch:
+		case evt := <-eventCh:
 			if err := stream.Send(evt); err != nil {
 				return
 			}

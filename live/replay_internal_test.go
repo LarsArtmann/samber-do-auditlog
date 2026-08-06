@@ -34,8 +34,10 @@ func TestEventStore_EventsAfter(t *testing.T) {
 		{"invalid_id_returns_none", "abc", false, nil},
 	}
 
-	for _, tt := range tests { //nolint:paralleltest // table-driven subtests
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			var id sse.EventID
 
 			if tt.zero {

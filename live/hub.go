@@ -48,7 +48,7 @@ func (h *Hub) OnEvent(evt auditlog.Event) {
 	}
 
 	h.bc.Broadcast(sse.Event{
-		Event: "event",
+		Event: sseEventType,
 		Data:  string(payload),
 		ID:    sse.NewEventID(strconv.Itoa(evt.Sequence)),
 	})
