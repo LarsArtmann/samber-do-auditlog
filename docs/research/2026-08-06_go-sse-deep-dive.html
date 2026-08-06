@@ -1,0 +1,1225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>go-sse — Adoption & Utilization Audit</title>
+    <style>
+      /* =========================================================================
+         BAUHAUS LIGHT — Editorial template
+         Design language: form follows function. Primary colors on warm paper.
+         Zero external dependencies: system fonts, no CDN, no build step.
+         Token architecture: see references/bauhaus-tokens.md
+         ========================================================================= */
+
+      :root {
+        /* --- Primitive palette (Bauhaus Light) --- */
+        --color-paper: #f4f4f0;
+        --color-paper-2: #ffffff;
+        --color-paper-3: #e8e8e2;
+        --color-ink: #111111;
+        --color-red: #e63946;
+        --color-blue: #1d3557;
+        --color-yellow: #f4d35e;
+        --color-hairline: rgba(17, 17, 17, 0.14);
+        --color-hairline-strong: rgba(17, 17, 17, 0.3);
+
+        /* --- Semantic layer (shared vocabulary with dark template) --- */
+        --surface: var(--color-paper);
+        --surface-raised: var(--color-paper-2);
+        --surface-sunken: var(--color-paper-3);
+        --text: var(--color-ink);
+        --text-muted: rgba(17, 17, 17, 0.72);
+        --text-faint: rgba(17, 17, 17, 0.5);
+        --border: var(--color-hairline);
+        --border-strong: var(--color-hairline-strong);
+        --accent: var(--color-red);
+        --problem: var(--color-red);
+        --solution: var(--color-blue);
+        --warning: var(--color-yellow);
+
+        /* --- Backward-compatible aliases --- */
+        --bg: var(--surface);
+        --bg-elevated: var(--surface-raised);
+        --bg-sunken: var(--surface-sunken);
+        --bg-card: var(--surface-raised);
+        --bg-code: var(--surface-sunken);
+        --ink: var(--text);
+        --ink-secondary: var(--text-muted);
+        --ink-muted: var(--text-faint);
+        --rose: var(--problem);
+        --rose-glow: color-mix(in srgb, var(--problem) 15%, transparent);
+        --emerald: var(--solution);
+        --emerald-glow: color-mix(in srgb, var(--solution) 15%, transparent);
+        --amber: var(--warning);
+        --amber-glow: color-mix(in srgb, var(--warning) 15%, transparent);
+        --amber-light: color-mix(in srgb, var(--warning) 22%, transparent);
+        --coral: var(--problem);
+        --coral-light: color-mix(in srgb, var(--problem) 12%, transparent);
+        --teal: var(--solution);
+        --teal-light: color-mix(in srgb, var(--solution) 12%, transparent);
+
+        /* --- Shape --- */
+        --radius: 0px;
+        --radius-sm: 0px;
+
+        /* --- Type stacks --- */
+        --font-heading:
+          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-body:
+          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-mono:
+          ui-monospace, "Cascadia Code", "Source Code Pro", "JetBrains Mono",
+          Menlo, Consolas, monospace;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; }
+      section[id], [id] { scroll-margin-top: 60px; }
+
+      body {
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      a:focus-visible { outline-offset: -1px; }
+
+      .top-bar {
+        background: var(--text);
+        color: var(--surface);
+        padding: 0.6rem 2rem;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .layout { display: flex; gap: 2.5rem; padding: 2rem; }
+      .sidebar {
+        width: 220px; flex-shrink: 0; position: sticky; top: 1rem;
+        align-self: flex-start; height: calc(100vh - 2rem);
+        overflow-y: auto; display: none;
+      }
+      .sidebar nav { display: flex; flex-direction: column; gap: 0; }
+      .sidebar .label {
+        font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.14em;
+        color: var(--accent); margin-bottom: 0.75rem;
+        padding-bottom: 0.4rem; border-bottom: 2px solid var(--text);
+      }
+      .sidebar a {
+        font-size: 0.86rem; color: var(--text); text-decoration: none;
+        padding: 0.5rem 0.75rem; border-left: 4px solid transparent;
+        font-weight: 600; transition: all 0.15s ease; line-height: 1.4;
+      }
+      .sidebar a:hover, .sidebar a.active {
+        border-left-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 8%, transparent);
+        color: var(--accent);
+      }
+      .main { flex: 1; min-width: 0; }
+
+      h1, h2, h3, h4 {
+        font-family: var(--font-heading); font-weight: 900;
+        letter-spacing: -0.02em; color: var(--text);
+      }
+      h1 { font-size: clamp(1.9rem, 4.5vw, 2.8rem); line-height: 1.05; margin: 0 0 0.6rem; }
+      h2 {
+        font-size: 1.5rem; margin: 2.5rem 0 1rem;
+        padding-bottom: 0.4rem; border-bottom: 3px solid var(--text);
+        display: flex; align-items: baseline; gap: 0.7rem;
+      }
+      h2 .num {
+        font-family: var(--font-mono); font-size: 0.82rem;
+        color: var(--accent); font-weight: 700; letter-spacing: 0.04em;
+      }
+      h3 { font-size: 1.15rem; margin: 0 0 0.4rem; font-weight: 700; }
+      h4 { font-size: 1rem; margin: 0 0 0.3rem; font-weight: 700; }
+      p { margin: 0 0 1rem; }
+
+      .hero { padding: 1.5rem 0 2rem; margin-bottom: 1.5rem; border-bottom: 3px solid var(--text); }
+      .eyebrow {
+        font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.16em;
+        color: var(--accent); margin-bottom: 0.9rem;
+      }
+      .subtitle { font-size: 1.1rem; color: var(--text-muted); max-width: 70ch; margin: 0 0 1rem; }
+      .meta { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+      .tag {
+        display: inline-block; font-family: var(--font-mono);
+        font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em;
+        padding: 0.25rem 0.6rem; background: var(--surface-sunken);
+        color: var(--text); border: 1px solid var(--border-strong);
+      }
+      .tag.amber { background: var(--warning); border-color: var(--warning); color: var(--text); }
+      .tag.teal { background: var(--solution); border-color: var(--solution); color: var(--surface); }
+
+      .hero-shapes { position: relative; height: 90px; margin-bottom: 1.2rem; }
+      .hero-shapes .circle { position: absolute; top: 0; right: 180px; width: 64px; height: 64px; background: var(--problem); border-radius: 50%; }
+      .hero-shapes .square { position: absolute; top: 26px; right: 90px; width: 56px; height: 56px; background: var(--solution); }
+      .hero-shapes .tri { position: absolute; top: 8px; right: 0; width: 0; height: 0; border-left: 32px solid transparent; border-right: 32px solid transparent; border-bottom: 56px solid var(--warning); }
+      .hero-shapes .bar { position: absolute; bottom: 0; right: 230px; width: 100px; height: 14px; background: var(--text); }
+
+      .scorecard, .stat-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0; margin: 1.5rem 0 2rem; border: 3px solid var(--text);
+      }
+      .score-card, .stat-card {
+        padding: 1.3rem 1rem; text-align: center;
+        border-right: 3px solid var(--text); background: var(--surface-raised);
+      }
+      .score-card:last-child, .stat-card:last-child { border-right: none; }
+      .score, .stat-value {
+        font-family: var(--font-heading); font-size: 2.6rem; font-weight: 900;
+        line-height: 1; letter-spacing: -0.04em;
+      }
+      .score-card .label, .stat-label {
+        font-family: var(--font-mono); font-size: 0.62rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.12em; margin-top: 0.5rem;
+      }
+      .score-good, .stat-good { background: var(--solution); color: var(--surface); }
+      .score-warn, .stat-warn { background: var(--warning); color: var(--text); }
+      .score-bad, .stat-bad { background: var(--problem); color: var(--surface); }
+
+      .issue {
+        background: var(--surface-raised); border: 2px solid var(--text);
+        padding: 1.2rem 1.4rem; margin-bottom: 1rem;
+        border-left: 8px solid var(--border-strong);
+      }
+      .issue-critical { border-left-color: var(--problem); }
+      .issue-important { border-left-color: var(--warning); }
+      .issue-nice { border-left-color: var(--solution); }
+      .issue h3 { margin-bottom: 0.3rem; }
+      .issue .where {
+        font-family: var(--font-mono); font-size: 0.78rem;
+        color: var(--text-faint); margin: 0.2rem 0 0.6rem;
+      }
+      .issue p:last-child { margin-bottom: 0; }
+
+      .severity {
+        display: inline-block; font-family: var(--font-mono);
+        font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em;
+        text-transform: uppercase; padding: 0.22rem 0.6rem;
+        margin-bottom: 0.6rem; color: var(--surface);
+      }
+      .severity-critical { background: var(--problem); }
+      .severity-important { background: var(--warning); color: var(--text); }
+      .severity-nice { background: var(--solution); }
+
+      .callout {
+        margin: 0.8rem 0 0; padding: 0.8rem 1rem;
+        border: 1px solid var(--border-strong); border-left: 4px solid var(--border-strong);
+        background: var(--surface-sunken); font-size: 0.92rem;
+      }
+      .callout strong { display: inline-block; margin-right: 0.4rem; }
+      .callout-teal, .callout-solution {
+        border-left-color: var(--solution);
+        background: color-mix(in srgb, var(--solution) 10%, var(--surface-raised));
+      }
+      .callout-amber, .callout-warning {
+        border-left-color: var(--warning);
+        background: color-mix(in srgb, var(--warning) 18%, var(--surface-raised));
+      }
+
+      .strengths { display: grid; gap: 0.5rem; margin: 1rem 0 1.5rem; }
+      .strength {
+        display: grid; grid-template-columns: auto 1fr; gap: 0.9rem;
+        padding: 0.75rem 0; border-bottom: 2px solid var(--border);
+      }
+      .strength .check {
+        font-family: var(--font-mono); font-weight: 900;
+        color: var(--solution); font-size: 1.3rem; line-height: 1.3;
+      }
+      .strength .text strong { display: block; margin-bottom: 0.15rem; }
+      .strength .text span { color: var(--text-muted); font-size: 0.92rem; }
+
+      .table-wrap { overflow-x: auto; }
+      table {
+        width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem;
+        font-size: 0.92rem; border: 2px solid var(--text);
+      }
+      th {
+        text-align: left; padding: 0.6rem 0.9rem; background: var(--text);
+        color: var(--surface); font-family: var(--font-mono);
+        font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em;
+        text-transform: uppercase; border-right: 1px solid var(--border-strong);
+      }
+      th:last-child { border-right: none; }
+      td { padding: 0.6rem 0.9rem; border-top: 1px solid var(--border); border-right: 1px solid var(--border); }
+      td:last-child { border-right: none; }
+      tr:nth-child(even) td { background: var(--surface-sunken); }
+      table.compare td.yes { color: var(--solution); font-weight: 700; }
+      table.compare td.no { color: var(--problem); font-weight: 700; }
+
+      pre {
+        background: var(--text); color: var(--surface);
+        padding: 1rem 1.2rem; margin: 1rem 0;
+        font-family: var(--font-mono); font-size: 0.82rem;
+        line-height: 1.65; overflow-x: auto; border: 2px solid var(--text);
+      }
+      code { font-family: var(--font-mono); }
+      p code, li code, td code { font-size: 0.88em; background: var(--surface-sunken); padding: 0.1rem 0.35rem; }
+      .tok-keyword { color: var(--warning); }
+      .tok-type { color: var(--warning); }
+      .tok-string { color: #95e1d3; }
+      .tok-comment { color: rgba(244, 244, 240, 0.45); font-style: italic; }
+      .tok-func { color: #6eb5ff; }
+      .tok-number { color: var(--warning); }
+      .tok-generic { color: var(--problem); }
+      .tok-builtin { color: #6eb5ff; }
+      .tok-punct { color: rgba(244, 244, 240, 0.7); }
+      .tok-attr { color: var(--warning); }
+
+      .footer {
+        margin-top: 2rem; padding-top: 1rem; border-top: 3px solid var(--text);
+        font-size: 0.82rem; color: var(--text-muted); font-family: var(--font-mono);
+      }
+
+      .compare-header {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1rem 0 0.5rem;
+      }
+      .compare-before, .compare-after {
+        font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.1em;
+        padding: 0.4rem 0.7rem; color: var(--surface);
+      }
+      .compare-before { background: var(--problem); }
+      .compare-after { background: var(--solution); }
+      .compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+      .compare-row pre { margin: 0; }
+
+      .migration-step {
+        display: grid; grid-template-columns: 56px 1fr; gap: 1rem;
+        margin: 1rem 0; padding: 1.1rem; background: var(--surface-raised);
+        border: 2px solid var(--text); border-left: 6px solid var(--accent);
+      }
+      .migration-num {
+        font-family: var(--font-mono); font-weight: 900; font-size: 1.8rem;
+        color: var(--accent); line-height: 1;
+      }
+      .migration-content h4 { margin-bottom: 0.2rem; }
+      .migration-content p { margin-bottom: 0; color: var(--text-muted); font-size: 0.94rem; }
+
+      .highlight {
+        font-weight: 800; padding: 0.1rem 0.4rem;
+        background: var(--warning); color: var(--text);
+      }
+
+      @media (min-width: 1024px) { .sidebar { display: block; } }
+      @media (max-width: 768px) {
+        .layout { flex-direction: column; padding: 1rem; }
+        .top-bar { padding: 0.6rem 1rem; flex-wrap: wrap; gap: 0.3rem; }
+        .compare-header, .compare-row { grid-template-columns: 1fr; }
+        .scorecard, .stat-grid { grid-template-columns: repeat(2, 1fr); }
+        .score-card:nth-child(2), .stat-card:nth-child(2) { border-right: none; }
+        .score-card:nth-child(1), .stat-card:nth-child(1),
+        .score-card:nth-child(2), .stat-card:nth-child(2) { border-bottom: 3px solid var(--text); }
+        .migration-step { grid-template-columns: 1fr; }
+        .hero-shapes { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top-bar">
+      <span>Library Deep Dive</span>
+      <span>2026-08-06</span>
+      <span>samber-do-auditlog / live/</span>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar" data-nav>
+        <nav>
+          <div class="label">Contents</div>
+          <a href="#summary">Summary</a>
+          <a href="#current-usage">Current Usage</a>
+          <a href="#wire-format">Wire Format</a>
+          <a href="#stream">Stream</a>
+          <a href="#broadcaster">Broadcaster</a>
+          <a href="#replay">Reconnection Replay</a>
+          <a href="#heartbeat">Heartbeat</a>
+          <a href="#shutdown">Graceful Shutdown</a>
+          <a href="#health">Health Monitoring</a>
+          <a href="#version">Version Currency</a>
+          <a href="#opportunities">Top Opportunities</a>
+          <a href="#conclusion">Conclusion</a>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="hero">
+          <div class="hero-shapes">
+            <div class="bar"></div>
+            <div class="circle"></div>
+            <div class="square"></div>
+            <div class="tri"></div>
+          </div>
+          <div class="eyebrow">Library Deep Dive &middot; 2026-08-06</div>
+          <h1>go-sse &mdash; Adoption &amp; Utilization Audit</h1>
+          <p class="subtitle">
+            go-sse provides SSE wire-format serialization, connection lifecycle
+            management, generic fan-out broadcasting, and reconnection replay.
+            This audit found the project uses it for wire-format serialization
+            only &mdash; 3 of ~40 exported symbols &mdash; while hand-rolling
+            equivalents for every other subsystem.
+          </p>
+          <div class="meta">
+            <span class="tag amber">Installed: v0.3.0</span>
+            <span class="tag">Latest: v0.4.0</span>
+            <span class="tag teal">Adoption Score: 22/100</span>
+          </div>
+        </header>
+
+        <section id="scorecard" class="scorecard">
+          <div class="score-card score-bad">
+            <div class="score">22</div>
+            <div class="label">Adoption Score</div>
+          </div>
+          <div class="score-card score-bad">
+            <div class="score">1/11</div>
+            <div class="label">Features Leveraged</div>
+          </div>
+          <div class="score-card score-bad">
+            <div class="score">7</div>
+            <div class="label">Missed Opportunities</div>
+          </div>
+          <div class="score-card score-warn">
+            <div class="score">1</div>
+            <div class="label">Anti-Patterns</div>
+          </div>
+          <div class="score-card score-warn">
+            <div class="score">1 minor</div>
+            <div class="label">Version Gap</div>
+          </div>
+        </section>
+
+        <section id="summary">
+          <h2><span class="num">00</span>Summary</h2>
+          <p>
+            The <code>samber-do-auditlog</code> project depends on
+            <code>go-sse</code> but uses it as a bare wire-format serializer.
+            Only three symbols are imported: <code>sse.ContentType</code>,
+            <code>sse.Event</code>, and <code>sse.WriteEvent</code>. Every other
+            capability the library offers &mdash; connection lifecycle
+            (<code>Stream</code>), generic fan-out (<code>Broadcaster[T]</code>),
+            heartbeat management, reconnection replay, graceful shutdown, and
+            structured health &mdash; is hand-rolled from scratch. The
+            hand-rolled <code>Hub</code> in <code>live/hub.go</code> (137 lines)
+            is a near-exact functional duplicate of
+            <code>sse.Broadcaster[json.RawMessage]</code>.
+          </p>
+          <div class="callout callout-amber">
+            <strong>The bottom line</strong>
+            The project pulls in a comprehensive SSE library to use 3 of ~40
+            exported symbols. Adopting <code>Stream</code> + <code>Broadcaster</code>
+            would eliminate ~200 lines of hand-rolled infrastructure (hub.go +
+            manual SSE plumbing in server.go), gain reconnection replay for free,
+            and unlock graceful shutdown and structured health monitoring. The
+            library is used correctly for what it touches &mdash; it just touches
+            almost nothing.
+          </div>
+        </section>
+
+        <section id="current-usage">
+          <h2><span class="num">&#9670;</span>Current Usage</h2>
+          <p>
+            go-sse is imported in exactly one file:
+            <code>live/server.go</code>. The import appears at line 15 and is
+            used at 3 call sites. The project's own AGENTS.md describes go-sse
+            as providing "SSE wire-format primitives
+            (<code>sse.Event</code>, <code>sse.WriteEvent</code>,
+            <code>sse.ContentType</code>)" &mdash; a self-aware description that
+            confirms the project always intended to use only the serializer.
+          </p>
+
+          <div class="strengths">
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>Wire-format serialization used correctly</strong>
+                <span><code>sse.WriteEvent</code> at server.go:411, 449, 476 &mdash; correctly serializes SSE events with proper multi-line data splitting.</span>
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>ContentType constant used correctly</strong>
+                <span><code>sse.ContentType</code> at server.go:383 &mdash; avoids hardcoding <code>"text/event-stream"</code>.</span>
+              </div>
+            </div>
+            <div class="strength">
+              <div class="check">+</div>
+              <div class="text">
+                <strong>Event struct used correctly</strong>
+                <span><code>sse.Event{Event: "...", Data: "..."}</code> literals at 3 call sites &mdash; idiomatic struct construction.</span>
+              </div>
+            </div>
+          </div>
+
+          <p>
+            The architecture is: the <code>live/</code> sub-package builds a
+            custom Hub + Subscriber system (<code>hub.go</code>, 137 lines) for
+            fan-out, then manually sets SSE headers, manually checks
+            <code>http.Flusher</code>, manually flushes after each write, and
+            manually implements heartbeats. go-sse is reduced to a serialization
+            helper called inside this hand-rolled scaffolding.
+          </p>
+
+          <div class="dep-tree">
+<span style="color:var(--accent)">live/server.go</span> (<span style="color:var(--problem)">511 lines</span>)
+<span style="color:var(--text-muted)">  +-- </span><span style="color:var(--problem)">handleSSE()</span> &mdash; manual headers, manual flusher, manual heartbeat, manual flush
+<span style="color:var(--text-muted)">  +-- </span><span style="color:var(--problem)">sendSnapshot()</span> &mdash; manual JSON marshal + WriteEvent + manual flush
+<span style="color:var(--text-muted)">  +-- </span><span style="color:var(--problem)">sendComplete()</span> &mdash; manual JSON marshal + WriteEvent + manual flush
+<span style="color:var(--text-muted)">  +-- </span><span style="color:var(--problem)">hub.go (Hub + Subscriber)</span> &mdash; 137 lines of hand-rolled fan-out
+
+<span style="color:var(--accent)">go-sse symbols actually used:</span>
+<span style="color:var(--text-muted)">  +-- </span><span style="color:var(--solution)">sse.ContentType</span>  (1 call site)
+<span style="color:var(--text-muted)">  +-- </span><span style="color:var(--solution)">sse.Event</span>        (3 call sites)
+<span style="color:var(--text-muted)">  +-- </span><span style="color:var(--solution)">sse.WriteEvent</span>    (3 call sites)
+
+<span style="color:var(--accent)">go-sse symbols NOT used:</span> <span style="color:var(--problem)">~37 exported symbols</span>
+          </div>
+        </section>
+
+        <!-- FINDING 1: Stream -->
+        <section id="stream">
+          <h2><span class="num">01</span>Stream (Connection Lifecycle)</h2>
+
+          <div class="issue issue-critical" id="missed-stream">
+            <span class="severity severity-critical">Missed Opportunity &middot; High impact</span>
+            <h3>Stream lifecycle entirely unused &mdash; manual flusher/headers/write management instead</h3>
+            <div class="where">live/server.go:375-425 (handleSSE) &middot; 3 call sites bypass Stream</div>
+            <p>
+              go-sse's <code>Stream</code> type manages the full SSE connection
+              lifecycle: sets headers + writes 200 OK on construction, provides
+              mutex-guarded <code>Send</code> (write + flush in one call), runs
+              heartbeat in a separate goroutine safely, extracts
+              <code>Last-Event-ID</code> for reconnection, fires
+              <code>OnDisconnect</code> callbacks, and satisfies
+              <code>io.Closer</code>. The consumer uses none of this.
+            </p>
+            <p>
+              Instead, <code>handleSSE</code> manually:
+              (1) checks <code>w.(http.Flusher)</code> at line 376,
+              (2) sets 4 headers individually at lines 383-386,
+              (3) calls <code>flusher.Flush()</code> after every single write
+              (4 sites: lines 415, 422, 453, 478),
+              (4) runs heartbeat via a manual <code>time.NewTicker</code> +
+              manual <code>w.Write([]byte(": heartbeat\n\n"))</code> at line 418.
+              The writes have <strong>no mutex protection</strong> &mdash; safe
+              today because heartbeat runs in the same goroutine as the event
+              loop (select-based), but fragile if the handler is ever restructured.
+            </p>
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              Replace the manual plumbing with <code>sse.NewStream(w, r)</code> +
+              <code>stream.Send(evt)</code> + <code>go stream.Heartbeat(...)</code>.
+              Eliminates flusher checking, manual header setting, manual flush
+              calls, and manual heartbeat bytes.
+            </div>
+
+            <div class="compare-header">
+              <div class="compare-before">Before (server.go:375-424)</div>
+              <div class="compare-after">After (using Stream)</div>
+            </div>
+            <div class="compare-row">
+              <pre><code><span class="tok-comment">// 50 lines: manual flusher, headers,</span>
+<span class="tok-comment">// heartbeat ticker, manual flush</span>
+<span class="tok-keyword">func</span> (<span class="tok-builtin">srv</span> *Server) <span class="tok-func">handleSSE</span>(w, r) {
+  flusher, ok := w.(http.Flusher)
+  <span class="tok-keyword">if</span> !ok { http.Error(...); <span class="tok-keyword">return</span> }
+  w.Header().Set(<span class="tok-string">"Content-Type"</span>, sse.ContentType)
+  w.Header().Set(<span class="tok-string">"Cache-Control"</span>, ...)
+  w.Header().Set(<span class="tok-string">"Connection"</span>, ...)
+  w.Header().Set(<span class="tok-string">"X-Accel-Buffering"</span>, ...)
+  sub := <span class="tok-builtin">srv</span>.hub.Subscribe()
+  <span class="tok-keyword">defer</span> <span class="tok-builtin">srv</span>.hub.Unsubscribe(sub.id)
+  <span class="tok-builtin">srv</span>.sendSnapshot(w, flusher)
+  hb := time.NewTicker(...)
+  <span class="tok-keyword">defer</span> hb.Stop()
+  <span class="tok-keyword">for</span> {
+    <span class="tok-keyword">select</span> {
+    <span class="tok-keyword">case</span> &lt;-ctx.Done(): <span class="tok-keyword">return</span>
+    <span class="tok-keyword">case</span> &lt;-sub.done: srv.sendComplete(...); <span class="tok-keyword">return</span>
+    <span class="tok-keyword">case</span> evt := &lt;-sub.ch:
+      sse.WriteEvent(w, sse.Event{...})
+      flusher.Flush()
+    <span class="tok-keyword">case</span> &lt;-hb.C:
+      w.Write([]byte(<span class="tok-string">": heartbeat\n\n"</span>))
+      flusher.Flush()
+    }
+  }
+}</code></pre>
+              <pre><code><span class="tok-comment">// ~20 lines: Stream handles</span>
+<span class="tok-comment">// headers, flush, heartbeat, mutex</span>
+<span class="tok-keyword">func</span> (<span class="tok-builtin">srv</span> *Server) <span class="tok-func">handleSSE</span>(w, r) {
+  stream := sse.NewStream(w, r)
+  <span class="tok-keyword">defer</span> <span class="tok-keyword">func</span>() { _ = stream.Close() }()
+
+  ch := srv.broadcaster.Subscribe()
+  <span class="tok-keyword">defer</span> srv.broadcaster.Unsubscribe(ch)
+
+  srv.sendSnapshot(stream)
+  <span class="tok-keyword">go</span> stream.Heartbeat(
+    stream.Context(), srv.config.HeartbeatInterval)
+
+  <span class="tok-keyword">for</span> {
+    <span class="tok-keyword">select</span> {
+    <span class="tok-keyword">case</span> &lt;-stream.Context().Done():
+      <span class="tok-keyword">return</span>
+    <span class="tok-keyword">case</span> &lt;-srv.doneCh:
+      srv.sendComplete(stream)
+      <span class="tok-keyword">return</span>
+    <span class="tok-keyword">case</span> evt := &lt;-ch:
+      <span class="tok-keyword">if</span> stream.Send(evt) != nil {
+        <span class="tok-keyword">return</span>
+      }
+    }
+  }
+}</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- FINDING 2: Broadcaster -->
+        <section id="broadcaster">
+          <h2><span class="num">02</span>Broadcaster (Fan-Out)</h2>
+
+          <div class="issue issue-critical" id="missed-broadcaster">
+            <span class="severity severity-critical">Missed Opportunity &middot; High impact</span>
+            <h3>Entire Hub (137 lines) duplicates Broadcaster[json.RawMessage]</h3>
+            <div class="where">live/hub.go:1-137 &middot; the complete file is a hand-rolled Broadcaster</div>
+            <p>
+              The consumer's <code>Hub</code> struct is a line-for-line
+              functional equivalent of <code>sse.Broadcaster[json.RawMessage]</code>.
+              The <code>broadcast()</code> method at hub.go:66-76 uses the exact
+              same non-blocking <code>select { case ch &lt;- data: default: }</code>
+              pattern as go-sse's <code>fanOut.sendAllLocked()</code>. The
+              <code>Subscriber</code> struct with its buffered channel is the
+              same pattern as go-sse's <code>subscriber[T]</code>. The consumer
+              even chose the same buffer size strategy (128 vs go-sse's default
+              64, configurable).
+            </p>
+
+            <table class="compare">
+              <thead>
+                <tr>
+                  <th>Consumer (hub.go)</th>
+                  <th>go-sse equivalent</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>Hub.clients map[uint64]*Subscriber</code></td>
+                  <td><code>fanOut.subscribers map[uintptr]*subscriber[T]</code></td>
+                  <td class="no">Duplicated</td>
+                </tr>
+                <tr>
+                  <td><code>Hub.nextID uint64</code></td>
+                  <td>Channel pointer identity (no counter)</td>
+                  <td class="no">Duplicated (worse)</td>
+                </tr>
+                <tr>
+                  <td><code>Subscriber.ch</code> (buffer 128)</td>
+                  <td><code>subscriber.ch</code> (buffer 64, configurable)</td>
+                  <td class="no">Duplicated</td>
+                </tr>
+                <tr>
+                  <td><code>Hub.broadcast()</code></td>
+                  <td><code>Broadcaster.Broadcast()</code></td>
+                  <td class="no">Duplicated</td>
+                </tr>
+                <tr>
+                  <td><code>Hub.Subscribe()</code></td>
+                  <td><code>Broadcaster.Subscribe()</code></td>
+                  <td class="no">Duplicated</td>
+                </tr>
+                <tr>
+                  <td><code>Hub.Unsubscribe(id)</code></td>
+                  <td><code>Broadcaster.Unsubscribe(ch)</code></td>
+                  <td class="no">Duplicated</td>
+                </tr>
+                <tr>
+                  <td><code>Hub.ClientCount()</code></td>
+                  <td><code>Broadcaster.SubscriberCount()</code></td>
+                  <td class="no">Duplicated</td>
+                </tr>
+                <tr>
+                  <td><em>nothing</em></td>
+                  <td><code>Broadcaster.Shutdown(ctx)</code> &mdash; graceful drain</td>
+                  <td class="no">Missing</td>
+                </tr>
+                <tr>
+                  <td><em>nothing</em></td>
+                  <td><code>Broadcaster.Health()</code> &mdash; structured snapshot</td>
+                  <td class="no">Missing</td>
+                </tr>
+                <tr>
+                  <td><em>nothing</em></td>
+                  <td><code>Broadcaster.BroadcastMany()</code> &mdash; batch</td>
+                  <td class="no">Missing</td>
+                </tr>
+                <tr>
+                  <td><em>nothing</em></td>
+                  <td><code>Broadcaster.OnSubscribe()</code> &mdash; hooks</td>
+                  <td class="no">Missing</td>
+                </tr>
+                <tr>
+                  <td><code>Hub.SignalComplete()</code></td>
+                  <td><em>(domain-specific &mdash; not in go-sse)</em></td>
+                  <td class="yes">Correctly custom</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p>
+              The domain-specific parts (<code>SignalComplete</code>,
+              <code>IsComplete</code>, <code>Subscriber.done</code> channel for
+              lifecycle signaling) are correctly custom &mdash; go-sse has no
+              concept of a DI container lifecycle completing. But these could be
+              composed <em>on top of</em> a Broadcaster rather than reimplementing
+              fan-out from scratch.
+            </p>
+
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              Replace <code>Hub</code> with <code>sse.Broadcaster[sse.Event]</code>
+              + a thin domain layer for lifecycle completion. Eliminates 137 lines
+              of hub.go, gains graceful shutdown, structured health, and
+              configurable buffer size.
+            </div>
+          </div>
+        </section>
+
+        <!-- FINDING 3: Reconnection Replay -->
+        <section id="replay">
+          <h2><span class="num">03</span>Reconnection Replay</h2>
+
+          <div class="issue issue-critical" id="missed-replay">
+            <span class="severity severity-critical">Missed Opportunity &middot; High impact</span>
+            <h3>No reconnection support &mdash; events lost on reconnect</h3>
+            <div class="where">live/server.go:375 (handleSSE) &middot; no Last-Event-ID handling, no EventStore, no Replay</div>
+            <p>
+              When an SSE client disconnects and reconnects, the browser sends
+              a <code>Last-Event-ID</code> header containing the ID of the last
+              event it received. go-sse provides <code>Stream.LastEventID()</code>,
+              <code>EventStore</code> interface, and <code>Replay()</code> /
+              <code>ReplayFiltered()</code> to automatically fill the gap.
+            </p>
+            <p>
+              The consumer has none of this. Events are broadcast with no
+              <code>Event.ID</code> set (server.go:411, 449, 476 construct
+              <code>sse.Event</code> without the ID field). On reconnect, the
+              client receives a full snapshot via <code>sendSnapshot()</code>
+              &mdash; which recovers the report state but misses any individual
+              lifecycle events that fired between disconnect and reconnect.
+            </p>
+            <p>
+              The auditlog plugin already stores every event internally (it has
+              <code>plugin.Events()</code> and <code>plugin.EventsCount()</code>).
+              Implementing <code>EventStore</code> would be a ~15-line adapter.
+            </p>
+
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              (1) Tag events with sequential IDs using
+              <code>sse.NewEventID(strconv.FormatInt(seq, 10))</code>.
+              (2) Implement <code>EventStore</code> as a thin adapter over
+              <code>plugin.Events()</code>.
+              (3) Call <code>sse.Replay(stream, store, stream.LastEventID())</code>
+              before subscribing to live events.
+            </div>
+
+            <pre><code><span class="tok-comment">// EventStore adapter &mdash; ~15 lines</span>
+<span class="tok-keyword">type</span> <span class="tok-type">eventStore</span> <span class="tok-keyword">struct</span> {
+    plugin *auditlog.Plugin
+}
+
+<span class="tok-keyword">func</span> (s *<span class="tok-type">eventStore</span>) <span class="tok-func">EventsAfter</span>(lastID sse.EventID) ([]sse.Event, <span class="tok-type">error</span>) {
+    all := s.plugin.Events()
+    lastSeq, _ := strconv.ParseInt(lastID.Get(), <span class="tok-number">10</span>, <span class="tok-number">64</span>)
+
+    <span class="tok-keyword">var</span> result []sse.Event
+    <span class="tok-keyword">for</span> _, evt := <span class="tok-keyword">range</span> all {
+        <span class="tok-keyword">if</span> evt.Sequence &gt; lastSeq {
+            data, _ := json.Marshal(evt)
+            result = append(result, sse.Event{
+                Event: <span class="tok-string">"event"</span>,
+                Data:  string(data),
+                ID:    sse.NewEventID(strconv.FormatInt(evt.Sequence, <span class="tok-number">10</span>)),
+            })
+        }
+    }
+    <span class="tok-keyword">return</span> result, <span class="tok-keyword">nil</span>
+}</code></pre>
+          </div>
+        </section>
+
+        <!-- FINDING 4: Heartbeat -->
+        <section id="heartbeat">
+          <h2><span class="num">04</span>Heartbeat</h2>
+
+          <div class="issue issue-important" id="partial-heartbeat">
+            <span class="severity severity-important">Partially Used &middot; Medium impact</span>
+            <h3>WriteHeartbeat reimplemented as a raw byte write</h3>
+            <div class="where">live/server.go:418 &middot; 1 call site hand-rolls heartbeat bytes</div>
+            <p>
+              go-sse provides <code>sse.WriteHeartbeat(w io.Writer) error</code>
+              which writes the comment frame <code>": heartbeat\n\n"</code>
+              (event.go:187-196). The consumer writes the exact same bytes
+              manually at server.go:418:
+              <code>w.Write([]byte(": heartbeat\n\n"))</code>.
+              This is literal duplication &mdash; the bytes are byte-for-byte
+              identical to the <code>heartbeatFrame</code> constant in go-sse's
+              event.go.
+            </p>
+            <p>
+              Additionally, go-sse's <code>Stream.Heartbeat(ctx, interval)</code>
+              runs the heartbeat in a separate goroutine with proper mutex
+              coordination against concurrent writes. The consumer's heartbeat
+              runs in the event-loop goroutine via select, which works but
+              prevents the heartbeat from firing during a long snapshot
+              computation (e.g., <code>sendSnapshot</code> at line 391 calls
+              <code>plugin.Report()</code> which builds the full report &mdash;
+              if that takes &gt; 15s, the heartbeat is delayed).
+            </p>
+
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              Use <code>sse.WriteHeartbeat(w)</code> instead of
+              <code>w.Write([]byte(": heartbeat\n\n"))</code>. Or better: adopt
+              <code>Stream</code> and use <code>go stream.Heartbeat(...)</code>
+              for goroutine-safe, concurrent heartbeat.
+            </div>
+          </div>
+        </section>
+
+        <!-- FINDING 5: Graceful Shutdown -->
+        <section id="shutdown">
+          <h2><span class="num">05</span>Graceful Shutdown</h2>
+
+          <div class="issue issue-important" id="missed-shutdown">
+            <span class="severity severity-important">Partially Used &middot; Medium impact</span>
+            <h3>No broadcaster drain on server shutdown &mdash; in-flight events may be lost</h3>
+            <div class="where">live/server.go:223-237 (Server.Shutdown) &middot; only shuts down http.Server, not hub buffers</div>
+            <p>
+              The consumer's <code>Server.Shutdown(ctx)</code> calls
+              <code>http.Server.Shutdown(ctx)</code> which waits for active HTTP
+              connections to finish. But the hub's subscriber buffers (channel
+              with 128 capacity) may still contain undelivered events. When the
+              HTTP server returns, those events are silently lost.
+            </p>
+            <p>
+              go-sse's <code>Broadcaster.Shutdown(ctx)</code> stops accepting
+              new subscribers, waits for every subscriber's buffer to drain
+              (consumers catch up), then closes channels. This is exactly the
+              behavior needed for a clean dashboard shutdown &mdash; connected
+              clients receive all queued events before the connection closes.
+            </p>
+
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              If <code>Hub</code> is replaced with <code>Broadcaster</code>,
+              chain <code>broadcaster.Shutdown(ctx)</code> after
+              <code>http.Server.Shutdown(ctx)</code> in the server's Shutdown
+              method.
+            </div>
+          </div>
+        </section>
+
+        <!-- FINDING 6: Health -->
+        <section id="health">
+          <h2><span class="num">06</span>Health Monitoring</h2>
+
+          <div class="issue issue-important" id="missed-health">
+            <span class="severity severity-important">Partially Used &middot; Low impact</span>
+            <h3>Manual health response misses broadcaster lifecycle state</h3>
+            <div class="where">live/server.go:349-373 (handleHealth) &middot; constructs healthResponse manually</div>
+            <p>
+              The <code>/api/health</code> endpoint manually constructs a
+              <code>healthResponse</code> with <code>Clients</code>,
+              <code>Events</code>, <code>Complete</code>, <code>Dropped</code>.
+              It queries <code>hub.ClientCount()</code> directly.
+            </p>
+            <p>
+              go-sse's <code>Broadcaster.Health()</code> returns a structured
+              <code>BroadcasterHealth</code> with <code>Closed</code>,
+              <code>Draining</code>, <code>SubscriberCount</code>, and
+              <code>BufferSize</code>. Enriching the health response with
+              <code>Draining</code> and <code>BufferSize</code> would give
+              operators better visibility into the SSE subsystem state during
+              shutdowns.
+            </p>
+
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              After adopting <code>Broadcaster</code>, enrich
+              <code>healthResponse</code> with <code>broadcaster.Health()</code>
+              fields. Low effort, improves observability.
+            </div>
+          </div>
+        </section>
+
+        <!-- FINDING 7: Manual JSON marshaling -->
+        <section id="sendjson">
+          <h2><span class="num">07</span>Convenience Methods</h2>
+
+          <div class="issue issue-nice" id="missed-sendjson">
+            <span class="severity severity-nice">Partially Used &middot; Low impact</span>
+            <h3>SendJSON / SendData convenience methods unused &mdash; manual marshal + WriteEvent instead</h3>
+            <div class="where">live/server.go:427-456 (sendSnapshot), 458-479 (sendComplete) &middot; 2 functions manually marshal + WriteEvent</div>
+            <p>
+              <code>sendSnapshot</code> and <code>sendComplete</code> both follow
+              the same pattern: (1) build a struct, (2) <code>json.Marshal(data)</code>,
+              (3) <code>sse.WriteEvent(w, sse.Event{...Data: string(payload)})</code>,
+              (4) <code>flusher.Flush()</code>. This is exactly what
+              <code>Stream.SendJSON(eventName, v)</code> does in one call &mdash;
+              marshal + send + flush, with error wrapping.
+            </p>
+            <p>
+              Similarly, the event broadcast at line 411
+              (<code>sse.WriteEvent(w, sse.Event{Event: "event", Data: string(evt)})</code>)
+              could use <code>Stream.SendData("event", string(evt))</code>.
+            </p>
+
+            <div class="callout callout-teal">
+              <strong>Recommendation</strong>
+              After adopting <code>Stream</code>, replace
+              <code>sendSnapshot</code>/<code>sendComplete</code> internals with
+              <code>stream.SendJSON("snapshot", data)</code> /
+              <code>stream.SendJSON("complete", data)</code>. Eliminates manual
+              marshal + WriteEvent + Flush boilerplate.
+            </div>
+          </div>
+        </section>
+
+        <!-- VERSION CURRENCY -->
+        <section id="version">
+          <h2><span class="num">08</span>Version Currency</h2>
+
+          <div class="issue issue-important" id="version-gap">
+            <span class="severity severity-important">Important &middot; 1 minor behind</span>
+            <h3>go.mod pins v0.3.0, latest is v0.4.0, AGENTS.md says v0.2.1 (stale)</h3>
+            <div class="where">go.mod:5, AGENTS.md:122 &middot; documentation drift between go.mod and AGENTS.md</div>
+
+            <table class="compare">
+              <thead>
+                <tr>
+                  <th>Source</th>
+                  <th>Version</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>go.mod (authoritative)</td>
+                  <td><code>v0.3.0</code></td>
+                  <td class="yes">Correct (pinned)</td>
+                </tr>
+                <tr>
+                  <td>go.sum (checksums)</td>
+                  <td><code>v0.3.0</code></td>
+                  <td class="yes">Matches go.mod</td>
+                </tr>
+                <tr>
+                  <td>AGENTS.md:122</td>
+                  <td><code>v0.2.1</code></td>
+                  <td class="no">Stale (2 versions behind go.mod)</td>
+                </tr>
+                <tr>
+                  <td>AGENTS.md:160 (toolchain section)</td>
+                  <td><code>v0.2.1</code></td>
+                  <td class="no">Stale</td>
+                </tr>
+                <tr>
+                  <td>Latest git tag (go-sse repo)</td>
+                  <td><code>v0.4.0</code></td>
+                  <td class="no">1 minor ahead of go.mod</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p>
+              <strong>Note:</strong> v0.3.0 was a checkpoint release with no
+              user-facing changes (CHANGELOG: "No user-facing code changes").
+              So the consumer is effectively still on v0.2.1's API surface.
+              Upgrading to v0.4.0 unlocks:
+            </p>
+
+            <table class="compare">
+              <thead>
+                <tr>
+                  <th>Version</th>
+                  <th>Type</th>
+                  <th>Notable Change</th>
+                  <th>Relevance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>v0.4.0</td>
+                  <td>Feature</td>
+                  <td><code>SubscribeFilter(pred)</code> &mdash; predicate-based subscriptions</td>
+                  <td>Low &mdash; all clients receive all events today</td>
+                </tr>
+                <tr>
+                  <td>v0.4.0</td>
+                  <td>Feature</td>
+                  <td><code>FilteredEventStore</code> + <code>ReplayFiltered</code></td>
+                  <td class="yes">High &mdash; needed if replay is adopted</td>
+                </tr>
+                <tr>
+                  <td>v0.4.0</td>
+                  <td>Feature</td>
+                  <td><code>Broadcaster.Shutdown(ctx)</code> &mdash; graceful drain</td>
+                  <td class="yes">High &mdash; needed if Broadcaster is adopted</td>
+                </tr>
+                <tr>
+                  <td>v0.4.0</td>
+                  <td>Feature</td>
+                  <td><code>Broadcaster.Health()</code> &mdash; structured snapshot</td>
+                  <td class="yes">Medium &mdash; enriches health endpoint</td>
+                </tr>
+                <tr>
+                  <td>v0.4.0</td>
+                  <td>Feature</td>
+                  <td><code>WithBufferSize[T](n)</code> &mdash; configurable buffer</td>
+                  <td>Medium &mdash; replaces hardcoded 128</td>
+                </tr>
+                <tr>
+                  <td>v0.4.0</td>
+                  <td>Feature</td>
+                  <td><code>KeyedLines</code> / <code>SendLines</code> / <code>SendKeyed</code></td>
+                  <td class="no">N/A &mdash; DataStar-specific, not used here</td>
+                </tr>
+                <tr>
+                  <td>v0.4.0</td>
+                  <td>Feature</td>
+                  <td>Predicate panic recovery</td>
+                  <td>Low &mdash; no predicates used today</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="callout callout-amber">
+              <strong>Anti-pattern: documentation drift</strong>
+              AGENTS.md references v0.2.1 in two places (lines 122, 160) while
+              go.mod says v0.3.0. This is a split brain &mdash; any developer
+              or AI reading AGENTS.md gets the wrong version. The Go 1.26.5
+              toolchain pin rationale at AGENTS.md:160 also references v0.2.1
+              specifically. Both should be updated to v0.4.0 (or whatever
+              version is adopted after this audit).
+            </div>
+          </div>
+        </section>
+
+        <!-- TOP OPPORTUNITIES -->
+        <section id="opportunities">
+          <h2><span class="num">09</span>Top Opportunities</h2>
+          <p>
+            Ranked by <strong>Priority = Impact &times; Ease</strong>.
+            The Pareto set &mdash; items 1-3 deliver 80% of the value.
+          </p>
+
+          <table class="compare">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Opportunity</th>
+                <th>Impact</th>
+                <th>Ease</th>
+                <th>Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>Replace Hub with <code>Broadcaster[sse.Event]</code> + domain layer</td>
+                <td class="yes">5</td>
+                <td class="yes">4</td>
+                <td><span class="highlight">20</span></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>Adopt <code>Stream</code> in <code>handleSSE</code></td>
+                <td class="yes">5</td>
+                <td class="yes">4</td>
+                <td><span class="highlight">20</span></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>Implement <code>EventStore</code> + <code>Replay</code> for reconnection</td>
+                <td class="yes">5</td>
+                <td>3</td>
+                <td><span class="highlight">15</span></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>Use <code>stream.SendJSON()</code> in sendSnapshot/sendComplete</td>
+                <td>3</td>
+                <td class="yes">5</td>
+                <td>15</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>Upgrade go.mod to v0.4.0</td>
+                <td>4</td>
+                <td class="yes">5</td>
+                <td>20</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>Fix AGENTS.md version drift (v0.2.1 &rarr; actual)</td>
+                <td>2</td>
+                <td class="yes">5</td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>Replace manual heartbeat with <code>WriteHeartbeat</code> or <code>Stream.Heartbeat</code></td>
+                <td>3</td>
+                <td class="yes">5</td>
+                <td>15</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>Add <code>broadcaster.Shutdown(ctx)</code> to server Shutdown</td>
+                <td>3</td>
+                <td>4</td>
+                <td>12</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>Enrich health endpoint with <code>broadcaster.Health()</code></td>
+                <td>2</td>
+                <td>4</td>
+                <td>8</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>Use <code>WithBufferSize[T](128)</code> to preserve current buffer size</td>
+                <td>1</td>
+                <td class="yes">5</td>
+                <td>5</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout callout-teal">
+            <strong>Migration path</strong>
+            Items 1-5 are mutually reinforcing: adopting Broadcaster (1) and
+            Stream (2) together unlocks Replay (3), SendJSON (4), and
+            Shutdown (8). The upgrade to v0.4.0 (5) is a prerequisite for items
+            1-3 since <code>Shutdown</code> and <code>Health</code> are v0.4.0
+            additions. Do them as one coordinated refactor, not piecemeal.
+          </div>
+
+          <div class="migration-step">
+            <div class="migration-num">1</div>
+            <div class="migration-content">
+              <h4>Upgrade to v0.4.0 + replace Hub</h4>
+              <p>Bump go.mod, replace hub.go's fan-out with Broadcaster[sse.Event], keep SignalComplete/done-channel as a domain layer wrapping the Broadcaster. Delete ~100 lines of hub.go.</p>
+            </div>
+          </div>
+          <div class="migration-step">
+            <div class="migration-num">2</div>
+            <div class="migration-content">
+              <h4>Adopt Stream in handleSSE</h4>
+              <p>Replace manual headers/flusher/flush with NewStream + Send + go Heartbeat. Delete ~30 lines of manual plumbing in server.go.</p>
+            </div>
+          </div>
+          <div class="migration-step">
+            <div class="migration-num">3</div>
+            <div class="migration-content">
+              <h4>Add EventStore + Replay</h4>
+              <p>Implement the ~15-line EventStore adapter, tag events with IDs, call Replay before subscribing to live events. Gains seamless reconnection.</p>
+            </div>
+          </div>
+          <div class="migration-step">
+            <div class="migration-num">4</div>
+            <div class="migration-content">
+              <h4>Chain broadcaster.Shutdown + enrich health</h4>
+              <p>Add broadcaster.Shutdown(ctx) after http.Server.Shutdown(ctx). Enrich healthResponse with BroadcasterHealth fields. Fix AGENTS.md version references.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- CONCLUSION -->
+        <section id="conclusion">
+          <h2><span class="num">10</span>Conclusion</h2>
+          <p>
+            go-sse is used at <span class="highlight">7.5% of its API surface</span>
+            (3 of ~40 exported symbols). The three symbols it does use
+            (<code>ContentType</code>, <code>Event</code>,
+            <code>WriteEvent</code>) are used correctly and idiomatically. But
+            the library's core value propositions &mdash;
+            <code>Stream</code> (connection lifecycle), <code>Broadcaster</code>
+            (fan-out), and <code>Replay</code> (reconnection) &mdash; are
+            entirely unused, with hand-rolled equivalents filling every gap.
+          </p>
+          <p>
+            The single highest-leverage action is a coordinated adoption of
+            <code>Broadcaster</code> + <code>Stream</code> + <code>Replay</code>
+            (migration steps 1-3 above). This would eliminate ~200 lines of
+            hand-rolled infrastructure, gain seamless SSE reconnection, and
+            bring the adoption score from <span class="highlight">22</span> to
+            an estimated <span class="highlight">85+</span> &mdash; moving from
+            "token adoption" to "maximized" in one refactor.
+          </p>
+        </section>
+
+        <footer class="footer">
+          <p>
+            Generated 2026-08-06 &middot; Reviewed against go-sse v0.4.0 source
+            at /home/lars/projects/go-sse &middot; All claims verified against
+            source code where noted &middot; Consumer at go.mod v0.3.0
+          </p>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      (function () {
+        if (!("IntersectionObserver" in window)) return;
+        var nav = document.querySelector("[data-nav]");
+        if (!nav) return;
+        var links = nav.querySelectorAll('a[href^="#"]');
+        var ids = Array.from(links).map(function (l) {
+          return l.getAttribute("href").slice(1);
+        });
+        var sections = ids
+          .map(function (id) { return document.getElementById(id); })
+          .filter(Boolean);
+        if (!sections.length) return;
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                links.forEach(function (link) {
+                  link.classList.toggle(
+                    "active",
+                    link.getAttribute("href") === "#" + entry.target.id,
+                  );
+                });
+              }
+            });
+          },
+          { rootMargin: "-80px 0px -60% 0px", threshold: 0 },
+        );
+        sections.forEach(function (s) { observer.observe(s); });
+      })();
+    </script>
+  </body>
+</html>
