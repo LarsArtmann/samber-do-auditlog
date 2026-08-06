@@ -120,10 +120,12 @@ live/demo/          — Self-contained real-time demo (registers services with d
 ### Shared infrastructure: `go-sse`
 
 The `live/` sub-package depends on [`github.com/larsartmann/go-sse`](https://github.com/larsartmann/go-sse)
-(v0.2.1, public) for the SSE wire-format primitives — `sse.Event`, `sse.WriteEvent`,
-and `sse.ContentType`. The domain-specific Hub and Server are implemented locally in `live/`
-(samber/do service events, scope tree, dashboard HTML) on top of those primitives; go-sse
-itself is transport-only and owns no domain types here.
+(v0.4.0, public) for the full SSE lifecycle — `Stream`, `Broadcaster[T]`,
+`Replay`/`EventStore`, plus wire-format primitives (`Event`, `WriteEvent`,
+`ContentType`). The domain-specific Hub (facade over `Broadcaster[sse.Event]`)
+and Server are implemented locally in `live/` (samber/do service events, scope
+tree, dashboard HTML) on top of those primitives; go-sse itself is
+transport-only and owns no domain types here.
 
 ### Shared infrastructure: `go-ndjson`
 
@@ -157,13 +159,13 @@ automatically.
 
 ### Go 1.26.5 toolchain pin
 
-**The canonical Go version is 1.26.5** — required by the upgraded dependencies (`go-atomic-write` v0.4.0, `go-error-family` v0.10.0, `go-output` v0.32.0, `go-sse` v0.2.1 all declare `go 1.26.5` in their own `go.mod`), and pinned across (1) `go.mod` `go` directive, (2) `.github/workflows/ci.yml` (`go-version: "1.26.5"` in all 6 jobs), (3) `flake.nix` (`pkgs.go_1_26` resolves to nixpkgs's 1.26.5), (4) nixpkgs `go` / `go_latest` (both 1.26.5), (5) `CONTRIBUTING.md` / `BENCHMARKS.md` / `README.md` / `STABILITY.md`, (6) `flake.nix` `GOTOOLCHAIN=go1.26.5` env var.
+**The canonical Go version is 1.26.5** — required by the upgraded dependencies (`go-atomic-write` v0.4.0, `go-error-family` v0.10.0, `go-output` v0.32.0, `go-sse` v0.4.0 all declare `go 1.26.5` in their own `go.mod`), and pinned across (1) `go.mod` `go` directive, (2) `.github/workflows/ci.yml` (`go-version: "1.26.5"` in all 6 jobs), (3) `flake.nix` (`pkgs.go_1_26` resolves to nixpkgs's 1.26.5), (4) nixpkgs `go` / `go_latest` (both 1.26.5), (5) `CONTRIBUTING.md` / `BENCHMARKS.md` / `README.md` / `STABILITY.md`, (6) `flake.nix` `GOTOOLCHAIN=go1.26.5` env var.
 
 **Why it's mandatory, not discretionary:** Go computes the main module's language version as the maximum `go` directive across all dependencies, and `go mod tidy` rewrites the main `go` directive to match. Setting `go 1.26.4` while deps require `1.26.5` is unstable — `go mod tidy` bumps it straight back to `1.26.5` (verified empirically), and CI's `mod-tidy` drift gate would fail. With `GOTOOLCHAIN=go1.26.4` forced, the build outright fails: `go.mod requires go >= 1.26.5 (running go 1.26.4; GOTOOLCHAIN=go1.26.4)`.
 
 **Gotcha:** A separately-installed newer `go` nix-store derivation (e.g. from `nix profile install nixpkgs#go`) can shadow the devShell's `go_1_26` on PATH. Without `GOTOOLCHAIN=go1.26.5`, `go mod tidy` with the shadowed toolchain rewrites `go.mod` to the newer version, drifting from the canonical pin. The `GOTOOLCHAIN` env var in `flake.nix` (devShell + `coverage` app + `auditlog` app) forces Go's toolchain auto-download to 1.26.5 even when a different `go` is on PATH. If you must run `go mod tidy` outside the devShell, prefix it with `GOTOOLCHAIN=go1.26.5 go mod tidy`.
 
-History: The Go directive bounced between 1.26.4 and 1.26.5 across three releases. **v0.7.0** shipped `go 1.26.5` (then treated as drift; 1.26.4 was canonical). **v0.7.1** reverted to `go 1.26.4` and added the `GOTOOLCHAIN=go1.26.5` pin to prevent shadowed-toolchain drift. **v0.8.0** re-bumped to `go 1.26.5` and made it canonical — not a drift — because `go-atomic-write` v0.4.0, `go-error-family` v0.10.0, `go-output` v0.32.0, and `go-sse` v0.2.1 all bumped their own `go` directive to 1.26.5, making it the true required minimum (Go takes the max across deps). The `GOTOOLCHAIN` pin from v0.7.1 stays.
+History: The Go directive bounced between 1.26.4 and 1.26.5 across three releases. **v0.7.0** shipped `go 1.26.5` (then treated as drift; 1.26.4 was canonical). **v0.7.1** reverted to `go 1.26.4` and added the `GOTOOLCHAIN=go1.26.5` pin to prevent shadowed-toolchain drift. **v0.8.0** re-bumped to `go 1.26.5` and made it canonical — not a drift — because `go-atomic-write` v0.4.0, `go-error-family` v0.10.0, `go-output` v0.32.0, and `go-sse` v0.4.0 all bumped their own `go` directive to 1.26.5, making it the true required minimum (Go takes the max across deps). The `GOTOOLCHAIN` pin from v0.7.1 stays.
 
 ---
 

@@ -90,8 +90,8 @@ github.com/larsartmann/go-output/testhelpers/graphtest v0.34.0 h1:Aa8x/8ik+VM4Qx
 github.com/larsartmann/go-output/testhelpers/graphtest v0.34.0/go.mod h1:u8gCtwVTjsJInrulwuDXl4JJttxcJTKdzz6RsVIL7jc=
 github.com/larsartmann/go-output/tree v0.35.0 h1:iCXUM4IDlEH5VKwRVUjqahJGjPXk7zzmcZA+/2Y0tCE=
 github.com/larsartmann/go-output/tree v0.35.0/go.mod h1:9uYXXrmMeImVyHPGadE53EmVVtArPM2AsNypbVMDo7g=
-github.com/larsartmann/go-sse v0.3.0 h1:1XGi5C7dhGqrYvRB0s9ngwpGsZmeyuECM8JAUVEW8MY=
-github.com/larsartmann/go-sse v0.3.0/go.mod h1:jzjpWqwufPRLht+qk15EHwHG65mhZDdTV1VIUk5pQ2Y=
+github.com/larsartmann/go-sse v0.4.0 h1:cHeOMbVGcIqeetic8bdZIITo4xsPSpWiPhtvQTxNd+4=
+github.com/larsartmann/go-sse v0.4.0/go.mod h1:B9mLj83rwtrnbqSqBcRuMV8vnOvAaPlJtH+9U/fMeRQ=
 github.com/lucasb-eyer/go-colorful v1.4.0 h1:UtrWVfLdarDgc44HcS7pYloGHJUjHV/4FwW4TvVgFr4=
 github.com/lucasb-eyer/go-colorful v1.4.0/go.mod h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=
 github.com/mattn/go-colorable v0.1.15 h1:+u9SLTRGnXv73cEsnsmoZBom+dMU88B2M0aDcWy0/jY=
