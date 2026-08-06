@@ -89,14 +89,16 @@ live/               — Real-time SSE dashboard sub-package (see below)
 ### `live/` sub-package files
 
 ```
-live/hub.go         — Hub: fan-out SSE broadcaster with subscriber buffer (128 events), SignalComplete, OnEvent callback
-live/server.go      — HTTP server with 6 endpoints (dashboard, report JSON, SSE events, health, export NDJSON, export HTML), configurable prefix, CORS middleware, graceful shutdown
+live/hub.go         — Hub: facade over sse.Broadcaster[sse.Event] with subscriber buffer (128 events), SignalComplete, OnEvent callback, Shutdown/Health pass-through
+live/replay.go      — eventStore adapter: adapts plugin.Events() to sse.EventStore for reconnection replay
+live/server.go      — HTTP server with 6 endpoints (dashboard, report JSON, SSE events via sse.Stream, health, export NDJSON, export HTML), configurable prefix, CORS middleware, graceful shutdown + broadcaster drain
 live/dashboard.go   — Dashboard HTML renderer (embeds CSS + JS, injects route prefix)
 live/dashboard.css  — Dashboard stylesheet (warm amber theme, responsive layout)
 live/dashboard.js   — Dashboard JavaScript (SSE client, real-time updates, DOM rendering)
 live/base_css.go    — Live dashboard CSS: composes shared design tokens (auditlog.DesignTokensCSS) + live-specific aliases + base component styles
 live/doc.go         — Package doc comment
-live/server_test.go — External tests: server lifecycle, SSE streaming, handler edge cases, hub unit tests, CORS, export endpoints
+live/server_test.go — External tests: server lifecycle, SSE streaming, handler edge cases, hub unit tests, replay tests, CORS, export endpoints
+live/replay_internal_test.go — Internal tests: eventStore adapter unit tests
 live/demo/          — Self-contained real-time demo (registers services with delays, shows dashboard updating live). Demo services implement do.Healthchecker.
 ```
 
@@ -264,6 +266,8 @@ Extremely strict — nearly every golangci-lint linter enabled. Key implications
 - **JS syntax validation test**: `TestHTMLJavaScriptSyntax` and `TestHTMLJavaScriptSyntax_MultiService` in `plugin_html_syntax_test.go` extract `<script>` content from the HTML report, strip strings/comments/regexes via a `jsStripper` state machine, and assert `{}`, `()`, `[]` delimiters are balanced. This catches syntax errors (like a stray `}`) that the golden byte-for-byte test misses.
 - **go-output v0.32.0 testhelpers pins resolved**: go-output was previously upgraded through v0.30.1 → v0.31.1 → v0.32.0 (all sub-modules in lockstep). v0.31.1 added `d2Quote()` (fixes D2 hex-color/label quoting — previously `#e8a838` was treated as a comment by D2). The v0.31.1 published manifests contained broken zero pseudo-versions for `testhelpers` and `testhelpers/graphtest` (local `replace` directives were not stripped before tagging), requiring consumer-side explicit indirect pins at v0.31.1. **As of v0.32.0**, upstream published corrected manifests: both `testhelpers` and `testhelpers/graphtest` v0.32.0 are available and resolve cleanly. The indirect pins in `go.mod` now point at v0.32.0, matching the rest of the go-output family.
 - **Cross-project feature ports from `go-workflow-auditlog`** (sibling project, same author, same patterns): Five patterns were ported from the sibling project: (1) **`go-error-family` classification** — `classify.go` registers all sentinel errors into Families (Corruption/Rejection) with auto-registration in `init()`; upgraded to v0.10.0 (direct dep). (2) **`go-atomic-write`** — `writeToFile()` in `plugin.go` now delegates to `atomicwrite.WriteFunc` v0.4.0 for crash-durable atomic writes. Note: v0.4.0 split the API — `WriteFunc(path, fn)` is the plain 2-arg write; `WriteFuncVerified` adds fingerprint TOCTOU protection. Audit exports use plain writes (no read-modify-write cycle). (3) **NDJSON streaming** — `stream.go` provides `NDJSONStreamer` for real-time event streaming via `Config.OnEvent` with `WithAutoFlush`/`WithStreamBufferSize`; uses standard `encoding/json` (no `jsontext` dependency). (4) **Diagram direction** — `diagram_options.go` provides `WithDirection(output.Direction)` across all 4 diagram formats. (5) **Table column selection** — `table_options.go` provides `WithColumns(TableColumn...)` with 10 selectable columns.
+- **go-sse full adoption** (v0.4.0): `live/` uses `sse.Stream` (connection lifecycle, `Send`/`SendJSON`, `Heartbeat` goroutine), `sse.Broadcaster[sse.Event]` (fan-out with `Shutdown`/`Health`), and `sse.Replay`/`sse.EventStore` (reconnection replay). The Hub is a thin facade over `Broadcaster` — no hand-rolled subscriber map, channel management, or broadcast loop remains. `handleSSE` keeps the flusher check before `NewStream` (AD3) because `NewStream` writes 200 OK and can't be undone. Event IDs use `auditlog.Event.Sequence` (not a separate counter) so that `eventStore.EventsAfter` can filter by the same numbering scheme. The subscribe-first replay pattern (AD4) is used: `hub.Subscribe()` is called before `sse.Replay()` to buffer live events that arrive during replay; the client deduplicates by Event ID.
+- **`live/replay.go` EventStore adapter**: Snapshots `plugin.Events()` at handler entry. `EventsAfter(lastID)` parses `lastID` as an integer (matching `Event.Sequence`), filters events with `Sequence > lastID`, and constructs `sse.Event` values with the same JSON payload format as live broadcasts. Returns `nil` for zero/invalid IDs.
 
 ---
 

@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — go-sse Full Adoption (Stream, Broadcaster, Replay)
+
+- **`sse.Stream` adoption**: `handleSSE` now uses `sse.NewStream` for connection lifecycle (headers, flush, heartbeat, disconnect detection). Replaces manual flusher/headers/heartbeat with `stream.Send`, `stream.SendJSON`, `go stream.Heartbeat(...)`. Concurrent write safety via Stream's internal mutex.
+- **`sse.Broadcaster[sse.Event]` adoption**: `Hub` rewritten as a thin facade over `sse.Broadcaster[sse.Event]`. Eliminates 137 lines of hand-rolled fan-out infrastructure (subscriber map, channel management, broadcast loop). Preserves the public API (`NewHub`, `OnEvent`, `SignalComplete`, `IsComplete`, `ClientCount`) while gaining `Shutdown(ctx)` and `Health()`.
+- **SSE reconnection replay**: `live/replay.go` implements `sse.EventStore` over `plugin.Events()`. Reconnecting clients with a `Last-Event-ID` header receive missed events via `sse.Replay`. Uses the subscribe-first pattern (AD4) to avoid event gaps.
+- **Event IDs**: broadcast events are tagged with `sse.EventID` derived from `auditlog.Event.Sequence`, enabling client-side deduplication on reconnect.
+- **Graceful broadcaster shutdown**: `Server.Shutdown` now drains the broadcaster after stopping the HTTP server, ensuring subscriber buffers are flushed before close.
+- **Enriched health endpoint**: `/api/health` now includes `draining` and `buffer_size` fields from `BroadcasterHealth`.
+- **Upgraded go-sse** from v0.3.0 to v0.4.0 (adds `SubscribeFilter`, `Shutdown`, `Health`, `WithBufferSize`, `KeyedLines`, `ReplayFiltered`).
+
 ### Added — Keyboard Navigation & Accessibility
 
 - **Skip link** (`<a href="#main-content">`) in both static and live dashboards for keyboard users to jump directly to main content.
