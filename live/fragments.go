@@ -12,24 +12,53 @@ import (
 )
 
 const (
-	maxServiceRows = 50
-	maxEventRows   = 100
+	maxServiceRows   = 50
+	maxEventRows     = 100
+	maxEventErrLen   = 30
+	maxServiceErrLen = 40
+	scopeIndentPx    = 20
+
+	// Duration conversion constants.
+	msPerSecond  = 1000.0
+	secPerMinute = 60.0
+	minPerHour   = 60.0
+
+	// Waveform rendering constants.
+	waveformMinHeight = 4.0
+	waveformMaxHeight = 28.0
+	waveformPctScale  = 100.0
+
+	// Shared CSS/HTML tokens.
+	cssVarTextMuted = "var(--text-muted)"
+	mdash           = "&mdash;"
 )
 
 // servicesShowExpr is the data-show expression for each service row.
-var servicesShowExpr = "(!$serviceSearch || $rowName.toLowerCase().includes($serviceSearch.toLowerCase()) || $rowScope.toLowerCase().includes($serviceSearch.toLowerCase())) && ($showAllServices || $rowIdx < " + strconv.Itoa(maxServiceRows) + ")"
+// It cannot be a const because it interpolates maxServiceRows via strconv.Itoa.
+//
+//nolint:gochecknoglobals // effectively immutable; interpolates a const
+var servicesShowExpr = "(!$serviceSearch || $rowName.toLowerCase().includes($serviceSearch.toLowerCase()) || $rowScope.toLowerCase().includes($serviceSearch.toLowerCase())) && ($showAllServices || $rowIdx < " + strconv.Itoa(maxServiceRows) + ")" //nolint:golines // single expression
 
 // eventsShowExpr is the data-show expression for each event row.
+//
+//nolint:gochecknoglobals // effectively immutable; interpolates a const
 var eventsShowExpr = "(!$eventFilter || $evtType === $eventFilter) && ($showAllEvents || $evtIdx < " + strconv.Itoa(maxEventRows) + ")"
 
 // rowSignals is the JSON payload embedded in each table row's data-signals
 // attribute, enabling client-side search/filter/pagination via datastar.
+// Tags use camelCase because datastar's signal system requires camelCase keys.
+//
+//nolint:tagliatelle // camelCase required by datastar signal system
 type rowSignals struct {
 	RowName  string `json:"rowName"`
 	RowScope string `json:"rowScope"`
 	RowIdx   int    `json:"rowIdx"`
 }
 
+// eventRowSignals is the JSON payload for event table rows. Tags use camelCase
+// for datastar signal compatibility.
+//
+//nolint:tagliatelle // camelCase required by datastar signal system
 type eventRowSignals struct {
 	EvtType string `json:"evtType"`
 	EvtIdx  int    `json:"evtIdx"`
@@ -49,11 +78,30 @@ func renderStatsFragment(report auditlog.Report) string {
 		}
 	}
 
-	stats := []struct {
-		label string
-		value string
-		cls   string
-	}{
+	stats := buildStatsEntries(report, errorCount)
+
+	for _, stat := range stats {
+		cls := stat.cls
+
+		if cls != "" {
+			cls = " " + cls
+		}
+
+		fmt.Fprintf(&b, `<div class="stat-card%s"><div class="label">%s</div><div class="value">%s</div></div>`,
+			cls, stat.label, stat.value)
+	}
+
+	return b.String()
+}
+
+type statsEntry struct {
+	label string
+	value string
+	cls   string
+}
+
+func buildStatsEntries(report auditlog.Report, errorCount int) []statsEntry {
+	stats := []statsEntry{
 		{"Services", strconv.Itoa(report.ServiceCount), ""},
 		{"Events", strconv.Itoa(report.EventCount), ""},
 		{"Scopes", strconv.Itoa(report.ScopeCount), ""},
@@ -68,24 +116,10 @@ func renderStatsFragment(report auditlog.Report) string {
 			cls = "error"
 		}
 
-		stats = append(stats, struct {
-			label string
-			value string
-			cls   string
-		}{"Health", healthLabel(report.HealthCheckSucceeded), cls})
+		stats = append(stats, statsEntry{"Health", healthLabel(report.HealthCheckSucceeded), cls})
 	}
 
-	for _, s := range stats {
-		cls := s.cls
-		if cls != "" {
-			cls = " " + cls
-		}
-
-		fmt.Fprintf(&b, `<div class="stat-card%s"><div class="label">%s</div><div class="value">%s</div></div>`,
-			cls, s.label, s.value)
-	}
-
-	return b.String()
+	return stats
 }
 
 // renderLegendFragment renders the provider type legend.
@@ -102,18 +136,18 @@ func renderLegendFragment(report auditlog.Report, meta auditlog.TypeMetadata) st
 
 	order := []string{"lazy", "eager", "transient", "alias"}
 
-	for _, k := range order {
-		count := counts[k]
+	for _, providerType := range order {
+		count := counts[providerType]
 		if count == 0 {
 			continue
 		}
 
 		icon := ""
-		label := k
+		label := providerType
 
-		if p, ok := meta.Providers[k]; ok {
-			icon = p.Icon
-			label = p.Label
+		if providerMeta, ok := meta.Providers[providerType]; ok {
+			icon = providerMeta.Icon
+			label = providerMeta.Label
 		}
 
 		fmt.Fprintf(&b, `<div class="legend-item"><span class="icon">%s</span>%s <span style="opacity:0.5">(%d)</span></div>`,
@@ -129,73 +163,89 @@ func renderWaveformFragment(events []auditlog.Event, meta auditlog.TypeMetadata)
 		return `<span class="waveform-placeholder">Waiting for events...</span>`
 	}
 
-	var b strings.Builder
-
-	minT := events[0].Timestamp.UnixMilli()
-	maxT := minT
-
-	for _, e := range events {
-		t := e.Timestamp.UnixMilli()
-		if t < minT {
-			minT = t
-		}
-
-		if t > maxT {
-			maxT = t
-		}
-	}
+	minT, maxT, maxDur := waveformBounds(events)
 
 	rangeMs := maxT - minT
 	if rangeMs == 0 {
 		rangeMs = 1
 	}
 
-	maxDur := 1.0
+	var b strings.Builder
 
-	for _, e := range events {
-		if e.DurationMs != nil && *e.DurationMs > maxDur {
-			maxDur = *e.DurationMs
-		}
-	}
-
-	for _, e := range events {
-		t := e.Timestamp.UnixMilli()
-		pct := float64(t-minT) / float64(rangeMs) * 100
-
-		color := "var(--text-muted)"
-		if em, ok := meta.Events[string(e.EventType)]; ok && em.Color != "" {
-			color = em.Color
-		}
-
-		hasErr := e.Error != nil
-		if hasErr {
-			color = "var(--error)"
-		}
-
-		height := 4.0
-		if e.DurationMs != nil && *e.DurationMs > 0 {
-			height = math.Max(4, *e.DurationMs/maxDur*28)
-		}
-
-		tip := string(e.EventType)
-		if e.ServiceName != "" {
-			tip += " " + string(e.ServiceName)
-		}
-
-		if e.Phase != "" {
-			tip += " " + string(e.Phase)
-		}
-
-		if e.DurationMs != nil {
-			tip += " " + humanizeDuration(*e.DurationMs)
-		}
-
-		fmt.Fprintf(&b,
-			`<div class="wf-event" style="left:%.2f%%;height:%.0fpx;background:%s" title="%s"></div>`,
-			pct, height, color, html.EscapeString(tip))
+	for _, evt := range events {
+		b.WriteString(waveformEventDiv(evt, minT, rangeMs, maxDur, meta))
 	}
 
 	return b.String()
+}
+
+// waveformBounds returns (minTimestamp, maxTimestamp, maxDuration) from a list
+// of events. maxDuration defaults to 1.0 if no event has a duration.
+func waveformBounds(events []auditlog.Event) (minT, maxT int64, maxDur float64) {
+	minT = events[0].Timestamp.UnixMilli()
+	maxT = minT
+	maxDur = 1.0
+
+	for _, evt := range events {
+		ts := evt.Timestamp.UnixMilli()
+		if ts < minT {
+			minT = ts
+		}
+
+		if ts > maxT {
+			maxT = ts
+		}
+
+		if evt.DurationMs != nil && *evt.DurationMs > maxDur {
+			maxDur = *evt.DurationMs
+		}
+	}
+
+	return minT, maxT, maxDur
+}
+
+// waveformEventDiv renders a single waveform event mark.
+func waveformEventDiv(evt auditlog.Event, minT, rangeMs int64, maxDur float64, meta auditlog.TypeMetadata) string {
+	ts := evt.Timestamp.UnixMilli()
+	pct := float64(ts-minT) / float64(rangeMs) * waveformPctScale
+
+	color := cssVarTextMuted
+
+	if evtMeta, ok := meta.Events[string(evt.EventType)]; ok && evtMeta.Color != "" {
+		color = evtMeta.Color
+	}
+
+	if evt.Error != nil {
+		color = "var(--error)"
+	}
+
+	height := waveformMinHeight
+	if evt.DurationMs != nil && *evt.DurationMs > 0 {
+		height = math.Max(waveformMinHeight, *evt.DurationMs/maxDur*waveformMaxHeight)
+	}
+
+	tip := waveformTooltip(evt)
+
+	return fmt.Sprintf(
+		`<div class="wf-event" style="left:%.2f%%;height:%.0fpx;background:%s" title="%s"></div>`,
+		pct, height, color, html.EscapeString(tip))
+}
+
+func waveformTooltip(evt auditlog.Event) string {
+	tip := string(evt.EventType)
+	if evt.ServiceName != "" {
+		tip += " " + string(evt.ServiceName)
+	}
+
+	if evt.Phase != "" {
+		tip += " " + string(evt.Phase)
+	}
+
+	if evt.DurationMs != nil {
+		tip += " " + humanizeDuration(*evt.DurationMs)
+	}
+
+	return tip
 }
 
 // renderServicesTbody renders the services table body with datastar attributes
@@ -209,12 +259,15 @@ func renderServicesTbody(report auditlog.Report, meta auditlog.TypeMetadata) str
 
 	var b strings.Builder
 
-	for i, svc := range services {
-		signals, _ := json.Marshal(rowSignals{
+	for idx, svc := range services {
+		signals, err := json.Marshal(rowSignals{
 			RowName:  string(svc.ServiceName),
 			RowScope: svc.ScopeName,
-			RowIdx:   i,
+			RowIdx:   idx,
 		})
+		if err != nil {
+			continue
+		}
 
 		b.WriteString(`<tr data-signals="`)
 		b.WriteString(html.EscapeString(string(signals)))
@@ -222,29 +275,35 @@ func renderServicesTbody(report auditlog.Report, meta auditlog.TypeMetadata) str
 		b.WriteString(html.EscapeString(servicesShowExpr))
 		b.WriteString(`">`)
 
-		icon := providerIcon(meta, string(svc.ServiceType))
-		statusIcon := statusIcon(meta, string(svc.Status))
-		buildMs := "&mdash;"
-
-		if svc.FirstBuildDurationMs != nil {
-			buildMs = humanizeDuration(*svc.FirstBuildDurationMs)
-		}
-
-		depNames := depNamesString(svc.Dependencies)
-
-		errorText, errorTooltip := serviceError(svc)
-
-		fmt.Fprintf(&b, `<td>%s %s</td>`, html.EscapeString(icon), html.EscapeString(string(svc.ServiceName)))
-		fmt.Fprintf(&b, `<td>%s</td>`, html.EscapeString(svc.ScopeName))
-		fmt.Fprintf(&b, `<td>%s</td>`, html.EscapeString(string(svc.ServiceType)))
-		fmt.Fprintf(&b, `<td>%s %s</td>`, html.EscapeString(statusIcon), html.EscapeString(string(svc.Status)))
-		fmt.Fprintf(&b, `<td>%d</td>`, svc.InvocationCount)
-		fmt.Fprintf(&b, `<td>%s</td>`, buildMs)
-		fmt.Fprintf(&b, `<td>%s</td>`, depNames)
-		fmt.Fprintf(&b, `<td title="%s">%s</td>`, errorTooltip, errorText)
-
+		b.WriteString(renderServiceRowCells(svc, meta))
 		b.WriteString(`</tr>`)
 	}
+
+	return b.String()
+}
+
+func renderServiceRowCells(svc auditlog.ServiceInfo, meta auditlog.TypeMetadata) string {
+	var b strings.Builder
+
+	icon := providerIcon(meta, string(svc.ServiceType))
+	statusIconStr := statusIcon(meta, string(svc.Status))
+	buildMs := mdash
+
+	if svc.FirstBuildDurationMs != nil {
+		buildMs = humanizeDuration(*svc.FirstBuildDurationMs)
+	}
+
+	depNames := depNamesString(svc.Dependencies)
+	errorText, errorTooltip := serviceError(svc)
+
+	fmt.Fprintf(&b, `<td>%s %s</td>`, html.EscapeString(icon), html.EscapeString(string(svc.ServiceName)))
+	fmt.Fprintf(&b, `<td>%s</td>`, html.EscapeString(svc.ScopeName))
+	fmt.Fprintf(&b, `<td>%s</td>`, html.EscapeString(string(svc.ServiceType)))
+	fmt.Fprintf(&b, `<td>%s %s</td>`, html.EscapeString(statusIconStr), html.EscapeString(string(svc.Status)))
+	fmt.Fprintf(&b, `<td>%d</td>`, svc.InvocationCount)
+	fmt.Fprintf(&b, `<td>%s</td>`, buildMs)
+	fmt.Fprintf(&b, `<td>%s</td>`, depNames)
+	fmt.Fprintf(&b, `<td title="%s">%s</td>`, errorTooltip, errorText)
 
 	return b.String()
 }
@@ -257,66 +316,85 @@ func renderEventsTbody(events []auditlog.Event, meta auditlog.TypeMetadata) stri
 
 	var b strings.Builder
 
-	for i, e := range events {
-		signals, _ := json.Marshal(eventRowSignals{
-			EvtType: string(e.EventType),
-			EvtIdx:  i,
-		})
-
-		b.WriteString(`<tr data-signals="`)
-		b.WriteString(html.EscapeString(string(signals)))
-		b.WriteString(`" data-show="`)
-		b.WriteString(html.EscapeString(eventsShowExpr))
-		b.WriteString(`">`)
-
-		label := string(e.EventType)
-		color := "var(--text-muted)"
-
-		if em, ok := meta.Events[string(e.EventType)]; ok {
-			if em.Label != "" {
-				label = em.Label
-			}
-
-			if em.Color != "" {
-				color = em.Color
-			}
-		}
-
-		phase := "&#9662;"
-		if e.Phase == auditlog.PhaseBefore {
-			phase = "&#9652;"
-		}
-
-		dur := "&mdash;"
-		if e.DurationMs != nil {
-			dur = humanizeDuration(*e.DurationMs)
-		}
-
-		errStr := ""
-		errTooltip := ""
-
-		if e.Error != nil {
-			errTooltip = html.EscapeString(*e.Error)
-			truncErr := *e.Error
-			if len(truncErr) > 30 {
-				truncErr = truncErr[:30]
-			}
-
-			errStr = "&#9888; " + html.EscapeString(truncErr)
-		}
-
-		fmt.Fprintf(&b, `<td>%d</td>`, i+1)
-		fmt.Fprintf(&b, `<td>%s</td>`, e.Timestamp.Format("15:04:05"))
-		fmt.Fprintf(&b, `<td><span class="event-badge" style="background:%s">%s</span></td>`, color, html.EscapeString(label))
-		fmt.Fprintf(&b, `<td>%s %s</td>`, phase, html.EscapeString(string(e.Phase)))
-		fmt.Fprintf(&b, `<td>%s</td>`, html.EscapeString(string(e.ServiceName)))
-		fmt.Fprintf(&b, `<td>%s</td>`, dur)
-		fmt.Fprintf(&b, `<td title="%s">%s</td>`, errTooltip, errStr)
-
-		b.WriteString(`</tr>`)
+	for idx, evt := range events {
+		b.WriteString(renderEventRow(evt, idx, meta))
 	}
 
 	return b.String()
+}
+
+func renderEventRow(evt auditlog.Event, idx int, meta auditlog.TypeMetadata) string {
+	signals, err := json.Marshal(eventRowSignals{
+		EvtType: string(evt.EventType),
+		EvtIdx:  idx,
+	})
+	if err != nil {
+		return ""
+	}
+
+	var b strings.Builder
+
+	b.WriteString(`<tr data-signals="`)
+	b.WriteString(html.EscapeString(string(signals)))
+	b.WriteString(`" data-show="`)
+	b.WriteString(html.EscapeString(eventsShowExpr))
+	b.WriteString(`">`)
+
+	label := string(evt.EventType)
+	color := cssVarTextMuted
+
+	if evtMeta, ok := meta.Events[string(evt.EventType)]; ok {
+		if evtMeta.Label != "" {
+			label = evtMeta.Label
+		}
+
+		if evtMeta.Color != "" {
+			color = evtMeta.Color
+		}
+	}
+
+	phase := "&#9662;"
+	if evt.Phase == auditlog.PhaseBefore {
+		phase = "&#9652;"
+	}
+
+	dur := mdash
+	if evt.DurationMs != nil {
+		dur = humanizeDuration(*evt.DurationMs)
+	}
+
+	errStr, errTooltip := eventErrorFields(evt)
+
+	fmt.Fprintf(&b, `<td>%d</td>`, idx+1)
+	fmt.Fprintf(&b, `<td>%s</td>`, evt.Timestamp.Format("15:04:05"))
+	fmt.Fprintf(&b, `<td><span class="event-badge" style="background:%s">%s</span></td>`, color, html.EscapeString(label))
+	fmt.Fprintf(&b, `<td>%s %s</td>`, phase, html.EscapeString(string(evt.Phase)))
+	fmt.Fprintf(&b, `<td>%s</td>`, html.EscapeString(string(evt.ServiceName)))
+	fmt.Fprintf(&b, `<td>%s</td>`, dur)
+	fmt.Fprintf(&b, `<td title="%s">%s</td>`, errTooltip, errStr)
+
+	b.WriteString(`</tr>`)
+
+	return b.String()
+}
+
+// eventErrorFields returns (displayText, tooltipText) for an event's error.
+func eventErrorFields(evt auditlog.Event) (displayText, tooltipText string) {
+	if evt.Error == nil {
+		return "", ""
+	}
+
+	tooltipText = html.EscapeString(*evt.Error)
+
+	truncErr := *evt.Error
+
+	if len(truncErr) > maxEventErrLen {
+		truncErr = truncErr[:maxEventErrLen]
+	}
+
+	displayText = "&#9888; " + html.EscapeString(truncErr)
+
+	return displayText, tooltipText
 }
 
 // renderScopeTreeFragment renders the scope tree as nested HTML.
@@ -332,9 +410,9 @@ func renderScopeTreeFragment(report auditlog.Report) string {
 func renderScopeNode(node auditlog.ScopeNode, depth int) string {
 	var b strings.Builder
 
-	marginLeft := depth * 20
+	marginLeft := depth * scopeIndentPx
 
-	b.WriteString(fmt.Sprintf(`<div class="scope-node" style="margin-left:%dpx">`, marginLeft))
+	fmt.Fprintf(&b, `<div class="scope-node" style="margin-left:%dpx">`, marginLeft)
 	b.WriteString(`<div class="scope-label" role="button" tabindex="0" aria-expanded="true">`)
 	b.WriteString(`<span class="scope-icon" aria-hidden="true">&#9660;</span>`)
 
@@ -390,10 +468,10 @@ func renderFooterStats(report auditlog.Report, eventCount int) string {
 		html.EscapeString(version), eventCount, report.ServiceCount)
 }
 
-// renderContainerId renders the container ID for the header.
+// renderContainerID renders the container ID for the header.
 func renderContainerID(report auditlog.Report) string {
 	if report.ContainerID == "" {
-		return "&mdash;"
+		return mdash
 	}
 
 	return html.EscapeString(string(report.ContainerID))
@@ -416,6 +494,8 @@ func renderAllFragments(report auditlog.Report, events []auditlog.Event, meta au
 		{"#services-tbody", renderServicesTbody(report, meta)},
 		{"#events-tbody", renderEventsTbody(events, meta)},
 		{"#scope-tree-container", renderScopeTreeFragment(report)},
+		{"#graph-container", renderGraphFragment(report)},
+		{"#timeline-container", renderTimelineFragment(report)},
 		{"#footer-stats", renderFooterStats(report, len(events))},
 		{"#container-id", renderContainerID(report)},
 	}
@@ -423,47 +503,47 @@ func renderAllFragments(report auditlog.Report, events []auditlog.Event, meta au
 
 // --- Helpers ---
 
-func humanizeDuration(ms float64) string {
-	if ms < 0 {
-		return "&mdash;"
+func humanizeDuration(milliseconds float64) string {
+	if milliseconds < 0 {
+		return mdash
 	}
 
-	if ms < 1 {
-		return strconv.FormatFloat(ms, 'f', 3, 64) + "ms"
+	if milliseconds < 1 {
+		return strconv.FormatFloat(milliseconds, 'f', 3, 64) + "ms"
 	}
 
-	if ms < 1000 {
-		return strconv.FormatFloat(ms, 'f', 1, 64) + "ms"
+	if milliseconds < msPerSecond {
+		return strconv.FormatFloat(milliseconds, 'f', 1, 64) + "ms"
 	}
 
-	s := ms / 1000
-	if s < 60 {
-		return strconv.FormatFloat(s, 'f', 1, 64) + "s"
+	secs := milliseconds / msPerSecond
+	if secs < secPerMinute {
+		return strconv.FormatFloat(secs, 'f', 1, 64) + "s"
 	}
 
-	m := math.Floor(s / 60)
-	rem := s - m*60
-	if m < 60 {
-		return strconv.Itoa(int(m)) + "m " + strconv.Itoa(int(math.Round(rem))) + "s"
+	minutes := math.Floor(secs / secPerMinute)
+	remSecs := secs - minutes*secPerMinute
+	if minutes < minPerHour {
+		return strconv.Itoa(int(minutes)) + "m " + strconv.Itoa(int(math.Round(remSecs))) + "s"
 	}
 
-	h := math.Floor(m / 60)
-	remM := m - h*60
+	hours := math.Floor(minutes / minPerHour)
+	remMins := minutes - hours*minPerHour
 
-	return strconv.Itoa(int(h)) + "h " + strconv.Itoa(int(remM)) + "m"
+	return strconv.Itoa(int(hours)) + "h " + strconv.Itoa(int(remMins)) + "m"
 }
 
 func providerIcon(meta auditlog.TypeMetadata, svcType string) string {
-	if p, ok := meta.Providers[svcType]; ok {
-		return p.Icon
+	if providerMeta, ok := meta.Providers[svcType]; ok {
+		return providerMeta.Icon
 	}
 
 	return ""
 }
 
 func statusIcon(meta auditlog.TypeMetadata, status string) string {
-	if s, ok := meta.Statuses[status]; ok {
-		return s.Icon
+	if statusMeta, ok := meta.Statuses[status]; ok {
+		return statusMeta.Icon
 	}
 
 	return ""
@@ -471,18 +551,18 @@ func statusIcon(meta auditlog.TypeMetadata, status string) string {
 
 func depNamesString(deps []auditlog.ServiceRef) string {
 	if len(deps) == 0 {
-		return "&mdash;"
+		return mdash
 	}
 
-	parts := make([]string, len(deps))
-	for i, d := range deps {
-		parts[i] = html.EscapeString(string(d.ServiceName))
+	parts := make([]string, 0, len(deps))
+	for _, dep := range deps {
+		parts = append(parts, html.EscapeString(string(dep.ServiceName)))
 	}
 
 	return strings.Join(parts, ", ")
 }
 
-func serviceError(svc auditlog.ServiceInfo) (text, tooltip string) {
+func serviceError(svc auditlog.ServiceInfo) (string, string) {
 	errStr := ""
 	if svc.InvocationError != nil {
 		errStr = *svc.InvocationError
@@ -491,13 +571,14 @@ func serviceError(svc auditlog.ServiceInfo) (text, tooltip string) {
 	}
 
 	if errStr == "" {
-		return "&mdash;", ""
+		return mdash, ""
 	}
 
 	escErr := html.EscapeString(errStr)
 	truncErr := errStr
-	if len(truncErr) > 40 {
-		truncErr = truncErr[:40]
+
+	if len(truncErr) > maxServiceErrLen {
+		truncErr = truncErr[:maxServiceErrLen]
 	}
 
 	return "&#9888; " + html.EscapeString(truncErr), escErr

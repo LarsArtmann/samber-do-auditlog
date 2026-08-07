@@ -57,6 +57,9 @@ type HealthInfo struct {
 // snapshotSignals is the initial signal payload sent on SSE connect.
 // These are server-owned signals; client-owned signals (activeTab,
 // serviceSearch, etc.) are declared in the HTML template's data-signals.
+// Tags use camelCase because datastar's signal system requires camelCase keys.
+//
+//nolint:tagliatelle // camelCase required by datastar signal system
 type snapshotSignals struct {
 	ConnStatus       string `json:"connStatus"`
 	Complete         bool   `json:"complete"`
@@ -480,12 +483,6 @@ func (srv *Server) sendDatastarSnapshot(stream *sse.Stream) error {
 	}
 
 	return nil
-}
-
-// sendDatastarUpdate re-renders all sections and sends them. Called on each
-// live event (after burst coalescing).
-func (srv *Server) sendDatastarUpdate(stream *sse.Stream) error {
-	return srv.sendDatastarSnapshot(stream)
 }
 
 // sendDatastarComplete sends the final full render and marks the lifecycle

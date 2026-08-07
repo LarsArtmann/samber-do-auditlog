@@ -154,19 +154,20 @@ func renderEventFilterChips() string {
 
 	var b strings.Builder
 
-	b.WriteString(`<button class="chip active" data-on:click="$eventFilter = ''" data-class:active="!$eventFilter" aria-pressed="true">All</button>`)
+	fmt.Fprintf(&b,
+		`<button class="chip active" data-on:click="$eventFilter = ''" data-class:active="!$eventFilter" aria-pressed="true">All</button>`)
 
 	for _, t := range types {
 		label := t
-		color := "var(--text-muted)"
+		color := cssVarTextMuted
 
-		if em, ok := meta.Events[t]; ok {
-			if em.Label != "" {
-				label = em.Label
+		if evtMeta, ok := meta.Events[t]; ok {
+			if evtMeta.Label != "" {
+				label = evtMeta.Label
 			}
 
-			if em.Color != "" {
-				color = em.Color
+			if evtMeta.Color != "" {
+				color = evtMeta.Color
 			}
 		}
 
