@@ -10,6 +10,10 @@ import (
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
+// sseEventType is the SSE event name for auditlog lifecycle events broadcast
+// by the hub.
+const sseEventType = "event"
+
 // subscriberBufferSize is the per-client event buffer. Events that overflow
 // are dropped for that client — the snapshot mechanism on reconnect will
 // recover the full state.

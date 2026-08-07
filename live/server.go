@@ -419,7 +419,7 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 			// Non-blocking drain: coalesce burst events into a single render.
 			drainEvents(eventCh)
 
-			if err := srv.sendDatastarUpdate(stream); err != nil {
+			if err := srv.sendDatastarSnapshot(stream); err != nil {
 				return
 			}
 		}
