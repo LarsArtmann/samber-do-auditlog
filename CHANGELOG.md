@@ -15,14 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added — `health/` sub-package (Health-Probe SDK)
 
 - **Three-probe separation**: `health.New(injector)` produces a `Probe` with distinct `LivenessHandler()`, `ReadinessHandler()`, and `StartupHandler()` HTTP handlers, each answering a different Kubernetes question (alive? ready? booted?).
-- **Critical vs non-critical classification**: `WithCriticalServices("db", "redis")` marks dependencies that gate readiness. Non-critical failures (e.g. metrics exporter) surface in the response body without causing 503.
+- **Critical vs non-critical classification**: `WithCriticalServices("db", "redis")` marks dependencies that gate readiness. Non-critical failures (e.g. metrics exporter) surface as `warn` in the response body without causing 503.
 - **Background caching**: default 1-second refresh loop populates an atomic cache so readiness serves O(1) responses regardless of kubelet/LB polling frequency. `WithRefreshInterval(0)` switches to live evaluation per request.
 - **Shutdown awareness**: `Probe.Shutdown()` flips readiness to 503 immediately (even from a stale cached response) while liveness stays 200, enabling graceful load-balancer drain.
 - **Startup latch**: startup probe evaluates critical services until all pass, then latches to 200 permanently — allows generous kubelet `failureThreshold` for slow-booting apps.
 - **Auditlog integration**: `WithPlugin(plugin)` routes every health-check batch through `auditlog.Plugin.RecordHealthCheckWithContext`, recording timed audit events for observability.
+- **GET-only enforcement**: `WithGETOnly()` wraps all handlers to reject non-GET requests with 405 + `Allow: GET` header. Off by default; Kubernetes always uses GET.
 - **`RegisterRoutes(mux, routes)`**: convenience wiring for conventional Kubernetes paths (`/healthz`, `/readyz`, `/startupz`) or custom paths.
 - **Strongly-typed response model**: `Status` (pass/fail/warn), `Check` (per-service), `Response` (aggregate with version, uptime, shutting_down, total_latency_ms).
-- **29 tests** covering liveness, readiness (critical/non-critical/shutdown/cache/live), startup (latch/unhealthy/no-critical), Evaluate, routes, content-type, audit integration, and lifecycle.
+- **Runnable examples**: 4 testable `Example*` functions with `// Output:` directives covering New, LivenessHandler, ReadinessHandler, and RegisterRoutes.
+- **Performance benchmarks**: 4 benchmarks proving cache delivers 3.3µs responses vs 9.6µs live evaluation.
+- **33 tests + 4 examples + 4 benchmarks** covering liveness, readiness (critical/non-critical/warn/shutdown/cache/live), startup (latch), Evaluate, routes, GET-only enforcement, audit integration, and lifecycle.
 
 ### Added — go-sse Full Adoption (Stream, Broadcaster, Replay)
 
