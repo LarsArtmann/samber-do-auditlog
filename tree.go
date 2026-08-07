@@ -121,22 +121,21 @@ func (r Report) WriteHTMLTree(writer io.Writer) error {
 
 // WriteTreeString returns the ASCII tree as a string.
 func (r Report) WriteTreeString() (string, error) {
-	var buf strings.Builder
-
-	err := r.WriteTree(&buf)
-	if err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
+	return writeTreeToString(r.WriteTree)
 }
 
 // WriteHTMLTreeString returns the HTML tree as a string.
 func (r Report) WriteHTMLTreeString() (string, error) {
+	return writeTreeToString(r.WriteHTMLTree)
+}
+
+// writeTreeToString writes a tree to a strings.Builder via the supplied writer
+// function and returns the resulting string. Centralizes the shared
+// Builder + write + return idiom of the String() helpers.
+func writeTreeToString(write func(io.Writer) error) (string, error) {
 	var buf strings.Builder
 
-	err := r.WriteHTMLTree(&buf)
-	if err != nil {
+	if err := write(&buf); err != nil {
 		return "", err
 	}
 

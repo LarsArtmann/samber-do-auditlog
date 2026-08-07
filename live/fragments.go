@@ -345,23 +345,25 @@ func depNamesString(deps []auditlog.ServiceRef) string {
 }
 
 func rowSignalsJSON(svc auditlog.ServiceInfo, idx int) string {
-	signals, err := json.Marshal(rowSignals{
+	return marshalSignalsOrEmpty(rowSignals{
 		RowName:  string(svc.ServiceName),
 		RowScope: svc.ScopeName,
 		RowIdx:   idx,
 	})
-	if err != nil {
-		return "{}"
-	}
-
-	return string(signals)
 }
 
 func eventRowSignalsJSON(evt auditlog.Event, idx int) string {
-	signals, err := json.Marshal(eventRowSignals{
+	return marshalSignalsOrEmpty(eventRowSignals{
 		EvtType: string(evt.EventType),
 		EvtIdx:  idx,
 	})
+}
+
+// marshalSignalsOrEmpty marshals v to JSON and returns the result. On error
+// (which can only happen if v contains unsupported types), returns "{}"
+// so the templ template can always render a valid signal struct.
+func marshalSignalsOrEmpty(v any) string {
+	signals, err := json.Marshal(v)
 	if err != nil {
 		return "{}"
 	}
