@@ -567,6 +567,66 @@ func TestEvaluate_TotalLatencyRecorded(t *testing.T) {
 	}
 }
 
+func TestEvaluate_MixedFailures_CriticalFailNonCriticalWarn(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	provideUnhealthy(injector, "db", "unreachable")
+	provideUnhealthy(injector, "metrics", "exporter down")
+	invoke[*unhealthyService](t, injector, "db")
+	invoke[*unhealthyService](t, injector, "metrics")
+
+	probe := health.New(injector, health.WithCriticalServices("db"))
+
+	resp := probe.Evaluate(context.Background())
+
+	if resp.Status != health.StatusFail {
+		t.Errorf("roll-up status: want fail (critical db down), got %s", resp.Status)
+	}
+
+	if resp.Checks["db"].Status != health.StatusFail {
+		t.Errorf("db check: want fail (critical), got %s", resp.Checks["db"].Status)
+	}
+
+	if resp.Checks["metrics"].Status != health.StatusWarn {
+		t.Errorf("metrics check: want warn (non-critical), got %s", resp.Checks["metrics"].Status)
+	}
+
+	if resp.Checks["metrics"].Error != "service unhealthy: exporter down" {
+		t.Errorf("metrics error: want message, got %q", resp.Checks["metrics"].Error)
+	}
+}
+
+func TestEvaluate_AllNonCriticalFailures_RollupStaysPass(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	provideUnhealthy(injector, "metrics", "exporter down")
+	provideUnhealthy(injector, "feature-flags", "service unavailable")
+	invoke[*unhealthyService](t, injector, "metrics")
+	invoke[*unhealthyService](t, injector, "feature-flags")
+	provideHealthy(injector, "db")
+	invoke[*healthyService](t, injector, "db")
+
+	probe := health.New(injector, health.WithCriticalServices("db"))
+
+	resp := probe.Evaluate(context.Background())
+
+	if resp.Status != health.StatusPass {
+		t.Errorf("roll-up status: want pass (only non-critical failures), got %s", resp.Status)
+	}
+
+	for _, name := range []string{"metrics", "feature-flags"} {
+		if resp.Checks[name].Status != health.StatusWarn {
+			t.Errorf("%s check: want warn, got %s", name, resp.Checks[name].Status)
+		}
+	}
+
+	if resp.Checks["db"].Status != health.StatusPass {
+		t.Errorf("db check: want pass, got %s", resp.Checks["db"].Status)
+	}
+}
+
 // --- RegisterRoutes tests ---.
 
 func TestRegisterRoutes_AllThreeHandlersRegistered(t *testing.T) {
@@ -765,5 +825,91 @@ func TestReadiness_BeforeStart_EvaluatesLive(t *testing.T) {
 	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
 	if w.Code != http.StatusOK {
 		t.Fatalf("readiness before Start (live fallback): want 200, got %d", w.Code)
+	}
+}
+
+// --- Benchmarks ---.
+
+func BenchmarkLivenessHandler(b *testing.B) {
+	injector := do.New()
+	probe := health.New(injector, health.WithVersion("1.0.0"))
+	handler := probe.LivenessHandler()
+
+	r, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/healthz", nil)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		w := httptest.NewRecorder()
+		handler(w, r)
+	}
+}
+
+func BenchmarkReadinessHandler_CacheHit(b *testing.B) {
+	injector := do.New()
+	provideHealthy(injector, "db")
+	invoke[*healthyService](b, injector, "db")
+
+	probe := health.New(injector, health.WithCriticalServices("db"))
+	probe.Start(context.Background())
+	defer probe.Shutdown()
+
+	handler := probe.ReadinessHandler()
+
+	r, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/readyz", nil)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		w := httptest.NewRecorder()
+		handler(w, r)
+	}
+}
+
+func BenchmarkReadinessHandler_LiveEval(b *testing.B) {
+	injector := do.New()
+	provideHealthy(injector, "db")
+	invoke[*healthyService](b, injector, "db")
+
+	probe := health.New(injector,
+		health.WithCriticalServices("db"),
+		health.WithRefreshInterval(0),
+	)
+	handler := probe.ReadinessHandler()
+
+	r, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/readyz", nil)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		w := httptest.NewRecorder()
+		handler(w, r)
+	}
+}
+
+func BenchmarkEvaluate(b *testing.B) {
+	injector := do.New()
+	provideHealthy(injector, "db")
+	provideHealthy(injector, "cache")
+	invoke[*healthyService](b, injector, "db")
+	invoke[*healthyService](b, injector, "cache")
+
+	probe := health.New(injector, health.WithCriticalServices("db", "cache"))
+
+	ctx := context.Background()
+
+	b.ResetTimer()
+
+	for b.Loop() {
+		_ = probe.Evaluate(ctx)
 	}
 }
