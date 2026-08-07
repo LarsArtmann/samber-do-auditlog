@@ -89,8 +89,7 @@ type fragmentPatch struct {
 // renderAllFragments renders every dashboard section and returns the list of
 // (selector, html) pairs to send as datastar-patch-elements events.
 //
-//nolint:contextcheck,golines // templ components don't take context as a parameter;
-// context is passed at Render() time inside renderToString
+//nolint:contextcheck,golines // templ components don't take ctx; context passed via renderToString
 func renderAllFragments(ctx context.Context, report auditlog.Report, events []auditlog.Event, meta auditlog.TypeMetadata) []fragmentPatch {
 	errorCount := countErrors(report.Services)
 	legendItems := computeLegendItems(report, meta)

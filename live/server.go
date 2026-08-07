@@ -379,7 +379,7 @@ func (srv *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write(payload)
 }
 
-func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) { //nolint:contextcheck // stream derives context from request
 	_, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "streaming not supported", http.StatusInternalServerError)

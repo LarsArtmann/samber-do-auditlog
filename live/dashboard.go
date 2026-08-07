@@ -170,7 +170,7 @@ func renderEventFilterChips() string {
 			}
 		}
 
-		fmt.Fprintf(&b,
+		fmt.Fprintf(&b, //nolint:golines,lll // HTML template with datastar attributes
 			`<button class="chip" data-on:click="$eventFilter = '%s'" data-class:active="$eventFilter === '%s'" aria-pressed="false" style="border-color:%s">%s</button>`,
 			t, t, color, label)
 	}
