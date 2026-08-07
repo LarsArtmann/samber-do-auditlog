@@ -187,6 +187,7 @@ linters:
         - github.com/larsartmann/samber-do-auditlog/health.Response
         - github.com/larsartmann/samber-do-auditlog/health.Check
         - github.com/larsartmann/samber-do-auditlog/health.Routes
+        - github.com/larsartmann/samber-do-auditlog/health.Probe
         - github.com/larsartmann/samber-do-auditlog.NDJSONStreamer
     ginkgolinter:
       forbid-focus-container: true

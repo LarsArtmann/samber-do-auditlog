@@ -296,14 +296,14 @@ func buildChecks(results map[string]error) map[string]Check {
 	checks := make(map[string]Check, len(results))
 
 	for name, err := range results {
-		c := Check{Status: StatusPass}
+		check := Check{Status: StatusPass}
 
 		if err != nil {
-			c.Status = StatusFail
-			c.Error = err.Error()
+			check.Status = StatusFail
+			check.Error = err.Error()
 		}
 
-		checks[name] = c
+		checks[name] = check
 	}
 
 	return checks

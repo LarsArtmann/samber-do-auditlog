@@ -108,6 +108,7 @@ func (p *Probe) StartupHandler() http.HandlerFunc {
 		}
 
 		resp := p.buildStartupResponse(results)
+
 		code := http.StatusServiceUnavailable
 		if p.startupPassed.Load() {
 			code = http.StatusOK

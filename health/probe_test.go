@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -23,12 +24,14 @@ var _ do.HealthcheckerWithContext = (*healthyService)(nil)
 
 func (healthyService) HealthCheck(_ context.Context) error { return nil }
 
+var errUnhealthy = errors.New("service unhealthy")
+
 type unhealthyService struct{ reason string }
 
 var _ do.HealthcheckerWithContext = (*unhealthyService)(nil)
 
 func (u *unhealthyService) HealthCheck(_ context.Context) error {
-	return errors.New(u.reason)
+	return fmt.Errorf("%w: %s", errUnhealthy, u.reason)
 }
 
 type slowService struct {
@@ -42,7 +45,7 @@ func (s *slowService) HealthCheck(ctx context.Context) error {
 	case <-time.After(s.delay):
 		return nil
 	case <-ctx.Done():
-		return ctx.Err()
+		return fmt.Errorf("health check interrupted: %w", ctx.Err())
 	}
 }
 
@@ -83,6 +86,7 @@ func provideUnhealthy(i do.Injector, name, reason string) {
 
 func provideCounting(i do.Injector, name string) *countingService {
 	svc := &countingService{}
+
 	do.ProvideNamed(i, name, func(_ do.Injector) (*countingService, error) {
 		return svc, nil
 	})
@@ -96,11 +100,16 @@ func invoke[T any](t *testing.T, i do.Injector, name string) T {
 	return do.MustInvokeNamed[T](i, name)
 }
 
-func doRequest(t *testing.T, handler http.HandlerFunc, method, target string) *httptest.ResponseRecorder {
+func doRequest(t *testing.T, handler http.HandlerFunc, target string) *httptest.ResponseRecorder {
 	t.Helper()
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest(method, target, nil)
+
+	r, err := http.NewRequestWithContext(t.Context(), http.MethodGet, target, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	handler(w, r)
 
 	return w
@@ -110,6 +119,7 @@ func decodeResponse(t *testing.T, w *httptest.ResponseRecorder) health.Response 
 	t.Helper()
 
 	var resp health.Response
+
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	if err != nil {
 		t.Fatalf("unmarshal response: %v", err)
@@ -126,7 +136,7 @@ func TestLiveness_AlwaysReturns200(t *testing.T) {
 	injector := do.New()
 	probe := health.New(injector)
 
-	w := doRequest(t, probe.LivenessHandler(), http.MethodGet, "/healthz")
+	w := doRequest(t, probe.LivenessHandler(), "/healthz")
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("liveness status: want 200, got %d", w.Code)
@@ -146,7 +156,7 @@ func TestLiveness_PerformsNoDependencyChecks(t *testing.T) {
 	invoke[*countingService](t, injector, "db")
 
 	probe := health.New(injector)
-	w := doRequest(t, probe.LivenessHandler(), http.MethodGet, "/healthz")
+	w := doRequest(t, probe.LivenessHandler(), "/healthz")
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("liveness status: want 200, got %d", w.Code)
@@ -163,7 +173,7 @@ func TestLiveness_ContainsVersionAndUptime(t *testing.T) {
 	injector := do.New()
 	probe := health.New(injector, health.WithVersion("v1.2.3"))
 
-	w := doRequest(t, probe.LivenessHandler(), http.MethodGet, "/healthz")
+	w := doRequest(t, probe.LivenessHandler(), "/healthz")
 	resp := decodeResponse(t, w)
 
 	if resp.Version != "v1.2.3" {
@@ -191,7 +201,7 @@ func TestReadiness_AllHealthy_Returns200(t *testing.T) {
 		health.WithRefreshInterval(0),
 	)
 
-	w := doRequest(t, probe.ReadinessHandler(), http.MethodGet, "/readyz")
+	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("readiness status: want 200, got %d", w.Code)
@@ -221,7 +231,7 @@ func TestReadiness_CriticalFailure_Returns503(t *testing.T) {
 		health.WithRefreshInterval(0),
 	)
 
-	w := doRequest(t, probe.ReadinessHandler(), http.MethodGet, "/readyz")
+	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
 
 	if w.Code != http.StatusServiceUnavailable {
 		t.Fatalf("readiness status: want 503, got %d", w.Code)
@@ -241,8 +251,8 @@ func TestReadiness_CriticalFailure_Returns503(t *testing.T) {
 		t.Errorf("db check status: want fail, got %s", dbCheck.Status)
 	}
 
-	if dbCheck.Error != "connection refused" {
-		t.Errorf("db check error: want 'connection refused', got %q", dbCheck.Error)
+	if dbCheck.Error != "service unhealthy: connection refused" {
+		t.Errorf("db check error: want 'service unhealthy: connection refused', got %q", dbCheck.Error)
 	}
 }
 
@@ -260,7 +270,7 @@ func TestReadiness_NonCriticalFailure_Returns200(t *testing.T) {
 		health.WithRefreshInterval(0),
 	)
 
-	w := doRequest(t, probe.ReadinessHandler(), http.MethodGet, "/readyz")
+	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("readiness status: want 200 (non-critical failure), got %d", w.Code)
@@ -295,7 +305,7 @@ func TestReadiness_ShuttingDown_Returns503(t *testing.T) {
 
 	probe.Shutdown()
 
-	w := doRequest(t, probe.ReadinessHandler(), http.MethodGet, "/readyz")
+	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
 
 	if w.Code != http.StatusServiceUnavailable {
 		t.Fatalf("readiness status during shutdown: want 503, got %d", w.Code)
@@ -315,10 +325,8 @@ func TestReadiness_MarkShuttingDown_DoesNotStopBackgroundLoop(t *testing.T) {
 	invoke[*healthyService](t, injector, "db")
 
 	probe := health.New(injector, health.WithCriticalServices("db"))
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
-	probe.Start(ctx)
+	probe.Start(t.Context())
 	probe.MarkShuttingDown()
 
 	// Give the loop time to prove it is still running.
@@ -338,7 +346,7 @@ func TestReadiness_NoServices_Returns200(t *testing.T) {
 	injector := do.New()
 	probe := health.New(injector, health.WithRefreshInterval(0))
 
-	w := doRequest(t, probe.ReadinessHandler(), http.MethodGet, "/readyz")
+	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("readiness with no services: want 200, got %d", w.Code)
@@ -359,10 +367,7 @@ func TestReadiness_CachedMode_ServesFromCache(t *testing.T) {
 	)
 
 	// Manually populate cache via Start.
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	probe.Start(ctx)
+	probe.Start(t.Context())
 	defer probe.Shutdown()
 
 	// Wait for initial evaluation.
@@ -372,7 +377,7 @@ func TestReadiness_CachedMode_ServesFromCache(t *testing.T) {
 
 	// Hit readiness 10 times — should not increase call count.
 	for range 10 {
-		w := doRequest(t, probe.ReadinessHandler(), http.MethodGet, "/readyz")
+		w := doRequest(t, probe.ReadinessHandler(), "/readyz")
 		if w.Code != http.StatusOK {
 			t.Fatalf("readiness status: want 200, got %d", w.Code)
 		}
@@ -398,7 +403,7 @@ func TestStartup_LatchesOnceAllCriticalPass(t *testing.T) {
 	)
 
 	// First call: all critical healthy → 200, latches.
-	w1 := doRequest(t, probe.StartupHandler(), http.MethodGet, "/startupz")
+	w1 := doRequest(t, probe.StartupHandler(), "/startupz")
 	if w1.Code != http.StatusOK {
 		t.Fatalf("first startup: want 200, got %d", w1.Code)
 	}
@@ -408,7 +413,7 @@ func TestStartup_LatchesOnceAllCriticalPass(t *testing.T) {
 	}
 
 	// Second call: latched → still 200.
-	w2 := doRequest(t, probe.StartupHandler(), http.MethodGet, "/startupz")
+	w2 := doRequest(t, probe.StartupHandler(), "/startupz")
 	if w2.Code != http.StatusOK {
 		t.Fatalf("latched startup: want 200, got %d", w2.Code)
 	}
@@ -430,7 +435,7 @@ func TestStartup_NeverInvokedService_AppearsHealthyInSamberDo(t *testing.T) {
 		health.WithRefreshInterval(0),
 	)
 
-	w := doRequest(t, probe.StartupHandler(), http.MethodGet, "/startupz")
+	w := doRequest(t, probe.StartupHandler(), "/startupz")
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("startup with never-invoked service: want 200 (samber/do reports healthy), got %d", w.Code)
@@ -453,7 +458,7 @@ func TestStartup_CriticalServiceUnhealthy_Returns503(t *testing.T) {
 		health.WithRefreshInterval(0),
 	)
 
-	w := doRequest(t, probe.StartupHandler(), http.MethodGet, "/startupz")
+	w := doRequest(t, probe.StartupHandler(), "/startupz")
 
 	if w.Code != http.StatusServiceUnavailable {
 		t.Fatalf("startup with unhealthy critical: want 503, got %d", w.Code)
@@ -466,7 +471,7 @@ func TestStartup_NoCriticalServices_ImmediatelyPasses(t *testing.T) {
 	injector := do.New()
 	probe := health.New(injector, health.WithRefreshInterval(0))
 
-	w := doRequest(t, probe.StartupHandler(), http.MethodGet, "/startupz")
+	w := doRequest(t, probe.StartupHandler(), "/startupz")
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("startup with no critical services: want 200, got %d", w.Code)
@@ -575,8 +580,13 @@ func TestRegisterRoutes_AllThreeHandlersRegistered(t *testing.T) {
 
 	for _, path := range []string{"/healthz", "/readyz", "/startupz"} {
 		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodGet, path, nil)
-		mux.ServeHTTP(w, r)
+
+	r, err := http.NewRequestWithContext(t.Context(), http.MethodGet, path, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mux.ServeHTTP(w, r)
 
 		if w.Code == http.StatusNotFound {
 			t.Errorf("route %s not registered", path)
@@ -598,7 +608,12 @@ func TestRegisterRoutes_CustomPaths(t *testing.T) {
 	})
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest(http.MethodGet, "/live", nil)
+
+	r, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/live", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	mux.ServeHTTP(w, r)
 
 	if w.Code != http.StatusOK {
@@ -614,7 +629,7 @@ func TestResponse_ContentTypeIsJSON(t *testing.T) {
 	injector := do.New()
 	probe := health.New(injector)
 
-	w := doRequest(t, probe.LivenessHandler(), http.MethodGet, "/healthz")
+	w := doRequest(t, probe.LivenessHandler(), "/healthz")
 
 	ct := w.Header().Get("Content-Type")
 	if ct != "application/json" {
@@ -628,7 +643,7 @@ func TestResponse_NoCacheHeader(t *testing.T) {
 	injector := do.New()
 	probe := health.New(injector)
 
-	w := doRequest(t, probe.LivenessHandler(), http.MethodGet, "/healthz")
+	w := doRequest(t, probe.LivenessHandler(), "/healthz")
 
 	cc := w.Header().Get("Cache-Control")
 	if cc != "no-cache" {
@@ -658,6 +673,7 @@ func TestAuditIntegration_RecordsHealthCheckEvents(t *testing.T) {
 	}
 
 	report := plugin.Report()
+
 	events := report.EventsByType(auditlog.EventTypeHealthCheck)
 	if len(events) == 0 {
 		t.Error("expected health check events from auditlog plugin")
@@ -697,13 +713,11 @@ func TestStart_PerformsImmediateEvaluation(t *testing.T) {
 	invoke[*healthyService](t, injector, "db")
 
 	probe := health.New(injector, health.WithCriticalServices("db"))
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
-	probe.Start(ctx)
+	probe.Start(t.Context())
 
 	// Cache should be populated immediately, before any tick.
-	w := doRequest(t, probe.ReadinessHandler(), http.MethodGet, "/readyz")
+	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
 	if w.Code != http.StatusOK {
 		t.Errorf("readiness after Start: want 200, got %d", w.Code)
 	}
@@ -716,14 +730,12 @@ func TestShutdown_StopsBackgroundLoop(t *testing.T) {
 
 	injector := do.New()
 	probe := health.New(injector, health.WithRefreshInterval(10*time.Millisecond))
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
-	probe.Start(ctx)
+	probe.Start(t.Context())
 	probe.Shutdown()
 
 	// Should not panic or hang.
-	w := doRequest(t, probe.ReadinessHandler(), http.MethodGet, "/readyz")
+	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
 	if w.Code != http.StatusServiceUnavailable {
 		t.Errorf("readiness after Shutdown: want 503, got %d", w.Code)
 	}
@@ -734,11 +746,9 @@ func TestStart_CalledTwice_IsNoOp(t *testing.T) {
 
 	injector := do.New()
 	probe := health.New(injector, health.WithRefreshInterval(10*time.Millisecond))
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
-	probe.Start(ctx)
-	probe.Start(ctx) // should not panic or start a second loop
+	probe.Start(t.Context())
+	probe.Start(t.Context()) // should not panic or start a second loop
 	probe.Shutdown()
 }
 
@@ -752,7 +762,7 @@ func TestReadiness_BeforeStart_EvaluatesLive(t *testing.T) {
 	// Default refresh interval > 0, but Start not called → no cache → live eval.
 	probe := health.New(injector, health.WithCriticalServices("db"))
 
-	w := doRequest(t, probe.ReadinessHandler(), http.MethodGet, "/readyz")
+	w := doRequest(t, probe.ReadinessHandler(), "/readyz")
 	if w.Code != http.StatusOK {
 		t.Fatalf("readiness before Start (live fallback): want 200, got %d", w.Code)
 	}
