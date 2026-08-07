@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/larsartmann/samber-do-auditlog/internal/testhelpers"
+	"github.com/larsartmann/samber-do-auditlog/testhelpers"
 	"github.com/samber/do/v2"
 )
 

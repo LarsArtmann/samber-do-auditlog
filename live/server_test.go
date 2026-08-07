@@ -15,7 +15,7 @@ import (
 
 	"github.com/larsartmann/go-sse"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
-	"github.com/larsartmann/samber-do-auditlog/internal/testhelpers"
+	"github.com/larsartmann/samber-do-auditlog/testhelpers"
 	"github.com/larsartmann/samber-do-auditlog/live"
 	"github.com/samber/do/v2"
 )

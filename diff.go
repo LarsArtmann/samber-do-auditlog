@@ -16,6 +16,10 @@ type DiffResult struct {
 	ChangedServices []ServiceDiff `json:"changed_services,omitempty"`
 	// EventCountDelta is other.EventCount - r.EventCount.
 	EventCountDelta int `json:"event_count_delta"`
+	// TotalBuildDurationMsDelta is other.TotalBuildDurationMs - r.TotalBuildDurationMs.
+	TotalBuildDurationMsDelta float64 `json:"total_build_duration_ms_delta"`
+	// TotalShutdownDurationMsDelta is other.TotalShutdownDurationMs - r.TotalShutdownDurationMs.
+	TotalShutdownDurationMsDelta float64 `json:"total_shutdown_duration_ms_delta"`
 }
 
 // ServiceDiff describes changes to a service that exists in both reports.
@@ -33,7 +37,9 @@ func (d DiffResult) IsEmpty() bool {
 	return len(d.AddedServices) == 0 &&
 		len(d.RemovedServices) == 0 &&
 		len(d.ChangedServices) == 0 &&
-		d.EventCountDelta == 0
+		d.EventCountDelta == 0 &&
+		d.TotalBuildDurationMsDelta == 0 &&
+		d.TotalShutdownDurationMsDelta == 0
 }
 
 // HasChanges returns true if the diff found any differences.
@@ -51,10 +57,12 @@ func (d DiffResult) HasChanges() bool {
 // dependency edges, status transitions, error appearances) are reported.
 func (r Report) Diff(other Report) DiffResult {
 	result := DiffResult{
-		AddedServices:   nil,
-		RemovedServices: nil,
-		ChangedServices: nil,
-		EventCountDelta: other.EventCount - r.EventCount,
+		AddedServices:               nil,
+		RemovedServices:             nil,
+		ChangedServices:             nil,
+		EventCountDelta:             other.EventCount - r.EventCount,
+		TotalBuildDurationMsDelta:   other.TotalBuildDurationMs - r.TotalBuildDurationMs,
+		TotalShutdownDurationMsDelta: other.TotalShutdownDurationMs - r.TotalShutdownDurationMs,
 	}
 
 	rByID := indexServicesByKey(r.Services)
