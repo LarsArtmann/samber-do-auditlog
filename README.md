@@ -314,15 +314,19 @@ go run ./example --live --live-addr :7777
 
 ## Health Probes
 
-The `health/` sub-package provides a production-ready health-probe SDK implementing the three-probe Kubernetes pattern (liveness, readiness, startup) with critical/non-critical service classification and background caching:
+The health-probe SDK has been extracted to its own project: **[go-health](https://github.com/larsartmann/go-health)** — a standalone Kubernetes health-probe library for samber/do v2 with zero dependencies beyond `samber/do` itself.
+
+`auditlog.Plugin` satisfies go-health's `HealthRecorder` interface implicitly, so you can wire them together:
 
 ```go
-import "github.com/larsartmann/samber-do-auditlog/health"
+import "github.com/larsartmann/go-health"
 
+plugin, _ := auditlog.New(auditlog.Config{Enabled: true})
 injector := do.NewWithOpts(plugin.Opts())
 // Register and invoke services...
 
 probe := health.New(injector,
+    health.WithHealthRecorder(plugin),
     health.WithCriticalServices("database", "redis"),
     health.WithVersion("1.0.0"),
 )
@@ -333,20 +337,6 @@ defer probe.Shutdown()
 mux := http.NewServeMux()
 probe.RegisterRoutes(mux, health.DefaultRoutes())
 ```
-
-Three endpoints:
-
-- **`/healthz`** (liveness) — dep-free, always 200. Prevents restart cascades from dependency blips.
-- **`/readyz`** (readiness) — checks deps, 503 on critical failure. Non-critical failures surface as `warn` in the response body without triggering 503.
-- **`/startupz`** (startup) — latches once all critical services pass, then permanently returns 200. Allows generous kubelet `failureThreshold` for slow-booting apps.
-
-Features:
-
-- **Background caching** — default 1s refresh interval serves cached results for O(1) responses. Set `WithRefreshInterval(0)` for live evaluation.
-- **Shutdown-aware** — `Shutdown()` flips readiness to 503 so load balancers drain traffic before connections close. Liveness stays 200.
-- **Optional audit integration** — wire `auditlog.Plugin` via `WithPlugin` to record every health-check batch as timed events.
-- **GET-only enforcement** — `WithGETOnly()` rejects non-GET requests with 405 (Kubernetes always uses GET).
-- **Functional options** — `WithVersion`, `WithCriticalServices`, `WithRefreshInterval`, `WithTimeout`, `WithBootTime`, `WithGETOnly`.
 
 See the [guide](docs/guides/superb-health-endpoint-with-samber-do.md) for the full design rationale.
 
