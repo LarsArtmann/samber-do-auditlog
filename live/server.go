@@ -58,8 +58,10 @@ type HealthInfo struct {
 // These are server-owned signals; client-owned signals (activeTab,
 // serviceSearch, etc.) are declared in the HTML template's data-signals.
 type snapshotSignals struct {
-	ConnStatus string `json:"connStatus"`
-	Complete   bool   `json:"complete"`
+	ConnStatus       string `json:"connStatus"`
+	Complete         bool   `json:"complete"`
+	ServicesOverflow bool   `json:"servicesOverflow"`
+	EventsOverflow   bool   `json:"eventsOverflow"`
 }
 
 // Server serves the real-time DI container dashboard over HTTP.
@@ -453,10 +455,12 @@ func (srv *Server) sendDatastarSnapshot(stream *sse.Stream) error {
 	events := plugin.Events()
 	meta := auditlog.BuildTypeMetadata()
 
-	// Send connection status signal.
+	// Send connection status + overflow signals.
 	signals := snapshotSignals{
-		ConnStatus: "connected",
-		Complete:   srv.hub.IsComplete(),
+		ConnStatus:       "connected",
+		Complete:         srv.hub.IsComplete(),
+		ServicesOverflow: len(report.Services) > maxServiceRows,
+		EventsOverflow:   len(events) > maxEventRows,
 	}
 
 	signalsJSON, err := json.Marshal(signals)

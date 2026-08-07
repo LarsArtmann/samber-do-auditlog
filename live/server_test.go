@@ -57,7 +57,7 @@ func TestServer_DashboardHTML(t *testing.T) {
 
 	body := rec.Body.String()
 
-	for _, want := range []string{"<!DOCTYPE html>", "samber-do-auditlog", "LIVE", "skip-link", "Skip to main content", "main-content", "role=\"tab\"", "aria-selected", "aria-controls", "tabindex", "showShortcutsHelp", "closeKbdHelp", "kbdHelpPrevFocus", "Keyboard shortcuts", "ArrowRight", "ArrowLeft", "Press ? for keyboard shortcuts"} {
+	for _, want := range []string{"<!DOCTYPE html>", "samber-do-auditlog", "LIVE", "skip-link", "Skip to main content", "main-content", "role=\"tab\"", "aria-selected", "aria-controls", "tabindex", "handleKeydown", "exportReport", "closeKbdHelp", "kbdHelpPrevFocus", "Keyboard shortcuts", "ArrowRight", "ArrowLeft", "Press ? for keyboard shortcuts", "data-signals", "data-init", "data-on:click", "data-text"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("dashboard HTML missing %q", want)
 		}
@@ -284,9 +284,15 @@ func sseConnectWithLastID(t *testing.T, url, lastEventID string) (*bufio.Scanner
 }
 
 func skipSnapshot(scanner *bufio.Scanner) {
+	// The datastar snapshot sends: 1 patch-signals + N patch-elements events.
+	// #container-id is always the last fragment. Skip until we consume it.
 	for scanner.Scan() {
-		if scanner.Text() == "" {
-			break
+		if strings.Contains(scanner.Text(), "selector #container-id") {
+			for scanner.Scan() {
+				if scanner.Text() == "" {
+					return
+				}
+			}
 		}
 	}
 }
@@ -295,17 +301,19 @@ func readSSEEvent(scanner *bufio.Scanner, eventName string) (string, bool) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "event: "+eventName) {
-			scanner.Scan()
-
-			dataLine := scanner.Text()
-			data, found := strings.CutPrefix(dataLine, "data: ")
-
-			if found {
-				return data, true
+			var dataLines []string
+			for scanner.Scan() {
+				l := scanner.Text()
+				if l == "" {
+					break
+				}
+				if d, ok := strings.CutPrefix(l, "data: "); ok {
+					dataLines = append(dataLines, d)
+				}
 			}
+			return strings.Join(dataLines, "\n"), true
 		}
 	}
-
 	return "", false
 }
 
@@ -341,13 +349,13 @@ func TestServer_SSE_SnapshotOnConnect(t *testing.T) {
 	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
 	defer closeSSE()
 
-	data, found := readSSEEvent(scanner, "snapshot")
+	data, found := readSSEEvent(scanner, "datastar-patch-signals")
 	if !found {
-		t.Fatal("did not receive snapshot event")
+		t.Fatal("did not receive datastar-patch-signals event")
 	}
 
-	if !strings.Contains(data, `"report"`) {
-		t.Errorf("snapshot should contain report field: %s", data[:min(200, len(data))])
+	if !strings.Contains(data, "connStatus") {
+		t.Errorf("snapshot signals should contain connStatus: %s", data[:min(200, len(data))])
 	}
 }
 
@@ -375,13 +383,13 @@ func TestServer_SSE_LiveEventDelivery(t *testing.T) {
 		Phase:     auditlog.PhaseAfter,
 	})
 
-	data, found := readSSEEvent(scanner, "event")
+	data, found := readSSEEvent(scanner, "datastar-patch-elements")
 	if !found {
-		t.Fatal("did not receive live event")
+		t.Fatal("did not receive live datastar-patch-elements event")
 	}
 
 	if !strings.Contains(data, "cache") {
-		t.Errorf("live event should contain cache: %s", data)
+		t.Errorf("live update should contain cache: %s", data[:min(200, len(data))])
 	}
 }
 
@@ -400,9 +408,21 @@ func TestServer_SSE_CompleteEvent(t *testing.T) {
 
 	server.SignalComplete()
 
-	_, found := readSSEEvent(scanner, "complete")
+	// Complete sends a full snapshot, then a final signal patch with complete:true.
+	// Read datastar-patch-signals events until we find the one with complete.
+	found := false
+	for range 20 {
+		data, ok := readSSEEvent(scanner, "datastar-patch-signals")
+		if !ok {
+			break
+		}
+		if strings.Contains(data, `"complete":true`) {
+			found = true
+			break
+		}
+	}
 	if !found {
-		t.Fatal("did not receive complete event")
+		t.Fatal("did not receive complete signal")
 	}
 }
 
@@ -1103,13 +1123,13 @@ func TestServer_SSE_EventBroadcast(t *testing.T) {
 		EventType: auditlog.EventTypeRegistration,
 	})
 
-	data, ok := readSSEEvent(scanner, "event")
+	data, ok := readSSEEvent(scanner, "datastar-patch-elements")
 	if !ok {
-		t.Fatal("expected to receive broadcast event")
+		t.Fatal("expected to receive broadcast datastar event")
 	}
 
-	if !strings.Contains(data, `"sequence":999`) {
-		t.Errorf("event data missing sequence 999: %s", data)
+	if !strings.Contains(data, "selector") {
+		t.Errorf("datastar event should contain selector: %s", data[:min(200, len(data))])
 	}
 }
 
@@ -1145,34 +1165,21 @@ func TestServer_SSE_ReconnectReplay(t *testing.T) {
 	defer ts.Close()
 
 	// Reconnect with Last-Event-ID = first event's sequence.
-	// Should replay all events after that sequence.
+	// With datastar, reconnect always sends a fresh snapshot.
 	firstSeq := strconv.Itoa(events[0].Sequence)
-	expectedReplay := len(events) - 1
 
 	scanner, closeSSE := sseConnectWithLastID(t, ts.URL+"/debug/di/api/events", firstSeq)
 	defer closeSSE()
 
-	skipSnapshot(scanner)
-
-	// Count replayed "event" messages.
-	replayed := 0
-
-	for range 200 {
-		if !scanner.Scan() {
-			break
-		}
-
-		if strings.HasPrefix(scanner.Text(), "event: event") {
-			replayed++
-		}
-
-		if replayed >= expectedReplay {
-			break
-		}
+	// Reconnect sends a fresh snapshot (datastar events) regardless of Last-Event-ID.
+	// Verify we get datastar-patch-signals on reconnect.
+	data, found := readSSEEvent(scanner, "datastar-patch-signals")
+	if !found {
+		t.Fatal("did not receive datastar-patch-signals on reconnect")
 	}
 
-	if replayed != expectedReplay {
-		t.Errorf("expected %d replayed events, got %d", expectedReplay, replayed)
+	if !strings.Contains(data, "connStatus") {
+		t.Error("reconnect signals should contain connStatus")
 	}
 }
 
@@ -1188,13 +1195,13 @@ func TestServer_SSE_ReconnectNoLastEventID(t *testing.T) {
 	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
 	defer closeSSE()
 
-	data, found := readSSEEvent(scanner, "snapshot")
+	data, found := readSSEEvent(scanner, "datastar-patch-signals")
 	if !found {
-		t.Fatal("did not receive snapshot")
+		t.Fatal("did not receive snapshot signals")
 	}
 
-	if !strings.Contains(data, `"report"`) {
-		t.Error("snapshot should contain report field")
+	if !strings.Contains(data, "connStatus") {
+		t.Error("snapshot signals should contain connStatus")
 	}
 }
 
