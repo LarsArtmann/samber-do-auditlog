@@ -21,6 +21,7 @@ var (
 type Report struct {
 	Version                 string      `json:"version"`
 	ContainerID             ContainerID `json:"container_id"`
+	RunID                   RunID       `json:"run_id,omitempty"`
 	ExportedAt              time.Time   `json:"exported_at"`
 	EventCount              int         `json:"event_count"`
 	ServiceCount            int         `json:"service_count"`
@@ -111,7 +112,7 @@ func finalizeDenormalized(report *Report) {
 // and MigrateReport — guaranteeing that count/summary fields can never drift
 // from the underlying data.
 func buildReportFromCore(
-	version string, containerID ContainerID,
+	version string, containerID ContainerID, runID RunID,
 	exportedAt time.Time,
 	droppedEventCount int64,
 	events []Event,
@@ -121,6 +122,7 @@ func buildReportFromCore(
 	report := Report{ //nolint:exhaustruct
 		Version:           version,
 		ContainerID:       containerID,
+		RunID:             runID,
 		ExportedAt:        exportedAt,
 		DroppedEventCount: droppedEventCount,
 		Events:            events,
@@ -146,7 +148,7 @@ func buildReportFromCore(
 // Returns an error if the inputs are structurally inconsistent in a way that
 // cannot be repaired by re-derivation.
 func NewReport(
-	version string, containerID ContainerID,
+	version string, containerID ContainerID, runID RunID,
 	exportedAt time.Time,
 	events []Event,
 	services []ServiceInfo,
@@ -158,7 +160,7 @@ func NewReport(
 	}
 
 	report := buildReportFromCore(
-		version, containerID, exportedAt, 0, events, services, scopeTree,
+		version, containerID, runID, exportedAt, 0, events, services, scopeTree,
 	)
 
 	err := report.Validate()
@@ -218,7 +220,7 @@ func MergeReports(reports []Report) (Report, error) {
 	rootScope := buildMergedRootScope(scopeSet)
 
 	return buildReportFromCore(
-		SchemaVersion, ContainerID("merged"), maxExportedAt, 0,
+		SchemaVersion, ContainerID("merged"), "", maxExportedAt, 0,
 		allEvents, allServices, rootScope,
 	), nil
 }

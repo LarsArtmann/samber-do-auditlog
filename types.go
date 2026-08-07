@@ -11,6 +11,15 @@ const RootScopeName = "[root]"
 // ContainerID identifies a DI container instance. Used in Config, Report, and Event.
 type ContainerID string
 
+// RunID identifies a single execution ("run") of a DI container. It is stamped
+// on every captured event and the final Report so that events from one run can
+// be correlated across logs, traces, and audit files.
+//
+// RunID is a branded string type: it serializes to/from JSON as a plain string
+// and is interchangeable with string literals (untyped constants) in Go code
+// where a RunID is expected. Convert with RunID("value") or string(id).
+type RunID string
+
 // ScopeID identifies a scope within the DI hierarchy.
 type ScopeID string
 
