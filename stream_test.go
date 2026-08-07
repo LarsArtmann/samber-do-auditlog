@@ -3,8 +3,10 @@ package auditlog_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -511,5 +513,121 @@ func TestNDJSONStreamer_OutputMatchesBatchEncoding(t *testing.T) {
 
 	if streamBuf.String() != batchBuf.String() {
 		t.Errorf("stream output != batch encoding\nstream:\n%s\nbatch:\n%s", streamBuf.String(), batchBuf.String())
+	}
+}
+
+func TestNDJSONStreamer_WithFlushInterval_Bounds(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+
+	streamer := auditlog.NewNDJSONStreamer(&buf, auditlog.WithFlushInterval(20*time.Millisecond))
+
+	start := time.Now()
+
+	for i := range 50 {
+		streamer.OnEvent(auditlog.Event{
+			Sequence:  i + 1,
+			EventType: auditlog.EventTypeRegistration,
+			Phase:     auditlog.PhaseBefore,
+			ServiceRef: auditlog.ServiceRef{
+				ServiceName: fmt.Sprintf("burst-%d", i),
+			},
+		})
+	}
+
+	elapsed := time.Since(start)
+
+	if elapsed >= 20*time.Millisecond {
+		t.Skipf("burst loop took %v; environment too slow to verify buffering", elapsed)
+	}
+
+	if buf.Len() != 0 {
+		t.Errorf("WithFlushInterval should buffer within the interval; got %d bytes written", buf.Len())
+	}
+
+	time.Sleep(40 * time.Millisecond)
+
+	streamer.OnEvent(auditlog.Event{
+		Sequence:  51,
+		EventType: auditlog.EventTypeRegistration,
+		Phase:     auditlog.PhaseBefore,
+		ServiceRef: auditlog.ServiceRef{
+			ServiceName: "trigger",
+		},
+	})
+
+	if buf.Len() == 0 {
+		t.Fatal("expected events to flush after interval elapsed")
+	}
+
+	lines := strings.Count(buf.String(), "\n")
+
+	if lines < 51 {
+		t.Errorf("expected >= 51 flushed lines, got %d", lines)
+	}
+
+	if err := streamer.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+}
+
+func TestNDJSONStreamer_WithFlushInterval_IgnoredForZeroAndNegative(t *testing.T) {
+	t.Parallel()
+
+	for _, d := range []time.Duration{0, -1 * time.Second} {
+		t.Run(fmt.Sprintf("d=%s", d), func(t *testing.T) {
+			t.Parallel()
+
+			var buf bytes.Buffer
+
+			streamer := auditlog.NewNDJSONStreamer(&buf, auditlog.WithFlushInterval(d))
+
+			streamer.OnEvent(auditlog.Event{
+				Sequence:  1,
+				EventType: auditlog.EventTypeRegistration,
+				Phase:     auditlog.PhaseBefore,
+				ServiceRef: auditlog.ServiceRef{
+					ServiceName: "x",
+				},
+			})
+
+			if buf.Len() != 0 {
+				t.Errorf("expected buffered (no flush) for ignored duration %s; got %d bytes", d, buf.Len())
+			}
+
+			if err := streamer.Close(); err != nil {
+				t.Fatalf("Close: %v", err)
+			}
+		})
+	}
+}
+
+func TestNDJSONStreamer_WithAutoFlushTakesPrecedence(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+
+	streamer := auditlog.NewNDJSONStreamer(
+		&buf,
+		auditlog.WithFlushInterval(time.Hour),
+		auditlog.WithAutoFlush(),
+	)
+
+	streamer.OnEvent(auditlog.Event{
+		Sequence:  1,
+		EventType: auditlog.EventTypeRegistration,
+		Phase:     auditlog.PhaseBefore,
+		ServiceRef: auditlog.ServiceRef{
+			ServiceName: "x",
+		},
+	})
+
+	if buf.Len() == 0 {
+		t.Error("WithAutoFlush should take precedence and flush immediately")
+	}
+
+	if err := streamer.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"time"
 )
 
 // ndjsonStreamBufferSize is the default buffer size for NDJSON streaming writes.
@@ -45,12 +46,14 @@ const ndjsonStreamBufferSize = 65536
 type NDJSONStreamer struct {
 	mu sync.Mutex
 
-	writer    io.Writer
-	buf       *bufio.Writer
-	encoder   *json.Encoder
-	err       error
-	autoFlush bool
-	closed    bool
+	writer     io.Writer
+	buf        *bufio.Writer
+	encoder    *json.Encoder
+	err        error
+	autoFlush  bool
+	flushEvery time.Duration
+	lastFlush  time.Time
+	closed     bool
 }
 
 // NDJSONStreamerOption configures an [NDJSONStreamer].
@@ -61,6 +64,25 @@ type NDJSONStreamerOption func(*NDJSONStreamer)
 // pipelines where consumers tail the output file.
 func WithAutoFlush() NDJSONStreamerOption {
 	return func(streamer *NDJSONStreamer) { streamer.autoFlush = true }
+}
+
+// WithFlushInterval enables time-based flushing: the streamer flushes its
+// buffer at most once per d. This bounds worst-case event visibility latency
+// without paying the per-event syscall cost of [WithAutoFlush] — ideal for
+// high-throughput pipelines that need consumers to see events within d but
+// don't require immediate flushing of every single event.
+//
+// A value of 0 disables time-based flushing (default). Values <= 0 are
+// ignored. Must not be combined with [WithAutoFlush]; if both are passed the
+// last option applied wins, with [WithAutoFlush] taking precedence because it
+// guarantees strict event-by-event visibility.
+func WithFlushInterval(d time.Duration) NDJSONStreamerOption {
+	return func(streamer *NDJSONStreamer) {
+		if d > 0 {
+			streamer.flushEvery = d
+			streamer.lastFlush = time.Now()
+		}
+	}
 }
 
 // WithStreamBufferSize sets the internal buffer size in bytes. The default is
@@ -137,6 +159,19 @@ func (streamer *NDJSONStreamer) OnEvent(evt Event) {
 		if flushErr != nil {
 			streamer.err = fmt.Errorf("flush ndjson stream: %w", flushErr)
 		}
+
+		return
+	}
+
+	if streamer.flushEvery > 0 && time.Since(streamer.lastFlush) >= streamer.flushEvery {
+		flushErr := streamer.buf.Flush()
+		if flushErr != nil {
+			streamer.err = fmt.Errorf("flush ndjson stream: %w", flushErr)
+
+			return
+		}
+
+		streamer.lastFlush = time.Now()
 	}
 }
 
