@@ -3,6 +3,7 @@ package auditlog
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/larsartmann/go-output/d2"
 )
@@ -36,4 +37,17 @@ func (r Report) WriteD2(writer io.Writer, opts ...DiagramOption) error {
 	}
 
 	return nil
+}
+
+// WriteD2String returns the D2 diagram as a string. It is a convenience
+// wrapper around [Report.WriteD2] for use in tests, CLI output, and any
+// context where a string is preferred over an [io.Writer].
+func (r Report) WriteD2String(opts ...DiagramOption) (string, error) {
+	var buf strings.Builder
+
+	if err := r.WriteD2(&buf, opts...); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }

@@ -34,3 +34,16 @@ func (r Report) WritePlantUML(writer io.Writer, opts ...DiagramOption) error {
 
 	return nil
 }
+
+// WritePlantUMLString returns the PlantUML diagram as a string. It is a
+// convenience wrapper around [Report.WritePlantUML] for use in tests, CLI
+// output, and any context where a string is preferred over an [io.Writer].
+func (r Report) WritePlantUMLString(opts ...DiagramOption) (string, error) {
+	var buf strings.Builder
+
+	if err := r.WritePlantUML(&buf, opts...); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}

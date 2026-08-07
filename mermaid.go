@@ -34,3 +34,16 @@ func (r Report) WriteMermaid(writer io.Writer, opts ...DiagramOption) error {
 
 	return nil
 }
+
+// WriteMermaidString returns the Mermaid diagram as a string. It is a
+// convenience wrapper around [Report.WriteMermaid] for use in tests, CLI
+// output, and any context where a string is preferred over an [io.Writer].
+func (r Report) WriteMermaidString(opts ...DiagramOption) (string, error) {
+	var buf strings.Builder
+
+	if err := r.WriteMermaid(&buf, opts...); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}

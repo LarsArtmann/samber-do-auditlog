@@ -45,3 +45,16 @@ func (r Report) WriteHTML(writer io.Writer) error {
 
 	return nil
 }
+
+// WriteHTMLString returns the HTML dashboard as a string. It is a convenience
+// wrapper around [Report.WriteHTML] for use in tests, CLI output, and any
+// context where a string is preferred over an [io.Writer].
+func (r Report) WriteHTMLString() (string, error) {
+	var buf bytes.Buffer
+
+	if err := r.WriteHTML(&buf); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}

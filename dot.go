@@ -3,6 +3,7 @@ package auditlog
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/larsartmann/go-output/graph"
 )
@@ -32,4 +33,17 @@ func (r Report) WriteDOT(writer io.Writer, opts ...DiagramOption) error {
 	}
 
 	return nil
+}
+
+// WriteDOTString returns the DOT diagram as a string. It is a convenience
+// wrapper around [Report.WriteDOT] for use in tests, CLI output, and any
+// context where a string is preferred over an [io.Writer].
+func (r Report) WriteDOTString(opts ...DiagramOption) (string, error) {
+	var buf strings.Builder
+
+	if err := r.WriteDOT(&buf, opts...); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }
