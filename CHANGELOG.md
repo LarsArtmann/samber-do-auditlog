@@ -6,11 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 > **Release vs. schema versions.** Release tags follow `v0.x.y`. The report
-> `schema_version` (currently `0.2.0`, see `types.go`) is a **separate**, independent
+> `schema_version` (currently `0.3.0`, see `types.go`) is a **separate**, independent
 > version for the JSON report format and is upgraded via `MigrateReport`. The two
 > version numbers are unrelated.
 
 ## [Unreleased]
+
+### Added — Cross-Project Infrastructure Parity (from go-workflow-auditlog)
+
+- **`MultiWriter`** (`multi_writer.go`): event fan-out to multiple `OnEvent` callbacks simultaneously. Enables streaming + live dashboard + custom handlers with a single recorder. Thread-safe, preserves callback order. 8 tests.
+- **`StreamEvents`** (`ndjson.go`): callback-based NDJSON reader for replaying event files without full materialization. Uses a `bufio.Scanner` for line-by-line processing, invokes a user callback per event. 7 tests.
+- **`WithFlushInterval`** (`stream.go`): time-based flush option on `NDJSONStreamer` for bounded-latency flushing without per-event syscall cost. 3 tests.
+- **`Write*String` methods** (`mermaid.go`, `plantuml.go`, `dot.go`, `d2.go`, `html.go`): convenience methods returning diagram/report output as a `string` (no `io.Writer` needed). Covers all 5 formats. 5 tests.
+- **SSE ring buffer replay** (`live/hub.go`, `live/server.go`): in-memory ring buffer stores recent SSE events for reconnection replay. `ReplayBufferSize` config field (default 256). `EventStore()` and `BufferedEventCount()` methods on `Hub`. 4 tests.
+- **`RunID` branded type** (`runid.go`, `types.go`): 128-bit hex correlation ID for cross-system tracing. Auto-generated via `crypto/rand`, can be overridden via `Config.RunID`. Stamped on every `Event` and the `Report`. 3 tests.
+- **Timing deltas in `DiffResult`** (`diff.go`): `TotalBuildDurationMsDelta` and `TotalShutdownDurationMsDelta` fields surface aggregate duration changes between two reports. 2 tests.
+- **Dependabot config** (`.github/dependabot.yml`): automated dependency updates for gomod, github-actions, and npm ecosystems.
+- **Goreleaser + RELEASE.md** (`.goreleaser.yml`, `RELEASE.md`): release automation for the CLI binary (linux/darwin amd64/arm64). CI check job validates config.
+- **Exported `testhelpers/`**: moved from `internal/testhelpers/` to public `testhelpers/` package, enabling downstream consumers to write integration tests against the audit log types.
+
+### Breaking
+
+- **`NewRecorder` signature changed**: `NewRecorder(containerID, onEvent)` → `NewRecorder(containerID, runID, onEvent)`. The `Recorder` type is listed as "Unstable / Internal" in `STABILITY.md`; construct via `New()`, not directly.
+- **`NewReport` signature changed**: added `runID RunID` parameter.
+- **Schema version bumped**: `0.2.0` → `0.3.0`. The `Event` and `Report` structs gained a `run_id` field. Old reports are auto-upgraded via `MigrateReport`.
 
 ### Added — `health/` sub-package (Health-Probe SDK)
 

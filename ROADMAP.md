@@ -17,7 +17,7 @@ The coverage gate (94%) and `GOEXPERIMENT=jsonv2` flag are already stable in CI.
 The path from BETA to 1.0 is:
 
 1. API surface frozen — no more breaking changes without migration guide
-2. Schema version stays at `0.2.0` unless report format changes
+2. Schema version stays at `0.3.0` unless report format changes
 3. Semantic versioning discipline: breaking Go API changes bump minor version
 
 ---
@@ -37,8 +37,8 @@ When Go 1.27 stabilizes `encoding/json/v2`:
 
 The `live/` sub-package has reached near-feature-parity with the static HTML export:
 
-- **Shipped**: scope tree tab, pagination, export buttons, CORS support, live demo (`live/demo/main.go`), `example/ --live` integration
-- **Shared CSS** — Extract common design tokens into a shared file or `go:embed` so the static and live dashboards can't drift
+- **Shipped**: scope tree tab, pagination, export buttons, CORS support, live demo (`live/demo/main.go`), `example/ --live` integration, SSE ring buffer replay
+- **Shared CSS** ✓ — `DesignTokensCSS` (`design_tokens.go`) is the single source of truth, enforced by `TestDesignTokensInSync`
 - **Dark/light theme toggle** — The warm amber aesthetic currently has no light variant
 - **Fix `example/ --live` premature shutdown** — See [TODO_LIST.md](TODO_LIST.md)
 - **Cross-origin CSP** — CORS headers are set but `connect-src 'self'` blocks cross-origin dashboard embedding; needs configurable CSP or documentation of the limitation

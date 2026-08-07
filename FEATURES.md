@@ -52,7 +52,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | Feature                        | Description                                                                                                                                              | Verified                        |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
 | **Report struct**              | Consolidated snapshot with version, container ID, counts, durations, success flags, events, services, scope tree                                         | `report.go`                     |
-| **Schema version**             | Current report schema is `"0.2.0"`                                                                                                                       | `types.go` (`SchemaVersion`)    |
+| **Schema version**             | Current report schema is `"0.3.0"`                                                                                                                       | `types.go` (`SchemaVersion`)    |
 | **Service info aggregate**     | Per-service rollup of status, type, timings, deps, dependents, errors, health                                                                            | `service.go` (`ServiceInfo`)    |
 | **Scope tree**                 | Hierarchical `ScopeNode` with services and children                                                                                                      | `service.go` (`ScopeNode`)      |
 | **Report validation**          | Checks denormalized counts match actual slice/tree lengths                                                                                               | `report.go` (`Report.Validate`) |
@@ -60,7 +60,16 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Report convenience queries** | `ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByRef`, `EventsByType`, `FailedServices`, `UnhealthyServices`              | `report.go`                     |
 | **Event convenience helpers**  | `IsRegistration`, `IsInvocation`, `IsShutdown`, `IsHealthCheck`, `IsBefore`, `IsAfter`, `HasError`, `Duration`                                           | `event.go`                      |
 | **Service info helpers**       | `Uptime()`, `HasHealthError()`                                                                                                                           | `service.go`                    |
-| **Report diff**                | `Report.Diff(other)` returns added/removed/changed services and event-count delta. `DiffResult.HasChanges()` / `IsEmpty()` give polarity-agnostic checks | `diff.go`                       |
+| **Report diff**                | `Report.Diff(other)` returns added/removed/changed services, event-count delta, and timing deltas (`TotalBuildDurationMsDelta`, `TotalShutdownDurationMsDelta`). `HasChanges()` / `IsEmpty()` for polarity-agnostic checks | `diff.go`                       |
+
+### Event Streaming
+
+|| Feature                     | Description                                                                                             | Verified               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------- |
+| **MultiWriter event fan-out** | `MultiWriter` broadcasts events to multiple `OnEvent` callbacks simultaneously. Thread-safe, ordered   | `multi_writer.go`      |
+| **StreamEvents callback reader** | `StreamEvents(reader, callback)` reads NDJSON events line-by-line via `bufio.Scanner`, invoking callback per event | `ndjson.go`            |
+| **Flush interval**           | `WithFlushInterval(d)` on `NDJSONStreamer` for bounded-latency time-based flushing                     | `stream.go`            |
+| **RunID correlation**        | 128-bit hex branded type auto-generated via `crypto/rand`, stamped on every `Event` and `Report`        | `runid.go`, `types.go` |
 
 ### Report Filtering
 
@@ -100,6 +109,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **HTML tree export**              | `Report.WriteHTMLTree(writer)` outputs a dependency DAG as an HTML nested list              | `tree.go`                   |
 | **Multi-format table export**     | `Report.WriteTable(writer, format, opts)` outputs service summary in 16+ formats            | `table.go`                  |
 | **Self-contained HTML export**    | `Plugin.ExportToHTML(path)` and `Plugin.WriteHTML(w)` render a single-file report           | `html.go`, `html.templ`     |
+| **Write\*String convenience**     | `WriteMermaidString()`, `WritePlantUMLString()`, `WriteDOTString()`, `WriteD2String()`, `WriteHTMLString()` return output as `string` | `mermaid.go` etc.           |
 
 ### HTML Visualization
 
@@ -153,6 +163,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **`http.Handler` compatibility** | `Server` implements `ServeHTTP` for `httptest` compatibility and embedding in existing mux chains                                                                                                                      | `live/server.go`; `TestServer_HandleSSE_NoFlusher` |
 | **SSE connection lifecycle**     | `sse.Stream` manages headers, flush, heartbeat, disconnect detection, and write serialization. `SendJSON` eliminates manual marshal+write+flush boilerplate                                                            | `live/server.go`                                   |
 | **SSE reconnection replay**      | Reconnecting clients with `Last-Event-ID` receive missed events via `sse.Replay` + `eventStore` adapter over `plugin.Events()`                                                                                         | `live/replay.go`; `TestServer_SSE_ReconnectReplay` |
+| **SSE ring buffer**              | In-memory ring buffer stores recent events for reconnection replay. `ReplayBufferSize` config (default 256), `EventStore()` and `BufferedEventCount()` on `Hub`                                                       | `live/hub.go`, `live/server.go`                    |
 | **go-sse full adoption**         | Uses `Stream`, `Broadcaster[T]`, `Replay`, `EventStore`, `Shutdown`, `Health` from `go-sse` v0.4.0. No hand-rolled fan-out or connection management code remains                                                       | `live/hub.go`, `live/server.go`, `live/replay.go`  |
 | **Live demo application**        | `live/demo/main.go` registers services with delays, invokes them, runs health checks, serves dashboard until Ctrl+C                                                                                                    | `live/demo/main.go`                                |
 | **Example `--live` flag**        | `go run ./example --live` starts the dashboard alongside the ride-sharing demo, registering 20 services across 4 scopes                                                                                                | `example/main.go`                                  |
@@ -189,7 +200,10 @@ The health-probe SDK has been extracted to its own standalone project: **[github
 
 | Feature                       | Description                                                                                                                                                                                                                              | Verified                                                |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| **GitHub Actions CI**         | `go vet`, `go build`, race-detector tests, golangci-lint, govulncheck, generated-code drift checks. All actions pinned to commit SHAs for supply-chain security.                                                                         | `.github/workflows/ci.yml`                              |
+| **GitHub Actions CI**         | `go vet`, `go build`, race-detector tests, golangci-lint, govulncheck, generated-code drift checks, goreleaser config check. All actions pinned to commit SHAs for supply-chain security.                                                                         | `.github/workflows/ci.yml`                              |
+| **Dependabot**                | Automated dependency updates for gomod, github-actions, and npm ecosystems                                                                                             | `.github/dependabot.yml`                               |
+| **Goreleaser**                | Release automation for CLI binary (linux/darwin amd64/arm64) with `RELEASE.md` process documentation                                                                    | `.goreleaser.yml`, `RELEASE.md`                        |
+| **Exported testhelpers**      | `testhelpers/` package (moved from `internal/`) enables downstream integration testing                                                                                  | `testhelpers/`                                          |
 | **golangci-lint config**      | `.golangci.yml` defines lint rules for the project (109 linters)                                                                                                                                                                         | `.golangci.yml`                                         |
 | **Generated-code check**      | CI runs `go generate ./...` and fails on drift, ensuring `html_templ.go` stays in sync                                                                                                                                                   | `.github/workflows/ci.yml`                              |
 | **templ code generation**     | `//go:generate go tool templ generate` in `html.go` produces `html_templ.go`                                                                                                                                                             | `html.go`, `html_templ.go`                              |
@@ -223,4 +237,4 @@ The health-probe SDK has been extracted to its own standalone project: **[github
 
 ---
 
-_Last verified against the codebase on 2026-07-24. Test counts: 302 Test + 12 Benchmark + 5 Fuzz + 8 Example = 327 top-level functions. Coverage: 94.1% combined (root 95.0%, live 89.7%). 311 `t.Parallel()` calls._
+_Last verified against the codebase on 2026-08-07. Coverage: 94.1% combined (root 95.0%, live 89.7%)._

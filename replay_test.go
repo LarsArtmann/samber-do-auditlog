@@ -917,8 +917,8 @@ func TestLoadReportFromBytes_MultiLineJSONReport(t *testing.T) {
 		t.Errorf("format: want JSON for multiline, got %v", format)
 	}
 
-	if report.Version != "0.2.0" {
-		t.Errorf("version: want %q, got %q", "0.2.0", report.Version)
+	if report.Version != "0.3.0" {
+		t.Errorf("version: want %q, got %q", "0.3.0", report.Version)
 	}
 }
 
