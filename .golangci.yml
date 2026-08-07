@@ -189,6 +189,10 @@ linters:
         - github.com/larsartmann/samber-do-auditlog/health.Routes
         - github.com/larsartmann/samber-do-auditlog/health.Probe
         - github.com/larsartmann/samber-do-auditlog.NDJSONStreamer
+        - github.com/larsartmann/samber-do-auditlog.Config
+        - github.com/larsartmann/samber-do-auditlog.live.Config
+        - github.com/larsartmann/samber-do-auditlog.MultiWriter
+        - github.com/larsartmann/samber-do-auditlog.live.eventRingBuffer
     ginkgolinter:
       forbid-focus-container: true
       forbid-spec-pollution: true
