@@ -3,6 +3,7 @@ package auditlog
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/larsartmann/go-output/plantuml"
 )

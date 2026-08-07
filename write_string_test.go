@@ -3,8 +3,6 @@ package auditlog_test
 import (
 	"strings"
 	"testing"
-
-	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
 func TestWriteMermaidString_MatchesWriteMermaid(t *testing.T) {

@@ -46,6 +46,10 @@ type Config struct {
 	// specific origin (e.g. "https://dashboard.example.com") to restrict.
 	// Set to "" to disable CORS headers entirely.
 	CORSAllowedOrigins string
+	// ReplayBufferSize is the maximum number of events retained for SSE
+	// reconnection replay. Events older than this are evicted (FIFO).
+	// Default 1000. Set to 0 for the default.
+	ReplayBufferSize int
 }
 
 // HealthInfo provides dynamic health check data.
@@ -87,7 +91,7 @@ type Server struct {
 // auditlog OnEvent callback, creates the Plugin, and returns a ready-to-use
 // Server.
 func New(auditCfg auditlog.Config, serverCfg Config) (*Server, *auditlog.Plugin, error) {
-	hub := NewHub()
+	hub := NewHubWithReplay(serverCfg.ReplayBufferSize)
 
 	auditCfg.OnEvent = hub.OnEvent
 	auditCfg.Enabled = true
@@ -395,6 +399,14 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 	defer func() { _ = stream.Close() }()
 
 	ctx := r.Context()
+
+	// Reconnection replay: if the client sends Last-Event-ID, replay any
+	// missed events from the ring buffer before sending the snapshot.
+	if lastID := stream.LastEventID(); !lastID.IsZero() {
+		if _, err := sse.Replay(stream, srv.hub.EventStore(), lastID); err != nil {
+			return
+		}
+	}
 
 	// Send initial snapshot as datastar patch-elements + patch-signals.
 	// On reconnect this IS the replay — the full current state replaces

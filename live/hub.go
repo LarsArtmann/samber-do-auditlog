@@ -27,17 +27,25 @@ const subscriberBufferSize = 128
 // The hub is safe for concurrent use. OnEvent is called from plugin
 // callbacks, and Subscribe/Unsubscribe are called from HTTP handler goroutines.
 type Hub struct {
-	bc       *sse.Broadcaster[sse.Event]
-	complete atomic.Bool
-	doneCh   chan struct{}
+	bc         *sse.Broadcaster[sse.Event]
+	complete   atomic.Bool
+	doneCh     chan struct{}
+	ringBuffer *eventRingBuffer
 }
 
-// NewHub creates a Hub ready for use.
+// NewHub creates a Hub ready for use with the default replay buffer size.
 func NewHub() *Hub {
+	return NewHubWithReplay(0)
+}
+
+// NewHubWithReplay creates a Hub with a replay ring buffer of the given
+// capacity. Non-positive capacity uses the default (1000).
+func NewHubWithReplay(replayBufferSize int) *Hub {
 	return &Hub{
-		bc:       sse.NewBroadcaster[sse.Event](sse.WithBufferSize[sse.Event](subscriberBufferSize)),
-		complete: atomic.Bool{},
-		doneCh:   make(chan struct{}),
+		bc:         sse.NewBroadcaster[sse.Event](sse.WithBufferSize[sse.Event](subscriberBufferSize)),
+		complete:   atomic.Bool{},
+		doneCh:     make(chan struct{}),
+		ringBuffer: newEventRingBuffer(replayBufferSize),
 	}
 }
 
@@ -51,11 +59,15 @@ func (h *Hub) OnEvent(evt auditlog.Event) {
 		return
 	}
 
-	h.bc.Broadcast(sse.Event{
+	sseEvt := sse.Event{
 		Event: sseEventType,
 		Data:  string(payload),
 		ID:    sse.NewEventID(strconv.Itoa(evt.Sequence)),
-	})
+	}
+
+	h.ringBuffer.add(sseEvt)
+
+	h.bc.Broadcast(sseEvt)
 }
 
 // Subscribe returns a channel that receives broadcast SSE events.
@@ -110,4 +122,18 @@ func (h *Hub) Shutdown(ctx context.Context) error {
 // for health checks and observability dashboards.
 func (h *Hub) Health() sse.BroadcasterHealth {
 	return h.bc.Health()
+}
+
+// EventStore returns the replay ring buffer as an sse.EventStore for
+// SSE reconnection replay via sse.Replay.
+//
+//nolint:ireturn // consumers need the interface for sse.Replay
+func (h *Hub) EventStore() sse.EventStore {
+	return h.ringBuffer
+}
+
+// BufferedEventCount returns the number of events currently stored in the
+// replay ring buffer.
+func (h *Hub) BufferedEventCount() int {
+	return h.ringBuffer.len()
 }
