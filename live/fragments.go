@@ -29,6 +29,8 @@ const (
 
 	cssVarTextMuted = "var(--text-muted)"
 	mdash           = "&mdash;"
+	cssClassSuccess = "success"
+	cssClassError   = "error"
 )
 
 // servicesShowExpr is the data-show expression for each service row.
@@ -147,9 +149,9 @@ func buildStatsEntries(report auditlog.Report, errorCount int) []statsEntry {
 	}
 
 	if report.HealthCheckedCount > 0 {
-		cls := "success"
+		cls := cssClassSuccess
 		if !report.HealthCheckSucceeded {
-			cls = "error"
+			cls = cssClassError
 		}
 
 		stats = append(stats, statsEntry{"Health", healthLabel(report.HealthCheckSucceeded), cls})
@@ -423,6 +425,7 @@ func healthLabel(succeeded bool) string {
 
 func timelineMaxDurations(services []auditlog.ServiceInfo) (float64, float64) {
 	var maxBuildMs float64
+
 	var maxShutdownMs float64
 
 	for _, svc := range services {

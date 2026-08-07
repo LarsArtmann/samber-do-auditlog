@@ -414,7 +414,7 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 			return
 
 		case <-srv.hub.Done():
-			srv.sendDatastarComplete(stream)
+			srv.sendDatastarComplete(stream) //nolint:contextcheck // stream derives ctx
 
 			return
 
@@ -422,7 +422,7 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 			// Non-blocking drain: coalesce burst events into a single render.
 			drainEvents(eventCh)
 
-			if err := srv.sendDatastarSnapshot(stream); err != nil { //nolint:contextcheck // stream derives ctx from request
+			if err := srv.sendDatastarSnapshot(stream); err != nil { //nolint:contextcheck // ctx from stream
 				return
 			}
 		}
@@ -493,7 +493,7 @@ func (srv *Server) sendDatastarComplete(stream *sse.Stream) {
 	}
 
 	// Send final full render.
-	_ = srv.sendDatastarSnapshot(stream) //nolint:contextcheck // stream derives ctx from request
+	_ = srv.sendDatastarSnapshot(stream)
 
 	// Signal completion.
 	_ = stream.SendKeyed("datastar-patch-signals", "signals", `{"complete":true,"connStatus":"complete"}`)

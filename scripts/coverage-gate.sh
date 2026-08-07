@@ -13,10 +13,9 @@ export GOEXPERIMENT=jsonv2
 
 go test -race -count=1 -coverprofile=cover.out -covermode=atomic ./...
 
-# Exclude the example/ (demo), cmd/ (tooling), live/demo/, and internal/testhelpers/
-# (test infrastructure) packages from the gate. Their logic is exercised by
-# integration/golden tests or by every caller's test suite, not in-process.
-grep -v -e '/example/' -e '/cmd/' -e '/live/demo/' -e '/internal/testhelpers/' cover.out > cover-filtered.out
+# Exclude the example/ (demo), cmd/ (tooling), live/demo/, internal/testhelpers/
+# (test infrastructure), and generated templ code (*_templ.go) from the gate.
+grep -v -e '/example/' -e '/cmd/' -e '/live/demo/' -e '/internal/testhelpers/' -e '_templ\.go' cover.out > cover-filtered.out
 
 coverage=$(go tool cover -func=cover-filtered.out | grep '^total:' | awk '{print $3}' | tr -d '%')
 echo "Total coverage (non-example): ${coverage}%"
