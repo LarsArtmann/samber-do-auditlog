@@ -20,7 +20,7 @@ require (
 	github.com/larsartmann/go-output/graph v0.35.0
 	github.com/larsartmann/go-output/markdown v0.35.0
 	github.com/larsartmann/go-output/markup v0.35.0
-	github.com/larsartmann/go-output/plantuml v0.35.0
+	github.com/larsartmann/go-output/plantuml v0.37.0
 	github.com/larsartmann/go-output/serialization v0.35.0
 	github.com/larsartmann/go-output/table v0.35.0
 	github.com/larsartmann/go-output/tree v0.35.0
