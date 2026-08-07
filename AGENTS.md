@@ -84,6 +84,7 @@ scripts/coverage-gate.sh — CI-equivalent coverage gate (excludes example/ + cm
 doc.go              — Package doc comment
 example/            — Self-checking demo with 23 samber/do v2 features
 live/               — Real-time SSE dashboard sub-package (see below)
+health/             — Production-ready health-probe SDK sub-package (see below)
 ```
 
 ### `live/` sub-package files
@@ -103,6 +104,28 @@ live/server_test.go — External tests: server lifecycle, SSE streaming, handler
 live/replay_internal_test.go — Internal tests: eventStore adapter unit tests (legacy)
 live/demo/          — Self-contained real-time demo (registers services with delays, shows dashboard updating live). Demo services implement do.Healthchecker.
 ```
+
+### `health/` sub-package files
+
+```
+health/doc.go       — Package doc with quick start, three-probe rationale, caching/shutdown/audit docs
+health/types.go     — Status enum (pass/fail/warn), Check, Response data model
+health/probe.go     — Probe struct, Option functional options, New(), lifecycle (Start, Shutdown, MarkShuttingDown), Evaluate, classify, evaluateStartup
+health/handlers.go  — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes, Routes, writeResponse
+health/probe_test.go — 29 tests: liveness (200, dep-free), readiness (critical/non-critical, shutdown, cache, live fallback), startup (latch, unhealthy, no-critical), Evaluate, routes, content-type, audit integration, lifecycle
+```
+
+The `health/` sub-package provides a production-ready health-probe SDK that turns the [superb health endpoint guide](docs/guides/superb-health-endpoint-with-samber-do.md) into a reusable library. It separates three Kubernetes probes (liveness, readiness, startup) with critical/non-critical service classification, background caching, shutdown awareness, and optional auditlog integration.
+
+Key design decisions:
+
+- **Liveness never checks dependencies** — returns in microseconds, always 200. Prevents restart cascades.
+- **Readiness gates on critical services only** — non-critical failures appear in the response body but don't trigger 503.
+- **Startup latches** — once all critical services pass, always returns 200 without re-checking.
+- **Background caching by default** (1s refresh) — kubelet/LB polling doesn't hammer dependencies. Set `WithRefreshInterval(0)` for live mode.
+- **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately (even from stale cache); liveness stays 200.
+- **Nil-safe plugin integration** — works with or without `auditlog.Plugin`; when present, every check batch is recorded as audit events.
+- **samber/do v2.1.0 behavior** — never-invoked lazy services appear in `HealthCheckWithContext` results with nil error. Eagerly invoke critical services at boot for the startup probe to be meaningful.
 
 ### Data Flow
 

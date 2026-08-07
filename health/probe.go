@@ -110,7 +110,7 @@ func WithBootTime(t time.Time) Option {
 // Holding the root injector is correct here: HealthCheck is a container-level
 // operation, not business logic resolved ad-hoc per request (DO-1).
 func New(injector do.Injector, opts ...Option) *Probe {
-	p := &Probe{
+	probe := &Probe{
 		injector:        injector,
 		critical:        make(map[string]struct{}),
 		bootTime:        time.Now(),
@@ -119,10 +119,10 @@ func New(injector do.Injector, opts ...Option) *Probe {
 	}
 
 	for _, opt := range opts {
-		opt(p)
+		opt(probe)
 	}
 
-	return p
+	return probe
 }
 
 // Start launches the background cache refresh loop (when RefreshInterval > 0)

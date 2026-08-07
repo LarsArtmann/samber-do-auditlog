@@ -581,12 +581,12 @@ func TestRegisterRoutes_AllThreeHandlersRegistered(t *testing.T) {
 	for _, path := range []string{"/healthz", "/readyz", "/startupz"} {
 		w := httptest.NewRecorder()
 
-	r, err := http.NewRequestWithContext(t.Context(), http.MethodGet, path, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+		r, err := http.NewRequestWithContext(t.Context(), http.MethodGet, path, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	mux.ServeHTTP(w, r)
+		mux.ServeHTTP(w, r)
 
 		if w.Code == http.StatusNotFound {
 			t.Errorf("route %s not registered", path)
