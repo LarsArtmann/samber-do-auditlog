@@ -476,7 +476,7 @@ func (srv *Server) sendDatastarSnapshot(stream *sse.Stream) error {
 	}
 
 	// Send all HTML fragments.
-	for _, frag := range renderAllFragments(report, events, meta) {
+	for _, frag := range renderAllFragments(stream.Context(), report, events, meta) {
 		if err := sendPatchElements(stream, frag.selector, frag.html); err != nil {
 			return fmt.Errorf("send fragment %s: %w", frag.selector, err)
 		}

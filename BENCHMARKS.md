@@ -54,6 +54,21 @@ Median of 3 runs. Lower is better.
 
 ---
 
+## Health Package Benchmarks
+
+Captured 2026-08-07. Same environment as above. Median of 3 runs.
+
+| Benchmark                            | Time/op  | Bytes/op | Allocs/op | Notes                                                        |
+| ------------------------------------ | -------- | -------- | --------- | ------------------------------------------------------------ |
+| `BenchmarkLivenessHandler`           | 995 ns   | 1,316 B  | 15        | Liveness handler: zero dependency checks, always 200         |
+| `BenchmarkReadinessHandler_CacheHit` | 1,230 ns | 1,346 B  | 15        | Readiness served from atomic cache (background refresh)     |
+| `BenchmarkReadinessHandler_LiveEval` | 5,710 ns | 3,691 B  | 49        | Readiness with live `HealthCheckWithContext` (no cache)      |
+| `BenchmarkEvaluate`                  | 3,898 ns | 2,312 B  | 38        | Raw `Evaluate()` call: health-check batch + classify        |
+
+The cache delivers ~4.6× faster responses vs live evaluation (1,230 ns cached vs 5,710 ns live).
+
+---
+
 ## Key Observations
 
 - **Disabled path is truly zero-cost**: 113 ns / 4 allocs — entirely samber/do's own overhead. The plugin adds nothing when `Enabled: false`.
@@ -62,3 +77,4 @@ Median of 3 runs. Lower is better.
 - **EventsCopy is a single allocation**: the `append([]Event(nil), r.events...)` pattern allocates exactly once for the backing array.
 - **HealthCheck has high alloc count (147)**: the bulk `HealthCheckWithContext` API allocates per-service internally; this is samber/do's cost, not the plugin's.
 - **Diagram export via go-output**: `BenchmarkWriteD2` (added 2026-06-21) covers the full build→render→write path for the D2 format after the go-output adoption. The pre-existing diagram bench was not re-baselined because go-output replaced the entire rendering pipeline; the numbers above for hook/report paths were re-confirmed stable post-adoption.
+- **Health cache delivers ~4.6× speedup**: the `atomic.Pointer[Response]` cache keeps readiness at ~1.2 us (15 allocs), while live evaluation costs ~5.7 us (49 allocs). Liveness is sub-microsecond because it performs zero dependency checks.

@@ -110,9 +110,9 @@ live/demo/          — Self-contained real-time demo (registers services with d
 ```
 health/doc.go         — Package doc with quick start, three-probe rationale, caching/shutdown/audit docs, guide cross-reference
 health/types.go       — Status enum (pass/fail/warn), Check, Response data model
-health/probe.go       — Probe struct, 7 Option functional options (WithVersion/CriticalServices/Plugin/RefreshInterval/Timeout/BootTime/GETOnly), New(), lifecycle (Start, Shutdown, MarkShuttingDown), Evaluate, classify, evaluateStartup, guard (GET-only enforcement)
+health/probe.go       — Probe struct, 7 Option functional options (WithVersion/CriticalServices/Plugin/RefreshInterval/Timeout/BootTime/GETOnly), New(), Validate(), lifecycle (Start, Shutdown, MarkShuttingDown), Evaluate, classify (three-state pass/warn/fail), evaluateStartup, guard (GET-only enforcement)
 health/handlers.go    — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes, Routes, DefaultRoutes, writeResponse
-health/probe_test.go  — 33 tests + 4 benchmarks: liveness (200, dep-free), readiness (critical/non-critical/warn, shutdown, cache, live fallback), startup (latch), Evaluate, routes, GET-only enforcement, audit integration, lifecycle
+health/probe_test.go  — 41 tests + 4 benchmarks: liveness (200, dep-free), readiness (critical/non-critical/warn roll-up, shutdown, cache, live fallback), startup (latch), Evaluate (classify/warn/concurrent), routes, GET-only enforcement (all 3 handlers), Validate (5 tests), concurrency (1000-goroutine stress, idempotent shutdown), audit integration, lifecycle
 health/example_test.go — 4 testable Go examples (ExampleNew, LivenessHandler, ReadinessHandler, RegisterRoutes) with // Output: directives
 ```
 
@@ -121,7 +121,7 @@ The `health/` sub-package provides a production-ready health-probe SDK that turn
 Key design decisions:
 
 - **Liveness never checks dependencies** — returns in microseconds, always 200. Prevents restart cascades.
-- **Readiness gates on critical services only** — non-critical failures appear as `warn` in the response body, don't trigger 503.
+- **Readiness gates on critical services only** — non-critical failures set the roll-up status to `warn` (HTTP 200, degraded), critical failures set it to `fail` (HTTP 503). Monitoring tools that inspect the roll-up see the degradation.
 - **Startup latches** — once all critical services pass, always returns 200 without re-checking.
 - **Background caching by default** (1s refresh) — kubelet/LB polling doesn't hammer dependencies. Set `WithRefreshInterval(0)` for live mode.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately (even from stale cache); liveness stays 200.

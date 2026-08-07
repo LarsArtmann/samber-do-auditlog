@@ -162,18 +162,20 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | Feature                          | Description                                                                                                                                  | Verified                      |
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
 | **Three-probe separation**       | Liveness (dep-free, always 200), Readiness (critical-only 503), Startup (latch-based permanently 200 once passed)                           | `health/handlers.go`          |
-| **Critical vs non-critical**     | `WithCriticalServices` gates readiness 503. Non-critical failures surface as `warn` in individual checks without changing HTTP status code | `health/probe.go`             |
-| **StatusWarn classification**    | Non-critical service failures are marked `warn` (degraded), critical failures are `fail` (out of rotation) in the `Checks` map              | `health/probe.go`; `health/types.go` |
+| **Critical vs non-critical**     | `WithCriticalServices` gates readiness 503. Non-critical failures set roll-up to `warn` (HTTP still 200)                                   | `health/probe.go`             |
+| **StatusWarn roll-up**           | Non-critical failures mark individual checks AND the roll-up as `warn` (degraded, HTTP 200). Critical failures mark both as `fail` (HTTP 503) | `health/probe.go`; `health/types.go` |
 | **Background caching**           | Default 1s refresh via `atomic.Pointer[Response]`. `WithRefreshInterval(0)` switches to live evaluation per request                         | `health/probe.go`             |
 | **Shutdown-aware readiness**     | `Shutdown()` flips readiness to 503 immediately (even from stale cache); liveness stays 200                                                  | `health/probe.go`             |
 | **Two-phase shutdown**           | `MarkShuttingDown()` flips the flag without stopping the background loop, enabling a grace period before `Shutdown()`                       | `health/probe.go`             |
 | **Startup latch**                | Once all critical services pass, permanently returns 200 without re-checking                                                                | `health/handlers.go`          |
 | **Optional audit integration**   | `WithPlugin(plugin)` records every health-check batch as timed audit events. Works without plugin too (raw injector fallback)               | `health/probe.go`             |
 | **GET-only enforcement**         | `WithGETOnly()` rejects non-GET requests with 405 + `Allow: GET` header                                                                      | `health/probe.go`             |
+| **Config validation**            | `Probe.Validate()` checks timeout > 0 and refresh interval >= 0. Catches misconfigurations that cause panics or immediate timeouts          | `health/probe.go`             |
 | **Functional options**           | `WithVersion`, `WithCriticalServices`, `WithPlugin`, `WithRefreshInterval`, `WithTimeout`, `WithBootTime`, `WithGETOnly`                     | `health/probe.go`             |
 | **Route registration**           | `RegisterRoutes(mux, routes)` one-liner for standard or custom paths. `DefaultRoutes()` returns `/healthz`, `/readyz`, `/startupz`           | `health/handlers.go`          |
 | **Runnable examples**            | 4 testable `Example*` functions with `// Output:` directives for pkg.go.dev                                                                 | `health/example_test.go`      |
 | **Performance benchmarks**       | 4 benchmarks: liveness, readiness cache-hit, readiness live-eval, Evaluate — see [BENCHMARKS.md](BENCHMARKS.md) for baseline numbers         | `health/probe_test.go`        |
+| **Concurrency tested**           | 1000-goroutine stress test, concurrent Evaluate test, idempotent shutdown test — all `-race` clean                                          | `health/probe_test.go`        |
 
 ### Shared Module Delegation
 

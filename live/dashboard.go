@@ -154,8 +154,7 @@ func renderEventFilterChips() string {
 
 	var b strings.Builder
 
-	fmt.Fprintf(&b,
-		`<button class="chip active" data-on:click="$eventFilter = ''" data-class:active="!$eventFilter" aria-pressed="true">All</button>`)
+	b.WriteString(`<button class="chip active" data-on:click="$eventFilter = ''" data-class:active="!$eventFilter" aria-pressed="true">All</button>`) //nolint:golines,lll // single HTML element
 
 	for _, t := range types {
 		label := t

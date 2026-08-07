@@ -39,7 +39,7 @@ var servicesShowExpr = "(!$serviceSearch || $rowName.toLowerCase().includes($ser
 // eventsShowExpr is the data-show expression for each event row.
 //
 //nolint:gochecknoglobals // effectively immutable; interpolates a const
-var eventsShowExpr = "(!$eventFilter || $evtType === $eventFilter) && ($showAllEvents || $evtIdx < " + strconv.Itoa(maxEventRows) + ")"
+var eventsShowExpr = "(!$eventFilter || $evtType === $eventFilter) && ($showAllEvents || $evtIdx < " + strconv.Itoa(maxEventRows) + ")" //nolint:golines,lll // single expression
 
 // --- Data types for templ components ---
 
@@ -88,32 +88,32 @@ type fragmentPatch struct {
 
 // renderAllFragments renders every dashboard section and returns the list of
 // (selector, html) pairs to send as datastar-patch-elements events.
-func renderAllFragments(report auditlog.Report, events []auditlog.Event, meta auditlog.TypeMetadata) []fragmentPatch {
+func renderAllFragments(ctx context.Context, report auditlog.Report, events []auditlog.Event, meta auditlog.TypeMetadata) []fragmentPatch {
 	errorCount := countErrors(report.Services)
 	legendItems := computeLegendItems(report, meta)
 	waveformMarks := computeWaveformMarks(events, meta)
 	maxBuildMs, maxShutdownMs := timelineMaxDurations(report.Services)
 
 	return []fragmentPatch{
-		{"#stats", renderToString(statsFragment(buildStatsEntries(report, errorCount)))},
-		{"#legend", renderToString(legendFragment(legendItems))},
-		{"#waveform", renderToString(waveformFragment(waveformMarks))},
-		{"#services-tbody", renderToString(servicesTbody(report, meta))},
-		{"#events-tbody", renderToString(eventsTbody(events, meta))},
-		{"#scope-tree-container", renderToString(scopeTreeFragment(report))},
-		{"#graph-container", renderToString(graphFragment(report))},
-		{"#timeline-container", renderToString(timelineFragment(report, maxBuildMs, maxShutdownMs))},
-		{"#footer-stats", renderToString(footerStatsFragment(report, len(events)))},
-		{"#container-id", renderToString(containerIDFragment(report))},
+		{"#stats", renderToString(ctx, statsFragment(buildStatsEntries(report, errorCount)))},
+		{"#legend", renderToString(ctx, legendFragment(legendItems))},
+		{"#waveform", renderToString(ctx, waveformFragment(waveformMarks))},
+		{"#services-tbody", renderToString(ctx, servicesTbody(report, meta))},
+		{"#events-tbody", renderToString(ctx, eventsTbody(events, meta))},
+		{"#scope-tree-container", renderToString(ctx, scopeTreeFragment(report))},
+		{"#graph-container", renderToString(ctx, graphFragment(report))},
+		{"#timeline-container", renderToString(ctx, timelineFragment(report, maxBuildMs, maxShutdownMs))},
+		{"#footer-stats", renderToString(ctx, footerStatsFragment(report, len(events)))},
+		{"#container-id", renderToString(ctx, containerIDFragment(report))},
 	}
 }
 
-// renderToString renders a templ component to a string. Errors are impossible
-// with strings.Builder (Write never fails), but we handle them for safety.
-func renderToString(component templ.Component) string {
+// renderToString renders a templ component to a string. Uses the provided
+// context for cancellation.
+func renderToString(ctx context.Context, component templ.Component) string {
 	var buf strings.Builder
 
-	if err := component.Render(context.Background(), &buf); err != nil {
+	if err := component.Render(ctx, &buf); err != nil {
 		return ""
 	}
 
@@ -231,27 +231,27 @@ func computeWaveformMarks(events []auditlog.Event, meta auditlog.TypeMetadata) [
 	return marks
 }
 
-func waveformBounds(events []auditlog.Event) (minT, maxT int64, maxDur float64) {
-	minT = events[0].Timestamp.UnixMilli()
-	maxT = minT
-	maxDur = 1.0
+func waveformBounds(events []auditlog.Event) (minTimestamp, maxTimestamp int64, maxDuration float64) {
+	minTimestamp = events[0].Timestamp.UnixMilli()
+	maxTimestamp = minTimestamp
+	maxDuration = 1.0
 
 	for _, evt := range events {
-		ts := evt.Timestamp.UnixMilli()
-		if ts < minT {
-			minT = ts
+		millis := evt.Timestamp.UnixMilli()
+		if millis < minTimestamp {
+			minTimestamp = millis
 		}
 
-		if ts > maxT {
-			maxT = ts
+		if millis > maxTimestamp {
+			maxTimestamp = millis
 		}
 
-		if evt.DurationMs != nil && *evt.DurationMs > maxDur {
-			maxDur = *evt.DurationMs
+		if evt.DurationMs != nil && *evt.DurationMs > maxDuration {
+			maxDuration = *evt.DurationMs
 		}
 	}
 
-	return minT, maxT, maxDur
+	return minTimestamp, maxTimestamp, maxDuration
 }
 
 func waveformTooltip(evt auditlog.Event) string {
@@ -291,6 +291,7 @@ func humanizeDuration(milliseconds float64) string {
 
 	minutes := math.Floor(secs / secPerMinute)
 	remSecs := secs - minutes*secPerMinute
+
 	if minutes < minPerHour {
 		return strconv.Itoa(int(minutes)) + "m " + strconv.Itoa(int(math.Round(remSecs))) + "s"
 	}
@@ -418,26 +419,26 @@ func healthLabel(succeeded bool) string {
 
 // --- Timeline helpers ---
 
-func timelineMaxDurations(services []auditlog.ServiceInfo) (maxBuild, maxShutdown float64) {
+func timelineMaxDurations(services []auditlog.ServiceInfo) (maxBuildMs, maxShutdownMs float64) {
 	for _, svc := range services {
-		if svc.FirstBuildDurationMs != nil && *svc.FirstBuildDurationMs > maxBuild {
-			maxBuild = *svc.FirstBuildDurationMs
+		if svc.FirstBuildDurationMs != nil && *svc.FirstBuildDurationMs > maxBuildMs {
+			maxBuildMs = *svc.FirstBuildDurationMs
 		}
 
-		if svc.ShutdownDurationMs != nil && *svc.ShutdownDurationMs > maxShutdown {
-			maxShutdown = *svc.ShutdownDurationMs
+		if svc.ShutdownDurationMs != nil && *svc.ShutdownDurationMs > maxShutdownMs {
+			maxShutdownMs = *svc.ShutdownDurationMs
 		}
 	}
 
-	if maxBuild == 0 {
-		maxBuild = 1
+	if maxBuildMs == 0 {
+		maxBuildMs = 1
 	}
 
-	if maxShutdown == 0 {
-		maxShutdown = 1
+	if maxShutdownMs == 0 {
+		maxShutdownMs = 1
 	}
 
-	return maxBuild, maxShutdown
+	return maxBuildMs, maxShutdownMs
 }
 
 func timelineBarWidth(durationMs *float64, maxMs float64) string {
@@ -445,7 +446,7 @@ func timelineBarWidth(durationMs *float64, maxMs float64) string {
 		return "0%"
 	}
 
-	pct := *durationMs / maxMs * 100
+	pct := *durationMs / maxMs * waveformPctScale
 
 	return fmt.Sprintf("%.1f%%", pct)
 }
