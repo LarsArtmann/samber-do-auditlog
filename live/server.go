@@ -394,7 +394,7 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 	stream := sse.NewStream(w, r)
 	defer func() { _ = stream.Close() }()
 
-	ctx := stream.Context()
+	ctx := r.Context()
 
 	// Send initial snapshot as datastar patch-elements + patch-signals.
 	// On reconnect this IS the replay — the full current state replaces

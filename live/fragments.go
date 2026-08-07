@@ -91,7 +91,7 @@ type fragmentPatch struct {
 // renderAllFragments renders every dashboard section and returns the list of
 // (selector, html) pairs to send as datastar-patch-elements events.
 //
-//nolint:contextcheck,golines // templ components don't take ctx; context passed via renderToString
+//nolint:contextcheck,golines // templ components return templ.Component; ctx passed via renderToString -> Render(ctx, w)
 func renderAllFragments(ctx context.Context, report auditlog.Report, events []auditlog.Event, meta auditlog.TypeMetadata) []fragmentPatch {
 	errorCount := countErrors(report.Services)
 	legendItems := computeLegendItems(report, meta)
@@ -169,7 +169,7 @@ func computeLegendItems(report auditlog.Report, meta auditlog.TypeMetadata) []le
 		}
 	}
 
-	order := []string{"lazy", "eager", "transient", "alias"}
+	order := []string{"lazy", "eager", "transient", "alias"} //nolint:goconst // provider type names match domain enums
 
 	var items []legendItem
 
@@ -407,10 +407,10 @@ func truncateString(s string, maxLen int) string {
 
 func errorCountClass(count int) string {
 	if count > 0 {
-		return "error"
+	return cssClassError
 	}
 
-	return "success"
+	return cssClassSuccess
 }
 
 func healthLabel(succeeded bool) string {
