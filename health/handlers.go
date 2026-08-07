@@ -30,7 +30,7 @@ func DefaultRoutes() Routes {
 // always returns 200 with status "pass". This prevents restart cascades
 // caused by downstream dependency blips.
 func (p *Probe) LivenessHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, _ *http.Request) {
+	return p.guard(func(w http.ResponseWriter, _ *http.Request) {
 		resp := Response{
 			Status:  StatusPass,
 			Uptime:  time.Since(p.bootTime).Round(uptimeResolution).String(),
@@ -39,7 +39,7 @@ func (p *Probe) LivenessHandler() http.HandlerFunc {
 		}
 
 		writeResponse(w, http.StatusOK, resp)
-	}
+	})
 }
 
 // ReadinessHandler returns an http.HandlerFunc that answers the readiness
@@ -56,7 +56,7 @@ func (p *Probe) LivenessHandler() http.HandlerFunc {
 // called), the handler serves the cached result for O(1) response time. When
 // no cache is available, it evaluates live with a timeout-bounded context.
 func (p *Probe) ReadinessHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return p.guard(func(w http.ResponseWriter, r *http.Request) {
 		resp := p.readinessResponse(r.Context())
 
 		// Always overlay the live shutdown flag so a stale cached response
@@ -72,7 +72,7 @@ func (p *Probe) ReadinessHandler() http.HandlerFunc {
 		}
 
 		writeResponse(w, code, resp)
-	}
+	})
 }
 
 // StartupHandler returns an http.HandlerFunc that answers the startup
@@ -84,7 +84,7 @@ func (p *Probe) ReadinessHandler() http.HandlerFunc {
 // Kubernetes to use a generous failureThreshold for slow-booting applications
 // without affecting liveness or readiness sensitivity.
 func (p *Probe) StartupHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return p.guard(func(w http.ResponseWriter, r *http.Request) {
 		if p.startupPassed.Load() {
 			resp := Response{
 				Status:  StatusPass,
@@ -115,7 +115,7 @@ func (p *Probe) StartupHandler() http.HandlerFunc {
 		}
 
 		writeResponse(w, code, resp)
-	}
+	})
 }
 
 // RegisterRoutes registers all three probe handlers on the given mux using

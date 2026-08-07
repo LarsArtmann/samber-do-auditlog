@@ -2,6 +2,7 @@ package health
 
 import (
 	"context"
+	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -42,6 +43,7 @@ type Probe struct {
 
 	bootTime time.Time
 	version  string
+	getOnly  bool
 
 	latest          atomic.Pointer[Response]
 	refreshInterval time.Duration
@@ -102,6 +104,31 @@ func WithTimeout(d time.Duration) Option {
 // to the time [New] was called.
 func WithBootTime(t time.Time) Option {
 	return func(p *Probe) { p.bootTime = t }
+}
+
+// WithGETOnly wraps all handlers so they reject non-GET requests with 405
+// Method Not Allowed. Kubernetes probes always use GET; enabling this surfaces
+// misconfigurations (e.g. a load balancer sending HEAD or POST) early.
+func WithGETOnly() Option {
+	return func(p *Probe) { p.getOnly = true }
+}
+
+// guard wraps a handler with GET-only enforcement when WithGETOnly is active.
+func (p *Probe) guard(h http.HandlerFunc) http.HandlerFunc {
+	if !p.getOnly {
+		return h
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.Header().Set("Allow", "GET")
+			w.WriteHeader(http.StatusMethodNotAllowed)
+
+			return
+		}
+
+		h(w, r)
+	}
 }
 
 // New creates a [Probe] wired to the given injector.

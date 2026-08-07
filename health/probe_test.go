@@ -828,6 +828,66 @@ func TestReadiness_BeforeStart_EvaluatesLive(t *testing.T) {
 	}
 }
 
+// --- GET-only enforcement tests ---.
+
+func TestGETOnly_RejectsNonGET(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	probe := health.New(injector, health.WithGETOnly(), health.WithRefreshInterval(0))
+
+	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodHead} {
+		w := httptest.NewRecorder()
+
+		r, err := http.NewRequestWithContext(t.Context(), method, "/healthz", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		probe.LivenessHandler()(w, r)
+
+		if w.Code != http.StatusMethodNotAllowed {
+			t.Errorf("%s /healthz: want 405, got %d", method, w.Code)
+		}
+
+		if allow := w.Header().Get("Allow"); allow != "GET" {
+			t.Errorf("%s Allow header: want GET, got %s", method, allow)
+		}
+	}
+}
+
+func TestGETOnly_AllowsGET(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	probe := health.New(injector, health.WithGETOnly(), health.WithRefreshInterval(0))
+
+	w := doRequest(t, probe.LivenessHandler(), "/healthz")
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET /healthz with GETOnly: want 200, got %d", w.Code)
+	}
+}
+
+func TestDefault_AllowsNonGETWithoutGuard(t *testing.T) {
+	t.Parallel()
+
+	injector := do.New()
+	probe := health.New(injector, health.WithRefreshInterval(0))
+
+	w := httptest.NewRecorder()
+
+	r, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "/healthz", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	probe.LivenessHandler()(w, r)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("POST /healthz without GETOnly: want 200 (no guard), got %d", w.Code)
+	}
+}
+
 // --- Benchmarks ---.
 
 func BenchmarkLivenessHandler(b *testing.B) {
@@ -851,9 +911,10 @@ func BenchmarkLivenessHandler(b *testing.B) {
 func BenchmarkReadinessHandler_CacheHit(b *testing.B) {
 	injector := do.New()
 	provideHealthy(injector, "db")
-	invoke[*healthyService](b, injector, "db")
+	do.MustInvokeNamed[*healthyService](injector, "db")
 
 	probe := health.New(injector, health.WithCriticalServices("db"))
+
 	probe.Start(context.Background())
 	defer probe.Shutdown()
 
@@ -875,7 +936,7 @@ func BenchmarkReadinessHandler_CacheHit(b *testing.B) {
 func BenchmarkReadinessHandler_LiveEval(b *testing.B) {
 	injector := do.New()
 	provideHealthy(injector, "db")
-	invoke[*healthyService](b, injector, "db")
+	do.MustInvokeNamed[*healthyService](injector, "db")
 
 	probe := health.New(injector,
 		health.WithCriticalServices("db"),
@@ -900,8 +961,8 @@ func BenchmarkEvaluate(b *testing.B) {
 	injector := do.New()
 	provideHealthy(injector, "db")
 	provideHealthy(injector, "cache")
-	invoke[*healthyService](b, injector, "db")
-	invoke[*healthyService](b, injector, "cache")
+	do.MustInvokeNamed[*healthyService](injector, "db")
+	do.MustInvokeNamed[*healthyService](injector, "cache")
 
 	probe := health.New(injector, health.WithCriticalServices("db", "cache"))
 
