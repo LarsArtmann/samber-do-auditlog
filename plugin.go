@@ -24,6 +24,11 @@ type Config struct {
 	Enabled bool
 	// ContainerID is an optional human-readable identifier for the injector.
 	ContainerID ContainerID
+	// RunID is an optional identifier for a single execution ("run") of the
+	// container. When empty, New() auto-generates a 128-bit hex ID. Stamped
+	// on every captured event and the final Report for cross-system correlation
+	// (logs, traces, audit files).
+	RunID RunID
 	// OnEvent is called after each event is captured. Must not block.
 	// Called sequentially in hook order. Nil disables the callback.
 	OnEvent func(Event)
@@ -79,6 +84,10 @@ func New(config Config) (*Plugin, error) {
 		config.ContainerID = defaultContainerID
 	}
 
+	if config.RunID == "" {
+		config.RunID = newRunID()
+	}
+
 	err := config.Validate()
 	if err != nil {
 		return nil, err
@@ -88,7 +97,7 @@ func New(config Config) (*Plugin, error) {
 		config.Enabled = envIsEnabled()
 	}
 
-	recorder := NewRecorder(config.ContainerID, config.OnEvent)
+	recorder := NewRecorder(config.ContainerID, config.RunID, config.OnEvent)
 	if config.MaxEvents > 0 {
 		recorder.maxEvents = config.MaxEvents
 	}

@@ -37,7 +37,7 @@ func (r *Recorder) RecordHealthCheck(scopeID ScopeID, scopeName string, serviceN
 
 	evt := newEventFromRef(
 		seq, now, EventTypeHealthCheck, PhaseAfter,
-		ref, r.containerID, svcType, nil, errStr,
+		ref, r.containerID, r.runID, svcType, nil, errStr,
 	)
 	r.appendEventLocked(evt)
 

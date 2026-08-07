@@ -106,6 +106,7 @@ type Recorder struct {
 	sequence      *atomic.Int64
 	invocationSeq atomic.Int64
 	containerID   ContainerID
+	runID         RunID
 	onEvent       func(Event)
 
 	// maxEvents caps the events slice. When > 0, new events are dropped
@@ -115,7 +116,7 @@ type Recorder struct {
 }
 
 // NewRecorder creates a new event recorder.
-func NewRecorder(containerID ContainerID, onEvent func(Event)) *Recorder {
+func NewRecorder(containerID ContainerID, runID RunID, onEvent func(Event)) *Recorder {
 	return &Recorder{ //nolint:exhaustruct
 		mu:            sync.RWMutex{},
 		events:        make([]Event, 0, initialEventCapacity),
@@ -124,6 +125,7 @@ func NewRecorder(containerID ContainerID, onEvent func(Event)) *Recorder {
 		shutdownStart: make(map[svcKey]time.Time),
 		sequence:      newSequenceCounter(),
 		containerID:   containerID,
+		runID:         runID,
 		onEvent:       onEvent,
 	}
 }

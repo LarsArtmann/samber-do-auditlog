@@ -67,6 +67,7 @@ func MigrateReport(data []byte) (Report, error) {
 	return buildReportFromCore(
 		SchemaVersion,
 		report.ContainerID,
+		report.RunID,
 		exportedAt,
 		report.DroppedEventCount,
 		report.Events,

@@ -19,6 +19,7 @@ type replayState struct {
 	stack         []stackEntry
 	shutdownStart map[svcKey]time.Time
 	containerID   ContainerID
+	runID         RunID
 	// invocationSeq is a cross-service counter matching the live Recorder's
 	// invocationSeq. Each service gets its invocationOrder from this counter
 	// the first time it is invoked, preserving global build ordering.
@@ -75,9 +76,16 @@ func ReplayEvents(events []Event) (Report, error) {
 		containerID = events[0].ContainerID
 	}
 
+	runID := state.runID
+
+	if runID == "" && len(events) > 0 {
+		runID = events[0].RunID
+	}
+
 	report := buildReportFromCore(
 		SchemaVersion,
 		containerID,
+		runID,
 		time.Now(),
 		0, // replayed reports have no dropped events
 		slices.Clone(events),
@@ -98,6 +106,10 @@ func ReplayEvents(events []Event) (Report, error) {
 func applyEvent(evt Event, state *replayState) {
 	if state.containerID == "" {
 		state.containerID = evt.ContainerID
+	}
+
+	if state.runID == "" {
+		state.runID = evt.RunID
 	}
 
 	state.recordScope(evt.ScopeID, evt.ScopeName)

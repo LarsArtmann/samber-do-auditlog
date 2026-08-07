@@ -153,6 +153,7 @@ func (r Report) Filtered(opts ...ReportOption) Report {
 	return buildReportFromCore(
 		r.Version,
 		r.ContainerID,
+		r.RunID,
 		r.ExportedAt,
 		r.DroppedEventCount,
 		filteredEvents,

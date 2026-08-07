@@ -25,6 +25,7 @@ func (r *Recorder) BuildReport() Report {
 	return buildReportFromCore(
 		SchemaVersion,
 		r.containerID,
+		r.runID,
 		time.Now(),
 		r.droppedEvents.Load(),
 		events,
