@@ -1,0 +1,205 @@
+package live
+
+import (
+	"fmt"
+
+	auditlog "github.com/larsartmann/samber-do-auditlog"
+)
+
+// --- Stats fragment ---
+
+templ statsFragment(stats []statsEntry) {
+	for _, stat := range stats {
+		<div class={ "stat-card " + stat.cls }>
+			<div class="label">{ stat.label }</div>
+			<div class="value">{ stat.value }</div>
+		</div>
+	}
+}
+
+// --- Legend fragment ---
+
+templ legendFragment(items []legendItem) {
+	for _, item := range items {
+		<div class="legend-item">
+			<span class="icon">{ item.Icon }</span>
+			{ item.Label } <span style="opacity:0.5">({ item.Count })</span>
+		</div>
+	}
+}
+
+// --- Waveform fragment ---
+
+templ waveformFragment(marks []waveformMark) {
+	if len(marks) == 0 {
+		<span class="waveform-placeholder">Waiting for events...</span>
+	} else {
+		for _, mark := range marks {
+			<div class="wf-event" style={ mark.Style } title={ mark.Tooltip }></div>
+		}
+	}
+}
+
+// --- Services table body ---
+
+templ servicesTbody(report auditlog.Report, meta auditlog.TypeMetadata) {
+	if len(report.Services) == 0 {
+		<tr class="empty-state"><td colspan="8">No services registered yet.</td></tr>
+	} else {
+		for idx, svc := range report.Services {
+			<tr data-signals={ rowSignalsJSON(svc, idx) } data-show={ servicesShowExpr }>
+				<td>{ providerIcon(meta, string(svc.ServiceType)) } { string(svc.ServiceName) }</td>
+				<td>{ svc.ScopeName }</td>
+				<td>{ string(svc.ServiceType) }</td>
+				<td>{ statusIcon(meta, string(svc.Status)) } { string(svc.Status) }</td>
+				<td>{ svc.InvocationCount }</td>
+				if svc.FirstBuildDurationMs != nil {
+					<td>{ humanizeDuration(*svc.FirstBuildDurationMs) }</td>
+				} else {
+					<td>&mdash;</td>
+				}
+				<td>{ depNamesString(svc.Dependencies) }</td>
+				<td>
+					if svc.InvocationError != nil {
+						<span title={ *svc.InvocationError }>&#9888; { truncateString(*svc.InvocationError, maxServiceErrLen) }</span>
+					} else if svc.ShutdownError != nil {
+						<span title={ *svc.ShutdownError }>&#9888; { truncateString(*svc.ShutdownError, maxServiceErrLen) }</span>
+					} else {
+						&mdash;
+					}
+				</td>
+			</tr>
+		}
+	}
+}
+
+// --- Events table body ---
+
+templ eventsTbody(events []auditlog.Event, meta auditlog.TypeMetadata) {
+	if len(events) == 0 {
+		<tr class="empty-state"><td colspan="7">No events recorded yet.</td></tr>
+	} else {
+		for idx, evt := range events {
+			<tr data-signals={ eventRowSignalsJSON(evt, idx) } data-show={ eventsShowExpr }>
+				<td>{ idx + 1 }</td>
+				<td>{ evt.Timestamp.Format("15:04:05") }</td>
+				<td><span class="event-badge" style={ "background:" + eventBadgeColor(evt, meta) }>{ eventBadgeLabel(evt, meta) }</span></td>
+				if evt.Phase == auditlog.PhaseBefore {
+					<td>&#9652; { string(evt.Phase) }</td>
+				} else {
+					<td>&#9662; { string(evt.Phase) }</td>
+				}
+				<td>{ string(evt.ServiceName) }</td>
+				if evt.DurationMs != nil {
+					<td>{ humanizeDuration(*evt.DurationMs) }</td>
+				} else {
+					<td>&mdash;</td>
+				}
+				<td>
+					if evt.Error != nil {
+						<span title={ *evt.Error }>&#9888; { truncateString(*evt.Error, maxEventErrLen) }</span>
+					}
+				</td>
+			</tr>
+		}
+	}
+}
+
+// --- Scope tree fragment ---
+
+templ scopeTreeFragment(report auditlog.Report) {
+	if report.ScopeTree.ID == "" && report.ScopeTree.Name == "" && len(report.ScopeTree.Children) == 0 {
+		<div class="graph-placeholder">Scope tree will appear here once services register...</div>
+	} else {
+		@scopeNode(report.ScopeTree, 0)
+	}
+}
+
+templ scopeNode(node auditlog.ScopeNode, depth int) {
+	<div class="scope-node" style={ fmt.Sprintf("margin-left:%dpx", depth * scopeIndentPx) }>
+		<div class="scope-label" role="button" tabindex="0" aria-expanded="true">
+			<span class="scope-icon" aria-hidden="true">&#9660;</span>
+			{ scopeNodeName(node) }
+		</div>
+		<div class="scope-body">
+			if len(node.Services) > 0 {
+				<div class="scope-services">
+					for _, svc := range node.Services {
+						<span class="scope-service-chip">{ string(svc) }</span>
+					}
+				</div>
+			}
+			if len(node.Children) > 0 {
+				<div class="scope-children">
+					for _, child := range node.Children {
+						@scopeNode(child, depth + 1)
+					}
+				</div>
+			}
+		</div>
+	</div>
+}
+
+// --- Dependency graph fragment ---
+
+templ graphFragment(report auditlog.Report) {
+	if len(report.Services) == 0 {
+		<div class="graph-placeholder" id="graph-placeholder">Dependency graph will appear here as services register...</div>
+	} else {
+		<div class="dep-graph">
+			for _, svc := range report.Services {
+				<div class="dep-node">
+					<div class="dep-node-header">
+						<span class="dep-node-name">{ string(svc.ServiceName) }</span>
+						if svc.ServiceType != "" {
+							<span class="dep-node-type">{ string(svc.ServiceType) }</span>
+						}
+					</div>
+					if len(svc.Dependencies) > 0 {
+						<div class="dep-node-deps">
+							for _, dep := range svc.Dependencies {
+								<span class="dep-arrow">{ string(dep.ServiceName) }</span>
+							}
+						</div>
+					}
+				</div>
+			}
+		</div>
+	}
+}
+
+// --- Timeline fragment ---
+
+templ timelineFragment(report auditlog.Report, maxBuildMs float64, maxShutdownMs float64) {
+	if len(report.Services) == 0 {
+		<div class="graph-placeholder">Timeline will appear here as events arrive...</div>
+	} else {
+		<div class="timeline">
+			for _, svc := range report.Services {
+				<div class="timeline-row">
+					<div class="timeline-label">{ string(svc.ServiceName) }</div>
+					<div class="timeline-bars">
+						<div class="timeline-bar build" style={ "width:" + timelineBarWidth(svc.FirstBuildDurationMs, maxBuildMs) } title={ "Build: " + humanizeDuration(safeDuration(svc.FirstBuildDurationMs)) }></div>
+						<div class="timeline-bar shutdown" style={ "width:" + timelineBarWidth(svc.ShutdownDurationMs, maxShutdownMs) } title={ "Shutdown: " + humanizeDuration(safeDuration(svc.ShutdownDurationMs)) }></div>
+					</div>
+				</div>
+			}
+		</div>
+	}
+}
+
+// --- Footer stats ---
+
+templ footerStatsFragment(report auditlog.Report, eventCount int) {
+	Schema v{ footerVersion(report) } | { eventCount } events | { report.ServiceCount } services
+}
+
+// --- Container ID ---
+
+templ containerIDFragment(report auditlog.Report) {
+	if report.ContainerID == "" {
+		&mdash;
+	} else {
+		{ string(report.ContainerID) }
+	}
+}

@@ -2,6 +2,7 @@ package health
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -152,6 +153,35 @@ func New(injector do.Injector, opts ...Option) *Probe {
 	return probe
 }
 
+// ErrInvalidTimeout is returned by [Probe.Validate] when the configured timeout
+// is zero or negative.
+var ErrInvalidTimeout = errors.New("health: timeout must be positive")
+
+// ErrInvalidRefreshInterval is returned by [Probe.Validate] when the configured
+// refresh interval is negative.
+var ErrInvalidRefreshInterval = errors.New("health: refresh interval must not be negative")
+
+// Validate checks that the Probe configuration is internally consistent.
+// Returns nil when the configuration is safe to use.
+//
+// This catches the two common mistakes that cause runtime problems:
+//
+//   - Timeout <= 0 creates an already-expired context, so every health check
+//     fails immediately with "context deadline exceeded".
+//   - RefreshInterval < 0 is treated the same as 0 (live evaluation) by Start,
+//     but callers likely intended a positive interval.
+func (p *Probe) Validate() error {
+	if p.timeout <= 0 {
+		return ErrInvalidTimeout
+	}
+
+	if p.refreshInterval < 0 {
+		return ErrInvalidRefreshInterval
+	}
+
+	return nil
+}
+
 // Start launches the background cache refresh loop (when RefreshInterval > 0)
 // and performs an immediate evaluation so the cache is populated before the
 // first request arrives. Calling Start more than once is a no-op.
@@ -275,17 +305,33 @@ func (p *Probe) runHealthChecks(ctx context.Context) map[string]error {
 	return p.injector.HealthCheckWithContext(ctx)
 }
 
-// classify computes the roll-up status: fail if shutting down or any critical
-// service failed, pass otherwise.
+// classify computes the roll-up status from health-check results:
+//
+//   - StatusFail when shutting down or any critical service failed.
+//   - StatusWarn when no critical service failed but at least one
+//     non-critical service failed (degraded but still serving traffic).
+//   - StatusPass when every checked service is healthy.
 func (p *Probe) classify(results map[string]error, shuttingDown bool) Status {
 	if shuttingDown {
 		return StatusFail
 	}
 
-	for name := range p.critical {
-		if err, found := results[name]; found && err != nil {
+	hasWarning := false
+
+	for name, err := range results {
+		if err == nil {
+			continue
+		}
+
+		if _, critical := p.critical[name]; critical {
 			return StatusFail
 		}
+
+		hasWarning = true
+	}
+
+	if hasWarning {
+		return StatusWarn
 	}
 
 	return StatusPass

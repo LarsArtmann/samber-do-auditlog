@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`RegisterRoutes(mux, routes)`**: convenience wiring for conventional Kubernetes paths (`/healthz`, `/readyz`, `/startupz`) or custom paths.
 - **Strongly-typed response model**: `Status` (pass/fail/warn), `Check` (per-service), `Response` (aggregate with version, uptime, shutting_down, total_latency_ms).
 - **Runnable examples**: 4 testable `Example*` functions with `// Output:` directives covering New, LivenessHandler, ReadinessHandler, and RegisterRoutes.
-- **Performance benchmarks**: 4 benchmarks proving cache delivers 3.3µs responses vs 9.6µs live evaluation.
+- **Performance benchmarks**: 4 benchmarks proving cached readiness is multiple times faster than live evaluation (see BENCHMARKS.md).
 - **33 tests + 4 examples + 4 benchmarks** covering liveness, readiness (critical/non-critical/warn/shutdown/cache/live), startup (latch), Evaluate, routes, GET-only enforcement, audit integration, and lifecycle.
 
 ### Added — go-sse Full Adoption (Stream, Broadcaster, Replay)

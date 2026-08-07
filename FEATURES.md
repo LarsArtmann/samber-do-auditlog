@@ -173,7 +173,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Functional options**           | `WithVersion`, `WithCriticalServices`, `WithPlugin`, `WithRefreshInterval`, `WithTimeout`, `WithBootTime`, `WithGETOnly`                     | `health/probe.go`             |
 | **Route registration**           | `RegisterRoutes(mux, routes)` one-liner for standard or custom paths. `DefaultRoutes()` returns `/healthz`, `/readyz`, `/startupz`           | `health/handlers.go`          |
 | **Runnable examples**            | 4 testable `Example*` functions with `// Output:` directives for pkg.go.dev                                                                 | `health/example_test.go`      |
-| **Performance benchmarks**       | 4 benchmarks: liveness handler, readiness cache hit (3.3µs), readiness live eval (9.6µs), Evaluate                                         | `health/probe_test.go`        |
+| **Performance benchmarks**       | 4 benchmarks: liveness, readiness cache-hit, readiness live-eval, Evaluate — see [BENCHMARKS.md](BENCHMARKS.md) for baseline numbers         | `health/probe_test.go`        |
 
 ### Shared Module Delegation
 

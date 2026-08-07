@@ -14,6 +14,8 @@ import (
 // exampleDB is a minimal service that satisfies do.HealthcheckerWithContext.
 type exampleDB struct{}
 
+var _ do.HealthcheckerWithContext = (*exampleDB)(nil)
+
 func (*exampleDB) HealthCheck(_ context.Context) error { return nil }
 
 // ExampleNew shows how to create a health Probe wired to a samber/do

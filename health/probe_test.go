@@ -277,8 +277,8 @@ func TestReadiness_NonCriticalFailure_Returns200(t *testing.T) {
 	}
 
 	resp := decodeResponse(t, w)
-	if resp.Status != health.StatusPass {
-		t.Errorf("readiness status field: want pass (non-critical failure), got %s", resp.Status)
+	if resp.Status != health.StatusWarn {
+		t.Errorf("readiness status field: want warn (non-critical failure), got %s", resp.Status)
 	}
 
 	metricsCheck, ok := resp.Checks["metrics"]
@@ -497,8 +497,8 @@ func TestEvaluate_ReturnsCorrectClassification(t *testing.T) {
 
 	resp := probe.Evaluate(context.Background())
 
-	if resp.Status != health.StatusPass {
-		t.Errorf("status: want pass (db healthy, cache non-critical), got %s", resp.Status)
+	if resp.Status != health.StatusWarn {
+		t.Errorf("status: want warn (db healthy, cache non-critical), got %s", resp.Status)
 	}
 
 	if len(resp.Checks) != 2 {
@@ -597,7 +597,7 @@ func TestEvaluate_MixedFailures_CriticalFailNonCriticalWarn(t *testing.T) {
 	}
 }
 
-func TestEvaluate_AllNonCriticalFailures_RollupStaysPass(t *testing.T) {
+func TestEvaluate_AllNonCriticalFailures_RollupIsWarn(t *testing.T) {
 	t.Parallel()
 
 	injector := do.New()
@@ -612,8 +612,8 @@ func TestEvaluate_AllNonCriticalFailures_RollupStaysPass(t *testing.T) {
 
 	resp := probe.Evaluate(context.Background())
 
-	if resp.Status != health.StatusPass {
-		t.Errorf("roll-up status: want pass (only non-critical failures), got %s", resp.Status)
+	if resp.Status != health.StatusWarn {
+		t.Errorf("roll-up status: want warn (only non-critical failures), got %s", resp.Status)
 	}
 
 	for _, name := range []string{"metrics", "feature-flags"} {
@@ -624,6 +624,58 @@ func TestEvaluate_AllNonCriticalFailures_RollupStaysPass(t *testing.T) {
 
 	if resp.Checks["db"].Status != health.StatusPass {
 		t.Errorf("db check: want pass, got %s", resp.Checks["db"].Status)
+	}
+}
+
+// --- Validate tests ---.
+
+func TestValidate_DefaultConfig_IsValid(t *testing.T) {
+	t.Parallel()
+
+	probe := health.New(do.New())
+
+	if err := probe.Validate(); err != nil {
+		t.Errorf("default config: want nil error, got %v", err)
+	}
+}
+
+func TestValidate_ZeroTimeout_ReturnsError(t *testing.T) {
+	t.Parallel()
+
+	probe := health.New(do.New(), health.WithTimeout(0))
+
+	if err := probe.Validate(); !errors.Is(err, health.ErrInvalidTimeout) {
+		t.Errorf("zero timeout: want ErrInvalidTimeout, got %v", err)
+	}
+}
+
+func TestValidate_NegativeTimeout_ReturnsError(t *testing.T) {
+	t.Parallel()
+
+	probe := health.New(do.New(), health.WithTimeout(-1*time.Second))
+
+	if err := probe.Validate(); !errors.Is(err, health.ErrInvalidTimeout) {
+		t.Errorf("negative timeout: want ErrInvalidTimeout, got %v", err)
+	}
+}
+
+func TestValidate_NegativeRefreshInterval_ReturnsError(t *testing.T) {
+	t.Parallel()
+
+	probe := health.New(do.New(), health.WithRefreshInterval(-1))
+
+	if err := probe.Validate(); !errors.Is(err, health.ErrInvalidRefreshInterval) {
+		t.Errorf("negative refresh interval: want ErrInvalidRefreshInterval, got %v", err)
+	}
+}
+
+func TestValidate_ZeroRefreshInterval_IsValid(t *testing.T) {
+	t.Parallel()
+
+	probe := health.New(do.New(), health.WithRefreshInterval(0))
+
+	if err := probe.Validate(); err != nil {
+		t.Errorf("zero refresh interval (live mode): want nil error, got %v", err)
 	}
 }
 
@@ -834,24 +886,38 @@ func TestGETOnly_RejectsNonGET(t *testing.T) {
 	t.Parallel()
 
 	injector := do.New()
-	probe := health.New(injector, health.WithGETOnly(), health.WithRefreshInterval(0))
+	provideHealthy(injector, "db")
+	invoke[*healthyService](t, injector, "db")
+	probe := health.New(injector,
+		health.WithGETOnly(),
+		health.WithCriticalServices("db"),
+		health.WithRefreshInterval(0),
+	)
 
-	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodHead} {
-		w := httptest.NewRecorder()
+	handlers := map[string]http.HandlerFunc{
+		"/healthz":  probe.LivenessHandler(),
+		"/readyz":   probe.ReadinessHandler(),
+		"/startupz": probe.StartupHandler(),
+	}
 
-		r, err := http.NewRequestWithContext(t.Context(), method, "/healthz", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+	for path, handler := range handlers {
+		for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodHead} {
+			w := httptest.NewRecorder()
 
-		probe.LivenessHandler()(w, r)
+			r, err := http.NewRequestWithContext(t.Context(), method, path, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if w.Code != http.StatusMethodNotAllowed {
-			t.Errorf("%s /healthz: want 405, got %d", method, w.Code)
-		}
+			handler(w, r)
 
-		if allow := w.Header().Get("Allow"); allow != "GET" {
-			t.Errorf("%s Allow header: want GET, got %s", method, allow)
+			if w.Code != http.StatusMethodNotAllowed {
+				t.Errorf("%s %s: want 405, got %d", method, path, w.Code)
+			}
+
+			if allow := w.Header().Get("Allow"); allow != "GET" {
+				t.Errorf("%s %s Allow header: want GET, got %s", method, path, allow)
+			}
 		}
 	}
 }
@@ -860,11 +926,23 @@ func TestGETOnly_AllowsGET(t *testing.T) {
 	t.Parallel()
 
 	injector := do.New()
-	probe := health.New(injector, health.WithGETOnly(), health.WithRefreshInterval(0))
+	provideHealthy(injector, "db")
+	invoke[*healthyService](t, injector, "db")
+	probe := health.New(injector,
+		health.WithGETOnly(),
+		health.WithCriticalServices("db"),
+		health.WithRefreshInterval(0),
+	)
 
-	w := doRequest(t, probe.LivenessHandler(), "/healthz")
-	if w.Code != http.StatusOK {
-		t.Fatalf("GET /healthz with GETOnly: want 200, got %d", w.Code)
+	for path, handler := range map[string]http.HandlerFunc{
+		"/healthz":  probe.LivenessHandler(),
+		"/readyz":   probe.ReadinessHandler(),
+		"/startupz": probe.StartupHandler(),
+	} {
+		w := doRequest(t, handler, path)
+		if w.Code != http.StatusOK {
+			t.Fatalf("GET %s with GETOnly: want 200, got %d", path, w.Code)
+		}
 	}
 }
 

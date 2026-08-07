@@ -23,8 +23,9 @@ type Check struct {
 
 // Response is the aggregate health-check response served by all probe handlers.
 type Response struct {
-	// Status is the overall roll-up: fail if any critical service is down,
-	// pass otherwise.
+	// Status is the overall roll-up: fail if any critical service is down
+	// or the probe is shutting down, warn if only non-critical services
+	// are degraded, pass when all services are healthy.
 	Status Status `json:"status"`
 	// Version is the application version, if configured.
 	Version string `json:"version,omitempty"`

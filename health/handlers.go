@@ -67,7 +67,7 @@ func (p *Probe) ReadinessHandler() http.HandlerFunc {
 		}
 
 		code := http.StatusOK
-		if resp.Status != StatusPass {
+		if resp.Status == StatusFail {
 			code = http.StatusServiceUnavailable
 		}
 
