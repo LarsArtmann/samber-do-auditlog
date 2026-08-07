@@ -27,6 +27,7 @@ func TestStreamEvents_DeliversInOrder(t *testing.T) {
 		func(lineNum int, evt auditlog.Event) error {
 			lineNums = append(lineNums, lineNum)
 			delivered = append(delivered, evt)
+
 			return nil
 		},
 	)
@@ -61,6 +62,7 @@ func TestStreamEvents_EmptyInput(t *testing.T) {
 		nil,
 		func(int, auditlog.Event) error {
 			called++
+
 			return nil
 		},
 	)
@@ -83,6 +85,7 @@ func TestStreamEvents_AllBlank(t *testing.T) {
 		nil,
 		func(int, auditlog.Event) error {
 			called++
+
 			return nil
 		},
 	)
@@ -125,6 +128,7 @@ func TestStreamEvents_CallbackError(t *testing.T) {
 			if called == 2 {
 				return sentinel
 			}
+
 			return nil
 		},
 	)
@@ -156,10 +160,12 @@ func TestStreamEvents_InvokesValidate(t *testing.T) {
 		strings.NewReader(input),
 		func(int, auditlog.Event) error {
 			validated++
+
 			return errors.New("rejected")
 		},
 		func(int, auditlog.Event) error {
 			t.Fatal("callback should not run after validate rejects")
+
 			return nil
 		},
 	)

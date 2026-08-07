@@ -19,6 +19,7 @@ func TestMultiWriter_FansOutToAllCallbacks(t *testing.T) {
 
 	callback := func(e auditlog.Event) {
 		mu.Lock()
+
 		got = append(got, e)
 		mu.Unlock()
 		wg.Done()
@@ -62,6 +63,7 @@ func TestMultiWriter_PreservesRegistrationOrder(t *testing.T) {
 		return func(auditlog.Event) {
 			mu.Lock()
 			defer mu.Unlock()
+
 			order = append(order, n)
 		}
 	}
@@ -109,6 +111,7 @@ func TestMultiWriter_ConcurrentSafety(t *testing.T) {
 		wg.Add(1)
 		go func(seq int) {
 			defer wg.Done()
+
 			mw.OnEvent(auditlog.Event{Sequence: seq})
 		}(i)
 	}

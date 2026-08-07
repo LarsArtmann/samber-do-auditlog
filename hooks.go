@@ -240,7 +240,18 @@ func (r *Recorder) OnBeforeRegistration(scope *do.Scope, serviceName string) {
 	ctx := r.beginLockedBeforeHook(scope, serviceName)
 
 	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: ctx.serviceName}
-	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeRegistration, PhaseBefore, ref, r.containerID, r.runID, "", nil, nil)
+	evt := newEventFromRef(
+		ctx.seq,
+		ctx.now,
+		EventTypeRegistration,
+		PhaseBefore,
+		ref,
+		r.containerID,
+		r.runID,
+		"",
+		nil,
+		nil,
+	)
 	r.publishLockedEvent(evt)
 }
 
@@ -262,7 +273,18 @@ func (r *Recorder) OnAfterRegistration(scope *do.Scope, serviceName string) {
 	}
 
 	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: ctx.serviceName}
-	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeRegistration, PhaseAfter, ref, r.containerID, r.runID, svcType, nil, nil)
+	evt := newEventFromRef(
+		ctx.seq,
+		ctx.now,
+		EventTypeRegistration,
+		PhaseAfter,
+		ref,
+		r.containerID,
+		r.runID,
+		svcType,
+		nil,
+		nil,
+	)
 	r.publishLockedEvent(evt)
 }
 
@@ -282,7 +304,18 @@ func (r *Recorder) OnBeforeInvocation(scope *do.Scope, serviceName string) {
 	svcType := r.serviceTypeForLocked(ctx.key)
 
 	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: ctx.serviceName}
-	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeInvocation, PhaseBefore, ref, r.containerID, r.runID, svcType, nil, nil)
+	evt := newEventFromRef(
+		ctx.seq,
+		ctx.now,
+		EventTypeInvocation,
+		PhaseBefore,
+		ref,
+		r.containerID,
+		r.runID,
+		svcType,
+		nil,
+		nil,
+	)
 	r.publishLockedEvent(evt)
 }
 
@@ -358,7 +391,18 @@ func (r *Recorder) OnBeforeShutdown(scope *do.Scope, serviceName string) {
 	svcType := r.serviceTypeForLocked(ctx.key)
 
 	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: ctx.serviceName}
-	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeShutdown, PhaseBefore, ref, r.containerID, r.runID, svcType, nil, nil)
+	evt := newEventFromRef(
+		ctx.seq,
+		ctx.now,
+		EventTypeShutdown,
+		PhaseBefore,
+		ref,
+		r.containerID,
+		r.runID,
+		svcType,
+		nil,
+		nil,
+	)
 	r.publishLockedEvent(evt)
 }
 
@@ -383,7 +427,18 @@ func (r *Recorder) OnAfterShutdown(scope *do.Scope, serviceName string, err erro
 	svcType := r.serviceTypeForLocked(ctx.key)
 
 	ref := ServiceRef{ScopeID: ctx.scopeID, ScopeName: ctx.scopeName, ServiceName: ctx.serviceName}
-	evt := newEventFromRef(ctx.seq, ctx.now, EventTypeShutdown, PhaseAfter, ref, r.containerID, r.runID, svcType, nil, errStr)
+	evt := newEventFromRef(
+		ctx.seq,
+		ctx.now,
+		EventTypeShutdown,
+		PhaseAfter,
+		ref,
+		r.containerID,
+		r.runID,
+		svcType,
+		nil,
+		errStr,
+	)
 	r.appendEventLocked(evt)
 
 	if rec, ok := r.services[ctx.key]; ok {

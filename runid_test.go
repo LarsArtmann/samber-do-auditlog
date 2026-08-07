@@ -30,6 +30,7 @@ func TestRunID_PreservedWhenProvided(t *testing.T) {
 	t.Parallel()
 
 	customRunID := auditlog.RunID("my-trace-id-123")
+
 	plugin, err := auditlog.New(auditlog.Config{
 		Enabled: true,
 		RunID:   customRunID,

@@ -13,6 +13,9 @@
         "service_name": {
           "type": "string"
         },
+        "run_id": {
+          "type": "string"
+        },
         "sequence": {
           "type": "integer"
         },
@@ -198,6 +201,9 @@
       "type": "string"
     },
     "container_id": {
+      "type": "string"
+    },
+    "run_id": {
       "type": "string"
     },
     "exported_at": {
