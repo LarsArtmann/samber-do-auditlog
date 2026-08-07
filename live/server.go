@@ -379,7 +379,7 @@ func (srv *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write(payload)
 }
 
-func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) { //nolint:contextcheck // stream derives context from request
+func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 	_, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "streaming not supported", http.StatusInternalServerError)
@@ -397,7 +397,7 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) { //nolint:
 	// Send initial snapshot as datastar patch-elements + patch-signals.
 	// On reconnect this IS the replay — the full current state replaces
 	// any missed events.
-	if err := srv.sendDatastarSnapshot(stream); err != nil {
+	if err := srv.sendDatastarSnapshot(stream); err != nil { //nolint:contextcheck // stream derives ctx from request
 		return
 	}
 
@@ -422,7 +422,7 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) { //nolint:
 			// Non-blocking drain: coalesce burst events into a single render.
 			drainEvents(eventCh)
 
-			if err := srv.sendDatastarSnapshot(stream); err != nil {
+			if err := srv.sendDatastarSnapshot(stream); err != nil { //nolint:contextcheck // stream derives ctx from request
 				return
 			}
 		}
@@ -493,7 +493,7 @@ func (srv *Server) sendDatastarComplete(stream *sse.Stream) {
 	}
 
 	// Send final full render.
-	_ = srv.sendDatastarSnapshot(stream)
+	_ = srv.sendDatastarSnapshot(stream) //nolint:contextcheck // stream derives ctx from request
 
 	// Signal completion.
 	_ = stream.SendKeyed("datastar-patch-signals", "signals", `{"complete":true,"connStatus":"complete"}`)

@@ -422,10 +422,8 @@ func healthLabel(succeeded bool) string {
 // --- Timeline helpers ---
 
 func timelineMaxDurations(services []auditlog.ServiceInfo) (float64, float64) {
-	var (
-		maxBuildMs   float64
-		maxShutdownMs float64
-	)
+	var maxBuildMs float64
+	var maxShutdownMs float64
 
 	for _, svc := range services {
 		if svc.FirstBuildDurationMs != nil && *svc.FirstBuildDurationMs > maxBuildMs {
