@@ -392,7 +392,7 @@ body.lifecycle-complete .live-dot {
   border-radius: 3px;
 }
 .dep-arrow::before {
-  content: '\2190';
+  content: "\2190";
   color: var(--text-dim);
   font-size: 0.7rem;
 }

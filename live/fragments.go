@@ -36,12 +36,16 @@ const (
 // servicesShowExpr is the data-show expression for each service row.
 //
 //nolint:gochecknoglobals // effectively immutable; interpolates a const
-var servicesShowExpr = "(!$serviceSearch || $rowName.toLowerCase().includes($serviceSearch.toLowerCase()) || $rowScope.toLowerCase().includes($serviceSearch.toLowerCase())) && ($showAllServices || $rowIdx < " + strconv.Itoa(maxServiceRows) + ")" //nolint:golines // single expression
+var servicesShowExpr = "(!$serviceSearch || $rowName.toLowerCase().includes($serviceSearch.toLowerCase()) || $rowScope.toLowerCase().includes($serviceSearch.toLowerCase())) && ($showAllServices || $rowIdx < " + strconv.Itoa(
+	maxServiceRows,
+) + ")"
 
 // eventsShowExpr is the data-show expression for each event row.
 //
 //nolint:gochecknoglobals // effectively immutable; interpolates a const
-var eventsShowExpr = "(!$eventFilter || $evtType === $eventFilter) && ($showAllEvents || $evtIdx < " + strconv.Itoa(maxEventRows) + ")" //nolint:golines,lll // single expression
+var eventsShowExpr = "(!$eventFilter || $evtType === $eventFilter) && ($showAllEvents || $evtIdx < " + strconv.Itoa(
+	maxEventRows,
+) + ")" //nolint:golines,lll // single expression
 
 // --- Data types for templ components ---
 
@@ -92,7 +96,12 @@ type fragmentPatch struct {
 // (selector, html) pairs to send as datastar-patch-elements events.
 //
 //nolint:contextcheck,golines // templ components return templ.Component; ctx passed via renderToString -> Render(ctx, w)
-func renderAllFragments(ctx context.Context, report auditlog.Report, events []auditlog.Event, meta auditlog.TypeMetadata) []fragmentPatch {
+func renderAllFragments(
+	ctx context.Context,
+	report auditlog.Report,
+	events []auditlog.Event,
+	meta auditlog.TypeMetadata,
+) []fragmentPatch {
 	errorCount := countErrors(report.Services)
 	legendItems := computeLegendItems(report, meta)
 	waveformMarks := computeWaveformMarks(events, meta)

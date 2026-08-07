@@ -58,12 +58,12 @@ Median of 3 runs. Lower is better.
 
 Captured 2026-08-07. Same environment as above. Median of 3 runs.
 
-| Benchmark                            | Time/op  | Bytes/op | Allocs/op | Notes                                                        |
-| ------------------------------------ | -------- | -------- | --------- | ------------------------------------------------------------ |
-| `BenchmarkLivenessHandler`           | 995 ns   | 1,316 B  | 15        | Liveness handler: zero dependency checks, always 200         |
-| `BenchmarkReadinessHandler_CacheHit` | 1,230 ns | 1,346 B  | 15        | Readiness served from atomic cache (background refresh)     |
-| `BenchmarkReadinessHandler_LiveEval` | 5,710 ns | 3,691 B  | 49        | Readiness with live `HealthCheckWithContext` (no cache)      |
-| `BenchmarkEvaluate`                  | 3,898 ns | 2,312 B  | 38        | Raw `Evaluate()` call: health-check batch + classify        |
+| Benchmark                            | Time/op  | Bytes/op | Allocs/op | Notes                                                   |
+| ------------------------------------ | -------- | -------- | --------- | ------------------------------------------------------- |
+| `BenchmarkLivenessHandler`           | 995 ns   | 1,316 B  | 15        | Liveness handler: zero dependency checks, always 200    |
+| `BenchmarkReadinessHandler_CacheHit` | 1,230 ns | 1,346 B  | 15        | Readiness served from atomic cache (background refresh) |
+| `BenchmarkReadinessHandler_LiveEval` | 5,710 ns | 3,691 B  | 49        | Readiness with live `HealthCheckWithContext` (no cache) |
+| `BenchmarkEvaluate`                  | 3,898 ns | 2,312 B  | 38        | Raw `Evaluate()` call: health-check batch + classify    |
 
 The cache delivers ~4.6× faster responses vs live evaluation (1,230 ns cached vs 5,710 ns live).
 
