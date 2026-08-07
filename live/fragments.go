@@ -407,7 +407,7 @@ func truncateString(s string, maxLen int) string {
 
 func errorCountClass(count int) string {
 	if count > 0 {
-	return cssClassError
+		return cssClassError
 	}
 
 	return cssClassSuccess

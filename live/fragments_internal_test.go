@@ -271,10 +271,10 @@ func TestBuildStatsEntries(t *testing.T) {
 		t.Parallel()
 
 		report := auditlog.Report{
-			ServiceCount:           3,
-			EventCount:             10,
-			ScopeCount:             2,
-			TotalBuildDurationMs:   150,
+			ServiceCount:            3,
+			EventCount:              10,
+			ScopeCount:              2,
+			TotalBuildDurationMs:    150,
 			TotalShutdownDurationMs: 30,
 		}
 
@@ -292,7 +292,7 @@ func TestBuildStatsEntries(t *testing.T) {
 		t.Parallel()
 
 		report := auditlog.Report{
-			HealthCheckedCount:  2,
+			HealthCheckedCount:   2,
 			HealthCheckSucceeded: true,
 		}
 
@@ -310,7 +310,7 @@ func TestBuildStatsEntries(t *testing.T) {
 		t.Parallel()
 
 		report := auditlog.Report{
-			HealthCheckedCount:  2,
+			HealthCheckedCount:   2,
 			HealthCheckSucceeded: false,
 		}
 
@@ -429,9 +429,10 @@ func TestTimelineMaxDurations(t *testing.T) {
 func TestWaveformBounds(t *testing.T) {
 	t.Parallel()
 
+	dur := 200.0
 	events := []auditlog.Event{
 		{Timestamp: parseTime("2025-01-01T10:00:00Z")},
-		{Timestamp: parseTime("2025-01-01T10:00:05Z"), DurationMs: ptrFloat(200)},
+		{Timestamp: parseTime("2025-01-01T10:00:05Z"), DurationMs: &dur},
 		{Timestamp: parseTime("2025-01-01T10:00:03Z")},
 	}
 
@@ -468,9 +469,10 @@ func TestComputeWaveformMarks_WithEvents(t *testing.T) {
 	meta := auditlog.BuildTypeMetadata()
 
 	dur := 10.0
+	dbRef := auditlog.ServiceRef{ServiceName: "db"}
 	events := []auditlog.Event{
-		{ServiceRef: auditlog.ServiceRef{ServiceName: "db"}, EventType: "registration", Timestamp: parseTime("2025-01-01T10:00:00Z")},
-		{ServiceRef: auditlog.ServiceRef{ServiceName: "db"}, EventType: "invocation", Timestamp: parseTime("2025-01-01T10:00:01Z"), DurationMs: &dur},
+		{ServiceRef: dbRef, EventType: "registration", Timestamp: parseTime("2025-01-01T10:00:00Z")},
+		{ServiceRef: dbRef, EventType: "invocation", Timestamp: parseTime("2025-01-01T10:00:01Z"), DurationMs: &dur},
 	}
 
 	marks := computeWaveformMarks(events, meta)
@@ -531,6 +533,7 @@ func TestEventRowSignalsJSON(t *testing.T) {
 	t.Parallel()
 
 	evt := auditlog.Event{EventType: "invocation"}
+
 	json := eventRowSignalsJSON(evt, 5)
 	if !strings.Contains(json, `"evtType":"invocation"`) {
 		t.Errorf("eventRowSignalsJSON missing evtType: %s", json)
@@ -546,8 +549,4 @@ func parseTime(s string) time.Time {
 	}
 
 	return t
-}
-
-func ptrFloat(f float64) *float64 {
-	return &f
 }

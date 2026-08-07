@@ -150,7 +150,7 @@ const liveTemplate = `<!DOCTYPE html>
 func renderEventFilterChips() string {
 	meta := auditlog.BuildTypeMetadata()
 
-	types := []string{"registration", "invocation", "shutdown", "health_check"}
+	types := []string{"registration", "invocation", "shutdown", "health_check"} //nolint:goconst,golines,lll // event type names match domain enums
 
 	var b strings.Builder
 
