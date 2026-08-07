@@ -229,7 +229,7 @@ func (p *Probe) Evaluate(ctx context.Context) Response {
 		Version:        p.version,
 		Uptime:         time.Since(p.bootTime).Round(uptimeResolution).String(),
 		ShuttingDown:   p.shuttingDown.Load(),
-		Checks:         buildChecks(results),
+		Checks:         p.buildChecks(results),
 		TotalLatencyMs: time.Since(start).Milliseconds(),
 	}
 
@@ -291,15 +291,22 @@ func (p *Probe) evaluateStartup(results map[string]error) bool {
 
 // buildChecks converts the raw map[string]error from samber/do into typed
 // Check entries. A nil error means the service passed; a non-nil error
-// populates the Error field.
-func buildChecks(results map[string]error) map[string]Check {
+// populates the Error field. Failures on critical services are marked
+// StatusFail; failures on non-critical services are marked StatusWarn to
+// distinguish "degraded but functional" from "take this pod out of rotation".
+func (p *Probe) buildChecks(results map[string]error) map[string]Check {
 	checks := make(map[string]Check, len(results))
 
 	for name, err := range results {
 		check := Check{Status: StatusPass}
 
 		if err != nil {
-			check.Status = StatusFail
+			if _, critical := p.critical[name]; critical {
+				check.Status = StatusFail
+			} else {
+				check.Status = StatusWarn
+			}
+
 			check.Error = err.Error()
 		}
 

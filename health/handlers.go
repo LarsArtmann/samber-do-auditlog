@@ -144,7 +144,7 @@ func (p *Probe) buildStartupResponse(results map[string]error) Response {
 	resp := Response{
 		Version:      p.version,
 		Uptime:       time.Since(p.bootTime).Round(uptimeResolution).String(),
-		Checks:       buildChecks(results),
+		Checks:       p.buildChecks(results),
 		ShuttingDown: p.shuttingDown.Load(),
 	}
 

@@ -286,8 +286,8 @@ func TestReadiness_NonCriticalFailure_Returns200(t *testing.T) {
 		t.Fatal("metrics check missing from response")
 	}
 
-	if metricsCheck.Status != health.StatusFail {
-		t.Errorf("metrics check status: want fail, got %s", metricsCheck.Status)
+	if metricsCheck.Status != health.StatusWarn {
+		t.Errorf("metrics check status: want warn (non-critical failure), got %s", metricsCheck.Status)
 	}
 }
 
@@ -509,8 +509,8 @@ func TestEvaluate_ReturnsCorrectClassification(t *testing.T) {
 		t.Error("db should pass")
 	}
 
-	if resp.Checks["cache"].Status != health.StatusFail {
-		t.Error("cache should fail")
+	if resp.Checks["cache"].Status != health.StatusWarn {
+		t.Error("cache should warn (non-critical failure)")
 	}
 }
 
