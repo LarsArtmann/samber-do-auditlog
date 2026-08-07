@@ -531,7 +531,7 @@ func TestNDJSONStreamer_WithFlushInterval_Bounds(t *testing.T) {
 			EventType: auditlog.EventTypeRegistration,
 			Phase:     auditlog.PhaseBefore,
 			ServiceRef: auditlog.ServiceRef{
-				ServiceName: fmt.Sprintf("burst-%d", i),
+				ServiceName: auditlog.ServiceName(fmt.Sprintf("burst-%d", i)),
 			},
 		})
 	}
