@@ -23,7 +23,7 @@ require (
 	github.com/larsartmann/go-output/plantuml v0.35.0
 	github.com/larsartmann/go-output/serialization v0.35.0
 	github.com/larsartmann/go-output/table v0.35.0
-	github.com/larsartmann/go-output/tree v0.35.0
+	github.com/larsartmann/go-output/tree v0.37.0
 	github.com/samber/do/v2 v2.1.0
 )
 

@@ -88,8 +88,8 @@ github.com/larsartmann/go-output/testhelpers v0.34.0 h1:6Lw5Y18UT2eIKOp7+qbhD678
 github.com/larsartmann/go-output/testhelpers v0.34.0/go.mod h1:CtP2aiCXEjiH/rh1cO2UJ0H8bW0eoqoqcTpUxqG6O6w=
 github.com/larsartmann/go-output/testhelpers/graphtest v0.34.0 h1:Aa8x/8ik+VM4QxbOwtc3Wta1ohASjyhff+BoQwDmszo=
 github.com/larsartmann/go-output/testhelpers/graphtest v0.34.0/go.mod h1:u8gCtwVTjsJInrulwuDXl4JJttxcJTKdzz6RsVIL7jc=
-github.com/larsartmann/go-output/tree v0.35.0 h1:iCXUM4IDlEH5VKwRVUjqahJGjPXk7zzmcZA+/2Y0tCE=
-github.com/larsartmann/go-output/tree v0.35.0/go.mod h1:9uYXXrmMeImVyHPGadE53EmVVtArPM2AsNypbVMDo7g=
+github.com/larsartmann/go-output/tree v0.37.0 h1:MTH3noReMY3AE9J+VBVLN15rJod+deE9WAMz9mOj6ls=
+github.com/larsartmann/go-output/tree v0.37.0/go.mod h1:uSH510k+u3XVZRSW3wsumLwDhSP4doWJZSb+DmALEjc=
 github.com/larsartmann/go-sse v0.4.0 h1:cHeOMbVGcIqeetic8bdZIITo4xsPSpWiPhtvQTxNd+4=
 github.com/larsartmann/go-sse v0.4.0/go.mod h1:B9mLj83rwtrnbqSqBcRuMV8vnOvAaPlJtH+9U/fMeRQ=
 github.com/lucasb-eyer/go-colorful v1.4.0 h1:UtrWVfLdarDgc44HcS7pYloGHJUjHV/4FwW4TvVgFr4=
