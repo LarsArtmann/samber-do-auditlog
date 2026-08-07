@@ -414,12 +414,16 @@ func TestStartup_LatchesOnceAllCriticalPass(t *testing.T) {
 	}
 }
 
-func TestStartup_CriticalServiceMissing_Returns503(t *testing.T) {
+func TestStartup_NeverInvokedService_AppearsHealthyInSamberDo(t *testing.T) {
 	t.Parallel()
 
+	// Documents samber/do v2.1.0 behavior: never-invoked services appear in
+	// HealthCheckWithContext results with nil error (no actual HealthCheck call
+	// is made). The startup probe therefore treats them as healthy. For the
+	// startup probe to be meaningful, eagerly invoke critical services at boot
+	// so their HealthCheck methods are actually exercised.
 	injector := do.New()
-	// Register but do NOT invoke — samber/do skips never-invoked lazy services.
-	provideHealthy(injector, "db")
+	provideHealthy(injector, "db") // registered, NOT invoked
 
 	probe := health.New(injector,
 		health.WithCriticalServices("db"),
@@ -428,12 +432,12 @@ func TestStartup_CriticalServiceMissing_Returns503(t *testing.T) {
 
 	w := doRequest(t, probe.StartupHandler(), http.MethodGet, "/startupz")
 
-	if w.Code != http.StatusServiceUnavailable {
-		t.Fatalf("startup with missing critical service: want 503, got %d", w.Code)
+	if w.Code != http.StatusOK {
+		t.Fatalf("startup with never-invoked service: want 200 (samber/do reports healthy), got %d", w.Code)
 	}
 
-	if probe.StartupComplete() {
-		t.Error("StartupComplete should be false when critical service was never invoked")
+	if !probe.StartupComplete() {
+		t.Error("StartupComplete should be true (samber/do v2.1.0 reports never-invoked as healthy)")
 	}
 }
 

@@ -59,6 +59,13 @@ func (p *Probe) ReadinessHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		resp := p.readinessResponse(r.Context())
 
+		// Always overlay the live shutdown flag so a stale cached response
+		// (evaluated before Shutdown was called) still produces 503.
+		if p.shuttingDown.Load() {
+			resp.ShuttingDown = true
+			resp.Status = StatusFail
+		}
+
 		code := http.StatusOK
 		if resp.Status != StatusPass {
 			code = http.StatusServiceUnavailable

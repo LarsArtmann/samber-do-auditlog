@@ -362,7 +362,19 @@ func TestServer_SSE_SnapshotOnConnect(t *testing.T) {
 func TestServer_SSE_LiveEventDelivery(t *testing.T) {
 	t.Parallel()
 
-	server := newTestServer(t)
+	hub := live.NewHub()
+
+	plugin, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "live-event-test",
+		OnEvent:     hub.OnEvent,
+	})
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+
+	server := live.NewServer(hub, plugin, live.Config{})
+	injector := do.NewWithOpts(plugin.Opts())
 
 	ts := httptest.NewServer(server)
 	defer ts.Close()
@@ -372,24 +384,21 @@ func TestServer_SSE_LiveEventDelivery(t *testing.T) {
 
 	skipSnapshot(scanner)
 
-	server.OnEvent(auditlog.Event{
-		ServiceRef: auditlog.ServiceRef{
-			ScopeID:     "root",
-			ScopeName:   "[root]",
-			ServiceName: "cache",
-		},
-		Sequence:  1,
-		EventType: auditlog.EventTypeRegistration,
-		Phase:     auditlog.PhaseAfter,
-	})
+	do.ProvideNamedValue(injector, "cache", "cache-value")
 
-	data, found := readSSEEvent(scanner, "datastar-patch-elements")
-	if !found {
-		t.Fatal("did not receive live datastar-patch-elements event")
+	found := false
+	for range 20 {
+		data, ok := readSSEEvent(scanner, "datastar-patch-elements")
+		if !ok {
+			break
+		}
+		if strings.Contains(data, "cache") {
+			found = true
+			break
+		}
 	}
-
-	if !strings.Contains(data, "cache") {
-		t.Errorf("live update should contain cache: %s", data[:min(200, len(data))])
+	if !found {
+		t.Fatal("did not receive live update containing cache")
 	}
 }
 
@@ -429,7 +438,19 @@ func TestServer_SSE_CompleteEvent(t *testing.T) {
 func TestServer_SSE_FanOut(t *testing.T) {
 	t.Parallel()
 
-	server := newTestServer(t)
+	hub := live.NewHub()
+
+	plugin, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "fanout-test",
+		OnEvent:     hub.OnEvent,
+	})
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+
+	server := live.NewServer(hub, plugin, live.Config{})
+	injector := do.NewWithOpts(plugin.Opts())
 
 	ts := httptest.NewServer(server)
 	defer ts.Close()
@@ -443,16 +464,7 @@ func TestServer_SSE_FanOut(t *testing.T) {
 	skipSnapshot(scanner1)
 	skipSnapshot(scanner2)
 
-	server.OnEvent(auditlog.Event{
-		ServiceRef: auditlog.ServiceRef{
-			ScopeID:     "root",
-			ScopeName:   "[root]",
-			ServiceName: "fanout-svc",
-		},
-		Sequence:  1,
-		EventType: auditlog.EventTypeRegistration,
-		Phase:     auditlog.PhaseAfter,
-	})
+	do.ProvideNamedValue(injector, "fanout-svc", "fanout-value")
 
 	if !readUntilService(scanner1, "fanout-svc") {
 		t.Error("client 1 did not receive fanout event")
@@ -1107,7 +1119,19 @@ func TestServer_HealthEndpoint_NilPlugin(t *testing.T) {
 func TestServer_SSE_EventBroadcast(t *testing.T) {
 	t.Parallel()
 
-	server := newTestServer(t)
+	hub := live.NewHub()
+
+	plugin, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "broadcast-test",
+		OnEvent:     hub.OnEvent,
+	})
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+
+	server := live.NewServer(hub, plugin, live.Config{})
+	injector := do.NewWithOpts(plugin.Opts())
 
 	ts := httptest.NewServer(server)
 	defer ts.Close()
@@ -1117,19 +1141,21 @@ func TestServer_SSE_EventBroadcast(t *testing.T) {
 
 	skipSnapshot(scanner)
 
-	// Broadcast an event through the hub (simulates plugin OnEvent callback).
-	server.OnEvent(auditlog.Event{
-		Sequence:  999,
-		EventType: auditlog.EventTypeRegistration,
-	})
+	do.ProvideNamedValue(injector, "broadcast-svc", "value")
 
-	data, ok := readSSEEvent(scanner, "datastar-patch-elements")
-	if !ok {
-		t.Fatal("expected to receive broadcast datastar event")
+	found := false
+	for range 20 {
+		data, ok := readSSEEvent(scanner, "datastar-patch-elements")
+		if !ok {
+			break
+		}
+		if strings.Contains(data, "broadcast-svc") {
+			found = true
+			break
+		}
 	}
-
-	if !strings.Contains(data, "selector") {
-		t.Errorf("datastar event should contain selector: %s", data[:min(200, len(data))])
+	if !found {
+		t.Fatal("expected to receive broadcast-svc in datastar event")
 	}
 }
 
