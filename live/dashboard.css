@@ -332,3 +332,112 @@ body.lifecycle-complete .live-dot {
   border: 1px solid var(--border);
   color: var(--text);
 }
+
+/* === Dependency Graph === */
+.dep-graph {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+}
+.dep-node {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.75rem;
+  transition: border-color var(--transition);
+}
+.dep-node:hover {
+  border-color: var(--border-active);
+}
+.dep-node-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+.dep-node-name {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dep-node-type {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  flex-shrink: 0;
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.dep-node-deps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.dep-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  background: var(--surface);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+}
+.dep-arrow::before {
+  content: '\2190';
+  color: var(--text-dim);
+  font-size: 0.7rem;
+}
+
+/* === Timeline === */
+#timeline-container {
+  display: block;
+}
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+.timeline-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.timeline-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text);
+  width: 140px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.timeline-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.timeline-bar {
+  height: 8px;
+  border-radius: 2px;
+  min-width: 1px;
+  transition: width var(--transition);
+}
+.timeline-bar.build {
+  background: var(--accent);
+}
+.timeline-bar.shutdown {
+  background: var(--warning);
+}

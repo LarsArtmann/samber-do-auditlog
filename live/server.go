@@ -394,10 +394,12 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 	stream := sse.NewStream(w, r)
 	defer func() { _ = stream.Close() }()
 
+	ctx := stream.Context()
+
 	// Send initial snapshot as datastar patch-elements + patch-signals.
 	// On reconnect this IS the replay — the full current state replaces
 	// any missed events.
-	if err := srv.sendDatastarSnapshot(stream); err != nil { //nolint:contextcheck // stream derives ctx from request
+	if err := srv.sendDatastarSnapshot(ctx, stream); err != nil {
 		return
 	}
 
@@ -406,15 +408,13 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 
 	go stream.Heartbeat(r.Context(), srv.config.HeartbeatInterval)
 
-	ctx := stream.Context()
-
 	for {
 		select {
 		case <-ctx.Done():
 			return
 
 		case <-srv.hub.Done():
-			srv.sendDatastarComplete(stream) //nolint:contextcheck // stream derives ctx
+			srv.sendDatastarComplete(ctx, stream)
 
 			return
 
@@ -422,7 +422,7 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 			// Non-blocking drain: coalesce burst events into a single render.
 			drainEvents(eventCh)
 
-			if err := srv.sendDatastarSnapshot(stream); err != nil { //nolint:contextcheck // ctx from stream
+			if err := srv.sendDatastarSnapshot(ctx, stream); err != nil {
 				return
 			}
 		}
@@ -448,7 +448,7 @@ func drainEvents(ch <-chan sse.Event) {
 // sendDatastarSnapshot renders all dashboard sections from the plugin's
 // current state and sends them as datastar-patch-elements events. It also
 // sends a datastar-patch-signals event with connection status.
-func (srv *Server) sendDatastarSnapshot(stream *sse.Stream) error {
+func (srv *Server) sendDatastarSnapshot(ctx context.Context, stream *sse.Stream) error {
 	plugin := srv.plugin
 	if plugin == nil {
 		return nil
@@ -476,7 +476,7 @@ func (srv *Server) sendDatastarSnapshot(stream *sse.Stream) error {
 	}
 
 	// Send all HTML fragments.
-	for _, frag := range renderAllFragments(stream.Context(), report, events, meta) {
+	for _, frag := range renderAllFragments(ctx, report, events, meta) {
 		if err := sendPatchElements(stream, frag.selector, frag.html); err != nil {
 			return fmt.Errorf("send fragment %s: %w", frag.selector, err)
 		}
@@ -487,13 +487,13 @@ func (srv *Server) sendDatastarSnapshot(stream *sse.Stream) error {
 
 // sendDatastarComplete sends the final full render and marks the lifecycle
 // as complete via a signal patch.
-func (srv *Server) sendDatastarComplete(stream *sse.Stream) {
+func (srv *Server) sendDatastarComplete(ctx context.Context, stream *sse.Stream) {
 	if srv.plugin == nil {
 		return
 	}
 
 	// Send final full render.
-	_ = srv.sendDatastarSnapshot(stream)
+	_ = srv.sendDatastarSnapshot(ctx, stream)
 
 	// Signal completion.
 	_ = stream.SendKeyed("datastar-patch-signals", "signals", `{"complete":true,"connStatus":"complete"}`)
