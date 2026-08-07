@@ -44,7 +44,7 @@ func NewMultiWriter(fn ...MultiWriterCallback) *MultiWriter {
 		return nil
 	}
 
-	return &MultiWriter{callbacks: fn}
+	return &MultiWriter{callbacks: fn} //nolint:exhaustruct // mu zero-value is correct
 }
 
 // OnEvent invokes every registered callback with evt, in registration order.

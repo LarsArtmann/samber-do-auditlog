@@ -75,7 +75,7 @@ func runLive(addr string) {
 		MaxEvents:            0,
 		InitialEventCapacity: 1024,
 		OnEvent:              hub.OnEvent,
-	})
+	}) //nolint:exhaustruct // RunID auto-generated, ReplayBufferSize uses default
 	if err != nil {
 		log.Fatalf("create plugin: %v", err)
 	}
@@ -88,7 +88,7 @@ func runLive(addr string) {
 		ReadHeaderTimeout:  5 * time.Second,
 		HeartbeatInterval:  15 * time.Second,
 		CORSAllowedOrigins: "*",
-	})
+	}) //nolint:exhaustruct // ReplayBufferSize uses default
 
 	errCh := make(chan error, 1)
 	go func() {
@@ -138,7 +138,7 @@ func setupPlugin() (*auditlog.Plugin, do.Injector, *[]string) { //nolint:ireturn
 				*eventLog = append(*eventLog, string(e.ServiceName))
 			}
 		},
-	})
+	}) //nolint:exhaustruct // RunID auto-generated
 	if err != nil {
 		log.Fatalf("failed to create audit-log plugin: %v", err)
 	}

@@ -32,7 +32,7 @@ func newEventRingBuffer(capacity int) *eventRingBuffer {
 		capacity = defaultReplayBufferSize
 	}
 
-	return &eventRingBuffer{
+	return &eventRingBuffer{ //nolint:exhaustruct // mu zero-value is correct
 		events: make([]sse.Event, 0, capacity),
 		cap:    capacity,
 	}

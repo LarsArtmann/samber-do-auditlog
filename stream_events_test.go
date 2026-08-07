@@ -116,7 +116,7 @@ func TestStreamEvents_CallbackError(t *testing.T) {
 		`{"sequence":3,"timestamp":"2026-01-01T00:00:02Z","event_type":"registration","phase":"before","service_name":"s2"}`,
 	}, "\n") + "\n"
 
-	sentinel := errors.New("downstream failure")
+	sentinel := errors.New("downstream failure") //nolint:err113 // test-local sentinel
 
 	var called int
 
@@ -161,7 +161,7 @@ func TestStreamEvents_InvokesValidate(t *testing.T) {
 		func(int, auditlog.Event) error {
 			validated++
 
-			return errors.New("rejected")
+			return errors.New("rejected") //nolint:err113 // test-local error
 		},
 		func(int, auditlog.Event) error {
 			t.Fatal("callback should not run after validate rejects")
