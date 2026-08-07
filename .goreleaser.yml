@@ -1,0 +1,89 @@
+# goreleaser config for samber-do-auditlog.
+#
+# This is a library, not a service, so the primary release artifact is the
+# GitHub Release with auto-generated, grouped changelog notes. We also build
+# the CLI binary (cmd/auditlog) cross-platform so users can inspect reports
+# without writing Go code.
+#
+# Usage:
+#   GORELEASER_CURRENT_TAG=vX.Y.Z GOEXPERIMENT=jsonv2 goreleaser release --clean            # full release
+#   GORELEASER_CURRENT_TAG=vX.Y.Z GOEXPERIMENT=jsonv2 goreleaser release --snapshot --clean  # local dry-run
+#   goreleaser check                                           # validate config
+#
+# NOTE: GOEXPERIMENT=jsonv2 is set explicitly on every hook and build below so
+# the release is reproducible without the caller remembering to export it.
+#
+# NOTE: goreleaser OSS executes before-hooks via direct exec.CommandContext —
+# NOT through a shell (no sh -c). Inline env vars (FOO=bar cmd) and shell
+# builtins (cd, &&) are therefore ineffective unless wrapped in sh -c.
+# See https://goreleaser.com/customization/hooks/
+
+version: 2
+
+before:
+  hooks:
+    - sh -c "GOEXPERIMENT=jsonv2 go mod tidy"
+    - sh -c "GOEXPERIMENT=jsonv2 go vet ./..."
+    - sh -c "GOEXPERIMENT=jsonv2 go test -race ./..."
+
+builds:
+  - id: auditlog-cli
+    main: ./cmd/auditlog
+    binary: do-auditlog
+    env:
+      - CGO_ENABLED=0
+      - GOEXPERIMENT=jsonv2
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.CLIVersion={{.Version}}
+
+archives:
+  - id: default
+    ids: [auditlog-cli]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_
+      {{- title .Os }}_{{ .Arch }}
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-dev"
+
+release:
+  draft: false
+  prerelease: auto
+  make_latest: true
+  name_template: "{{ .Tag }}"
+
+changelog:
+  use: github
+  sort: asc
+  groups:
+    - title: "New Features"
+      regexp: '^.*feat[(\w)]*!?:.*$'
+      order: 0
+    - title: "Bug Fixes"
+      regexp: '^.*fix[(\w)]*!?:.*$'
+      order: 1
+    - title: "Documentation"
+      regexp: '^.*docs[(\w)]*!?:.*$'
+      order: 2
+    - title: "Refactor"
+      regexp: '^.*refactor[(\w)]*!?:.*$'
+      order: 3
+    - title: "Other"
+      order: 999
+  filters:
+    exclude:
+      - "^Merge"
+      - "^chore:"
+      - "^style:"

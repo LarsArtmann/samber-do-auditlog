@@ -57,11 +57,11 @@ func (d DiffResult) HasChanges() bool {
 // dependency edges, status transitions, error appearances) are reported.
 func (r Report) Diff(other Report) DiffResult {
 	result := DiffResult{
-		AddedServices:               nil,
-		RemovedServices:             nil,
-		ChangedServices:             nil,
-		EventCountDelta:             other.EventCount - r.EventCount,
-		TotalBuildDurationMsDelta:   other.TotalBuildDurationMs - r.TotalBuildDurationMs,
+		AddedServices:                nil,
+		RemovedServices:              nil,
+		ChangedServices:              nil,
+		EventCountDelta:              other.EventCount - r.EventCount,
+		TotalBuildDurationMsDelta:    other.TotalBuildDurationMs - r.TotalBuildDurationMs,
 		TotalShutdownDurationMsDelta: other.TotalShutdownDurationMs - r.TotalShutdownDurationMs,
 	}
 
