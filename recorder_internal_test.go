@@ -11,7 +11,7 @@ func TestNewRecorder(t *testing.T) {
 
 	var callbackCalled bool
 
-	r := NewRecorder("recorder-test", func(_ Event) {
+	r := NewRecorder("recorder-test", "test-run-id", func(_ Event) {
 		callbackCalled = true
 	})
 

@@ -324,7 +324,7 @@ func TestPlugin_EnrichCapabilitiesWithNilScopeRef(t *testing.T) {
 func TestPlugin_RecordHealthCheckCreatesServiceFromMeta(t *testing.T) {
 	t.Parallel()
 
-	rec := auditlog.NewRecorder("test", nil)
+	rec := auditlog.NewRecorder("test", "", nil)
 
 	rec.RecordHealthCheck("scope-1", "myscope", "discovered-svc", nil)
 

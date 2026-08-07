@@ -107,7 +107,7 @@ func mkNewReport(
 	t.Helper()
 
 	report, err := auditlog.NewReport(
-		auditlog.SchemaVersion, containerID, exported,
+		auditlog.SchemaVersion, containerID, "", exported,
 		nil, services, scopeTree,
 	)
 	if err != nil {
@@ -122,7 +122,7 @@ func TestNewReport_ValidationFailure(t *testing.T) {
 
 	// A report with mismatched ServiceCount should fail validation.
 	report, err := auditlog.NewReport(
-		auditlog.SchemaVersion, "bad-container", epochTime,
+		auditlog.SchemaVersion, "bad-container", "", epochTime,
 		nil,
 		[]auditlog.ServiceInfo{
 			{
