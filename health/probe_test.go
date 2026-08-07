@@ -984,6 +984,7 @@ func TestReadiness_ConcurrentAccess_AllSucceed(t *testing.T) {
 	handler := probe.ReadinessHandler()
 
 	const goroutines = 1000
+
 	var wg sync.WaitGroup
 
 	wg.Add(goroutines)
@@ -1033,6 +1034,7 @@ func TestEvaluate_ConcurrentAccess_NoRace(t *testing.T) {
 	)
 
 	const goroutines = 100
+
 	var wg sync.WaitGroup
 
 	wg.Add(goroutines)
@@ -1040,6 +1042,7 @@ func TestEvaluate_ConcurrentAccess_NoRace(t *testing.T) {
 	for range goroutines {
 		go func() {
 			defer wg.Done()
+
 			_ = probe.Evaluate(context.Background())
 		}()
 	}

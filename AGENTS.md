@@ -128,6 +128,8 @@ Key design decisions:
 - **GET-only enforcement** — `WithGETOnly()` wraps all handlers to reject non-GET with 405 + `Allow: GET` header. Off by default.
 - **Nil-safe plugin integration** — works with or without `auditlog.Plugin`; when present, every check batch is recorded as audit events.
 - **samber/do v2.1.0 behavior** — never-invoked lazy services appear in `HealthCheckWithContext` results with nil error. Eagerly invoke critical services at boot for the startup probe to be meaningful.
+- **Three-state classify** — `classify` returns `pass` (all healthy), `warn` (only non-critical failures), or `fail` (critical failure or shutting down). The readiness handler maps only `fail` to HTTP 503; `warn` and `pass` both return 200.
+- **Config validation** — `Probe.Validate()` checks `timeout > 0` and `refreshInterval >= 0`. Not enforced in `New()` (no API change); callers call it explicitly for early misconfiguration detection.
 
 ### Data Flow
 

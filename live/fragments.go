@@ -88,6 +88,9 @@ type fragmentPatch struct {
 
 // renderAllFragments renders every dashboard section and returns the list of
 // (selector, html) pairs to send as datastar-patch-elements events.
+//
+//nolint:contextcheck,golines // templ components don't take context as a parameter;
+// context is passed at Render() time inside renderToString
 func renderAllFragments(ctx context.Context, report auditlog.Report, events []auditlog.Event, meta auditlog.TypeMetadata) []fragmentPatch {
 	errorCount := countErrors(report.Services)
 	legendItems := computeLegendItems(report, meta)
@@ -231,10 +234,10 @@ func computeWaveformMarks(events []auditlog.Event, meta auditlog.TypeMetadata) [
 	return marks
 }
 
-func waveformBounds(events []auditlog.Event) (minTimestamp, maxTimestamp int64, maxDuration float64) {
-	minTimestamp = events[0].Timestamp.UnixMilli()
-	maxTimestamp = minTimestamp
-	maxDuration = 1.0
+func waveformBounds(events []auditlog.Event) (int64, int64, float64) {
+	minTimestamp := events[0].Timestamp.UnixMilli()
+	maxTimestamp := minTimestamp
+	maxDuration := 1.0
 
 	for _, evt := range events {
 		millis := evt.Timestamp.UnixMilli()
@@ -419,7 +422,12 @@ func healthLabel(succeeded bool) string {
 
 // --- Timeline helpers ---
 
-func timelineMaxDurations(services []auditlog.ServiceInfo) (maxBuildMs, maxShutdownMs float64) {
+func timelineMaxDurations(services []auditlog.ServiceInfo) (float64, float64) {
+	var (
+		maxBuildMs   float64
+		maxShutdownMs float64
+	)
+
 	for _, svc := range services {
 		if svc.FirstBuildDurationMs != nil && *svc.FirstBuildDurationMs > maxBuildMs {
 			maxBuildMs = *svc.FirstBuildDurationMs

@@ -300,20 +300,26 @@ func skipSnapshot(scanner *bufio.Scanner) {
 func readSSEEvent(scanner *bufio.Scanner, eventName string) (string, bool) {
 	for scanner.Scan() {
 		line := scanner.Text()
+
 		if strings.HasPrefix(line, "event: "+eventName) {
 			var dataLines []string
+
 			for scanner.Scan() {
-				l := scanner.Text()
-				if l == "" {
+				scanLine := scanner.Text()
+
+				if scanLine == "" {
 					break
 				}
-				if d, ok := strings.CutPrefix(l, "data: "); ok {
-					dataLines = append(dataLines, d)
+
+				if data, ok := strings.CutPrefix(scanLine, "data: "); ok {
+					dataLines = append(dataLines, data)
 				}
 			}
+
 			return strings.Join(dataLines, "\n"), true
 		}
 	}
+
 	return "", false
 }
 
@@ -325,6 +331,57 @@ func readUntilService(scanner *bufio.Scanner, serviceName string) bool {
 	}
 
 	return false
+}
+
+// assertSSEDetectsService creates a server with an injector, connects SSE,
+// provides a service, and asserts the service name appears in a datastar
+// patch-elements event. Shared by TestServer_SSE_LiveEventDelivery and
+// TestServer_SSE_EventBroadcast.
+func assertSSEDetectsService(t *testing.T, containerID, serviceName string, value any) {
+	t.Helper()
+
+	hub := live.NewHub()
+
+	plugin, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: auditlog.ContainerID(containerID),
+		OnEvent:     hub.OnEvent,
+	})
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+
+	server := live.NewServer(hub, plugin, live.Config{})
+	injector := do.NewWithOpts(plugin.Opts())
+
+	ts := httptest.NewServer(server)
+	defer ts.Close()
+
+	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	defer closeSSE()
+
+	skipSnapshot(scanner)
+
+	do.ProvideNamedValue(injector, serviceName, value)
+
+	found := false
+
+	for range 20 {
+		data, ok := readSSEEvent(scanner, "datastar-patch-elements")
+		if !ok {
+			break
+		}
+
+		if strings.Contains(data, serviceName) {
+			found = true
+
+			break
+		}
+	}
+
+	if !found {
+		t.Fatalf("did not receive live update containing %s", serviceName)
+	}
 }
 
 func TestServer_SSE_SnapshotOnConnect(t *testing.T) {
@@ -362,44 +419,7 @@ func TestServer_SSE_SnapshotOnConnect(t *testing.T) {
 func TestServer_SSE_LiveEventDelivery(t *testing.T) {
 	t.Parallel()
 
-	hub := live.NewHub()
-
-	plugin, err := auditlog.New(auditlog.Config{
-		Enabled:     true,
-		ContainerID: "live-event-test",
-		OnEvent:     hub.OnEvent,
-	})
-	if err != nil {
-		t.Fatalf("create plugin: %v", err)
-	}
-
-	server := live.NewServer(hub, plugin, live.Config{})
-	injector := do.NewWithOpts(plugin.Opts())
-
-	ts := httptest.NewServer(server)
-	defer ts.Close()
-
-	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
-	defer closeSSE()
-
-	skipSnapshot(scanner)
-
-	do.ProvideNamedValue(injector, "cache", "cache-value")
-
-	found := false
-	for range 20 {
-		data, ok := readSSEEvent(scanner, "datastar-patch-elements")
-		if !ok {
-			break
-		}
-		if strings.Contains(data, "cache") {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Fatal("did not receive live update containing cache")
-	}
+	assertSSEDetectsService(t, "live-event-test", "cache", "cache-value")
 }
 
 func TestServer_SSE_CompleteEvent(t *testing.T) {
@@ -420,16 +440,20 @@ func TestServer_SSE_CompleteEvent(t *testing.T) {
 	// Complete sends a full snapshot, then a final signal patch with complete:true.
 	// Read datastar-patch-signals events until we find the one with complete.
 	found := false
+
 	for range 20 {
 		data, ok := readSSEEvent(scanner, "datastar-patch-signals")
 		if !ok {
 			break
 		}
+
 		if strings.Contains(data, `"complete":true`) {
 			found = true
+
 			break
 		}
 	}
+
 	if !found {
 		t.Fatal("did not receive complete signal")
 	}
@@ -1119,44 +1143,7 @@ func TestServer_HealthEndpoint_NilPlugin(t *testing.T) {
 func TestServer_SSE_EventBroadcast(t *testing.T) {
 	t.Parallel()
 
-	hub := live.NewHub()
-
-	plugin, err := auditlog.New(auditlog.Config{
-		Enabled:     true,
-		ContainerID: "broadcast-test",
-		OnEvent:     hub.OnEvent,
-	})
-	if err != nil {
-		t.Fatalf("create plugin: %v", err)
-	}
-
-	server := live.NewServer(hub, plugin, live.Config{})
-	injector := do.NewWithOpts(plugin.Opts())
-
-	ts := httptest.NewServer(server)
-	defer ts.Close()
-
-	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
-	defer closeSSE()
-
-	skipSnapshot(scanner)
-
-	do.ProvideNamedValue(injector, "broadcast-svc", "value")
-
-	found := false
-	for range 20 {
-		data, ok := readSSEEvent(scanner, "datastar-patch-elements")
-		if !ok {
-			break
-		}
-		if strings.Contains(data, "broadcast-svc") {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Fatal("expected to receive broadcast-svc in datastar event")
-	}
+	assertSSEDetectsService(t, "broadcast-test", "broadcast-svc", "value")
 }
 
 func TestServer_SSE_ReconnectReplay(t *testing.T) {
