@@ -114,9 +114,9 @@ func WithGETOnly() Option {
 }
 
 // guard wraps a handler with GET-only enforcement when WithGETOnly is active.
-func (p *Probe) guard(h http.HandlerFunc) http.HandlerFunc {
+func (p *Probe) guard(handler http.HandlerFunc) http.HandlerFunc {
 	if !p.getOnly {
-		return h
+		return handler
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +127,7 @@ func (p *Probe) guard(h http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		h(w, r)
+		handler(w, r)
 	}
 }
 

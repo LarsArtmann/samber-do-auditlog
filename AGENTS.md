@@ -108,11 +108,12 @@ live/demo/          — Self-contained real-time demo (registers services with d
 ### `health/` sub-package files
 
 ```
-health/doc.go       — Package doc with quick start, three-probe rationale, caching/shutdown/audit docs
-health/types.go     — Status enum (pass/fail/warn), Check, Response data model
-health/probe.go     — Probe struct, Option functional options, New(), lifecycle (Start, Shutdown, MarkShuttingDown), Evaluate, classify, evaluateStartup
-health/handlers.go  — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes, Routes, writeResponse
-health/probe_test.go — 29 tests: liveness (200, dep-free), readiness (critical/non-critical, shutdown, cache, live fallback), startup (latch, unhealthy, no-critical), Evaluate, routes, content-type, audit integration, lifecycle
+health/doc.go         — Package doc with quick start, three-probe rationale, caching/shutdown/audit docs, guide cross-reference
+health/types.go       — Status enum (pass/fail/warn), Check, Response data model
+health/probe.go       — Probe struct, 7 Option functional options (WithVersion/CriticalServices/Plugin/RefreshInterval/Timeout/BootTime/GETOnly), New(), lifecycle (Start, Shutdown, MarkShuttingDown), Evaluate, classify, evaluateStartup, guard (GET-only enforcement)
+health/handlers.go    — LivenessHandler, ReadinessHandler, StartupHandler, RegisterRoutes, Routes, DefaultRoutes, writeResponse
+health/probe_test.go  — 33 tests + 4 benchmarks: liveness (200, dep-free), readiness (critical/non-critical/warn, shutdown, cache, live fallback), startup (latch), Evaluate, routes, GET-only enforcement, audit integration, lifecycle
+health/example_test.go — 4 testable Go examples (ExampleNew, LivenessHandler, ReadinessHandler, RegisterRoutes) with // Output: directives
 ```
 
 The `health/` sub-package provides a production-ready health-probe SDK that turns the [superb health endpoint guide](docs/guides/superb-health-endpoint-with-samber-do.md) into a reusable library. It separates three Kubernetes probes (liveness, readiness, startup) with critical/non-critical service classification, background caching, shutdown awareness, and optional auditlog integration.
@@ -120,10 +121,11 @@ The `health/` sub-package provides a production-ready health-probe SDK that turn
 Key design decisions:
 
 - **Liveness never checks dependencies** — returns in microseconds, always 200. Prevents restart cascades.
-- **Readiness gates on critical services only** — non-critical failures appear in the response body but don't trigger 503.
+- **Readiness gates on critical services only** — non-critical failures appear as `warn` in the response body, don't trigger 503.
 - **Startup latches** — once all critical services pass, always returns 200 without re-checking.
 - **Background caching by default** (1s refresh) — kubelet/LB polling doesn't hammer dependencies. Set `WithRefreshInterval(0)` for live mode.
 - **Shutdown-aware** — `Shutdown()` flips readiness to 503 immediately (even from stale cache); liveness stays 200.
+- **GET-only enforcement** — `WithGETOnly()` wraps all handlers to reject non-GET with 405 + `Allow: GET` header. Off by default.
 - **Nil-safe plugin integration** — works with or without `auditlog.Plugin`; when present, every check batch is recorded as audit events.
 - **samber/do v2.1.0 behavior** — never-invoked lazy services appear in `HealthCheckWithContext` results with nil error. Eagerly invoke critical services at boot for the startup probe to be meaningful.
 

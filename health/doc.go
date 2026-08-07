@@ -70,4 +70,11 @@
 // When an [auditlog.Plugin] is provided via [WithPlugin], every health-check
 // batch is recorded as a timed audit event, giving you full observability into
 // dependency health over time.
+//
+// # Design Rationale
+//
+// This package implements the nine-step guide at
+// docs/guides/superb-health-endpoint-with-samber-do.md, which explains the
+// three-probe separation, critical/non-critical classification, background
+// caching, shutdown awareness, and audit integration in detail.
 package health

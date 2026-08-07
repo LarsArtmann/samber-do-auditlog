@@ -157,6 +157,24 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Live demo application**        | `live/demo/main.go` registers services with delays, invokes them, runs health checks, serves dashboard until Ctrl+C                                                                                                    | `live/demo/main.go`                                |
 | **Example `--live` flag**        | `go run ./example --live` starts the dashboard alongside the ride-sharing demo, registering 20 services across 4 scopes                                                                                                | `example/main.go`                                  |
 
+### Health Probes (`health/` Sub-Package)
+
+| Feature                          | Description                                                                                                                                  | Verified                      |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| **Three-probe separation**       | Liveness (dep-free, always 200), Readiness (critical-only 503), Startup (latch-based permanently 200 once passed)                           | `health/handlers.go`          |
+| **Critical vs non-critical**     | `WithCriticalServices` gates readiness 503. Non-critical failures surface as `warn` in individual checks without changing HTTP status code | `health/probe.go`             |
+| **StatusWarn classification**    | Non-critical service failures are marked `warn` (degraded), critical failures are `fail` (out of rotation) in the `Checks` map              | `health/probe.go`; `health/types.go` |
+| **Background caching**           | Default 1s refresh via `atomic.Pointer[Response]`. `WithRefreshInterval(0)` switches to live evaluation per request                         | `health/probe.go`             |
+| **Shutdown-aware readiness**     | `Shutdown()` flips readiness to 503 immediately (even from stale cache); liveness stays 200                                                  | `health/probe.go`             |
+| **Two-phase shutdown**           | `MarkShuttingDown()` flips the flag without stopping the background loop, enabling a grace period before `Shutdown()`                       | `health/probe.go`             |
+| **Startup latch**                | Once all critical services pass, permanently returns 200 without re-checking                                                                | `health/handlers.go`          |
+| **Optional audit integration**   | `WithPlugin(plugin)` records every health-check batch as timed audit events. Works without plugin too (raw injector fallback)               | `health/probe.go`             |
+| **GET-only enforcement**         | `WithGETOnly()` rejects non-GET requests with 405 + `Allow: GET` header                                                                      | `health/probe.go`             |
+| **Functional options**           | `WithVersion`, `WithCriticalServices`, `WithPlugin`, `WithRefreshInterval`, `WithTimeout`, `WithBootTime`, `WithGETOnly`                     | `health/probe.go`             |
+| **Route registration**           | `RegisterRoutes(mux, routes)` one-liner for standard or custom paths. `DefaultRoutes()` returns `/healthz`, `/readyz`, `/startupz`           | `health/handlers.go`          |
+| **Runnable examples**            | 4 testable `Example*` functions with `// Output:` directives for pkg.go.dev                                                                 | `health/example_test.go`      |
+| **Performance benchmarks**       | 4 benchmarks: liveness handler, readiness cache hit (3.3µs), readiness live eval (9.6µs), Evaluate                                         | `health/probe_test.go`        |
+
 ### Shared Module Delegation
 
 | Feature                     | Description                                                                                                                                                                                                                                                        | Verified              |
@@ -197,6 +215,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Test parallelism**         | 311 `t.Parallel()` calls (~97% of eligible tests); only `t.Setenv()` env-var tests run sequentially                                                                                                                                   | all `*_test.go`                                         |
 | **Type metadata assertions** | `TestBuildTypeMetadata` directly asserts provider/status icons, labels, and colors                                                                                                                                                    | `metadata_test.go`                                      |
 | **live/ sub-package tests**  | 35 tests covering dashboard HTML, health, report, 404, SSE snapshot/live/complete/fan-out/heartbeat, graceful shutdown, client count, server lifecycle, nil-plugin edge cases, CORS, export endpoints, hub lifecycle, buffer overflow | `live/server_test.go`                                   |
+| **health/ sub-package tests**  | 33 tests + 4 examples + 4 benchmarks covering liveness (dep-free), readiness (critical/non-critical/shutdown/cache/live fallback), startup (latch), Evaluate (classify/warn), routes, GET-only enforcement, audit integration, lifecycle | `health/probe_test.go`, `health/example_test.go` |
 
 ---
 
