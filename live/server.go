@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/larsartmann/go-output/daghtml"
 	"github.com/larsartmann/go-sse"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
@@ -55,19 +54,12 @@ type HealthInfo struct {
 	Dropped int64 `json:"dropped"`
 }
 
-// snapshotData is the payload sent as the initial SSE event.
-type snapshotData struct {
-	Report   auditlog.Report       `json:"report"`
-	Events   []auditlog.Event      `json:"events"`
-	Metadata auditlog.TypeMetadata `json:"metadata"`
-	DAG      daghtml.DAG           `json:"dag"`
-	Complete bool                  `json:"complete"`
-}
-
-// completeData is the payload sent when the container lifecycle finishes.
-type completeData struct {
-	Report auditlog.Report `json:"report"`
-	DAG    daghtml.DAG     `json:"dag"`
+// snapshotSignals is the initial signal payload sent on SSE connect.
+// These are server-owned signals; client-owned signals (activeTab,
+// serviceSearch, etc.) are declared in the HTML template's data-signals.
+type snapshotSignals struct {
+	ConnStatus string `json:"connStatus"`
+	Complete   bool   `json:"complete"`
 }
 
 // Server serves the real-time DI container dashboard over HTTP.
@@ -397,22 +389,15 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 	stream := sse.NewStream(w, r)
 	defer func() { _ = stream.Close() }()
 
-	eventCh := srv.hub.Subscribe()
-	defer srv.hub.Unsubscribe(eventCh)
-
-	if err := srv.sendSnapshot(stream); err != nil {
+	// Send initial snapshot as datastar patch-elements + patch-signals.
+	// On reconnect this IS the replay — the full current state replaces
+	// any missed events.
+	if err := srv.sendDatastarSnapshot(stream); err != nil {
 		return
 	}
 
-	// Replay missed events for reconnecting clients (AD4: subscribe-first
-	// pattern — the broadcaster is already buffering live events above).
-	lastID := stream.LastEventID()
-	if !lastID.IsZero() && srv.plugin != nil {
-		store := &eventStore{events: srv.plugin.Events()}
-		if _, err := sse.Replay(stream, store, lastID); err != nil {
-			return
-		}
-	}
+	eventCh := srv.hub.Subscribe()
+	defer srv.hub.Unsubscribe(eventCh)
 
 	go stream.Heartbeat(r.Context(), srv.config.HeartbeatInterval)
 
@@ -424,19 +409,41 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 			return
 
 		case <-srv.hub.Done():
-			srv.sendComplete(stream)
+			srv.sendDatastarComplete(stream)
 
 			return
 
-		case evt := <-eventCh:
-			if err := stream.Send(evt); err != nil {
+		case <-eventCh:
+			// Non-blocking drain: coalesce burst events into a single render.
+			drainEvents(eventCh)
+
+			if err := srv.sendDatastarUpdate(stream); err != nil {
 				return
 			}
 		}
 	}
 }
 
-func (srv *Server) sendSnapshot(stream *sse.Stream) error {
+// drainEvents non-blocking-drains any immediately-available events from the
+// channel. This coalesces event bursts (e.g. rapid registrations) into a
+// single HTML re-render instead of one render per event.
+func drainEvents(ch <-chan sse.Event) {
+	for {
+		select {
+		case _, ok := <-ch:
+			if !ok {
+				return
+			}
+		default:
+			return
+		}
+	}
+}
+
+// sendDatastarSnapshot renders all dashboard sections from the plugin's
+// current state and sends them as datastar-patch-elements events. It also
+// sends a datastar-patch-signals event with connection status.
+func (srv *Server) sendDatastarSnapshot(stream *sse.Stream) error {
 	plugin := srv.plugin
 	if plugin == nil {
 		return nil
@@ -444,32 +451,61 @@ func (srv *Server) sendSnapshot(stream *sse.Stream) error {
 
 	report := plugin.Report()
 	events := plugin.Events()
+	meta := auditlog.BuildTypeMetadata()
 
-	data := snapshotData{
-		Report:   report,
-		Events:   events,
-		Metadata: auditlog.BuildTypeMetadata(),
-		DAG:      auditlog.BuildDAGHTML(report),
-		Complete: srv.hub.IsComplete(),
+	// Send connection status signal.
+	signals := snapshotSignals{
+		ConnStatus: "connected",
+		Complete:   srv.hub.IsComplete(),
 	}
 
-	return stream.SendJSON("snapshot", data)
+	signalsJSON, err := json.Marshal(signals)
+	if err != nil {
+		return fmt.Errorf("marshal signals: %w", err)
+	}
+
+	if err := stream.SendKeyed("datastar-patch-signals", "signals", string(signalsJSON)); err != nil {
+		return fmt.Errorf("send signals: %w", err)
+	}
+
+	// Send all HTML fragments.
+	for _, frag := range renderAllFragments(report, events, meta) {
+		if err := sendPatchElements(stream, frag.selector, frag.html); err != nil {
+			return fmt.Errorf("send fragment %s: %w", frag.selector, err)
+		}
+	}
+
+	return nil
 }
 
-func (srv *Server) sendComplete(stream *sse.Stream) {
-	plugin := srv.plugin
-	if plugin == nil {
+// sendDatastarUpdate re-renders all sections and sends them. Called on each
+// live event (after burst coalescing).
+func (srv *Server) sendDatastarUpdate(stream *sse.Stream) error {
+	return srv.sendDatastarSnapshot(stream)
+}
+
+// sendDatastarComplete sends the final full render and marks the lifecycle
+// as complete via a signal patch.
+func (srv *Server) sendDatastarComplete(stream *sse.Stream) {
+	if srv.plugin == nil {
 		return
 	}
 
-	report := plugin.Report()
+	// Send final full render.
+	_ = srv.sendDatastarSnapshot(stream)
 
-	data := completeData{
-		Report: report,
-		DAG:    auditlog.BuildDAGHTML(report),
-	}
+	// Signal completion.
+	_ = stream.SendKeyed("datastar-patch-signals", "signals", `{"complete":true,"connStatus":"complete"}`)
+}
 
-	_ = stream.SendJSON("complete", data)
+// sendPatchElements sends a datastar-patch-elements SSE event that morphs
+// the inner HTML of the element matching the given CSS selector.
+func sendPatchElements(stream *sse.Stream, selector, htmlContent string) error {
+	return stream.SendLines("datastar-patch-elements",
+		"selector "+selector,
+		"mode inner",
+		sse.KeyedLines("elements", htmlContent),
+	)
 }
 
 // --- Helpers ---
