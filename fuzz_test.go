@@ -89,6 +89,7 @@ func FuzzMigrateReport(f *testing.F) {
 	seeds := []string{
 		`{"version":"0.1.0"}`,
 		`{"version":"0.2.0"}`,
+		`{"version":"0.3.0"}`,
 		`{"version":"0.1.0","services":[{"service_name":"svc","scope_id":"r","scope_name":"[root]"}]}`,
 		`{"version":"0.1.0","scope_tree":{"id":"root","name":"[root]","services":[],"children":[{"id":"child","name":"child","services":[],"children":[]}]}}`,
 		`not json`,

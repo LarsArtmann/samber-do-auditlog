@@ -31,7 +31,7 @@ These surfaces are functional but their exact shape may change:
 | `Report.Diff(other Report) DiffResult`         | New in 0.0.4. `DiffResult` and `ServiceDiff` field sets may grow.                                                |
 | `Report.WriteNDJSON`, `Report.WriteJSON`       | New in 0.0.4. Error wrapping format may change.                                                                  |
 | `Report.Filtered(opts ...ReportOption)`        | The filter option set may expand. Existing options keep their behavior.                                          |
-| `MigrateReport(data []byte)`                   | Handles v0.1.0 → v0.2.0. Future schema bumps add new migration logic.                                            |
+| `MigrateReport(data []byte)`                   | Handles v0.1.0 → v0.3.0. Future schema bumps add new migration logic.                                            |
 | `Event`, `ServiceInfo`, `ServiceRef` field set | New fields may be added. Existing JSON tags are stable.                                                          |
 | HTML report visual design                      | The self-contained HTML output is regenerated from `html.templ` and its appearance will change between releases. |
 
@@ -56,11 +56,11 @@ The `live/` sub-package is newer than the core library. Its public API may chang
 
 ## JSON Schema Versioning
 
-The JSON report format has its own version (`schema_version`, currently `0.2.0`)
+The JSON report format has its own version (`schema_version`, currently `0.3.0`)
 that is **independent** of release tags:
 
 - Release tags: `v0.x.y` (Git/GitHub releases)
-- Schema version: `0.2.0` (in the JSON `version` field)
+- Schema version: `0.3.0` (in the JSON `version` field)
 
 A schema bump (e.g. `0.2.0` → `0.3.0`) does NOT require a release tag bump.
 Old schemas can always be migrated forward via `MigrateReport`.

@@ -3,7 +3,7 @@ package auditlog
 import "fmt"
 
 // SchemaVersion is the current report schema version.
-const SchemaVersion = "0.2.0"
+const SchemaVersion = "0.3.0"
 
 // RootScopeName is the canonical name for the root scope in samber/do v2.
 const RootScopeName = "[root]"

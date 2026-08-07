@@ -31,6 +31,9 @@ func RedriveReportStatuses(report *Report) {
 // always valid. The implied contract is "repair/normalize -> current", not
 // just "upgrade old -> current".
 //
+// For v0.2.0 → v0.3.0 the migration adds:
+//   - run_id (RunID field on Event and Report for cross-system correlation)
+//
 // For v0.1.0 → v0.2.0 the migration adds:
 //   - scope_count, total_build_duration_ms, total_shutdown_duration_ms, shutdown_succeeded
 //   - health_check_succeeded, health_checked_count (always false/0 for old reports)

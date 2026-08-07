@@ -285,15 +285,15 @@ func TestMigrateReport_EmptyScopeTree(t *testing.T) {
 func TestMigrateReport_AlreadyCurrentVersion(t *testing.T) {
 	t.Parallel()
 
-	input := `{"version":"0.2.0","container_id":"test","exported_at":"2026-01-01T00:00:00Z","event_count":5,"service_count":2}`
+	input := `{"version":"0.3.0","container_id":"test","exported_at":"2026-01-01T00:00:00Z","event_count":5,"service_count":2}`
 
 	report, err := auditlog.MigrateReport([]byte(input))
 	if err != nil {
 		t.Fatalf("MigrateReport: %v", err)
 	}
 
-	if report.Version != "0.2.0" {
-		t.Errorf("version should remain 0.2.0, got %s", report.Version)
+	if report.Version != "0.3.0" {
+		t.Errorf("version should remain 0.3.0, got %s", report.Version)
 	}
 
 	assertContainerID(t, report, "test")
