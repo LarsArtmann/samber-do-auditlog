@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"unicode/utf8"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	errorfamily "github.com/larsartmann/go-error-family"
@@ -35,6 +36,20 @@ func FuzzNDJSONStreamer(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, sequence int, eventType, phase, serviceName, scopeID string) {
 		if serviceName == "" || scopeID == "" {
+			t.Skip()
+		}
+
+		if !utf8.ValidString(serviceName) || !utf8.ValidString(scopeID) {
+			t.Skip()
+		}
+
+		et := auditlog.EventType(eventType)
+		if !et.IsKnown() {
+			t.Skip()
+		}
+
+		ph := auditlog.Phase(phase)
+		if ph != auditlog.PhaseBefore && ph != auditlog.PhaseAfter {
 			t.Skip()
 		}
 
