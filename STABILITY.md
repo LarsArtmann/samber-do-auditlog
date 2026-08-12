@@ -19,33 +19,45 @@ the 0.x series:
 | `Plugin.DroppedEventCount() int64`                                       | Stable.                                                                                                                                                                                                                |
 | `ExportToFile`, `ExportToHTML`, `ExportEventsToNDJSON`                   | Stable method signatures. Output format may evolve (see below).                                                                                                                                                        |
 | `Plugin.RecordHealthCheck` / `RecordHealthCheckWithContext`              | Stable.                                                                                                                                                                                                                |
-| `Config{Enabled, ContainerID, MaxEvents, InitialEventCapacity, OnEvent}` | All current fields are stable. New fields may be added.                                                                                                                                                                |
+| `Config{Enabled, ContainerID, RunID, MaxEvents, InitialEventCapacity, OnEvent}` | All current fields are stable. New fields may be added.                                                                                                                                                          |
 | Exported sentinel errors (`Err*`)                                        | Stable identity for `errors.Is` matching (e.g. `ErrContainerIDPathSep`, `ErrReport*`, `ErrReplayValidationFailed`, `ErrMigration*`, `ErrUnsupportedFormat`). The set may grow; existing sentinels keep their identity. |
+| `RunID` type and auto-generation                                         | Stable. `Config.RunID` zero-value means auto-generate via `crypto/rand`. Non-zero values are respected as-is.                                                                                                      |
+| `Plugin.WriteMermaid/WritePlantUML/WriteDOT/WriteD2`                     | Stable method signatures. Diagram output format may evolve between releases.                                                                                                                                       |
+| `Plugin.WriteTree/WriteHTMLTree/WriteTable`                              | Stable method signatures. Output format may evolve.                                                                                                                                                                 |
+| `Plugin.RecordHealthCheck/RecordHealthCheckWithContext`                  | Stable.                                                                                                                                                                                                           |
 
 ## Evolving API (may change between 0.x releases)
 
 These surfaces are functional but their exact shape may change:
 
-| Surface                                        | Reason                                                                                                           |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `Report.Diff(other Report) DiffResult`         | New in 0.0.4. `DiffResult` and `ServiceDiff` field sets may grow.                                                |
-| `Report.WriteNDJSON`, `Report.WriteJSON`       | New in 0.0.4. Error wrapping format may change.                                                                  |
-| `Report.Filtered(opts ...ReportOption)`        | The filter option set may expand. Existing options keep their behavior.                                          |
-| `MigrateReport(data []byte)`                   | Handles v0.1.0 → v0.3.0. Future schema bumps add new migration logic.                                            |
-| `Event`, `ServiceInfo`, `ServiceRef` field set | New fields may be added. Existing JSON tags are stable.                                                          |
-| HTML report visual design                      | The self-contained HTML output is regenerated from `html.templ` and its appearance will change between releases. |
+| Surface                                                              | Reason                                                                                                           |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `Report.Diff(other Report) DiffResult`                               | `DiffResult` and `ServiceDiff` field sets may grow (timing deltas added in 0.9.0).                               |
+| `DiffResult.HasChanges()`                                            | New in 0.9.0. Polarity companion to the existing `IsEmpty()`.                                                   |
+| `Report.WriteNDJSON`, `Report.WriteJSON`                             | Error wrapping format may change.                                                                                |
+| `Report.Filtered(opts ...ReportOption)`                              | The filter option set may expand. Existing options keep their behavior.                                          |
+| `Report.Write*String` (Mermaid/PlantUML/DOT/D2/HTML/Tree/Table)      | New in 0.9.0. Convenience wrappers around `Write*`; same stability as their parent methods.                      |
+| `Report.WriteTable` + `TableColumn`/`WithColumns`                    | New in 0.9.0. Column set may grow; existing columns keep their indices.                                         |
+| `DiagramOption` / `WithDirection`                                    | New in 0.9.0. Diagram layout options may expand.                                                                 |
+| `MigrateReport(data []byte)`                                         | Handles v0.1.0 → v0.3.0. Future schema bumps add new migration logic.                                            |
+| `MultiWriter` / `NewMultiWriter`                                     | New in 0.9.0. Event fan-out type. Callback ordering is stable; internals may change.                             |
+| `NDJSONStreamer` / `NewNDJSONStreamer` / `CreateNDJSONStreamer`      | New in 0.9.0. Streaming NDJSON writer. Options (`WithAutoFlush`, `WithFlushInterval`, `WithStreamBufferSize`) may grow. |
+| `StreamEvents(reader, validate, callback)`                           | New in 0.9.0. Callback-based NDJSON reader. Callback signature is stable.                                        |
+| `Event`, `ServiceInfo`, `ServiceRef` field set                       | New fields may be added (e.g. `RunID` on `Event`/`Report` in 0.9.0). Existing JSON tags are stable.              |
+| HTML report visual design                                            | The self-contained HTML output is regenerated from `html.templ` and its appearance will change between releases. |
 
 ## `live/` Sub-Package (Evolving)
 
 The `live/` sub-package is newer than the core library. Its public API may change:
 
-| Surface                                                            | Reason                                                            |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| `live.New(auditlog.Config, live.Config) (*Server, *Plugin, error)` | Convenience constructor. Signature stable, but `Config` may grow. |
-| `live.Config{Addr, Prefix, CORSAllowedOrigins}`                    | All current fields stable. New fields may be added.               |
-| `live.Server.ListenAndServe()` / `Shutdown(ctx)`                   | Stable lifecycle methods.                                         |
-| `live.Server.ServeHTTP`                                            | Stable — enables `httptest` and mux embedding.                    |
-| `live.Hub`                                                         | Evolving — internal event broadcaster. May gain metrics hooks.    |
+| Surface                                                            | Reason                                                                                     |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `live.New(auditlog.Config, live.Config) (*Server, *Plugin, error)` | Convenience constructor. Signature stable, but `Config` may grow.                           |
+| `live.Config{Addr, Prefix, CORSAllowedOrigins, ReplayBufferSize}`  | All current fields stable. New fields may be added.                                         |
+| `live.Server.ListenAndServe()` / `Shutdown(ctx)`                   | Stable lifecycle methods.                                                                   |
+| `live.Server.ServeHTTP`                                            | Stable — enables `httptest` and mux embedding.                                              |
+| `live.Hub`                                                         | Evolving — internal event broadcaster. May gain metrics hooks.                              |
+| `live.Hub.EventStore()` / `BufferedEventCount()`                   | New in 0.9.0. Ring buffer inspection for SSE reconnection replay.                          |
 
 ## Unstable / Internal (no stability guarantee)
 

@@ -127,6 +127,8 @@ live/demo/          — Self-contained real-time demo (registers services with d
 - Each hook acquires `mu` once, performs all mutations (scope recording, stack management, event append, service updates), then releases.
 - `onEvent` callback is always called outside the lock to avoid blocking the hot path.
 - `BuildReport()` uses `mu.RLock()` for reading — concurrent reads don't block each other.
+- **`MultiWriter`** has its own internal `sync.Mutex` — safe for concurrent use from multiple hooks. Preserves callback registration order; callbacks fire sequentially per event.
+- **`RunID`** is immutable once set. Auto-generated in `New()` via `crypto/rand` (128-bit hex). Stored on `Recorder` and stamped on every `Event` and the `Report`. `Config.RunID` (non-zero) overrides auto-generation.
 
 ### Shared infrastructure: `go-sse`
 

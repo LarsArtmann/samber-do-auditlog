@@ -12,6 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-08-12
+
+A minor release introducing `RunID` for cross-system event correlation,
+`MultiWriter` for event fan-out, `StreamEvents` for callback-based NDJSON
+replay, SSE reconnection replay with ring buffer, `Write*String` convenience
+methods for all diagram formats, time-based flush for `NDJSONStreamer`, and
+full keyboard navigation/accessibility across both dashboards. The `health/`
+sub-package was extracted to its own project
+([github.com/larsartmann/go-health](https://github.com/larsartmann/go-health))
+before release and is not included here.
+
+**Breaking**: `NewRecorder` and `NewReport` signatures gained a `RunID`
+parameter. Report schema version bumped from `0.2.0` to `0.3.0` (old reports
+are auto-upgraded via `MigrateReport`).
+
 ### Added — Cross-Project Infrastructure Parity (from go-workflow-auditlog)
 
 - **`MultiWriter`** (`multi_writer.go`): event fan-out to multiple `OnEvent` callbacks simultaneously. Enables streaming + live dashboard + custom handlers with a single recorder. Thread-safe, preserves callback order. 8 tests.
@@ -30,23 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`NewRecorder` signature changed**: `NewRecorder(containerID, onEvent)` → `NewRecorder(containerID, runID, onEvent)`. The `Recorder` type is listed as "Unstable / Internal" in `STABILITY.md`; construct via `New()`, not directly.
 - **`NewReport` signature changed**: added `runID RunID` parameter.
 - **Schema version bumped**: `0.2.0` → `0.3.0`. The `Event` and `Report` structs gained a `run_id` field. Old reports are auto-upgraded via `MigrateReport`.
-
-### Added — `health/` sub-package (Health-Probe SDK)
-
-- **Three-probe separation**: `health.New(injector)` produces a `Probe` with distinct `LivenessHandler()`, `ReadinessHandler()`, and `StartupHandler()` HTTP handlers, each answering a different Kubernetes question (alive? ready? booted?).
-- **Critical vs non-critical classification**: `WithCriticalServices("db", "redis")` marks dependencies that gate readiness. Non-critical failures (e.g. metrics exporter) set the roll-up status to `warn` and surface as `warn` in individual checks without causing 503.
-- **Background caching**: default 1-second refresh loop populates an atomic cache so readiness serves O(1) responses regardless of kubelet/LB polling frequency. `WithRefreshInterval(0)` switches to live evaluation per request.
-- **Shutdown awareness**: `Probe.Shutdown()` flips readiness to 503 immediately (even from a stale cached response) while liveness stays 200, enabling graceful load-balancer drain.
-- **Startup latch**: startup probe evaluates critical services until all pass, then latches to 200 permanently — allows generous kubelet `failureThreshold` for slow-booting apps.
-- **Auditlog integration**: `WithPlugin(plugin)` routes every health-check batch through `auditlog.Plugin.RecordHealthCheckWithContext`, recording timed audit events for observability.
-- **GET-only enforcement**: `WithGETOnly()` wraps all handlers to reject non-GET requests with 405 + `Allow: GET` header. Off by default; Kubernetes always uses GET.
-- **`RegisterRoutes(mux, routes)`**: convenience wiring for conventional Kubernetes paths (`/healthz`, `/readyz`, `/startupz`) or custom paths.
-- **Strongly-typed response model**: `Status` (pass/fail/warn), `Check` (per-service), `Response` (aggregate with version, uptime, shutting_down, total_latency_ms).
-- **Runnable examples**: 4 testable `Example*` functions with `// Output:` directives covering New, LivenessHandler, ReadinessHandler, and RegisterRoutes.
-- **Performance benchmarks**: 4 benchmarks proving cached readiness is multiple times faster than live evaluation (see BENCHMARKS.md).
-- **Config validation**: `Probe.Validate()` checks timeout > 0 and refresh interval >= 0, returning descriptive sentinel errors.
-- **Concurrency hardened**: 1000-goroutine stress test, concurrent Evaluate test, idempotent shutdown test — all `-race` clean.
-- **41 tests + 4 examples + 4 benchmarks** covering liveness, readiness (critical/non-critical/warn roll-up/shutdown/cache/live), startup (latch), Evaluate (classify/warn), routes, GET-only enforcement (all 3 handlers), config validation, concurrency, audit integration, and lifecycle.
 
 ### Added — go-sse Full Adoption (Stream, Broadcaster, Replay)
 
@@ -81,6 +79,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Footer/`<main>` split-brain** in `live/dashboard.go`: `</main>` was placed after the footer (footer inside `<main>`); moved before footer to match the static report's structure.
+- **Flaky `TestNDJSONStreamer_WithFlushInterval_Bounds`** (`stream_test.go`): the 20 ms flush interval was too tight for CI load, causing the inline flush check to fire mid-burst. Increased to 250 ms with a proportional sleep, eliminating the race.
+- **Lint compliance**: resolved 10 golangci-lint issues (cyclop on `applyEvent` via `captureIDs` extraction, goconst on event-type strings via `EventType` constants, stale `golines` nolint directives, makezero/prealloc in fuzz tests).
 
 ## [0.8.0] - 2026-07-26
 
