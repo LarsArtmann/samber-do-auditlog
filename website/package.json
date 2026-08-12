@@ -36,13 +36,13 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
     "@astrojs/starlight": "^0.41.1",
-    "@tailwindcss/vite": "^4.3.1",
-    "astro": "^7.1.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.2.1",
     "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.9",
-    "html-validate": "^11.5.3",
+    "@astrojs/check": "^0.9.10",
+    "html-validate": "^11.6.2",
     "typescript": "^6.0.3"
   },
   "overrides": {
