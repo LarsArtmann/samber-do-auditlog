@@ -136,9 +136,9 @@ func FuzzMultiWriter(f *testing.F) {
 
 		var mu sync.Mutex
 
-		received := make([]int, callbackCount)
+		received := make([]int, callbackCount) //nolint:makezero // indexed by position
 
-		var callbacks []auditlog.MultiWriterCallback
+		callbacks := make([]auditlog.MultiWriterCallback, 0, callbackCount)
 
 		for i := range callbackCount {
 			idx := i

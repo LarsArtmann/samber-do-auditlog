@@ -102,8 +102,8 @@ func ReplayEvents(events []Event) (Report, error) {
 	return report, nil
 }
 
-// applyEvent dispatches a single event to the appropriate state mutation.
-func applyEvent(evt Event, state *replayState) {
+// captureIDs seeds container and run IDs from the first event that carries them.
+func (state *replayState) captureIDs(evt Event) {
 	if state.containerID == "" {
 		state.containerID = evt.ContainerID
 	}
@@ -111,6 +111,11 @@ func applyEvent(evt Event, state *replayState) {
 	if state.runID == "" {
 		state.runID = evt.RunID
 	}
+}
+
+// applyEvent dispatches a single event to the appropriate state mutation.
+func applyEvent(evt Event, state *replayState) {
+	state.captureIDs(evt)
 
 	state.recordScope(evt.ScopeID, evt.ScopeName)
 

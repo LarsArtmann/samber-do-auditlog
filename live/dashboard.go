@@ -151,17 +151,17 @@ func renderEventFilterChips() string {
 	meta := auditlog.BuildTypeMetadata()
 
 	types := []string{
-		"registration",
-		"invocation",
-		"shutdown",
-		"health_check",
-	} //nolint:goconst,golines,lll // event type names match domain enums
+		string(auditlog.EventTypeRegistration),
+		string(auditlog.EventTypeInvocation),
+		string(auditlog.EventTypeShutdown),
+		string(auditlog.EventTypeHealthCheck),
+	}
 
 	var b strings.Builder
 
 	b.WriteString(
 		`<button class="chip active" data-on:click="$eventFilter = ''" data-class:active="!$eventFilter" aria-pressed="true">All</button>`,
-	) //nolint:golines,lll // single HTML element
+	) //nolint:lll // single HTML element
 
 	for _, t := range types {
 		label := t
@@ -184,7 +184,7 @@ func renderEventFilterChips() string {
 			t,
 			color,
 			label,
-		) //nolint:golines,lll // HTML template with datastar attributes
+		) //nolint:lll // HTML template with datastar attributes
 	}
 
 	return b.String()

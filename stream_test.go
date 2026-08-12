@@ -521,9 +521,9 @@ func TestNDJSONStreamer_WithFlushInterval_Bounds(t *testing.T) {
 
 	var buf bytes.Buffer
 
-	streamer := auditlog.NewNDJSONStreamer(&buf, auditlog.WithFlushInterval(20*time.Millisecond))
+	const interval = 250 * time.Millisecond
 
-	start := time.Now()
+	streamer := auditlog.NewNDJSONStreamer(&buf, auditlog.WithFlushInterval(interval))
 
 	for i := range 50 {
 		streamer.OnEvent(auditlog.Event{
@@ -536,17 +536,11 @@ func TestNDJSONStreamer_WithFlushInterval_Bounds(t *testing.T) {
 		})
 	}
 
-	elapsed := time.Since(start)
-
-	if elapsed >= 20*time.Millisecond {
-		t.Skipf("burst loop took %v; environment too slow to verify buffering", elapsed)
-	}
-
 	if buf.Len() != 0 {
 		t.Errorf("WithFlushInterval should buffer within the interval; got %d bytes written", buf.Len())
 	}
 
-	time.Sleep(40 * time.Millisecond)
+	time.Sleep(interval + 50*time.Millisecond)
 
 	streamer.OnEvent(auditlog.Event{
 		Sequence:  51,

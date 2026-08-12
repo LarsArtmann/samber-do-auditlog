@@ -45,7 +45,7 @@ var servicesShowExpr = "(!$serviceSearch || $rowName.toLowerCase().includes($ser
 //nolint:gochecknoglobals // effectively immutable; interpolates a const
 var eventsShowExpr = "(!$eventFilter || $evtType === $eventFilter) && ($showAllEvents || $evtIdx < " + strconv.Itoa(
 	maxEventRows,
-) + ")" //nolint:golines,lll // single expression
+) + ")" //nolint:lll // single expression
 
 // --- Data types for templ components ---
 
@@ -95,7 +95,7 @@ type fragmentPatch struct {
 // renderAllFragments renders every dashboard section and returns the list of
 // (selector, html) pairs to send as datastar-patch-elements events.
 //
-//nolint:contextcheck,golines // templ components return templ.Component; ctx passed via renderToString -> Render(ctx, w)
+//nolint:contextcheck // templ components return templ.Component; ctx passed via renderToString -> Render(ctx, w)
 func renderAllFragments(
 	ctx context.Context,
 	report auditlog.Report,
