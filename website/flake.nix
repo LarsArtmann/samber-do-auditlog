@@ -32,7 +32,6 @@
         {
           config,
           pkgs,
-          lib,
           ...
         }:
         let

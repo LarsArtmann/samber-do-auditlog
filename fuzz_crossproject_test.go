@@ -8,8 +8,8 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	auditlog "github.com/larsartmann/samber-do-auditlog"
 	errorfamily "github.com/larsartmann/go-error-family"
+	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
 // FuzzNDJSONStreamer fuzzes the NDJSONStreamer with adversarial event fields.
@@ -64,6 +64,7 @@ func FuzzNDJSONStreamer(f *testing.F) {
 		}
 
 		var buf bytes.Buffer
+
 		streamer := auditlog.NewNDJSONStreamer(&buf, auditlog.WithAutoFlush())
 
 		streamer.OnEvent(evt)
@@ -134,11 +135,14 @@ func FuzzMultiWriter(f *testing.F) {
 		}
 
 		var mu sync.Mutex
+
 		received := make([]int, callbackCount)
 
 		var callbacks []auditlog.MultiWriterCallback
+
 		for i := range callbackCount {
 			idx := i
+
 			callbacks = append(callbacks, func(e auditlog.Event) {
 				mu.Lock()
 				received[idx]++
@@ -181,6 +185,7 @@ func FuzzClassifyAdversarialChains(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, payload string) {
 		bare := fmt.Errorf("%s", payload) //nolint:err113 // fuzz input
+
 		family := errorfamily.Classify(bare)
 		if family != errorfamily.Transient {
 			t.Errorf("bare error should classify as Transient (fail-open), got %d", family)
@@ -188,6 +193,7 @@ func FuzzClassifyAdversarialChains(f *testing.F) {
 
 		for sentinel, expectedFamily := range auditlog.ErrorClassifications() {
 			wrapped := fmt.Errorf("%s: %w: %s", payload, sentinel, payload)
+
 			wrappedFamily := errorfamily.Classify(wrapped)
 			if wrappedFamily != expectedFamily {
 				t.Errorf("wrapped sentinel classified as %d, want %d", wrappedFamily, expectedFamily)
