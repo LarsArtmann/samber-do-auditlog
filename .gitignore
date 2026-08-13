@@ -9,8 +9,6 @@ audit-report.html
 
 # Generated reports
 reports/
-# Add pattern for Templ generated files
-*_templ.go
 # Test coverage
 /coverage
 /cover.out
