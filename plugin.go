@@ -149,7 +149,7 @@ func (p *Plugin) Opts() *do.InjectorOpts {
 // the first Opts() result is used to create a samber/do injector. Calling
 // it later has no effect on already-installed (or already-empty) hooks.
 // Intended for integrations that create the plugin before their feature
-// flags are parsed — e.g. a CLI that force-enables DI audit logging when
+// flags are parsed, e.g. a CLI that force-enables DI audit logging when
 // the user requests a live dashboard, mirroring an "always on when the
 // dashboard is shown" contract.
 func (p *Plugin) Enable() {
@@ -163,7 +163,7 @@ func (p *Plugin) Enable() {
 // plugin for its DI container before flags are parsed, then wires a live
 // SSE dashboard hub afterward) can attach the callback with SetOnEvent.
 //
-// Replaces any callback passed via Config.OnEvent — compose with
+// Replaces any callback passed via Config.OnEvent; compose with
 // NewMultiWriter beforehand if several sinks must all keep receiving
 // events. Passing nil disables the callback.
 //

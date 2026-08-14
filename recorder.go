@@ -77,10 +77,11 @@ func newSequenceCounter() *atomic.Int64 {
 //
 // # Locking Protocol
 //
-// All mutable state is protected by a single sync.RWMutex (mu):
+// All mutable state is protected by a single sync.RWMutex (mu), except the
+// onEvent callback which has its own onEventMu (see field comment):
 //
-//	Write path:  mu.Lock()   — all hook methods (OnBefore*, OnAfter*, RecordHealthCheck)
-//	Read path:   mu.RLock()  — BuildReport, Events, EventsCount, ResolveServiceScope
+//	Write path:  mu.Lock()   : all hook methods (OnBefore*, OnAfter*, RecordHealthCheck)
+//	Read path:   mu.RLock()  : BuildReport, Events, EventsCount, ResolveServiceScope
 //
 // The invocation counter (invocationSeq) uses atomic.Int64, eliminating a separate mutex.
 // Sequence numbers use a separate per-recorder atomic.Int64, also lock-free.

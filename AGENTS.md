@@ -39,7 +39,7 @@ A `flake.nix` devShell is available for Nix users. No Makefile, no justfile.
 Single-package library (`auditlog`) with these source files:
 
 ```
-plugin.go           — Public API: New(), Opts(), Report(), Export*(), Write*(), Events(), RecordHealthCheck*
+plugin.go           — Public API: New(), Opts(), Enable(), SetOnEvent(), Report(), Export*(), Write*(), Events(), RecordHealthCheck*
 recorder.go         — Core state machine: event capture, invocation stack, service aggregation
 hooks.go            — Hook methods + shared helpers (newEventFromRef, newServiceRecordCore, inferServiceType, getOrCreateServiceRecord, recordDependencyFromStack)
 types.go            — Domain enums: EventType, Phase, ProviderType, ServiceStatus, ServiceRef
@@ -122,10 +122,11 @@ live/demo/          — Self-contained real-time demo (registers services with d
 
 ### Concurrency Model
 
-- **Single `sync.RWMutex` (`mu`)** protects all mutable state: `events`, `services`, `scopes`, `stack`, `shutdownStart`. This reduces lock acquisition overhead from 2–4 per hook to exactly 1.
+- **`sync.RWMutex` (`mu`)** protects core mutable state: `events`, `services`, `scopes`, `stack`, `shutdownStart`. This reduces lock acquisition overhead from 2–4 per hook to exactly 1.
+- **`onEventMu sync.RWMutex`** (separate from `mu`) guards the `onEvent` callback so `Plugin.SetOnEvent` can swap it after creation. `fireEvent` copies the callback under `RLock` and invokes the copy outside any lock; `setOnEvent` takes `Lock` only on swap.
 - `sequence` and `invocationSeq` are `atomic.Int64` — no mutex needed for counters.
 - Each hook acquires `mu` once, performs all mutations (scope recording, stack management, event append, service updates), then releases.
-- `onEvent` callback is always called outside the lock to avoid blocking the hot path.
+- `onEvent` callback is always invoked outside the lock to avoid blocking the hot path.
 - `BuildReport()` uses `mu.RLock()` for reading — concurrent reads don't block each other.
 - **`MultiWriter`** has its own internal `sync.Mutex` — safe for concurrent use from multiple hooks. Preserves callback registration order; callbacks fire sequentially per event.
 - **`RunID`** is immutable once set. Auto-generated in `New()` via `crypto/rand` (128-bit hex). Stored on `Recorder` and stamped on every `Event` and the `Report`. `Config.RunID` (non-zero) overrides auto-generation.
@@ -133,7 +134,7 @@ live/demo/          — Self-contained real-time demo (registers services with d
 ### Shared infrastructure: `go-sse`
 
 The `live/` sub-package depends on [`github.com/larsartmann/go-sse`](https://github.com/larsartmann/go-sse)
-(v0.4.0, public) for the full SSE lifecycle — `Stream`, `Broadcaster[T]`,
+(v0.5.0, public) for the full SSE lifecycle — `Stream`, `Broadcaster[T]`,
 `Replay`/`EventStore`, plus wire-format primitives (`Event`, `WriteEvent`,
 `ContentType`). The domain-specific Hub (facade over `Broadcaster[sse.Event]`)
 and Server are implemented locally in `live/` (samber/do service events, scope

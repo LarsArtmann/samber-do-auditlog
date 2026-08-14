@@ -12,9 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-08-14
+
+A minor release for integrations that must create the plugin before they know
+their runtime configuration: `Plugin.SetOnEvent` attaches an event callback
+after construction (previously only settable via `Config.OnEvent` at `New()`
+time), and `Plugin.Enable` turns logging on after construction (previously
+only via `Config.Enabled` or `DO_AUDITLOG_ENABLED`). Together they let a CLI
+parse feature flags first and still get a fully wired, streaming audit log,
+which is how BuildFlow's `--live-dashboard` DI SSE stream is powered. Also
+bumps `go-sse` to v0.5.0 and `go-atomic-write` to v0.5.0.
+
 ### Added
 
-- **`Plugin.SetOnEvent`** (`plugin.go`, `recorder.go`): sets or replaces the `OnEvent` callback after `New()`. Fixes integrations that must create the plugin before their sink exists — e.g. a CLI that constructs the plugin for its DI container before flags are parsed and wires a `live` dashboard hub afterward (BuildFlow's `--live-dashboard`, whose DI SSE stream previously stayed eventless and fell back to `/api/report` polling). Race-safe with recording goroutines via a dedicated `onEventMu`; replaces (does not chain) any `Config.OnEvent` callback — compose with `MultiWriter` beforehand if several sinks must all keep receiving events. 4 tests.
+- **`Plugin.SetOnEvent`** (`plugin.go`, `recorder.go`): sets or replaces the `OnEvent` callback after `New()`. Fixes integrations that must create the plugin before their sink exists, e.g. a CLI that constructs the plugin for its DI container before flags are parsed and wires a `live` dashboard hub afterward (BuildFlow's `--live-dashboard`, whose DI SSE stream previously stayed eventless and fell back to `/api/report` polling). Race-safe with recording goroutines via a dedicated `onEventMu`; replaces (does not chain) any `Config.OnEvent` callback, so compose with `MultiWriter` beforehand if several sinks must all keep receiving events. 4 tests.
 - **`Plugin.Enable`** (`plugin.go`): turns audit logging on after `New()` regardless of `Config.Enabled` or `DO_AUDITLOG_ENABLED`. Idempotent; effective only before the first `Opts()` result is used to create an injector. Enables the "always on when the dashboard is shown" contract for integrations that parse feature flags after plugin creation. 1 test.
 
 ## [0.9.0] - 2026-08-12
