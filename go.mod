@@ -6,12 +6,12 @@ go 1.26.5
 // Broke Nix builds that vendor source without running templ generate.
 retract v0.9.0
 
-require github.com/larsartmann/go-sse v0.4.0
+require github.com/larsartmann/go-sse v0.5.0
 
 require (
 	github.com/a-h/templ v0.3.1020
 	github.com/invopop/jsonschema v0.14.0
-	github.com/larsartmann/go-atomic-write v0.4.1
+	github.com/larsartmann/go-atomic-write v0.5.0
 	github.com/larsartmann/go-error-family v0.10.0
 	github.com/larsartmann/go-ndjson v0.0.1
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
@@ -40,7 +40,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20260811164956-006e29f97886 // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260812204455-68fa937c71be // indirect
 	github.com/charmbracelet/x/ansi v0.11.8 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
