@@ -139,6 +139,23 @@ func (p *Plugin) Opts() *do.InjectorOpts {
 	}
 }
 
+// Enable turns audit logging on after creation, regardless of the
+// Config.Enabled value or DO_AUDITLOG_ENABLED env var seen at New().
+// Idempotent; there is no Disable counterpart because disabling after
+// hooks are installed would silently drop events mid-run.
+//
+// Only effective while the injector options are still consumable: Opts()
+// consults the enabled flag at call time, so Enable must be called before
+// the first Opts() result is used to create a samber/do injector. Calling
+// it later has no effect on already-installed (or already-empty) hooks.
+// Intended for integrations that create the plugin before their feature
+// flags are parsed — e.g. a CLI that force-enables DI audit logging when
+// the user requests a live dashboard, mirroring an "always on when the
+// dashboard is shown" contract.
+func (p *Plugin) Enable() {
+	p.config.Enabled = true
+}
+
 // SetOnEvent sets or replaces the event callback after creation.
 //
 // Config.OnEvent is captured at New() time; integrations that must create

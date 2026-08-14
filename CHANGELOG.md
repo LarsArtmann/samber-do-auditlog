@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`Plugin.SetOnEvent`** (`plugin.go`, `recorder.go`): sets or replaces the `OnEvent` callback after `New()`. Fixes integrations that must create the plugin before their sink exists — e.g. a CLI that constructs the plugin for its DI container before flags are parsed and wires a `live` dashboard hub afterward (BuildFlow's `--live-dashboard`, whose DI SSE stream previously stayed eventless and fell back to `/api/report` polling). Race-safe with recording goroutines via a dedicated `onEventMu`; replaces (does not chain) any `Config.OnEvent` callback — compose with `MultiWriter` beforehand if several sinks must all keep receiving events. 4 tests.
+- **`Plugin.Enable`** (`plugin.go`): turns audit logging on after `New()` regardless of `Config.Enabled` or `DO_AUDITLOG_ENABLED`. Idempotent; effective only before the first `Opts()` result is used to create an injector. Enables the "always on when the dashboard is shown" contract for integrations that parse feature flags after plugin creation. 1 test.
 
 ## [0.9.0] - 2026-08-12
 

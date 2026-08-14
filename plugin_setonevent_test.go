@@ -113,6 +113,40 @@ func TestPlugin_SetOnEvent_ReplacesConfiguredCallback(t *testing.T) {
 	}
 }
 
+func TestPlugin_Enable_InstallsHooksWhenCalledBeforeOpts(t *testing.T) {
+	// Not parallel: mutates the DO_AUDITLOG_ENABLED environment (t.Setenv
+	// is incompatible with t.Parallel).
+	t.Setenv("DO_AUDITLOG_ENABLED", "")
+
+	p := mustNew(auditlog.Config{Enabled: false})
+
+	if got := len(p.Opts().HookBeforeRegistration); got != 0 {
+		t.Fatalf("disabled plugin Opts() hooks: want 0, got %d", got)
+	}
+
+	p.Enable()
+
+	opts := p.Opts()
+	if got := len(opts.HookBeforeRegistration); got != 1 {
+		t.Fatalf("enabled plugin Opts() HookBeforeRegistration: want 1, got %d", got)
+	}
+
+	// Opts() consumed after Enable: a fresh injector records events.
+	injector := do.NewWithOpts(opts)
+	do.ProvideNamedValue(injector, "enabled-svc", "enabled-svc")
+
+	if got := p.EventsCount(); got != 2 {
+		t.Fatalf("events after Enable + Provide: want 2, got %d", got)
+	}
+
+	// Idempotent: a second Enable must not duplicate hooks.
+	p.Enable()
+
+	if got := len(p.Opts().HookBeforeRegistration); got != 1 {
+		t.Fatalf("HookBeforeRegistration after double Enable: want 1, got %d", got)
+	}
+}
+
 func TestPlugin_SetOnEvent_ConcurrentSwapWhileRecording(t *testing.T) {
 	t.Parallel()
 

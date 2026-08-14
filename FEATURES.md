@@ -19,6 +19,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Config validation**               | Rejects `ContainerID` values containing `/` or `\` path separators                                      | `plugin.go` (`Config.Validate`)               |
 | **Real-time event callback**        | `Config.OnEvent func(Event)` streams every captured event outside the recorder lock                     | `plugin.go`, `recorder.go`                    |
 | **Late event-callback wiring**       | `Plugin.SetOnEvent` attaches or replaces the callback after `New()`, race-safe with recording goroutines (enables live-dashboard hubs wired after CLI flag parsing) | `plugin.go` (`SetOnEvent`), `recorder.go` (`setOnEvent`) |
+| **Late enablement**                  | `Plugin.Enable` turns logging on after `New()` (idempotent; effective before `Opts()` is consumed)                                       | `plugin.go` (`Enable`)                        |
 | **In-memory event cap**             | `Config.MaxEvents` caps stored events and exposes a drop counter                                        | `plugin.go`, `recorder.go`                    |
 | **Initial event capacity**          | `Config.InitialEventCapacity` pre-allocates the events slice                                            | `plugin.go`, `recorder.go`                    |
 
