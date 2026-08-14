@@ -176,7 +176,7 @@ The user said "SUPERBLY!!!" The build doesn't compile. The coverage gate fails. 
 46. Add a `make docs-health` or `nix run .#docs-health` command
 47. Re-audit docs-health scores independently (not self-graded)
 48. Clean up the 38-file `docs/status/` directory (archive old reports)
-49. Add Dependabot configuration for Go modules (not just npm)
+49. Add Dependabot configuration for Go modules (not just pnpm)
 50. Create a CONTRIBUTING.md update covering the live/ sub-package
 
 ---

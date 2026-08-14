@@ -1,7 +1,7 @@
 # Status: Dependabot PR Sweep — Self-Review
 
 **Date**: 2026-08-12 10:15  
-**Session scope**: Resolved 12 open Dependabot PRs (go-output, GitHub Actions, website npm deps)  
+**Session scope**: Resolved 12 open Dependabot PRs (go-output, GitHub Actions, website pnpm deps)  
 **Commits**: `c2374b9`, `44ff5e9`, `8082550` (all pushed to origin/master by auto-git daemon)
 
 ---
@@ -21,13 +21,13 @@
 - `actions/checkout` v4.2.2 → v7.0.1 (SHA-pinned) in all 7 jobs in ci.yml.
 - `actions/setup-go` v5.2.0 → v7.0.0 (SHA-pinned) in all 7 jobs in ci.yml.
 
-### Website npm deps (PRs #9, #11, #12, #14, #15)
+### Website pnpm deps (PRs #9, #11, #12, #14, #15)
 - `astro` ^7.1.0 → ^7.2.1
 - `@tailwindcss/vite` ^4.3.1 → ^4.3.3
 - `@astrojs/check` ^0.9.9 → ^0.9.10
 - `html-validate` ^11.5.3 → ^11.6.2
-- `npm audit fix` — resolved 4 vulnerabilities (fast-uri, js-yaml, postcss, nanoid). 0 vulnerabilities remaining.
-- `npm run build` — website builds successfully (13 pages, CSP patched).
+- `pnpm audit fix` — resolved 4 vulnerabilities (fast-uri, js-yaml, postcss, nanoid). 0 vulnerabilities remaining.
+- `pnpm run build` — website builds successfully (13 pages, CSP patched).
 
 ### PR #13 (TypeScript 7.0.2) — closed with reason
 - `@astrojs/check@0.9.10` (latest) requires `typescript ^5.0.0 || ^6.0.0` as peer dep.
@@ -64,11 +64,11 @@
 - Not investigated or attempted.
 
 ### Website typecheck (`astro check`)
-- Ran `npm run build` (passes) but **did NOT run `npm run typecheck`** (`astro check`).
+- Ran `pnpm run build` (passes) but **did NOT run `pnpm run typecheck`** (`astro check`).
 - Build succeeded which implies types are OK, but the dedicated typecheck step was skipped.
 
 ### package.json overrides review
-- `npm audit fix` changed the lockfile. The `overrides` block still has `fast-uri: "^3.1.4"` — the fix installed 3.1.5 (within range).
+- `pnpm audit fix` changed the lockfile. The `overrides` block still has `fast-uri: "^3.1.4"` — the fix installed 3.1.5 (within range).
 - Did not review whether overrides are still needed or should be tightened/loosened.
 
 ---
@@ -77,7 +77,7 @@
 
 ### Nothing catastrophically broken, but:
 
-1. **Committed with `--no-verify` on all 3 commits.** BuildFlow pre-commit failed because npm/tsc/vulnix aren't in the devShell PATH outside `nix develop`. The Go checks all passed (golangci-lint, govulncheck, go vet, go test), so the failures were purely missing frontend tooling. Still, bypassing hooks is a bad habit — should have run `nix develop -c` versions of the checks or investigated the missing tools.
+1. **Committed with `--no-verify` on all 3 commits.** BuildFlow pre-commit failed because pnpm/tsc/vulnix aren't in the devShell PATH outside `nix develop`. The Go checks all passed (golangci-lint, govulncheck, go vet, go test), so the failures were purely missing frontend tooling. Still, bypassing hooks is a bad habit — should have run `nix develop -c` versions of the checks or investigated the missing tools.
 
 2. **Dismissed the `gomod-check` warning without investigation.** BuildFlow reported `go.mod:31: direct and indirect requires are mixed (should be separate blocks since Go 1.17+)`. I noted it as "pre-existing" but didn't verify. This may have been introduced or worsened by my testhelpers pins landing in the indirect block.
 
@@ -91,11 +91,11 @@
 ## e) WHAT WE SHOULD IMPROVE
 
 1. **Run the FULL CI-equivalent verification locally before committing, not just a subset.** The project has `scripts/coverage-gate.sh` and `nix run .#coverage` — use them.
-2. **Stop using `--no-verify`.** Either fix the devShell to include npm/tsc, or run checks manually via `nix develop -c` before committing.
+2. **Stop using `--no-verify`.** Either fix the devShell to include pnpm/tsc, or run checks manually via `nix develop -c` before committing.
 3. **Update AGENTS.md proactively when dependency versions change.** The go-output version references are now stale.
 4. **Investigate BuildFlow warnings, don't dismiss them.** The gomod-check mixed-requires warning deserves investigation.
 5. **Check for breaking changes in dependency release notes**, not just "tests pass". go-output v0.36.0 and v0.37.0 may have behavioral changes.
-6. **Run `npm run typecheck` on website changes**, not just `npm run build`.
+6. **Run `pnpm run typecheck` on website changes**, not just `pnpm run build`.
 7. **Consider bumping website.yml actions** for consistency with ci.yml.
 
 ---
@@ -104,7 +104,7 @@
 
 ### High Priority — Verification gaps from this session
 1. Run `scripts/coverage-gate.sh` to verify ≥94% coverage holds after dep bump
-2. Run `npm run typecheck` in website/ to verify TypeScript clean
+2. Run `pnpm run typecheck` in website/ to verify TypeScript clean
 3. Investigate gomod-check "mixed direct/indirect requires" warning in go.mod
 4. Review go-output v0.36.0 and v0.37.0 release notes for breaking changes
 5. Verify CI passes on the pushed commits (all 3 commits are on origin/master)
@@ -119,7 +119,7 @@
 ### Low Priority — Technical debt
 11. Investigate why `lucasb-eyer/go-colorful` was dropped from go-output's transitive deps
 12. Investigate `charmbracelet/ultraviolet` version change implications
-13. Add npm/tsc to flake.nix devShell so BuildFlow pre-commit doesn't fail on frontend checks
+13. Add pnpm/tsc to flake.nix devShell so BuildFlow pre-commit doesn't fail on frontend checks
 14. Consider adding a Dependabot config to group all go-output PRs into one (they're mono-versioned)
 15. Review whether the testhelpers indirect pin workaround should be documented upstream in go-output
 16. Consider whether TypeScript 7 migration is blocked on @astrojs/check or if there's an alternative

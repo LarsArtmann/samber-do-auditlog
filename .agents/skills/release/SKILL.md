@@ -197,7 +197,7 @@ git commit -m "docs(release): prepare vX.Y.Z release"
 git push origin master
 ```
 
-If the pre-commit hook (BuildFlow) fails on missing devShell binaries (npm,
+If the pre-commit hook (BuildFlow) fails on missing devShell binaries (pnpm,
 tsc, go-licenses, etc.), those are infrastructure gaps, not code issues —
 bypass with `--no-verify` only if the Go-specific checks (golangci-lint,
 govulncheck, go-generate, go vet) all passed within the BuildFlow output.

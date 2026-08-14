@@ -106,7 +106,7 @@ All 4 regenerated screenshots are ~3x larger because they now contain actual ren
 **Yes, Firebase deployment IS fully automated.** The CI pipeline at `.github/workflows/website.yml`:
 - Triggers on push to `master` when `website/**` or the workflow file changes
 - Also triggers on PRs (build-only, no deploy)
-- **Build job:** `npm install`, `npm audit`, `astro check`, `npm run build` (includes `fix-csp.mjs` for CSP hash injection), HTML validation, artifact upload
+- **Build job:** `pnpm install`, `pnpm audit`, `astro check`, `pnpm run build` (includes `fix-csp.mjs` for CSP hash injection), HTML validation, artifact upload
 - **Deploy job:** Only on `master` push, downloads artifact, installs `firebase-tools`, deploys to `hosting:do-auditlog` on `lars-software` Firebase project using `GOOGLE_APPLICATION_CREDENTIALS` secret
 - `FIREBASE_SERVICE_ACCOUNT` GitHub secret is set (verified via `gh secret list`, created 2026-07-13)
 - `.firebaserc` targets `do-auditlog` site on `lars-software` project
@@ -126,7 +126,7 @@ The README screenshots in `docs/images/` are the same files as the website scree
 
 ### 2. Website Build Verification
 
-The website was not built locally this session (`npm install` + `npm run build` was not run). The CI pipeline will catch build errors on push, but local verification would have been better. The new Astro components (`ShowcaseSection.astro`, `DemoSection.astro`) were written following existing patterns but have not been tested in a build.
+The website was not built locally this session (`pnpm install` + `pnpm run build` was not run). The CI pipeline will catch build errors on push, but local verification would have been better. The new Astro components (`ShowcaseSection.astro`, `DemoSection.astro`) were written following existing patterns but have not been tested in a build.
 
 ### 3. Firebase Deploy Fix Needs Testing
 
@@ -194,7 +194,7 @@ Confirmed via `fetch` of `https://do-auditlog.lars.software/` — the live HTML 
 
 ### Website
 
-6. **No visual QA was performed** — The new ShowcaseSection and DemoSection have never been rendered in a browser. A local `npm run build` + screenshot would verify they work.
+6. **No visual QA was performed** — The new ShowcaseSection and DemoSection have never been rendered in a browser. A local `pnpm run build` + screenshot would verify they work.
 7. **No OG image** — Social sharing has no preview card. Add `astro-og-canvas` (gogenfilter has this).
 8. **The "Try it" section's copy button uses an inline script** — This requires CSP hash injection via `fix-csp.mjs`. Should verify this works in the build.
 9. **The showcase screenshots are large (100-150KB each)** — Could be optimized with WebP or AVIF for faster loading. Firebase's CDN serves them with 1-year cache headers, but first load is still slow.
@@ -216,7 +216,7 @@ Confirmed via `fetch` of `https://do-auditlog.lars.software/` — the live HTML 
 ### CI/CD
 
 21. **GitHub Actions are pinned to tag versions, not SHA hashes** — `actions/checkout@v6`, `actions/setup-node@v6`, `actions/upload-artifact@v7`, `actions/download-artifact@v8` are all vulnerable to supply chain attacks. Pin to SHA hashes.
-22. **The `npm audit` step has `continue-on-error: true`** — High-severity vulnerabilities are silently ignored. At minimum, log the output; ideally, fail the build.
+22. **The `pnpm audit` step has `continue-on-error: true`** — High-severity vulnerabilities are silently ignored. At minimum, log the output; ideally, fail the build.
 23. **No Firebase rollback step** — If a deploy breaks the site, there's no automated rollback. The website-launch skill references `firebase hosting:rollback` but it's not in the workflow.
 24. **The website CI workflow doesn't run `golangci-lint` or Go tests** — These are in a separate `ci.yml` workflow, which is correct, but there's no cross-workflow dependency to ensure the Go code passes before the website deploys.
 
@@ -233,7 +233,7 @@ Confirmed via `fetch` of `https://do-auditlog.lars.software/` — the live HTML 
 ### Immediate (should have been done this session)
 
 1. **Commit and push the website.yml fix and changelog sync** — the deploy fix is uncommitted; the website will never update without it
-2. **Build the website locally** (`npm install && npm run build`) to verify ShowcaseSection and DemoSection compile without errors
+2. **Build the website locally** (`pnpm install && pnpm run build`) to verify ShowcaseSection and DemoSection compile without errors
 3. **Take a screenshot of the website landing page** to visually verify the new sections
 4. **Verify CSP hash injection** for the DemoSection's inline script (check the built HTML for the `sha256-` hash in the CSP header)
 5. **Regenerate the `FIREBASE_SERVICE_ACCOUNT` secret** if the `printf` fix doesn't work — the key may be expired or corrupted

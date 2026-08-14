@@ -132,7 +132,7 @@
 
 1. Run `go run ./example --live` and verify the dashboard stays up after lifecycle completion
 2. Run `go run ./live/demo` and verify health checks populate the dashboard
-3. Build the website (`cd website && npm run build`) and verify the touch-accessibility class compiles
+3. Build the website (`cd website && pnpm run build`) and verify the touch-accessibility class compiles
 4. Open the padded screenshots and verify they look acceptable
 5. Verify GitHub release notes content is correct on the Releases page
 

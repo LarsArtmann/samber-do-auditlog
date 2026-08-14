@@ -158,11 +158,27 @@ func inferServiceType(scope *do.Scope, serviceName ServiceName) ProviderType {
 // --- Hook methods (single-lock hot path) ---
 
 // fireEvent invokes the onEvent callback if configured. Always called
-// outside the mutex to avoid blocking the hot path.
+// outside the recorder mutex to avoid blocking the hot path. The callback
+// is copied under onEventMu.RLock so a concurrent setOnEvent (Plugin
+// .SetOnEvent) cannot race with the invocation.
 func (r *Recorder) fireEvent(evt Event) {
-	if r.onEvent != nil {
-		r.onEvent(evt)
+	r.onEventMu.RLock()
+	fn := r.onEvent
+	r.onEventMu.RUnlock()
+
+	if fn != nil {
+		fn(evt)
 	}
+}
+
+// setOnEvent replaces the onEvent callback. Safe for concurrent use with
+// recording goroutines: fireEvent copies the callback under RLock and
+// invokes the copy outside any lock.
+func (r *Recorder) setOnEvent(fn func(Event)) {
+	r.onEventMu.Lock()
+	defer r.onEventMu.Unlock()
+
+	r.onEvent = fn
 }
 
 // publishLockedEvent finalizes a hook: appends evt under r.mu, releases the

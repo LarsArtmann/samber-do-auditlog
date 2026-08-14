@@ -82,7 +82,7 @@
 
 ### package-lock.json
 
-- Not committed. We installed with npm during testing but removed it. CI will generate it on first run. The `cache-dependency-path: website/package-lock.json` in website.yml will warn on first run since the file doesn't exist yet.
+- Not committed. We installed with pnpm during testing but removed it. CI will generate it on first run. The `cache-dependency-path: website/package-lock.json` in website.yml will warn on first run since the file doesn't exist yet.
 
 ### .npmrc / engine constraints
 
@@ -100,7 +100,7 @@
 
 ### Near-miss: Astro version compatibility
 
-- The reference projects (gogenfilter, go-atomic-write) list `"astro": "^7.0.3"` in package.json but their lockfiles actually resolve to Astro 6.3.1. Our package.json also says `^7.0.3` and resolves to Astro 7.0.8 with Vite 8, which works. But this is fragile — the reference projects may break on their next `npm install` if Astro 7 has further breaking changes.
+- The reference projects (gogenfilter, go-atomic-write) list `"astro": "^7.0.3"` in package.json but their lockfiles actually resolve to Astro 6.3.1. Our package.json also says `^7.0.3` and resolves to Astro 7.0.8 with Vite 8, which works. But this is fragile — the reference projects may break on their next `pnpm install` if Astro 7 has further breaking changes.
 
 ---
 
@@ -108,7 +108,7 @@
 
 1. **Deploy the website** — Set up Firebase hosting target and DNS for `do-auditlog.lars.software`. Without this, the homepage URL in GitHub returns nothing.
 
-2. **Commit package-lock.json** — Required for reproducible CI builds and npm cache. Currently missing.
+2. **Commit package-lock.json** — Required for reproducible CI builds and pnpm cache. Currently missing.
 
 3. **Add OG images** — The landing page and docs have no social preview images. This hurts link sharing on Twitter/Slack/Discord.
 
@@ -136,7 +136,7 @@
 2. Set `FIREBASE_SERVICE_ACCOUNT` GitHub secret
 3. Configure DNS for `do-auditlog.lars.software` (CNAME to Firebase)
 4. Deploy the website
-5. Commit `package-lock.json` after first clean `npm install`
+5. Commit `package-lock.json` after first clean `pnpm install`
 6. Verify the website URL works end-to-end from the GitHub homepage link
 
 ### Content Depth (high impact)
@@ -223,7 +223,7 @@ The .firebaserc references `lars-software` as the default project and configures
 
 Both reference projects keep the website in the same repo (`website/` subdirectory). This is the pattern I followed. However, the website has its own package.json, node_modules, and build pipeline — it's a separate project living inside the Go library repo. This means:
 
-- `npm` changes show up in Go repo diffs
+- `pnpm` changes show up in Go repo diffs
 - The Nix flake now has two flake.nix files (root for Go, website/ for Node)
 - CI runs both Go and Node jobs
 

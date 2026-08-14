@@ -33,25 +33,25 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef358964e2896645e5dc5ba9c38 # v6
         with:
           node-version: "24"
-          cache: npm
+          cache: pnpm
           cache-dependency-path: website/package-lock.json
 
-      - run: npm install
+      - run: pnpm install
         working-directory: website
 
-      - name: npm audit
-        run: npm audit --audit-level=high --omit=dev
+      - name: pnpm audit
+        run: pnpm audit --audit-level=high --omit=dev
         working-directory: website
         continue-on-error: true
 
-      - run: npx astro check
+      - run: pnpm dlx astro check
         working-directory: website
 
-      - run: npm run build
+      - run: pnpm run build
         working-directory: website
 
       - name: HTML Validation
-        run: npx html-validate --config .htmlvalidate.json "dist/**/*.html"
+        run: pnpm dlx html-validate --config .htmlvalidate.json "dist/**/*.html"
         working-directory: website
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -79,7 +79,7 @@ jobs:
       - name: Deploy to Firebase Hosting
         working-directory: website
         run: |
-          npm install -g firebase-tools
+          pnpm add -g firebase-tools
           printf '%s' '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/gcp-key.json"
           if ! node -e "JSON.parse(require('fs').readFileSync('$RUNNER_TEMP/gcp-key.json','utf8'))" 2>/dev/null; then
             echo "ERROR: gcp-key.json is not valid JSON — secret may be corrupted or empty"

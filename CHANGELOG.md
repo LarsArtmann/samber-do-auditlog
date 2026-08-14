@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`Plugin.SetOnEvent`** (`plugin.go`, `recorder.go`): sets or replaces the `OnEvent` callback after `New()`. Fixes integrations that must create the plugin before their sink exists — e.g. a CLI that constructs the plugin for its DI container before flags are parsed and wires a `live` dashboard hub afterward (BuildFlow's `--live-dashboard`, whose DI SSE stream previously stayed eventless and fell back to `/api/report` polling). Race-safe with recording goroutines via a dedicated `onEventMu`; replaces (does not chain) any `Config.OnEvent` callback — compose with `MultiWriter` beforehand if several sinks must all keep receiving events. 4 tests.
+
 ## [0.9.0] - 2026-08-12
 
 A minor release introducing `RunID` for cross-system event correlation,
@@ -36,7 +40,7 @@ are auto-upgraded via `MigrateReport`).
 - **SSE ring buffer replay** (`live/hub.go`, `live/server.go`): in-memory ring buffer stores recent SSE events for reconnection replay. `ReplayBufferSize` config field (default 256). `EventStore()` and `BufferedEventCount()` methods on `Hub`. 4 tests.
 - **`RunID` branded type** (`runid.go`, `types.go`): 128-bit hex correlation ID for cross-system tracing. Auto-generated via `crypto/rand`, can be overridden via `Config.RunID`. Stamped on every `Event` and the `Report`. 3 tests.
 - **Timing deltas in `DiffResult`** (`diff.go`): `TotalBuildDurationMsDelta` and `TotalShutdownDurationMsDelta` fields surface aggregate duration changes between two reports. 2 tests.
-- **Dependabot config** (`.github/dependabot.yml`): automated dependency updates for gomod, github-actions, and npm ecosystems.
+- **Dependabot config** (`.github/dependabot.yml`): automated dependency updates for gomod, github-actions, and pnpm ecosystems.
 - **Goreleaser + RELEASE.md** (`.goreleaser.yml`, `RELEASE.md`): release automation for the CLI binary (linux/darwin amd64/arm64). CI check job validates config.
 - **Exported `testhelpers/`**: moved from `internal/testhelpers/` to public `testhelpers/` package, enabling downstream consumers to write integration tests against the audit log types.
 

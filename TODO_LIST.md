@@ -29,6 +29,6 @@ Identified during cross-project review. These patterns existed in the sibling pr
 - [x] **Add Write\*String methods** — Mermaid, PlantUML, DOT, D2, HTML convenience methods returning `string`.
 - [x] **Add timing deltas to Diff** — `TotalBuildDurationMsDelta` and `TotalShutdownDurationMsDelta` in `DiffResult`.
 - [x] **Export testhelpers** — Moved from `internal/testhelpers/` to public `testhelpers/`.
-- [x] **Add dependabot** — Automated dependency updates for gomod, github-actions, npm.
+- [x] **Add dependabot** — Automated dependency updates for gomod, github-actions, pnpm.
 - [x] **Add goreleaser + RELEASE.md** — Release automation for CLI binary.
 - [x] **Bump schema version** — `0.2.0` → `0.3.0` (RunID field added to Event/Report).

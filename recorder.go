@@ -107,7 +107,15 @@ type Recorder struct {
 	invocationSeq atomic.Int64
 	containerID   ContainerID
 	runID         RunID
-	onEvent       func(Event)
+
+	// onEventMu guards onEvent so the callback can be replaced after
+	// creation via setOnEvent (Plugin.SetOnEvent). It is deliberately
+	// separate from mu: the callback is invoked outside mu (see the
+	// locking protocol above), so it needs its own lock. fireEvent takes
+	// RLock per event; setOnEvent takes Lock only when a caller swaps
+	// the callback.
+	onEventMu sync.RWMutex
+	onEvent   func(Event)
 
 	// maxEvents caps the events slice. When > 0, new events are dropped
 	// (counter incremented) after this many events are stored.

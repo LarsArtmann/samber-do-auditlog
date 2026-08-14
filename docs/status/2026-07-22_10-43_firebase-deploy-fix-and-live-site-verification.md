@@ -135,7 +135,7 @@ I updated the feature grid to "16+ Export Formats" but missed the identical clai
 ### CI/CD
 
 16. **Pin GitHub Actions to SHA hashes** — supply chain security
-17. **Remove `continue-on-error: true` from npm audit** — or at least log the output
+17. **Remove `continue-on-error: true` from pnpm audit** — or at least log the output
 18. **Add Firebase rollback step** to the workflow
 19. **Add notification on deploy failure** — the deploy was broken for 9 days without anyone knowing
 
@@ -170,7 +170,7 @@ I updated the feature grid to "16+ Export Formats" but missed the identical clai
 14. Add "When NOT to use this" section to README
 15. Add error boundary for `JSON.parse` in HTML report
 16. Add deploy-failure notification (Slack/email/GitHub issue)
-17. Remove `continue-on-error` from npm audit or log output
+17. Remove `continue-on-error` from pnpm audit or log output
 18. Add Firebase rollback step to website workflow
 19. Improve comparison section with real alternatives
 20. Add benchmarks page to Starlight docs
@@ -225,7 +225,7 @@ The comparison section on the live website currently says "9+ export formats inc
 
 ### 3. Should I merge the Dependabot PR #1?
 
-The open PR bumps `astro` and `fast-uri` in the website npm dependencies. CI passed on it. It's a security update (npm_and_yarn group). Should I merge it, or do you want to review the dependency changes first?
+The open PR bumps `astro` and `fast-uri` in the website pnpm dependencies. CI passed on it. It's a security update (npm_and_yarn group). Should I merge it, or do you want to review the dependency changes first?
 
 ---
 

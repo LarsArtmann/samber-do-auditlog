@@ -30,7 +30,7 @@
 
 ### Website package-lock.json
 
-- [x] Generated via `npm install` during build (298,897 bytes, 8247 lines). Untracked, ready to commit.
+- [x] Generated via `pnpm install` during build (298,897 bytes, 8247 lines). Untracked, ready to commit.
 
 ---
 
@@ -116,7 +116,7 @@
 ### CI/CD Verification
 
 10. **Verify `website.yml` workflow runs** on push (build + deploy to Firebase)
-11. **Verify npm cache works** in CI (package-lock.json now exists)
+11. **Verify pnpm cache works** in CI (package-lock.json now exists)
 12. **Verify HTML validation** passes in CI
 13. **Verify astro check** passes in CI
 14. **Fix any CI issues** that arise

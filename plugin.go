@@ -139,6 +139,25 @@ func (p *Plugin) Opts() *do.InjectorOpts {
 	}
 }
 
+// SetOnEvent sets or replaces the event callback after creation.
+//
+// Config.OnEvent is captured at New() time; integrations that must create
+// the plugin before they know their sink (e.g. a CLI that constructs the
+// plugin for its DI container before flags are parsed, then wires a live
+// SSE dashboard hub afterward) can attach the callback with SetOnEvent.
+//
+// Replaces any callback passed via Config.OnEvent — compose with
+// NewMultiWriter beforehand if several sinks must all keep receiving
+// events. Passing nil disables the callback.
+//
+// Safe for concurrent use with recording goroutines. Events recorded
+// before the call are not replayed to fn; read them via Events or Report
+// (the live dashboard sends a full snapshot on connect, so late wiring
+// loses nothing).
+func (p *Plugin) SetOnEvent(fn func(Event)) {
+	p.recorder.setOnEvent(fn)
+}
+
 // Report returns a consolidated snapshot of everything observed so far.
 func (p *Plugin) Report() Report {
 	return p.recorder.BuildReport()
