@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/larsartmann/go-sse"
+	"github.com/larsartmann/go-sse/ssetest"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/larsartmann/samber-do-auditlog/live"
 	"github.com/larsartmann/samber-do-auditlog/testhelpers"
@@ -233,7 +234,7 @@ func TestServer_RootPrefix(t *testing.T) {
 
 // --- SSE Tests (use httptest.NewServer for real HTTP streaming) ---
 
-func sseConnect(t *testing.T, url string) (*bufio.Scanner, func()) {
+func sseConnect(t *testing.T, url string) (*ssetest.StreamReader, func()) {
 	t.Helper()
 
 	ctx, cancel := context.WithCancel(t.Context())
@@ -254,10 +255,10 @@ func sseConnect(t *testing.T, url string) (*bufio.Scanner, func()) {
 		_ = resp.Body.Close()
 	}
 
-	return bufio.NewScanner(resp.Body), cleanup
+	return ssetest.NewStreamReader(resp.Body), cleanup
 }
 
-func sseConnectWithLastID(t *testing.T, url, lastEventID string) (*bufio.Scanner, func()) {
+func sseConnectWithLastID(t *testing.T, url, lastEventID string) (*ssetest.StreamReader, func()) {
 	t.Helper()
 
 	ctx, cancel := context.WithCancel(t.Context())
@@ -280,57 +281,48 @@ func sseConnectWithLastID(t *testing.T, url, lastEventID string) (*bufio.Scanner
 		_ = resp.Body.Close()
 	}
 
-	return bufio.NewScanner(resp.Body), cleanup
+	return ssetest.NewStreamReader(resp.Body), cleanup
 }
 
-func skipSnapshot(scanner *bufio.Scanner) {
+func skipSnapshot(sr *ssetest.StreamReader) {
 	// The datastar snapshot sends: 1 patch-signals + N patch-elements events.
 	// #container-id is always the last fragment. Skip until we consume it.
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), "selector #container-id") {
-			for scanner.Scan() {
-				if scanner.Text() == "" {
-					return
-				}
-			}
+	for {
+		evt, err := sr.Next()
+		if err != nil {
+			return
+		}
+
+		if strings.Contains(evt.Data(), "selector #container-id") {
+			return
 		}
 	}
 }
 
-func readSSEEvent(scanner *bufio.Scanner, eventName string) (string, bool) {
-	for scanner.Scan() {
-		line := scanner.Text()
+func readSSEEvent(sr *ssetest.StreamReader, eventName string) (string, bool) {
+	for {
+		evt, err := sr.Next()
+		if err != nil {
+			return "", false
+		}
 
-		if strings.HasPrefix(line, "event: "+eventName) {
-			var dataLines []string
-
-			for scanner.Scan() {
-				scanLine := scanner.Text()
-
-				if scanLine == "" {
-					break
-				}
-
-				if data, ok := strings.CutPrefix(scanLine, "data: "); ok {
-					dataLines = append(dataLines, data)
-				}
-			}
-
-			return strings.Join(dataLines, "\n"), true
+		if evt.Type == eventName {
+			return evt.Data(), true
 		}
 	}
-
-	return "", false
 }
 
-func readUntilService(scanner *bufio.Scanner, serviceName string) bool {
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), serviceName) {
+func readUntilService(sr *ssetest.StreamReader, serviceName string) bool {
+	for {
+		evt, err := sr.Next()
+		if err != nil {
+			return false
+		}
+
+		if strings.Contains(evt.Data(), serviceName) {
 			return true
 		}
 	}
-
-	return false
 }
 
 // assertSSEDetectsService creates a server with an injector, connects SSE,
@@ -357,17 +349,17 @@ func assertSSEDetectsService(t *testing.T, containerID, serviceName string, valu
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	sr, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
 	defer closeSSE()
 
-	skipSnapshot(scanner)
+	skipSnapshot(sr)
 
 	do.ProvideNamedValue(injector, serviceName, value)
 
 	found := false
 
 	for range 20 {
-		data, ok := readSSEEvent(scanner, "datastar-patch-elements")
+		data, ok := readSSEEvent(sr, "datastar-patch-elements")
 		if !ok {
 			break
 		}
@@ -403,10 +395,10 @@ func TestServer_SSE_SnapshotOnConnect(t *testing.T) {
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	sr, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
 	defer closeSSE()
 
-	data, found := readSSEEvent(scanner, "datastar-patch-signals")
+	data, found := readSSEEvent(sr, "datastar-patch-signals")
 	if !found {
 		t.Fatal("did not receive datastar-patch-signals event")
 	}
@@ -430,10 +422,10 @@ func TestServer_SSE_CompleteEvent(t *testing.T) {
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	sr, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
 	defer closeSSE()
 
-	skipSnapshot(scanner)
+	skipSnapshot(sr)
 
 	server.SignalComplete()
 
@@ -442,7 +434,7 @@ func TestServer_SSE_CompleteEvent(t *testing.T) {
 	found := false
 
 	for range 20 {
-		data, ok := readSSEEvent(scanner, "datastar-patch-signals")
+		data, ok := readSSEEvent(sr, "datastar-patch-signals")
 		if !ok {
 			break
 		}
@@ -479,22 +471,22 @@ func TestServer_SSE_FanOut(t *testing.T) {
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner1, closeSSE1 := sseConnect(t, ts.URL+"/debug/di/api/events")
+	sr1, closeSSE1 := sseConnect(t, ts.URL+"/debug/di/api/events")
 	defer closeSSE1()
 
-	scanner2, closeSSE2 := sseConnect(t, ts.URL+"/debug/di/api/events")
+	sr2, closeSSE2 := sseConnect(t, ts.URL+"/debug/di/api/events")
 	defer closeSSE2()
 
-	skipSnapshot(scanner1)
-	skipSnapshot(scanner2)
+	skipSnapshot(sr1)
+	skipSnapshot(sr2)
 
 	do.ProvideNamedValue(injector, "fanout-svc", "fanout-value")
 
-	if !readUntilService(scanner1, "fanout-svc") {
+	if !readUntilService(sr1, "fanout-svc") {
 		t.Error("client 1 did not receive fanout event")
 	}
 
-	if !readUntilService(scanner2, "fanout-svc") {
+	if !readUntilService(sr2, "fanout-svc") {
 		t.Error("client 2 did not receive fanout event")
 	}
 }
@@ -673,11 +665,37 @@ func TestServer_SSE_Heartbeat(t *testing.T) {
 	ts := httptest.NewServer(server)
 	defer ts.Close()
 
-	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	sr, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
 	defer closeSSE()
 
 	// Skip the snapshot event.
-	skipSnapshot(scanner)
+	skipSnapshot(sr)
+
+	// Heartbeats are SSE comment lines (: heartbeat), which StreamReader
+	// ignores. Use a raw scanner on a separate connection to detect them.
+	ctx2, cancel2 := context.WithCancel(t.Context())
+	defer cancel2()
+
+	req2, err := http.NewRequestWithContext(ctx2, http.MethodGet, ts.URL+"/debug/di/api/events", nil)
+	if err != nil {
+		t.Fatalf("create request: %v", err)
+	}
+
+	resp2, err := http.DefaultClient.Do(req2) //nolint:bodyclose // closed below
+	if err != nil {
+		t.Fatalf("connect SSE: %v", err)
+	}
+
+	defer func() { _ = resp2.Body.Close() }()
+
+	scanner := bufio.NewScanner(resp2.Body)
+
+	// Skip the snapshot (read until blank line dispatches the frame).
+	for scanner.Scan() {
+		if scanner.Text() == "" {
+			break
+		}
+	}
 
 	// Wait for a heartbeat comment line.
 	foundHeartbeat := false
@@ -1017,7 +1035,7 @@ func TestServer_NilPlugin_SSESnapshot(t *testing.T) {
 	// then SignalComplete triggers sendComplete (also nil plugin → return).
 	hub.SignalComplete()
 
-	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	sr, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
 	defer closeSSE()
 
 	// The connection should succeed even with nil plugin.
@@ -1181,12 +1199,12 @@ func TestServer_SSE_ReconnectReplay(t *testing.T) {
 	// With datastar, reconnect always sends a fresh snapshot.
 	firstSeq := strconv.Itoa(events[0].Sequence)
 
-	scanner, closeSSE := sseConnectWithLastID(t, ts.URL+"/debug/di/api/events", firstSeq)
+	sr, closeSSE := sseConnectWithLastID(t, ts.URL+"/debug/di/api/events", firstSeq)
 	defer closeSSE()
 
 	// Reconnect sends a fresh snapshot (datastar events) regardless of Last-Event-ID.
 	// Verify we get datastar-patch-signals on reconnect.
-	data, found := readSSEEvent(scanner, "datastar-patch-signals")
+	data, found := readSSEEvent(sr, "datastar-patch-signals")
 	if !found {
 		t.Fatal("did not receive datastar-patch-signals on reconnect")
 	}
@@ -1205,10 +1223,10 @@ func TestServer_SSE_ReconnectNoLastEventID(t *testing.T) {
 	defer ts.Close()
 
 	// Connect without Last-Event-ID — should get snapshot only, no replay.
-	scanner, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
+	sr, closeSSE := sseConnect(t, ts.URL+"/debug/di/api/events")
 	defer closeSSE()
 
-	data, found := readSSEEvent(scanner, "datastar-patch-signals")
+	data, found := readSSEEvent(sr, "datastar-patch-signals")
 	if !found {
 		t.Fatal("did not receive snapshot signals")
 	}

@@ -59,6 +59,7 @@ require (
 	github.com/larsartmann/go-branded-id v0.5.1 // indirect
 	github.com/larsartmann/go-output/testhelpers v0.37.0 // indirect
 	github.com/larsartmann/go-output/testhelpers/graphtest v0.37.0 // indirect
+	github.com/larsartmann/go-sse/ssetest v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.1 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect

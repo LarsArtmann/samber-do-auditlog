@@ -94,6 +94,8 @@ github.com/larsartmann/go-sse v0.5.0 h1:6KC4fh/cDxNvaZE10ByT39y6ib65KH+nQIgw8sfV
 github.com/larsartmann/go-sse v0.5.0/go.mod h1:kj1Gv+cnHIWKeqL0hRvbzkyM96/ZHAfub4FpgFtehHg=
 github.com/larsartmann/go-sse v0.5.1 h1:WxTNZp+DfShA2yXPne4+Jp5sFKTDlng+VMOniCiFVu8=
 github.com/larsartmann/go-sse v0.5.1/go.mod h1:TJl45pMXjwZTdhGgyu6RZWmmXyr28XwpnNJ7rVyyUxU=
+github.com/larsartmann/go-sse/ssetest v0.2.0 h1:xnze3rcrYrTyssums3SWZmZeCt1prJ2J6CBttovOzRM=
+github.com/larsartmann/go-sse/ssetest v0.2.0/go.mod h1:NhScY7qZtXb9cWMBrwM/dXeZ14ArAAahYCIhZUM91qM=
 github.com/lucasb-eyer/go-colorful v1.4.1 h1:1EO+WB73+EH8EVbzlrG3KLAfEypQWVHIBqlTf+2hNss=
 github.com/lucasb-eyer/go-colorful v1.4.1/go.mod h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=
 github.com/mattn/go-colorable v0.1.15 h1:+u9SLTRGnXv73cEsnsmoZBom+dMU88B2M0aDcWy0/jY=
