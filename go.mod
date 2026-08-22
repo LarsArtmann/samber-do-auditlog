@@ -1,12 +1,12 @@
 module github.com/larsartmann/samber-do-auditlog
 
-go 1.26.5
+go 1.26.6
 
 // v0.9.0 is retracted: missing live/fragments_templ.go (gitignored generated file).
 // Broke Nix builds that vendor source without running templ generate.
 retract v0.9.0
 
-require github.com/larsartmann/go-sse v0.5.0
+require github.com/larsartmann/go-sse v0.5.1
 
 require (
 	github.com/a-h/templ v0.3.1020
