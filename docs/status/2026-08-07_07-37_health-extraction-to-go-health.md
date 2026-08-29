@@ -88,11 +88,13 @@ My port from auditlog reverted this to holding `do.Injector` directly as a struc
 ### Critical Mistake #3: Lost improved error reporting
 
 The existing `Validate()` method wraps sentinel errors with offending values and remediation hints:
+
 ```go
 return fmt.Errorf("%w: got %s (configure via WithTimeout)", ErrInvalidTimeout, p.timeout)
 ```
 
 My port used bare sentinel returns:
+
 ```go
 return ErrInvalidTimeout
 ```
@@ -148,6 +150,7 @@ I wrote fresh AGENTS.md and README.md files without checking what was already th
 ## f) Up to 50 Things to Do Next
 
 ### go-health: Infrastructure (HIGH PRIORITY)
+
 1. Create `.github/workflows/ci.yml` — test (race + coverage), lint, mod-tidy, govulncheck, stale-generation (if templ ever added)
 2. Create `flake.nix` — Go 1.26.5 devShell, `coverage` app, `test` app
 3. Create `.golangci.yml` — strict lint config (copy patterns from auditlog, adjust for single-package simplicity)
@@ -160,6 +163,7 @@ I wrote fresh AGENTS.md and README.md files without checking what was already th
 10. Add go-health to parent `go.work` workspace (if one exists)
 
 ### go-health: Code Quality
+
 11. **Resolve the `slog` issue** — revert `slog.Debug` in `writeResponse` to silent swallow, OR add `WithLogger(*slog.Logger) Option`
 12. Add test for `writeResponse` marshal-failure branch
 13. Add test for `writeResponse` write-failure branch
@@ -172,6 +176,7 @@ I wrote fresh AGENTS.md and README.md files without checking what was already th
 20. Run `erraudit ./... --type-aware` and verify baseline
 
 ### go-health: Documentation
+
 21. Create `docs/guides/` if needed (port the superb-health-endpoint guide from auditlog?)
 22. Create `FEATURES.md` — honest feature inventory
 23. Create `TODO_LIST.md` — actionable improvement tasks
@@ -184,6 +189,7 @@ I wrote fresh AGENTS.md and README.md files without checking what was already th
 30. Set up website launch (website-launch skill — Astro + Starlight + Firebase)
 
 ### go-health: API Design
+
 31. Decide: should `New()` accept a `do.Injector` or should it accept a `healthCheckFunc` directly? (The existing code resolves internally — good pattern, but worth documenting the decision)
 32. Add `WithHealthCheckFunc(fn)` option for users who want to bypass the injector entirely
 33. Consider adding `Probe.Healthy()` bool convenience method (returns `Evaluate(ctx).Status == StatusPass`)
@@ -191,6 +197,7 @@ I wrote fresh AGENTS.md and README.md files without checking what was already th
 35. Decide: structured logging approach (Option-injected logger vs. none)
 
 ### auditlog: Cleanup
+
 36. Add CHANGELOG.md entry for health/ extraction
 37. Verify no stale `health/` references remain in any `.go` files (re-run grep)
 38. Verify `docs/guides/superb-health-endpoint-with-samber-do.md` guide — keep in auditlog (historical context) or move to go-health?
@@ -199,6 +206,7 @@ I wrote fresh AGENTS.md and README.md files without checking what was already th
 41. Verify the auditlog → go-health integration works end-to-end (write an integration test in go-health that uses a mock Plugin)
 
 ### Cross-Project
+
 42. Decide: should `docs/guides/superb-health-endpoint-with-samber-do.md` move to go-health, stay in auditlog, or be duplicated?
 43. Add go-health as a `replace` directive in auditlog's go.mod for local development (or use go.work)
 44. Create an integration test that verifies `*auditlog.Plugin` satisfies `health.HealthRecorder` at compile time (`var _ health.HealthRecorder = (*auditlog.Plugin)(nil)`)
@@ -229,14 +237,14 @@ The auditlog AGENTS.md mentions "A `go.work` workspace at the parent directory m
 
 ## Session Summary
 
-| Metric | Value |
-|--------|-------|
-| Files written (go-health) | 9 (may have been overwritten by daemon restoring HEAD) |
-| Files removed (auditlog) | 6 (health/*.go) |
-| Files updated (auditlog) | 3 (AGENTS.md, README.md, FEATURES.md) |
-| Commits (auditlog) | 2 (auto-committed by daemon) |
-| Commits (go-health) | 0 from this session (9 pre-existing from concurrent session) |
-| Tests pass (both projects) | Yes, `-race` clean |
-| Coverage (auditlog) | 95.5% |
-| Critical mistakes | 6 (documented above) |
-| Biggest lesson | **Always check if the target of a "move" operation already exists with evolved code before writing** |
+| Metric                     | Value                                                                                                |
+| -------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Files written (go-health)  | 9 (may have been overwritten by daemon restoring HEAD)                                               |
+| Files removed (auditlog)   | 6 (health/*.go)                                                                                      |
+| Files updated (auditlog)   | 3 (AGENTS.md, README.md, FEATURES.md)                                                                |
+| Commits (auditlog)         | 2 (auto-committed by daemon)                                                                         |
+| Commits (go-health)        | 0 from this session (9 pre-existing from concurrent session)                                         |
+| Tests pass (both projects) | Yes, `-race` clean                                                                                   |
+| Coverage (auditlog)        | 95.5%                                                                                                |
+| Critical mistakes          | 6 (documented above)                                                                                 |
+| Biggest lesson             | **Always check if the target of a "move" operation already exists with evolved code before writing** |

@@ -128,33 +128,33 @@ When I first saw the drift between local templ (v0.3.1036) and go.mod (v0.3.1020
 
 ## f) Top #25 Things to Get Done Next
 
-| #   | Task                                                                    | Impact | Effort | Priority |
-| --- | ----------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1   | Pin templ@v0.3.1020 in flake.nix shell hook                             | High   | Low    | 🔴       |
-| 2   | Add `golangci-lint config verify` to CONTRIBUTING checks                | High   | Low    | 🔴       |
-| 3   | Set `go 1.26.4` in go.mod (auto-toolchain download)                     | High   | Low    | 🔴       |
-| 4   | Upgrade actions/checkout@v4 → v5 (Node.js 24)                           | Medium | Low    | 🟡       |
-| 5   | Upgrade actions/setup-go@v5 → v6 (Node.js 24)                           | Medium | Low    | 🟡       |
-| 6   | Add coverage gate to CI (fail if < 95%)                                 | Medium | Low    | 🟡       |
-| 7   | Add flake-check CI job (run stress test ×100)                           | Medium | Medium | 🟡       |
-| 8   | True streaming NDJSON via io.Reader                                     | Medium | High   | 🟡       |
-| 9   | Report.Diff scope tree comparison                                       | Low    | Medium | 🟢       |
-| 10  | Add `golangci-lint config verify` step to CI lint job                   | Medium | Low    | 🟡       |
-| 11  | Update BENCHMARKS.md with Go 1.26.4 numbers                             | Low    | Low    | 🟢       |
-| 12  | Add `go mod tidy` check to CI                                           | Medium | Low    | 🟡       |
-| 13  | Document templ version pinning in CONTRIBUTING.md                       | Medium | Low    | 🟡       |
-| 14  | Add gitleaks to CI (secret leak detection)                              | Medium | Low    | 🟡       |
-| 15  | Consider encoding/json/v2 migration (re-evaluate risk)                  | Low    | High   | 🟢       |
-| 16  | Add Report.Equal(other) method (structural equality)                    | Low    | Low    | 🟢       |
-| 17  | Add Plugin.Reset() to clear recorded data                               | Low    | Low    | 🟢       |
-| 18  | Add `--tags=benchmark` CI job for benchmark regressions                 | Low    | Medium | 🟢       |
-| 19  | Add Dependabot config for automated dep updates                         | Medium | Low    | 🟡       |
-| 20  | Consider branded ID type for ServiceName (go-composable-business-types) | Low    | Medium | 🟢       |
-| 21  | Add CHANGELOG automation (release-please or similar)                    | Low    | Medium | 🟢       |
-| 22  | Add HTML report visual regression test (snapshot)                       | Low    | Medium | 🟢       |
-| 23  | Evaluate slog for internal logging (currently none)                     | Low    | Low    | 🟢       |
-| 24  | Add example_test.go for Report.Diff and Report.WriteNDJSON              | Low    | Low    | 🟢       |
-| 25  | Consider otel integration example as executable code                    | Low    | High   | 🟢       |
+| #  | Task                                                                    | Impact | Effort | Priority |
+| -- | ----------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1  | Pin templ@v0.3.1020 in flake.nix shell hook                             | High   | Low    | 🔴       |
+| 2  | Add `golangci-lint config verify` to CONTRIBUTING checks                | High   | Low    | 🔴       |
+| 3  | Set `go 1.26.4` in go.mod (auto-toolchain download)                     | High   | Low    | 🔴       |
+| 4  | Upgrade actions/checkout@v4 → v5 (Node.js 24)                           | Medium | Low    | 🟡       |
+| 5  | Upgrade actions/setup-go@v5 → v6 (Node.js 24)                           | Medium | Low    | 🟡       |
+| 6  | Add coverage gate to CI (fail if < 95%)                                 | Medium | Low    | 🟡       |
+| 7  | Add flake-check CI job (run stress test ×100)                           | Medium | Medium | 🟡       |
+| 8  | True streaming NDJSON via io.Reader                                     | Medium | High   | 🟡       |
+| 9  | Report.Diff scope tree comparison                                       | Low    | Medium | 🟢       |
+| 10 | Add `golangci-lint config verify` step to CI lint job                   | Medium | Low    | 🟡       |
+| 11 | Update BENCHMARKS.md with Go 1.26.4 numbers                             | Low    | Low    | 🟢       |
+| 12 | Add `go mod tidy` check to CI                                           | Medium | Low    | 🟡       |
+| 13 | Document templ version pinning in CONTRIBUTING.md                       | Medium | Low    | 🟡       |
+| 14 | Add gitleaks to CI (secret leak detection)                              | Medium | Low    | 🟡       |
+| 15 | Consider encoding/json/v2 migration (re-evaluate risk)                  | Low    | High   | 🟢       |
+| 16 | Add Report.Equal(other) method (structural equality)                    | Low    | Low    | 🟢       |
+| 17 | Add Plugin.Reset() to clear recorded data                               | Low    | Low    | 🟢       |
+| 18 | Add `--tags=benchmark` CI job for benchmark regressions                 | Low    | Medium | 🟢       |
+| 19 | Add Dependabot config for automated dep updates                         | Medium | Low    | 🟡       |
+| 20 | Consider branded ID type for ServiceName (go-composable-business-types) | Low    | Medium | 🟢       |
+| 21 | Add CHANGELOG automation (release-please or similar)                    | Low    | Medium | 🟢       |
+| 22 | Add HTML report visual regression test (snapshot)                       | Low    | Medium | 🟢       |
+| 23 | Evaluate slog for internal logging (currently none)                     | Low    | Low    | 🟢       |
+| 24 | Add example_test.go for Report.Diff and Report.WriteNDJSON              | Low    | Low    | 🟢       |
+| 25 | Consider otel integration example as executable code                    | Low    | High   | 🟢       |
 
 ---
 

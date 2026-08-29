@@ -1,8 +1,8 @@
 # Status Report: Oversized File Split (350-line limit compliance)
 
-**Date**: 2026-06-13 12:13  
-**Session Focus**: Reduce all source files to ≤350 lines per file as required by lint config  
-**Branch**: master  
+**Date**: 2026-06-13 12:13\
+**Session Focus**: Reduce all source files to ≤350 lines per file as required by lint config\
+**Branch**: master\
 **Commits**: 6d0eb01, a388c57, b7ac470 (3 commits this session)
 
 ---
@@ -81,13 +81,13 @@ Nothing. The splits are clean, all tests pass, no broken code paths.
 
 ### Code Quality
 
-| #   | Issue                                                          | Impact                  | Recommended Action                                                |
-| --- | -------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------- |
-| 1   | `mermaid.go` + `plantuml.go` are ~45 lines of copy-paste       | Medium                  | Extract `writeDependencyGraph(w, format)` parameterized by format |
-| 2   | `mermaidNodeID` doesn't sanitize `*[]{}`                       | Medium (bug)            | Port PlantUML's sanitizer to Mermaid                              |
-| 3   | `Config.Validate()` never called in `New()`                    | High (ghost system)     | Change `New()` signature to return `(*Plugin, error)`             |
-| 4   | `shutdownStart` map can leak entries on unmatched before/after | Low                     | Add eviction or use TTL                                           |
-| 5   | `Uptime()` uses wall-clock `time.Since()`                      | Low (non-deterministic) | Compute from `RegisteredAt` to `ShutdownAt`                       |
+| # | Issue                                                          | Impact                  | Recommended Action                                                |
+| - | -------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------- |
+| 1 | `mermaid.go` + `plantuml.go` are ~45 lines of copy-paste       | Medium                  | Extract `writeDependencyGraph(w, format)` parameterized by format |
+| 2 | `mermaidNodeID` doesn't sanitize `*[]{}`                       | Medium (bug)            | Port PlantUML's sanitizer to Mermaid                              |
+| 3 | `Config.Validate()` never called in `New()`                    | High (ghost system)     | Change `New()` signature to return `(*Plugin, error)`             |
+| 4 | `shutdownStart` map can leak entries on unmatched before/after | Low                     | Add eviction or use TTL                                           |
+| 5 | `Uptime()` uses wall-clock `time.Since()`                      | Low (non-deterministic) | Compute from `RegisteredAt` to `ShutdownAt`                       |
 
 ### Process
 

@@ -179,10 +179,10 @@ These are mixed with my new do-auditlog CNAME. The ACME TXT for do-auditlog is u
 
 The DNS and SSL blockers from section b) are resolved. The website is live.
 
-| Item | Section | Resolution |
-| ---- | ------- | ---------- |
-| DNS propagation (BLOCKED) | §b | RESOLVED: CNAME + ACME TXT records applied; DNS propagated. `do-auditlog.lars.software` returns HTTP 200 with valid SSL cert. |
-| SSL certificate provisioning | §b | RESOLVED: Firebase auto-provisioned the SSL cert after DNS propagated (`CERT_ACTIVE`). |
-| End-to-end verification | §c | VERIFIED: `https://do-auditlog.lars.software` returns the full Astro + Starlight site (landing page, 11 docs pages). |
+| Item                         | Section | Resolution                                                                                                                    |
+| ---------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| DNS propagation (BLOCKED)    | §b      | RESOLVED: CNAME + ACME TXT records applied; DNS propagated. `do-auditlog.lars.software` returns HTTP 200 with valid SSL cert. |
+| SSL certificate provisioning | §b      | RESOLVED: Firebase auto-provisioned the SSL cert after DNS propagated (`CERT_ACTIVE`).                                        |
+| End-to-end verification      | §c      | VERIFIED: `https://do-auditlog.lars.software` returns the full Astro + Starlight site (landing page, 11 docs pages).          |
 
 **Still open** (from "50 things" list): SOPS/age-encrypted tfvars for Namecheap credentials, DNS record count assertion CI check, uptime monitoring, `.well-known/security.txt`.

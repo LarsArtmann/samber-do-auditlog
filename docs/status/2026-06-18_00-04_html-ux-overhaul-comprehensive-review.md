@@ -166,33 +166,33 @@ The only "scare" was coverage dropping from 95.0% to 94.4% when I added `{ repor
 
 ## f) Top 25 Things to Get Done Next
 
-| #   | Task                                                                | Impact   | Effort |
-| --- | ------------------------------------------------------------------- | -------- | ------ |
-| 1   | **Commit the CSS escape fix** (uncommitted sort indicators)         | Critical | 1 min  |
-| 2   | Events table column sorting (reuse Services pattern)                | High     | 2h     |
-| 3   | Mobile horizontal scroll indicator/gradient on wide tables          | High     | 1h     |
-| 4   | Light theme toggle (`[data-theme="light"]` CSS overrides)           | High     | 3h     |
-| 5   | Global search / Cmd+K command palette across tabs                   | High     | 4h     |
-| 6   | Service detail drawer (click row → full event history)              | High     | 3h     |
-| 7   | Chronological event timeline (Gantt-style time axis)                | Medium   | 4h     |
-| 8   | Print stylesheet (`@media print`)                                   | Medium   | 2h     |
-| 9   | In-page "Download JSON" / "Copy NDJSON" buttons                     | Medium   | 1h     |
-| 10  | Virtual scrolling for 500+ service reports                          | Medium   | 4h     |
-| 11  | Keyboard shortcut help overlay (press `?`)                          | Low      | 1h     |
-| 12  | Graph edge labels on hover (dependency type/count)                  | Low      | 2h     |
-| 13  | Animation orchestration (coordinated tab slide+fade)                | Low      | 2h     |
-| 14  | WCAG AAA contrast audit on all text/background pairs                | Medium   | 2h     |
-| 15  | ARIA live regions for filter result count announcements             | Low      | 1h     |
-| 16  | Configurable page sizes (dropdown: 25/50/100/All)                   | Low      | 1h     |
-| 17  | Sticky table first column (service name) on horizontal scroll       | Low      | 1h     |
-| 18  | Diff viewer (load two reports, highlight changes)                   | High     | 8h     |
-| 19  | Mermaid/PlantUML diagram download from HTML page                    | Low      | 1h     |
-| 20  | Search highlighting (highlight matched text in results)             | Low      | 2h     |
-| 21  | Color-blind safe palette option                                     | Medium   | 2h     |
-| 22  | Event correlation view (group before/after pairs into transactions) | Medium   | 4h     |
-| 23  | Scope tree service count badges with status breakdown               | Low      | 1h     |
-| 24  | Auto-refresh indicator (show "snapshot taken at X" vs live)         | Low      | 30 min |
-| 25  | Performance budget: cap HTML output size for 1000+ event reports    | Medium   | 2h     |
+| #  | Task                                                                | Impact   | Effort |
+| -- | ------------------------------------------------------------------- | -------- | ------ |
+| 1  | **Commit the CSS escape fix** (uncommitted sort indicators)         | Critical | 1 min  |
+| 2  | Events table column sorting (reuse Services pattern)                | High     | 2h     |
+| 3  | Mobile horizontal scroll indicator/gradient on wide tables          | High     | 1h     |
+| 4  | Light theme toggle (`[data-theme="light"]` CSS overrides)           | High     | 3h     |
+| 5  | Global search / Cmd+K command palette across tabs                   | High     | 4h     |
+| 6  | Service detail drawer (click row → full event history)              | High     | 3h     |
+| 7  | Chronological event timeline (Gantt-style time axis)                | Medium   | 4h     |
+| 8  | Print stylesheet (`@media print`)                                   | Medium   | 2h     |
+| 9  | In-page "Download JSON" / "Copy NDJSON" buttons                     | Medium   | 1h     |
+| 10 | Virtual scrolling for 500+ service reports                          | Medium   | 4h     |
+| 11 | Keyboard shortcut help overlay (press `?`)                          | Low      | 1h     |
+| 12 | Graph edge labels on hover (dependency type/count)                  | Low      | 2h     |
+| 13 | Animation orchestration (coordinated tab slide+fade)                | Low      | 2h     |
+| 14 | WCAG AAA contrast audit on all text/background pairs                | Medium   | 2h     |
+| 15 | ARIA live regions for filter result count announcements             | Low      | 1h     |
+| 16 | Configurable page sizes (dropdown: 25/50/100/All)                   | Low      | 1h     |
+| 17 | Sticky table first column (service name) on horizontal scroll       | Low      | 1h     |
+| 18 | Diff viewer (load two reports, highlight changes)                   | High     | 8h     |
+| 19 | Mermaid/PlantUML diagram download from HTML page                    | Low      | 1h     |
+| 20 | Search highlighting (highlight matched text in results)             | Low      | 2h     |
+| 21 | Color-blind safe palette option                                     | Medium   | 2h     |
+| 22 | Event correlation view (group before/after pairs into transactions) | Medium   | 4h     |
+| 23 | Scope tree service count badges with status breakdown               | Low      | 1h     |
+| 24 | Auto-refresh indicator (show "snapshot taken at X" vs live)         | Low      | 30 min |
+| 25 | Performance budget: cap HTML output size for 1000+ event reports    | Medium   | 2h     |
 
 ---
 

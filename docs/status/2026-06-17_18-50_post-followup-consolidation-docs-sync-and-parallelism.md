@@ -32,13 +32,13 @@ All verification gates green: build ✅, vet ✅, race tests ✅ (95.3% coverage
 
 ### Immediate Follow-Up Items (all 5 complete)
 
-| #   | Task                                     | File(s)                                             | Details                                                                                                                                                                                                                                                                 |
-| --- | ---------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **`.gitattributes` for generated files** | `.gitattributes`                                    | Added `*_templ.go linguist-generated=true`. Prevents the recurring `html_templ.go` format drift (the #1 "TOTALLY FUCKED UP" item from the previous report). GitHub will now hide the generated file from diffs and language stats.                                      |
-| 2   | **CHANGELOG entries**                    | `CHANGELOG.md`                                      | Added: unified Report construction (Changed), `ServiceInfo.DeriveStatus()` public method (Added), 5th+6th fuzz targets → corrected to reflect the 3-target consolidation (Tests).                                                                                       |
-| 3   | **TODO_LIST.md sync**                    | `TODO_LIST.md`                                      | Fixed Go 1.26.3→1.26.4 in flake.nix description. Added "Post-Remediation Consolidation" completed section (6 items). Added "Future Priorities" section with 16 open tasks from the Top-25 audit, organized by category (Architecture, Features, Testing, Release & CI). |
-| 4   | **AGENTS.md Gotcha**                     | `AGENTS.md`                                         | Added `buildReportFromCore` Gotcha documenting the critical invariant. Updated `ServiceStatus` gotcha to mention `DeriveStatus()`. Updated file-listing descriptions for `report.go` and `service.go`.                                                                  |
-| 5   | **Test parallelism**                     | `plugin_basic_test.go`, `healthcheck_basic_test.go` | 13 additional `t.Parallel()` calls. Only 5 tests remain sequential (all use `t.Setenv()`). Total: **152 parallel calls** across 24 test files.                                                                                                                          |
+| # | Task                                     | File(s)                                             | Details                                                                                                                                                                                                                                                                 |
+| - | ---------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | **`.gitattributes` for generated files** | `.gitattributes`                                    | Added `*_templ.go linguist-generated=true`. Prevents the recurring `html_templ.go` format drift (the #1 "TOTALLY FUCKED UP" item from the previous report). GitHub will now hide the generated file from diffs and language stats.                                      |
+| 2 | **CHANGELOG entries**                    | `CHANGELOG.md`                                      | Added: unified Report construction (Changed), `ServiceInfo.DeriveStatus()` public method (Added), 5th+6th fuzz targets → corrected to reflect the 3-target consolidation (Tests).                                                                                       |
+| 3 | **TODO_LIST.md sync**                    | `TODO_LIST.md`                                      | Fixed Go 1.26.3→1.26.4 in flake.nix description. Added "Post-Remediation Consolidation" completed section (6 items). Added "Future Priorities" section with 16 open tasks from the Top-25 audit, organized by category (Architecture, Features, Testing, Release & CI). |
+| 4 | **AGENTS.md Gotcha**                     | `AGENTS.md`                                         | Added `buildReportFromCore` Gotcha documenting the critical invariant. Updated `ServiceStatus` gotcha to mention `DeriveStatus()`. Updated file-listing descriptions for `report.go` and `service.go`.                                                                  |
+| 5 | **Test parallelism**                     | `plugin_basic_test.go`, `healthcheck_basic_test.go` | 13 additional `t.Parallel()` calls. Only 5 tests remain sequential (all use `t.Setenv()`). Total: **152 parallel calls** across 24 test files.                                                                                                                          |
 
 ### `html_templ.go` Canonical Restore
 
@@ -166,33 +166,33 @@ The flake description says "Go 1.26.3" but `go.mod` requires `1.26.4`. The devSh
 
 Sorted by **Impact × Customer-Value ÷ Effort**:
 
-| #   | Task                                                            | Impact | Effort     | Category     |
-| --- | --------------------------------------------------------------- | ------ | ---------- | ------------ |
-| 1   | **Fix AGENTS.md Testing Patterns metrics** (146 tests, 3 fuzz)  | 🟡 Low | ⚪ Trivial | Docs         |
-| 2   | **Fix `flake.nix` description** (Go 1.26.3 → 1.26.4)            | 🟡 Low | ⚪ Trivial | Docs         |
-| 3   | **Add `buildReportFromCore` unit test**                         | 🟡 Low | ⚪ Trivial | Testing      |
-| 4   | **Add buildflow section to AGENTS.md**                          | 🟡 Low | ⚪ Trivial | Docs         |
-| 5   | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`) | 🟠 Med | 🔵 Low     | Architecture |
-| 6   | **NDJSON import** (trivial now with `buildReportFromCore`)      | 🟠 Med | 🔵 Low     | Feature      |
-| 7   | **v0.1.0 release**                                              | 🟠 Med | 🟡 Med     | Release      |
-| 8   | **JSON Schema file**                                            | 🟠 Med | 🔵 Low     | Docs/API     |
-| 9   | **CSV/TSV export**                                              | 🟡 Low | 🔵 Low     | Feature      |
-| 10  | **Refactor `ServiceInfo` lifecycle concerns**                   | 🟠 Med | 🔴 High    | Architecture |
-| 11  | **Property-based `Diff` tests**                                 | 🟡 Low | 🔵 Low     | Testing      |
-| 12  | **Property-based `MigrateReport` tests**                        | 🟡 Low | 🔵 Low     | Testing      |
-| 13  | **Fuzz filter inputs**                                          | 🟡 Low | 🔵 Low     | Testing      |
-| 14  | **HTML golden-file test**                                       | 🟠 Med | 🟡 Med     | Testing      |
-| 15  | **`Report` constructor validation**                             | 🟠 Med | 🟡 Med     | Architecture |
-| 16  | **Prometheus exporter example**                                 | 🟠 Med | 🟡 Med     | Docs         |
-| 17  | **Add `actionlint` to CI**                                      | 🟡 Low | ⚪ Trivial | CI           |
-| 18  | **GitHub Actions version upgrades**                             | 🟡 Low | ⚪ Trivial | CI           |
-| 19  | **Flake app for coverage gate**                                 | 🟡 Low | 🔵 Low     | DevEx        |
-| 20  | **`RELEASING.md`** or release checklist                         | 🟡 Low | ⚪ Trivial | Docs         |
-| 21  | **Add buildflow to flake.nix + AGENTS.md**                      | 🟡 Low | 🔵 Low     | DevEx        |
-| 22  | **`pgregory/rapid`** for property-based testing                 | 🟡 Low | 🔵 Low     | Testing      |
-| 23  | **`invopop/jsonschema`** for schema generation                  | 🟠 Med | 🔵 Low     | Docs/API     |
-| 24  | **CLI tool** for report conversion                              | 🟢 Low | 🔴 High    | Feature      |
-| 25  | **WebSocket live stream**                                       | 🟢 Low | 🔴 High    | Feature      |
+| #  | Task                                                            | Impact | Effort     | Category     |
+| -- | --------------------------------------------------------------- | ------ | ---------- | ------------ |
+| 1  | **Fix AGENTS.md Testing Patterns metrics** (146 tests, 3 fuzz)  | 🟡 Low | ⚪ Trivial | Docs         |
+| 2  | **Fix `flake.nix` description** (Go 1.26.3 → 1.26.4)            | 🟡 Low | ⚪ Trivial | Docs         |
+| 3  | **Add `buildReportFromCore` unit test**                         | 🟡 Low | ⚪ Trivial | Testing      |
+| 4  | **Add buildflow section to AGENTS.md**                          | 🟡 Low | ⚪ Trivial | Docs         |
+| 5  | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`) | 🟠 Med | 🔵 Low     | Architecture |
+| 6  | **NDJSON import** (trivial now with `buildReportFromCore`)      | 🟠 Med | 🔵 Low     | Feature      |
+| 7  | **v0.1.0 release**                                              | 🟠 Med | 🟡 Med     | Release      |
+| 8  | **JSON Schema file**                                            | 🟠 Med | 🔵 Low     | Docs/API     |
+| 9  | **CSV/TSV export**                                              | 🟡 Low | 🔵 Low     | Feature      |
+| 10 | **Refactor `ServiceInfo` lifecycle concerns**                   | 🟠 Med | 🔴 High    | Architecture |
+| 11 | **Property-based `Diff` tests**                                 | 🟡 Low | 🔵 Low     | Testing      |
+| 12 | **Property-based `MigrateReport` tests**                        | 🟡 Low | 🔵 Low     | Testing      |
+| 13 | **Fuzz filter inputs**                                          | 🟡 Low | 🔵 Low     | Testing      |
+| 14 | **HTML golden-file test**                                       | 🟠 Med | 🟡 Med     | Testing      |
+| 15 | **`Report` constructor validation**                             | 🟠 Med | 🟡 Med     | Architecture |
+| 16 | **Prometheus exporter example**                                 | 🟠 Med | 🟡 Med     | Docs         |
+| 17 | **Add `actionlint` to CI**                                      | 🟡 Low | ⚪ Trivial | CI           |
+| 18 | **GitHub Actions version upgrades**                             | 🟡 Low | ⚪ Trivial | CI           |
+| 19 | **Flake app for coverage gate**                                 | 🟡 Low | 🔵 Low     | DevEx        |
+| 20 | **`RELEASING.md`** or release checklist                         | 🟡 Low | ⚪ Trivial | Docs         |
+| 21 | **Add buildflow to flake.nix + AGENTS.md**                      | 🟡 Low | 🔵 Low     | DevEx        |
+| 22 | **`pgregory/rapid`** for property-based testing                 | 🟡 Low | 🔵 Low     | Testing      |
+| 23 | **`invopop/jsonschema`** for schema generation                  | 🟠 Med | 🔵 Low     | Docs/API     |
+| 24 | **CLI tool** for report conversion                              | 🟢 Low | 🔴 High    | Feature      |
+| 25 | **WebSocket live stream**                                       | 🟢 Low | 🔴 High    | Feature      |
 
 ---
 

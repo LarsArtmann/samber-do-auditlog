@@ -37,6 +37,7 @@ All styles use the existing warm-amber design tokens (`var(--accent)`, `var(--bg
 **After:** Both functions now accept `ctx context.Context` as their first parameter. The `handleSSE` handler uses `r.Context()` (the request context, which is cancelled on client disconnect — identical semantics to `stream.Context()`). All 3 call-site nolints removed.
 
 **Remaining nolints:**
+
 - `renderAllFragments` has a function-level `//nolint:contextcheck` — this is fundamental: templ components return `templ.Component` (not `func(ctx)`), and the linter traces into their constructors. The context IS passed, just via `renderToString(ctx, component)` → `component.Render(ctx, w)`. This is a templ/linter architectural mismatch, not lazy code.
 - `handleExportHTML` has `//nolint:contextcheck` — `WriteHTML` takes `io.Writer`, not `context.Context`. Can't be fixed without changing the auditlog library's public API.
 
@@ -55,18 +56,18 @@ New `TestCSSCompleteness` test that asserts every CSS class used in `fragments.t
 
 **Before → After coverage on key helpers:**
 
-| Function | Before | After |
-|---|---|---|
-| `buildStatsEntries` | 42.9% | **100%** |
-| `providerIcon` | 66.7% | **100%** |
-| `statusIcon` | 66.7% | **100%** |
-| `eventBadgeColor` | 66.7% | **100%** |
-| `eventBadgeLabel` | 66.7% | **100%** |
-| `countErrors` | 80.0% | **100%** |
-| `computeLegendItems` | untested | **100%** |
-| `timelineMaxDurations` | 83.3% | **100%** |
-| `waveformBounds` | untested | 91.7% |
-| `waveformTooltip` | untested | **100%** |
+| Function               | Before   | After    |
+| ---------------------- | -------- | -------- |
+| `buildStatsEntries`    | 42.9%    | **100%** |
+| `providerIcon`         | 66.7%    | **100%** |
+| `statusIcon`           | 66.7%    | **100%** |
+| `eventBadgeColor`      | 66.7%    | **100%** |
+| `eventBadgeLabel`      | 66.7%    | **100%** |
+| `countErrors`          | 80.0%    | **100%** |
+| `computeLegendItems`   | untested | **100%** |
+| `timelineMaxDurations` | 83.3%    | **100%** |
+| `waveformBounds`       | untested | 91.7%    |
+| `waveformTooltip`      | untested | **100%** |
 
 Every non-generated function in `fragments.go` is now at 91-100% coverage.
 
@@ -91,6 +92,7 @@ Each tests both the empty and populated paths, verifying specific HTML substring
 ### Live package coverage: 77.9% (up from 72.1%)
 
 Improved but still below what's achievable. The remaining gaps are:
+
 - **`fragments_templ.go`** (generated code, excluded from gate) — 58-87% per function. The generated templ switch statements have many branches; covering all would require testing every permutation of nil/non-nil fields.
 - **`server.go` export handlers** — `handleExportNDJSON` (50%), `handleExportHTML` (50%) — error paths not tested. These would need a plugin that fails on write.
 - **`hub.go` `OnEvent`** (75%) — JSON marshal error path not tested.
@@ -231,26 +233,26 @@ The coverage gate excludes `*_templ.go` from the aggregate, but `live/` as a pac
 
 ## Verification Snapshot
 
-| Check | Result |
-|---|---|
-| `go build ./...` | PASS |
-| `go vet ./...` | PASS |
-| `go generate ./...` | PASS (zero drift) |
-| `go test -race ./... -count=1` | PASS (all packages) |
-| `golangci-lint run ./...` | **0 issues** |
-| Coverage gate (`scripts/coverage-gate.sh`) | **95.8%** (threshold: 94%) |
-| `live/` package coverage | 77.9% (was 72.1%) |
-| LSP restart | Done (gopls, golangci-lint-ls, templ, vtsls) |
+| Check                                      | Result                                       |
+| ------------------------------------------ | -------------------------------------------- |
+| `go build ./...`                           | PASS                                         |
+| `go vet ./...`                             | PASS                                         |
+| `go generate ./...`                        | PASS (zero drift)                            |
+| `go test -race ./... -count=1`             | PASS (all packages)                          |
+| `golangci-lint run ./...`                  | **0 issues**                                 |
+| Coverage gate (`scripts/coverage-gate.sh`) | **95.8%** (threshold: 94%)                   |
+| `live/` package coverage                   | 77.9% (was 72.1%)                            |
+| LSP restart                                | Done (gopls, golangci-lint-ls, templ, vtsls) |
 
 ## Files Changed This Session
 
-| File | Change | Lines |
-|---|---|---|
-| `live/dashboard.css` | Added graph + timeline CSS | +109 lines (334→443) |
-| `live/server.go` | Context threading: `sendDatastarSnapshot(ctx, stream)` + `sendDatastarComplete(ctx, stream)` | ~15 lines changed |
-| `live/fragments.go` | `errorCountClass`/`healthLabel` use constants; `goconst` nolint on provider types; removed `contextcheck` from 3 call sites | ~5 lines changed |
-| `live/fragments_internal_test.go` | CSS completeness test + helper coverage tests + templ render tests | +700 lines (157→857) |
-| `live/dashboard.go` | `goconst` nolint on event type string list | 1 line changed |
+| File                              | Change                                                                                                                      | Lines                |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| `live/dashboard.css`              | Added graph + timeline CSS                                                                                                  | +109 lines (334→443) |
+| `live/server.go`                  | Context threading: `sendDatastarSnapshot(ctx, stream)` + `sendDatastarComplete(ctx, stream)`                                | ~15 lines changed    |
+| `live/fragments.go`               | `errorCountClass`/`healthLabel` use constants; `goconst` nolint on provider types; removed `contextcheck` from 3 call sites | ~5 lines changed     |
+| `live/fragments_internal_test.go` | CSS completeness test + helper coverage tests + templ render tests                                                          | +700 lines (157→857) |
+| `live/dashboard.go`               | `goconst` nolint on event type string list                                                                                  | 1 line changed       |
 
 ## Commits This Session
 

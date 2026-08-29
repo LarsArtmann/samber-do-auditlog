@@ -28,23 +28,23 @@ Closing coverage on `migration.go` (55.6% → 90%+) and `computeServiceStatusFro
 
 Sorted by impact × urgency:
 
-| #   | Task                                                                                     | Impact | Effort | Why                        |
-| --- | ---------------------------------------------------------------------------------------- | ------ | ------ | -------------------------- |
-| 1   | Update TODO_LIST: mark 4 stale items done, add new completed items                       | HIGH   | 15min  | Prevents rework            |
-| 2   | Update FEATURES.md: add migration, godoc examples, fuzz test, iterative BFS, single-lock | HIGH   | 15min  | Accurate feature inventory |
-| 3   | Update AGENTS.md: reflect current 94.3% coverage, 109 tests, migration.go, new files     | MED    | 15min  | Session context accuracy   |
-| 4   | Cover computeServiceStatusFromInfo (55.6% → 100%)                                        | HIGH   | 15min  | New code, low coverage     |
-| 5   | Cover countUniqueScopes (75% → 100%)                                                     | MED    | 10min  | Nested scope tree          |
-| 6   | Cover inferServiceType (75% → 100%)                                                      | MED    | 10min  | Provider type detection    |
-| 7   | Cover mermaidLabelForRef (0% → 100%)                                                     | MED    | 5min   | Last 0% function           |
-| 8   | Cover WriteMermaid error path (84% → 100%)                                               | MED    | 10min  | Export robustness          |
-| 9   | Cover ExportFilteredToFile error path (87.5% → 100%)                                     | LOW    | 10min  | Error handling             |
-| 10  | Cover updateInvocationAggregate (84.6% → 95%+)                                           | MED    | 15min  | Hot path coverage          |
-| 11  | Cover RecordHealthCheckWithContext cancel (88.9% → 100%)                                 | LOW    | 10min  | Context cancel path        |
-| 12  | Cover enrichCapabilities nil-ref + empty scope (91.7% → 100%)                            | LOW    | 10min  | Edge case                  |
-| 13  | Cover ResolveServiceScope ancestor walking (90% → 100%)                                  | LOW    | 10min  | Scope resolution           |
-| 14  | Update docs/planning/execution-plan.md to reflect completed items                        | LOW    | 10min  | Planning accuracy          |
-| 15  | Verify: full build + test + lint + coverage report                                       | HIGH   | 5min   | Final gate                 |
+| #  | Task                                                                                     | Impact | Effort | Why                        |
+| -- | ---------------------------------------------------------------------------------------- | ------ | ------ | -------------------------- |
+| 1  | Update TODO_LIST: mark 4 stale items done, add new completed items                       | HIGH   | 15min  | Prevents rework            |
+| 2  | Update FEATURES.md: add migration, godoc examples, fuzz test, iterative BFS, single-lock | HIGH   | 15min  | Accurate feature inventory |
+| 3  | Update AGENTS.md: reflect current 94.3% coverage, 109 tests, migration.go, new files     | MED    | 15min  | Session context accuracy   |
+| 4  | Cover computeServiceStatusFromInfo (55.6% → 100%)                                        | HIGH   | 15min  | New code, low coverage     |
+| 5  | Cover countUniqueScopes (75% → 100%)                                                     | MED    | 10min  | Nested scope tree          |
+| 6  | Cover inferServiceType (75% → 100%)                                                      | MED    | 10min  | Provider type detection    |
+| 7  | Cover mermaidLabelForRef (0% → 100%)                                                     | MED    | 5min   | Last 0% function           |
+| 8  | Cover WriteMermaid error path (84% → 100%)                                               | MED    | 10min  | Export robustness          |
+| 9  | Cover ExportFilteredToFile error path (87.5% → 100%)                                     | LOW    | 10min  | Error handling             |
+| 10 | Cover updateInvocationAggregate (84.6% → 95%+)                                           | MED    | 15min  | Hot path coverage          |
+| 11 | Cover RecordHealthCheckWithContext cancel (88.9% → 100%)                                 | LOW    | 10min  | Context cancel path        |
+| 12 | Cover enrichCapabilities nil-ref + empty scope (91.7% → 100%)                            | LOW    | 10min  | Edge case                  |
+| 13 | Cover ResolveServiceScope ancestor walking (90% → 100%)                                  | LOW    | 10min  | Scope resolution           |
+| 14 | Update docs/planning/execution-plan.md to reflect completed items                        | LOW    | 10min  | Planning accuracy          |
+| 15 | Verify: full build + test + lint + coverage report                                       | HIGH   | 5min   | Final gate                 |
 
 ---
 
@@ -78,16 +78,16 @@ Sorted by impact × urgency:
 
 ### Wave B: Coverage — migration.go (4% → 64% of value)
 
-| #   | Micro-task                                                      | Est  | Target          |
-| --- | --------------------------------------------------------------- | ---- | --------------- |
-| B1  | Test computeServiceStatusFromInfo: registered status            | 3min | migration.go:56 |
-| B2  | Test computeServiceStatusFromInfo: active status                | 3min | migration.go:56 |
-| B3  | Test computeServiceStatusFromInfo: invocation_error status      | 3min | migration.go:56 |
-| B4  | Test computeServiceStatusFromInfo: shutdown status              | 3min | migration.go:56 |
-| B5  | Test computeServiceStatusFromInfo: shutdown_error status        | 3min | migration.go:56 |
-| B6  | Test countUniqueScopes: nested children                         | 3min | migration.go:46 |
-| B7  | Test countUniqueScopes: empty tree                              | 2min | migration.go:46 |
-| B8  | Test MigrateReport: service with existing status (no overwrite) | 3min | migration.go    |
+| #  | Micro-task                                                      | Est  | Target          |
+| -- | --------------------------------------------------------------- | ---- | --------------- |
+| B1 | Test computeServiceStatusFromInfo: registered status            | 3min | migration.go:56 |
+| B2 | Test computeServiceStatusFromInfo: active status                | 3min | migration.go:56 |
+| B3 | Test computeServiceStatusFromInfo: invocation_error status      | 3min | migration.go:56 |
+| B4 | Test computeServiceStatusFromInfo: shutdown status              | 3min | migration.go:56 |
+| B5 | Test computeServiceStatusFromInfo: shutdown_error status        | 3min | migration.go:56 |
+| B6 | Test countUniqueScopes: nested children                         | 3min | migration.go:46 |
+| B7 | Test countUniqueScopes: empty tree                              | 2min | migration.go:46 |
+| B8 | Test MigrateReport: service with existing status (no overwrite) | 3min | migration.go    |
 
 ### Wave C: Coverage — recorder.go hot paths
 
@@ -108,14 +108,14 @@ Sorted by impact × urgency:
 
 ### Wave D: Final Verification
 
-| #   | Micro-task                                     | Est  | Target       |
-| --- | ---------------------------------------------- | ---- | ------------ |
-| D1  | Run go build ./...                             | 1min | full project |
-| D2  | Run go test -timeout 60s -count=1 -cover ./... | 2min | full project |
-| D3  | Run golangci-lint run                          | 2min | full project |
-| D4  | Check coverage report for remaining gaps       | 3min | coverage     |
-| D5  | Verify no regressions in example_test.go       | 2min | examples     |
-| D6  | Update docs/planning/execution-plan.md status  | 5min | planning     |
+| #  | Micro-task                                     | Est  | Target       |
+| -- | ---------------------------------------------- | ---- | ------------ |
+| D1 | Run go build ./...                             | 1min | full project |
+| D2 | Run go test -timeout 60s -count=1 -cover ./... | 2min | full project |
+| D3 | Run golangci-lint run                          | 2min | full project |
+| D4 | Check coverage report for remaining gaps       | 3min | coverage     |
+| D5 | Verify no regressions in example_test.go       | 2min | examples     |
+| D6 | Update docs/planning/execution-plan.md status  | 5min | planning     |
 
 ---
 

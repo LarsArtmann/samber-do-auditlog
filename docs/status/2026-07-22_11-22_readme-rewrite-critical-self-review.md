@@ -1,7 +1,7 @@
 # Status: README.md Rewrite — Critical Self-Review
 
-**Date:** 2026-07-22 11:22  
-**Session scope:** Rewrite `README.md` from 569 lines to 281 lines as a high-conversion "sales page"  
+**Date:** 2026-07-22 11:22\
+**Session scope:** Rewrite `README.md` from 569 lines to 281 lines as a high-conversion "sales page"\
 **Status:** PARTIALLY DONE — shipped a much better README but left real problems on the table
 
 ---
@@ -116,71 +116,71 @@ The rewrite removed ALL of these. These are critical for anyone who wants to pro
 
 ## Full Next Steps List (Up to 50)
 
-| #  | Task | Priority | Effort |
-| -- | ---- | -------- | ------ |
-| 1  | Fix Mermaid example to use real slugified node IDs | P0 | 15m |
-| 2  | Restore API Reference link to website instead of pkg.go.dev | P0 | 1m |
-| 3  | Add "Loading & Migrating Reports" section with `LoadReport`/`MigrateReport`/`ReplayEvents` | P0 | 20m |
-| 4  | Add CHANGELOG.md entry for README rewrite | P0 | 5m |
-| 5  | Add `DO_AUDITLOG_ENABLED` env var mention in Quick Start or Features | P1 | 5m |
-| 6  | Document `Enabled: false` zero-value → env var fallback behavior | P1 | 5m |
-| 7  | Add `Report.Diff(other)` mention (CI/CD use case) | P1 | 10m |
-| 8  | Add `MaxEvents` / `DroppedEventCount` mention (OOM safety) | P1 | 5m |
-| 9  | Add condensed JSON output example (5-10 lines) | P1 | 10m |
-| 10 | Add brief Security section (CSP, fuzz, gosec) | P1 | 10m |
-| 11 | Sync website `features.ts` with README features table | P1 | 10m |
-| 12 | Add `STABILITY.md` link from README | P2 | 1m |
-| 13 | Add "Related Tools" mini-comparison or link | P2 | 10m |
-| 14 | Run markdown linter on README | P2 | 5m |
-| 15 | Add GitHub topic tags to repo settings | P2 | 2m |
-| 16 | Add Go Report Card badge | P2 | 5m |
-| 17 | Add latest release badge | P2 | 5m |
-| 18 | Add "Star this repo" CTA | P2 | 1m |
-| 19 | Add CONTRIBUTING.md link in alpha notice | P2 | 1m |
-| 20 | Add use-cases section (debugging, observability, CI/CD, performance) | P2 | 15m |
-| 21 | Verify README renders correctly on GitHub (not just locally) | P2 | 5m |
-| 22 | Check `.prettierignore` — does oxfmt reformat README on commit? | P2 | 5m |
-| 23 | Add `ExportFilteredToFile` to export formats table or filtered section | P2 | 2m |
-| 24 | Add `WriteTable` format list (markdown, yaml, toml, xml, json, csv, etc.) | P3 | 5m |
-| 25 | Consider adding a "Design Goals" or "Philosophy" section | P3 | 15m |
-| 26 | Add cross-links between README and website guides inline | P3 | 10m |
-| 27 | Verify the screenshots are current (not stale from older design) | P3 | 10m |
-| 28 | Add `gofmt`-style code block consistency check | P3 | 5m |
-| 29 | Consider adding a table of contents for quick navigation | P3 | 10m |
-| 30 | Add `govulncheck` badge or mention | P3 | 5m |
-| 31 | Check if README is used as website landing page meta description | P3 | 5m |
-| 32 | Add `DroppedEventCount()` to the API surface | P3 | 2m |
-| 33 | Mention schema versioning (release tags vs schema version independence) | P3 | 10m |
-| 34 | Add `ReplayEvents` as the inverse of hook-based recording | P3 | 5m |
-| 35 | Consider adding architecture diagram or data flow visual | P3 | 20m |
-| 36 | Add `RecordHealthCheckWithContext` variant in Health Checks section | P3 | 2m |
-| 37 | Check if `go get` needs `@latest` or version pin | P3 | 2m |
-| 38 | Verify CLI flags match actual flags (`-f`, `-o`) | P3 | 5m |
-| 39 | Add "Replay" workflow: NDJSON → `ReadEvents` → `ReplayEvents` → Report | P3 | 10m |
-| 40 | Consider adding a FAQ section | P3 | 15m |
-| 41 | Add sponsor/funding link if applicable | P3 | 2m |
-| 42 | Verify all internal anchors work (e.g., "see screenshots above") | P3 | 5m |
-| 43 | Add `ResolveServiceScope` mention for advanced health check use | P3 | 5m |
-| 44 | Consider adding benchmark comparison vs no-plugin baseline | P3 | 10m |
-| 45 | Add mention of `a-h/templ` as the HTML template engine | P4 | 2m |
-| 46 | Consider adding "Migration from v0.1.0" callout | P4 | 5m |
-| 47 | Add `Index()` method mention for O(1) multi-query use cases | P4 | 5m |
-| 48 | Consider adding Persian/Tabs for different audiences (quick vs detailed) | P4 | 20m |
-| 49 | Add mention of 5 fuzz targets as a quality signal | P4 | 2m |
-| 50 | Consider adding a "Limitations" section (health check timing, no before-hook) | P4 | 10m |
+| #  | Task                                                                                       | Priority | Effort |
+| -- | ------------------------------------------------------------------------------------------ | -------- | ------ |
+| 1  | Fix Mermaid example to use real slugified node IDs                                         | P0       | 15m    |
+| 2  | Restore API Reference link to website instead of pkg.go.dev                                | P0       | 1m     |
+| 3  | Add "Loading & Migrating Reports" section with `LoadReport`/`MigrateReport`/`ReplayEvents` | P0       | 20m    |
+| 4  | Add CHANGELOG.md entry for README rewrite                                                  | P0       | 5m     |
+| 5  | Add `DO_AUDITLOG_ENABLED` env var mention in Quick Start or Features                       | P1       | 5m     |
+| 6  | Document `Enabled: false` zero-value → env var fallback behavior                           | P1       | 5m     |
+| 7  | Add `Report.Diff(other)` mention (CI/CD use case)                                          | P1       | 10m    |
+| 8  | Add `MaxEvents` / `DroppedEventCount` mention (OOM safety)                                 | P1       | 5m     |
+| 9  | Add condensed JSON output example (5-10 lines)                                             | P1       | 10m    |
+| 10 | Add brief Security section (CSP, fuzz, gosec)                                              | P1       | 10m    |
+| 11 | Sync website `features.ts` with README features table                                      | P1       | 10m    |
+| 12 | Add `STABILITY.md` link from README                                                        | P2       | 1m     |
+| 13 | Add "Related Tools" mini-comparison or link                                                | P2       | 10m    |
+| 14 | Run markdown linter on README                                                              | P2       | 5m     |
+| 15 | Add GitHub topic tags to repo settings                                                     | P2       | 2m     |
+| 16 | Add Go Report Card badge                                                                   | P2       | 5m     |
+| 17 | Add latest release badge                                                                   | P2       | 5m     |
+| 18 | Add "Star this repo" CTA                                                                   | P2       | 1m     |
+| 19 | Add CONTRIBUTING.md link in alpha notice                                                   | P2       | 1m     |
+| 20 | Add use-cases section (debugging, observability, CI/CD, performance)                       | P2       | 15m    |
+| 21 | Verify README renders correctly on GitHub (not just locally)                               | P2       | 5m     |
+| 22 | Check `.prettierignore` — does oxfmt reformat README on commit?                            | P2       | 5m     |
+| 23 | Add `ExportFilteredToFile` to export formats table or filtered section                     | P2       | 2m     |
+| 24 | Add `WriteTable` format list (markdown, yaml, toml, xml, json, csv, etc.)                  | P3       | 5m     |
+| 25 | Consider adding a "Design Goals" or "Philosophy" section                                   | P3       | 15m    |
+| 26 | Add cross-links between README and website guides inline                                   | P3       | 10m    |
+| 27 | Verify the screenshots are current (not stale from older design)                           | P3       | 10m    |
+| 28 | Add `gofmt`-style code block consistency check                                             | P3       | 5m     |
+| 29 | Consider adding a table of contents for quick navigation                                   | P3       | 10m    |
+| 30 | Add `govulncheck` badge or mention                                                         | P3       | 5m     |
+| 31 | Check if README is used as website landing page meta description                           | P3       | 5m     |
+| 32 | Add `DroppedEventCount()` to the API surface                                               | P3       | 2m     |
+| 33 | Mention schema versioning (release tags vs schema version independence)                    | P3       | 10m    |
+| 34 | Add `ReplayEvents` as the inverse of hook-based recording                                  | P3       | 5m     |
+| 35 | Consider adding architecture diagram or data flow visual                                   | P3       | 20m    |
+| 36 | Add `RecordHealthCheckWithContext` variant in Health Checks section                        | P3       | 2m     |
+| 37 | Check if `go get` needs `@latest` or version pin                                           | P3       | 2m     |
+| 38 | Verify CLI flags match actual flags (`-f`, `-o`)                                           | P3       | 5m     |
+| 39 | Add "Replay" workflow: NDJSON → `ReadEvents` → `ReplayEvents` → Report                     | P3       | 10m    |
+| 40 | Consider adding a FAQ section                                                              | P3       | 15m    |
+| 41 | Add sponsor/funding link if applicable                                                     | P3       | 2m     |
+| 42 | Verify all internal anchors work (e.g., "see screenshots above")                           | P3       | 5m     |
+| 43 | Add `ResolveServiceScope` mention for advanced health check use                            | P3       | 5m     |
+| 44 | Consider adding benchmark comparison vs no-plugin baseline                                 | P3       | 10m    |
+| 45 | Add mention of `a-h/templ` as the HTML template engine                                     | P4       | 2m     |
+| 46 | Consider adding "Migration from v0.1.0" callout                                            | P4       | 5m     |
+| 47 | Add `Index()` method mention for O(1) multi-query use cases                                | P4       | 5m     |
+| 48 | Consider adding Persian/Tabs for different audiences (quick vs detailed)                   | P4       | 20m    |
+| 49 | Add mention of 5 fuzz targets as a quality signal                                          | P4       | 2m     |
+| 50 | Consider adding a "Limitations" section (health check timing, no before-hook)              | P4       | 10m    |
 
 ---
 
 ## Session Metrics
 
-| Metric | Before | After | Delta |
-| ------ | ------ | ----- | ----- |
-| Line count | 569 | 281 | -288 (-51%) |
-| Code blocks | 12 | 5 | -7 |
-| API tables | 4 (60+ rows) | 0 | -4 |
-| Screenshot sections | 1 (5 images) | 1 (5 images) | 0 |
-| Sections | 15 | 13 | -2 |
-| Compile-verified code | No | Yes | Fixed |
+| Metric                | Before       | After        | Delta       |
+| --------------------- | ------------ | ------------ | ----------- |
+| Line count            | 569          | 281          | -288 (-51%) |
+| Code blocks           | 12           | 5            | -7          |
+| API tables            | 4 (60+ rows) | 0            | -4          |
+| Screenshot sections   | 1 (5 images) | 1 (5 images) | 0           |
+| Sections              | 15           | 13           | -2          |
+| Compile-verified code | No           | Yes          | Fixed       |
 
 ---
 

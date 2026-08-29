@@ -161,33 +161,33 @@ The previous session's status reports (`2026-06-21_02-07` and `2026-06-21_03-11`
 
 Sorted by impact × value ÷ effort (highest first).
 
-| #   | Task                                                                | Impact | Effort | Notes                                                        |
-| --- | ------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------------ |
-| 1   | **Tag v0.2.0**                                                      | HIGH   | 5m     | D2 + go-output + Plugin API parity. Non-breaking. Ready now. |
-| 2   | **Typed identifiers batch** (`ContainerID`/`ScopeID`/`ServiceName`) | HIGH   | 4h     | 65+ compile errors; zero bugs; do once. v0.1.0 batch.        |
-| 3   | **`ServiceInfo` split** into identity/lifecycle/health/graph        | HIGH   | 6h     | Paired with #2. God object decomposition.                    |
-| 4   | **File upstream PR: add `DedupEdges` to go-output/d2**              | HIGH   | 30m    | Eliminates `dedupGraphEdges`, unifies dedup path.            |
-| 5   | **File upstream PR: graph-attribute setter for go-output**          | HIGH   | 1h     | Restores DOT bgcolor + edge colors.                          |
-| 6   | **Add CSV/TSV to `example/exportReports()`**                        | LOW    | 10m    | Closes the example demo gap.                                 |
-| 7   | **Property-based testing for Diff/Filter/Migrate**                  | MEDIUM | 2h     | `rapid` or `gopter`. Depguard change needed.                 |
-| 8   | **Markdown table export via go-output/markdown**                    | LOW    | 30m    | Zero new deps. Format breadth.                               |
-| 9   | **ASCII tree export via go-output/tree**                            | LOW    | 30m    | Zero new deps. Format breadth.                               |
-| 10  | **WebSocket live stream bridge**                                    | MEDIUM | 3h     | `OnEvent` → WebSocket for real-time dashboards.              |
-| 11  | **Prometheus metrics exporter**                                     | MEDIUM | 2h     | `OnEvent` → Prometheus.                                      |
-| 12  | **OTel bridge example**                                             | MEDIUM | 2h     | `OnEvent` → OTel spans.                                      |
-| 13  | **Restore DOT dark background**                                     | LOW    | 1h     | Blocked on #5 (upstream go-output).                          |
-| 14  | **Add `auditlog graph` CLI subcommand**                             | LOW    | 1h     | Standalone diagram generation from JSON.                     |
-| 15  | **Integrate govulncheck into pre-commit hook**                      | LOW    | 15m    | Currently CI-only.                                           |
-| 16  | **Collapse README diagram sections into one**                       | LOW    | 10m    | Or keep separate — style preference.                         |
-| 17  | **Add bench for `buildDiagramNodes`/`buildDiagramEdges`**           | LOW    | 10m    | Hot-path coverage.                                           |
-| 18  | **D2 classes for per-type node coloring**                           | LOW    | 30m    | Color nodes by provider type.                                |
-| 19  | **Consider go-output `Stream(w)` instead of `Render()+Write`**      | LOW    | 30m    | Memory for huge graphs.                                      |
-| 20  | **Document the DOT bgcolor tradeoff in FEATURES.md**                | LOW    | 5m     | User expectation mgmt.                                       |
-| 21  | **Run `brutal-self-review` skill**                                  | MEDIUM | 30m    | Honest critique of go-output integration.                    |
-| 22  | **Update go-output to next release**                                | LOW    | 10m    | Watch for v0.18.0+ features.                                 |
-| 23  | **Add `--format d2` to `auditlog info` subcommand**                 | LOW    | 10m    | Currently convert-only.                                      |
-| 24  | **Multi-module repository split**                                   | LOW    | 4h     | Revisit at 5+ packages (currently 1).                        |
-| 25  | **Open GitHub Discussion: "diagram format priorities?"**            | LOW    | 5m     | User signal for future formats.                              |
+| #  | Task                                                                | Impact | Effort | Notes                                                        |
+| -- | ------------------------------------------------------------------- | ------ | ------ | ------------------------------------------------------------ |
+| 1  | **Tag v0.2.0**                                                      | HIGH   | 5m     | D2 + go-output + Plugin API parity. Non-breaking. Ready now. |
+| 2  | **Typed identifiers batch** (`ContainerID`/`ScopeID`/`ServiceName`) | HIGH   | 4h     | 65+ compile errors; zero bugs; do once. v0.1.0 batch.        |
+| 3  | **`ServiceInfo` split** into identity/lifecycle/health/graph        | HIGH   | 6h     | Paired with #2. God object decomposition.                    |
+| 4  | **File upstream PR: add `DedupEdges` to go-output/d2**              | HIGH   | 30m    | Eliminates `dedupGraphEdges`, unifies dedup path.            |
+| 5  | **File upstream PR: graph-attribute setter for go-output**          | HIGH   | 1h     | Restores DOT bgcolor + edge colors.                          |
+| 6  | **Add CSV/TSV to `example/exportReports()`**                        | LOW    | 10m    | Closes the example demo gap.                                 |
+| 7  | **Property-based testing for Diff/Filter/Migrate**                  | MEDIUM | 2h     | `rapid` or `gopter`. Depguard change needed.                 |
+| 8  | **Markdown table export via go-output/markdown**                    | LOW    | 30m    | Zero new deps. Format breadth.                               |
+| 9  | **ASCII tree export via go-output/tree**                            | LOW    | 30m    | Zero new deps. Format breadth.                               |
+| 10 | **WebSocket live stream bridge**                                    | MEDIUM | 3h     | `OnEvent` → WebSocket for real-time dashboards.              |
+| 11 | **Prometheus metrics exporter**                                     | MEDIUM | 2h     | `OnEvent` → Prometheus.                                      |
+| 12 | **OTel bridge example**                                             | MEDIUM | 2h     | `OnEvent` → OTel spans.                                      |
+| 13 | **Restore DOT dark background**                                     | LOW    | 1h     | Blocked on #5 (upstream go-output).                          |
+| 14 | **Add `auditlog graph` CLI subcommand**                             | LOW    | 1h     | Standalone diagram generation from JSON.                     |
+| 15 | **Integrate govulncheck into pre-commit hook**                      | LOW    | 15m    | Currently CI-only.                                           |
+| 16 | **Collapse README diagram sections into one**                       | LOW    | 10m    | Or keep separate — style preference.                         |
+| 17 | **Add bench for `buildDiagramNodes`/`buildDiagramEdges`**           | LOW    | 10m    | Hot-path coverage.                                           |
+| 18 | **D2 classes for per-type node coloring**                           | LOW    | 30m    | Color nodes by provider type.                                |
+| 19 | **Consider go-output `Stream(w)` instead of `Render()+Write`**      | LOW    | 30m    | Memory for huge graphs.                                      |
+| 20 | **Document the DOT bgcolor tradeoff in FEATURES.md**                | LOW    | 5m     | User expectation mgmt.                                       |
+| 21 | **Run `brutal-self-review` skill**                                  | MEDIUM | 30m    | Honest critique of go-output integration.                    |
+| 22 | **Update go-output to next release**                                | LOW    | 10m    | Watch for v0.18.0+ features.                                 |
+| 23 | **Add `--format d2` to `auditlog info` subcommand**                 | LOW    | 10m    | Currently convert-only.                                      |
+| 24 | **Multi-module repository split**                                   | LOW    | 4h     | Revisit at 5+ packages (currently 1).                        |
+| 25 | **Open GitHub Discussion: "diagram format priorities?"**            | LOW    | 5m     | User signal for future formats.                              |
 
 ---
 

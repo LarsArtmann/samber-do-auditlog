@@ -12,16 +12,16 @@ A BuildFlow run (commit `ceca5b4`) triggered `go-auto-upgrade`, which catastroph
 
 ## a) FULLY DONE
 
-| #   | Item                       | Details                                                                                                                                                  |
-| --- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Identified root cause      | `go-auto-upgrade` migrated to `encoding/json/v2` + `jsontext` (build-constraint-excluded in Go 1.26.4) AND deleted `CompareServiceRefs()` from `diff.go` |
-| 2   | Reverted 9 files           | `export.go`, `report.go`, `ndjson.go`, `loader.go`, `migration.go`, `diff.go`, `cmd/genschema/main.go`, `go.mod`, `go.sum` — all restored to HEAD        |
-| 3   | Preserved harmless changes | `.gitignore` (JS/TS patterns from gitignore-upserter) and `flake.lock` (nixpkgs bump) kept — both benign                                                 |
-| 4   | `go mod tidy`              | Clean — go.sum consistent with go.mod, no drift                                                                                                          |
-| 5   | `go vet ./...`             | Clean                                                                                                                                                    |
-| 6   | `go build ./...`           | Clean — all 4 packages compile                                                                                                                           |
-| 7   | `go test -race ./...`      | All pass: `auditlog` (1.3s), `cmd/auditlog` (1.5s), `cmd/genschema` + `example` (no test files)                                                          |
-| 8   | `go generate ./...`        | Clean — schema regenerated (5777 bytes)                                                                                                                  |
+| # | Item                       | Details                                                                                                                                                  |
+| - | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | Identified root cause      | `go-auto-upgrade` migrated to `encoding/json/v2` + `jsontext` (build-constraint-excluded in Go 1.26.4) AND deleted `CompareServiceRefs()` from `diff.go` |
+| 2 | Reverted 9 files           | `export.go`, `report.go`, `ndjson.go`, `loader.go`, `migration.go`, `diff.go`, `cmd/genschema/main.go`, `go.mod`, `go.sum` — all restored to HEAD        |
+| 3 | Preserved harmless changes | `.gitignore` (JS/TS patterns from gitignore-upserter) and `flake.lock` (nixpkgs bump) kept — both benign                                                 |
+| 4 | `go mod tidy`              | Clean — go.sum consistent with go.mod, no drift                                                                                                          |
+| 5 | `go vet ./...`             | Clean                                                                                                                                                    |
+| 6 | `go build ./...`           | Clean — all 4 packages compile                                                                                                                           |
+| 7 | `go test -race ./...`      | All pass: `auditlog` (1.3s), `cmd/auditlog` (1.5s), `cmd/genschema` + `example` (no test files)                                                          |
+| 8 | `go generate ./...`        | Clean — schema regenerated (5777 bytes)                                                                                                                  |
 
 **Project state: GREEN.** Only `.gitignore` and `flake.lock` differ from HEAD.
 
@@ -35,11 +35,11 @@ Nothing partially done. The revert was binary — either the code compiles or it
 
 ## c) NOT STARTED
 
-| #   | Item                                                | Notes                                                                                                                                                                                                                                         |
-| --- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Go-output v0.30.4 upgrade                           | The upgrade itself may be desirable (v0.30.4 could have real fixes), but it's blocked until Go 1.26.4's build constraints are resolved or go-output drops `encoding/json/v2`. Not attempted this session — out of scope for emergency repair. |
-| 2   | Committing the revert                               | Not committed — per project rules, no commit without explicit user instruction.                                                                                                                                                               |
-| 3   | Investigating whether Go 1.27+ would enable json/v2 | Not researched.                                                                                                                                                                                                                               |
+| # | Item                                                | Notes                                                                                                                                                                                                                                         |
+| - | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | Go-output v0.30.4 upgrade                           | The upgrade itself may be desirable (v0.30.4 could have real fixes), but it's blocked until Go 1.26.4's build constraints are resolved or go-output drops `encoding/json/v2`. Not attempted this session — out of scope for emergency repair. |
+| 2 | Committing the revert                               | Not committed — per project rules, no commit without explicit user instruction.                                                                                                                                                               |
+| 3 | Investigating whether Go 1.27+ would enable json/v2 | Not researched.                                                                                                                                                                                                                               |
 
 ---
 
@@ -223,12 +223,12 @@ This requires your decision on the Go version / json/v2 adoption timeline.
 
 The revert was committed and follow-up hardening was applied.
 
-| Item | Section | Resolution | Commit |
-| ---- | ------- | ---------- | ------ |
-| Committing the revert | §c NOT STARTED | DONE: revert committed with full documentation of the incident | `fb56b6a` |
-| `.gitignore` + `flake.lock` changes | §g Q1 | DONE: committed alongside the revert and subsequent commits | `c272da5` |
-| `GOEXPERIMENT=jsonv2` in devShell | §f item 4 | DONE: added to flake.nix to unblock potential go-output v0.30.4+ adoption | `c5e1f2c` |
-| govulncheck CI | §e item 2 | DONE: replaced `govulncheck-action@v1` with `go run golang.org/x/vuln/cmd/govulncheck` approach | `c5e1f2c` |
-| `encoding/json/v2` exclusion policy | §f item 23 | DONE: documented in AGENTS.md Gotchas (this session's remediation already added it) | `fb56b6a` |
+| Item                                | Section        | Resolution                                                                                      | Commit    |
+| ----------------------------------- | -------------- | ----------------------------------------------------------------------------------------------- | --------- |
+| Committing the revert               | §c NOT STARTED | DONE: revert committed with full documentation of the incident                                  | `fb56b6a` |
+| `.gitignore` + `flake.lock` changes | §g Q1          | DONE: committed alongside the revert and subsequent commits                                     | `c272da5` |
+| `GOEXPERIMENT=jsonv2` in devShell   | §f item 4      | DONE: added to flake.nix to unblock potential go-output v0.30.4+ adoption                       | `c5e1f2c` |
+| govulncheck CI                      | §e item 2      | DONE: replaced `govulncheck-action@v1` with `go run golang.org/x/vuln/cmd/govulncheck` approach | `c5e1f2c` |
+| `encoding/json/v2` exclusion policy | §f item 23     | DONE: documented in AGENTS.md Gotchas (this session's remediation already added it)             | `fb56b6a` |
 
 **Still open** (lower priority): `go-auto-upgrade` exclusion from BuildFlow config (item 1), go-output v0.30.4 evaluation (item 3), `nix-fmt` failure on `website/flake.nix` (item 5).

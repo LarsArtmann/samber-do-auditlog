@@ -66,7 +66,7 @@ flowchart TD
 
 Differences that make a swap a **breaking change**:
 
-1. Markdown code fence (` ```mermaid `) vs raw flowchart.
+1. Markdown code fence (`` ```mermaid ``) vs raw flowchart.
 2. **Pink** `classDef` (`#f9f`) vs the warm-amber `%%{init}%%` theme — a deliberate design-coherence regression (see AGENTS.md "Diagram themes").
 3. No provider-type icons (😴/⚡) in labels.
 4. **No edge deduplication** — `go-output` renders every edge added; auditlog's `writeDiagram` deduplicates (covered by `TestWriteMermaid_DuplicateEdges`). The dedup logic would have to stay, so little code is actually deleted.
@@ -117,16 +117,16 @@ root_evil]"svc[evil]"svc]
 
 Every fix was verified by reading the committed source code, not just the appendix claims:
 
-| #   | Issue                     | Claim                                                                                                | Verified                                                        |
-| --- | ------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| C1  | GraphStyle ignored        | Mermaid emits per-node `style <id> fill:...,stroke:...`; PlantUML emits inline `#[fill;line:stroke]` | ✅ `graph/mermaid.go:120-151`, `plantuml/plantuml.go:57,91-107` |
-| C2  | No edge dedup             | `DedupEdges()` method on `GraphRendererState`, opt-in                                                | ✅ `graph.go:157-181`                                           |
-| C3  | Markdown fence locked     | `SetCodeFence(bool)` on `MermaidRenderer`, default `true`                                            | ✅ `graph/mermaid.go:42-60`                                     |
-| C4  | Root pulls YAML/TOML      | `serialization` removed from root `go.mod` `require` block                                           | ✅ `go.mod` — only in `replace` (local dev)                     |
-| I5  | SlugifyID gaps            | Now replaces `. * [ ] { } ( )` in addition to `␣ - /`                                                | ✅ `escape/escape.go:70-81`                                     |
-| I6  | Hardcoded DOT attrs       | `SetRankDir(RankDir)`, `SetSplines(SplineStyle)`, `SetNodeSep`, `SetRankSep` + typed enums           | ✅ `graph/dot.go:44-98`, `graph/dot_enum.go`                    |
-| I7  | No io.Writer for diagrams | Already supported via `StreamingRendererFromRenderer()` adapter                                      | ✅ `streaming.go:24`                                            |
-| N8  | No stability promise      | ADR 006 documents stable vs experimental tiers                                                       | ✅ `docs/adr/006-api-stability.md`                              |
+| #  | Issue                     | Claim                                                                                                | Verified                                                        |
+| -- | ------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| C1 | GraphStyle ignored        | Mermaid emits per-node `style <id> fill:...,stroke:...`; PlantUML emits inline `#[fill;line:stroke]` | ✅ `graph/mermaid.go:120-151`, `plantuml/plantuml.go:57,91-107` |
+| C2 | No edge dedup             | `DedupEdges()` method on `GraphRendererState`, opt-in                                                | ✅ `graph.go:157-181`                                           |
+| C3 | Markdown fence locked     | `SetCodeFence(bool)` on `MermaidRenderer`, default `true`                                            | ✅ `graph/mermaid.go:42-60`                                     |
+| C4 | Root pulls YAML/TOML      | `serialization` removed from root `go.mod` `require` block                                           | ✅ `go.mod` — only in `replace` (local dev)                     |
+| I5 | SlugifyID gaps            | Now replaces `. * [ ] { } ( )` in addition to `␣ - /`                                                | ✅ `escape/escape.go:70-81`                                     |
+| I6 | Hardcoded DOT attrs       | `SetRankDir(RankDir)`, `SetSplines(SplineStyle)`, `SetNodeSep`, `SetRankSep` + typed enums           | ✅ `graph/dot.go:44-98`, `graph/dot_enum.go`                    |
+| I7 | No io.Writer for diagrams | Already supported via `StreamingRendererFromRenderer()` adapter                                      | ✅ `streaming.go:24`                                            |
+| N8 | No stability promise      | ADR 006 documents stable vs experimental tiers                                                       | ✅ `docs/adr/006-api-stability.md`                              |
 
 ### Dependency tree re-measured
 

@@ -1,7 +1,7 @@
 # Status: Dependabot PR Sweep — Self-Review
 
-**Date**: 2026-08-12 10:15  
-**Session scope**: Resolved 12 open Dependabot PRs (go-output, GitHub Actions, website pnpm deps)  
+**Date**: 2026-08-12 10:15\
+**Session scope**: Resolved 12 open Dependabot PRs (go-output, GitHub Actions, website pnpm deps)\
 **Commits**: `c2374b9`, `44ff5e9`, `8082550` (all pushed to origin/master by auto-git daemon)
 
 ---
@@ -9,6 +9,7 @@
 ## a) FULLY DONE
 
 ### go-output v0.35.0 → v0.37.0 (PRs #4, #6, #7, #8, #10)
+
 - All 12 go-output sub-modules bumped in lockstep (mono-versioning).
 - Added explicit indirect pins for `testhelpers` and `testhelpers/graphtest` at v0.37.0 to work around broken pseudo-version (`v0.0.0-...000`) in go-output v0.37.0's published go.mod.
 - `go mod tidy` — no drift.
@@ -18,10 +19,12 @@
 - `golangci-lint` (via BuildFlow) — 0 issues.
 
 ### GitHub Actions bumps (PRs #3, #5)
+
 - `actions/checkout` v4.2.2 → v7.0.1 (SHA-pinned) in all 7 jobs in ci.yml.
 - `actions/setup-go` v5.2.0 → v7.0.0 (SHA-pinned) in all 7 jobs in ci.yml.
 
 ### Website pnpm deps (PRs #9, #11, #12, #14, #15)
+
 - `astro` ^7.1.0 → ^7.2.1
 - `@tailwindcss/vite` ^4.3.1 → ^4.3.3
 - `@astrojs/check` ^0.9.9 → ^0.9.10
@@ -30,11 +33,13 @@
 - `pnpm run build` — website builds successfully (13 pages, CSP patched).
 
 ### PR #13 (TypeScript 7.0.2) — closed with reason
+
 - `@astrojs/check@0.9.10` (latest) requires `typescript ^5.0.0 || ^6.0.0` as peer dep.
 - TS 7.0.2 causes `ERESOLVE` peer dependency conflict.
 - Closed with explanatory comment.
 
 ### All 12 PRs closed
+
 - 11 closed as "resolved in commit X".
 - 1 (#13) closed as incompatible with explanation.
 
@@ -43,10 +48,12 @@
 ## b) PARTIALLY DONE
 
 ### Coverage gate verification
+
 - Ran `go test -race ./...` (passes) but **did NOT run the ≥94% coverage gate** (`scripts/coverage-gate.sh` or the CI-equivalent command).
 - A dependency bump is unlikely to change coverage, but CI will enforce it. Not verified locally.
 
 ### `go generate ./...` drift check
+
 - BuildFlow pre-commit ran `go generate` and reported 0 updates needed, so generated code IS fresh.
 - But I did not explicitly verify this myself or run the CI stale-generation step independently.
 
@@ -55,19 +62,23 @@
 ## c) NOT STARTED
 
 ### AGENTS.md version references
+
 - AGENTS.md references go-output v0.35.0, v0.32.0, v0.31.1 in several gotchas. Now stale.
 - Specifically the "go-output v0.32.0 testhelpers pins resolved" gotcha and "Diagram rendering" section reference old versions.
 
 ### website.yml GitHub Actions
+
 - `.github/workflows/website.yml` uses `actions/checkout@...# v6` and `actions/setup-node@...# v6`.
 - These were NOT part of the Dependabot PRs (which targeted ci.yml only), but could be bumped for consistency.
 - Not investigated or attempted.
 
 ### Website typecheck (`astro check`)
+
 - Ran `pnpm run build` (passes) but **did NOT run `pnpm run typecheck`** (`astro check`).
 - Build succeeded which implies types are OK, but the dedicated typecheck step was skipped.
 
 ### package.json overrides review
+
 - `pnpm audit fix` changed the lockfile. The `overrides` block still has `fast-uri: "^3.1.4"` — the fix installed 3.1.5 (within range).
 - Did not review whether overrides are still needed or should be tightened/loosened.
 
@@ -103,6 +114,7 @@
 ## f) NEXT TASKS (up to 50)
 
 ### High Priority — Verification gaps from this session
+
 1. Run `scripts/coverage-gate.sh` to verify ≥94% coverage holds after dep bump
 2. Run `pnpm run typecheck` in website/ to verify TypeScript clean
 3. Investigate gomod-check "mixed direct/indirect requires" warning in go.mod
@@ -110,6 +122,7 @@
 5. Verify CI passes on the pushed commits (all 3 commits are on origin/master)
 
 ### Medium Priority — Documentation & consistency
+
 6. Update AGENTS.md go-output version references (v0.35.0 → v0.37.0, remove stale testhelpers pin notes)
 7. Bump `actions/checkout` and `actions/setup-node` in website.yml for consistency
 8. Review package.json overrides — are `fast-uri`, `yaml`, `devalue`, `brace-expansion` still needed?
@@ -117,6 +130,7 @@
 10. Check if CHANGELOG.md needs entries for dependency bumps
 
 ### Low Priority — Technical debt
+
 11. Investigate why `lucasb-eyer/go-colorful` was dropped from go-output's transitive deps
 12. Investigate `charmbracelet/ultraviolet` version change implications
 13. Add pnpm/tsc to flake.nix devShell so BuildFlow pre-commit doesn't fail on frontend checks
@@ -129,6 +143,7 @@
 20. Review the `go.sum` diff for any unexpected additions/removals
 
 ### Future — Process improvements
+
 21. Create a `just`-like task or flake app for "full local CI verification" that runs all 6 CI jobs locally
 22. Document the testhelpers broken-pseudo-version workaround pattern for future go-output bumps
 23. Consider a pre-push hook (vs pre-commit) that runs the full suite

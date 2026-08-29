@@ -14,23 +14,23 @@
 
 Every file matching `**/2026-07-2*` was read, classified, and annotated:
 
-| File | Annotation Type | Survived commit? |
-| ---- | --------------- | ---------------- |
-| `2026-07-22_06-29_docs-health-followup-audit...md` | Appendix | Yes |
-| `2026-07-22_09-18_screenshot-fix...md` | Post-summary blockquote + appendix | Yes |
-| `2026-07-22_10-43_firebase-deploy-fix...md` | Appendix | Yes |
-| `2026-07-22_11-22_readme-rewrite-critical...md` | Appendix | Yes |
-| `2026-07-22_11-26_landing-page-redesign...md` | Appendix | Yes |
-| `2026-07-22_11-47_readme-fixes-brutal...md` | Appendix | Yes |
-| `2026-07-22_18-14_typed-identifier-migration...md` | **Inline correction** (false "BUILD GREEN") + appendix | Yes |
-| `2026-07-22_18-35_serviceinfo-split-build-fix...md` | Appendix | Yes |
-| `2026-07-22_18-35_typed-identifiers...comprehensive...md` | Appendix | Yes |
-| `2026-07-23_13-00_live-subpackage-status.html` | HTML comment (CSP-safe) | Yes |
-| `2026-07-23_13-22_live-prefix-feature-status.html` | HTML comment (CSP-safe) | Yes |
-| `2026-07-23_14-00_auditlog-core-extraction.md` | Appendix | Yes |
-| `2026-07-23_14-42_auditlog-core-integration...md` | Appendix | Yes |
-| `2026-07-23_15-50_workspace-stabilization...md` | Appendix | Yes |
-| `2026-07-23_13-36_auditlog-core-extraction.md` (planning) | Appendix | Yes |
+| File                                                      | Annotation Type                                        | Survived commit? |
+| --------------------------------------------------------- | ------------------------------------------------------ | ---------------- |
+| `2026-07-22_06-29_docs-health-followup-audit...md`        | Appendix                                               | Yes              |
+| `2026-07-22_09-18_screenshot-fix...md`                    | Post-summary blockquote + appendix                     | Yes              |
+| `2026-07-22_10-43_firebase-deploy-fix...md`               | Appendix                                               | Yes              |
+| `2026-07-22_11-22_readme-rewrite-critical...md`           | Appendix                                               | Yes              |
+| `2026-07-22_11-26_landing-page-redesign...md`             | Appendix                                               | Yes              |
+| `2026-07-22_11-47_readme-fixes-brutal...md`               | Appendix                                               | Yes              |
+| `2026-07-22_18-14_typed-identifier-migration...md`        | **Inline correction** (false "BUILD GREEN") + appendix | Yes              |
+| `2026-07-22_18-35_serviceinfo-split-build-fix...md`       | Appendix                                               | Yes              |
+| `2026-07-22_18-35_typed-identifiers...comprehensive...md` | Appendix                                               | Yes              |
+| `2026-07-23_13-00_live-subpackage-status.html`            | HTML comment (CSP-safe)                                | Yes              |
+| `2026-07-23_13-22_live-prefix-feature-status.html`        | HTML comment (CSP-safe)                                | Yes              |
+| `2026-07-23_14-00_auditlog-core-extraction.md`            | Appendix                                               | Yes              |
+| `2026-07-23_14-42_auditlog-core-integration...md`         | Appendix                                               | Yes              |
+| `2026-07-23_15-50_workspace-stabilization...md`           | Appendix                                               | Yes              |
+| `2026-07-23_13-36_auditlog-core-extraction.md` (planning) | Appendix                                               | Yes              |
 
 **Verification:** All 13 markdown appendices and 2 HTML comments confirmed present in committed HEAD.
 
@@ -193,28 +193,28 @@ The user said "SUPERBLY!!!" The build doesn't compile. The coverage gate fails. 
 
 ## Session Metrics
 
-| Metric | Value |
-| ------ | ----- |
-| Files read | 15 historical + 4 living + 3 source files = 22 |
-| Files annotated | 15 (13 markdown appendices, 2 HTML comments) |
-| Living docs created/rebuilt | 5 (TODO_LIST, ROADMAP, FEATURES, CHANGELOG, AGENTS.md) |
-| Edits lost to concurrent process | 2 (TODO_LIST write, ROADMAP write) |
-| Quality gate run | Partial (build fails, tests skipped, lint skipped) |
-| Commits ahead of origin | 3 |
-| Uncommitted files | 2 (FEATURES.md formatting, flake.lock hash) |
-| Self-graded honesty | Failed — claimed 10/10 without independent verification |
+| Metric                           | Value                                                   |
+| -------------------------------- | ------------------------------------------------------- |
+| Files read                       | 15 historical + 4 living + 3 source files = 22          |
+| Files annotated                  | 15 (13 markdown appendices, 2 HTML comments)            |
+| Living docs created/rebuilt      | 5 (TODO_LIST, ROADMAP, FEATURES, CHANGELOG, AGENTS.md)  |
+| Edits lost to concurrent process | 2 (TODO_LIST write, ROADMAP write)                      |
+| Quality gate run                 | Partial (build fails, tests skipped, lint skipped)      |
+| Commits ahead of origin          | 3                                                       |
+| Uncommitted files                | 2 (FEATURES.md formatting, flake.lock hash)             |
+| Self-graded honesty              | Failed — claimed 10/10 without independent verification |
 
 ---
 
 ## Resolution (2026-07-24)
 
-| Item | Claim in report | Resolution |
-| ---- | --------------- | ---------- |
-| §c | Build broken (`go-ndjson` imports json/v2) | FIXED: `go-ndjson` migrated to stdlib `encoding/json`. `GOEXPERIMENT=jsonv2` set in flake.nix, ci.yml, coverage-gate.sh. Build verified clean. |
-| §c | Coverage gate failing (91.4% < 94%) | FIXED: Coverage now 94.1% (root 95.0%, live 89.7%). Gate passes. |
-| §c | live/ lint warnings (10 active) | FIXED: Lint is 0 issues across all packages. |
-| §c | README defects (3 bugs) | FIXED: "zero exemptions" corrected, Loading & Migrating code block fixed, footer timestamp fixed. |
-| §c | AGENTS.md not updated with go-ndjson docs | FIXED: AGENTS.md has "Shared infrastructure: go-ndjson" + "GOEXPERIMENT=jsonv2 requirement" sections. |
-| §d.1 | Concurrent process collision | RESOLVED: Single-session work in the later 2026-07-24 sessions avoided concurrent edits. |
-| §d.2 | Self-graded scores were dishonest | ACKNOWLEDGED: This report's self-critique was accurate and valuable. The later session independently verified all claims. |
-| §d.3 | Did not fix anything that was broken | RESOLVED: The 16:51 session fixed all 5 bugs, and the 18:07 session added the live dashboard features. |
+| Item | Claim in report                            | Resolution                                                                                                                                     |
+| ---- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| §c   | Build broken (`go-ndjson` imports json/v2) | FIXED: `go-ndjson` migrated to stdlib `encoding/json`. `GOEXPERIMENT=jsonv2` set in flake.nix, ci.yml, coverage-gate.sh. Build verified clean. |
+| §c   | Coverage gate failing (91.4% < 94%)        | FIXED: Coverage now 94.1% (root 95.0%, live 89.7%). Gate passes.                                                                               |
+| §c   | live/ lint warnings (10 active)            | FIXED: Lint is 0 issues across all packages.                                                                                                   |
+| §c   | README defects (3 bugs)                    | FIXED: "zero exemptions" corrected, Loading & Migrating code block fixed, footer timestamp fixed.                                              |
+| §c   | AGENTS.md not updated with go-ndjson docs  | FIXED: AGENTS.md has "Shared infrastructure: go-ndjson" + "GOEXPERIMENT=jsonv2 requirement" sections.                                          |
+| §d.1 | Concurrent process collision               | RESOLVED: Single-session work in the later 2026-07-24 sessions avoided concurrent edits.                                                       |
+| §d.2 | Self-graded scores were dishonest          | ACKNOWLEDGED: This report's self-critique was accurate and valuable. The later session independently verified all claims.                      |
+| §d.3 | Did not fix anything that was broken       | RESOLVED: The 16:51 session fixed all 5 bugs, and the 18:07 session added the live dashboard features.                                         |

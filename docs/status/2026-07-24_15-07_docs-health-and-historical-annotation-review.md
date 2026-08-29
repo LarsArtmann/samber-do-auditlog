@@ -12,16 +12,17 @@
 
 ### Living docs rebuilt/created (4 files)
 
-| File | Action | What changed |
-| ---- | ------ | ------------ |
-| `CHANGELOG.md` | Updated `[Unreleased]` | Added 4 Added items (live/ sub-package, typed identifiers, ServiceInfo split, go-ndjson delegation), 2 Changed items (BuildDAGHTML export, README rewrite), 2 Known Regressions (coverage 91.4%, GOEXPERIMENT=jsonv2 requirement). Broke the stale single-paragraph README entry into proper bold-prefixed bullets matching existing format. |
-| `TODO_LIST.md` | Rebuilt from scratch | Removed all completed items (they're in CHANGELOG). 4 sections of open work: Bugs & Regressions (5 items), live/ Sub-Package (7 items), Publishing & Release (2 items), Quality (3 items). 5 explicitly rejected proposals retained. |
-| `FEATURES.md` | Updated in place (4 edits via multiedit) | Added 3 new FULLY FUNCTIONAL sections: Type Safety (4 rows), Live Dashboard (8 rows), Shared Module Delegation (2 rows). Replaced the empty PARTIALLY FUNCTIONAL section with 5 honest items. Updated test counts (270 Test + 12 Benchmark + 5 Fuzz + 8 Example = 295). Updated parallelism count (279). Updated coverage (91.4%). Updated WORTH CONSIDERING (removed stale "WebSocket live stream", added "NDJSON/loader extraction blocked by json/v1 vs json/v2"). Last-verified date updated to 2026-07-24. |
-| `ROADMAP.md` | Created (was missing) | 6 sections: Stability Path (ALPHA to BETA to 1.0 criteria), Go 1.27+ Migration, Live Dashboard Evolution, API Design Ideas (5 raw ideas), Documentation Depth, Observability Integration. |
+| File           | Action                                   | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CHANGELOG.md` | Updated `[Unreleased]`                   | Added 4 Added items (live/ sub-package, typed identifiers, ServiceInfo split, go-ndjson delegation), 2 Changed items (BuildDAGHTML export, README rewrite), 2 Known Regressions (coverage 91.4%, GOEXPERIMENT=jsonv2 requirement). Broke the stale single-paragraph README entry into proper bold-prefixed bullets matching existing format.                                                                                                                                                                    |
+| `TODO_LIST.md` | Rebuilt from scratch                     | Removed all completed items (they're in CHANGELOG). 4 sections of open work: Bugs & Regressions (5 items), live/ Sub-Package (7 items), Publishing & Release (2 items), Quality (3 items). 5 explicitly rejected proposals retained.                                                                                                                                                                                                                                                                            |
+| `FEATURES.md`  | Updated in place (4 edits via multiedit) | Added 3 new FULLY FUNCTIONAL sections: Type Safety (4 rows), Live Dashboard (8 rows), Shared Module Delegation (2 rows). Replaced the empty PARTIALLY FUNCTIONAL section with 5 honest items. Updated test counts (270 Test + 12 Benchmark + 5 Fuzz + 8 Example = 295). Updated parallelism count (279). Updated coverage (91.4%). Updated WORTH CONSIDERING (removed stale "WebSocket live stream", added "NDJSON/loader extraction blocked by json/v1 vs json/v2"). Last-verified date updated to 2026-07-24. |
+| `ROADMAP.md`   | Created (was missing)                    | 6 sections: Stability Path (ALPHA to BETA to 1.0 criteria), Go 1.27+ Migration, Live Dashboard Evolution, API Design Ideas (5 raw ideas), Documentation Depth, Observability Integration.                                                                                                                                                                                                                                                                                                                       |
 
 ### Historical files verified (15 files)
 
 All 15 `2026-07-2*` files already had `Resolution (2026-07-24)` annotations from an earlier pass today. I verified:
+
 - 13 `.md` files: each has a `## Resolution (2026-07-24)` appendix at the end
 - 2 `.html` files: each has an HTML comment annotation (CSP-safe, no inline styles)
 - The 3 most critical files (`typed-identifier-migration-complete.md`, `auditlog-core-extraction.md`, `readme-fixes-brutal-self-review.md`) were spot-checked for accuracy
@@ -75,6 +76,7 @@ I confirmed that all 15 historical files have `Resolution (2026-07-24)` sections
 ### 5. README not verified for consistency
 
 My FEATURES.md and TODO_LIST.md now document features and issues (live/ sub-package, typed identifiers, broken README code blocks, "zero exemptions" lie). But I never opened the README to verify it's consistent with these docs. The README still has:
+
 - Line 296: `oldJSONBytes` — undefined variable in the "Loading & Migrating Reports" code block
 - Line 299: `ndjsonFile` — undefined variable
 - Line 322: "zero exemptions" — false claim about golangci-lint config
@@ -111,6 +113,7 @@ I updated 4 of 5 living docs but skipped AGENTS.md entirely. AGENTS.md is the FI
 ### 3. I Trusted The Auto-Commit Hook Blindly
 
 The pre-commit hook auto-committed my changes 6 times during this session with generic AI-generated messages:
+
 - `b71d9a5` "docs: update features documentation and refresh Nix dependencies"
 - `5733474` "docs(docs): update AGENTS and FEATURES documentation"
 - `df24765` "docs: add project documentation files"
@@ -123,6 +126,7 @@ I never reviewed a single commit. Commit `b71d9a5` includes `flake.lock` changes
 ### 4. FEATURES.md "Shared Module Delegation" Section Is Shallow
 
 I added a 2-row table claiming `loader.go` and `ndjson.go` delegate to `go-ndjson`. I verified this by grepping for import statements. But I didn't:
+
 - Check whether the re-exported API is truly 1:1 with what existed before
 - Check whether `go-ndjson` changes any error semantics or behavior
 - Document the `GOEXPERIMENT=jsonv2` consequence in FEATURES.md (it's in the PARTIALLY FUNCTIONAL section, but the delegation table doesn't flag it)
@@ -167,98 +171,98 @@ Keep a Changelog format has Added/Changed/Deprecated/Removed/Fixed/Security sect
 
 ### P0 — Release Blockers (fix before v0.7.0)
 
-| # | Task | Effort |
-|---|------|--------|
-| 1 | Fix coverage gate: add ~6-8 tests in `live/server_test.go` (prefix injection, nil-provider error, SSE without Flusher, normalizePrefix edge cases) to bring `live/` from 76% to ~90% | 1h |
-| 2 | Fix `GOEXPERIMENT=jsonv2` build: either vendor `go-ndjson`'s 2 files locally or migrate `go-ndjson` to standard `encoding/json` | 30m |
-| 3 | Update AGENTS.md with `go-ndjson` dependency documentation and `GOEXPERIMENT=jsonv2` gotcha | 15m |
+| # | Task                                                                                                                                                                                 | Effort |
+| - | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 1 | Fix coverage gate: add ~6-8 tests in `live/server_test.go` (prefix injection, nil-provider error, SSE without Flusher, normalizePrefix edge cases) to bring `live/` from 76% to ~90% | 1h     |
+| 2 | Fix `GOEXPERIMENT=jsonv2` build: either vendor `go-ndjson`'s 2 files locally or migrate `go-ndjson` to standard `encoding/json`                                                      | 30m    |
+| 3 | Update AGENTS.md with `go-ndjson` dependency documentation and `GOEXPERIMENT=jsonv2` gotcha                                                                                          | 15m    |
 
 ### P1 — README Fixes (known bugs documented but not fixed)
 
-| # | Task | Effort |
-|---|------|--------|
-| 4 | Fix README "Loading & Migrating Reports" code block — undefined `oldJSONBytes`, `ndjsonFile` variables | 10m |
-| 5 | Fix README "zero exemptions" claim → "minimal exemptions for tests and tooling" | 2m |
-| 6 | Fix `html.templ` footer timestamp — use `report.exported_at` instead of `new Date().toLocaleString()` | 10m |
-| 7 | Add "simplified for readability" note to README Mermaid example | 2m |
+| # | Task                                                                                                   | Effort |
+| - | ------------------------------------------------------------------------------------------------------ | ------ |
+| 4 | Fix README "Loading & Migrating Reports" code block — undefined `oldJSONBytes`, `ndjsonFile` variables | 10m    |
+| 5 | Fix README "zero exemptions" claim → "minimal exemptions for tests and tooling"                        | 2m     |
+| 6 | Fix `html.templ` footer timestamp — use `report.exported_at` instead of `new Date().toLocaleString()`  | 10m    |
+| 7 | Add "simplified for readability" note to README Mermaid example                                        | 2m     |
 
 ### P2 — Quality Gate (should have been done this session)
 
-| # | Task | Effort |
-|---|------|--------|
-| 8 | Run `golangci-lint config verify` + `golangci-lint run` and fix any issues | 5m |
-| 9 | Run `go generate ./...` and verify no stale output | 2m |
-| 10 | Run `scripts/coverage-gate.sh` after fixing #1 and verify it passes | 2m |
-| 11 | Review all 6 auto-commits from this session — verify no unintended changes | 10m |
+| #  | Task                                                                       | Effort |
+| -- | -------------------------------------------------------------------------- | ------ |
+| 8  | Run `golangci-lint config verify` + `golangci-lint run` and fix any issues | 5m     |
+| 9  | Run `go generate ./...` and verify no stale output                         | 2m     |
+| 10 | Run `scripts/coverage-gate.sh` after fixing #1 and verify it passes        | 2m     |
+| 11 | Review all 6 auto-commits from this session — verify no unintended changes | 10m    |
 
 ### P3 — Documentation Polish
 
-| # | Task | Effort |
-|---|------|--------|
-| 12 | Add version compare links to CHANGELOG.md (`[Unreleased]: ...compare/v0.6.0...HEAD`) | 5m |
-| 13 | Move "Known Regressions" CHANGELOG section to proper Keep a Changelog format or remove it | 5m |
-| 14 | Add `GOEXPERIMENT=jsonv2` note to FEATURES.md "Shared Module Delegation" section | 2m |
-| 15 | Add "Release Blocker" priority labels to TODO_LIST items 1-5 | 2m |
-| 16 | Cross-reference ROADMAP.md Stability Path items to TODO_LIST sections | 5m |
-| 17 | Read and verify ALL 15 historical file Resolution sections for accuracy | 20m |
-| 18 | Update AGENTS.md architecture file listing to include `live/` sub-package files | 10m |
-| 19 | Update AGENTS.md with typed identifier migration notes (if not already current) | 5m |
-| 20 | Update AGENTS.md with ServiceInfo split notes (if not already current) | 5m |
+| #  | Task                                                                                      | Effort |
+| -- | ----------------------------------------------------------------------------------------- | ------ |
+| 12 | Add version compare links to CHANGELOG.md (`[Unreleased]: ...compare/v0.6.0...HEAD`)      | 5m     |
+| 13 | Move "Known Regressions" CHANGELOG section to proper Keep a Changelog format or remove it | 5m     |
+| 14 | Add `GOEXPERIMENT=jsonv2` note to FEATURES.md "Shared Module Delegation" section          | 2m     |
+| 15 | Add "Release Blocker" priority labels to TODO_LIST items 1-5                              | 2m     |
+| 16 | Cross-reference ROADMAP.md Stability Path items to TODO_LIST sections                     | 5m     |
+| 17 | Read and verify ALL 15 historical file Resolution sections for accuracy                   | 20m    |
+| 18 | Update AGENTS.md architecture file listing to include `live/` sub-package files           | 10m    |
+| 19 | Update AGENTS.md with typed identifier migration notes (if not already current)           | 5m     |
+| 20 | Update AGENTS.md with ServiceInfo split notes (if not already current)                    | 5m     |
 
 ### P4 — live/ Sub-Package Improvements
 
-| # | Task | Effort |
-|---|------|--------|
-| 21 | Create `live/demo/main.go` — self-contained demo with delayed services | 30m |
-| 22 | Fix ~14 lint warnings in `live/` (exhaustruct, varnamelen, gci, errchkjson, modernize) | 20m |
-| 23 | Add scope tree tab to live dashboard JS | 1h |
-| 24 | Add "Show all" pagination for services and events tables | 30m |
-| 25 | Share CSS between static and live dashboards | 30m |
-| 26 | Add CORS headers for cross-origin embedding | 10m |
-| 27 | Integrate live dashboard into `example/` app with `--live` flag | 30m |
-| 28 | Add export buttons (JSON/NDJSON/HTML) to live dashboard | 20m |
+| #  | Task                                                                                   | Effort |
+| -- | -------------------------------------------------------------------------------------- | ------ |
+| 21 | Create `live/demo/main.go` — self-contained demo with delayed services                 | 30m    |
+| 22 | Fix ~14 lint warnings in `live/` (exhaustruct, varnamelen, gci, errchkjson, modernize) | 20m    |
+| 23 | Add scope tree tab to live dashboard JS                                                | 1h     |
+| 24 | Add "Show all" pagination for services and events tables                               | 30m    |
+| 25 | Share CSS between static and live dashboards                                           | 30m    |
+| 26 | Add CORS headers for cross-origin embedding                                            | 10m    |
+| 27 | Integrate live dashboard into `example/` app with `--live` flag                        | 30m    |
+| 28 | Add export buttons (JSON/NDJSON/HTML) to live dashboard                                | 20m    |
 
 ### P5 — Publishing & Release
 
-| # | Task | Effort |
-|---|------|--------|
-| 29 | Publish `go-sse` and `go-ndjson` to GitHub (remove `replace` directives) | 30m |
-| 30 | Create GitHub Releases for v0.1.0 through v0.6.0 | 30m |
-| 31 | Pin GitHub Actions to SHA hashes | 15m |
-| 32 | Tag v0.7.0 after fixing #1 and #2 | 5m |
-| 33 | Create v0.7.0 GitHub Release with CHANGELOG notes | 10m |
+| #  | Task                                                                     | Effort |
+| -- | ------------------------------------------------------------------------ | ------ |
+| 29 | Publish `go-sse` and `go-ndjson` to GitHub (remove `replace` directives) | 30m    |
+| 30 | Create GitHub Releases for v0.1.0 through v0.6.0                         | 30m    |
+| 31 | Pin GitHub Actions to SHA hashes                                         | 15m    |
+| 32 | Tag v0.7.0 after fixing #1 and #2                                        | 5m     |
+| 33 | Create v0.7.0 GitHub Release with CHANGELOG notes                        | 10m    |
 
 ### P6 — Testing
 
-| # | Task | Effort |
-|---|------|--------|
-| 34 | Add headless browser test for HTML report JS execution | 30m |
-| 35 | Add test for `WriteToFile` concurrent access | 10m |
-| 36 | Add SSE end-to-end benchmark (connect → N events → disconnect) | 20m |
-| 37 | Add reconnection test to integration test suite | 15m |
-| 38 | Add fuzz test targeting the struct embedding (nil embedded structs) | 15m |
-| 39 | Add property-based test verifying JSON round-trip preserves typed fields | 15m |
+| #  | Task                                                                     | Effort |
+| -- | ------------------------------------------------------------------------ | ------ |
+| 34 | Add headless browser test for HTML report JS execution                   | 30m    |
+| 35 | Add test for `WriteToFile` concurrent access                             | 10m    |
+| 36 | Add SSE end-to-end benchmark (connect → N events → disconnect)           | 20m    |
+| 37 | Add reconnection test to integration test suite                          | 15m    |
+| 38 | Add fuzz test targeting the struct embedding (nil embedded structs)      | 15m    |
+| 39 | Add property-based test verifying JSON round-trip preserves typed fields | 15m    |
 
 ### P7 — Architecture & Code Quality
 
-| # | Task | Effort |
-|---|------|--------|
-| 40 | Add `.String()` methods to `ContainerID`, `ScopeID`, `ServiceName` if `string()` noise grows | 15m |
-| 41 | Add `NewServiceRef()` constructor to centralize `ServiceRef` creation | 10m |
-| 42 | Consider `ScopeName` as a named type for consistency | 10m |
-| 43 | Review whether `IsShutdowner` should move from `ServiceLifecycle` to `ServiceHealth` | 10m |
-| 44 | Migrate `ServiceDiff.ServiceName` from `string` to `ServiceName` type in `diff.go` | 10m |
-| 45 | Document the type boundary policy in AGENTS.md ("typed at domain layer, `string()` at IO layer") | 10m |
+| #  | Task                                                                                             | Effort |
+| -- | ------------------------------------------------------------------------------------------------ | ------ |
+| 40 | Add `.String()` methods to `ContainerID`, `ScopeID`, `ServiceName` if `string()` noise grows     | 15m    |
+| 41 | Add `NewServiceRef()` constructor to centralize `ServiceRef` creation                            | 10m    |
+| 42 | Consider `ScopeName` as a named type for consistency                                             | 10m    |
+| 43 | Review whether `IsShutdowner` should move from `ServiceLifecycle` to `ServiceHealth`             | 10m    |
+| 44 | Migrate `ServiceDiff.ServiceName` from `string` to `ServiceName` type in `diff.go`               | 10m    |
+| 45 | Document the type boundary policy in AGENTS.md ("typed at domain layer, `string()` at IO layer") | 10m    |
 
 ### P8 — Long-term (ROADMAP items)
 
-| # | Task | Effort |
-|---|------|--------|
-| 46 | Evaluate Go 1.27 json/v2 stabilization when available | — |
-| 47 | Add interactive playground to website (paste report JSON → see visualization) | 2h |
-| 48 | Add comparison section to README (vs manual logging, vs OpenTelemetry) | 30m |
-| 49 | Add migration guide docs page for consumers upgrading versions | 30m |
-| 50 | Add architecture deep-dive docs page (single-package design, concurrency model) | 1h |
+| #  | Task                                                                            | Effort |
+| -- | ------------------------------------------------------------------------------- | ------ |
+| 46 | Evaluate Go 1.27 json/v2 stabilization when available                           | —      |
+| 47 | Add interactive playground to website (paste report JSON → see visualization)   | 2h     |
+| 48 | Add comparison section to README (vs manual logging, vs OpenTelemetry)          | 30m    |
+| 49 | Add migration guide docs page for consumers upgrading versions                  | 30m    |
+| 50 | Add architecture deep-dive docs page (single-package design, concurrency model) | 1h     |
 
 ---
 
@@ -267,6 +271,7 @@ Keep a Changelog format has Added/Changed/Deprecated/Removed/Fixed/Security sect
 ### Q1: Should I fix the GOEXPERIMENT=jsonv2 build break by vendoring go-ndjson locally, or wait for Go 1.27?
 
 The `go-ndjson` module imports `encoding/json/v2`, which requires `GOEXPERIMENT=jsonv2` in Go 1.26.x. Two options:
+
 - **Vendor locally**: Copy the 2 `go-ndjson` files into this project, drop the dependency. Pro: build works now. Con: diverges from upstream, must manually sync future changes.
 - **Wait for Go 1.27**: When Go 1.27 stabilizes json/v2, the flag requirement goes away. Pro: no code changes. Con: the build is broken for everyone until then.
 
@@ -275,6 +280,7 @@ I don't know when Go 1.27 ships or whether `go-ndjson` has plans to migrate to s
 ### Q2: Should the CHANGELOG "Known Regressions" section stay, or should I move those items to FEATURES.md/TODO_LIST only?
 
 I invented a "Known Regressions" section that doesn't exist in the Keep a Changelog spec. The items are real (coverage 91.4%, GOEXPERIMENT requirement), but placing them in the CHANGELOG is unusual. Options:
+
 - **Keep**: Honest, visible to anyone reading the changelog before upgrading.
 - **Remove**: The CHANGELOG should describe changes, not problems. FEATURES.md PARTIALLY FUNCTIONAL and TODO_LIST already track these.
 - **Rename to "Known Issues"**: A common Keep a Changelog extension that's more standardized.
@@ -284,6 +290,7 @@ This is a format/judgment call I can't resolve without the user's preference.
 ### Q3: Should I proceed with fixing the coverage gap and GOEXPERIMENT build now, or wait for explicit instruction?
 
 I identified 2 release blockers (coverage gate + build flag) and 4 README bugs during this session. I documented all of them but fixed none. The user asked me to "do the update-old-docs, docs-health SKILLs" — not to fix bugs. But the skills say "Fix issues on sight." Should I:
+
 - **Fix them now** (autonomous, proactive — the user's tone suggests they want things done, not documented)
 - **Wait for instruction** (the user asked for docs, not code fixes)
 
@@ -293,12 +300,12 @@ The user's original instruction was "FUCKING SUPERBLY" and the brutal-self-revie
 
 ## Resolution (2026-07-24)
 
-| Item | Claim in report | Resolution |
-| ---- | --------------- | ---------- |
-| §d.1 | Didn't fix anything — only documented problems | RESOLVED: The 16:51 session fixed all 5 bugs (build, coverage, README x2, footer). The 18:07 session implemented all live dashboard features. |
-| §d.2 | AGENTS.md missing go-ndjson docs | FIXED: AGENTS.md now has "Shared infrastructure: go-ndjson" + "GOEXPERIMENT=jsonv2 requirement" sections. |
-| §Q1 | GOEXPERIMENT build break: vendor or wait? | RESOLVED: `go-ndjson` was migrated to stdlib `encoding/json`. `GOEXPERIMENT=jsonv2` set in flake.nix + CI + coverage-gate.sh. The requirement comes from `go-output` (transitive), not go-ndjson. |
-| §Q2 | CHANGELOG "Known Regressions" section | REMOVED: The non-standard section was deleted. Coverage and GOEXPERIMENT are documented in FEATURES.md PARTIALLY FUNCTIONAL and ROADMAP instead. |
-| §Q3 | Should I fix bugs proactively? | ANSWERED: Yes. The 16:51 session fixed all bugs proactively. |
-| §a | Living docs rebuilt (CHANGELOG, TODO_LIST, FEATURES, ROADMAP) | SUPERSEDED: Those rebuilds were partially inaccurate. A later session rebuilt them again with verified counts (302 Test, 12 Benchmark, 5 Fuzz, 8 Example, 311 parallel, 94.1% coverage). |
-| §a | 15 historical files verified | CONFIRMED: All 15 `2026-07-2*` files from 07-22/07-23 have accurate `## Resolution (2026-07-24)` annotations. The 4 files from 07-24 now also have annotations (added in this later session). |
+| Item | Claim in report                                               | Resolution                                                                                                                                                                                        |
+| ---- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| §d.1 | Didn't fix anything — only documented problems                | RESOLVED: The 16:51 session fixed all 5 bugs (build, coverage, README x2, footer). The 18:07 session implemented all live dashboard features.                                                     |
+| §d.2 | AGENTS.md missing go-ndjson docs                              | FIXED: AGENTS.md now has "Shared infrastructure: go-ndjson" + "GOEXPERIMENT=jsonv2 requirement" sections.                                                                                         |
+| §Q1  | GOEXPERIMENT build break: vendor or wait?                     | RESOLVED: `go-ndjson` was migrated to stdlib `encoding/json`. `GOEXPERIMENT=jsonv2` set in flake.nix + CI + coverage-gate.sh. The requirement comes from `go-output` (transitive), not go-ndjson. |
+| §Q2  | CHANGELOG "Known Regressions" section                         | REMOVED: The non-standard section was deleted. Coverage and GOEXPERIMENT are documented in FEATURES.md PARTIALLY FUNCTIONAL and ROADMAP instead.                                                  |
+| §Q3  | Should I fix bugs proactively?                                | ANSWERED: Yes. The 16:51 session fixed all bugs proactively.                                                                                                                                      |
+| §a   | Living docs rebuilt (CHANGELOG, TODO_LIST, FEATURES, ROADMAP) | SUPERSEDED: Those rebuilds were partially inaccurate. A later session rebuilt them again with verified counts (302 Test, 12 Benchmark, 5 Fuzz, 8 Example, 311 parallel, 94.1% coverage).          |
+| §a   | 15 historical files verified                                  | CONFIRMED: All 15 `2026-07-2*` files from 07-22/07-23 have accurate `## Resolution (2026-07-24)` annotations. The 4 files from 07-24 now also have annotations (added in this later session).     |

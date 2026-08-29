@@ -1,14 +1,14 @@
 # Go-output Replace-Directive Cleanup: Comprehensive Session Status
 
-**Generated:** 2026-07-25 01:06:03 CEST  
-**Scope:** Only the current session's go-output dependency-workaround cleanup, verification, documentation changes, and observed workspace state.  
+**Generated:** 2026-07-25 01:06:03 CEST\
+**Scope:** Only the current session's go-output dependency-workaround cleanup, verification, documentation changes, and observed workspace state.\
 **Requested format note:** The status-report skill normally requires HTML, but this report is Markdown because the user explicitly required `docs/status/<...>.md`.
 
 ---
 
 ## Executive Summary
 
-The requested technical-debt item is functionally resolved: the two `replace` directives for `go-output/testhelpers` and `go-output/testhelpers/graphtest` were removed, and the corresponding `gomoddirectives.replace-allow-list` exception was removed from `.golangci.yml`. The dependency graph cannot remain healthy with no replacement *and* no version override because the published go-output v0.31.1 manifests still reference impossible zero pseudo-versions. The robust consumer-side fix is therefore explicit indirect requirements on the valid `v0.31.1` helper tags. Go's minimal version selection then overrides the bad transitive requirements without using `replace` directives.
+The requested technical-debt item is functionally resolved: the two `replace` directives for `go-output/testhelpers` and `go-output/testhelpers/graphtest` were removed, and the corresponding `gomoddirectives.replace-allow-list` exception was removed from `.golangci.yml`. The dependency graph cannot remain healthy with no replacement _and_ no version override because the published go-output v0.31.1 manifests still reference impossible zero pseudo-versions. The robust consumer-side fix is therefore explicit indirect requirements on the valid `v0.31.1` helper tags. Go's minimal version selection then overrides the bad transitive requirements without using `replace` directives.
 
 The dependency cleanup itself passed `go mod tidy`, `go mod verify`, `go list -m all`, `go vet ./...`, `go test ./...`, and `go test -race ./...`. Full lint did **not** pass because `tree.go` has two `err113` findings. Those findings are outside this task's dependency changes and `tree.go` was already concurrently modified by someone else, so this session correctly did not overwrite or revert it.
 
@@ -20,13 +20,13 @@ At report time, `git status --short` showed only pre-existing or concurrent modi
 
 ## Status Counts
 
-| Category | Count | Status |
-|---|---:|---|
-| Fully done | 10 | Verified during the session |
-| Partially done | 5 | Correct work existed, but handoff/worktree state is not cleanly secured |
-| Not started | 4 | Deliberately outside scope or blocked by ownership |
-| Totally fucked up | 3 | Material process or conclusion failures, later corrected where possible |
-| Open verification blockers | 2 | Full lint and final persistence of edits |
+| Category                   | Count | Status                                                                  |
+| -------------------------- | ----: | ----------------------------------------------------------------------- |
+| Fully done                 |    10 | Verified during the session                                             |
+| Partially done             |     5 | Correct work existed, but handoff/worktree state is not cleanly secured |
+| Not started                |     4 | Deliberately outside scope or blocked by ownership                      |
+| Totally fucked up          |     3 | Material process or conclusion failures, later corrected where possible |
+| Open verification blockers |     2 | Full lint and final persistence of edits                                |
 
 ---
 
@@ -133,9 +133,9 @@ When later status checks showed changes in `helpers_test.go`, `table_columns_tes
 At the end of the prior work, the dependency and documentation edits were verified. At report-generation time, `git status --short` showed only:
 
 ```text
- M helpers_test.go
- M table_columns_test.go
- M tree.go
+M helpers_test.go
+M table_columns_test.go
+M tree.go
 ```
 
 This means the session's edits were externally restored, committed elsewhere, or otherwise removed from the visible worktree. I did not research unrelated activity because the user explicitly prohibited unrelated research. The practical consequence is that the cleanup cannot be declared durably handed off until the intended diff is confirmed present again.
@@ -271,33 +271,33 @@ At report time, all dependency and documentation edits from this session had dis
 
 ## F) TOP 25 THINGS TO GET DONE NEXT
 
-| # | Priority | Action | Why | Status |
-|---:|---|---|---|---|
-| 1 | Critical | Confirm whether the intended `go.mod` indirect pins currently exist | Current status output suggests session edits disappeared | Not verified at report time |
-| 2 | Critical | Confirm both go-output testhelpers `replace` directives are absent | This is the core requested debt item | Not verified at report time |
-| 3 | Critical | Confirm `.golangci.yml` no longer has `replace-allow-list` | Required companion cleanup | Not verified at report time |
-| 4 | Critical | Reapply the cleanup if a concurrent actor restored the old state | Makes the requested work durable | Pending state confirmation |
-| 5 | High | Run `GOWORK=off GOEXPERIMENT=jsonv2 go mod tidy` after confirming/reapplying | Proves graph resolution from manifests | Previously passed with pins |
-| 6 | High | Run `GOWORK=off GOEXPERIMENT=jsonv2 go mod verify` | Verifies downloaded module integrity | Previously passed |
-| 7 | High | Run `GOWORK=off GOEXPERIMENT=jsonv2 go list -m all` | Proves complete module selection | Previously passed |
-| 8 | High | Run `GOEXPERIMENT=jsonv2 go test -race ./...` | CI-equivalent behavioral confidence | Previously passed |
-| 9 | High | Run `GOEXPERIMENT=jsonv2 go vet ./...` | Static correctness gate | Previously passed |
-| 10 | High | Coordinate ownership of `tree.go` | Prevents overwriting concurrent changes | Not started |
-| 11 | High | Fix the two `tree.go` `err113` findings after ownership is clear | Restores full lint green | Not started |
-| 12 | High | Run `golangci-lint run` to green | Required release quality gate | Currently blocked by tree.go |
-| 13 | High | Review the final focused diff for only intended files | Prevents accidental scope creep | Needs repetition after state confirmation |
-| 14 | Medium | Keep the `CHANGELOG.md` resolution entry | Preserves historical sequence | Intended update existed |
-| 15 | Medium | Keep `AGENTS.md` explanation of minimal version selection | Prevents future accidental pin removal | Intended update existed |
-| 16 | Medium | Remove the completed TODO item | Keeps technical-debt tracking honest | Intended update existed |
-| 17 | Medium | Update ROADMAP stability wording | Prevents stale claims about replacements | Intended update existed |
-| 18 | Medium | Add a small script or CI assertion for forbidden helper replacements | Encodes the debt invariant | Not started |
-| 19 | Medium | Track the upstream corrected-release requirement | Ensures indirect pins are temporary | Documented conceptually |
-| 20 | Medium | When upstream releases a fix, upgrade all go-output modules in lockstep | Preserves mono-versioning invariant | Future work |
-| 21 | Medium | After upgrading, remove both explicit indirect helper pins | Completes upstream debt elimination | Future work |
-| 22 | Medium | Rerun tidy and verify pins stay gone | Confirms corrected upstream metadata | Future work |
-| 23 | Low | Add a dependency-graph note to release verification checklist | Avoids recurrence | Not started |
-| 24 | Low | Recheck `git status` immediately before any eventual commit | Protects concurrent work | Required |
-| 25 | Low | Commit only when explicitly instructed, staging only relevant files | Preserves user control and unrelated changes | Waiting for instruction |
+|  # | Priority | Action                                                                       | Why                                                      | Status                                    |
+| -: | -------- | ---------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------- |
+|  1 | Critical | Confirm whether the intended `go.mod` indirect pins currently exist          | Current status output suggests session edits disappeared | Not verified at report time               |
+|  2 | Critical | Confirm both go-output testhelpers `replace` directives are absent           | This is the core requested debt item                     | Not verified at report time               |
+|  3 | Critical | Confirm `.golangci.yml` no longer has `replace-allow-list`                   | Required companion cleanup                               | Not verified at report time               |
+|  4 | Critical | Reapply the cleanup if a concurrent actor restored the old state             | Makes the requested work durable                         | Pending state confirmation                |
+|  5 | High     | Run `GOWORK=off GOEXPERIMENT=jsonv2 go mod tidy` after confirming/reapplying | Proves graph resolution from manifests                   | Previously passed with pins               |
+|  6 | High     | Run `GOWORK=off GOEXPERIMENT=jsonv2 go mod verify`                           | Verifies downloaded module integrity                     | Previously passed                         |
+|  7 | High     | Run `GOWORK=off GOEXPERIMENT=jsonv2 go list -m all`                          | Proves complete module selection                         | Previously passed                         |
+|  8 | High     | Run `GOEXPERIMENT=jsonv2 go test -race ./...`                                | CI-equivalent behavioral confidence                      | Previously passed                         |
+|  9 | High     | Run `GOEXPERIMENT=jsonv2 go vet ./...`                                       | Static correctness gate                                  | Previously passed                         |
+| 10 | High     | Coordinate ownership of `tree.go`                                            | Prevents overwriting concurrent changes                  | Not started                               |
+| 11 | High     | Fix the two `tree.go` `err113` findings after ownership is clear             | Restores full lint green                                 | Not started                               |
+| 12 | High     | Run `golangci-lint run` to green                                             | Required release quality gate                            | Currently blocked by tree.go              |
+| 13 | High     | Review the final focused diff for only intended files                        | Prevents accidental scope creep                          | Needs repetition after state confirmation |
+| 14 | Medium   | Keep the `CHANGELOG.md` resolution entry                                     | Preserves historical sequence                            | Intended update existed                   |
+| 15 | Medium   | Keep `AGENTS.md` explanation of minimal version selection                    | Prevents future accidental pin removal                   | Intended update existed                   |
+| 16 | Medium   | Remove the completed TODO item                                               | Keeps technical-debt tracking honest                     | Intended update existed                   |
+| 17 | Medium   | Update ROADMAP stability wording                                             | Prevents stale claims about replacements                 | Intended update existed                   |
+| 18 | Medium   | Add a small script or CI assertion for forbidden helper replacements         | Encodes the debt invariant                               | Not started                               |
+| 19 | Medium   | Track the upstream corrected-release requirement                             | Ensures indirect pins are temporary                      | Documented conceptually                   |
+| 20 | Medium   | When upstream releases a fix, upgrade all go-output modules in lockstep      | Preserves mono-versioning invariant                      | Future work                               |
+| 21 | Medium   | After upgrading, remove both explicit indirect helper pins                   | Completes upstream debt elimination                      | Future work                               |
+| 22 | Medium   | Rerun tidy and verify pins stay gone                                         | Confirms corrected upstream metadata                     | Future work                               |
+| 23 | Low      | Add a dependency-graph note to release verification checklist                | Avoids recurrence                                        | Not started                               |
+| 24 | Low      | Recheck `git status` immediately before any eventual commit                  | Protects concurrent work                                 | Required                                  |
+| 25 | Low      | Commit only when explicitly instructed, staging only relevant files          | Preserves user control and unrelated changes             | Waiting for instruction                   |
 
 ---
 
@@ -311,20 +311,20 @@ At report time, all dependency and documentation edits from this session had dis
 
 ## Verification Ledger
 
-| Command | Result | Interpretation |
-|---|---|---|
-| `go list -m -versions ...` | Valid v0.31.1 helper tags found | Real helper releases exist |
-| Published manifest inspection | Broken zero pseudo-versions confirmed | Upstream v0.31.1 metadata still faulty |
-| Plain replacement removal + `go mod tidy` | Failed with unknown revision `000000000000` | Plain removal is not sufficient |
-| Explicit indirect v0.31.1 requirements + `go mod tidy` | Passed | Minimal version selection is the correct mitigation |
-| `go mod verify` | Passed | Module contents/checksums valid |
-| `go list -m all` | Passed | Complete graph resolves |
-| `go test ./...` | Passed | Functional tests green |
-| `go test -race ./...` | Passed | Race-enabled suite green |
-| `go vet ./...` | Passed | Vet green |
-| `golangci-lint config verify` | Passed | Lint configuration valid |
-| `golangci-lint run` | Failed on two `tree.go` err113 findings | Dependency lint issue fixed; unrelated lint debt remains |
-| Final report-time `git status --short` | Only helpers_test.go, table_columns_test.go, tree.go modified | Session edits are not currently visible and require state confirmation |
+| Command                                                | Result                                                        | Interpretation                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `go list -m -versions ...`                             | Valid v0.31.1 helper tags found                               | Real helper releases exist                                             |
+| Published manifest inspection                          | Broken zero pseudo-versions confirmed                         | Upstream v0.31.1 metadata still faulty                                 |
+| Plain replacement removal + `go mod tidy`              | Failed with unknown revision `000000000000`                   | Plain removal is not sufficient                                        |
+| Explicit indirect v0.31.1 requirements + `go mod tidy` | Passed                                                        | Minimal version selection is the correct mitigation                    |
+| `go mod verify`                                        | Passed                                                        | Module contents/checksums valid                                        |
+| `go list -m all`                                       | Passed                                                        | Complete graph resolves                                                |
+| `go test ./...`                                        | Passed                                                        | Functional tests green                                                 |
+| `go test -race ./...`                                  | Passed                                                        | Race-enabled suite green                                               |
+| `go vet ./...`                                         | Passed                                                        | Vet green                                                              |
+| `golangci-lint config verify`                          | Passed                                                        | Lint configuration valid                                               |
+| `golangci-lint run`                                    | Failed on two `tree.go` err113 findings                       | Dependency lint issue fixed; unrelated lint debt remains               |
+| Final report-time `git status --short`                 | Only helpers_test.go, table_columns_test.go, tree.go modified | Session edits are not currently visible and require state confirmation |
 
 ---
 

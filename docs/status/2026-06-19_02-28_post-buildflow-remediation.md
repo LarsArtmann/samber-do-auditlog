@@ -168,33 +168,33 @@ One **recently unfucked** item worth noting:
 
 Sorted by **impact / effort ratio** (highest first):
 
-| #   | Task                                                                | Impact   | Effort | Category        |
-| --- | ------------------------------------------------------------------- | -------- | ------ | --------------- |
-| 1   | **Tag v0.1.0 release**                                              | CRITICAL | LOW    | Release         |
-| 2   | **Batch branded types** (`ContainerID`, `ScopeID`, `ServiceName`)   | HIGH     | HIGH   | Architecture    |
-| 3   | **Split `ServiceInfo`** into identity/lifecycle/health/graph        | HIGH     | HIGH   | Architecture    |
-| 4   | **Update `BENCHMARKS.md`** with v0.1.0 feature baselines            | MEDIUM   | LOW    | Testing         |
-| 5   | **Wire schema drift test** as dedicated CI job                      | MEDIUM   | LOW    | CI              |
-| 6   | **Add `MergeReports` property tests** (idempotent, associative)     | MEDIUM   | LOW    | Testing         |
-| 7   | **Convert `TestDiff_MultipleChanged`** raw literals to `mkEvent`    | LOW      | MEDIUM | Code Quality    |
-| 8   | **Add `.gitattributes`** for `*_templ.go` diff suppression          | LOW      | LOW    | DX              |
-| 9   | **CLI: add `--format` flag** to `info` subcommand for JSON output   | MEDIUM   | LOW    | DX              |
-| 10  | **Add `Report.WriteAll(writer, format)`** unified export dispatcher | MEDIUM   | LOW    | API             |
-| 11  | **Error type hierarchy** — wrap sentinels in typed structs          | MEDIUM   | MEDIUM | Architecture    |
-| 12  | **Add `ServiceInfo.IsRootScope()`** convenience method              | LOW      | LOW    | API             |
-| 13  | **HTML: extract JS into separate file** (reduce template size)      | LOW      | MEDIUM | Maintainability |
-| 14  | **Add `Config.Validate()` examples** to godoc                       | LOW      | LOW    | Docs            |
-| 15  | **Property test: filter invariants** (filtered ≤ original)          | MEDIUM   | LOW    | Testing         |
-| 16  | **Prometheus exporter reference** in `example/`                     | LOW      | MEDIUM | DX              |
-| 17  | **Add `Report.EventTimeline()`** returning time-sorted event view   | LOW      | LOW    | API             |
-| 18  | **OpenTelemetry bridge** runnable example                           | LOW      | MEDIUM | DX              |
-| 19  | **Add `DiffResult.Summary()`** human-readable diff string           | LOW      | LOW    | API             |
-| 20  | **Streaming JSON export** (avoid full materialization)              | LOW      | HIGH   | Performance     |
-| 21  | **Add `Config.LogLevel`** for internal plugin logging               | LOW      | MEDIUM | DX              |
-| 22  | **GitHub Pages demo** with sample report viewer                     | LOW      | HIGH   | Marketing       |
-| 23  | **Add `Report.Stats()`** as a public method (currently CLI-only)    | MEDIUM   | LOW    | API             |
-| 24  | **Add `--watch` flag to CLI** for live report regeneration          | LOW      | HIGH   | DX              |
-| 25  | **Add `ServiceInfo.Uptime()`** to public API (currently internal)   | LOW      | LOW    | API             |
+| #  | Task                                                                | Impact   | Effort | Category        |
+| -- | ------------------------------------------------------------------- | -------- | ------ | --------------- |
+| 1  | **Tag v0.1.0 release**                                              | CRITICAL | LOW    | Release         |
+| 2  | **Batch branded types** (`ContainerID`, `ScopeID`, `ServiceName`)   | HIGH     | HIGH   | Architecture    |
+| 3  | **Split `ServiceInfo`** into identity/lifecycle/health/graph        | HIGH     | HIGH   | Architecture    |
+| 4  | **Update `BENCHMARKS.md`** with v0.1.0 feature baselines            | MEDIUM   | LOW    | Testing         |
+| 5  | **Wire schema drift test** as dedicated CI job                      | MEDIUM   | LOW    | CI              |
+| 6  | **Add `MergeReports` property tests** (idempotent, associative)     | MEDIUM   | LOW    | Testing         |
+| 7  | **Convert `TestDiff_MultipleChanged`** raw literals to `mkEvent`    | LOW      | MEDIUM | Code Quality    |
+| 8  | **Add `.gitattributes`** for `*_templ.go` diff suppression          | LOW      | LOW    | DX              |
+| 9  | **CLI: add `--format` flag** to `info` subcommand for JSON output   | MEDIUM   | LOW    | DX              |
+| 10 | **Add `Report.WriteAll(writer, format)`** unified export dispatcher | MEDIUM   | LOW    | API             |
+| 11 | **Error type hierarchy** — wrap sentinels in typed structs          | MEDIUM   | MEDIUM | Architecture    |
+| 12 | **Add `ServiceInfo.IsRootScope()`** convenience method              | LOW      | LOW    | API             |
+| 13 | **HTML: extract JS into separate file** (reduce template size)      | LOW      | MEDIUM | Maintainability |
+| 14 | **Add `Config.Validate()` examples** to godoc                       | LOW      | LOW    | Docs            |
+| 15 | **Property test: filter invariants** (filtered ≤ original)          | MEDIUM   | LOW    | Testing         |
+| 16 | **Prometheus exporter reference** in `example/`                     | LOW      | MEDIUM | DX              |
+| 17 | **Add `Report.EventTimeline()`** returning time-sorted event view   | LOW      | LOW    | API             |
+| 18 | **OpenTelemetry bridge** runnable example                           | LOW      | MEDIUM | DX              |
+| 19 | **Add `DiffResult.Summary()`** human-readable diff string           | LOW      | LOW    | API             |
+| 20 | **Streaming JSON export** (avoid full materialization)              | LOW      | HIGH   | Performance     |
+| 21 | **Add `Config.LogLevel`** for internal plugin logging               | LOW      | MEDIUM | DX              |
+| 22 | **GitHub Pages demo** with sample report viewer                     | LOW      | HIGH   | Marketing       |
+| 23 | **Add `Report.Stats()`** as a public method (currently CLI-only)    | MEDIUM   | LOW    | API             |
+| 24 | **Add `--watch` flag to CLI** for live report regeneration          | LOW      | HIGH   | DX              |
+| 25 | **Add `ServiceInfo.Uptime()`** to public API (currently internal)   | LOW      | LOW    | API             |
 
 ---
 

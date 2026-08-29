@@ -14,25 +14,25 @@ A dependency upgrade commit (`b73e30a chore(config): initialize project configur
 
 ## a) FULLY DONE ✅
 
-| # | Item | Verification |
-|---|------|--------------|
-| 1 | **Compile fix** — `plugin.go:336`: `atomicwrite.WriteFunc(path, fn, Fingerprint{})` → `WriteFunc(path, fn)` | `go build ./...` OK |
-| 2 | **Root-cause analysis** — read v0.4.0 source + CHANGELOG; confirmed the 3-arg→2-arg migration is the documented, correct path for zero-value fingerprints | go-atomic-write v0.4.0 CHANGELOG migration table |
-| 3 | **Confirmed atomicwrite was the ONLY breakage** from the 4-lib upgrade (go-error-family v0.10.0, go-output v0.32.0, go-sse v0.2.1 all build clean) | `go build ./...` clean after single fix |
-| 4 | **Discovered the 1.26.5 toolchain split-brain** — empirically proved `GOTOOLCHAIN=go1.26.4` fails (`go.mod requires go >= 1.26.5`) and `go mod tidy` auto-bumps `go 1.26.4`→`1.26.5` (so 1.26.4 is unstable, not just "stale") | reproduced both directions |
-| 5 | **Re-pinned toolchain to 1.26.5** across `flake.nix` (3 sites: devShell env + coverage app + auditlog app), `.github/workflows/ci.yml` (6 jobs), `CONTRIBUTING.md` (2 refs), `BENCHMARKS.md` (1 ref) | `rg '1.26.4'` confirms zero stale pins in current (non-historical) files |
-| 6 | **Updated AGENTS.md** — rewrote the "Go 1.26.4 toolchain pin" section to 1.26.5 with a new "why it's mandatory" paragraph (max-of-deps rule + empirical proof), fixed the Gotcha text, added History note; bumped stale dep refs (go-sse v0.2.0→v0.2.1, go-error-family v0.9.0→v0.10.0, go-atomic-write v0.3.0→v0.4.0 + API-split note) | `rg` confirms clean |
-| 7 | **Gates green with new pin** — build, vet, `test -race`, golangci-lint (exit 0), coverage 94.2% ≥ 94% | all run with `GOTOOLCHAIN=go1.26.5` |
-| 8 | **No drift** — `go mod tidy` and `go generate` produce no diffs | diffed go.mod/go.sum before/after; `git status` clean except intended edits |
+| # | Item                                                                                                                                                                                                                                                                                                                                    | Verification                                                                |
+| - | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 1 | **Compile fix** — `plugin.go:336`: `atomicwrite.WriteFunc(path, fn, Fingerprint{})` → `WriteFunc(path, fn)`                                                                                                                                                                                                                             | `go build ./...` OK                                                         |
+| 2 | **Root-cause analysis** — read v0.4.0 source + CHANGELOG; confirmed the 3-arg→2-arg migration is the documented, correct path for zero-value fingerprints                                                                                                                                                                               | go-atomic-write v0.4.0 CHANGELOG migration table                            |
+| 3 | **Confirmed atomicwrite was the ONLY breakage** from the 4-lib upgrade (go-error-family v0.10.0, go-output v0.32.0, go-sse v0.2.1 all build clean)                                                                                                                                                                                      | `go build ./...` clean after single fix                                     |
+| 4 | **Discovered the 1.26.5 toolchain split-brain** — empirically proved `GOTOOLCHAIN=go1.26.4` fails (`go.mod requires go >= 1.26.5`) and `go mod tidy` auto-bumps `go 1.26.4`→`1.26.5` (so 1.26.4 is unstable, not just "stale")                                                                                                          | reproduced both directions                                                  |
+| 5 | **Re-pinned toolchain to 1.26.5** across `flake.nix` (3 sites: devShell env + coverage app + auditlog app), `.github/workflows/ci.yml` (6 jobs), `CONTRIBUTING.md` (2 refs), `BENCHMARKS.md` (1 ref)                                                                                                                                    | `rg '1.26.4'` confirms zero stale pins in current (non-historical) files    |
+| 6 | **Updated AGENTS.md** — rewrote the "Go 1.26.4 toolchain pin" section to 1.26.5 with a new "why it's mandatory" paragraph (max-of-deps rule + empirical proof), fixed the Gotcha text, added History note; bumped stale dep refs (go-sse v0.2.0→v0.2.1, go-error-family v0.9.0→v0.10.0, go-atomic-write v0.3.0→v0.4.0 + API-split note) | `rg` confirms clean                                                         |
+| 7 | **Gates green with new pin** — build, vet, `test -race`, golangci-lint (exit 0), coverage 94.2% ≥ 94%                                                                                                                                                                                                                                   | all run with `GOTOOLCHAIN=go1.26.5`                                         |
+| 8 | **No drift** — `go mod tidy` and `go generate` produce no diffs                                                                                                                                                                                                                                                                         | diffed go.mod/go.sum before/after; `git status` clean except intended edits |
 
 ---
 
 ## b) PARTIALLY DONE 🟡
 
-| Item | What's done | What's missing |
-|------|-------------|----------------|
-| Dependency version-ref cleanup | Current config + AGENTS.md updated | **CHANGELOG.md not updated** (see c); **FEATURES.md / README.md / ROADMAP.md / TODO_LIST.md not audited** for stale version refs |
-| AGENTS.md toolchain section | Rewritten accurately | Did not reconcile the "History: v0.7.0 shipped with go 1.26.5" narrative — it now reads slightly oddly since 1.26.5 is canonical again. Defensible but could be clearer. |
+| Item                           | What's done                        | What's missing                                                                                                                                                           |
+| ------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Dependency version-ref cleanup | Current config + AGENTS.md updated | **CHANGELOG.md not updated** (see c); **FEATURES.md / README.md / ROADMAP.md / TODO_LIST.md not audited** for stale version refs                                         |
+| AGENTS.md toolchain section    | Rewritten accurately               | Did not reconcile the "History: v0.7.0 shipped with go 1.26.5" narrative — it now reads slightly oddly since 1.26.5 is canonical again. Defensible but could be clearer. |
 
 ---
 
@@ -61,7 +61,7 @@ The closest thing to a mistake was **scope creep in the right direction** — I 
 
 ### Process gaps this session exposed
 
-1. **No CHANGELOG discipline on dep upgrades.** The original upgrade commit `b73e30a` bumped 4 deps + go directive with commit message *"chore(config): initialize project configuration and tooling setup"* — completely opaque. A future reader cannot tell from history that a breaking atomicwrite API change landed. **The upgrade was half-done by whoever/whatever made `b73e30a`, and I nearly repeated the pattern by almost forgetting the CHANGELOG myself.**
+1. **No CHANGELOG discipline on dep upgrades.** The original upgrade commit `b73e30a` bumped 4 deps + go directive with commit message _"chore(config): initialize project configuration and tooling setup"_ — completely opaque. A future reader cannot tell from history that a breaking atomicwrite API change landed. **The upgrade was half-done by whoever/whatever made `b73e30a`, and I nearly repeated the pattern by almost forgetting the CHANGELOG myself.**
 2. **Split-brain detection is manual.** The 1.26.4-vs-1.26.5 inconsistency across go.mod/flake.nix/ci.yml/AGENTS.md survived a commit. There's no CI gate that asserts "go.mod go directive == flake.nix GOTOOLCHAIN == ci.yml go-version == AGENTS.md canonical pin." One assert script would have caught this at commit time.
 3. **The auto-git daemon writes terrible commit messages** ("docs: add contributor, agent, and benchmark documentation" for what was actually a dep-upgrade + toolchain-pin fix). This corrupts archaeological value. Not my commits, but I let the daemon grab my changes instead of committing with a descriptive message first.
 4. **I didn't test the artifact I claimed to fix.** I said "devShell fixed" but never ran `nix develop`. I verified Go behavior directly, which is strong evidence — but the claim outpaced the verification.
@@ -77,6 +77,7 @@ The closest thing to a mistake was **scope creep in the right direction** — I 
 ## f) Up to 50 things we should get done next
 
 **Immediate (this upgrade, not finished):**
+
 1. Add `[Unreleased]` CHANGELOG.md entry documenting: go-atomic-write v0.4.0 API migration, go-error-family v0.10.0, go-output v0.32.0, go-sse v0.2.1, Go 1.26.5 mandatory pin, devShell breakage + fix.
 2. Verify whether `website/src/content/docs/changelog.mdx` is generated or hand-maintained; sync if needed.
 3. Run `nix flake check` to validate the edited flake.nix evaluates.
@@ -116,7 +117,7 @@ The closest thing to a mistake was **scope creep in the right direction** — I 
 27. `cmd/genschema` has no test files — exercised via `go generate` golden test; noted.
 28. README badge says "Go-1.26+" — accurate but could be "1.26.5" for precision (tradeoff: breaks on next bump).
 
-*(Stopping at 28 — these are all genuinely earned from this session's work; I won't pad to 50 with unrelated research, per instructions.)*
+_(Stopping at 28 — these are all genuinely earned from this session's work; I won't pad to 50 with unrelated research, per instructions.)_
 
 ---
 
@@ -132,14 +133,14 @@ The closest thing to a mistake was **scope creep in the right direction** — I 
 
 ## Files changed this session
 
-| File | Change |
-|------|--------|
-| `plugin.go` | `writeToFile`: 3-arg → 2-arg `atomicwrite.WriteFunc` call (the compile fix) |
-| `flake.nix` | `GOTOOLCHAIN` go1.26.4 → go1.26.5 (3 sites: devShell, coverage app, auditlog app) |
-| `.github/workflows/ci.yml` | `go-version` 1.26.4 → 1.26.5 (6 jobs) |
-| `CONTRIBUTING.md` | Go 1.26.4 → 1.26.5 (2 refs) |
-| `BENCHMARKS.md` | Go 1.26.4 → 1.26.5 (1 ref) |
-| `AGENTS.md` | Toolchain section rewrite + dep version refs (go-sse, go-error-family, go-atomic-write) |
+| File                       | Change                                                                                  |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| `plugin.go`                | `writeToFile`: 3-arg → 2-arg `atomicwrite.WriteFunc` call (the compile fix)             |
+| `flake.nix`                | `GOTOOLCHAIN` go1.26.4 → go1.26.5 (3 sites: devShell, coverage app, auditlog app)       |
+| `.github/workflows/ci.yml` | `go-version` 1.26.4 → 1.26.5 (6 jobs)                                                   |
+| `CONTRIBUTING.md`          | Go 1.26.4 → 1.26.5 (2 refs)                                                             |
+| `BENCHMARKS.md`            | Go 1.26.4 → 1.26.5 (1 ref)                                                              |
+| `AGENTS.md`                | Toolchain section rewrite + dep version refs (go-sse, go-error-family, go-atomic-write) |
 
 All gates green: build, vet, `test -race`, golangci-lint, coverage 94.2%. No drift in `go mod tidy` / `go generate`.
 

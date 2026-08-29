@@ -227,33 +227,33 @@ The PLANNED section lists 8 of 9 items as "not started" when they are actually *
 
 Sorted by `Impact × Customer-Value ÷ Effort`:
 
-| #   | Task                                                                                                            | Impact  | Effort     | Category     |
-| --- | --------------------------------------------------------------------------------------------------------------- | ------- | ---------- | ------------ |
-| 1   | **Fix scope-counting bug** — unify `countUniqueScopes`/`countScopeNodes`, add `Validate()` to empty-report test | 🔴 High | 🔵 Low     | Bug fix      |
-| 2   | **Remove dead `formatNs()` JS** or implement offset timestamps in backend                                       | 🔴 High | 🔵 Low     | Bug fix      |
-| 3   | **Remove stale `~/go/bin/templ`** binary — eliminates future drift                                              | 🟠 Med  | ⚪ Trivial | DevX         |
-| 4   | **Rebuild FEATURES.md** from actual code (features-audit skill)                                                 | 🟠 Med  | 🔵 Low     | Docs         |
-| 5   | **Fix README non-compiling example** — `New()` error handling                                                   | 🟠 Med  | ⚪ Trivial | Docs         |
-| 6   | **Deduplicate AGENTS.md** — remove 6 duplicate bullets, stale refs                                              | 🟡 Low  | ⚪ Trivial | Docs         |
-| 7   | **Add `golangci-lint config verify`** to CI and CONTRIBUTING.md                                                 | 🟠 Med  | ⚪ Trivial | CI           |
-| 8   | **Add coverage gate to CI** — fail if < 95%                                                                     | 🟠 Med  | ⚪ Trivial | CI           |
-| 9   | **Add `go mod tidy` check to CI**                                                                               | 🟡 Low  | ⚪ Trivial | CI           |
-| 10  | **Fix fragile type assertion** in `ResolveServiceScope` (healthcheck.go:58)                                     | 🟠 Med  | 🔵 Low     | Bug fix      |
-| 11  | **Sync README benchmark numbers** with BENCHMARKS.md                                                            | 🟡 Low  | ⚪ Trivial | Docs         |
-| 12  | **Add `MigrateReport` fuzz target**                                                                             | 🟠 Med  | 🔵 Low     | Testing      |
-| 13  | **Add direct `BuildTypeMetadata` tests**                                                                        | 🟡 Low  | 🔵 Low     | Testing      |
-| 14  | **Replace magic `[2]bool`** with named struct in capability enrichment                                          | 🟡 Low  | 🔵 Low     | Code quality |
-| 15  | **Add `t.Parallel()` to independent tests**                                                                     | 🟡 Low  | 🟡 Med     | Testing      |
-| 16  | **Update `docs/DOMAIN_LANGUAGE.md`** — fix file refs, add new commands                                          | 🟡 Low  | 🔵 Low     | Docs         |
-| 17  | **Set `go 1.26.4` in go.mod** — patched version via auto-toolchain                                              | 🟡 Low  | ⚪ Trivial | DevX         |
-| 18  | **Add missing API methods to README tables** (WriteNDJSON, WriteJSON, Diff)                                     | 🟡 Low  | ⚪ Trivial | Docs         |
-| 19  | **Review experimental build tags** in .golangci.yml                                                             | 🟡 Low  | 🔵 Low     | Config       |
-| 20  | **Test `NewRecorder()` directly**                                                                               | 🟢 Low  | 🔵 Low     | Testing      |
-| 21  | **Add Prometheus exporter example** (parallel to OTel example)                                                  | 🟢 Low  | 🟡 Med     | Docs         |
-| 22  | **JSON Schema file** for the report format                                                                      | 🟡 Low  | 🟡 Med     | Docs         |
-| 23  | **Property-based tests** for Diff, MigrateReport, filter round-trips                                            | 🟢 Low  | 🟠 High    | Testing      |
-| 24  | **NDJSON import** — enable loading events back from NDJSON                                                      | 🟢 Low  | 🔴 High    | Feature      |
-| 25  | **v0.1.0 release** — project meets STABILITY.md criteria                                                        | 🟠 Med  | 🟡 Med     | Release      |
+| #  | Task                                                                                                            | Impact  | Effort     | Category     |
+| -- | --------------------------------------------------------------------------------------------------------------- | ------- | ---------- | ------------ |
+| 1  | **Fix scope-counting bug** — unify `countUniqueScopes`/`countScopeNodes`, add `Validate()` to empty-report test | 🔴 High | 🔵 Low     | Bug fix      |
+| 2  | **Remove dead `formatNs()` JS** or implement offset timestamps in backend                                       | 🔴 High | 🔵 Low     | Bug fix      |
+| 3  | **Remove stale `~/go/bin/templ`** binary — eliminates future drift                                              | 🟠 Med  | ⚪ Trivial | DevX         |
+| 4  | **Rebuild FEATURES.md** from actual code (features-audit skill)                                                 | 🟠 Med  | 🔵 Low     | Docs         |
+| 5  | **Fix README non-compiling example** — `New()` error handling                                                   | 🟠 Med  | ⚪ Trivial | Docs         |
+| 6  | **Deduplicate AGENTS.md** — remove 6 duplicate bullets, stale refs                                              | 🟡 Low  | ⚪ Trivial | Docs         |
+| 7  | **Add `golangci-lint config verify`** to CI and CONTRIBUTING.md                                                 | 🟠 Med  | ⚪ Trivial | CI           |
+| 8  | **Add coverage gate to CI** — fail if < 95%                                                                     | 🟠 Med  | ⚪ Trivial | CI           |
+| 9  | **Add `go mod tidy` check to CI**                                                                               | 🟡 Low  | ⚪ Trivial | CI           |
+| 10 | **Fix fragile type assertion** in `ResolveServiceScope` (healthcheck.go:58)                                     | 🟠 Med  | 🔵 Low     | Bug fix      |
+| 11 | **Sync README benchmark numbers** with BENCHMARKS.md                                                            | 🟡 Low  | ⚪ Trivial | Docs         |
+| 12 | **Add `MigrateReport` fuzz target**                                                                             | 🟠 Med  | 🔵 Low     | Testing      |
+| 13 | **Add direct `BuildTypeMetadata` tests**                                                                        | 🟡 Low  | 🔵 Low     | Testing      |
+| 14 | **Replace magic `[2]bool`** with named struct in capability enrichment                                          | 🟡 Low  | 🔵 Low     | Code quality |
+| 15 | **Add `t.Parallel()` to independent tests**                                                                     | 🟡 Low  | 🟡 Med     | Testing      |
+| 16 | **Update `docs/DOMAIN_LANGUAGE.md`** — fix file refs, add new commands                                          | 🟡 Low  | 🔵 Low     | Docs         |
+| 17 | **Set `go 1.26.4` in go.mod** — patched version via auto-toolchain                                              | 🟡 Low  | ⚪ Trivial | DevX         |
+| 18 | **Add missing API methods to README tables** (WriteNDJSON, WriteJSON, Diff)                                     | 🟡 Low  | ⚪ Trivial | Docs         |
+| 19 | **Review experimental build tags** in .golangci.yml                                                             | 🟡 Low  | 🔵 Low     | Config       |
+| 20 | **Test `NewRecorder()` directly**                                                                               | 🟢 Low  | 🔵 Low     | Testing      |
+| 21 | **Add Prometheus exporter example** (parallel to OTel example)                                                  | 🟢 Low  | 🟡 Med     | Docs         |
+| 22 | **JSON Schema file** for the report format                                                                      | 🟡 Low  | 🟡 Med     | Docs         |
+| 23 | **Property-based tests** for Diff, MigrateReport, filter round-trips                                            | 🟢 Low  | 🟠 High    | Testing      |
+| 24 | **NDJSON import** — enable loading events back from NDJSON                                                      | 🟢 Low  | 🔴 High    | Feature      |
+| 25 | **v0.1.0 release** — project meets STABILITY.md criteria                                                        | 🟠 Med  | 🟡 Med     | Release      |
 
 ---
 

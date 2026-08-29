@@ -160,33 +160,33 @@ One minor staleness: FEATURES.md still lists PlantUML under PLANNED when it's be
 
 ## f) Top #25 Things We Should Get Done Next
 
-| #   | Task                                           | Impact | Effort | Rationale                                     |
-| --- | ---------------------------------------------- | ------ | ------ | --------------------------------------------- |
-| 1   | **Fix FEATURES.md: move PlantUML to DONE**     | Low    | 5 min  | Stale docs erode trust                        |
-| 2   | **Add GitHub Actions CI workflow**             | High   | 30 min | Automated quality gate                        |
-| 3   | **Tag v0.1.0-alpha.1**                         | High   | 5 min  | Makes module installable with version         |
-| 4   | **Unify nodeID sanitization**                  | Medium | 15 min | mermaidNodeID/plantumlNodeID share ~80% logic |
-| 5   | **Add `default-src 'none'` to HTML CSP**       | Medium | 5 min  | Stronger security posture                     |
-| 6   | **Add fuzz seed corpus**                       | Medium | 20 min | Improves fuzz effectiveness                   |
-| 7   | **Verify pkg.go.dev rendering**                | Medium | 10 min | Public API docs quality                       |
-| 8   | **Add PR template**                            | Low    | 10 min | Consistent review process                     |
-| 9   | **Add dependabot/renovate**                    | Medium | 10 min | Automated dependency updates                  |
-| 10  | **Add `go test -race` to CI**                  | High   | 2 min  | Catch data races                              |
-| 11  | **Add `go generate ./...` + diff check to CI** | High   | 5 min  | Prevent stale generated code                  |
-| 12  | **Consolidate docs/archive/**                  | Low    | 10 min | Reduce noise                                  |
-| 13  | **Add README screenshots**                     | Medium | 15 min | Better first impression                       |
-| 14  | **Add architecture diagram to README**         | Low    | 10 min | Quick onboarding                              |
-| 15  | **Benchmark comparison in CI**                 | Medium | 20 min | Catch performance regressions                 |
-| 16  | **Add Report.Validate() method**               | Low    | 15 min | Defensive check for exported reports          |
-| 17  | **Add Report.Merge(other Report) method**      | Low    | 20 min | Combine reports from multiple containers      |
-| 18  | **Add error wrapping with sentinel errors**    | Medium | 15 min | Programmatic error handling                   |
-| 19  | **Consider struct-key for serviceKey**         | Low    | 10 min | Zero-alloc hot path optimization              |
-| 20  | **Add OpenTelemetry trace integration**        | Low    | 60 min | Production observability story                |
-| 21  | **Add Prometheus metrics integration**         | Low    | 45 min | Metrics dashboard story                       |
-| 22  | **Add real-world usage guide**                 | Medium | 30 min | Help users integrate                          |
-| 23  | **Test with go test -count=100 -race**         | Medium | 5 min  | Shake out flaky tests                         |
-| 24  | **Add godoc for unexported helpers**           | Low    | 15 min | Internal documentation                        |
-| 25  | **Review example/main.go for API drift**       | Low    | 10 min | Ensure demo matches current API               |
+| #  | Task                                           | Impact | Effort | Rationale                                     |
+| -- | ---------------------------------------------- | ------ | ------ | --------------------------------------------- |
+| 1  | **Fix FEATURES.md: move PlantUML to DONE**     | Low    | 5 min  | Stale docs erode trust                        |
+| 2  | **Add GitHub Actions CI workflow**             | High   | 30 min | Automated quality gate                        |
+| 3  | **Tag v0.1.0-alpha.1**                         | High   | 5 min  | Makes module installable with version         |
+| 4  | **Unify nodeID sanitization**                  | Medium | 15 min | mermaidNodeID/plantumlNodeID share ~80% logic |
+| 5  | **Add `default-src 'none'` to HTML CSP**       | Medium | 5 min  | Stronger security posture                     |
+| 6  | **Add fuzz seed corpus**                       | Medium | 20 min | Improves fuzz effectiveness                   |
+| 7  | **Verify pkg.go.dev rendering**                | Medium | 10 min | Public API docs quality                       |
+| 8  | **Add PR template**                            | Low    | 10 min | Consistent review process                     |
+| 9  | **Add dependabot/renovate**                    | Medium | 10 min | Automated dependency updates                  |
+| 10 | **Add `go test -race` to CI**                  | High   | 2 min  | Catch data races                              |
+| 11 | **Add `go generate ./...` + diff check to CI** | High   | 5 min  | Prevent stale generated code                  |
+| 12 | **Consolidate docs/archive/**                  | Low    | 10 min | Reduce noise                                  |
+| 13 | **Add README screenshots**                     | Medium | 15 min | Better first impression                       |
+| 14 | **Add architecture diagram to README**         | Low    | 10 min | Quick onboarding                              |
+| 15 | **Benchmark comparison in CI**                 | Medium | 20 min | Catch performance regressions                 |
+| 16 | **Add Report.Validate() method**               | Low    | 15 min | Defensive check for exported reports          |
+| 17 | **Add Report.Merge(other Report) method**      | Low    | 20 min | Combine reports from multiple containers      |
+| 18 | **Add error wrapping with sentinel errors**    | Medium | 15 min | Programmatic error handling                   |
+| 19 | **Consider struct-key for serviceKey**         | Low    | 10 min | Zero-alloc hot path optimization              |
+| 20 | **Add OpenTelemetry trace integration**        | Low    | 60 min | Production observability story                |
+| 21 | **Add Prometheus metrics integration**         | Low    | 45 min | Metrics dashboard story                       |
+| 22 | **Add real-world usage guide**                 | Medium | 30 min | Help users integrate                          |
+| 23 | **Test with go test -count=100 -race**         | Medium | 5 min  | Shake out flaky tests                         |
+| 24 | **Add godoc for unexported helpers**           | Low    | 15 min | Internal documentation                        |
+| 25 | **Review example/main.go for API drift**       | Low    | 10 min | Ensure demo matches current API               |
 
 ---
 
@@ -244,8 +244,8 @@ I'd recommend: **tag v0.1.0-alpha.1 now, add CI next.** The code quality is alre
 ### Git diff summary
 
 ```
- mermaid.go  | 27 +++------------------------
- plantuml.go | 26 +++++---------------------
- export.go   | 31 +++++++++++++++++++++++++++++++
- 3 files changed, 40 insertions(+), 44 deletions(-)
+mermaid.go  | 27 +++------------------------
+plantuml.go | 26 +++++---------------------
+export.go   | 31 +++++++++++++++++++++++++++++++
+3 files changed, 40 insertions(+), 44 deletions(-)
 ```

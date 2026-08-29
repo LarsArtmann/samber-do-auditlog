@@ -1,7 +1,7 @@
 # Status Report: `health/` Sub-Package (Health-Probe SDK)
 
-**Date:** 2026-08-07 03:34  
-**Session scope:** Creation of `health/` sub-package from the superb health endpoint guide  
+**Date:** 2026-08-07 03:34\
+**Session scope:** Creation of `health/` sub-package from the superb health endpoint guide\
 **Coverage:** 96.1% | **Tests:** 29 (all pass, -race clean) | **Lint:** 0 issues | **Lines:** 1,368 total
 
 ---
@@ -10,19 +10,19 @@
 
 ### Core SDK — Complete and Working
 
-| Deliverable | Status | Details |
-|---|---|---|
-| `health/types.go` | DONE | `Status` enum (pass/fail/warn), `Check`, `Response` with JSON tags |
-| `health/doc.go` | DONE | Package doc with quick start, three-probe rationale, caching/shutdown/audit sections |
-| `health/probe.go` | DONE | `Probe` struct, 6 functional options, `New()`, `Start`/`Shutdown`/`MarkShuttingDown`, `Evaluate`, classify, evaluateStartup |
-| `health/handlers.go` | DONE | `LivenessHandler`, `ReadinessHandler`, `StartupHandler`, `RegisterRoutes`, `Routes`, `DefaultRoutes`, `writeResponse` |
-| `health/probe_test.go` | DONE | 29 tests: liveness (3), readiness (7), startup (4), Evaluate (4), routes (2), format (2), audit (2), lifecycle (5) |
-| `.golangci.yml` exhaustruct exclusions | DONE | `health.Response`, `health.Check`, `health.Routes`, `health.Probe` added |
-| `AGENTS.md` updated | DONE | Architecture section + `health/` sub-package file table + key design decisions |
-| `CHANGELOG.md` updated | DONE | Full `[Unreleased]` section with all features |
-| Full project builds | DONE | `GOEXPERIMENT=jsonv2 go build ./...` clean |
-| Full project tests pass | DONE | `go test -race ./...` — all packages pass |
-| Health package lint clean | DONE | 0 issues across ~70 linters |
+| Deliverable                            | Status | Details                                                                                                                     |
+| -------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `health/types.go`                      | DONE   | `Status` enum (pass/fail/warn), `Check`, `Response` with JSON tags                                                          |
+| `health/doc.go`                        | DONE   | Package doc with quick start, three-probe rationale, caching/shutdown/audit sections                                        |
+| `health/probe.go`                      | DONE   | `Probe` struct, 6 functional options, `New()`, `Start`/`Shutdown`/`MarkShuttingDown`, `Evaluate`, classify, evaluateStartup |
+| `health/handlers.go`                   | DONE   | `LivenessHandler`, `ReadinessHandler`, `StartupHandler`, `RegisterRoutes`, `Routes`, `DefaultRoutes`, `writeResponse`       |
+| `health/probe_test.go`                 | DONE   | 29 tests: liveness (3), readiness (7), startup (4), Evaluate (4), routes (2), format (2), audit (2), lifecycle (5)          |
+| `.golangci.yml` exhaustruct exclusions | DONE   | `health.Response`, `health.Check`, `health.Routes`, `health.Probe` added                                                    |
+| `AGENTS.md` updated                    | DONE   | Architecture section + `health/` sub-package file table + key design decisions                                              |
+| `CHANGELOG.md` updated                 | DONE   | Full `[Unreleased]` section with all features                                                                               |
+| Full project builds                    | DONE   | `GOEXPERIMENT=jsonv2 go build ./...` clean                                                                                  |
+| Full project tests pass                | DONE   | `go test -race ./...` — all packages pass                                                                                   |
+| Health package lint clean              | DONE   | 0 issues across ~70 linters                                                                                                 |
 
 ### Design Decisions Implemented
 
@@ -39,32 +39,32 @@
 
 ## b) PARTIALLY DONE
 
-| Item | What exists | What's missing |
-|---|---|---|
-| `StatusWarn` enum value | Defined in `types.go` | **Never used anywhere.** Non-critical failures are marked `StatusFail` in individual checks, not `warn`. The guide (Step 5) says non-critical failures should be "warn-ish". The roll-up stays `pass` (correct), but individual non-critical check entries show `fail` instead of `warn`. |
-| Shutdown grace period | `MarkShuttingDown()` exists for two-phase shutdown | No `WithGracePeriod` option. The guide Step 7 shows `time.Sleep(gracePeriod)` between marking and resource close. No built-in sleep/delay mechanism. |
-| HTTP method handling | Handlers accept any method | No GET-only enforcement. Kubernetes only uses GET, but POST/PUT/etc. are not rejected. |
+| Item                    | What exists                                        | What's missing                                                                                                                                                                                                                                                                            |
+| ----------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `StatusWarn` enum value | Defined in `types.go`                              | **Never used anywhere.** Non-critical failures are marked `StatusFail` in individual checks, not `warn`. The guide (Step 5) says non-critical failures should be "warn-ish". The roll-up stays `pass` (correct), but individual non-critical check entries show `fail` instead of `warn`. |
+| Shutdown grace period   | `MarkShuttingDown()` exists for two-phase shutdown | No `WithGracePeriod` option. The guide Step 7 shows `time.Sleep(gracePeriod)` between marking and resource close. No built-in sleep/delay mechanism.                                                                                                                                      |
+| HTTP method handling    | Handlers accept any method                         | No GET-only enforcement. Kubernetes only uses GET, but POST/PUT/etc. are not rejected.                                                                                                                                                                                                    |
 
 ---
 
 ## c) NOT STARTED
 
-| Item | Why it matters |
-|---|---|
-| **Example file (`example/health/main.go` or `health/example_test.go`)** | The project has `example/` and `live/demo/`. The guide is literally a tutorial. A runnable example is the #1 missing deliverable. |
-| **Benchmarks** | Project has `BENCHMARKS.md` and `benchmarks_test.go`. No benchmarks for handler latency, cache hit/miss, Evaluate throughput, or allocation profiling. |
-| **README.md update** | README documents `live/` sub-package (line 274) but says nothing about `health/`. |
-| **FEATURES.md update** | FEATURES.md has a full `live/` section (lines 137-158). No `health/` sub-package section exists. |
-| **Coverage gate verification** | Coverage is 96.1% but the CI gate is 94%. Not verified whether the health package is included in the coverage gate script or excluded like `example/` and `cmd/`. |
-| **`WithHealthCheckTimeouts` option** | The guide Step 2 shows configuring `InjectorOpts.HealthCheckTimeout`, `HealthCheckGlobalTimeout`, `HealthCheckParallelism`. The SDK doesn't help configure these — user must set them manually on `do.InjectorOpts` before creating the injector. |
-| **Internal-only middleware** | Guide Step 9 says "gate detail internally". No `InternalOnly()` middleware or CIDR-based access control provided. |
-| **Deadlock watchdog hook** | Guide Step 6 mentions "Optionally: check a deadlock watchdog". No pluggable liveness checker interface. |
-| **Fuzz tests** | Project has fuzz tests (`fuzz_test.go`, `filter_fuzz_test.go`). No fuzz tests for health response serialization or edge cases. |
-| **JSON output format options** | No option for indented JSON (human-readable) vs compact JSON. Compact only. |
-| **Combined `/health` endpoint** | Some legacy systems want one endpoint. Not provided (the guide argues against it, but users may want the option). |
-| **slog integration** | No structured logging of slow checks, failures, or state transitions. |
-| **Prometheus metrics** | No health-check metrics exposition (latency histogram, fail counter). |
-| **Context-aware Start** | `Start(ctx)` takes a context but the test uses `t.Context()` — fine for tests but production users need to understand the lifecycle. No doc example of wiring `Start` to a signal handler. |
+| Item                                                                    | Why it matters                                                                                                                                                                                                                                    |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Example file (`example/health/main.go` or `health/example_test.go`)** | The project has `example/` and `live/demo/`. The guide is literally a tutorial. A runnable example is the #1 missing deliverable.                                                                                                                 |
+| **Benchmarks**                                                          | Project has `BENCHMARKS.md` and `benchmarks_test.go`. No benchmarks for handler latency, cache hit/miss, Evaluate throughput, or allocation profiling.                                                                                            |
+| **README.md update**                                                    | README documents `live/` sub-package (line 274) but says nothing about `health/`.                                                                                                                                                                 |
+| **FEATURES.md update**                                                  | FEATURES.md has a full `live/` section (lines 137-158). No `health/` sub-package section exists.                                                                                                                                                  |
+| **Coverage gate verification**                                          | Coverage is 96.1% but the CI gate is 94%. Not verified whether the health package is included in the coverage gate script or excluded like `example/` and `cmd/`.                                                                                 |
+| **`WithHealthCheckTimeouts` option**                                    | The guide Step 2 shows configuring `InjectorOpts.HealthCheckTimeout`, `HealthCheckGlobalTimeout`, `HealthCheckParallelism`. The SDK doesn't help configure these — user must set them manually on `do.InjectorOpts` before creating the injector. |
+| **Internal-only middleware**                                            | Guide Step 9 says "gate detail internally". No `InternalOnly()` middleware or CIDR-based access control provided.                                                                                                                                 |
+| **Deadlock watchdog hook**                                              | Guide Step 6 mentions "Optionally: check a deadlock watchdog". No pluggable liveness checker interface.                                                                                                                                           |
+| **Fuzz tests**                                                          | Project has fuzz tests (`fuzz_test.go`, `filter_fuzz_test.go`). No fuzz tests for health response serialization or edge cases.                                                                                                                    |
+| **JSON output format options**                                          | No option for indented JSON (human-readable) vs compact JSON. Compact only.                                                                                                                                                                       |
+| **Combined `/health` endpoint**                                         | Some legacy systems want one endpoint. Not provided (the guide argues against it, but users may want the option).                                                                                                                                 |
+| **slog integration**                                                    | No structured logging of slow checks, failures, or state transitions.                                                                                                                                                                             |
+| **Prometheus metrics**                                                  | No health-check metrics exposition (latency histogram, fail counter).                                                                                                                                                                             |
+| **Context-aware Start**                                                 | `Start(ctx)` takes a context but the test uses `t.Context()` — fine for tests but production users need to understand the lifecycle. No doc example of wiring `Start` to a signal handler.                                                        |
 
 ---
 
@@ -126,12 +126,14 @@ Health probes are the most frequently-called endpoints in production (kubelet po
 ## f) Up to 50 Things We Should Get Done Next
 
 ### Correctness (must do)
+
 1. Wire `StatusWarn` into `buildChecks` for non-critical failures
 2. Add test verifying non-critical failure produces `warn` status
 3. Add test verifying `StatusWarn` is actually produced by the SDK
 4. Consider whether `Evaluate` should also use `warn` for non-critical roll-up
 
 ### Examples & Docs (must do)
+
 5. Create `health/example_test.go` with `ExampleNew` and `// Output:` directive
 6. Create `health/example_test.go` with `ExampleProbe_LivenessHandler`
 7. Create `health/example_test.go` with `ExampleProbe_ReadinessHandler`
@@ -144,6 +146,7 @@ Health probes are the most frequently-called endpoints in production (kubelet po
 14. Add guide cross-reference in `health/doc.go` (link to the guide file)
 
 ### Performance (must do)
+
 15. Add `BenchmarkLivenessHandler` — should be <1us / 0 allocs
 16. Add `BenchmarkReadinessHandler_CacheHit` — should be <1us / 0 allocs
 17. Add `BenchmarkReadinessHandler_LiveEval` — measure raw injector check cost
@@ -153,6 +156,7 @@ Health probes are the most frequently-called endpoints in production (kubelet po
 21. Add `health/` to `BENCHMARKS.md`
 
 ### Test Coverage
+
 22. Verify coverage gate script (`scripts/coverage-gate.sh`) includes `health/`
 23. Add test for `writeResponse` marshal error path (even if hard to trigger)
 24. Add test for concurrent `Start` calls (race detector)
@@ -164,6 +168,7 @@ Health probes are the most frequently-called endpoints in production (kubelet po
 30. Add `-count=10` race test run for timing-dependent cache tests
 
 ### API Hardening
+
 31. Add GET-only method enforcement (405 on POST/PUT/DELETE)
 32. Add `WithHealthCheckTimeouts(perService, global, parallelism)` option
 33. Add `WithGracePeriod(d)` for shutdown sleep
@@ -174,6 +179,7 @@ Health probes are the most frequently-called endpoints in production (kubelet po
 38. Consider `WithCORS` middleware option
 
 ### Observability
+
 39. Add `WithLogger(logger)` for slog integration
 40. Log slow health checks (> threshold)
 41. Log state transitions (shutdown, startup latch)
@@ -181,12 +187,14 @@ Health probes are the most frequently-called endpoints in production (kubelet po
 43. Add per-service latency tracking in `Check` struct (`LatencyMs int64`)
 
 ### Integration
+
 44. Add integration test: `health/` + `live/` on same mux
 45. Add integration test: `health/` with disabled auditlog plugin
 46. Add integration test: `health/` with scoped injectors (child scope health checks)
 47. Verify `depguard` rules work for external consumers importing `health/`
 
 ### CI
+
 48. Verify `go generate ./...` doesn't need changes
 49. Verify `go mod tidy` doesn't drift (no new deps added)
 50. Verify CI coverage gate passes with `health/` included
@@ -211,18 +219,18 @@ The SDK is tightly coupled to `samber/do` (it holds a `do.Injector` reference) b
 
 ## Session Metrics
 
-| Metric | Value |
-|---|---|
-| Files created | 5 (`doc.go`, `types.go`, `probe.go`, `handlers.go`, `probe_test.go`) |
-| Files modified | 3 (`.golangci.yml`, `AGENTS.md`, `CHANGELOG.md`) |
-| Total lines written | 1,368 (596 source + 769 test + 3 doc/config) |
-| Test functions | 29 |
-| Test coverage | 96.1% |
-| Lint issues | 0 |
-| Race detector | Clean |
-| Build | Clean (`GOEXPERIMENT=jsonv2 go build ./...`) |
-| Full suite | All packages pass |
-| Time to build | <1s |
-| Benchmark files | 0 |
-| Example files | 0 |
-| Fuzz tests | 0 |
+| Metric              | Value                                                                |
+| ------------------- | -------------------------------------------------------------------- |
+| Files created       | 5 (`doc.go`, `types.go`, `probe.go`, `handlers.go`, `probe_test.go`) |
+| Files modified      | 3 (`.golangci.yml`, `AGENTS.md`, `CHANGELOG.md`)                     |
+| Total lines written | 1,368 (596 source + 769 test + 3 doc/config)                         |
+| Test functions      | 29                                                                   |
+| Test coverage       | 96.1%                                                                |
+| Lint issues         | 0                                                                    |
+| Race detector       | Clean                                                                |
+| Build               | Clean (`GOEXPERIMENT=jsonv2 go build ./...`)                         |
+| Full suite          | All packages pass                                                    |
+| Time to build       | <1s                                                                  |
+| Benchmark files     | 0                                                                    |
+| Example files       | 0                                                                    |
+| Fuzz tests          | 0                                                                    |

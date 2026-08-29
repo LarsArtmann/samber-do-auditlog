@@ -8,20 +8,20 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ### Core Plugin / Container Integration
 
-| Feature                             | Description                                                                                             | Verified                                      |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| **Plugin constructor**              | `New(Config) (*Plugin, error)` validates config, applies env-var enablement, initializes recorder       | `plugin.go` (`New`)                           |
-| **Injector options generation**     | `Opts()` returns `*do.InjectorOpts` wiring all six lifecycle hooks into samber/do v2                    | `plugin.go` (`Opts`)                          |
-| **Environment-variable enablement** | `DO_AUDITLOG_ENABLED` (`true`/`1`/`yes`) enables logging without code change                            | `plugin.go` (`EnvKeyEnabled`, `envIsEnabled`) |
-| **Explicit enable override**        | `Config.Enabled: true` bypasses the env-var check                                                       | `plugin.go` (`New`)                           |
-| **Zero-cost disabled mode**         | When disabled, `Opts()` returns empty hooks and `RecordHealthCheck*` delegates directly to the injector | `plugin.go` (`Opts`, `RecordHealthCheck*`)    |
-| **Container ID**                    | Human-readable identifier propagated to events, report, and HTML title                                  | `plugin.go` (`Config.ContainerID`)            |
-| **Config validation**               | Rejects `ContainerID` values containing `/` or `\` path separators                                      | `plugin.go` (`Config.Validate`)               |
-| **Real-time event callback**        | `Config.OnEvent func(Event)` streams every captured event outside the recorder lock                     | `plugin.go`, `recorder.go`                    |
-| **Late event-callback wiring**       | `Plugin.SetOnEvent` attaches or replaces the callback after `New()`, race-safe with recording goroutines (enables live-dashboard hubs wired after CLI flag parsing) | `plugin.go` (`SetOnEvent`), `recorder.go` (`setOnEvent`) |
-| **Late enablement**                  | `Plugin.Enable` turns logging on after `New()` (idempotent; effective before `Opts()` is consumed)                                       | `plugin.go` (`Enable`)                        |
-| **In-memory event cap**             | `Config.MaxEvents` caps stored events and exposes a drop counter                                        | `plugin.go`, `recorder.go`                    |
-| **Initial event capacity**          | `Config.InitialEventCapacity` pre-allocates the events slice                                            | `plugin.go`, `recorder.go`                    |
+| Feature                             | Description                                                                                                                                                         | Verified                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **Plugin constructor**              | `New(Config) (*Plugin, error)` validates config, applies env-var enablement, initializes recorder                                                                   | `plugin.go` (`New`)                                      |
+| **Injector options generation**     | `Opts()` returns `*do.InjectorOpts` wiring all six lifecycle hooks into samber/do v2                                                                                | `plugin.go` (`Opts`)                                     |
+| **Environment-variable enablement** | `DO_AUDITLOG_ENABLED` (`true`/`1`/`yes`) enables logging without code change                                                                                        | `plugin.go` (`EnvKeyEnabled`, `envIsEnabled`)            |
+| **Explicit enable override**        | `Config.Enabled: true` bypasses the env-var check                                                                                                                   | `plugin.go` (`New`)                                      |
+| **Zero-cost disabled mode**         | When disabled, `Opts()` returns empty hooks and `RecordHealthCheck*` delegates directly to the injector                                                             | `plugin.go` (`Opts`, `RecordHealthCheck*`)               |
+| **Container ID**                    | Human-readable identifier propagated to events, report, and HTML title                                                                                              | `plugin.go` (`Config.ContainerID`)                       |
+| **Config validation**               | Rejects `ContainerID` values containing `/` or `\` path separators                                                                                                  | `plugin.go` (`Config.Validate`)                          |
+| **Real-time event callback**        | `Config.OnEvent func(Event)` streams every captured event outside the recorder lock                                                                                 | `plugin.go`, `recorder.go`                               |
+| **Late event-callback wiring**      | `Plugin.SetOnEvent` attaches or replaces the callback after `New()`, race-safe with recording goroutines (enables live-dashboard hubs wired after CLI flag parsing) | `plugin.go` (`SetOnEvent`), `recorder.go` (`setOnEvent`) |
+| **Late enablement**                 | `Plugin.Enable` turns logging on after `New()` (idempotent; effective before `Opts()` is consumed)                                                                  | `plugin.go` (`Enable`)                                   |
+| **In-memory event cap**             | `Config.MaxEvents` caps stored events and exposes a drop counter                                                                                                    | `plugin.go`, `recorder.go`                               |
+| **Initial event capacity**          | `Config.InitialEventCapacity` pre-allocates the events slice                                                                                                        | `plugin.go`, `recorder.go`                               |
 
 ### Lifecycle Event Recording
 
@@ -51,27 +51,27 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ### Report Model
 
-| Feature                        | Description                                                                                                                                              | Verified                        |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| **Report struct**              | Consolidated snapshot with version, container ID, counts, durations, success flags, events, services, scope tree                                         | `report.go`                     |
-| **Schema version**             | Current report schema is `"0.3.0"`                                                                                                                       | `types.go` (`SchemaVersion`)    |
-| **Service info aggregate**     | Per-service rollup of status, type, timings, deps, dependents, errors, health                                                                            | `service.go` (`ServiceInfo`)    |
-| **Scope tree**                 | Hierarchical `ScopeNode` with services and children                                                                                                      | `service.go` (`ScopeNode`)      |
-| **Report validation**          | Checks denormalized counts match actual slice/tree lengths                                                                                               | `report.go` (`Report.Validate`) |
-| **Report indexing**            | `Report.Index()` builds O(1) lookups by name, ref, scope, events                                                                                         | `report.go` (`Index`)           |
-| **Report convenience queries** | `ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByRef`, `EventsByType`, `FailedServices`, `UnhealthyServices`              | `report.go`                     |
-| **Event convenience helpers**  | `IsRegistration`, `IsInvocation`, `IsShutdown`, `IsHealthCheck`, `IsBefore`, `IsAfter`, `HasError`, `Duration`                                           | `event.go`                      |
-| **Service info helpers**       | `Uptime()`, `HasHealthError()`                                                                                                                           | `service.go`                    |
+| Feature                        | Description                                                                                                                                                                                                                | Verified                        |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| **Report struct**              | Consolidated snapshot with version, container ID, counts, durations, success flags, events, services, scope tree                                                                                                           | `report.go`                     |
+| **Schema version**             | Current report schema is `"0.3.0"`                                                                                                                                                                                         | `types.go` (`SchemaVersion`)    |
+| **Service info aggregate**     | Per-service rollup of status, type, timings, deps, dependents, errors, health                                                                                                                                              | `service.go` (`ServiceInfo`)    |
+| **Scope tree**                 | Hierarchical `ScopeNode` with services and children                                                                                                                                                                        | `service.go` (`ScopeNode`)      |
+| **Report validation**          | Checks denormalized counts match actual slice/tree lengths                                                                                                                                                                 | `report.go` (`Report.Validate`) |
+| **Report indexing**            | `Report.Index()` builds O(1) lookups by name, ref, scope, events                                                                                                                                                           | `report.go` (`Index`)           |
+| **Report convenience queries** | `ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByRef`, `EventsByType`, `FailedServices`, `UnhealthyServices`                                                                                | `report.go`                     |
+| **Event convenience helpers**  | `IsRegistration`, `IsInvocation`, `IsShutdown`, `IsHealthCheck`, `IsBefore`, `IsAfter`, `HasError`, `Duration`                                                                                                             | `event.go`                      |
+| **Service info helpers**       | `Uptime()`, `HasHealthError()`                                                                                                                                                                                             | `service.go`                    |
 | **Report diff**                | `Report.Diff(other)` returns added/removed/changed services, event-count delta, and timing deltas (`TotalBuildDurationMsDelta`, `TotalShutdownDurationMsDelta`). `HasChanges()` / `IsEmpty()` for polarity-agnostic checks | `diff.go`                       |
 
 ### Event Streaming
 
-|| Feature                     | Description                                                                                             | Verified               |
+|| Feature | Description | Verified |
 | --------------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------- |
-| **MultiWriter event fan-out** | `MultiWriter` broadcasts events to multiple `OnEvent` callbacks simultaneously. Thread-safe, ordered   | `multi_writer.go`      |
-| **StreamEvents callback reader** | `StreamEvents(reader, callback)` reads NDJSON events line-by-line via `bufio.Scanner`, invoking callback per event | `ndjson.go`            |
-| **Flush interval**           | `WithFlushInterval(d)` on `NDJSONStreamer` for bounded-latency time-based flushing                     | `stream.go`            |
-| **RunID correlation**        | 128-bit hex branded type auto-generated via `crypto/rand`, stamped on every `Event` and `Report`        | `runid.go`, `types.go` |
+| **MultiWriter event fan-out** | `MultiWriter` broadcasts events to multiple `OnEvent` callbacks simultaneously. Thread-safe, ordered | `multi_writer.go` |
+| **StreamEvents callback reader** | `StreamEvents(reader, callback)` reads NDJSON events line-by-line via `bufio.Scanner`, invoking callback per event | `ndjson.go` |
+| **Flush interval** | `WithFlushInterval(d)` on `NDJSONStreamer` for bounded-latency time-based flushing | `stream.go` |
+| **RunID correlation** | 128-bit hex branded type auto-generated via `crypto/rand`, stamped on every `Event` and `Report` | `runid.go`, `types.go` |
 
 ### Report Filtering
 
@@ -88,29 +88,29 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 
 ### Export Formats
 
-| Feature                           | Description                                                                                 | Verified                    |
-| --------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------- |
-| **JSON report to writer**         | `Plugin.WriteReportJSON(writer)`                                                            | `plugin.go`                 |
-| **NDJSON event stream to writer** | `Plugin.WriteEventsNDJSON(writer)`                                                          | `plugin.go`                 |
-| **JSON report to file**           | `Plugin.ExportToFile(path)`                                                                 | `plugin.go`                 |
-| **NDJSON events to file**         | `Plugin.ExportEventsToNDJSON(path)`                                                         | `plugin.go`                 |
-| **Filtered JSON report to file**  | `Plugin.ExportFilteredToFile(path, opts...)`                                                | `plugin.go`                 |
-| **Plugin CSV/TSV export**         | `Plugin.WriteReportCSV/TSV(w)` and `Plugin.ExportToCSV/TSV(path)`                           | `plugin.go`                 |
-| **Plugin diagram export**         | `Plugin.WriteMermaid/PlantUML/DOT/D2(w)` and `Plugin.ExportToMermaid/PlantUML/DOT/D2(path)` | `plugin.go`                 |
-| **Plugin tree export**            | `Plugin.WriteTree/WriteHTMLTree(w)` and `Plugin.ExportToTree/ExportToHTMLTree(path)`        | `plugin.go`, `tree.go`      |
-| **Plugin table export**           | `Plugin.WriteTable(w, format, opts)` and `Plugin.ExportToTable(path, format, opts)`         | `plugin.go`, `table.go`     |
-| **Report JSON writer**            | `Report.WriteJSON(writer)`                                                                  | `report.go`                 |
-| **Report NDJSON writer**          | `Report.WriteNDJSON(writer)`                                                                | `report.go`                 |
-| **Atomic file writes**            | File exports write to temp file and rename for crash safety                                 | `plugin.go` (`writeToFile`) |
-| **Mermaid diagram export**        | `Report.WriteMermaid(writer)` outputs a themed flowchart                                    | `mermaid.go`, `diagram.go`  |
-| **PlantUML diagram export**       | `Report.WritePlantUML(writer)` outputs a styled component diagram                           | `plantuml.go`, `diagram.go` |
-| **DOT diagram export**            | `Report.WriteDOT(writer)` outputs a Graphviz digraph                                        | `dot.go`, `diagram.go`      |
-| **D2 diagram export**             | `Report.WriteD2(writer)` outputs a D2 diagram with per-node warm-amber styling              | `d2.go`, `diagram.go`       |
-| **Shared diagram builder**        | `buildDiagramNodes`/`buildDiagramEdges` drives all four formats with deduplicated output    | `diagram.go`                |
-| **ASCII tree export**             | `Report.WriteTree(writer)` outputs a dependency DAG as an ASCII tree                        | `tree.go`                   |
-| **HTML tree export**              | `Report.WriteHTMLTree(writer)` outputs a dependency DAG as an HTML nested list              | `tree.go`                   |
-| **Multi-format table export**     | `Report.WriteTable(writer, format, opts)` outputs service summary in 16+ formats            | `table.go`                  |
-| **Self-contained HTML export**    | `Plugin.ExportToHTML(path)` and `Plugin.WriteHTML(w)` render a single-file report           | `html.go`, `html.templ`     |
+| Feature                           | Description                                                                                                                           | Verified                    |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| **JSON report to writer**         | `Plugin.WriteReportJSON(writer)`                                                                                                      | `plugin.go`                 |
+| **NDJSON event stream to writer** | `Plugin.WriteEventsNDJSON(writer)`                                                                                                    | `plugin.go`                 |
+| **JSON report to file**           | `Plugin.ExportToFile(path)`                                                                                                           | `plugin.go`                 |
+| **NDJSON events to file**         | `Plugin.ExportEventsToNDJSON(path)`                                                                                                   | `plugin.go`                 |
+| **Filtered JSON report to file**  | `Plugin.ExportFilteredToFile(path, opts...)`                                                                                          | `plugin.go`                 |
+| **Plugin CSV/TSV export**         | `Plugin.WriteReportCSV/TSV(w)` and `Plugin.ExportToCSV/TSV(path)`                                                                     | `plugin.go`                 |
+| **Plugin diagram export**         | `Plugin.WriteMermaid/PlantUML/DOT/D2(w)` and `Plugin.ExportToMermaid/PlantUML/DOT/D2(path)`                                           | `plugin.go`                 |
+| **Plugin tree export**            | `Plugin.WriteTree/WriteHTMLTree(w)` and `Plugin.ExportToTree/ExportToHTMLTree(path)`                                                  | `plugin.go`, `tree.go`      |
+| **Plugin table export**           | `Plugin.WriteTable(w, format, opts)` and `Plugin.ExportToTable(path, format, opts)`                                                   | `plugin.go`, `table.go`     |
+| **Report JSON writer**            | `Report.WriteJSON(writer)`                                                                                                            | `report.go`                 |
+| **Report NDJSON writer**          | `Report.WriteNDJSON(writer)`                                                                                                          | `report.go`                 |
+| **Atomic file writes**            | File exports write to temp file and rename for crash safety                                                                           | `plugin.go` (`writeToFile`) |
+| **Mermaid diagram export**        | `Report.WriteMermaid(writer)` outputs a themed flowchart                                                                              | `mermaid.go`, `diagram.go`  |
+| **PlantUML diagram export**       | `Report.WritePlantUML(writer)` outputs a styled component diagram                                                                     | `plantuml.go`, `diagram.go` |
+| **DOT diagram export**            | `Report.WriteDOT(writer)` outputs a Graphviz digraph                                                                                  | `dot.go`, `diagram.go`      |
+| **D2 diagram export**             | `Report.WriteD2(writer)` outputs a D2 diagram with per-node warm-amber styling                                                        | `d2.go`, `diagram.go`       |
+| **Shared diagram builder**        | `buildDiagramNodes`/`buildDiagramEdges` drives all four formats with deduplicated output                                              | `diagram.go`                |
+| **ASCII tree export**             | `Report.WriteTree(writer)` outputs a dependency DAG as an ASCII tree                                                                  | `tree.go`                   |
+| **HTML tree export**              | `Report.WriteHTMLTree(writer)` outputs a dependency DAG as an HTML nested list                                                        | `tree.go`                   |
+| **Multi-format table export**     | `Report.WriteTable(writer, format, opts)` outputs service summary in 16+ formats                                                      | `table.go`                  |
+| **Self-contained HTML export**    | `Plugin.ExportToHTML(path)` and `Plugin.WriteHTML(w)` render a single-file report                                                     | `html.go`, `html.templ`     |
 | **Write\*String convenience**     | `WriteMermaidString()`, `WritePlantUMLString()`, `WriteDOTString()`, `WriteD2String()`, `WriteHTMLString()` return output as `string` | `mermaid.go` etc.           |
 
 ### HTML Visualization
@@ -165,7 +165,7 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **`http.Handler` compatibility** | `Server` implements `ServeHTTP` for `httptest` compatibility and embedding in existing mux chains                                                                                                                      | `live/server.go`; `TestServer_HandleSSE_NoFlusher` |
 | **SSE connection lifecycle**     | `sse.Stream` manages headers, flush, heartbeat, disconnect detection, and write serialization. `SendJSON` eliminates manual marshal+write+flush boilerplate                                                            | `live/server.go`                                   |
 | **SSE reconnection replay**      | Reconnecting clients with `Last-Event-ID` receive missed events via `sse.Replay` + `eventStore` adapter over `plugin.Events()`                                                                                         | `live/replay.go`; `TestServer_SSE_ReconnectReplay` |
-| **SSE ring buffer**              | In-memory ring buffer stores recent events for reconnection replay. `ReplayBufferSize` config (default 256), `EventStore()` and `BufferedEventCount()` on `Hub`                                                       | `live/hub.go`, `live/server.go`                    |
+| **SSE ring buffer**              | In-memory ring buffer stores recent events for reconnection replay. `ReplayBufferSize` config (default 256), `EventStore()` and `BufferedEventCount()` on `Hub`                                                        | `live/hub.go`, `live/server.go`                    |
 | **go-sse full adoption**         | Uses `Stream`, `Broadcaster[T]`, `Replay`, `EventStore`, `Shutdown`, `Health` from `go-sse` v0.4.0. No hand-rolled fan-out or connection management code remains                                                       | `live/hub.go`, `live/server.go`, `live/replay.go`  |
 | **Live demo application**        | `live/demo/main.go` registers services with delays, invokes them, runs health checks, serves dashboard until Ctrl+C                                                                                                    | `live/demo/main.go`                                |
 | **Example `--live` flag**        | `go run ./example --live` starts the dashboard alongside the ride-sharing demo, registering 20 services across 4 scopes                                                                                                | `example/main.go`                                  |
@@ -202,10 +202,10 @@ The health-probe SDK has been extracted to its own standalone project: **[github
 
 | Feature                       | Description                                                                                                                                                                                                                              | Verified                                                |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| **GitHub Actions CI**         | `go vet`, `go build`, race-detector tests, golangci-lint, govulncheck, generated-code drift checks, goreleaser config check. All actions pinned to commit SHAs for supply-chain security.                                                                         | `.github/workflows/ci.yml`                              |
-| **Dependabot**                | Automated dependency updates for gomod, github-actions, and pnpm ecosystems                                                                                             | `.github/dependabot.yml`                               |
-| **Goreleaser**                | Release automation for CLI binary (linux/darwin amd64/arm64) with `RELEASE.md` process documentation                                                                    | `.goreleaser.yml`, `RELEASE.md`                        |
-| **Exported testhelpers**      | `testhelpers/` package (moved from `internal/`) enables downstream integration testing                                                                                  | `testhelpers/`                                          |
+| **GitHub Actions CI**         | `go vet`, `go build`, race-detector tests, golangci-lint, govulncheck, generated-code drift checks, goreleaser config check. All actions pinned to commit SHAs for supply-chain security.                                                | `.github/workflows/ci.yml`                              |
+| **Dependabot**                | Automated dependency updates for gomod, github-actions, and pnpm ecosystems                                                                                                                                                              | `.github/dependabot.yml`                                |
+| **Goreleaser**                | Release automation for CLI binary (linux/darwin amd64/arm64) with `RELEASE.md` process documentation                                                                                                                                     | `.goreleaser.yml`, `RELEASE.md`                         |
+| **Exported testhelpers**      | `testhelpers/` package (moved from `internal/`) enables downstream integration testing                                                                                                                                                   | `testhelpers/`                                          |
 | **golangci-lint config**      | `.golangci.yml` defines lint rules for the project (109 linters)                                                                                                                                                                         | `.golangci.yml`                                         |
 | **Generated-code check**      | CI runs `go generate ./...` and fails on drift, ensuring `html_templ.go` stays in sync                                                                                                                                                   | `.github/workflows/ci.yml`                              |
 | **templ code generation**     | `//go:generate go tool templ generate` in `html.go` produces `html_templ.go`                                                                                                                                                             | `html.go`, `html_templ.go`                              |

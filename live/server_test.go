@@ -1041,7 +1041,7 @@ func TestServer_NilPlugin_SSESnapshot(t *testing.T) {
 	// The connection should succeed even with nil plugin.
 	// The complete event may or may not arrive depending on timing,
 	// but the connection itself should not error.
-	_ = scanner
+	_ = sr
 }
 
 func TestServer_NilPlugin_ReportEndpoint(t *testing.T) {

@@ -139,48 +139,48 @@ Nothing. All critical bugs from the review were fixed and verified. No regressio
 
 ### High Impact / Low Effort (do first)
 
-| #   | Task                                                                      | Impact             | Effort |
-| --- | ------------------------------------------------------------------------- | ------------------ | ------ |
-| 1   | Add `aria-pressed` on event filter chips + `scope="col"` on table headers | a11y completeness  | 15 min |
-| 2   | Add CSP `base-uri 'none'; frame-ancestors 'none'`                         | security hardening | 5 min  |
-| 3   | Update FEATURES.md with diagram, a11y, and test quality work              | docs freshness     | 20 min |
-| 4   | Update TODO_LIST.md — mark all session items done                         | docs freshness     | 10 min |
-| 5   | Update CHANGELOG.md with session commits                                  | release tracking   | 10 min |
-| 6   | Update README.md with Mermaid/PlantUML/filtering API docs                 | user-facing docs   | 30 min |
-| 7   | Clean up stale Gotchas in AGENTS.md referencing old function names        | accuracy           | 15 min |
-| 8   | Add keyboard nav exclusion for TEXTAREA/SELECT/BUTTON                     | a11y correctness   | 10 min |
+| # | Task                                                                      | Impact             | Effort |
+| - | ------------------------------------------------------------------------- | ------------------ | ------ |
+| 1 | Add `aria-pressed` on event filter chips + `scope="col"` on table headers | a11y completeness  | 15 min |
+| 2 | Add CSP `base-uri 'none'; frame-ancestors 'none'`                         | security hardening | 5 min  |
+| 3 | Update FEATURES.md with diagram, a11y, and test quality work              | docs freshness     | 20 min |
+| 4 | Update TODO_LIST.md — mark all session items done                         | docs freshness     | 10 min |
+| 5 | Update CHANGELOG.md with session commits                                  | release tracking   | 10 min |
+| 6 | Update README.md with Mermaid/PlantUML/filtering API docs                 | user-facing docs   | 30 min |
+| 7 | Clean up stale Gotchas in AGENTS.md referencing old function names        | accuracy           | 15 min |
+| 8 | Add keyboard nav exclusion for TEXTAREA/SELECT/BUTTON                     | a11y correctness   | 10 min |
 
 ### High Impact / Medium Effort
 
-| #   | Task                                                                     | Impact                    | Effort |
-| --- | ------------------------------------------------------------------------ | ------------------------- | ------ |
-| 9   | Inject Go enum metadata into HTML template (eliminate JS/Go split brain) | architecture              | 2-3h   |
-| 10  | Add realistic multi-service HTML integration test                        | test confidence           | 1h     |
-| 11  | Add `Report.Validate()` method to enforce count consistency              | type safety               | 30 min |
-| 12  | Record benchmark baselines in CI                                         | perf regression detection | 1h     |
-| 13  | Replace `stripScriptTags` with proper HTML escaping test                 | test robustness           | 30 min |
-| 14  | Add debounce to service search input                                     | UX polish                 | 15 min |
-| 15  | Add empty-state messages ("No services", "No events") to HTML tables     | UX polish                 | 30 min |
+| #  | Task                                                                     | Impact                    | Effort |
+| -- | ------------------------------------------------------------------------ | ------------------------- | ------ |
+| 9  | Inject Go enum metadata into HTML template (eliminate JS/Go split brain) | architecture              | 2-3h   |
+| 10 | Add realistic multi-service HTML integration test                        | test confidence           | 1h     |
+| 11 | Add `Report.Validate()` method to enforce count consistency              | type safety               | 30 min |
+| 12 | Record benchmark baselines in CI                                         | perf regression detection | 1h     |
+| 13 | Replace `stripScriptTags` with proper HTML escaping test                 | test robustness           | 30 min |
+| 14 | Add debounce to service search input                                     | UX polish                 | 15 min |
+| 15 | Add empty-state messages ("No services", "No events") to HTML tables     | UX polish                 | 30 min |
 
 ### Medium Impact / Low Effort
 
-| #   | Task                                                              | Impact          | Effort |
-| --- | ----------------------------------------------------------------- | --------------- | ------ |
-| 16  | Remove unused `errConnectionRefused` sentinel (or document it)    | dead code       | 5 min  |
-| 17  | Clean up 34 archived docs in `docs/archive/`                      | repo hygiene    | 30 min |
-| 18  | Pin `go.mod` to `go 1.26` (remove patch number)                   | consumer compat | 5 min  |
-| 19  | Add `@startuml skinparam` directives for better PlantUML defaults | diagram polish  | 15 min |
-| 20  | Add Mermaid theme styling                                         | diagram polish  | 15 min |
+| #  | Task                                                              | Impact          | Effort |
+| -- | ----------------------------------------------------------------- | --------------- | ------ |
+| 16 | Remove unused `errConnectionRefused` sentinel (or document it)    | dead code       | 5 min  |
+| 17 | Clean up 34 archived docs in `docs/archive/`                      | repo hygiene    | 30 min |
+| 18 | Pin `go.mod` to `go 1.26` (remove patch number)                   | consumer compat | 5 min  |
+| 19 | Add `@startuml skinparam` directives for better PlantUML defaults | diagram polish  | 15 min |
+| 20 | Add Mermaid theme styling                                         | diagram polish  | 15 min |
 
 ### Medium Impact / Higher Effort
 
-| #   | Task                                                       | Impact           | Effort |
-| --- | ---------------------------------------------------------- | ---------------- | ------ |
-| 21  | Add virtual scrolling/pagination for 500+ service reports  | scalability      | 4-6h   |
-| 22  | Add touch event support for graph pan/zoom                 | mobile support   | 1h     |
-| 23  | Add `go report card` badge and fix any issues              | community        | 30 min |
-| 24  | Add `gosec` + `govulncheck` to CI pipeline                 | security CI      | 1h     |
-| 25  | Consider `samber/lo` for filter/find boilerplate reduction | code conciseness | 1h     |
+| #  | Task                                                       | Impact           | Effort |
+| -- | ---------------------------------------------------------- | ---------------- | ------ |
+| 21 | Add virtual scrolling/pagination for 500+ service reports  | scalability      | 4-6h   |
+| 22 | Add touch event support for graph pan/zoom                 | mobile support   | 1h     |
+| 23 | Add `go report card` badge and fix any issues              | community        | 30 min |
+| 24 | Add `gosec` + `govulncheck` to CI pipeline                 | security CI      | 1h     |
+| 25 | Consider `samber/lo` for filter/find boilerplate reduction | code conciseness | 1h     |
 
 ---
 

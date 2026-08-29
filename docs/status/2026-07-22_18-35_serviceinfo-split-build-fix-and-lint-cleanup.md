@@ -17,25 +17,30 @@ This session's job was to read that status report, break it into actionable step
 ## a) FULLY DONE
 
 ### Build Breakage Fixed (test struct literals)
+
 - **`tree_table_test.go`** — 3 `ServiceInfo` struct literals migrated to embedded struct pattern (`ServiceIdentity`/`ServiceLifecycle`/`ServiceGraph`). These were the `activeSvcReport` helper, the `crashing-svc` error fixture, and the `svc-a` with external dependency fixture.
 - **`diff_property_test.go`** — `randReport` helper migrated to embedded struct pattern. (Fixed by concurrent session commit `9706293` before my edit reached the file.)
 - **`fuzz_test.go`** — 2 `ServiceInfo` struct literals (root-svc + scoped services) migrated to embedded struct pattern. (Fixed by concurrent session commit `48362d5`.)
 - **`diagram_test.go`** — Already migrated by concurrent session (commit `9706293`). Used as reference for the correct pattern.
 
 ### Golden File Updated
+
 - **`testdata/golden/report.html`** — Regenerated via `UPDATE_GOLDEN=1`. The JSON field ordering changed because struct embedding reorders serialized fields (`service_type` moved, `is_shutdowner`/`is_healthchecker` swapped positions). Content is semantically identical — only key order in the embedded JSON `<script>` block shifted.
 
 ### Lint Issues Fixed
+
 - **`fuzz_test.go:314`** — Removed redundant double conversion `auditlog.ScopeID(auditlog.ScopeID(...)))` → `auditlog.ScopeID(...)` (unconvert).
 - **`filter_fuzz_test.go:55-62`** — Changed `make([]ServiceName, len(names))` + index assignment to `make([]ServiceName, 0, len(names))` + append (makezero). Added blank lines for wsl_v5 compliance.
 - **`plugin.go:291`** — Added blank line before `if !found` after multi-statement block (wsl_v5).
 - **`example/summary.go:83`** — Changed `make([]string, len(names))` + index assignment to `make([]string, 0, len(names))` + append (makezero).
 
 ### Documentation Updated
+
 - **`AGENTS.md`** — Replaced the stale "Typed identifiers / ServiceInfo split are DEFERRED to v0.3.0" note with "Typed identifiers + ServiceInfo split are DONE", documenting the embedded struct pattern and the IO-boundary `string()` conversion convention.
 - **`AGENTS.md`** — Updated `service.go` architecture description to list the four embedded sub-structs.
 
 ### Verification (all green)
+
 - `go build ./...` — clean
 - `go vet ./...` — clean
 - `go test -count=1 -race ./...` — all pass
@@ -70,6 +75,7 @@ The following items from the prior status report's 50-item list remain unaddress
 ## d) TOTALLY FUCKED UP
 
 ### The Prior Status Report Was a Lie
+
 The `2026-07-22_18-14` report claimed "BUILD GREEN, ALL TESTS PASS, COVERAGE 94.1%". **None of that was true at the time it was written.** The `ServiceInfo` split (commit `253b2af`) had already been done, breaking every test file with `ServiceInfo{ServiceRef: ...}` struct literals. The report was written as if the split was "deferred" when it was already merged. This caused me to start from a false premise.
 
 ### My Session Mistakes
@@ -91,6 +97,7 @@ The `2026-07-22_18-14` report claimed "BUILD GREEN, ALL TESTS PASS, COVERAGE 94.
 ## e) WHAT WE SHOULD IMPROVE
 
 ### Process
+
 1. **Never trust status reports — verify with `go build` + `go test` first** — Status reports are point-in-time snapshots that can be stale within minutes. The compiler is ground truth.
 2. **Check `git log --oneline -10` before starting work** — Concurrent sessions may have already done the work. Avoid wasted effort.
 3. **Diff golden files before updating** — Run the test, see the diff, verify it's benign, THEN update. Never blindly regenerate.
@@ -98,12 +105,14 @@ The `2026-07-22_18-14` report claimed "BUILD GREEN, ALL TESTS PASS, COVERAGE 94.
 5. **Commit messages from the hook are terrible** — They're generic ("update AGENTS.md with enhanced AI agent interaction guidelines") and don't describe the actual changes. This pollutes git history. Consider improving the hook's commit message generation or committing manually before the hook runs.
 
 ### Code Quality
+
 6. **The `string()` conversion noise is real** — Every IO boundary (CSV, HTML, diagrams, fmt) needs `string(typedValue)` wrapping. This is expected with named types but creates visual noise. A `.String()` method (or relying on `%s` format verb which works on `~string` types) would help.
 7. **JSON field ordering changed** — The struct embedding caused JSON field reordering in serialized output. This is semantically harmless but breaks golden file tests and could break consumers that rely on field order (they shouldn't, but some do).
 8. **`schema/report.schema.json` should be audited** — The auto-generated schema may not correctly represent the embedded struct JSON output. Needs manual verification.
 9. **`ScopeName` is still plain `string`** — It's the only identity field not typed. This is a consistency gap.
 
 ### Architecture
+
 10. **Concurrent sessions are creating merge chaos** — Multiple sessions working on the same files (`AGENTS.md` was committed 3 times in 5 commits) without coordination. Need a locking or branching strategy.
 11. **The `ServiceInfo` split is good but the migration was incomplete** — Production code was split but test code wasn't updated in the same commit. The split + test migration should have been one atomic commit.
 
@@ -112,6 +121,7 @@ The `2026-07-22_18-14` report claimed "BUILD GREEN, ALL TESTS PASS, COVERAGE 94.
 ## f) Up to 50 Things to Get Done Next
 
 ### High Priority (correctness & verification)
+
 1. Audit `schema/report.schema.json` — verify it correctly represents the embedded struct JSON output
 2. Diff the golden HTML file content (not just byte-level) — verify no data was lost in field reordering
 3. Run `nix flake check` — verify Nix CI checks pass
@@ -124,6 +134,7 @@ The `2026-07-22_18-14` report claimed "BUILD GREEN, ALL TESTS PASS, COVERAGE 94.
 10. Check `ndjson.go` `ReadEvents` — returns `[]Event`, verify no string assumptions
 
 ### Medium Priority (quality improvements)
+
 11. Add `.String()` methods to `ContainerID`, `ScopeID`, `ServiceName` if conversion noise grows
 12. Add `NewServiceRef(scopeID ScopeID, scopeName string, serviceName ServiceName) ServiceRef` constructor
 13. Migrate `ScopeName` to a named type for consistency with `ScopeID`/`ServiceName`/`ContainerID`
@@ -140,6 +151,7 @@ The `2026-07-22_18-14` report claimed "BUILD GREEN, ALL TESTS PASS, COVERAGE 94.
 24. Consider whether `CompareServiceRefs` needs typed param awareness (it uses `cmp.Compare` which works on `~string`)
 
 ### Low Priority (nice to have)
+
 25. Add linting rule to catch untyped string usage in domain logic
 26. Add doc comment examples showing the typed API usage
 27. Consider `Sequence` and `InvocationOrder` named integer types
@@ -150,6 +162,7 @@ The `2026-07-22_18-14` report claimed "BUILD GREEN, ALL TESTS PASS, COVERAGE 94.
 32. Explore typed service registries via generics (`Register[T any](name ServiceName)`)
 
 ### Infrastructure
+
 33. Improve pre-commit hook commit message generation — current messages are generic junk
 34. Add a CI check that prevents committing if `go test ./...` fails (catch stale status reports)
 35. Consider a pre-push hook that runs the full BuildFlow suite
@@ -157,6 +170,7 @@ The `2026-07-22_18-14` report claimed "BUILD GREEN, ALL TESTS PASS, COVERAGE 94.
 37. Consider a concurrent-session coordination strategy (branching, locking)
 
 ### Future Architecture (v0.3.0+)
+
 38. Consider whether `Event` should split into before/after event types (making impossible states unrepresentable)
 39. Consider `ScopePath` type for hierarchical scope identification
 40. Evaluate whether `ContainerID` should carry validation (already has path-separator check in `Config.Validate()`)

@@ -105,33 +105,33 @@ The closest thing to a concern: the **stale LSP diagnostics** for `zz_dump_test.
 
 Sorted by impact × value ÷ effort:
 
-| #   | Task                                                            | Impact | Effort  | Notes                                                      |
-| --- | --------------------------------------------------------------- | ------ | ------- | ---------------------------------------------------------- |
-| 1   | **Add `CHANGELOG.md` entry** for the diagram escaping fix       | High   | Trivial | `[Unreleased]` section is empty                            |
-| 2   | **JSON Schema file** (`schema.json`) for report format          | High   | Medium  | Biggest gap for consumers; blocks v0.1.0                   |
-| 3   | **Typed identifiers** (`ScopeID`, `ServiceName`, `ContainerID`) | High   | Low     | Compiler-enforced safety                                   |
-| 4   | **NDJSON import** (`ReadNDJSON`)                                | Medium | Low     | Symmetry with export; trivial via `buildReportFromCore`    |
-| 5   | **CSV/TSV export**                                              | Medium | Low     | `encoding/csv`, no dep; high value for data analysis       |
-| 6   | **HTML golden-file test**                                       | Medium | Medium  | Deterministic multi-service → golden file                  |
-| 7   | **Split `ServiceInfo`** into identity/lifecycle/health/graph    | High   | High    | Breaking change; decide before v0.1.0                      |
-| 8   | **`NewReport(...)` constructor** returning `(Report, error)`    | Medium | Low     | Makes invalid reports unrepresentable                      |
-| 9   | **Property-based `Diff` tests**                                 | Medium | Low     | Random reports, symmetry assertions                        |
-| 10  | **Property-based `MigrateReport` tests**                        | Medium | Low     | Arbitrary JSON → migrate → validate                        |
-| 11  | **Fuzz filter inputs**                                          | Low    | Low     | Arbitrary `ReportOption` combinations                      |
-| 12  | **Prometheus exporter example**                                 | Medium | Low     | Parallel to OTel bridge doc                                |
-| 13  | **`actionlint` in CI**                                          | Low    | Trivial | Workflow validation                                        |
-| 14  | **Flake app for coverage gate**                                 | Low    | Low     | Replace inline CI shell                                    |
-| 15  | **DOT graph export**                                            | Low    | Medium  | New diagram format; local impl preferred over dep          |
-| 16  | **CLI tool** (`auditlog-convert`)                               | Medium | High    | Report conversion/export binary                            |
-| 17  | **WebSocket live stream** bridge for `OnEvent`                  | Medium | High    | Live dashboards                                            |
-| 18  | **v0.1.0 release**                                              | High   | Medium  | Blocked on #2 (schema) and decision on #7 (split)          |
-| 19  | **`RELEASING.md`** or release checklist                         | Low    | Trivial | In CONTRIBUTING.md                                         |
-| 20  | **`example/` smoke test**                                       | Low    | Low     | At least a basic integration test                          |
-| 21  | **`docs/status/` retention policy**                             | Low    | Trivial | Keep last 5, archive rest                                  |
-| 22  | **Add diagram escaping to fuzz target**                         | Medium | Low     | Extend `FuzzDiagramSpecialChars` with bracket/quote corpus |
-| 23  | **Coverage gate as separate CI step**                           | Low    | Low     | Clearer failure messages                                   |
-| 24  | **Review `ServiceStatus` priority** for completeness            | Low    | Low     | Is there a missing state (e.g. "health_error")?            |
-| 25  | **Benchmark the escaping functions**                            | Low    | Trivial | Ensure no hot-path regression from `sanitizeDiagramID`     |
+| #  | Task                                                            | Impact | Effort  | Notes                                                      |
+| -- | --------------------------------------------------------------- | ------ | ------- | ---------------------------------------------------------- |
+| 1  | **Add `CHANGELOG.md` entry** for the diagram escaping fix       | High   | Trivial | `[Unreleased]` section is empty                            |
+| 2  | **JSON Schema file** (`schema.json`) for report format          | High   | Medium  | Biggest gap for consumers; blocks v0.1.0                   |
+| 3  | **Typed identifiers** (`ScopeID`, `ServiceName`, `ContainerID`) | High   | Low     | Compiler-enforced safety                                   |
+| 4  | **NDJSON import** (`ReadNDJSON`)                                | Medium | Low     | Symmetry with export; trivial via `buildReportFromCore`    |
+| 5  | **CSV/TSV export**                                              | Medium | Low     | `encoding/csv`, no dep; high value for data analysis       |
+| 6  | **HTML golden-file test**                                       | Medium | Medium  | Deterministic multi-service → golden file                  |
+| 7  | **Split `ServiceInfo`** into identity/lifecycle/health/graph    | High   | High    | Breaking change; decide before v0.1.0                      |
+| 8  | **`NewReport(...)` constructor** returning `(Report, error)`    | Medium | Low     | Makes invalid reports unrepresentable                      |
+| 9  | **Property-based `Diff` tests**                                 | Medium | Low     | Random reports, symmetry assertions                        |
+| 10 | **Property-based `MigrateReport` tests**                        | Medium | Low     | Arbitrary JSON → migrate → validate                        |
+| 11 | **Fuzz filter inputs**                                          | Low    | Low     | Arbitrary `ReportOption` combinations                      |
+| 12 | **Prometheus exporter example**                                 | Medium | Low     | Parallel to OTel bridge doc                                |
+| 13 | **`actionlint` in CI**                                          | Low    | Trivial | Workflow validation                                        |
+| 14 | **Flake app for coverage gate**                                 | Low    | Low     | Replace inline CI shell                                    |
+| 15 | **DOT graph export**                                            | Low    | Medium  | New diagram format; local impl preferred over dep          |
+| 16 | **CLI tool** (`auditlog-convert`)                               | Medium | High    | Report conversion/export binary                            |
+| 17 | **WebSocket live stream** bridge for `OnEvent`                  | Medium | High    | Live dashboards                                            |
+| 18 | **v0.1.0 release**                                              | High   | Medium  | Blocked on #2 (schema) and decision on #7 (split)          |
+| 19 | **`RELEASING.md`** or release checklist                         | Low    | Trivial | In CONTRIBUTING.md                                         |
+| 20 | **`example/` smoke test**                                       | Low    | Low     | At least a basic integration test                          |
+| 21 | **`docs/status/` retention policy**                             | Low    | Trivial | Keep last 5, archive rest                                  |
+| 22 | **Add diagram escaping to fuzz target**                         | Medium | Low     | Extend `FuzzDiagramSpecialChars` with bracket/quote corpus |
+| 23 | **Coverage gate as separate CI step**                           | Low    | Low     | Clearer failure messages                                   |
+| 24 | **Review `ServiceStatus` priority** for completeness            | Low    | Low     | Is there a missing state (e.g. "health_error")?            |
+| 25 | **Benchmark the escaping functions**                            | Low    | Trivial | Ensure no hot-path regression from `sanitizeDiagramID`     |
 
 ---
 

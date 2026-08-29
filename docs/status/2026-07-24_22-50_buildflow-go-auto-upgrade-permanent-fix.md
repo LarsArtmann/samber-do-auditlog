@@ -1,8 +1,8 @@
 # Status Report: BuildFlow go-auto-upgrade Fix & AGENTS.md Reconciliation
 
-**Date**: 2026-07-24 22:50  
-**Session Scope**: Diagnose and permanently fix the `go-auto-upgrade` buildflow failure, reconcile stale documentation.  
-**Commits**: `1bfb9a8` (`.buildflow.yml`), `9d17856` (AGENTS.md gotcha updates)  
+**Date**: 2026-07-24 22:50\
+**Session Scope**: Diagnose and permanently fix the `go-auto-upgrade` buildflow failure, reconcile stale documentation.\
+**Commits**: `1bfb9a8` (`.buildflow.yml`), `9d17856` (AGENTS.md gotcha updates)\
 **Branch**: `master` — pushed to `origin/master`
 
 ---
@@ -32,12 +32,12 @@ Created `.buildflow.yml` with three permanent settings:
 
 ```yaml
 skip_steps:
-  - go-auto-upgrade          # permanently incompatible with json/v2 exclusion policy
+  - go-auto-upgrade # permanently incompatible with json/v2 exclusion policy
 
 env:
-  GOEXPERIMENT: jsonv2       # belt-and-suspenders for non-devShell runs
+  GOEXPERIMENT: jsonv2 # belt-and-suspenders for non-devShell runs
 
-max_time: 5m                 # fuzz tests need ~30s each × 5 targets
+max_time: 5m # fuzz tests need ~30s each × 5 targets
 ```
 
 **Verification**: `buildflow --no-tui` passes cleanly — **27/29 steps green**, `go-auto-upgrade` skipped via config, `gitleaks` skipped by build mode.
@@ -46,13 +46,13 @@ max_time: 5m                 # fuzz tests need ~30s each × 5 targets
 
 Updated 3 stale AGENTS.md gotchas + 1 section:
 
-| Location | Before | After |
-|----------|--------|-------|
-| Line 141 (GOEXPERIMENT section) | Listed 4 sources where GOEXPERIMENT is set | Added 5th: BuildFlow config via `ApplyConfigEnv` |
-| Line 236 (`--max-time`) | Described as open problem needing CLI flag workaround | Marked **RESOLVED via `.buildflow.yml`** (`max_time: 5m`) |
-| Line 237 (GOEXPERIMENT env) | Falsely claimed `env:` config key "doesn't work" (`config view` ignores it) | Corrected: `env:` IS applied at runtime via `ApplyConfigEnv` (`pipeline.go:102`); `config view` display limitation noted |
-| Line 238 (`go-auto-upgrade`) | Described as "DANGEROUS", recommended ad-hoc exclusion | Marked **RESOLVED via `.buildflow.yml`** `skip_steps`; permanent rationale documented |
-| Line 239 (json/v2 exclusion) | Listed `go-output`, `go-branded-id` as transitive deps using json/v2 | Added `go-ndjson` (was missing) |
+| Location                        | Before                                                                      | After                                                                                                                    |
+| ------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Line 141 (GOEXPERIMENT section) | Listed 4 sources where GOEXPERIMENT is set                                  | Added 5th: BuildFlow config via `ApplyConfigEnv`                                                                         |
+| Line 236 (`--max-time`)         | Described as open problem needing CLI flag workaround                       | Marked **RESOLVED via `.buildflow.yml`** (`max_time: 5m`)                                                                |
+| Line 237 (GOEXPERIMENT env)     | Falsely claimed `env:` config key "doesn't work" (`config view` ignores it) | Corrected: `env:` IS applied at runtime via `ApplyConfigEnv` (`pipeline.go:102`); `config view` display limitation noted |
+| Line 238 (`go-auto-upgrade`)    | Described as "DANGEROUS", recommended ad-hoc exclusion                      | Marked **RESOLVED via `.buildflow.yml`** `skip_steps`; permanent rationale documented                                    |
+| Line 239 (json/v2 exclusion)    | Listed `go-output`, `go-branded-id` as transitive deps using json/v2        | Added `go-ndjson` (was missing)                                                                                          |
 
 ---
 

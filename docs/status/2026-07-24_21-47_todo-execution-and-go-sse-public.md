@@ -41,14 +41,14 @@
 
 ### Quality Gate (final run)
 
-| Check | Result |
-|-------|--------|
-| Build (`GOEXPERIMENT=jsonv2 go build ./...`) | PASS |
-| Vet (`GOEXPERIMENT=jsonv2 go vet ./...`) | PASS |
-| Generate (`GOEXPERIMENT=jsonv2 go generate ./...`) | No drift |
+| Check                                                      | Result          |
+| ---------------------------------------------------------- | --------------- |
+| Build (`GOEXPERIMENT=jsonv2 go build ./...`)               | PASS            |
+| Vet (`GOEXPERIMENT=jsonv2 go vet ./...`)                   | PASS            |
+| Generate (`GOEXPERIMENT=jsonv2 go generate ./...`)         | No drift        |
 | Tests (`GOEXPERIMENT=jsonv2 go test -race -count=1 ./...`) | 4 packages PASS |
-| Lint (`golangci-lint run --timeout=10m`) | 0 issues |
-| Coverage (`sh scripts/coverage-gate.sh`) | 94.1% ≥ 94% ✓ |
+| Lint (`golangci-lint run --timeout=10m`)                   | 0 issues        |
+| Coverage (`sh scripts/coverage-gate.sh`)                   | 94.1% ≥ 94% ✓   |
 
 ### Counts
 

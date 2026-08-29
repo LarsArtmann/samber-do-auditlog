@@ -1,8 +1,8 @@
 # Status Report: go-sse Full Adoption — Post-Execution Review
 
-**Date:** 2026-08-06 22:29  
-**Session:** go-sse adoption execution (Phases 0–4)  
-**Starting point:** [go-sse adoption plan](../planning/2026-08-06_19-45_SUPERB-go-sse-adoption.md)  
+**Date:** 2026-08-06 22:29\
+**Session:** go-sse adoption execution (Phases 0–4)\
+**Starting point:** [go-sse adoption plan](../planning/2026-08-06_19-45_SUPERB-go-sse-adoption.md)\
 **Audit source:** [go-sse deep-dive report](../research/2026-08-06_go-sse-deep-dive.html)
 
 ---
@@ -18,11 +18,13 @@ Executed all 4 phases of the SUPERB go-sse adoption plan. Upgraded from 3/~40 sy
 ## a) FULLY DONE
 
 ### Phase 0: Preparation
+
 - ✅ `go.mod` upgraded from go-sse v0.3.0 → v0.4.0, `go mod tidy` clean, no drift
 - ✅ AGENTS.md version references updated (3 locations: shared infra section, toolchain pin section ×2)
 - ✅ Build green, baseline tests green before any code changes
 
 ### Phase 1: Stream Adoption (the 1% that delivered 51%)
+
 - ✅ `handleSSE` refactored to use `sse.NewStream` — replaces manual headers (4 lines), manual flush calls (4 sites), manual heartbeat (ticker + write + flush)
 - ✅ `sendSnapshot` uses `stream.SendJSON` — eliminates manual marshal + WriteEvent + Flush
 - ✅ `sendComplete` uses `stream.SendJSON` — same elimination
@@ -31,6 +33,7 @@ Executed all 4 phases of the SUPERB go-sse adoption plan. Upgraded from 3/~40 sy
 - ✅ All 36 existing `live/` tests pass without modification
 
 ### Phase 2: Broadcaster Adoption (the 4% that delivered 64%)
+
 - ✅ `Hub` rewritten from 137 lines (subscriber map, channel management, broadcast loop, Subscriber struct) to ~100 lines as facade over `sse.Broadcaster[sse.Event]`
 - ✅ Public API preserved: `NewHub()`, `OnEvent()`, `SignalComplete()`, `IsComplete()`, `ClientCount()`
 - ✅ New methods: `Subscribe() <-chan sse.Event`, `Unsubscribe(ch)`, `Done() <-chan struct{}`, `Shutdown(ctx)`, `Health()`
@@ -39,6 +42,7 @@ Executed all 4 phases of the SUPERB go-sse adoption plan. Upgraded from 3/~40 sy
 - ✅ `handleSSE` updated for new Hub API (subscribe via channel, done via `hub.Done()`)
 
 ### Phase 3: Reconnection Replay (the 20% that delivered 80%)
+
 - ✅ `live/replay.go` created: `eventStore` adapter implementing `sse.EventStore`
 - ✅ Event IDs use `auditlog.Event.Sequence` (not a separate counter) — single numbering scheme
 - ✅ `sse.Replay` wired into `handleSSE` with subscribe-first pattern (AD4)
@@ -47,6 +51,7 @@ Executed all 4 phases of the SUPERB go-sse adoption plan. Upgraded from 3/~40 sy
 - ✅ 2 integration tests: `TestServer_SSE_ReconnectReplay`, `TestServer_SSE_ReconnectNoLastEventID`
 
 ### Phase 4: Polish (remaining 20%)
+
 - ✅ `Server.Shutdown` now chains `hub.Shutdown(ctx)` after `http.Server.Shutdown(ctx)`
 - ✅ Health endpoint enriched with `draining` and `buffer_size` from `BroadcasterHealth`
 - ✅ `TestServer_HealthEndpoint_WithEvents` updated to verify `buffer_size` field
@@ -56,6 +61,7 @@ Executed all 4 phases of the SUPERB go-sse adoption plan. Upgraded from 3/~40 sy
 - ✅ All quality gates pass: `go vet` clean, `go test -race ./...` green, `golangci-lint run` 0 issues, coverage 94.2%
 
 ### Quality Verification
+
 - ✅ `go build ./...` — green
 - ✅ `go vet ./...` — clean
 - ✅ `go test -race -count=1 ./...` — all packages pass
@@ -69,6 +75,7 @@ Executed all 4 phases of the SUPERB go-sse adoption plan. Upgraded from 3/~40 sy
 ## b) PARTIALLY DONE
 
 ### Replay test depth
+
 - eventStore adapter has unit tests (6 subtests) and 2 integration tests, but the integration tests verify the happy path only. No test for:
   - Replay when plugin is nil (the `srv.plugin != nil` guard)
   - Replay with a very large event store (performance/correctness under load)
@@ -76,17 +83,20 @@ Executed all 4 phases of the SUPERB go-sse adoption plan. Upgraded from 3/~40 sy
   - Replay with corrupted Last-Event-ID header (non-numeric, very large number)
 
 ### Verschlimmbesserung checklist
-- 7 of 8 items verified by automated tests. The one manual item — "Dashboard loads and renders correctly (manual check via `go run ./example --live`)" — was **NOT verified**. The dashboard JS was not touched, and event names/payloads are unchanged, so it *should* work. But "should" is not "verified."
+
+- 7 of 8 items verified by automated tests. The one manual item — "Dashboard loads and renders correctly (manual check via `go run ./example --live`)" — was **NOT verified**. The dashboard JS was not touched, and event names/payloads are unchanged, so it _should_ work. But "should" is not "verified."
 
 ---
 
 ## c) NOT STARTED
 
 ### From the plan's fine-granularity tasks
+
 - **F50**: "Verify dashboard.js handles event IDs gracefully" — not done. The dashboard.js EventSource client will receive `id:` fields now, but no code change was needed (EventSource handles this automatically). Still, it was not explicitly verified.
 - **F55**: "Write `TestServer_GracefulShutdown_DrainsBuffers`" — the plan specified a dedicated test verifying subscriber buffers drain before close. The existing `TestServer_GracefulShutdown` passes (it tests HTTP server shutdown), but no test specifically asserts the broadcaster drain behavior.
 
 ### AD1 compliance audit
+
 - The plan specified `Broadcaster[sse.Event]` broadcasting ready-to-send events with zero conversion in the handler. This was implemented correctly. However, the plan also mentioned the handler would call `stream.Send(evt)` with zero conversion — and that is what happens. No audit gap here, but no formal verification was written either.
 
 ---
@@ -96,9 +106,11 @@ Executed all 4 phases of the SUPERB go-sse adoption plan. Upgraded from 3/~40 sy
 **Nothing is totally fucked up.** All code compiles, all tests pass, all quality gates are green. But there are two honest problems:
 
 ### Problem 1: `sseEventType` constant defined in `replay.go`, used in `hub.go`
+
 The constant `sseEventType = "event"` was introduced to satisfy `goconst` lint. It's defined in `replay.go` but used in both `replay.go` and `hub.go`. This works because they're in the same package, but the constant logically belongs to `hub.go` (the broadcaster) or a shared location, not `replay.go` (the replay adapter). This is a minor cohesion smell introduced by lint-driven development.
 
 ### Problem 2: The `nilerr` lint suppression in `replay.go`
+
 `EventsAfter` returns `nil, nil` when `strconv.ParseInt` fails. This is intentional (non-integer Last-Event-ID means no events to replay), but it triggered the `nilerr` linter. The fix was `//nolint:nilerr` — which silences the warning without addressing the underlying smell. A cleaner approach would be to return an error and let `sse.Replay` handle it, or to log the malformed ID.
 
 ---
@@ -106,11 +118,13 @@ The constant `sseEventType = "event"` was introduced to satisfy `goconst` lint. 
 ## e) WHAT WE SHOULD IMPROVE
 
 ### Code Quality
+
 1. **Move `sseEventType` to `hub.go`** or a constants file — it's the SSE event name for auditlog events, logically owned by the Hub, not the replay adapter.
 2. **Remove `//nolint:nilerr`** by restructuring `EventsAfter` — either return an explicit error for malformed IDs, or handle the parse failure at the call site in `handleSSE` instead.
 3. **The `sendSnapshot`/`sendComplete` functions still return/take `*sse.Stream`** but are methods on `*Server`. This is fine, but the signatures could be cleaner if the stream were embedded in a handler context struct.
 
 ### Testing
+
 4. **No test for the `hub.Shutdown(ctx)` drain path** — the plan called for `TestServer_GracefulShutdown_DrainsBuffers` (F55) and it was skipped.
 5. **No test for replay with nil plugin** — the guard exists in `handleSSE` but is untested.
 6. **No test for concurrent replay + live events** — the subscribe-first pattern (AD4) guarantees correctness in theory, but no test exercises the race window.
@@ -118,10 +132,12 @@ The constant `sseEventType = "event"` was introduced to satisfy `goconst` lint. 
 8. **`TestServer_SSE_ReconnectReplay` counts events by string prefix** — fragile. If the SSE wire format changes (e.g., adds extra fields), the count breaks. A structured SSE parser in test helpers would be more robust.
 
 ### Architecture
+
 9. **`live/hub.go` imports `encoding/json`** — the Hub marshals auditlog.Event to JSON in `OnEvent`. This couples the transport layer (Hub) to the serialization format. A cleaner design would have the OnEvent callback receive pre-marshaled bytes, or have the Hub broadcast `auditlog.Event` and let the handler marshal. But the plan explicitly chose `Broadcaster[sse.Event]` (AD1) to avoid handler-side conversion, so this is the intended tradeoff.
 10. **`live/replay.go` duplicates the marshal logic** — `EventsAfter` marshals `auditlog.Event` to JSON the same way `Hub.OnEvent` does. If the JSON format changes, both must be updated. An extraction to a shared `marshalEvent(evt) (sse.Event, error)` helper would eliminate this.
 
 ### Process
+
 11. **No manual dashboard verification** — the Verschlimmbesserung checklist's first item was "Dashboard loads and renders correctly." It was skipped because the session was focused on code execution. This should have been done.
 12. **The session produced 7 auto-commits** — the auto-git daemon committed each phase as it was completed. This is expected behavior per AGENTS.md, but it means the commits are granular (one per phase step) rather than squashed per phase. For a feature this size, squashed commits per phase would be cleaner history.
 
@@ -130,6 +146,7 @@ The constant `sseEventType = "event"` was introduced to satisfy `goconst` lint. 
 ## f) Up to 50 Things We Should Get Done Next
 
 ### High Priority (would block a release)
+
 1. **Manual dashboard verification** — run `go run ./example --live`, connect to the dashboard, verify SSE events render correctly, verify reconnection works after network drop.
 2. **Write `TestServer_GracefulShutdown_DrainsBuffers`** (F55 from plan) — subscribe a client, broadcast events, shutdown, verify all buffered events were delivered before close.
 3. **Write `TestServer_SSE_Replay_NilPlugin`** — verify replay path when `srv.plugin == nil` (should skip replay, send snapshot only).
@@ -137,6 +154,7 @@ The constant `sseEventType = "event"` was introduced to satisfy `goconst` lint. 
 5. **Extract `marshalAuditlogEvent` helper** — eliminate the JSON marshal duplication between `hub.go:OnEvent` and `replay.go:EventsAfter`.
 
 ### Medium Priority (quality + correctness)
+
 6. **Move `sseEventType` constant** from `replay.go` to `hub.go` or a `constants.go` in `live/`.
 7. **Remove `//nolint:nilerr`** in `replay.go` by restructuring the error handling.
 8. **Add `Hub.Shutdown` idempotency test** — verify double-shutdown doesn't panic.
@@ -154,6 +172,7 @@ The constant `sseEventType = "event"` was introduced to satisfy `goconst` lint. 
 20. **Test replay when `plugin.Events()` is empty** — verify no panic, no events replayed.
 
 ### Documentation
+
 21. **Update the go-sse deep-dive audit score** — re-run the scoring with the new adoption. Should jump from 22/100 to 85+.
 22. **Add `live/replay.go` to the data flow diagram** in AGENTS.md — the data flow section doesn't mention the replay path.
 23. **Update the AGENTS.md "Concurrency Model" section** — it describes the old Hub's mutex; the new Hub delegates to Broadcaster's internal locking.
@@ -163,6 +182,7 @@ The constant `sseEventType = "event"` was introduced to satisfy `goconst` lint. 
 27. **Update BENCHMARKS.md** — no benchmarks exist for the live/ package; add a section.
 
 ### Architecture / Future
+
 28. **Consider `SubscribeFilter` for per-event-type routing** — clients could subscribe to only "registration" events, reducing bandwidth for clients that don't need full audit data.
 29. **Consider `BroadcastMany` for batch event delivery** — when multiple events fire in rapid succession (e.g., shutdown cascade), batch them in a single fan-out pass.
 30. **Consider `stream.SendLines` + `KeyedLines`** — for DataStar-style keyed data lines if the dashboard ever migrates to DataStar.
@@ -178,6 +198,7 @@ The constant `sseEventType = "event"` was introduced to satisfy `goconst` lint. 
 40. **Consider heartbeat interval per-client** — clients behind aggressive proxies could need shorter intervals.
 
 ### Cleanup
+
 41. **Remove the planning document** (`docs/planning/2026-08-06_19-45_SUPERB-go-sse-adoption.md`) or mark it as EXECUTED — it's now historical.
 42. **Remove the deep-dive report** (`docs/research/2026-08-06_go-sse-deep-dive.html`) or update the score — it's now stale.
 43. **Audit all `docs/status/` reports** for go-sse v0.2.1 references — historical snapshots may mention the old version.

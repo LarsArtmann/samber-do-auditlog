@@ -43,6 +43,7 @@ Created a new service account key via `gcloud iam service-accounts keys create` 
 ### 9. Live Website Verified
 
 CI run `29903918930` — both Build Website and Deploy Website jobs passed. Verified live site via `fetch`:
+
 - Landing page: shows "16+ Export Formats", showcase section with 4 screenshots, demo section with copy button, newsletter form
 - Changelog page: v0.6.0 entry is live with all sections
 - All CI workflows green (CI + Website)
@@ -94,6 +95,7 @@ The stray `}` on line 1093 of `html.templ` was committed in a prior session and 
 ### 2. Firebase Deploy Was Broken for 9 Days Straight
 
 The website CI deploy job failed on every single push from July 13 through July 22 — 5 consecutive failures, all with the same `Failed to authenticate` error. Nobody noticed because:
+
 1. The build job succeeded (green check on the workflow)
 2. The failure was only in the deploy job (easy to miss)
 3. The live site was still serving the initial deploy (no visible downtime, just stale content)
@@ -231,18 +233,18 @@ The open PR bumps `astro` and `fast-uri` in the website pnpm dependencies. CI pa
 
 ## Session Summary
 
-| Metric | Value |
-|--------|-------|
-| Commits pushed | 5 (`db2b932`, `915aa18` [prior], `b040af4`, `a10783f`, `89a98de`) |
-| Working tree | Clean (all committed and pushed) |
-| Bugs fixed | 3 (stray `}` JS syntax error, DOMContentLoaded timing, Firebase deploy `echo` corruption) |
-| Key regenerated | Yes (gcloud + gh secret set) |
-| CI status | All green (CI + Website workflows passing) |
-| Live site | Updated and verified (showcase, demo, changelog v0.6.0 all live) |
-| Known live issues | Comparison section says "9+" instead of "16+" (1-line fix needed) |
-| Missing releases | 6 GitHub Releases (v0.1.0 through v0.6.0) |
-| Open PRs | 1 (Dependabot npm_and_yarn security update) |
-| Tests | `go vet`, `go build`, `go test -race` — all pass |
+| Metric            | Value                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| Commits pushed    | 5 (`db2b932`, `915aa18` [prior], `b040af4`, `a10783f`, `89a98de`)                         |
+| Working tree      | Clean (all committed and pushed)                                                          |
+| Bugs fixed        | 3 (stray `}` JS syntax error, DOMContentLoaded timing, Firebase deploy `echo` corruption) |
+| Key regenerated   | Yes (gcloud + gh secret set)                                                              |
+| CI status         | All green (CI + Website workflows passing)                                                |
+| Live site         | Updated and verified (showcase, demo, changelog v0.6.0 all live)                          |
+| Known live issues | Comparison section says "9+" instead of "16+" (1-line fix needed)                         |
+| Missing releases  | 6 GitHub Releases (v0.1.0 through v0.6.0)                                                 |
+| Open PRs          | 1 (Dependabot npm_and_yarn security update)                                               |
+| Tests             | `go vet`, `go build`, `go test -race` — all pass                                          |
 
 ---
 

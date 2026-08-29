@@ -32,32 +32,32 @@
 
 ### UI/UX Problems Found
 
-| #   | Problem                                                                       | Severity |
-| --- | ----------------------------------------------------------------------------- | -------- |
-| 1   | No search/filter on services table                                            | HIGH     |
-| 2   | No way to see error details (error message hidden)                            | HIGH     |
-| 3   | No scope tree visualization                                                   | HIGH     |
-| 4   | No total build time stat                                                      | MEDIUM   |
-| 5   | No shutdown duration in services table                                        | MEDIUM   |
-| 6   | No reverse dependencies shown                                                 | MEDIUM   |
-| 7   | Events table event types are abbreviated inconsistently ("reg", "inv", "sht") | MEDIUM   |
-| 8   | No responsive design for mobile                                               | MEDIUM   |
-| 9   | Graph has no tooltips on hover                                                | MEDIUM   |
-| 10  | Graph arrows don't account for node width (overlap into node)                 | MEDIUM   |
-| 11  | No dark/light theme toggle                                                    | LOW      |
-| 12  | No export button within HTML (can't re-download)                              | LOW      |
-| 13  | Version not shown in header                                                   | LOW      |
-| 14  | Timeline doesn't show shutdown durations                                      | LOW      |
-| 15  | No "copy as JSON" button for report data                                      | LOW      |
+| #  | Problem                                                                       | Severity |
+| -- | ----------------------------------------------------------------------------- | -------- |
+| 1  | No search/filter on services table                                            | HIGH     |
+| 2  | No way to see error details (error message hidden)                            | HIGH     |
+| 3  | No scope tree visualization                                                   | HIGH     |
+| 4  | No total build time stat                                                      | MEDIUM   |
+| 5  | No shutdown duration in services table                                        | MEDIUM   |
+| 6  | No reverse dependencies shown                                                 | MEDIUM   |
+| 7  | Events table event types are abbreviated inconsistently ("reg", "inv", "sht") | MEDIUM   |
+| 8  | No responsive design for mobile                                               | MEDIUM   |
+| 9  | Graph has no tooltips on hover                                                | MEDIUM   |
+| 10 | Graph arrows don't account for node width (overlap into node)                 | MEDIUM   |
+| 11 | No dark/light theme toggle                                                    | LOW      |
+| 12 | No export button within HTML (can't re-download)                              | LOW      |
+| 13 | Version not shown in header                                                   | LOW      |
+| 14 | Timeline doesn't show shutdown durations                                      | LOW      |
+| 15 | No "copy as JSON" button for report data                                      | LOW      |
 
 ### Report Data Model Improvements
 
-| #   | Improvement                             | Impact                           |
-| --- | --------------------------------------- | -------------------------------- |
-| 1   | Add `TotalBuildDurationMs` to Report    | Sum of all first build durations |
-| 2   | Add `TotalShutdownDurationMs` to Report | Wall-clock total                 |
-| 3   | Add `ShutdownSucceeded bool` to Report  | Any shutdown errors?             |
-| 4   | Add `ScopeCount int` to Report          | Pre-computed for stats cards     |
+| # | Improvement                             | Impact                           |
+| - | --------------------------------------- | -------------------------------- |
+| 1 | Add `TotalBuildDurationMs` to Report    | Sum of all first build durations |
+| 2 | Add `TotalShutdownDurationMs` to Report | Wall-clock total                 |
+| 3 | Add `ShutdownSucceeded bool` to Report  | Any shutdown errors?             |
+| 4 | Add `ScopeCount int` to Report          | Pre-computed for stats cards     |
 
 ---
 

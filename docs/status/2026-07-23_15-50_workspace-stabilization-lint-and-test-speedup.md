@@ -65,58 +65,58 @@
 
 ## f) UP TO 50 THINGS WE SHOULD GET DONE NEXT
 
-| #  | Task                                                                                                      | Impact | Effort |
-| -- | --------------------------------------------------------------------------------------------------------- | ------ | ------ |
-| 1  | Publish `auditlog-core` to GitHub (fix sum verification — `GONOSUMDB`/`GONOSUMCHECK`)                      | High   | S      |
-| 2  | Tag `auditlog-core` `v0.1.0`                                                                              | High   | XS     |
-| 3  | Remove `replace` directives from all `go.mod` files after publish                                         | High   | XS     |
-| 4  | Consolidate go-workflow `helpers.go:WriteToFile` to delegate to `auditlogcore.WriteToFile`                | High   | S      |
-| 5  | Cascade `context.Context` through go-workflow export API (`ExportJSON`, `ExportNDJSON`)                   | Medium | M      |
-| 6  | Extract `sseConnect`/`readSSEEvent`/`skipSnapshot` into `auditlog-core/live/testutil`                     | High   | S      |
-| 7  | Standardize on `encoding/json` OR `encoding/json/v2` across all three projects                            | High   | M      |
-| 8  | Extract NDJSON read/write into `auditlog-core/ndjson/` (after #7)                                         | High   | M      |
-| 9  | Extract format detection/loader into `auditlog-core/loader/` (after #7)                                   | High   | M      |
-| 10 | Add `.github/workflows/ci.yml` to auditlog-core (build + test -race + lint)                               | High   | S      |
-| 11 | Add cross-repo CI that tests all three together                                                           | High   | M      |
-| 12 | Add `go test -race -count=1` to all CI pipelines                                                          | High   | XS     |
-| 13 | Add reconnection test to integration test (disconnect, reconnect, verify snapshot)                        | High   | S      |
-| 14 | Add concurrent-write test for `WriteToFile`                                                               | Medium | XS     |
-| 15 | Add SSE end-to-end benchmark (connect → N events → disconnect)                                            | Medium | S      |
-| 16 | Rename `HealthInfo` → `HealthResponse` before v0.1.0 (breaking change, do it now)                         | Medium | S      |
-| 17 | Make `Subscriber` an interface (`ID()`, `Events()`, `Done()`)                                             | Low    | S      |
-| 18 | Create multi-module test runner script (`find . -name go.mod -execdir go test ./... \;`)                  | High   | XS     |
-| 19 | Add `.envrc` with `export GOEXPERIMENT=jsonv2` to all three projects                                      | Medium | XS     |
-| 20 | Migrate go-workflow dashboard.go to standard `encoding/json` (drop json/v2)                               | High   | M      |
-| 21 | Add `//go:build goexperiment.jsonv2` constraint OR remove json/v2 from go-workflow                        | High   | S      |
-| 22 | Update both `FEATURES.md` to reflect auditlog-core extraction                                             | Low    | XS     |
-| 23 | Add `docs/DOMAIN_LANGUAGE.md` to samber-do-auditlog                                                       | Low    | S      |
-| 24 | Write `MIGRATION.md` for downstream projects upgrading to core                                            | Medium | S      |
-| 25 | Add `auditlog-core/examples/minimal` runnable demo                                                        | Medium | S      |
-| 26 | Add `auditlog-core/cmd/auditlog-core-demo` CLI                                                            | Low    | M      |
-| 27 | Add `flake.nix` to auditlog-core for devShell parity                                                      | Low    | S      |
-| 28 | Add `go mod tidy` to pre-commit hooks                                                                     | Medium | XS     |
-| 29 | Add Prometheus metrics interface (events-sent, clients-connected)                                         | Low    | M      |
-| 30 | Add `OnSubscribe`/`OnUnsubscribe` callbacks to Hub for metrics                                            | Low    | XS     |
-| 31 | Add `Server.Handle(pattern, handler)` for extensibility                                                   | Low    | S      |
-| 32 | Document `SnapshotProvider`/`CompleteProvider` lifecycle in README                                        | Medium | XS     |
-| 33 | Add `ErrInvalidPrefix` sentinel for malformed route prefixes                                              | Low    | XS     |
-| 34 | Add `WithHeartbeatInterval` as a public test helper option                                                | Low    | XS     |
-| 35 | Consolidate `makeReportProvider`/`Snapshot`/`Complete`/`Health` factories into generic helper             | Low    | S      |
-| 36 | Refactor `With*Provider` options to use `Option func(*Server) error`                                      | Low    | S      |
-| 37 | Add test for `handleReport` returning nil provider error                                                  | Medium | XS     |
-| 38 | Add test for SSE handler when `Flusher` assertion fails                                                   | Low    | XS     |
-| 39 | Add test for `WriteToFile` directory-creation failure path                                                | Low    | XS     |
-| 40 | Tag go-workflow and samber-do versions that use core `v0.1.0`                                             | High   | XS     |
-| 41 | Verify both `replace` directives are path-consistent (catch drift)                                        | Low    | XS     |
-| 42 | Add `go work sync` to CI to keep workspace in sync                                                        | Low    | XS     |
-| 43 | Create `auditlog-core/CHANGELOG.md` entry for v0.1.0                                                      | Medium | XS     |
-| 44 | Add `healthResponse` version field for API stability                                                      | Low    | XS     |
-| 45 | Add `context.Context` to `CheckNoClobber` (currently takes only path)                                     | Low    | XS     |
-| 46 | Add SSE backpressure test (fill buffer, verify drop, verify no block)                                     | Medium | S      |
-| 47 | Add `go vet` to CI alongside golangci-lint                                                                | Low    | XS     |
-| 48 | Add `gosec` to CI for security scanning                                                                   | Low    | XS     |
-| 49 | Add `govulncheck` to CI for vulnerability scanning                                                        | Low    | XS     |
-| 50 | Create architecture diagram (D2 or Mermaid) showing all three projects + dependencies                     | Low    | S      |
+| #  | Task                                                                                          | Impact | Effort |
+| -- | --------------------------------------------------------------------------------------------- | ------ | ------ |
+| 1  | Publish `auditlog-core` to GitHub (fix sum verification — `GONOSUMDB`/`GONOSUMCHECK`)         | High   | S      |
+| 2  | Tag `auditlog-core` `v0.1.0`                                                                  | High   | XS     |
+| 3  | Remove `replace` directives from all `go.mod` files after publish                             | High   | XS     |
+| 4  | Consolidate go-workflow `helpers.go:WriteToFile` to delegate to `auditlogcore.WriteToFile`    | High   | S      |
+| 5  | Cascade `context.Context` through go-workflow export API (`ExportJSON`, `ExportNDJSON`)       | Medium | M      |
+| 6  | Extract `sseConnect`/`readSSEEvent`/`skipSnapshot` into `auditlog-core/live/testutil`         | High   | S      |
+| 7  | Standardize on `encoding/json` OR `encoding/json/v2` across all three projects                | High   | M      |
+| 8  | Extract NDJSON read/write into `auditlog-core/ndjson/` (after #7)                             | High   | M      |
+| 9  | Extract format detection/loader into `auditlog-core/loader/` (after #7)                       | High   | M      |
+| 10 | Add `.github/workflows/ci.yml` to auditlog-core (build + test -race + lint)                   | High   | S      |
+| 11 | Add cross-repo CI that tests all three together                                               | High   | M      |
+| 12 | Add `go test -race -count=1` to all CI pipelines                                              | High   | XS     |
+| 13 | Add reconnection test to integration test (disconnect, reconnect, verify snapshot)            | High   | S      |
+| 14 | Add concurrent-write test for `WriteToFile`                                                   | Medium | XS     |
+| 15 | Add SSE end-to-end benchmark (connect → N events → disconnect)                                | Medium | S      |
+| 16 | Rename `HealthInfo` → `HealthResponse` before v0.1.0 (breaking change, do it now)             | Medium | S      |
+| 17 | Make `Subscriber` an interface (`ID()`, `Events()`, `Done()`)                                 | Low    | S      |
+| 18 | Create multi-module test runner script (`find . -name go.mod -execdir go test ./... \;`)      | High   | XS     |
+| 19 | Add `.envrc` with `export GOEXPERIMENT=jsonv2` to all three projects                          | Medium | XS     |
+| 20 | Migrate go-workflow dashboard.go to standard `encoding/json` (drop json/v2)                   | High   | M      |
+| 21 | Add `//go:build goexperiment.jsonv2` constraint OR remove json/v2 from go-workflow            | High   | S      |
+| 22 | Update both `FEATURES.md` to reflect auditlog-core extraction                                 | Low    | XS     |
+| 23 | Add `docs/DOMAIN_LANGUAGE.md` to samber-do-auditlog                                           | Low    | S      |
+| 24 | Write `MIGRATION.md` for downstream projects upgrading to core                                | Medium | S      |
+| 25 | Add `auditlog-core/examples/minimal` runnable demo                                            | Medium | S      |
+| 26 | Add `auditlog-core/cmd/auditlog-core-demo` CLI                                                | Low    | M      |
+| 27 | Add `flake.nix` to auditlog-core for devShell parity                                          | Low    | S      |
+| 28 | Add `go mod tidy` to pre-commit hooks                                                         | Medium | XS     |
+| 29 | Add Prometheus metrics interface (events-sent, clients-connected)                             | Low    | M      |
+| 30 | Add `OnSubscribe`/`OnUnsubscribe` callbacks to Hub for metrics                                | Low    | XS     |
+| 31 | Add `Server.Handle(pattern, handler)` for extensibility                                       | Low    | S      |
+| 32 | Document `SnapshotProvider`/`CompleteProvider` lifecycle in README                            | Medium | XS     |
+| 33 | Add `ErrInvalidPrefix` sentinel for malformed route prefixes                                  | Low    | XS     |
+| 34 | Add `WithHeartbeatInterval` as a public test helper option                                    | Low    | XS     |
+| 35 | Consolidate `makeReportProvider`/`Snapshot`/`Complete`/`Health` factories into generic helper | Low    | S      |
+| 36 | Refactor `With*Provider` options to use `Option func(*Server) error`                          | Low    | S      |
+| 37 | Add test for `handleReport` returning nil provider error                                      | Medium | XS     |
+| 38 | Add test for SSE handler when `Flusher` assertion fails                                       | Low    | XS     |
+| 39 | Add test for `WriteToFile` directory-creation failure path                                    | Low    | XS     |
+| 40 | Tag go-workflow and samber-do versions that use core `v0.1.0`                                 | High   | XS     |
+| 41 | Verify both `replace` directives are path-consistent (catch drift)                            | Low    | XS     |
+| 42 | Add `go work sync` to CI to keep workspace in sync                                            | Low    | XS     |
+| 43 | Create `auditlog-core/CHANGELOG.md` entry for v0.1.0                                          | Medium | XS     |
+| 44 | Add `healthResponse` version field for API stability                                          | Low    | XS     |
+| 45 | Add `context.Context` to `CheckNoClobber` (currently takes only path)                         | Low    | XS     |
+| 46 | Add SSE backpressure test (fill buffer, verify drop, verify no block)                         | Medium | S      |
+| 47 | Add `go vet` to CI alongside golangci-lint                                                    | Low    | XS     |
+| 48 | Add `gosec` to CI for security scanning                                                       | Low    | XS     |
+| 49 | Add `govulncheck` to CI for vulnerability scanning                                            | Low    | XS     |
+| 50 | Create architecture diagram (D2 or Mermaid) showing all three projects + dependencies         | Low    | S      |
 
 ## g) QUESTIONS I CANNOT ANSWER MYSELF
 

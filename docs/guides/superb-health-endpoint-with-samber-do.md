@@ -6,15 +6,15 @@
 
 ## The Core Insight
 
-**samber/do already *is* your health engine.** Every service that implements `do.HealthcheckerWithContext` gets checked by `injector.HealthCheckWithContext(ctx)`, which runs **concurrently, in reverse-invocation order**, and returns `map[string]error` (`nil` value = healthy). Your job is *not* to write health checks — it's to **expose the right signals at the right endpoint, with the right timeouts, and without leaking internals or hanging under load.**
+**samber/do already _is_ your health engine.** Every service that implements `do.HealthcheckerWithContext` gets checked by `injector.HealthCheckWithContext(ctx)`, which runs **concurrently, in reverse-invocation order**, and returns `map[string]error` (`nil` value = healthy). Your job is _not_ to write health checks — it's to **expose the right signals at the right endpoint, with the right timeouts, and without leaking internals or hanging under load.**
 
 The #1 mistake is conflating one `/health` endpoint with three distinct probes:
 
-| Endpoint          | Question it answers                         | samber/do role                                                        | Failure code                |
-| ----------------- | ------------------------------------------- | --------------------------------------------------------------------- | --------------------------- |
-| `/healthz` (liveness) | "Is the process alive & not deadlocked?"    | **None** — must stay cheap & dependency-free                          | 500 if deadlocked           |
-| `/readyz` (readiness) | "Can I serve traffic right now?"            | **`injector.HealthCheckWithContext(ctx)`** — checks DB, cache, downstream | **503** if any _critical_ dep fails |
-| `/startupz` (startup) | "Am I done booting?" (slow apps)            | Gate on critical eager services being invoked/healthy once            | 503 until ready             |
+| Endpoint              | Question it answers                      | samber/do role                                                            | Failure code                        |
+| --------------------- | ---------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------- |
+| `/healthz` (liveness) | "Is the process alive & not deadlocked?" | **None** — must stay cheap & dependency-free                              | 500 if deadlocked                   |
+| `/readyz` (readiness) | "Can I serve traffic right now?"         | **`injector.HealthCheckWithContext(ctx)`** — checks DB, cache, downstream | **503** if any _critical_ dep fails |
+| `/startupz` (startup) | "Am I done booting?" (slow apps)         | Gate on critical eager services being invoked/healthy once                | 503 until ready                     |
 
 A superb endpoint implements **readiness** against the container, keeps **liveness** trivially fast, and degrades gracefully during **shutdown**.
 
@@ -109,7 +109,7 @@ type Response struct {
 
 ### Step 4 — Separate critical from non-critical checks
 
-This is the line between *functional* and *superb*. A failing metrics-exporter must not take your app out of rotation. Classify services, and gate readiness only on **critical** ones.
+This is the line between _functional_ and _superb_. A failing metrics-exporter must not take your app out of rotation. Classify services, and gate readiness only on **critical** ones.
 
 ```go
 type Probe struct {
@@ -126,7 +126,7 @@ type Probe struct {
 
 ### Step 5 — The readiness handler (aggregate + classify)
 
-Hold the **root injector** at construction (this is *not* the service-locator smell — `HealthCheck` is a container-level operation, not business logic resolved ad-hoc per request). Never `do.Invoke` inside the handler (DO-1).
+Hold the **root injector** at construction (this is _not_ the service-locator smell — `HealthCheck` is a container-level operation, not business logic resolved ad-hoc per request). Never `do.Invoke` inside the handler (DO-1).
 
 ```go
 func (p *Probe) Readiness(w http.ResponseWriter, r *http.Request) {
@@ -257,16 +257,16 @@ mux.HandleFunc("/readyz", internalOnly(probe.Readiness))  // 200/503 externally;
 
 ## What Separates "Superb" from "Works"
 
-| Concern            | Naive                       | Superb                                                        |
-| ------------------ | --------------------------- | ------------------------------------------------------------- |
-| Probes             | One `/health`               | Split liveness / readiness / startup                         |
-| Failure semantics  | Any dep down → 503          | Critical vs non-critical classification                       |
-| Polling resilience | `Ping()` per request        | Background-refresh cache                                      |
-| Timeouts           | None (hangs)                | Per-service + global budgets on `InjectorOpts`               |
-| Shutdown           | Abrupt 503 after close      | Flips to 503 _before_ closing connections                     |
-| Observability      | `fmt.Println`               | `samber-do-auditlog` records every check as a timed event    |
-| Lazy gotcha        | "DB never checked at boot"  | Eager-provide or `do.Invoke` critical services at startup    |
-| Security           | Leaks internals             | Aggregate externally; detail internal-only; `dohttp` never public |
+| Concern            | Naive                      | Superb                                                            |
+| ------------------ | -------------------------- | ----------------------------------------------------------------- |
+| Probes             | One `/health`              | Split liveness / readiness / startup                              |
+| Failure semantics  | Any dep down → 503         | Critical vs non-critical classification                           |
+| Polling resilience | `Ping()` per request       | Background-refresh cache                                          |
+| Timeouts           | None (hangs)               | Per-service + global budgets on `InjectorOpts`                    |
+| Shutdown           | Abrupt 503 after close     | Flips to 503 _before_ closing connections                         |
+| Observability      | `fmt.Println`              | `samber-do-auditlog` records every check as a timed event         |
+| Lazy gotcha        | "DB never checked at boot" | Eager-provide or `do.Invoke` critical services at startup         |
+| Security           | Leaks internals            | Aggregate externally; detail internal-only; `dohttp` never public |
 
 ---
 
@@ -281,12 +281,12 @@ type HealthcheckerWithContext interface{ HealthCheck(context.Context) error }
 
 **Package-level single-service checks (return `error`):**
 
-| Function                          | Signature                                        |
-| --------------------------------- | ------------------------------------------------ |
-| `do.HealthCheck[T]`               | `func(i Injector) error`                         |
-| `do.HealthCheckWithContext[T]`    | `func(ctx context.Context, i Injector) error`    |
-| `do.HealthCheckNamed`             | `func(i Injector, name string) error`            |
-| `do.HealthCheckNamedWithContext`  | `func(ctx context.Context, i Injector, name string) error` |
+| Function                         | Signature                                                  |
+| -------------------------------- | ---------------------------------------------------------- |
+| `do.HealthCheck[T]`              | `func(i Injector) error`                                   |
+| `do.HealthCheckWithContext[T]`   | `func(ctx context.Context, i Injector) error`              |
+| `do.HealthCheckNamed`            | `func(i Injector, name string) error`                      |
+| `do.HealthCheckNamedWithContext` | `func(ctx context.Context, i Injector, name string) error` |
 
 **Injector-level bulk checks (return `map[string]error`, nil value = healthy):**
 

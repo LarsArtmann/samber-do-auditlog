@@ -1,7 +1,7 @@
 # Performance Optimization Execution Plan
 
-**Date:** 2025-06-14  
-**Based on:** [Performance Review](../research/performance-review.html)  
+**Date:** 2025-06-14\
+**Based on:** [Performance Review](../research/performance-review.html)\
 **Goal:** Reduce GC pressure (43%→<15% CPU), eliminate OOM risk, reduce I/O syscalls, without breaking the public API or build.
 
 ---
@@ -10,25 +10,25 @@
 
 ### The 1% that delivers 51% of the result
 
-| #   | Task                                                                                                                    | Impact                                                                                                                    | Why                                                                                                                              |
-| --- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Struct map key** — replace `serviceKey()` string concat with `svcKey{scopeID, name}` struct key for all internal maps | Eliminates 3 of 9 allocations per hook invocation (33% reduction). GC is 43% of CPU → this alone could halve GC overhead. | `serviceKey()` is called 2–3× per hook, each producing a heap-allocated string. A struct key is a stack value — zero allocation. |
-| 2   | **Buffered I/O** — wrap `os.File` in `bufio.Writer` inside `writeToFile()`                                              | NDJSON export drops from N syscalls to ~1. 10–100× fewer context switches.                                                | Single-line change. Currently every `fmt.Fprintln` / `json.Encode` hits the kernel.                                              |
+| # | Task                                                                                                                    | Impact                                                                                                                    | Why                                                                                                                              |
+| - | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | **Struct map key** — replace `serviceKey()` string concat with `svcKey{scopeID, name}` struct key for all internal maps | Eliminates 3 of 9 allocations per hook invocation (33% reduction). GC is 43% of CPU → this alone could halve GC overhead. | `serviceKey()` is called 2–3× per hook, each producing a heap-allocated string. A struct key is a stack value — zero allocation. |
+| 2 | **Buffered I/O** — wrap `os.File` in `bufio.Writer` inside `writeToFile()`                                              | NDJSON export drops from N syscalls to ~1. 10–100× fewer context switches.                                                | Single-line change. Currently every `fmt.Fprintln` / `json.Encode` hits the kernel.                                              |
 
 ### The 4% that delivers 64% of the result
 
-| #   | Task                                                                    | Impact                                                           | Why                                                                                             |
-| --- | ----------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| 3   | **Config.MaxEvents** — cap the events slice to prevent unbounded growth | Eliminates OOM risk in long-running processes.                   | The `events` slice grows forever. At 10K invocations/sec it reaches 4GB in ~55 minutes.         |
-| 4   | **Config.InitialEventCapacity** — let users pre-size the events slice   | Eliminates `runtime.growslice` (31% of CPU) for known workloads. | Currently hardcoded to 1024. A user with 5000 services can pre-size and avoid 4+ reallocations. |
+| # | Task                                                                    | Impact                                                           | Why                                                                                             |
+| - | ----------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 3 | **Config.MaxEvents** — cap the events slice to prevent unbounded growth | Eliminates OOM risk in long-running processes.                   | The `events` slice grows forever. At 10K invocations/sec it reaches 4GB in ~55 minutes.         |
+| 4 | **Config.InitialEventCapacity** — let users pre-size the events slice   | Eliminates `runtime.growslice` (31% of CPU) for known workloads. | Currently hardcoded to 1024. A user with 5000 services can pre-size and avoid 4+ reallocations. |
 
 ### The 20% that delivers 80% of the result
 
-| #   | Task                                                                                          | Impact                                             | Why                                                                                                     |
-| --- | --------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| 5   | **enrichCapabilities cache** — cache `do.ExplainInjector` results, invalidate on registration | Reduces BuildReport CPU by ~33% on repeat calls.   | `do.ExplainInjector` is 33.4% of BuildReport CPU and 42.9% of its allocations. Called every `Report()`. |
-| 6   | **Atomic file writes** — write to temp file + `os.Rename`                                     | Crash-safe exports. No partial files.              | Currently `os.Create` truncates immediately. A crash mid-write corrupts the file.                       |
-| 7   | **Diagram export batching** — use `strings.Builder` + single write                            | Reduces syscall count for Mermaid/PlantUML export. | Currently 1 `fmt.Fprintln` per diagram line.                                                            |
+| # | Task                                                                                          | Impact                                             | Why                                                                                                     |
+| - | --------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 5 | **enrichCapabilities cache** — cache `do.ExplainInjector` results, invalidate on registration | Reduces BuildReport CPU by ~33% on repeat calls.   | `do.ExplainInjector` is 33.4% of BuildReport CPU and 42.9% of its allocations. Called every `Report()`. |
+| 6 | **Atomic file writes** — write to temp file + `os.Rename`                                     | Crash-safe exports. No partial files.              | Currently `os.Create` truncates immediately. A crash mid-write corrupts the file.                       |
+| 7 | **Diagram export batching** — use `strings.Builder` + single write                            | Reduces syscall count for Mermaid/PlantUML export. | Currently 1 `fmt.Fprintln` per diagram line.                                                            |
 
 ---
 

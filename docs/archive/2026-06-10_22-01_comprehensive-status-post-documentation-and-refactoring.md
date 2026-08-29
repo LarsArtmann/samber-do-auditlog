@@ -1,8 +1,8 @@
 # Comprehensive Status Report
 
-**Date:** 2026-06-10 22:01  
-**Branch:** master  
-**Commits ahead of origin:** 0 (all pushed)  
+**Date:** 2026-06-10 22:01\
+**Branch:** master\
+**Commits ahead of origin:** 0 (all pushed)\
 **Session:** Post-documentation-and-refactoring marathon
 
 ---
@@ -160,33 +160,33 @@ Speaking of which — `html_templ.go` should be marked as generated in `.gitattr
 
 Sorted by impact ÷ effort (highest ROI first):
 
-| #   | Task                                                   | Impact                       | Effort | File               |
-| --- | ------------------------------------------------------ | ---------------------------- | ------ | ------------------ |
-| 1   | **Cover `inferServiceType` `!ok` branch**              | Close 25% gap                | 5min   | `recorder.go:143`  |
-| 2   | **Cover `pruneScopeTreeRecursive` no-match branch**    | Close 6.7% gap               | 5min   | `types.go:525`     |
-| 3   | **Cover `writeToFile` close-error-only path**          | Close 20% gap                | 10min  | `plugin.go:225`    |
-| 4   | **Cover `ExportFilteredToFile` file creation error**   | Close 12.5% gap              | 10min  | `plugin.go:153`    |
-| 5   | **Cover `RecordHealthCheckWithContext` disabled path** | Close 11.1% gap              | 5min   | `plugin.go:187`    |
-| 6   | **Cover `enrichCapabilities` nil-ref skip**            | Close 5.9% gap               | 10min  | `recorder.go:155`  |
-| 7   | **Cover `OnBeforeShutdown` no-record path**            | Close 5.9% gap               | 10min  | `recorder.go:486`  |
-| 8   | **Cover `buildScopeTreeLocked` no-root fallback**      | Close 4.2% gap               | 10min  | `recorder.go:737`  |
-| 9   | **Cover `OnAfterInvocation` stack-not-found**          | Close 3.8% gap               | 10min  | `recorder.go:395`  |
-| 10  | **Cover `OnAfterShutdown` no-record path**             | Close 3.7% gap               | 10min  | `recorder.go:542`  |
-| 11  | **Cover `WriteMermaid` write-line error**              | Close 4% gap                 | 10min  | `mermaid.go:51`    |
-| 12  | **Cover `WritePlantUML` error paths**                  | Close 21.4% gap              | 10min  | `plantuml.go:13`   |
-| 13  | **Add `.gitattributes` with `linguist-generated`**     | Cleaner PR diffs             | 2min   | `.gitattributes`   |
-| 14  | **Determine if `plantumlLabelForRef` is dead code**    | Remove bloat or cover        | 10min  | `plantuml.go:88`   |
-| 15  | **Add `TestReport_Index` for O(1) lookups**            | Verify new feature           | 10min  | `auditlog_test.go` |
-| 16  | **Add `TestReport_Filtered` with deep scope tree**     | Verify pruning               | 15min  | `auditlog_test.go` |
-| 17  | **Document `Report.Index()` in README**                | User discoverability         | 5min   | `README.md`        |
-| 18  | **Investigate `IsRoot()` empty string check**          | Remove dead code or document | 10min  | `types.go:106`     |
-| 19  | **Add `TestWritePlantUML_WithDepsAndTypes`**           | Feature parity with Mermaid  | 10min  | `auditlog_test.go` |
-| 20  | **Add benchmark for `Report.Index()`**                 | Performance baseline         | 10min  | `auditlog_test.go` |
-| 21  | **Cover `updateInvocationAggregate` service-create**   | Close 15.4% gap              | 10min  | `recorder.go:451`  |
-| 22  | **Add `TestResolveServiceScope_AncestorNotFound`**     | Close 10% gap                | 10min  | `auditlog_test.go` |
-| 23  | **Cover `OnAfterRegistration` re-registration**        | Close 5.3% gap               | 10min  | `recorder.go:291`  |
-| 24  | **Add `ExampleReport_Index`**                          | Godoc discoverability        | 10min  | `example_test.go`  |
-| 25  | **Add `ExampleReport_Filtered`**                       | Godoc discoverability        | 10min  | `example_test.go`  |
+| #  | Task                                                   | Impact                       | Effort | File               |
+| -- | ------------------------------------------------------ | ---------------------------- | ------ | ------------------ |
+| 1  | **Cover `inferServiceType` `!ok` branch**              | Close 25% gap                | 5min   | `recorder.go:143`  |
+| 2  | **Cover `pruneScopeTreeRecursive` no-match branch**    | Close 6.7% gap               | 5min   | `types.go:525`     |
+| 3  | **Cover `writeToFile` close-error-only path**          | Close 20% gap                | 10min  | `plugin.go:225`    |
+| 4  | **Cover `ExportFilteredToFile` file creation error**   | Close 12.5% gap              | 10min  | `plugin.go:153`    |
+| 5  | **Cover `RecordHealthCheckWithContext` disabled path** | Close 11.1% gap              | 5min   | `plugin.go:187`    |
+| 6  | **Cover `enrichCapabilities` nil-ref skip**            | Close 5.9% gap               | 10min  | `recorder.go:155`  |
+| 7  | **Cover `OnBeforeShutdown` no-record path**            | Close 5.9% gap               | 10min  | `recorder.go:486`  |
+| 8  | **Cover `buildScopeTreeLocked` no-root fallback**      | Close 4.2% gap               | 10min  | `recorder.go:737`  |
+| 9  | **Cover `OnAfterInvocation` stack-not-found**          | Close 3.8% gap               | 10min  | `recorder.go:395`  |
+| 10 | **Cover `OnAfterShutdown` no-record path**             | Close 3.7% gap               | 10min  | `recorder.go:542`  |
+| 11 | **Cover `WriteMermaid` write-line error**              | Close 4% gap                 | 10min  | `mermaid.go:51`    |
+| 12 | **Cover `WritePlantUML` error paths**                  | Close 21.4% gap              | 10min  | `plantuml.go:13`   |
+| 13 | **Add `.gitattributes` with `linguist-generated`**     | Cleaner PR diffs             | 2min   | `.gitattributes`   |
+| 14 | **Determine if `plantumlLabelForRef` is dead code**    | Remove bloat or cover        | 10min  | `plantuml.go:88`   |
+| 15 | **Add `TestReport_Index` for O(1) lookups**            | Verify new feature           | 10min  | `auditlog_test.go` |
+| 16 | **Add `TestReport_Filtered` with deep scope tree**     | Verify pruning               | 15min  | `auditlog_test.go` |
+| 17 | **Document `Report.Index()` in README**                | User discoverability         | 5min   | `README.md`        |
+| 18 | **Investigate `IsRoot()` empty string check**          | Remove dead code or document | 10min  | `types.go:106`     |
+| 19 | **Add `TestWritePlantUML_WithDepsAndTypes`**           | Feature parity with Mermaid  | 10min  | `auditlog_test.go` |
+| 20 | **Add benchmark for `Report.Index()`**                 | Performance baseline         | 10min  | `auditlog_test.go` |
+| 21 | **Cover `updateInvocationAggregate` service-create**   | Close 15.4% gap              | 10min  | `recorder.go:451`  |
+| 22 | **Add `TestResolveServiceScope_AncestorNotFound`**     | Close 10% gap                | 10min  | `auditlog_test.go` |
+| 23 | **Cover `OnAfterRegistration` re-registration**        | Close 5.3% gap               | 10min  | `recorder.go:291`  |
+| 24 | **Add `ExampleReport_Index`**                          | Godoc discoverability        | 10min  | `example_test.go`  |
+| 25 | **Add `ExampleReport_Filtered`**                       | Godoc discoverability        | 10min  | `example_test.go`  |
 
 ---
 

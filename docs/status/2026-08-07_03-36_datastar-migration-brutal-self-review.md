@@ -98,6 +98,7 @@
 ## f) Up to 50 Things to Get Done Next
 
 ### Critical (blocks CI/lint)
+
 1. Fix all 62 golangci-lint issues in `live/` (see section d for full list)
 2. Fix the `GOTOOLCHAIN=go1.26.4` env var at the source (LSP is broken)
 3. Add `//nolint:tagliatelle` for datastar signal struct JSON tags
@@ -114,6 +115,7 @@
 14. Fix `gochecknoglobals` — move show expressions to function locals or `//nolint`
 
 ### Feature Gaps (user-visible regressions)
+
 15. Restore graph tab — render daghtml DAG as a server-side fragment
 16. Restore timeline tab — render build/shutdown timeline bars server-side
 17. Add health check column to services table
@@ -123,6 +125,7 @@
 21. Test in a real browser — verify morphing, focus preservation, search
 
 ### Architecture
+
 22. Remove `sendDatastarUpdate` indirection (just calls `sendDatastarSnapshot`)
 23. Delete or re-wire dead `replay.go` / `eventStore` code
 24. Rename `TestServer_SSE_ReconnectReplay` to `TestServer_SSE_ReconnectSnapshot` (no replay anymore)
@@ -131,6 +134,7 @@
 27. Add CSP nonce support instead of `'unsafe-inline'` for scripts
 
 ### Testing
+
 28. Write browser E2E test (Playwright) for dashboard
 29. Add test for burst event coalescing (N events → 1 render)
 30. Add test for `drainEvents` function
@@ -143,6 +147,7 @@
 37. Add test for pagination "Show all" button
 
 ### Performance
+
 38. Benchmark SSE fragment throughput (events/sec → fragments/sec)
 39. Profile `renderAllFragments` for large reports
 40. Consider `strings.Builder` pooling for fragment rendering
@@ -150,6 +155,7 @@
 42. Consider `datastar-patch-signals` for incremental updates instead of full re-render
 
 ### Documentation
+
 43. Update `live/demo/` README if it references old dashboard JS
 44. Add datastar adoption section to CHANGELOG.md
 45. Write `docs/research/datastar-adoption.md` with lessons learned

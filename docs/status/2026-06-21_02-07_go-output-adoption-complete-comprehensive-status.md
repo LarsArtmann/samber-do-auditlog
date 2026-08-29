@@ -130,33 +130,33 @@ Evaluated and **DEFERRED**: blast radius 65+ compile errors across production + 
 
 Sorted by impact × value ÷ effort (highest first).
 
-| #   | Task                                                            | Impact | Effort  | Notes                              |
-| --- | --------------------------------------------------------------- | ------ | ------- | ---------------------------------- |
-| 1   | Restore `CODE_OF_CONDUCT.md` (commit `--no-verify`)             | High   | Trivial | OSS hygiene; currently broken      |
-| 2   | Add `[Unreleased]` CHANGELOG entry for go-output adoption       | High   | Trivial | Significant refactor undocumented  |
-| 3   | Update `TODO_LIST.md` — mark go-output DONE, fix stale note     | High   | Trivial | Doc accuracy                       |
-| 4   | Contribute graph-attribute setter to go-output upstream         | High   | Low     | Restores DOT bgcolor + edge colors |
-| 5   | Re-baseline `BENCHMARKS.md` post-go-output                      | Medium | Low     | Confirm no perf regression         |
-| 6   | Add D2 diagram format via go-output `d2` module                 | Medium | Low     | Near-zero cost now                 |
-| 7   | `docs-freshness-check` skill run                                | Medium | Low     | Verify all docs match code         |
-| 8   | File go-output upstream issue for edge styling API              | Medium | Trivial | Unblock DOT edge colors            |
-| 9   | Add integration test: go-output render output snapshot          | Medium | Medium  | Catch upstream format drift        |
-| 10  | Typed identifiers batch (`ContainerID`/`ScopeID`/`ServiceName`) | High   | High    | Deferred v0.1.0 breaking batch     |
-| 11  | `ServiceInfo` lifecycle split                                   | High   | High    | Paired with #10                    |
-| 12  | Tag v0.2.0 after #10/#11 (or sooner if non-breaking)            | High   | Low     | First post-adoption release        |
-| 13  | Add `WriteD2` + D2 fuzz target                                  | Low    | Low     | Format breadth                     |
-| 14  | Explore go-output `markup` streaming HTML                       | Low    | Medium  | Large-report streaming             |
-| 15  | Pin go-output versions in a comment in go.mod                   | Low    | Trivial | Non-obvious version split          |
-| 16  | Audit `example/` — does it demonstrate DOT/Mermaid export?      | Medium | Low     | Demo completeness                  |
-| 17  | Add a "diagram formats" section to README                       | Medium | Low     | Discoverability                    |
-| 18  | Run `brutal-self-review` skill on the go-output integration     | Medium | Medium  | Honest critique                    |
-| 19  | Verify go-output v0.14.0+ upgrade path (watch releases)         | Low    | Trivial | Dependency hygiene                 |
-| 20  | Add bench for `buildDiagramNodes`/`buildDiagramEdges`           | Low    | Low     | Hot-path coverage                  |
-| 21  | Consider go-output `Stream(w)` instead of `Render()+Write`      | Low    | Low     | Memory for huge graphs             |
-| 22  | Document the DOT bgcolor tradeoff in README/FEATURES            | Medium | Trivial | User expectation mgmt              |
-| 23  | Run `nix flake check` to confirm Nix build still green          | Medium | Trivial | CI parity                          |
-| 24  | Check `go list -deps` count in CI (dep-bloat guard)             | Low    | Low     | Prevent silent dep growth          |
-| 25  | Open GitHub Discussion: "diagram format priorities?"            | Low    | Trivial | User signal for #6/#13             |
+| #  | Task                                                            | Impact | Effort  | Notes                              |
+| -- | --------------------------------------------------------------- | ------ | ------- | ---------------------------------- |
+| 1  | Restore `CODE_OF_CONDUCT.md` (commit `--no-verify`)             | High   | Trivial | OSS hygiene; currently broken      |
+| 2  | Add `[Unreleased]` CHANGELOG entry for go-output adoption       | High   | Trivial | Significant refactor undocumented  |
+| 3  | Update `TODO_LIST.md` — mark go-output DONE, fix stale note     | High   | Trivial | Doc accuracy                       |
+| 4  | Contribute graph-attribute setter to go-output upstream         | High   | Low     | Restores DOT bgcolor + edge colors |
+| 5  | Re-baseline `BENCHMARKS.md` post-go-output                      | Medium | Low     | Confirm no perf regression         |
+| 6  | Add D2 diagram format via go-output `d2` module                 | Medium | Low     | Near-zero cost now                 |
+| 7  | `docs-freshness-check` skill run                                | Medium | Low     | Verify all docs match code         |
+| 8  | File go-output upstream issue for edge styling API              | Medium | Trivial | Unblock DOT edge colors            |
+| 9  | Add integration test: go-output render output snapshot          | Medium | Medium  | Catch upstream format drift        |
+| 10 | Typed identifiers batch (`ContainerID`/`ScopeID`/`ServiceName`) | High   | High    | Deferred v0.1.0 breaking batch     |
+| 11 | `ServiceInfo` lifecycle split                                   | High   | High    | Paired with #10                    |
+| 12 | Tag v0.2.0 after #10/#11 (or sooner if non-breaking)            | High   | Low     | First post-adoption release        |
+| 13 | Add `WriteD2` + D2 fuzz target                                  | Low    | Low     | Format breadth                     |
+| 14 | Explore go-output `markup` streaming HTML                       | Low    | Medium  | Large-report streaming             |
+| 15 | Pin go-output versions in a comment in go.mod                   | Low    | Trivial | Non-obvious version split          |
+| 16 | Audit `example/` — does it demonstrate DOT/Mermaid export?      | Medium | Low     | Demo completeness                  |
+| 17 | Add a "diagram formats" section to README                       | Medium | Low     | Discoverability                    |
+| 18 | Run `brutal-self-review` skill on the go-output integration     | Medium | Medium  | Honest critique                    |
+| 19 | Verify go-output v0.14.0+ upgrade path (watch releases)         | Low    | Trivial | Dependency hygiene                 |
+| 20 | Add bench for `buildDiagramNodes`/`buildDiagramEdges`           | Low    | Low     | Hot-path coverage                  |
+| 21 | Consider go-output `Stream(w)` instead of `Render()+Write`      | Low    | Low     | Memory for huge graphs             |
+| 22 | Document the DOT bgcolor tradeoff in README/FEATURES            | Medium | Trivial | User expectation mgmt              |
+| 23 | Run `nix flake check` to confirm Nix build still green          | Medium | Trivial | CI parity                          |
+| 24 | Check `go list -deps` count in CI (dep-bloat guard)             | Low    | Low     | Prevent silent dep growth          |
+| 25 | Open GitHub Discussion: "diagram format priorities?"            | Low    | Trivial | User signal for #6/#13             |
 
 ---
 

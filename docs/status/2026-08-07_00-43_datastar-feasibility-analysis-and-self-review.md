@@ -8,37 +8,37 @@
 
 ## a) FULLY DONE
 
-| Item | Evidence |
-| --- | --- |
-| Read and understood data-star's core value proposition | Fetched homepage, reference (attributes, SSE events), getting-started guide, SDK page |
-| Read and understood the official datastar-go SDK (v1.2.2) | Fetched `sse.go`, `elements.go`, `elements-sugar.go`, `consts.go` listing; reviewed `NewSSE`, `PatchElements`, `PatchSignals`, `PatchElementTempl` adapter |
-| Read and understood the current `live/` dashboard implementation | Read `dashboard.js` (977 lines), `dashboard.go` (171 lines), `dashboard.css` (200+ lines), `hub.go` (110 lines), `server.go` (495 lines) |
-| Discovered go-sse already has datastar wire-format support | Found `KeyedLines`, `SendLines`, `SendKeyed` in go-sse; read `docs/guides/migrating-from-datastar-sdk.md` |
-| Reviewed the go-sse `example/datastar/` project | `index.templ` + `main.go` + `static/datastar.js` — a complete working datastar example already exists in the sibling repo |
-| Read go-sse datastar integration status reports | `2026-08-03_00-18_datastar-integration-keyed-lines-and-self-review.md`, `2026-08-03_00-51_datastar-integration-wave1-4-execution-and-self-review.md` |
-| Compared datastar capabilities vs current dashboard | Produced a feature-by-feature table of what datastar enables vs what we already have |
-| Delivered a recommendation to the user | "Don't migrate" — with reasoning grounded in the actual dashboard structure |
+| Item                                                             | Evidence                                                                                                                                                   |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Read and understood data-star's core value proposition           | Fetched homepage, reference (attributes, SSE events), getting-started guide, SDK page                                                                      |
+| Read and understood the official datastar-go SDK (v1.2.2)        | Fetched `sse.go`, `elements.go`, `elements-sugar.go`, `consts.go` listing; reviewed `NewSSE`, `PatchElements`, `PatchSignals`, `PatchElementTempl` adapter |
+| Read and understood the current `live/` dashboard implementation | Read `dashboard.js` (977 lines), `dashboard.go` (171 lines), `dashboard.css` (200+ lines), `hub.go` (110 lines), `server.go` (495 lines)                   |
+| Discovered go-sse already has datastar wire-format support       | Found `KeyedLines`, `SendLines`, `SendKeyed` in go-sse; read `docs/guides/migrating-from-datastar-sdk.md`                                                  |
+| Reviewed the go-sse `example/datastar/` project                  | `index.templ` + `main.go` + `static/datastar.js` — a complete working datastar example already exists in the sibling repo                                  |
+| Read go-sse datastar integration status reports                  | `2026-08-03_00-18_datastar-integration-keyed-lines-and-self-review.md`, `2026-08-03_00-51_datastar-integration-wave1-4-execution-and-self-review.md`       |
+| Compared datastar capabilities vs current dashboard              | Produced a feature-by-feature table of what datastar enables vs what we already have                                                                       |
+| Delivered a recommendation to the user                           | "Don't migrate" — with reasoning grounded in the actual dashboard structure                                                                                |
 
 ---
 
 ## b) PARTIALLY DONE
 
-| Item | What's missing |
-| --- | --- |
-| Toolchain diagnosis | Identified `GOTOOLCHAIN=go1.26.4` shadowing the required `go1.26.5` (every LSP diagnostic shows this). Did **not** fix it — deferred to a todo and never returned. |
-| Live demo verification | Read the source of the go-sse datastar example but did not run it or visually compare its output against our current live dashboard. A side-by-side would have made the morphing argument concrete instead of theoretical. |
-| User's first question answered correctly on first attempt | Had to be prompted a second time ("What did you forget?") before giving the honest, grounded answer. The first response was still leaning toward migration. |
+| Item                                                      | What's missing                                                                                                                                                                                                             |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Toolchain diagnosis                                       | Identified `GOTOOLCHAIN=go1.26.4` shadowing the required `go1.26.5` (every LSP diagnostic shows this). Did **not** fix it — deferred to a todo and never returned.                                                         |
+| Live demo verification                                    | Read the source of the go-sse datastar example but did not run it or visually compare its output against our current live dashboard. A side-by-side would have made the morphing argument concrete instead of theoretical. |
+| User's first question answered correctly on first attempt | Had to be prompted a second time ("What did you forget?") before giving the honest, grounded answer. The first response was still leaning toward migration.                                                                |
 
 ---
 
 ## c) NOT STARTED
 
-| Item | Why it matters |
-| --- | --- |
-| `GOTOOLCHAIN=go1.26.5` fix | Every LSP diagnostic in the session failed with `go.mod requires go >= 1.26.5 (running go 1.26.4; GOTOOLCHAIN=go1.26.4)`. The `which go` showed `/nix/store/...-go-1.26.5/bin/go` but `go version` reported `go1.26.4` — the env var is pinning to the wrong version. This is a one-line fix (unset or correct `GOTOOLCHAIN`) but was left as a pending todo. |
-| Actual code change | No files were modified in this session. |
-| `docs/research/` note | Did not write up the analysis as a research note for future sessions. |
-| Cost/benefit of vendoring datastar.js | Did not evaluate the bundle-size impact (~12KB) against the current dashboard's total payload. |
+| Item                                  | Why it matters                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GOTOOLCHAIN=go1.26.5` fix            | Every LSP diagnostic in the session failed with `go.mod requires go >= 1.26.5 (running go 1.26.4; GOTOOLCHAIN=go1.26.4)`. The `which go` showed `/nix/store/...-go-1.26.5/bin/go` but `go version` reported `go1.26.4` — the env var is pinning to the wrong version. This is a one-line fix (unset or correct `GOTOOLCHAIN`) but was left as a pending todo. |
+| Actual code change                    | No files were modified in this session.                                                                                                                                                                                                                                                                                                                       |
+| `docs/research/` note                 | Did not write up the analysis as a research note for future sessions.                                                                                                                                                                                                                                                                                         |
+| Cost/benefit of vendoring datastar.js | Did not evaluate the bundle-size impact (~12KB) against the current dashboard's total payload.                                                                                                                                                                                                                                                                |
 
 ---
 
@@ -50,7 +50,7 @@
 
 **Why it was wrong:** The user's reply pointed me at `/home/lars/projects/go-sse/example/datastar/*`. When I looked, I found that go-sse **already has first-class datastar wire-format support** (`KeyedLines`, `SendLines`, `SendKeyed`, a complete migration guide, a working example server, fuzz tests, benchmarks). My recommendation would have deleted the exact library that already does what I was proposing to add.
 
-**Root cause:** I read the data-star website and the datastar-go SDK, but I did not check whether the project's *existing dependency* (`go-sse`) already solved the problem. I jumped to "add a new dependency" before investigating "does what we have already do this?"
+**Root cause:** I read the data-star website and the datastar-go SDK, but I did not check whether the project's _existing dependency_ (`go-sse`) already solved the problem. I jumped to "add a new dependency" before investigating "does what we have already do this?"
 
 **Lesson:** Before proposing a new library, grep the existing deps for the capability. The sibling project (`go-sse`) had a 243-line migration guide titled "Migrating from the DataStar Go SDK to go-sse" that I would have found with one search.
 

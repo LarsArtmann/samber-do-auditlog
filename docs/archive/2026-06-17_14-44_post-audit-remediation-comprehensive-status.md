@@ -189,33 +189,33 @@ The `awk` coverage comparison and `grep -v '/example/'` filtering works but is h
 
 Sorted by **Impact × Customer-Value ÷ Effort**:
 
-| #   | Task                                                            | Impact      | Effort     | Category     |
-| --- | --------------------------------------------------------------- | ----------- | ---------- | ------------ |
-| 1   | **Commit and push current remediation**                         | 🔴 Critical | ⚪ Trivial | Git hygiene  |
-| 2   | **Update CHANGELOG.md** for this batch                          | 🟠 Med      | ⚪ Trivial | Docs         |
-| 3   | **Archive old status reports**                                  | 🟡 Low      | ⚪ Trivial | Docs         |
-| 4   | **Update BENCHMARKS.md Go version**                             | 🟡 Low      | ⚪ Trivial | Docs         |
-| 5   | **Update AGENTS.md with new CI commands**                       | 🟡 Low      | ⚪ Trivial | Docs         |
-| 6   | **v0.1.0 release**                                              | 🟠 Med      | 🟡 Med     | Release      |
-| 7   | **JSON Schema file**                                            | 🟠 Med      | 🔵 Low     | Docs/API     |
-| 8   | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`) | 🟠 Med      | 🟡 Med     | Architecture |
-| 9   | **Refactor `ServiceInfo` lifecycle concerns**                   | 🟠 Med      | 🔴 High    | Architecture |
-| 10  | **Prometheus exporter example**                                 | 🟠 Med      | 🟡 Med     | Docs         |
-| 11  | **Property-based `MigrateReport` tests**                        | 🟠 Med      | 🔵 Low     | Testing      |
-| 12  | **Property-based `Diff` tests**                                 | 🟠 Med      | 🔵 Low     | Testing      |
-| 13  | **Fuzz Mermaid/PlantUML special chars**                         | 🟡 Low      | 🔵 Low     | Testing      |
-| 14  | **Fuzz deeply nested scopes**                                   | 🟡 Low      | 🔵 Low     | Testing      |
-| 15  | **Fuzz filter inputs**                                          | 🟡 Low      | 🔵 Low     | Testing      |
-| 16  | **HTML integration test**                                       | 🟠 Med      | 🟡 Med     | Testing      |
-| 17  | **NDJSON import**                                               | 🟠 Med      | 🔴 High    | Feature      |
-| 18  | **CSV/TSV export**                                              | 🟡 Low      | 🔵 Low     | Feature      |
-| 19  | **CLI tool**                                                    | 🟢 Low      | 🔴 High    | Feature      |
-| 20  | **WebSocket live stream**                                       | 🟢 Low      | 🔴 High    | Feature      |
-| 21  | **Add `actionlint` to CI**                                      | 🟡 Low      | ⚪ Trivial | CI           |
-| 22  | **Add `gosec` to CI**                                           | 🟡 Low      | ⚪ Trivial | CI           |
-| 23  | **GitHub Actions version upgrades**                             | 🟡 Low      | ⚪ Trivial | CI           |
-| 24  | **Flake app for coverage gate**                                 | 🟡 Low      | 🔵 Low     | DevEx        |
-| 25  | **Split `Report.Validate()` into constructor validation**       | 🟠 Med      | 🟡 Med     | Architecture |
+| #  | Task                                                            | Impact      | Effort     | Category     |
+| -- | --------------------------------------------------------------- | ----------- | ---------- | ------------ |
+| 1  | **Commit and push current remediation**                         | 🔴 Critical | ⚪ Trivial | Git hygiene  |
+| 2  | **Update CHANGELOG.md** for this batch                          | 🟠 Med      | ⚪ Trivial | Docs         |
+| 3  | **Archive old status reports**                                  | 🟡 Low      | ⚪ Trivial | Docs         |
+| 4  | **Update BENCHMARKS.md Go version**                             | 🟡 Low      | ⚪ Trivial | Docs         |
+| 5  | **Update AGENTS.md with new CI commands**                       | 🟡 Low      | ⚪ Trivial | Docs         |
+| 6  | **v0.1.0 release**                                              | 🟠 Med      | 🟡 Med     | Release      |
+| 7  | **JSON Schema file**                                            | 🟠 Med      | 🔵 Low     | Docs/API     |
+| 8  | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`) | 🟠 Med      | 🟡 Med     | Architecture |
+| 9  | **Refactor `ServiceInfo` lifecycle concerns**                   | 🟠 Med      | 🔴 High    | Architecture |
+| 10 | **Prometheus exporter example**                                 | 🟠 Med      | 🟡 Med     | Docs         |
+| 11 | **Property-based `MigrateReport` tests**                        | 🟠 Med      | 🔵 Low     | Testing      |
+| 12 | **Property-based `Diff` tests**                                 | 🟠 Med      | 🔵 Low     | Testing      |
+| 13 | **Fuzz Mermaid/PlantUML special chars**                         | 🟡 Low      | 🔵 Low     | Testing      |
+| 14 | **Fuzz deeply nested scopes**                                   | 🟡 Low      | 🔵 Low     | Testing      |
+| 15 | **Fuzz filter inputs**                                          | 🟡 Low      | 🔵 Low     | Testing      |
+| 16 | **HTML integration test**                                       | 🟠 Med      | 🟡 Med     | Testing      |
+| 17 | **NDJSON import**                                               | 🟠 Med      | 🔴 High    | Feature      |
+| 18 | **CSV/TSV export**                                              | 🟡 Low      | 🔵 Low     | Feature      |
+| 19 | **CLI tool**                                                    | 🟢 Low      | 🔴 High    | Feature      |
+| 20 | **WebSocket live stream**                                       | 🟢 Low      | 🔴 High    | Feature      |
+| 21 | **Add `actionlint` to CI**                                      | 🟡 Low      | ⚪ Trivial | CI           |
+| 22 | **Add `gosec` to CI**                                           | 🟡 Low      | ⚪ Trivial | CI           |
+| 23 | **GitHub Actions version upgrades**                             | 🟡 Low      | ⚪ Trivial | CI           |
+| 24 | **Flake app for coverage gate**                                 | 🟡 Low      | 🔵 Low     | DevEx        |
+| 25 | **Split `Report.Validate()` into constructor validation**       | 🟠 Med      | 🟡 Med     | Architecture |
 
 ---
 

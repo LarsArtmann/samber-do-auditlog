@@ -17,6 +17,7 @@ This report covers the work done in the session starting from the user's questio
 **Root cause:** The `renderGraph()` function definition was followed by a stray `}` that closed the `<script>` block prematurely. The `DOMContentLoaded` listener for footer timestamps was also placed after this stray brace, so it was outside the script scope and never executed, producing a secondary `Cannot set properties of null` error.
 
 **Fix applied:**
+
 - Removed the stray `}` after `renderGraph()` in `html.templ` (line 1093)
 - Wrapped `footer-ts` and `footer-stats` DOM updates in `document.addEventListener('DOMContentLoaded', ...)` to handle cases where the script runs before the footer elements exist (e.g., when the script is injected before `</body>`)
 - Regenerated `html_templ.go` via `go generate ./...`
@@ -25,6 +26,7 @@ This report covers the work done in the session starting from the user's questio
 - Verified: Chromium headless DOM dump now shows 21 service rows, 146 waveform events, 5 stat cards, 4 scope tree nodes, 146 event rows
 
 **Files changed:**
+
 - `html.templ` — removed stray `}`, added DOMContentLoaded wrapper
 - `html_templ.go` — regenerated from `html.templ`
 - `testdata/golden/report.html` — regenerated golden fixture
@@ -34,6 +36,7 @@ This report covers the work done in the session starting from the user's questio
 **Problem:** The previous session's screenshots were captured from an HTML report with a broken JavaScript runtime. The services table, waveform, stats cards, and all other JS-rendered content were empty. The screenshots showed only the static HTML shell (header, tab bar, empty containers).
 
 **Fix applied:**
+
 - Generated fresh HTML report via `DO_AUDITLOG_ENABLED=true go run ./example`
 - Used per-tab HTML files with sed-activated tabs (the HTML uses JS `classList.add/remove('active')` for tab switching, so headless Chromium only renders the default-active tab)
 - Used `--virtual-time-budget=15000` (15 seconds) to allow JavaScript to fully execute
@@ -41,19 +44,21 @@ This report covers the work done in the session starting from the user's questio
 - Exported as JPEG quality 85 via ImageMagick (pngquant at quality 65-85 destroyed detail)
 
 **Results:**
-| File | Old Size | New Size | Content |
-|------|----------|----------|---------|
-| `html-services.jpg` | 44,581 B | 147,662 B | Full services table with 20 rows, waveform, 5 stat cards |
-| `html-graph.jpg` | 38,616 B | 101,213 B | Sugiyama DAG with 20 nodes, colored by type |
-| `html-timeline.jpg` | 30,321 B | 107,564 B | Build + shutdown horizontal bars for all timed services |
-| `html-events.jpg` | 37,073 B | 145,330 B | Full event log with 146 rows, type filter chips |
-| `html-realworld.jpg` | 114,416 B | 114,416 B | Unchanged (BuildFlow report — already had working JS) |
+
+| File                 | Old Size  | New Size  | Content                                                  |
+| -------------------- | --------- | --------- | -------------------------------------------------------- |
+| `html-services.jpg`  | 44,581 B  | 147,662 B | Full services table with 20 rows, waveform, 5 stat cards |
+| `html-graph.jpg`     | 38,616 B  | 101,213 B | Sugiyama DAG with 20 nodes, colored by type              |
+| `html-timeline.jpg`  | 30,321 B  | 107,564 B | Build + shutdown horizontal bars for all timed services  |
+| `html-events.jpg`    | 37,073 B  | 145,330 B | Full event log with 146 rows, type filter chips          |
+| `html-realworld.jpg` | 114,416 B | 114,416 B | Unchanged (BuildFlow report — already had working JS)    |
 
 All 4 regenerated screenshots are ~3x larger because they now contain actual rendered content instead of empty containers.
 
 ### 3. Website Showcase Section (COMMITTED: `b040af4`)
 
 **What was added:**
+
 - New `ShowcaseSection.astro` component on the landing page
 - Hero screenshot (services tab) displayed in a browser chrome mockup with clickable link
 - Three thumbnail screenshots (graph, timeline, events) in a responsive grid below
@@ -64,6 +69,7 @@ All 4 regenerated screenshots are ~3x larger because they now contain actual ren
 ### 4. Website Demo Section (COMMITTED: `a10783f`)
 
 **What was added:**
+
 - New `DemoSection.astro` component with a copy-to-clipboard terminal command
 - Command: `DO_AUDITLOG_ENABLED=true go run ./example`
 - Description: "exercises 19 samber/do v2 features"
@@ -81,11 +87,13 @@ All 4 regenerated screenshots are ~3x larger because they now contain actual ren
 **Problem:** The website CI/CD pipeline at `.github/workflows/website.yml` has been failing on EVERY deploy since July 13, 2026 (5 consecutive failures). The build job succeeds (the website compiles correctly), but the deploy job fails with `Error: Failed to authenticate, have you run firebase login?`.
 
 **Root cause:** The deploy step used `echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"` with double quotes to write the service account JSON to a file. Double-quoted `echo` in bash can corrupt multi-line JSON because:
+
 1. Shell expansion of special characters in the JSON (e.g., `$`, backticks)
 2. Different `echo` implementations handle escape sequences differently
 3. Multi-line secrets in GitHub Actions can have newline handling issues
 
 **Fix applied:**
+
 - Changed `echo "..."` to `printf '%s' '...'` (single quotes prevent shell expansion, `printf %s` avoids trailing newline issues)
 - Added a JSON validation step: `node -e "JSON.parse(...)"` to verify the key file is valid JSON before attempting deploy, with a clear error message if it's not
 - Removed unnecessary `GOOGLE_PROJECT` env var (not used by firebase-tools)
@@ -97,6 +105,7 @@ All 4 regenerated screenshots are ~3x larger because they now contain actual ren
 **Problem:** The website's `changelog.mdx` was missing the v0.6.0 release entry. The root-level `CHANGELOG.md` has v0.6.0 (released 2026-07-22), but the website docs changelog stopped at v0.5.0 (2026-07-07). The "Unreleased" section also had stale content that was already released in v0.6.0.
 
 **Fix applied:**
+
 - Added the full v0.6.0 entry to `changelog.mdx` with all Added/Changed/Fixed sections from `CHANGELOG.md`
 - Replaced em-dashes with regular hyphens (Starlight/MDX compatibility — em-dashes can cause rendering issues in some MDX parsers)
 - Cleared the Unreleased section (moved its content to v0.6.0 where it belongs)
@@ -104,6 +113,7 @@ All 4 regenerated screenshots are ~3x larger because they now contain actual ren
 ### 8. Firebase CI/CD Pipeline Verification (ALREADY EXISTED)
 
 **Yes, Firebase deployment IS fully automated.** The CI pipeline at `.github/workflows/website.yml`:
+
 - Triggers on push to `master` when `website/**` or the workflow file changes
 - Also triggers on PRs (build-only, no deploy)
 - **Build job:** `pnpm install`, `pnpm audit`, `astro check`, `pnpm run build` (includes `fix-csp.mjs` for CSP hash injection), HTML validation, artifact upload
@@ -312,17 +322,17 @@ The README has it in the collapsible gallery, but the website showcase only show
 
 ## Session Summary
 
-| Metric | Value |
-|--------|-------|
-| Commits made | 3 (`db2b932`, `b040af4`, `a10783f`) — all pushed |
-| Uncommitted changes | 2 (website.yml deploy fix + changelog.mdx sync) |
-| Files changed | 11 (html.templ, html_templ.go, golden, 4 screenshots, 2 new Astro components, 1 data file, 1 page, 1 workflow, 1 changelog) |
-| Bugs fixed | 3 (stray `}` syntax error, DOMContentLoaded timing, Firebase deploy auth `echo` corruption) |
-| Tests passing | `go vet`, `go build`, `go test -race` — all pass |
-| CI status | Go CI: passing. Website CI: build passes, deploy FAILING since July 13 (fix uncommitted) |
-| Lines added | ~170 (across all files) |
-| Lines removed | ~15 |
-| User-facing impact | High — every HTML report generated by the library was broken; now fixed. Website still broken (deploy fix uncommitted). |
+| Metric              | Value                                                                                                                       |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Commits made        | 3 (`db2b932`, `b040af4`, `a10783f`) — all pushed                                                                            |
+| Uncommitted changes | 2 (website.yml deploy fix + changelog.mdx sync)                                                                             |
+| Files changed       | 11 (html.templ, html_templ.go, golden, 4 screenshots, 2 new Astro components, 1 data file, 1 page, 1 workflow, 1 changelog) |
+| Bugs fixed          | 3 (stray `}` syntax error, DOMContentLoaded timing, Firebase deploy auth `echo` corruption)                                 |
+| Tests passing       | `go vet`, `go build`, `go test -race` — all pass                                                                            |
+| CI status           | Go CI: passing. Website CI: build passes, deploy FAILING since July 13 (fix uncommitted)                                    |
+| Lines added         | ~170 (across all files)                                                                                                     |
+| Lines removed       | ~15                                                                                                                         |
+| User-facing impact  | High — every HTML report generated by the library was broken; now fixed. Website still broken (deploy fix uncommitted).     |
 
 ---
 

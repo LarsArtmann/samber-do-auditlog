@@ -1,9 +1,9 @@
 # Status Report — 2026-06-10 15:54
 
-**Project**: `samber-do-auditlog` — Go plugin for samber/do v2 DI container observability  
-**Module**: `github.com/larsartmann/samber-do-auditlog`  
-**Branch**: `master` (1 commit ahead of origin)  
-**Status**: ALPHA  
+**Project**: `samber-do-auditlog` — Go plugin for samber/do v2 DI container observability\
+**Module**: `github.com/larsartmann/samber-do-auditlog`\
+**Branch**: `master` (1 commit ahead of origin)\
+**Status**: ALPHA\
 **Coverage**: 94.9% (library package), 61.4% total (example pulls it down)
 
 ---
@@ -166,48 +166,48 @@
 
 ### High Impact, Low Effort (Do First)
 
-| #   | Task                                                                          | Impact   | Effort |
-| --- | ----------------------------------------------------------------------------- | -------- | ------ |
-| 1   | **Push to origin** — 1 commit ahead                                           | Critical | 0      |
-| 2   | **Cover `newServiceRecordFromMeta`** — 0% → ~100%                             | High     | Low    |
-| 3   | **Consolidate `newServiceRecord` / `newServiceRecordFromMeta`** — deduplicate | Medium   | Low    |
-| 4   | **Add `ProviderType.IsKnown()` method**                                       | Medium   | Low    |
-| 5   | **Cover `ResolveServiceScope` ancestor-walking branch**                       | Medium   | Low    |
-| 6   | **Test `RecordHealthCheckWithContext` with cancellable context**              | Medium   | Low    |
-| 7   | **Update AGENTS.md with new convenience methods**                             | Medium   | Low    |
+| # | Task                                                                          | Impact   | Effort |
+| - | ----------------------------------------------------------------------------- | -------- | ------ |
+| 1 | **Push to origin** — 1 commit ahead                                           | Critical | 0      |
+| 2 | **Cover `newServiceRecordFromMeta`** — 0% → ~100%                             | High     | Low    |
+| 3 | **Consolidate `newServiceRecord` / `newServiceRecordFromMeta`** — deduplicate | Medium   | Low    |
+| 4 | **Add `ProviderType.IsKnown()` method**                                       | Medium   | Low    |
+| 5 | **Cover `ResolveServiceScope` ancestor-walking branch**                       | Medium   | Low    |
+| 6 | **Test `RecordHealthCheckWithContext` with cancellable context**              | Medium   | Low    |
+| 7 | **Update AGENTS.md with new convenience methods**                             | Medium   | Low    |
 
 ### High Impact, Medium Effort (Do Next)
 
-| #   | Task                                                                                     | Impact    | Effort |
-| --- | ---------------------------------------------------------------------------------------- | --------- | ------ |
-| 8   | **ReportOption functional options** — filter reports by service/time/event type/scope    | Very High | Medium |
-| 9   | **Group health fields into `ServiceHealth` struct** in `serviceRecord` and `ServiceInfo` | Medium    | Medium |
-| 10  | **Add `Event.RelativeTime() string`** — human-readable relative timestamps for events    | Medium    | Medium |
-| 11  | **Update TODO_LIST.md / FEATURES.md** — reflect current state                            | Medium    | Low    |
-| 12  | **Add `Report.EventsByRef(scopeID, serviceName)`** — scoped event lookup                 | Medium    | Low    |
+| #  | Task                                                                                     | Impact    | Effort |
+| -- | ---------------------------------------------------------------------------------------- | --------- | ------ |
+| 8  | **ReportOption functional options** — filter reports by service/time/event type/scope    | Very High | Medium |
+| 9  | **Group health fields into `ServiceHealth` struct** in `serviceRecord` and `ServiceInfo` | Medium    | Medium |
+| 10 | **Add `Event.RelativeTime() string`** — human-readable relative timestamps for events    | Medium    | Medium |
+| 11 | **Update TODO_LIST.md / FEATURES.md** — reflect current state                            | Medium    | Low    |
+| 12 | **Add `Report.EventsByRef(scopeID, serviceName)`** — scoped event lookup                 | Medium    | Low    |
 
 ### Medium Impact, Medium Effort
 
-| #   | Task                                                                                     | Impact | Effort |
-| --- | ---------------------------------------------------------------------------------------- | ------ | ------ |
-| 13  | **Add `Report.ServiceCount()` / `EventCount()` cached accessors**                        | Low    | Low    |
-| 14  | **Document locking protocol** on `Recorder` (4 mutexes)                                  | Medium | Medium |
-| 15  | **Refactor `buildCapabilityMap`** — use iterative approach instead of recursion + nolint | Low    | Medium |
-| 16  | **Add HTML export test that verifies health check data renders**                         | Medium | Low    |
-| 17  | **Add example_test.go** with runnable examples for godoc                                 | Medium | Medium |
+| #  | Task                                                                                     | Impact | Effort |
+| -- | ---------------------------------------------------------------------------------------- | ------ | ------ |
+| 13 | **Add `Report.ServiceCount()` / `EventCount()` cached accessors**                        | Low    | Low    |
+| 14 | **Document locking protocol** on `Recorder` (4 mutexes)                                  | Medium | Medium |
+| 15 | **Refactor `buildCapabilityMap`** — use iterative approach instead of recursion + nolint | Low    | Medium |
+| 16 | **Add HTML export test that verifies health check data renders**                         | Medium | Low    |
+| 17 | **Add example_test.go** with runnable examples for godoc                                 | Medium | Medium |
 
 ### Lower Priority, Higher Effort
 
-| #   | Task                                                                      | Impact | Effort |
-| --- | ------------------------------------------------------------------------- | ------ | ------ |
-| 18  | **Mermaid export** — text-based dependency graph                          | Medium | High   |
-| 19  | **Schema migration function** — version compatibility                     | Medium | High   |
-| 20  | **Fuzz test for HTML template rendering**                                 | Low    | Medium |
-| 21  | **Optimize Report query methods with pre-built indices**                  | Low    | Medium |
-| 22  | **PlantUML export**                                                       | Low    | High   |
-| 23  | **Consider `iter.Seq` for event streaming** — Go 1.26 iterators           | Low    | Medium |
-| 24  | **Structured logging integration** — `slog.Handler` for events            | Low    | High   |
-| 25  | **Benchmark with realistic workloads** — 1000+ services, deep scope trees | Low    | Medium |
+| #  | Task                                                                      | Impact | Effort |
+| -- | ------------------------------------------------------------------------- | ------ | ------ |
+| 18 | **Mermaid export** — text-based dependency graph                          | Medium | High   |
+| 19 | **Schema migration function** — version compatibility                     | Medium | High   |
+| 20 | **Fuzz test for HTML template rendering**                                 | Low    | Medium |
+| 21 | **Optimize Report query methods with pre-built indices**                  | Low    | Medium |
+| 22 | **PlantUML export**                                                       | Low    | High   |
+| 23 | **Consider `iter.Seq` for event streaming** — Go 1.26 iterators           | Low    | Medium |
+| 24 | **Structured logging integration** — `slog.Handler` for events            | Low    | High   |
+| 25 | **Benchmark with realistic workloads** — 1000+ services, deep scope trees | Low    | Medium |
 
 ---
 

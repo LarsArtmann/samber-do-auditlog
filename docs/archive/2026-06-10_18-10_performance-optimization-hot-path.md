@@ -99,33 +99,33 @@ Nothing. All 53+ tests pass, 0 lint issues, all benchmarks verified.
 
 ## f) Top 25 Things to Get Done Next
 
-| #   | Task                                                                                                            | Impact | Effort |
-| --- | --------------------------------------------------------------------------------------------------------------- | ------ | ------ |
-| 1   | Fix/resolve pre-existing test syntax errors (implement missing methods or remove WIP tests)                     | High   | Medium |
-| 2   | Implement `ReportFiltered()` with `WithServicesByName`, `WithTimeRange` options                                 | High   | Medium |
-| 3   | Add `Event.HasError()`, `ServiceInfo.HasHealthError()`, `ProviderType.IsKnown()`, `ServiceRef.IsRoot()` methods | High   | Low    |
-| 4   | Add OpenTelemetry integration (spans for invocations)                                                           | High   | High   |
-| 5   | Add Prometheus metrics exporter via `OnEvent` callback                                                          | High   | Medium |
-| 6   | Add example showing `OnEvent` for real-time dashboards                                                          | Medium | Low    |
-| 7   | Add `EventsByRef()` convenience method (partially done)                                                         | Medium | Low    |
-| 8   | Performance test with 1000+ services (scale validation)                                                         | Medium | Low    |
-| 9   | Add fuzz testing for export paths                                                                               | Medium | Medium |
-| 10  | Add CI pipeline (GitHub Actions)                                                                                | Medium | Low    |
-| 11  | Add `Recorder.Reset()` to clear state without recreating                                                        | Medium | Low    |
-| 12  | Add `ServiceInfo.Uptime()` to use `time.Since` with configurable clock                                          | Low    | Low    |
-| 13  | Make `initialEventCapacity` configurable via `Config`                                                           | Low    | Low    |
-| 14  | Add `ExportToHTMLWriter()` for streaming HTML export                                                            | Low    | Low    |
-| 15  | Add Mermaid graph export (already has `MermaidGraph()`)                                                         | Low    | Low    |
-| 16  | Add graphviz DOT export                                                                                         | Low    | Low    |
-| 17  | Improve HTML visualization: search/filter events by type                                                        | Low    | Medium |
-| 18  | Add `Report.ServiceByType()` for filtering by provider type                                                     | Low    | Low    |
-| 19  | Add `Report.EventsInTimeRange()` for time-based filtering                                                       | Low    | Low    |
-| 20  | Document public API with GoDoc examples                                                                         | Low    | Medium |
-| 21  | Add `README.md` quickstart guide                                                                                | Medium | Low    |
-| 22  | Consider `ServiceInfo.DependencyCount` for JSON output without full dep objects                                 | Low    | Low    |
-| 23  | Add benchmark comparing with/without `OnEvent` callback                                                         | Low    | Low    |
-| 24  | Add memory profiling under load (1000 services, 10k events)                                                     | Low    | Low    |
-| 25  | Explore `sync.Pool` for Event objects if allocation becomes measurable                                          | Low    | Low    |
+| #  | Task                                                                                                            | Impact | Effort |
+| -- | --------------------------------------------------------------------------------------------------------------- | ------ | ------ |
+| 1  | Fix/resolve pre-existing test syntax errors (implement missing methods or remove WIP tests)                     | High   | Medium |
+| 2  | Implement `ReportFiltered()` with `WithServicesByName`, `WithTimeRange` options                                 | High   | Medium |
+| 3  | Add `Event.HasError()`, `ServiceInfo.HasHealthError()`, `ProviderType.IsKnown()`, `ServiceRef.IsRoot()` methods | High   | Low    |
+| 4  | Add OpenTelemetry integration (spans for invocations)                                                           | High   | High   |
+| 5  | Add Prometheus metrics exporter via `OnEvent` callback                                                          | High   | Medium |
+| 6  | Add example showing `OnEvent` for real-time dashboards                                                          | Medium | Low    |
+| 7  | Add `EventsByRef()` convenience method (partially done)                                                         | Medium | Low    |
+| 8  | Performance test with 1000+ services (scale validation)                                                         | Medium | Low    |
+| 9  | Add fuzz testing for export paths                                                                               | Medium | Medium |
+| 10 | Add CI pipeline (GitHub Actions)                                                                                | Medium | Low    |
+| 11 | Add `Recorder.Reset()` to clear state without recreating                                                        | Medium | Low    |
+| 12 | Add `ServiceInfo.Uptime()` to use `time.Since` with configurable clock                                          | Low    | Low    |
+| 13 | Make `initialEventCapacity` configurable via `Config`                                                           | Low    | Low    |
+| 14 | Add `ExportToHTMLWriter()` for streaming HTML export                                                            | Low    | Low    |
+| 15 | Add Mermaid graph export (already has `MermaidGraph()`)                                                         | Low    | Low    |
+| 16 | Add graphviz DOT export                                                                                         | Low    | Low    |
+| 17 | Improve HTML visualization: search/filter events by type                                                        | Low    | Medium |
+| 18 | Add `Report.ServiceByType()` for filtering by provider type                                                     | Low    | Low    |
+| 19 | Add `Report.EventsInTimeRange()` for time-based filtering                                                       | Low    | Low    |
+| 20 | Document public API with GoDoc examples                                                                         | Low    | Medium |
+| 21 | Add `README.md` quickstart guide                                                                                | Medium | Low    |
+| 22 | Consider `ServiceInfo.DependencyCount` for JSON output without full dep objects                                 | Low    | Low    |
+| 23 | Add benchmark comparing with/without `OnEvent` callback                                                         | Low    | Low    |
+| 24 | Add memory profiling under load (1000 services, 10k events)                                                     | Low    | Low    |
+| 25 | Explore `sync.Pool` for Event objects if allocation becomes measurable                                          | Low    | Low    |
 
 ---
 

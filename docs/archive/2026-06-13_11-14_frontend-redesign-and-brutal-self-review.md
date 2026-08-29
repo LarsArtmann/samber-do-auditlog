@@ -1,8 +1,8 @@
 # Status Report: Frontend Redesign & Brutal Self-Review
 
-**Date**: 2026-06-13 11:14  
-**Session Focus**: HTML frontend redesign (frontend-design skill), then brutal self-review of entire codebase  
-**Branch**: master  
+**Date**: 2026-06-13 11:14\
+**Session Focus**: HTML frontend redesign (frontend-design skill), then brutal self-review of entire codebase\
+**Branch**: master\
 **Commit**: 88c3421 → (pending)
 
 ---
@@ -94,43 +94,43 @@
 
 ### Architecture
 
-| #   | Issue                                     | Impact                                                | Fix Approach                                                                                      |
-| --- | ----------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| 1   | **Wire `Validate()` into `New()`**        | High — silent acceptance of invalid configs           | Change `New()` signature to `(*Plugin, error)` or call `Validate()` and log/panic on invalid      |
-| 2   | **Deduplicate Mermaid/PlantUML**          | Medium — 45 lines of copy-paste                       | Extract `writeDependencyGraph(w, graphFormat)` with format descriptor                             |
-| 3   | **Fix Mermaid ID sanitization**           | Medium — invalid diagrams for `*`-prefixed names      | Port PlantUML's sanitizer or create shared `sanitizeNodeID()`                                     |
-| 4   | **`ReportIndex` is a parallel query API** | Low — two ways to query same data                     | Either make `Report` use `ReportIndex` internally, or document that `Index` is the preferred path |
-| 5   | **`shutdownStart` map can leak**          | Low — entries never cleaned on unmatched before/after | Add eviction or use `sync.Map` with TTL                                                           |
-| 6   | **`Uptime()` uses wall-clock**            | Low — non-deterministic for exported snapshots        | Should compute from `RegisteredAt` to `ShutdownAt` or `ExportedAt`                                |
+| # | Issue                                     | Impact                                                | Fix Approach                                                                                      |
+| - | ----------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| 1 | **Wire `Validate()` into `New()`**        | High — silent acceptance of invalid configs           | Change `New()` signature to `(*Plugin, error)` or call `Validate()` and log/panic on invalid      |
+| 2 | **Deduplicate Mermaid/PlantUML**          | Medium — 45 lines of copy-paste                       | Extract `writeDependencyGraph(w, graphFormat)` with format descriptor                             |
+| 3 | **Fix Mermaid ID sanitization**           | Medium — invalid diagrams for `*`-prefixed names      | Port PlantUML's sanitizer or create shared `sanitizeNodeID()`                                     |
+| 4 | **`ReportIndex` is a parallel query API** | Low — two ways to query same data                     | Either make `Report` use `ReportIndex` internally, or document that `Index` is the preferred path |
+| 5 | **`shutdownStart` map can leak**          | Low — entries never cleaned on unmatched before/after | Add eviction or use `sync.Map` with TTL                                                           |
+| 6 | **`Uptime()` uses wall-clock**            | Low — non-deterministic for exported snapshots        | Should compute from `RegisteredAt` to `ShutdownAt` or `ExportedAt`                                |
 
 ### Frontend Design
 
-| #   | Issue                          | Impact                                                        | Fix Approach                                                                      |
-| --- | ------------------------------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| 7   | **No layout restructuring**    | Medium — same tab/table structure, just recolored             | Consider card-grid for services, full-width timeline, side-panel for graph detail |
-| 8   | **Waveform needs testing**     | Medium — no test verifies waveform renders                    | Add HTML test checking for `wf-event` class and `renderWaveform` function         |
-| 9   | **No mobile layout**           | Low — media query only reduces padding                        | Responsive tab bar (scrollable), collapsible table columns, stacked stat cards    |
-| 10  | **Graph node colors untested** | Low — SVG fill uses CSS vars, may not resolve in all browsers | Verify in real browser or use computed hex values                                 |
+| #  | Issue                          | Impact                                                        | Fix Approach                                                                      |
+| -- | ------------------------------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 7  | **No layout restructuring**    | Medium — same tab/table structure, just recolored             | Consider card-grid for services, full-width timeline, side-panel for graph detail |
+| 8  | **Waveform needs testing**     | Medium — no test verifies waveform renders                    | Add HTML test checking for `wf-event` class and `renderWaveform` function         |
+| 9  | **No mobile layout**           | Low — media query only reduces padding                        | Responsive tab bar (scrollable), collapsible table columns, stacked stat cards    |
+| 10 | **Graph node colors untested** | Low — SVG fill uses CSS vars, may not resolve in all browsers | Verify in real browser or use computed hex values                                 |
 
 ### Testing
 
-| #   | Issue                                   | Impact                                        | Fix Approach                                                                                         |
-| --- | --------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| 11  | **Misnamed test**                       | Low — confusing                               | `TestPlugin_WriteReportJSONError` tests success path, rename to `TestPlugin_WriteReportJSON_Success` |
-| 12  | **No PlantUML writer-error test**       | Low — asymmetric coverage                     | Add `TestWritePlantUML_WriterError`                                                                  |
-| 13  | **No concurrent BuildReport test**      | Medium — RWMutex protocol untested under load | Add test with goroutines writing while reading                                                       |
-| 14  | **No alias provider registration test** | Low — type method tested but not registration | Add test with `do.As` or alias provider                                                              |
+| #  | Issue                                   | Impact                                        | Fix Approach                                                                                         |
+| -- | --------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 11 | **Misnamed test**                       | Low — confusing                               | `TestPlugin_WriteReportJSONError` tests success path, rename to `TestPlugin_WriteReportJSON_Success` |
+| 12 | **No PlantUML writer-error test**       | Low — asymmetric coverage                     | Add `TestWritePlantUML_WriterError`                                                                  |
+| 13 | **No concurrent BuildReport test**      | Medium — RWMutex protocol untested under load | Add test with goroutines writing while reading                                                       |
+| 14 | **No alias provider registration test** | Low — type method tested but not registration | Add test with `do.As` or alias provider                                                              |
 
 ### Code Quality
 
-| #   | Issue                                             | Impact                             | Fix Approach                                          |
-| --- | ------------------------------------------------- | ---------------------------------- | ----------------------------------------------------- |
-| 15  | **`newServiceRecordCore` explicit nil/zero init** | Trivial — exhaustruct-driven noise | Acceptable tradeoff for lint compliance; document why |
-| 16  | **`newReportFilter` explicit nil init**           | Trivial — same                     | Same                                                  |
-| 17  | **Duplicate `r.services[key]` lookups**           | Trivial — minor perf               | Reuse first lookup result                             |
-| 18  | **`serviceRefLabel` drops scope info**            | Low — ambiguous cross-scope labels | Include scope when non-root                           |
-| 19  | **`newSequenceCounter` is trivial wrapper**       | Trivial                            | Could be `new(atomic.Int64)` but harmless             |
-| 20  | **Migration silently bumps unknown versions**     | Low — future-compatibility risk    | Add warning log for unknown versions                  |
+| #  | Issue                                             | Impact                             | Fix Approach                                          |
+| -- | ------------------------------------------------- | ---------------------------------- | ----------------------------------------------------- |
+| 15 | **`newServiceRecordCore` explicit nil/zero init** | Trivial — exhaustruct-driven noise | Acceptable tradeoff for lint compliance; document why |
+| 16 | **`newReportFilter` explicit nil init**           | Trivial — same                     | Same                                                  |
+| 17 | **Duplicate `r.services[key]` lookups**           | Trivial — minor perf               | Reuse first lookup result                             |
+| 18 | **`serviceRefLabel` drops scope info**            | Low — ambiguous cross-scope labels | Include scope when non-root                           |
+| 19 | **`newSequenceCounter` is trivial wrapper**       | Trivial                            | Could be `new(atomic.Int64)` but harmless             |
+| 20 | **Migration silently bumps unknown versions**     | Low — future-compatibility risk    | Add warning log for unknown versions                  |
 
 ---
 

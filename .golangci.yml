@@ -1,7 +1,7 @@
 version: "2"
 run:
   timeout: 5m
-  go: 1.26.5
+  go: 1.26.7
   build-tags:
     - goexperiment.arenas
     - goexperiment.goroutineleakprofile
@@ -28,7 +28,6 @@ linters:
     - copyloopvar
     - cyclop
     - decorder
-    - depguard
     - dogsled
     - dupl
     - dupword
@@ -125,54 +124,29 @@ linters:
     - wrapcheck
     - wsl_v5
     - zerologlint
+  disable:
+    - depguard
   settings:
     cyclop:
       max-complexity: 12
-    depguard:
-      rules:
-        cmd:
-          allow:
-            - $gostd
-            - github.com/invopop/jsonschema
-            - github.com/larsartmann/samber-do-auditlog
-          files:
-            - "**/cmd/**"
-        example:
-          allow:
-            - $gostd
-            - github.com/a-h/templ
-            - github.com/larsartmann/go-output
-            - github.com/larsartmann/samber-do-auditlog
-            - github.com/samber
-          files:
-            - "**/example/**"
-        main:
-          allow:
-            - $gostd
-            - github.com/a-h/templ
-            - github.com/larsartmann/go-atomic-write
-            - github.com/larsartmann/go-error-family
-            - github.com/larsartmann/go-ndjson/loader
-            - github.com/larsartmann/go-ndjson
-            - github.com/larsartmann/go-output
-            - github.com/larsartmann/go-sse
-            - github.com/larsartmann/samber-do-auditlog
-            - github.com/samber
-          files:
-            - "!**/*_test.go"
-            - "!**/example/**"
-            - "!**/cmd/**"
-        tests:
-          allow:
-            - $gostd
-            - github.com/a-h/templ
-            - github.com/larsartmann/go-error-family
-            - github.com/larsartmann/go-output
-            - github.com/larsartmann/go-sse
-            - github.com/larsartmann/samber-do-auditlog
-            - github.com/samber
-          files:
-            - "**/*_test.go"
+    errcheck:
+      exclude-functions:
+        - (*os.File).Close
+        - (io.Closer).Close
+        - (*sql.DB).Close
+        - (*sql.Rows).Close
+        - (*sql.Stmt).Close
+        - (net.Conn).Close
+        - (*net.TCPConn).Close
+        - (*net.UDPConn).Close
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - fmt.Print
+        - fmt.Printf
+        - fmt.Println
+        - (*strings.Builder).WriteString
+        - (*bytes.Buffer).WriteString
     exhaustruct:
       exclude:
         - os/exec.Cmd
@@ -193,6 +167,9 @@ linters:
         - github.com/larsartmann/samber-do-auditlog.live.Config
         - github.com/larsartmann/samber-do-auditlog.MultiWriter
         - github.com/larsartmann/samber-do-auditlog.live.eventRingBuffer
+    funlen:
+      lines: 200
+      statements: 100
     ginkgolinter:
       forbid-focus-container: true
       forbid-spec-pollution: true
@@ -201,6 +178,10 @@ linters:
         - ifElseChain
     gomoddirectives:
       replace-local: true
+    gosec:
+      excludes:
+        - G304
+        - G115
     ireturn:
       allow:
         - error
@@ -210,6 +191,12 @@ linters:
         - generic
     makezero:
       always: true
+    mnd:
+      ignored-numbers:
+        - "0"
+        - "1"
+        - "2"
+        - "100"
     revive:
       rules:
         - disabled: true

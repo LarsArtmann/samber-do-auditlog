@@ -35,15 +35,15 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
-    "@astrojs/starlight": "^0.41.1",
+    "@astrojs/starlight": "^0.41.10",
     "@tailwindcss/vite": "^4.3.3",
-    "astro": "^7.2.1",
-    "tailwindcss": "^4.3.1"
+    "astro": "^7.2.9",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "html-validate": "^11.6.2",
-    "typescript": "^6.0.3"
+    "html-validate": "^11.10.0",
+    "typescript": "^7.0.2"
   },
   "overrides": {
     "brace-expansion": "5.0.6",

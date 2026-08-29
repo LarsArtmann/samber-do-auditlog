@@ -7,9 +7,9 @@ This is a **single-module repo**: every release produces one tag.
 
 ## Tag Convention
 
-| Module | Import path                                        | Tag format | Example  |
-| ------ | -------------------------------------------------- | ---------- | -------- |
-| Core   | `github.com/larsartmann/samber-do-auditlog`        | `vX.Y.Z`   | `v0.8.1` |
+| Module | Import path                                 | Tag format | Example  |
+| ------ | ------------------------------------------- | ---------- | -------- |
+| Core   | `github.com/larsartmann/samber-do-auditlog` | `vX.Y.Z`   | `v0.8.1` |
 
 ### SemVer guidance
 

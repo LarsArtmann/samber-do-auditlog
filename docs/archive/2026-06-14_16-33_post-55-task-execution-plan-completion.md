@@ -191,33 +191,33 @@ One issue caught and fixed during implementation:
 
 Sorted by impact × urgency:
 
-| #   | Task                                                                                                   | Impact   | Effort  |
-| --- | ------------------------------------------------------------------------------------------------------ | -------- | ------- |
-| 1   | **Push to origin** — 2 commits ahead, nothing pushed yet                                               | CRITICAL | 1 min   |
-| 2   | **Fix TODO_LIST.md** — flip 11 stale `[ ]` to `[x]`, they're all done                                  | HIGH     | 5 min   |
-| 3   | **Cut v0.2.0 release** — tag the commit, update CHANGELOG from `[Unreleased]` to `[0.2.0]`             | HIGH     | 10 min  |
-| 4   | **Add metadata completeness test** — verify every enum value has metadata, fail if missing             | HIGH     | 15 min  |
-| 5   | **Set up GitHub Actions CI** — `go test`, `golangci-lint`, `govulncheck` on every push/PR              | HIGH     | 30 min  |
-| 6   | **Investigate `html_templ.go` size** — 91 lines for a 1,255-line template seems wrong                  | HIGH     | 15 min  |
-| 7   | **Add `templ` version upgrade** — bump go.mod from v0.3.1020 to v0.3.1036 to silence warning           | MEDIUM   | 5 min   |
-| 8   | **Add CONTRIBUTING.md** — dev setup, test commands, PR workflow                                        | MEDIUM   | 20 min  |
-| 9   | **Benchmark `BuildTypeMetadata()`** — ensure it's not a bottleneck on large reports                    | MEDIUM   | 15 min  |
-| 10  | **Cache `TypeMetadata`** — `BuildTypeMetadata()` returns the same data every time; compute once, reuse | MEDIUM   | 10 min  |
-| 11  | **Add `data-schema-version` to HTML output** — version the HTML JS/CSS for forward compat              | MEDIUM   | 10 min  |
-| 12  | **Review/clean `docs/research/performance-review.html`** — unknown origin, may need archiving          | LOW      | 5 min   |
-| 13  | **Review `DOMAIN_LANGUAGE.md`** — verify terms match current code                                      | LOW      | 15 min  |
-| 14  | **Add E2E browser test** — Playwright/Puppeteer for graph pan/zoom, pagination, search                 | LOW      | 2 hours |
-| 15  | **Add `Report.Validate()` call in `Export*` methods** — validate before serializing                    | LOW      | 10 min  |
-| 16  | **Profile large report (500+ services)** — verify pagination actually helps render time                | LOW      | 30 min  |
-| 17  | **Add snapshot test for HTML output** — golden file comparison to catch unintended visual changes      | LOW      | 30 min  |
-| 18  | **Consider copy-on-write for events slice** — eliminate read lock contention during BuildReport        | LOW      | 1 hour  |
-| 19  | **Add Mermaid/PlantUML to README Quick Start** — show all 5 export formats in the intro                | LOW      | 10 min  |
-| 20  | **Add `gosec` CI config exclusion review** — verify no false positives in the 114-linter config        | LOW      | 15 min  |
-| 21  | **Consider `sync.Pool` for event allocation** — reduce GC pressure on hot path                         | LOW      | 30 min  |
-| 22  | **Add Open Graph meta tags to HTML output** — for better link previews when sharing audit reports      | LOW      | 10 min  |
-| 23  | **Add print stylesheet to HTML output** — for PDF export of audit reports                              | LOW      | 20 min  |
-| 24  | **Consider WebSocket streaming mode** — live audit log streaming instead of post-hoc export            | LOW      | 2 hours |
-| 25  | **Internationalize HTML output** — add `lang` attribute support for non-English service names          | LOW      | 1 hour  |
+| #  | Task                                                                                                   | Impact   | Effort  |
+| -- | ------------------------------------------------------------------------------------------------------ | -------- | ------- |
+| 1  | **Push to origin** — 2 commits ahead, nothing pushed yet                                               | CRITICAL | 1 min   |
+| 2  | **Fix TODO_LIST.md** — flip 11 stale `[ ]` to `[x]`, they're all done                                  | HIGH     | 5 min   |
+| 3  | **Cut v0.2.0 release** — tag the commit, update CHANGELOG from `[Unreleased]` to `[0.2.0]`             | HIGH     | 10 min  |
+| 4  | **Add metadata completeness test** — verify every enum value has metadata, fail if missing             | HIGH     | 15 min  |
+| 5  | **Set up GitHub Actions CI** — `go test`, `golangci-lint`, `govulncheck` on every push/PR              | HIGH     | 30 min  |
+| 6  | **Investigate `html_templ.go` size** — 91 lines for a 1,255-line template seems wrong                  | HIGH     | 15 min  |
+| 7  | **Add `templ` version upgrade** — bump go.mod from v0.3.1020 to v0.3.1036 to silence warning           | MEDIUM   | 5 min   |
+| 8  | **Add CONTRIBUTING.md** — dev setup, test commands, PR workflow                                        | MEDIUM   | 20 min  |
+| 9  | **Benchmark `BuildTypeMetadata()`** — ensure it's not a bottleneck on large reports                    | MEDIUM   | 15 min  |
+| 10 | **Cache `TypeMetadata`** — `BuildTypeMetadata()` returns the same data every time; compute once, reuse | MEDIUM   | 10 min  |
+| 11 | **Add `data-schema-version` to HTML output** — version the HTML JS/CSS for forward compat              | MEDIUM   | 10 min  |
+| 12 | **Review/clean `docs/research/performance-review.html`** — unknown origin, may need archiving          | LOW      | 5 min   |
+| 13 | **Review `DOMAIN_LANGUAGE.md`** — verify terms match current code                                      | LOW      | 15 min  |
+| 14 | **Add E2E browser test** — Playwright/Puppeteer for graph pan/zoom, pagination, search                 | LOW      | 2 hours |
+| 15 | **Add `Report.Validate()` call in `Export*` methods** — validate before serializing                    | LOW      | 10 min  |
+| 16 | **Profile large report (500+ services)** — verify pagination actually helps render time                | LOW      | 30 min  |
+| 17 | **Add snapshot test for HTML output** — golden file comparison to catch unintended visual changes      | LOW      | 30 min  |
+| 18 | **Consider copy-on-write for events slice** — eliminate read lock contention during BuildReport        | LOW      | 1 hour  |
+| 19 | **Add Mermaid/PlantUML to README Quick Start** — show all 5 export formats in the intro                | LOW      | 10 min  |
+| 20 | **Add `gosec` CI config exclusion review** — verify no false positives in the 114-linter config        | LOW      | 15 min  |
+| 21 | **Consider `sync.Pool` for event allocation** — reduce GC pressure on hot path                         | LOW      | 30 min  |
+| 22 | **Add Open Graph meta tags to HTML output** — for better link previews when sharing audit reports      | LOW      | 10 min  |
+| 23 | **Add print stylesheet to HTML output** — for PDF export of audit reports                              | LOW      | 20 min  |
+| 24 | **Consider WebSocket streaming mode** — live audit log streaming instead of post-hoc export            | LOW      | 2 hours |
+| 25 | **Internationalize HTML output** — add `lang` attribute support for non-English service names          | LOW      | 1 hour  |
 
 ---
 

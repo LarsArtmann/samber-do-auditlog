@@ -1,8 +1,8 @@
 # Status Report: Post-Deduplication Deep Cleanup
 
-**Date**: 2026-06-10 16:56  
-**Branch**: master  
-**Commit**: d830b40 (HEAD)  
+**Date**: 2026-06-10 16:56\
+**Branch**: master\
+**Commit**: d830b40 (HEAD)\
 **Status**: ALPHA — production-ready quality, feature-complete for alpha scope
 
 ---
@@ -26,7 +26,7 @@ Executed comprehensive semantic code deduplication across the entire codebase. E
 
 ### Extracted Helpers (Production)
 
-- **`compareByName(a, b ServiceRef) int`** — `recorder.go:622`  
+- **`compareByName(a, b ServiceRef) int`** — `recorder.go:622`\
   Unified sorting comparator for both `ServiceInfo` (via embedded `ServiceRef`) and `ServiceRef` slices. Eliminated the last production code clone.
 
 ### Extracted Helpers (Test)
@@ -91,7 +91,7 @@ Executed comprehensive semantic code deduplication across the entire codebase. E
 
 ## d) TOTALLY FUCKED UP — Nothing
 
-No broken tests. No lint failures. No build errors. No regressions.  
+No broken tests. No lint failures. No build errors. No regressions.\
 Clean working tree. Clean build. Clean lint. All green.
 
 **One close call**: `assertVersion()` recursive stack overflow — `replace_all` flag replaced the body of the helper itself along with the call sites. Fixed immediately by restoring the helper body.

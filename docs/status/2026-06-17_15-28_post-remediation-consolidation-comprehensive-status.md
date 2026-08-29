@@ -170,33 +170,33 @@ The TODO list still references Go 1.26.3 in completed items, doesn't mention the
 
 Sorted by **Impact × Customer-Value ÷ Effort**:
 
-| #   | Task                                                            | Impact | Effort     | Category     |
-| --- | --------------------------------------------------------------- | ------ | ---------- | ------------ |
-| 1   | **CHANGELOG + TODO + AGENTS update** (refactor visibility)      | 🟠 Med | ⚪ Trivial | Docs         |
-| 2   | **Fix `html_templ.go` drift** (`.gitattributes`)                | 🟠 Med | ⚪ Trivial | DevEx        |
-| 3   | **Parallelize remaining 18 sequential tests**                   | 🟡 Low | ⚪ Trivial | Testing      |
-| 4   | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`) | 🟠 Med | 🔵 Low     | Architecture |
-| 5   | **NDJSON import** (trivial now with `buildReportFromCore`)      | 🟠 Med | 🔵 Low     | Feature      |
-| 6   | **v0.1.0 release**                                              | 🟠 Med | 🟡 Med     | Release      |
-| 7   | **JSON Schema file**                                            | 🟠 Med | 🔵 Low     | Docs/API     |
-| 8   | **CSV/TSV export**                                              | 🟡 Low | 🔵 Low     | Feature      |
-| 9   | **Refactor `ServiceInfo` lifecycle concerns**                   | 🟠 Med | 🔴 High    | Architecture |
-| 10  | **Property-based `Diff` tests**                                 | 🟡 Low | 🔵 Low     | Testing      |
-| 11  | **Property-based `MigrateReport` tests**                        | 🟡 Low | 🔵 Low     | Testing      |
-| 12  | **Fuzz filter inputs**                                          | 🟡 Low | 🔵 Low     | Testing      |
-| 13  | **HTML golden-file test**                                       | 🟠 Med | 🟡 Med     | Testing      |
-| 14  | **`Report` constructor validation**                             | 🟠 Med | 🟡 Med     | Architecture |
-| 15  | **Prometheus exporter example**                                 | 🟠 Med | 🟡 Med     | Docs         |
-| 16  | **Add `actionlint` to CI**                                      | 🟡 Low | ⚪ Trivial | CI           |
-| 17  | **GitHub Actions version upgrades**                             | 🟡 Low | ⚪ Trivial | CI           |
-| 18  | **Flake app for coverage gate**                                 | 🟡 Low | 🔵 Low     | DevEx        |
-| 19  | **`RELEASING.md`** or release checklist                         | 🟡 Low | ⚪ Trivial | Docs         |
-| 20  | **CLI tool** for report conversion                              | 🟢 Low | 🔴 High    | Feature      |
-| 21  | **WebSocket live stream**                                       | 🟢 Low | 🔴 High    | Feature      |
-| 22  | **`pgregory/rapid`** for property-based testing                 | 🟡 Low | 🔵 Low     | Testing      |
-| 23  | **`invopop/jsonschema`** for schema generation                  | 🟠 Med | 🔵 Low     | Docs/API     |
-| 24  | **Upgrade Go further** (1.27 when released)                     | 🟡 Low | ⚪ Trivial | Deps         |
-| 25  | **Explore `samber/do` v2.1+** new APIs                          | 🟡 Low | 🔵 Low     | Deps         |
+| #  | Task                                                            | Impact | Effort     | Category     |
+| -- | --------------------------------------------------------------- | ------ | ---------- | ------------ |
+| 1  | **CHANGELOG + TODO + AGENTS update** (refactor visibility)      | 🟠 Med | ⚪ Trivial | Docs         |
+| 2  | **Fix `html_templ.go` drift** (`.gitattributes`)                | 🟠 Med | ⚪ Trivial | DevEx        |
+| 3  | **Parallelize remaining 18 sequential tests**                   | 🟡 Low | ⚪ Trivial | Testing      |
+| 4  | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`) | 🟠 Med | 🔵 Low     | Architecture |
+| 5  | **NDJSON import** (trivial now with `buildReportFromCore`)      | 🟠 Med | 🔵 Low     | Feature      |
+| 6  | **v0.1.0 release**                                              | 🟠 Med | 🟡 Med     | Release      |
+| 7  | **JSON Schema file**                                            | 🟠 Med | 🔵 Low     | Docs/API     |
+| 8  | **CSV/TSV export**                                              | 🟡 Low | 🔵 Low     | Feature      |
+| 9  | **Refactor `ServiceInfo` lifecycle concerns**                   | 🟠 Med | 🔴 High    | Architecture |
+| 10 | **Property-based `Diff` tests**                                 | 🟡 Low | 🔵 Low     | Testing      |
+| 11 | **Property-based `MigrateReport` tests**                        | 🟡 Low | 🔵 Low     | Testing      |
+| 12 | **Fuzz filter inputs**                                          | 🟡 Low | 🔵 Low     | Testing      |
+| 13 | **HTML golden-file test**                                       | 🟠 Med | 🟡 Med     | Testing      |
+| 14 | **`Report` constructor validation**                             | 🟠 Med | 🟡 Med     | Architecture |
+| 15 | **Prometheus exporter example**                                 | 🟠 Med | 🟡 Med     | Docs         |
+| 16 | **Add `actionlint` to CI**                                      | 🟡 Low | ⚪ Trivial | CI           |
+| 17 | **GitHub Actions version upgrades**                             | 🟡 Low | ⚪ Trivial | CI           |
+| 18 | **Flake app for coverage gate**                                 | 🟡 Low | 🔵 Low     | DevEx        |
+| 19 | **`RELEASING.md`** or release checklist                         | 🟡 Low | ⚪ Trivial | Docs         |
+| 20 | **CLI tool** for report conversion                              | 🟢 Low | 🔴 High    | Feature      |
+| 21 | **WebSocket live stream**                                       | 🟢 Low | 🔴 High    | Feature      |
+| 22 | **`pgregory/rapid`** for property-based testing                 | 🟡 Low | 🔵 Low     | Testing      |
+| 23 | **`invopop/jsonschema`** for schema generation                  | 🟠 Med | 🔵 Low     | Docs/API     |
+| 24 | **Upgrade Go further** (1.27 when released)                     | 🟡 Low | ⚪ Trivial | Deps         |
+| 25 | **Explore `samber/do` v2.1+** new APIs                          | 🟡 Low | 🔵 Low     | Deps         |
 
 ---
 

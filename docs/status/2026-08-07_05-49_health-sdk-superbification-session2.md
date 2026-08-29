@@ -15,16 +15,17 @@
 
 **The fix:** `classify()` rewritten from two-state (pass/fail) to three-state (pass/warn/fail):
 
-| Condition | Old roll-up | New roll-up | HTTP status |
-|---|---|---|---|
-| All services healthy | `pass` | `pass` | 200 |
-| Only non-critical failures | `pass` ← **wrong** | `warn` ← **correct** | 200 |
-| Any critical failure | `fail` | `fail` | 503 |
-| Shutting down | `fail` | `fail` | 503 |
+| Condition                  | Old roll-up        | New roll-up          | HTTP status |
+| -------------------------- | ------------------ | -------------------- | ----------- |
+| All services healthy       | `pass`             | `pass`               | 200         |
+| Only non-critical failures | `pass` ← **wrong** | `warn` ← **correct** | 200         |
+| Any critical failure       | `fail`             | `fail`               | 503         |
+| Shutting down              | `fail`             | `fail`               | 503         |
 
 `ReadinessHandler` HTTP logic changed from `if resp.Status != StatusPass` to `if resp.Status == StatusFail` — only `fail` triggers 503, both `warn` and `pass` return 200.
 
 **Files changed:**
+
 - `health/probe.go:280-307` — `classify()` rewritten with three-state logic + `hasWarning` flag
 - `health/handlers.go:70` — `if resp.Status == StatusFail` (was `!= StatusPass`)
 - `health/types.go:27-30` — `Status` doc comment updated to mention warn roll-up
@@ -34,9 +35,9 @@
 
 Validates configuration before startup. Returns sentinel errors for the two misconfigurations that cause silent runtime failures:
 
-| Check | Error sentinel | What it prevents |
-|---|---|---|
-| `timeout <= 0` | `ErrInvalidTimeout` | Every health check fails with "context deadline exceeded" |
+| Check                 | Error sentinel              | What it prevents                                                                  |
+| --------------------- | --------------------------- | --------------------------------------------------------------------------------- |
+| `timeout <= 0`        | `ErrInvalidTimeout`         | Every health check fails with "context deadline exceeded"                         |
 | `refreshInterval < 0` | `ErrInvalidRefreshInterval` | Negative interval is treated as 0 (live mode) but caller likely intended positive |
 
 Not enforced in `New()` (no API change, backward compatible). Callers call `Validate()` explicitly for early detection.
@@ -47,11 +48,11 @@ Not enforced in `New()` (no API change, backward compatible). Callers call `Vali
 
 ### Concurrency Hardening
 
-| Test | What it proves |
-|---|---|
+| Test                                        | What it proves                                                                 |
+| ------------------------------------------- | ------------------------------------------------------------------------------ |
 | `TestReadiness_ConcurrentAccess_AllSucceed` | 1000 goroutines hit cached readiness handler simultaneously — all 200, no race |
-| `TestEvaluate_ConcurrentAccess_NoRace` | 100 goroutines call `Evaluate()` concurrently — `-race` clean |
-| `TestShutdown_Idempotent` | Double `Shutdown()` doesn't panic or hang; readiness still returns 503 |
+| `TestEvaluate_ConcurrentAccess_NoRace`      | 100 goroutines call `Evaluate()` concurrently — `-race` clean                  |
+| `TestShutdown_Idempotent`                   | Double `Shutdown()` doesn't panic or hang; readiness still returns 503         |
 
 ### Compile-Time Guard on `exampleDB`
 
@@ -66,12 +67,12 @@ Added `var _ do.HealthcheckerWithContext = (*exampleDB)(nil)` to `health/example
 
 New "Health Package Benchmarks" section with median-of-3 runs, captured 2026-08-07:
 
-| Benchmark | Time/op | Bytes/op | Allocs/op |
-|---|---|---|---|
-| `BenchmarkLivenessHandler` | 995 ns | 1,316 B | 15 |
-| `BenchmarkReadinessHandler_CacheHit` | 1,230 ns | 1,346 B | 15 |
-| `BenchmarkReadinessHandler_LiveEval` | 5,710 ns | 3,691 B | 49 |
-| `BenchmarkEvaluate` | 3,898 ns | 2,312 B | 38 |
+| Benchmark                            | Time/op  | Bytes/op | Allocs/op |
+| ------------------------------------ | -------- | -------- | --------- |
+| `BenchmarkLivenessHandler`           | 995 ns   | 1,316 B  | 15        |
+| `BenchmarkReadinessHandler_CacheHit` | 1,230 ns | 1,346 B  | 15        |
+| `BenchmarkReadinessHandler_LiveEval` | 5,710 ns | 3,691 B  | 49        |
+| `BenchmarkEvaluate`                  | 3,898 ns | 2,312 B  | 38        |
 
 Cache delivers ~4.6× speedup over live evaluation.
 
@@ -84,15 +85,15 @@ Cache delivers ~4.6× speedup over live evaluation.
 
 ### Verification
 
-| Check | Result |
-|---|---|
-| `go test -race ./health/... -count=1` | 41 tests + 4 examples PASS |
-| `go test -race ./health/... -count=3` | PASS (no timing flakes) |
-| `go test -race ./... -count=1` | Full project PASS |
-| `golangci-lint run ./health/...` | 0 issues |
-| `golangci-lint fmt ./health/...` | Clean (no fmt/lint conflicts) |
-| `go vet ./health/...` | Clean |
-| Coverage (health/) | 98.0% of statements |
+| Check                                 | Result                        |
+| ------------------------------------- | ----------------------------- |
+| `go test -race ./health/... -count=1` | 41 tests + 4 examples PASS    |
+| `go test -race ./health/... -count=3` | PASS (no timing flakes)       |
+| `go test -race ./... -count=1`        | Full project PASS             |
+| `golangci-lint run ./health/...`      | 0 issues                      |
+| `golangci-lint fmt ./health/...`      | Clean (no fmt/lint conflicts) |
+| `go vet ./health/...`                 | Clean                         |
+| Coverage (health/)                    | 98.0% of statements           |
 
 ---
 
@@ -102,13 +103,13 @@ Cache delivers ~4.6× speedup over live evaluation.
 
 I changed `classify()` from two-state to three-state, but **5 doc comments across 3 files still describe the old behavior**. I discovered this during the self-review at the end of this session but did NOT fix them — the user asked for a status report, not more changes.
 
-| File | Line | Current text (stale) | What it should say |
-|---|---|---|---|
-| `health/probe.go` | 32 | "non-critical failures are surfaced as individual check entries but do not affect the HTTP status code" | Should mention roll-up `warn` |
-| `health/probe.go` | 68 | "their failures appear in the response body but do not change the HTTP status code" | Should mention roll-up `warn` |
+| File                 | Line  | Current text (stale)                                                                                                               | What it should say                                          |
+| -------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `health/probe.go`    | 32    | "non-critical failures are surfaced as individual check entries but do not affect the HTTP status code"                            | Should mention roll-up `warn`                               |
+| `health/probe.go`    | 68    | "their failures appear in the response body but do not change the HTTP status code"                                                | Should mention roll-up `warn`                               |
 | `health/handlers.go` | 51-52 | "200 when all critical services pass (non-critical failures appear as individual check entries but do not change the status code)" | Should mention three-state: 200 for pass+warn, 503 for fail |
-| `README.md` | 340 | "Non-critical failures surface as `warn` in the response body without triggering 503" | Should mention roll-up status is also `warn` |
-| `health/doc.go` | — | No mention of `Validate()` or three-state behavior | Should document both |
+| `README.md`          | 340   | "Non-critical failures surface as `warn` in the response body without triggering 503"                                              | Should mention roll-up status is also `warn`                |
+| `health/doc.go`      | —     | No mention of `Validate()` or three-state behavior                                                                                 | Should document both                                        |
 
 **Why this matters:** These are the user-facing descriptions that consumers read first. They now under-describe the actual behavior. The code is correct; the docs are stale.
 
@@ -120,19 +121,19 @@ I changed `classify()` from two-state to three-state, but **5 doc comments acros
 
 ## c) NOT STARTED
 
-| Item | Why it matters |
-|---|---|
-| **Fix 5 stale doc comments** | User-facing descriptions now under-describe the three-state behavior. See section b. |
-| **Fuzz test for `writeResponse`** | `writeResponse` marshals arbitrary `Response` values to JSON. No fuzz test verifies it can't panic on edge-case inputs (nil maps, very long strings, unicode). |
-| **`WithGracePeriod(d)` option** | Guide Step 7 shows `time.Sleep(gracePeriod)` between `MarkShuttingDown` and resource close. SDK has `MarkShuttingDown` but no built-in sleep mechanism. |
-| **`LivenessChecker` interface** | Guide Step 6 mentions "optionally check a deadlock watchdog." No pluggable hook for goroutine-starvation detection. |
-| **slog integration** | No structured logging of slow checks, failures, or state transitions. |
-| **`WithIndentJSON()` option** | No human-readable JSON for development. Compact JSON only. |
-| **Integration test with `live/`** | No test verifying `health/` and `live/` routes don't conflict on same mux. |
-| **Restart test** | No test for `Shutdown` then `Start` (restart scenario). `Start` is no-op-safe for double-call, but restart after full shutdown is untested. |
-| **Per-service latency in `Check` struct** | No `LatencyMs int64` field for per-service timing visibility. |
-| **`Probe.Status()` method** | No way to get current cached status without serving an HTTP request (for external monitoring). |
-| **`WithOnStateChange` callback** | No callback for external alerting when status transitions (pass→warn→fail). |
+| Item                                      | Why it matters                                                                                                                                                 |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Fix 5 stale doc comments**              | User-facing descriptions now under-describe the three-state behavior. See section b.                                                                           |
+| **Fuzz test for `writeResponse`**         | `writeResponse` marshals arbitrary `Response` values to JSON. No fuzz test verifies it can't panic on edge-case inputs (nil maps, very long strings, unicode). |
+| **`WithGracePeriod(d)` option**           | Guide Step 7 shows `time.Sleep(gracePeriod)` between `MarkShuttingDown` and resource close. SDK has `MarkShuttingDown` but no built-in sleep mechanism.        |
+| **`LivenessChecker` interface**           | Guide Step 6 mentions "optionally check a deadlock watchdog." No pluggable hook for goroutine-starvation detection.                                            |
+| **slog integration**                      | No structured logging of slow checks, failures, or state transitions.                                                                                          |
+| **`WithIndentJSON()` option**             | No human-readable JSON for development. Compact JSON only.                                                                                                     |
+| **Integration test with `live/`**         | No test verifying `health/` and `live/` routes don't conflict on same mux.                                                                                     |
+| **Restart test**                          | No test for `Shutdown` then `Start` (restart scenario). `Start` is no-op-safe for double-call, but restart after full shutdown is untested.                    |
+| **Per-service latency in `Check` struct** | No `LatencyMs int64` field for per-service timing visibility.                                                                                                  |
+| **`Probe.Status()` method**               | No way to get current cached status without serving an HTTP request (for external monitoring).                                                                 |
+| **`WithOnStateChange` callback**          | No callback for external alerting when status transitions (pass→warn→fail).                                                                                    |
 
 ---
 
@@ -190,6 +191,7 @@ I added `Probe.Validate()` and 5 tests for it, but I never wired it into `New()`
 ## f) Up to 50 Things We Should Get Done Next
 
 ### Documentation Fixes (must do)
+
 1. Update `Probe` struct doc comment (probe.go:32) to mention three-state warn roll-up
 2. Update `WithCriticalServices` doc comment (probe.go:68) to mention warn roll-up
 3. Update `ReadinessHandler` doc comment (handlers.go:51-52) to describe three-state HTTP mapping
@@ -200,12 +202,14 @@ I added `Probe.Validate()` and 5 tests for it, but I never wired it into `New()`
 8. Consider adding `Validate()` call example to `health/example_test.go`
 
 ### Validate() Design Decision (must decide)
+
 9. Decide: enforce `Validate()` in `New()` (returns error), in `Start()` (panic), or document as caller responsibility
 10. If caller responsibility: add a lint rule or startup checklist
 11. Consider `NewOrPanic(injector, opts...)` variant that calls Validate internally
 12. Add `Validate()` call to the guide (`docs/guides/superb-health-endpoint-with-samber-do.md`)
 
 ### Test Hardening
+
 13. Fix 5 stale doc comments (items 1-4 above)
 14. Add fuzz test for `writeResponse` — edge-case Response values
 15. Add restart test: `Shutdown` then `Start` again
@@ -219,6 +223,7 @@ I added `Probe.Validate()` and 5 tests for it, but I never wired it into `New()`
 23. Add test verifying startup handler ignores non-critical failures entirely
 
 ### API Hardening
+
 24. Add `WithGracePeriod(d time.Duration)` option
 25. Add `Probe.Status() Status` method returning current cached status
 26. Add `Probe.LastResponse() Response` method returning last evaluated response
@@ -231,24 +236,28 @@ I added `Probe.Validate()` and 5 tests for it, but I never wired it into `New()`
 33. Consider `WithCORS` middleware option
 
 ### Coverage Gate Fix
+
 34. Investigate `live/` coverage (69.6%) — is this demo code that should be excluded?
 35. If `live/` is production: add tests to raise coverage
 36. If `live/` is demo: exclude from coverage gate
 37. Re-run coverage gate after fix to verify 94% threshold passes
 
 ### Observability
+
 38. Log slow health checks (> configurable threshold) via slog
 39. Log state transitions (shutdown marked, startup latched)
 40. Add Prometheus metrics endpoint option
 41. Add per-service latency tracking in `Check` struct
 
 ### Integration
+
 42. Add integration test: `health/` + `live/` on same mux
 43. Add integration test: `health/` with scoped injectors
 44. Add integration test: `health/` with `WithRefreshInterval(0)` under load
 45. Add standalone `example/health/main.go` demo
 
 ### CI
+
 46. Verify `go mod tidy` doesn't drift (no new deps from Validate)
 47. Add health/ to CI benchmark job if one exists
 48. Run full `golangci-lint run ./...` and verify 0 issues in health/ (done — 0 issues)

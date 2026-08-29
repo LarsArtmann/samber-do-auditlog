@@ -156,48 +156,48 @@ The fuzz test only seeds `ProvideNamed` with a service name. It doesn't test:
 
 ### Critical (must fix before any release)
 
-| #   | Task                                                                                                  | Impact      | Effort    |
-| --- | ----------------------------------------------------------------------------------------------------- | ----------- | --------- |
-| 1   | **Fix broken Events tab** — build `allEvents` array from `report.events`                              | 🔴 Critical | S (30min) |
-| 2   | **Fix XSS in deps column** — add `esc()` around `d.service_name`                                      | 🔴 Security | S (5min)  |
-| 3   | **Add HTML smoke test** — verify all 5 tabs produce non-empty content                                 | 🔴 Critical | M (1hr)   |
-| 4   | **Add `allEvents` rendering** — sequence, timestamp, type badge, phase, duration, error, service type | 🔴 Critical | M (1hr)   |
+| # | Task                                                                                                  | Impact      | Effort    |
+| - | ----------------------------------------------------------------------------------------------------- | ----------- | --------- |
+| 1 | **Fix broken Events tab** — build `allEvents` array from `report.events`                              | 🔴 Critical | S (30min) |
+| 2 | **Fix XSS in deps column** — add `esc()` around `d.service_name`                                      | 🔴 Security | S (5min)  |
+| 3 | **Add HTML smoke test** — verify all 5 tabs produce non-empty content                                 | 🔴 Critical | M (1hr)   |
+| 4 | **Add `allEvents` rendering** — sequence, timestamp, type badge, phase, duration, error, service type | 🔴 Critical | M (1hr)   |
 
 ### High Priority
 
-| #   | Task                                                                                      | Impact         | Effort    |
-| --- | ----------------------------------------------------------------------------------------- | -------------- | --------- |
-| 5   | **Expand fuzz test** — deps names, scope names, error strings, multiple injection vectors | 🔴 Security    | M (1hr)   |
-| 6   | **Add version guard to MigrateReport** — return early if already at target version        | 🟡 Robustness  | S (15min) |
-| 7   | **Preserve ExportedAt in migration** — don't overwrite if non-zero                        | 🟡 Correctness | S (10min) |
-| 8   | **Add ResolveServiceScope ancestor walk test** — service in parent scope                  | 🟡 Coverage    | S (20min) |
-| 9   | **Add CSP meta tag to HTML** — defense-in-depth against XSS                               | 🟡 Security    | S (15min) |
-| 10  | **Validate empty/null JSON in MigrateReport** — return error for invalid input            | 🟡 Robustness  | S (15min) |
+| #  | Task                                                                                      | Impact         | Effort    |
+| -- | ----------------------------------------------------------------------------------------- | -------------- | --------- |
+| 5  | **Expand fuzz test** — deps names, scope names, error strings, multiple injection vectors | 🔴 Security    | M (1hr)   |
+| 6  | **Add version guard to MigrateReport** — return early if already at target version        | 🟡 Robustness  | S (15min) |
+| 7  | **Preserve ExportedAt in migration** — don't overwrite if non-zero                        | 🟡 Correctness | S (10min) |
+| 8  | **Add ResolveServiceScope ancestor walk test** — service in parent scope                  | 🟡 Coverage    | S (20min) |
+| 9  | **Add CSP meta tag to HTML** — defense-in-depth against XSS                               | 🟡 Security    | S (15min) |
+| 10 | **Validate empty/null JSON in MigrateReport** — return error for invalid input            | 🟡 Robustness  | S (15min) |
 
 ### Medium Priority
 
-| #   | Task                                                                                             | Impact          | Effort    |
-| --- | ------------------------------------------------------------------------------------------------ | --------------- | --------- |
-| 11  | **Add missing godoc** — 7 exported methods in types.go                                           | Documentation   | S (15min) |
-| 12  | **Extract `"[root]"` to named constant** — used in types.go + 20+ test lines                     | Cleanliness     | S (10min) |
-| 13  | **Handle writeToFile Close error** — at minimum log or wrap                                      | Correctness     | S (10min) |
-| 14  | **Extract complex hook functions** — OnBeforeInvocation (57 lines), OnAfterInvocation (55 lines) | Maintainability | M (2hr)   |
-| 15  | **Add godoclint exception or fix** — dual package comments in doc.go + plugin.go                 | Lint hygiene    | S (5min)  |
-| 16  | **Add ExampleConfig_Validate** — godoc example for validation                                    | Documentation   | S (10min) |
-| 17  | **Update CHANGELOG.md** — Session 5 entries                                                      | Documentation   | S (10min) |
+| #  | Task                                                                                             | Impact          | Effort    |
+| -- | ------------------------------------------------------------------------------------------------ | --------------- | --------- |
+| 11 | **Add missing godoc** — 7 exported methods in types.go                                           | Documentation   | S (15min) |
+| 12 | **Extract `"[root]"` to named constant** — used in types.go + 20+ test lines                     | Cleanliness     | S (10min) |
+| 13 | **Handle writeToFile Close error** — at minimum log or wrap                                      | Correctness     | S (10min) |
+| 14 | **Extract complex hook functions** — OnBeforeInvocation (57 lines), OnAfterInvocation (55 lines) | Maintainability | M (2hr)   |
+| 15 | **Add godoclint exception or fix** — dual package comments in doc.go + plugin.go                 | Lint hygiene    | S (5min)  |
+| 16 | **Add ExampleConfig_Validate** — godoc example for validation                                    | Documentation   | S (10min) |
+| 17 | **Update CHANGELOG.md** — Session 5 entries                                                      | Documentation   | S (10min) |
 
 ### Lower Priority
 
-| #   | Task                                                                                            | Impact      | Effort    |
-| --- | ----------------------------------------------------------------------------------------------- | ----------- | --------- |
-| 18  | **Add HTML integration test** — run JS in a lightweight engine (e.g., goja) to verify rendering | Testing     | L (4hr)   |
-| 19  | **Add event type badge to HTML events tab** — color-coded badges matching service types         | UX          | M (1hr)   |
-| 20  | **Extract emoji codepoints to named constants** — types.go:53-66                                | Readability | S (10min) |
-| 21  | **Add PlantUML export** — only if users request it                                              | Feature     | M (2hr)   |
-| 22  | **Add ServiceInfo health check duration** — if samber/do adds per-service timing in future      | Feature     | Deferred  |
-| 23  | **Consider struct key for serviceKey** — `scopeID+"/"+serviceName` allocates per key            | Performance | S (15min) |
-| 24  | **Add edge count to HTML stats** — total dependency edges                                       | UX          | S (10min) |
-| 25  | **Reduce html_templ.go generated size** — minify inline JS/CSS                                  | Performance | M (1hr)   |
+| #  | Task                                                                                            | Impact      | Effort    |
+| -- | ----------------------------------------------------------------------------------------------- | ----------- | --------- |
+| 18 | **Add HTML integration test** — run JS in a lightweight engine (e.g., goja) to verify rendering | Testing     | L (4hr)   |
+| 19 | **Add event type badge to HTML events tab** — color-coded badges matching service types         | UX          | M (1hr)   |
+| 20 | **Extract emoji codepoints to named constants** — types.go:53-66                                | Readability | S (10min) |
+| 21 | **Add PlantUML export** — only if users request it                                              | Feature     | M (2hr)   |
+| 22 | **Add ServiceInfo health check duration** — if samber/do adds per-service timing in future      | Feature     | Deferred  |
+| 23 | **Consider struct key for serviceKey** — `scopeID+"/"+serviceName` allocates per key            | Performance | S (15min) |
+| 24 | **Add edge count to HTML stats** — total dependency edges                                       | UX          | S (10min) |
+| 25 | **Reduce html_templ.go generated size** — minify inline JS/CSS                                  | Performance | M (1hr)   |
 
 ---
 

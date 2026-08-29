@@ -1,8 +1,8 @@
 # samber/do v2: Best Practices & Anti-Patterns
 
-**Scope:** Every Go project in `/home/lars/projects` that depends on `github.com/samber/do`.  
-**Date:** 2026-07-23  
-**Library versions observed:** v2.0.0, v2.1.0  
+**Scope:** Every Go project in `/home/lars/projects` that depends on `github.com/samber/do`.\
+**Date:** 2026-07-23\
+**Library versions observed:** v2.0.0, v2.1.0\
 **Related work:** `samber-do-auditlog`, `branching-flow/pkg/doanalyzerv2`, `reports/docs/01-technical-analysis/go-libraries/samber-ro-do-linter-design.md`
 
 ---
@@ -26,11 +26,11 @@ Use this as the single reference for writing new DI code and for auditing existi
 
 ### 1.1 Projects by version
 
-| Version | Count | Notes |
-| --- | --- | --- |
-| v2.1.0 | ~55 modules | Current default across active code |
-| v2.0.0 | ~15 modules | Mostly older code; fully compatible with v2.1.0 |
-| v1.6.0 | 2 modules | Only in `archived/` |
+| Version | Count       | Notes                                           |
+| ------- | ----------- | ----------------------------------------------- |
+| v2.1.0  | ~55 modules | Current default across active code              |
+| v2.0.0  | ~15 modules | Mostly older code; fully compatible with v2.1.0 |
+| v1.6.0  | 2 modules   | Only in `archived/`                             |
 
 ### 1.2 All modules that depend on samber/do
 
@@ -42,18 +42,18 @@ Indirect (transitive) usage also appears in: `go-composable-business-types`, `go
 
 ### 1.3 Key files to study
 
-| Project | File | What it demonstrates |
-| --- | --- | --- |
-| `samber-do-auditlog` | `plugin.go` | Lifecycle hooks via `do.InjectorOpts` |
-| `samber-do-auditlog` | `example/main.go` | Every major feature in one runnable demo |
-| `BuildFlow` | `internal/di/di.go` | Wrapped container + cleanup + debug tree |
-| `BuildFlow` | `internal/di/providers_singleton.go` | `ProvideValue` for eager singletons |
-| `smart-configs/di` | `register.go` | `ProvideNamed` for config-as-services |
-| `Kernovia` | `internal/kernel/named_services.go` | Named services + helper accessors |
-| `KeyCountdown` | `internal/container/lifecycle/manager.go` | Lifecycle manager + health checks |
-| `cmdguard` | `pkg/cmdguard/v3/scope.go` | Typed wrapper + child scopes |
-| `go-plugin-mvp` | `marketplace/container/container.go` | Turnkey composition root |
-| `branching-flow` | `pkg/doanalyzerv2/*.go` | Static detection of anti-patterns |
+| Project              | File                                      | What it demonstrates                     |
+| -------------------- | ----------------------------------------- | ---------------------------------------- |
+| `samber-do-auditlog` | `plugin.go`                               | Lifecycle hooks via `do.InjectorOpts`    |
+| `samber-do-auditlog` | `example/main.go`                         | Every major feature in one runnable demo |
+| `BuildFlow`          | `internal/di/di.go`                       | Wrapped container + cleanup + debug tree |
+| `BuildFlow`          | `internal/di/providers_singleton.go`      | `ProvideValue` for eager singletons      |
+| `smart-configs/di`   | `register.go`                             | `ProvideNamed` for config-as-services    |
+| `Kernovia`           | `internal/kernel/named_services.go`       | Named services + helper accessors        |
+| `KeyCountdown`       | `internal/container/lifecycle/manager.go` | Lifecycle manager + health checks        |
+| `cmdguard`           | `pkg/cmdguard/v3/scope.go`                | Typed wrapper + child scopes             |
+| `go-plugin-mvp`      | `marketplace/container/container.go`      | Turnkey composition root                 |
+| `branching-flow`     | `pkg/doanalyzerv2/*.go`                   | Static detection of anti-patterns        |
 
 ---
 
@@ -61,12 +61,12 @@ Indirect (transitive) usage also appears in: `go-composable-business-types`, `go
 
 ### 2.1 Service lifetimes
 
-| Registration | Lifetime | Use for |
-| --- | --- | --- |
-| `do.Provide` | Lazy singleton | Most services |
-| `do.ProvideValue` | Eager singleton | Config, logger, DB connection |
-| `do.ProvideTransient` | New instance per `Invoke` | Factories, value objects |
-| `do.ProvideNamed` / `do.ProvideNamedValue` | Named singleton | Multiple impls of one type |
+| Registration                               | Lifetime                  | Use for                       |
+| ------------------------------------------ | ------------------------- | ----------------------------- |
+| `do.Provide`                               | Lazy singleton            | Most services                 |
+| `do.ProvideValue`                          | Eager singleton           | Config, logger, DB connection |
+| `do.ProvideTransient`                      | New instance per `Invoke` | Factories, value objects      |
+| `do.ProvideNamed` / `do.ProvideNamedValue` | Named singleton           | Multiple impls of one type    |
 
 ### 2.2 Invocation
 
@@ -367,7 +367,7 @@ If ownership is transferred (e.g. a constructor returns the injector to the call
 
 ### 4.3 DO-3: Override outside container setup
 
-`samber/do` explicitly warns: *"We strongly discourage using this helper in production. Please use service aliasing instead."* `do.Override*` is legitimate in:
+`samber/do` explicitly warns: _"We strongly discourage using this helper in production. Please use service aliasing instead."_ `do.Override*` is legitimate in:
 
 - `_test.go` files
 - setup / wire / configure / register / init functions
@@ -617,18 +617,18 @@ errors := lm.GracefulShutdownAll()
 
 When adding a new service, walk through these questions:
 
-| Question | If yes | Pattern |
-| --- | --- | --- |
-| Is it a long-lived singleton? | yes | `do.Provide` |
-| Must it exist before first invoke (DB, logger, config)? | yes | `do.ProvideValue` |
-| Is it a per-request / per-tenant resource? | yes | `do.ProvideTransient` in a child scope |
-| Are there multiple implementations? | yes | `do.ProvideNamed` + accessor helper |
-| Should consumers depend on an interface? | yes | Provide struct, invoke via `do.InvokeAs` |
-| Does it hold resources? | yes | Implement `do.Shutdowner*` |
-| Does it need a connectivity check? | yes | Implement `do.Healthchecker*` |
-| Is it invoked from a request handler? | yes | Inject dependency into handler struct, do not call `do.Invoke` in handler body |
-| Is shutdown order critical? | yes | Use a single lifecycle manager; never access other services from `Shutdown()` |
-| Is this code in `_test.go`? | yes | `do.Override*` is acceptable |
+| Question                                                | If yes | Pattern                                                                        |
+| ------------------------------------------------------- | ------ | ------------------------------------------------------------------------------ |
+| Is it a long-lived singleton?                           | yes    | `do.Provide`                                                                   |
+| Must it exist before first invoke (DB, logger, config)? | yes    | `do.ProvideValue`                                                              |
+| Is it a per-request / per-tenant resource?              | yes    | `do.ProvideTransient` in a child scope                                         |
+| Are there multiple implementations?                     | yes    | `do.ProvideNamed` + accessor helper                                            |
+| Should consumers depend on an interface?                | yes    | Provide struct, invoke via `do.InvokeAs`                                       |
+| Does it hold resources?                                 | yes    | Implement `do.Shutdowner*`                                                     |
+| Does it need a connectivity check?                      | yes    | Implement `do.Healthchecker*`                                                  |
+| Is it invoked from a request handler?                   | yes    | Inject dependency into handler struct, do not call `do.Invoke` in handler body |
+| Is shutdown order critical?                             | yes    | Use a single lifecycle manager; never access other services from `Shutdown()`  |
+| Is this code in `_test.go`?                             | yes    | `do.Override*` is acceptable                                                   |
 
 ---
 

@@ -19,6 +19,7 @@ The BuildFlow output showed `govalid`, `golangci-lint`, `go build`, `go test`, `
 ## a) FULLY DONE
 
 ### Production Code (100% complete)
+
 - **`report.go`** — `buildReportFromCore` and `NewReport` signatures changed from `containerID string` to `containerID ContainerID`. `MergeReports` scope map typed as `map[ScopeID]ScopeNode`. All query methods (`ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByRef`) take typed params. `ReportIndex` maps typed (`ByName map[ServiceName]`, `ByScope map[ScopeID]`, `EventsByName map[ServiceName]`).
 - **`report_builder.go`** — `sortedScopes` takes `map[ScopeID]scopeMeta`. Generic scope tree functions (`buildScopeTreeFromMeta`, `buildScopeChildren`, `findRootScope`) typed with `ScopeID`/`ServiceName` accessors. `scopeServicesForServices` returns `map[ScopeID][]ServiceName`. `enrichCapabilities` and `buildCapabilityMap` typed. `scopeMetaID`/`scopeMetaParentID` return `ScopeID`.
 - **`filter.go`** — `reportFilter` maps typed (`serviceNames map[ServiceName]`, `scopeIDs map[ScopeID]`). `WithServicesByName` takes `...ServiceName`. `WithScope` takes `ScopeID`. `pruneScopeTree` uses `map[ScopeID]map[ServiceName]struct{}`.
@@ -32,6 +33,7 @@ The BuildFlow output showed `govalid`, `golangci-lint`, `go build`, `go test`, `
 - **`example/summary.go`** — Added `serviceNamesToStrings` helper. `depRefs` wraps with `string()`. `strings.Join` uses helper.
 
 ### Test Code (100% complete)
+
 - **`helpers_test.go`** — 7 function signatures changed to typed params (`findServiceByName`, `findServiceBySuffix`, `assertAllEventsForService`, `assertContainerID`, `assertFilteredServiceCount`, `assertUnhealthyServiceCount`, `newPluginAndInjectorWithID`). `strings.HasSuffix` wraps with `string()`.
 - **`replay_test.go`** — `mkEvent`, `mkLazyEvent`, `mkRegEvent`, `mkEventWithDur`, `mkInvAfterWithDur`, `mkInvAfter`, `mkInvBefore` signatures and call sites typed. Inline closures at lines 1024, 1266 wrapped with `auditlog.ServiceName()` and `auditlog.ContainerID()`.
 - **`csv_export_test.go`** — `csvServiceRef` takes `auditlog.ServiceName`.
@@ -52,6 +54,7 @@ The BuildFlow output showed `govalid`, `golangci-lint`, `go build`, `go test`, `
 - **`cmd/auditlog/cli_integration_test.go`** — `mkRegEvent` and `writeSampleReport` signatures typed.
 
 ### Verification
+
 - `go build ./...` — clean
 - `go vet ./...` — clean
 - `go test -race ./...` — all pass (3.8s)
@@ -92,12 +95,14 @@ Nothing. No regressions introduced. All tests pass with race detector. Coverage 
 ## e) WHAT WE SHOULD IMPROVE
 
 ### Process
+
 1. **Run `go build` after every logical group of edits** — LSP diagnostics lag behind file writes. `go build` is ground truth. Would have saved 3-4 iterations.
 2. **Use `edit`/`multiedit` instead of `sed` for multi-line edits** — `sed` has no whitespace awareness, no context matching, and hits wrong lines when line numbers shift.
 3. **Pre-commit hook auto-commits everything** — The pre-commit hook at `scripts/hooks/pre-commit` runs formatters and then stages ALL changes before committing. This means partial work-in-progress gets committed if you trigger the hook. 9 commits were created during this session.
 4. **AGENTS.md needs updating** — The "Typed identifiers / ServiceInfo split are DEFERRED to v0.3.0" note is now partially wrong — the typed identifiers (`ContainerID`, `ScopeID`, `ServiceName`) ARE now propagated through the entire codebase. The note should be updated to reflect this.
 
 ### Code Quality
+
 5. **`ServiceDiff.ServiceName` is still `string`** — `diff.go`'s `ServiceDiff` struct has `ServiceName string` instead of `ServiceName ServiceName`. This is a remaining inconsistency.
 6. **Many `string()` conversions at boundaries** — Every external library call (go-output, csv, fmt) needs `string()` wrapping. This is expected with named types but creates noise. Consider adding `.String()` methods if the noise grows.
 7. **`report.go:166` `%q` formatting on `ContainerID`** — The `fmt.Errorf` in `NewReport` uses `%q` on `containerID` which is now `ContainerID` type. This works because `ContainerID` is `~string` but should be verified.
@@ -108,6 +113,7 @@ Nothing. No regressions introduced. All tests pass with race detector. Coverage 
 ## f) Up to 50 Things to Get Done Next
 
 ### High Priority (blocks v0.2.0 release)
+
 1. Update AGENTS.md — remove "DEFERRED" note for typed identifiers, document the completed migration
 2. Run `golangci-lint run` — verify the full lint suite passes (BuildFlow showed it was red due to typecheck)
 3. Run `nix flake check` — verify Nix flake CI checks pass
@@ -116,6 +122,7 @@ Nothing. No regressions introduced. All tests pass with race detector. Coverage 
 6. Verify `govulncheck` passes
 
 ### Medium Priority (quality improvements)
+
 7. Migrate `ServiceDiff.ServiceName` from `string` to `ServiceName` type in `diff.go`
 8. Add `.String()` methods to `ContainerID`, `ScopeID`, `ServiceName` if the `string()` conversion noise grows
 9. Consider a `NewServiceRef(scopeID ScopeID, scopeName string, serviceName ServiceName)` constructor to centralize ServiceRef creation
@@ -130,6 +137,7 @@ Nothing. No regressions introduced. All tests pass with race detector. Coverage 
 18. Check `ndjson.go` — `ReadEvents` returns `[]Event`; verify no string assumptions
 
 ### Low Priority (nice to have)
+
 19. Consider compile-time type assertions to prevent accidental `string` usage where typed values are expected
 20. Document the type boundary policy in AGENTS.md — "typed at domain layer, `string()` at IO/rendering layer"
 21. Add a linting rule (via `golangci-lint` `forcetypeassert` or custom) to catch untyped string usage in domain logic
@@ -139,6 +147,7 @@ Nothing. No regressions introduced. All tests pass with race detector. Coverage 
 25. Verify `html.templ` template works correctly with typed fields (it uses `@templ.JSONScript` and field access — does templ handle named string types transparently?)
 
 ### Testing
+
 26. Add a test that verifies `ServiceName("foo") != string("foo")` at the type level (compile-time safety test)
 27. Add a test that verifies `ContainerID` round-trips through JSON correctly (serialization safety)
 28. Add fuzz test coverage for typed identifier edge cases (empty strings, unicode, path separators)
@@ -146,6 +155,7 @@ Nothing. No regressions introduced. All tests pass with race detector. Coverage 
 30. Run the full test suite with `-count=1` to bypass cache — verify no flaky tests
 
 ### Documentation
+
 31. Update `README.md` if the code examples use typed identifiers
 32. Update `FEATURES.md` if it lists type safety as a feature
 33. Update `CHANGELOG.md` with the typed identifier migration
@@ -153,6 +163,7 @@ Nothing. No regressions introduced. All tests pass with race detector. Coverage 
 35. Update `docs/research/` if any research docs reference the old `string` types
 
 ### Future Architecture (v0.3.0+)
+
 36. Split `ServiceInfo` into identity/lifecycle/health/graph sub-structs (previously deferred)
 37. Consider whether `Event` should split into before/after event types (making impossible states unrepresentable)
 38. Consider `ScopePath` type for hierarchical scope identification

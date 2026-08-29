@@ -1,7 +1,7 @@
 # Status Report: Typed Identifiers + ServiceInfo Split
 
-**Date:** 2026-07-22 18:35  
-**Session Scope:** Implementing the two deferred breaking-change items from TODO_LIST.md  
+**Date:** 2026-07-22 18:35\
+**Session Scope:** Implementing the two deferred breaking-change items from TODO_LIST.md\
 **Outcome:** Both implemented, all tests pass, 0 lint issues, 94.1% coverage
 
 ---
@@ -18,6 +18,7 @@ Two breaking API changes were shipped together as a single batch:
 ## A) FULLY DONE
 
 ### Typed Identifiers
+
 - `ContainerID`, `ScopeID`, `ServiceName` defined as named string types in `types.go`
 - `ServiceRef` fields retyped (`ScopeID`, `ServiceName`)
 - `Event.ContainerID` retyped to `ContainerID`
@@ -33,6 +34,7 @@ Two breaking API changes were shipped together as a single batch:
 - JSON schema regenerated — no semantic changes (named string types serialize identically to `string`)
 
 ### ServiceInfo Split
+
 - `ServiceIdentity` (ServiceRef + ServiceType) — identity and provider classification
 - `ServiceLifecycle` (Status, RegisteredAt, FirstInvokedAt, InvocationCount, InvocationOrder, FirstBuildDurationMs, ShutdownAt, ShutdownDurationMs, ShutdownError, InvocationError, IsShutdowner) — lifecycle state
 - `ServiceHealth` (IsHealthchecker, LastHealthCheckAt, HealthCheckError, HealthCheckCount) — health check data
@@ -42,6 +44,7 @@ Two breaking API changes were shipped together as a single batch:
 - 15 test struct literal sites updated across: `csv_export_test.go`, `diagram_test.go`, `diff_property_test.go`, `fuzz_test.go`, `report_constructor_test.go`, `tree_table_test.go`
 
 ### Verification
+
 - `go build ./...` — passes
 - `go vet ./...` — passes
 - `go test -race -count=1 ./...` — all pass
@@ -56,12 +59,14 @@ Two breaking API changes were shipped together as a single batch:
 ## B) PARTIALLY DONE
 
 ### Commit Hygiene
+
 - Changes were auto-committed by a pre-commit hook during the session — **24 commits** were created
 - The commit messages are generic and AI-generated (e.g., "refactor(auditlog): enhance core functionality with improved health checks, hooks, and reporting")
 - These messages violate the git message quality guidelines: they don't describe WHAT changed or WHY, they're vague and interchangeable
 - The work is correct but the git history is messy — a squash or rebase would clean this up
 
 ### Test for Type Safety
+
 - I verified compile-time type safety manually with a throwaway file, but did NOT add a permanent compile-time test
 - Consider adding a `//go:build type_safety_check` file that fails to compile if types are accidentally merged
 
@@ -81,6 +86,7 @@ Two breaking API changes were shipped together as a single batch:
 Nothing is broken. All tests pass, lint is clean, coverage meets the gate.
 
 **However**, the commit history is a disaster. 24 auto-committed chunks with generic AI-generated messages like:
+
 - "refactor(auditlog): refactor core audit logging components for improved reliability and extensibility"
 - "test(auditlog): enhance test coverage and add comprehensive test scenarios"
 - "chore(repo): no changes detected in working directory"
@@ -118,6 +124,7 @@ These messages are useless for git archaeology. A `git log --oneline` tells you 
 ## F) Up to 50 Things We Should Get Done Next
 
 ### Git & Release
+
 1. Squash 24 auto-commits into 1-2 clean commits
 2. Write proper commit message: "feat!: add typed identifiers and split ServiceInfo into domain structs"
 3. Add CHANGELOG.md entry for v0.3.0
@@ -126,6 +133,7 @@ These messages are useless for git archaeology. A `git log --oneline` tells you 
 6. Update README.md to mention typed identifiers in the API section
 
 ### Type Safety Enhancements
+
 7. Add `String()` method to `ContainerID`, `ScopeID`, `ServiceName`
 8. Add `Validate()` methods to typed identifiers
 9. Add constructor functions: `NewContainerID()`, `NewScopeID()`, `NewServiceName()`
@@ -134,6 +142,7 @@ These messages are useless for git archaeology. A `git log --oneline` tells you 
 12. Consider `Phase` and `EventType` already being typed — audit for completeness
 
 ### API Polish
+
 13. Review whether `ServiceType` should move from `ServiceIdentity` to `ServiceLifecycle`
 14. Review whether `IsShutdowner` should move from `ServiceLifecycle` to `ServiceHealth` (capability grouping)
 15. Add doc examples showing the type safety benefit (e.g., "the compiler catches this bug...")
@@ -141,6 +150,7 @@ These messages are useless for git archaeology. A `git log --oneline` tells you 
 17. Consider adding `ServiceInfo.Identity()`, `.Lifecycle()`, `.Health()`, `.Graph()` accessors for explicit access
 
 ### Testing
+
 18. Add property-based test verifying JSON round-trip preserves typed fields
 19. Add test for `MigrateReport` with old schema → new typed fields
 20. Add fuzz test targeting the struct embedding (ensure no panics from nil embedded structs)
@@ -148,6 +158,7 @@ These messages are useless for git archaeology. A `git log --oneline` tells you 
 22. Consider table-driven test for all `string()` conversion sites
 
 ### Documentation
+
 23. Update AGENTS.md gotcha about test struct literal pattern (must use embedded struct names)
 24. Update docs/DOMAIN_LANGUAGE.md with typed identifier definitions
 25. Add migration guide for consumers (v0.2 → v0.3)
@@ -155,6 +166,7 @@ These messages are useless for git archaeology. A `git log --oneline` tells you 
 27. Document the four ServiceInfo sub-structs in the package doc comment
 
 ### Code Quality
+
 28. Audit `reportFilter` map types — now using typed keys, verify all lookups are consistent
 29. Review `pruneScopeTreeRecursive` — now uses `map[ScopeID]map[ServiceName]struct{}`; verify correctness
 30. Consider whether `buildScopeTreeFromMeta` generic signatures are clearer with typed accessors
@@ -162,6 +174,7 @@ These messages are useless for git archaeology. A `git log --oneline` tells you 
 32. Check if `ScopeNode.Services []ServiceName` causes issues in JSON consumers expecting `[]string`
 
 ### Architecture
+
 33. Consider whether the samber/do boundary conversion could be centralized in a single `adaptHook` function
 34. Review whether `hookContext` needs both `serviceName ServiceName` AND the raw `string` from the hook signature
 35. Consider a `ServiceNameFromDo(scope, name string) ServiceName` adapter at the plugin boundary
@@ -169,6 +182,7 @@ These messages are useless for git archaeology. A `git log --oneline` tells you 
 37. Consider whether the four embedded structs should be exported or if `ServiceInfo` should be the only public type
 
 ### Developer Experience
+
 38. Add a CONTRIBUTING.md note about the struct literal pattern for test fixtures
 39. Add a Makefile/flake target for type-safety verification
 40. Consider adding `go:generate` directives for typed identifier boilerplate
@@ -176,6 +190,7 @@ These messages are useless for git archaeology. A `git log --oneline` tells you 
 42. Consider adding a `gosec` exclusion for the `string()` conversions (if flagged)
 
 ### Pre-existing Tech Debt (noticed during session)
+
 43. Fix the pre-existing `makezero` lint warnings in `example/summary.go` and `filter_fuzz_test.go`
 44. Fix the pre-existing `wsl_v5` lint warnings in `plugin.go` and `filter_fuzz_test.go`
 45. Fix the pre-existing `golines` lint warning in `hooks.go`

@@ -121,13 +121,13 @@ fec4979 Add comprehensive codebase analysis, fix minor issues
 
 ## C) NOT STARTED
 
-| #   | Task                                                      | Priority  | Estimated Effort |
-| --- | --------------------------------------------------------- | --------- | ---------------- |
-| 1   | `ReportOption` functional options for filtering           | P2        | 1-2h             |
-| 2   | `EventHandler` callback in Config for real-time streaming | P2        | 1h               |
-| 3   | `Config.Validate() error` method                          | P3        | 20min            |
-| 4   | Versioned report schema with migration                    | P3 (v1.0) | 2-3h             |
-| 5   | Additional export formats (Mermaid, PlantUML)             | Future    | 2-3h each        |
+| # | Task                                                      | Priority  | Estimated Effort |
+| - | --------------------------------------------------------- | --------- | ---------------- |
+| 1 | `ReportOption` functional options for filtering           | P2        | 1-2h             |
+| 2 | `EventHandler` callback in Config for real-time streaming | P2        | 1h               |
+| 3 | `Config.Validate() error` method                          | P3        | 20min            |
+| 4 | Versioned report schema with migration                    | P3 (v1.0) | 2-3h             |
+| 5 | Additional export formats (Mermaid, PlantUML)             | Future    | 2-3h each        |
 
 ---
 
@@ -172,48 +172,48 @@ Sorted by impact × effort (highest ROI first).
 
 ### Tier 1 — Quick Wins (< 30min each, high impact)
 
-| #   | Task                                                           | Impact              | Effort |
-| --- | -------------------------------------------------------------- | ------------------- | ------ |
-| 1   | Add `shutdown_error` branch test for `computeServiceStatus`    | Test coverage → 95% | 15min  |
-| 2   | Add nested scope tree test for `sortScopeNodes`                | Test coverage → 95% | 15min  |
-| 3   | Add `Example*` test functions for pkg.go.dev documentation     | Discoverability     | 30min  |
-| 4   | Update README benchmarks to match current benchmark output     | Accuracy            | 5min   |
-| 5   | Add `Report.Summary() string` method for quick terminal output | Usability           | 20min  |
+| # | Task                                                           | Impact              | Effort |
+| - | -------------------------------------------------------------- | ------------------- | ------ |
+| 1 | Add `shutdown_error` branch test for `computeServiceStatus`    | Test coverage → 95% | 15min  |
+| 2 | Add nested scope tree test for `sortScopeNodes`                | Test coverage → 95% | 15min  |
+| 3 | Add `Example*` test functions for pkg.go.dev documentation     | Discoverability     | 30min  |
+| 4 | Update README benchmarks to match current benchmark output     | Accuracy            | 5min   |
+| 5 | Add `Report.Summary() string` method for quick terminal output | Usability           | 20min  |
 
 ### Tier 2 — Medium Effort (1-2h each, high impact)
 
-| #   | Task                                                                                     | Impact                  | Effort |
-| --- | ---------------------------------------------------------------------------------------- | ----------------------- | ------ |
-| 6   | Add `ReportOption` functional options (WithServiceFilter, WithTimeRange, WithEventTypes) | Scalability             | 1.5h   |
-| 7   | Add `EventHandler func(Event)` callback in Config                                        | Real-time observability | 1h     |
-| 8   | Add `Config.Validate() error` method                                                     | API robustness          | 20min  |
-| 9   | Test encode error paths in WriteReportJSON/WriteEventsNDJSON                             | Coverage → 97%          | 30min  |
-| 10  | Add convergence detection to force-directed graph in HTML                                | Visualization quality   | 1h     |
+| #  | Task                                                                                     | Impact                  | Effort |
+| -- | ---------------------------------------------------------------------------------------- | ----------------------- | ------ |
+| 6  | Add `ReportOption` functional options (WithServiceFilter, WithTimeRange, WithEventTypes) | Scalability             | 1.5h   |
+| 7  | Add `EventHandler func(Event)` callback in Config                                        | Real-time observability | 1h     |
+| 8  | Add `Config.Validate() error` method                                                     | API robustness          | 20min  |
+| 9  | Test encode error paths in WriteReportJSON/WriteEventsNDJSON                             | Coverage → 97%          | 30min  |
+| 10 | Add convergence detection to force-directed graph in HTML                                | Visualization quality   | 1h     |
 
 ### Tier 3 — Polish (30min-1h each, medium impact)
 
-| #   | Task                                                            | Impact             | Effort |
-| --- | --------------------------------------------------------------- | ------------------ | ------ |
-| 11  | Link architecture docs from README                              | Discoverability    | 10min  |
-| 12  | Add `IsRegistration()`/`IsInvocation()`/`IsShutdown()` on Event | API convenience    | 15min  |
-| 13  | Add scope tree test with 3+ levels of nesting                   | Edge case coverage | 20min  |
-| 14  | Test `writeToFile` error path (permission denied)               | Coverage → 97%     | 15min  |
-| 15  | Add `ServiceInfo.HasDependencies() bool` convenience method     | API convenience    | 10min  |
+| #  | Task                                                            | Impact             | Effort |
+| -- | --------------------------------------------------------------- | ------------------ | ------ |
+| 11 | Link architecture docs from README                              | Discoverability    | 10min  |
+| 12 | Add `IsRegistration()`/`IsInvocation()`/`IsShutdown()` on Event | API convenience    | 15min  |
+| 13 | Add scope tree test with 3+ levels of nesting                   | Edge case coverage | 20min  |
+| 14 | Test `writeToFile` error path (permission denied)               | Coverage → 97%     | 15min  |
+| 15 | Add `ServiceInfo.HasDependencies() bool` convenience method     | API convenience    | 10min  |
 
 ### Tier 4 — Future Considerations
 
-| #   | Task                                           | Impact                | Effort |
-| --- | ---------------------------------------------- | --------------------- | ------ |
-| 16  | Versioned report schema with `MigrateReport()` | Forward compatibility | 2-3h   |
-| 17  | Mermaid export format                          | Visualization         | 2h     |
-| 18  | PlantUML export format                         | Visualization         | 2h     |
-| 19  | Interactive HTML graph with zoom/pan/drag      | UX                    | 3h     |
-| 20  | Dark/light theme toggle in HTML                | UX                    | 1h     |
-| 21  | CSV export for spreadsheet import              | Data analysis         | 1h     |
-| 22  | GraphViz DOT export                            | Integration           | 1h     |
-| 23  | WebSocket streaming mode for live dashboards   | Real-time             | 4h     |
-| 24  | OpenTelemetry trace integration                | Observability         | 3h     |
-| 25  | Multi-container aggregation (merge reports)    | Scale                 | 3h     |
+| #  | Task                                           | Impact                | Effort |
+| -- | ---------------------------------------------- | --------------------- | ------ |
+| 16 | Versioned report schema with `MigrateReport()` | Forward compatibility | 2-3h   |
+| 17 | Mermaid export format                          | Visualization         | 2h     |
+| 18 | PlantUML export format                         | Visualization         | 2h     |
+| 19 | Interactive HTML graph with zoom/pan/drag      | UX                    | 3h     |
+| 20 | Dark/light theme toggle in HTML                | UX                    | 1h     |
+| 21 | CSV export for spreadsheet import              | Data analysis         | 1h     |
+| 22 | GraphViz DOT export                            | Integration           | 1h     |
+| 23 | WebSocket streaming mode for live dashboards   | Real-time             | 4h     |
+| 24 | OpenTelemetry trace integration                | Observability         | 3h     |
+| 25 | Multi-container aggregation (merge reports)    | Scale                 | 3h     |
 
 ---
 

@@ -28,14 +28,14 @@
 
 ### Quality Gate (run after all fixes)
 
-| Check | Command | Result |
-|-------|---------|--------|
-| Build | `GOEXPERIMENT=jsonv2 go build ./...` | Clean |
-| Vet | `GOEXPERIMENT=jsonv2 go vet ./...` | Clean |
-| Generate | `go generate ./...` | No drift |
-| Tests | `go test -race -count=1 ./...` | All 4 packages pass |
-| Lint | `golangci-lint run --timeout=10m` | 0 issues |
-| Coverage | `sh scripts/coverage-gate.sh` | 94.1% ≥ 94% ✓ |
+| Check    | Command                              | Result              |
+| -------- | ------------------------------------ | ------------------- |
+| Build    | `GOEXPERIMENT=jsonv2 go build ./...` | Clean               |
+| Vet      | `GOEXPERIMENT=jsonv2 go vet ./...`   | Clean               |
+| Generate | `go generate ./...`                  | No drift            |
+| Tests    | `go test -race -count=1 ./...`       | All 4 packages pass |
+| Lint     | `golangci-lint run --timeout=10m`    | 0 issues            |
+| Coverage | `sh scripts/coverage-gate.sh`        | 94.1% ≥ 94% ✓       |
 
 ### Verified Counts (computed, not trusted from docs)
 
@@ -187,6 +187,7 @@
 ### Q1: Should I re-baseline BENCHMARKS.md now?
 
 The benchmark data is from 2026-06-21 (pre-live-dashboard, pre-CORS, pre-export-endpoints). The live/ sub-package has no benchmarks in the file. I can run the benchmarks and update the table, but:
+
 - Benchmark numbers are machine-specific (mine is a different CPU than the original NixOS capture)
 - The original file says "AMD Ryzen AI MAX+ 395 (32 threads)" — if I re-run on a different machine, the numbers aren't comparable
 - **Question:** Should I re-baseline on whatever machine I'm on now (breaking comparability with the old baseline), or leave it for the original author to re-run on the same hardware?

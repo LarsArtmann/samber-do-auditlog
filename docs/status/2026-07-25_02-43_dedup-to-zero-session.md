@@ -7,29 +7,29 @@
 
 ## a) Fully Done
 
-| # | Item | Evidence |
-|---|------|----------|
-| 1 | Initial art-dupl run at `-t 4` identified 4 clone groups (2 production, 1 test-only at `-t 3`) | `art-dupl --semantic --sort total-tokens -t 4 .` initial output: 4 groups |
-| 2 | Refactored `tree.go`: extracted `writeTree(writer, renderer)` helper | `tree.go:90-127` — shared by `WriteTree` (line 129) and `WriteHTMLTree` (line 138) |
-| 3 | Refactored `live/server.go`: extracted `requirePlugin(w)` + `setDownloadHeaders(w, ct, fn)` | `live/server.go:261-281` (helpers), used by `handleReport`, `handleExportNDJSON`, `handleExportHTML` |
-| 4 | Refactored `cmd/auditlog`: extracted `parseFlagSet(name, args, n, usage)` + `loadSingleReportSubcommand(name, args, usage)` | `cmd/auditlog/load.go:32-65`; consumed by `info.go`, `stats.go`, `diff.go`, `validate.go` |
-| 5 | Refactored `mermaid.go` + `plantuml.go`: each calls `renderGraphDiagramTransform` directly with static error wraps | both files now ~28 LOC, down from ~38 LOC each, no shared dynamic-error helper |
-| 6 | Refactored `helpers_test.go`: added `setupRootAndChildScopeDBs(rootName, rootURL, childName, childURL)` | `helpers_test.go:466-477`; consumed by 4 tests across `plugin_scope_test.go` and `report_query_test.go` |
-| 7 | Refactored `helpers_test.go`: added `singleServiceWithExternalDepReportAndBuf()` | `diagram_test.go:44-52`; consumed by 12 tests in `diagram_direction_test.go` and `table_columns_test.go` |
-| 8 | Fixed initial compile error in helper: `do.Scope[any]` → `do.Scope` | non-generic type in samber/do v2.0.0 |
-| 9 | Fixed initial test compile error: `&buf` → `buf` after switching to `*bytes.Buffer` returned by helper | 8 tests in `diagram_direction_test.go`, 4 tests in `table_columns_test.go` |
-| 10 | Fixed initial lint regressions: `err113` (dynamic errors), `wrapcheck` (unwrapped returns), `nolintlint` (unused nolint) | helpers now wrap with static format strings |
-| 11 | Fixed stray `}` syntax error from edit iteration in `tree.go` | `tree.go:125` |
-| 12 | Reformatted touched files with `gofumpt -w` | no gci/gofumpt complaints |
-| 13 | `go build ./...` — clean | no output |
-| 14 | `go vet ./...` — clean | no output |
-| 15 | `go test -race ./...` — all packages pass | `auditlog`, `cmd/auditlog`, `live` all OK |
-| 16 | `go test -race -coverprofile=... ./...` + coverage gate (94% threshold, excludes example/cmd) | **94.2%** meets gate |
-| 17 | `golangci-lint run` — clean | **0 issues** |
-| 18 | `go generate ./...` — no drift | wrote `schema/report.schema.json` (5777 bytes) |
-| 19 | `art-dupl` at `-t 3` — **0 clone groups** | matches AGENTS.md "clone-free at aggressive `-t 3`" claim |
-| 20 | `art-dupl` at `-t 4` (user-specified threshold) — **0 clone groups** | user-stated goal met |
-| 21 | `art-dupl` at `-t 15` (CI gate threshold) — **0 clone groups** | project CI gate met |
+| #  | Item                                                                                                                        | Evidence                                                                                                 |
+| -- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 1  | Initial art-dupl run at `-t 4` identified 4 clone groups (2 production, 1 test-only at `-t 3`)                              | `art-dupl --semantic --sort total-tokens -t 4 .` initial output: 4 groups                                |
+| 2  | Refactored `tree.go`: extracted `writeTree(writer, renderer)` helper                                                        | `tree.go:90-127` — shared by `WriteTree` (line 129) and `WriteHTMLTree` (line 138)                       |
+| 3  | Refactored `live/server.go`: extracted `requirePlugin(w)` + `setDownloadHeaders(w, ct, fn)`                                 | `live/server.go:261-281` (helpers), used by `handleReport`, `handleExportNDJSON`, `handleExportHTML`     |
+| 4  | Refactored `cmd/auditlog`: extracted `parseFlagSet(name, args, n, usage)` + `loadSingleReportSubcommand(name, args, usage)` | `cmd/auditlog/load.go:32-65`; consumed by `info.go`, `stats.go`, `diff.go`, `validate.go`                |
+| 5  | Refactored `mermaid.go` + `plantuml.go`: each calls `renderGraphDiagramTransform` directly with static error wraps          | both files now ~28 LOC, down from ~38 LOC each, no shared dynamic-error helper                           |
+| 6  | Refactored `helpers_test.go`: added `setupRootAndChildScopeDBs(rootName, rootURL, childName, childURL)`                     | `helpers_test.go:466-477`; consumed by 4 tests across `plugin_scope_test.go` and `report_query_test.go`  |
+| 7  | Refactored `helpers_test.go`: added `singleServiceWithExternalDepReportAndBuf()`                                            | `diagram_test.go:44-52`; consumed by 12 tests in `diagram_direction_test.go` and `table_columns_test.go` |
+| 8  | Fixed initial compile error in helper: `do.Scope[any]` → `do.Scope`                                                         | non-generic type in samber/do v2.0.0                                                                     |
+| 9  | Fixed initial test compile error: `&buf` → `buf` after switching to `*bytes.Buffer` returned by helper                      | 8 tests in `diagram_direction_test.go`, 4 tests in `table_columns_test.go`                               |
+| 10 | Fixed initial lint regressions: `err113` (dynamic errors), `wrapcheck` (unwrapped returns), `nolintlint` (unused nolint)    | helpers now wrap with static format strings                                                              |
+| 11 | Fixed stray `}` syntax error from edit iteration in `tree.go`                                                               | `tree.go:125`                                                                                            |
+| 12 | Reformatted touched files with `gofumpt -w`                                                                                 | no gci/gofumpt complaints                                                                                |
+| 13 | `go build ./...` — clean                                                                                                    | no output                                                                                                |
+| 14 | `go vet ./...` — clean                                                                                                      | no output                                                                                                |
+| 15 | `go test -race ./...` — all packages pass                                                                                   | `auditlog`, `cmd/auditlog`, `live` all OK                                                                |
+| 16 | `go test -race -coverprofile=... ./...` + coverage gate (94% threshold, excludes example/cmd)                               | **94.2%** meets gate                                                                                     |
+| 17 | `golangci-lint run` — clean                                                                                                 | **0 issues**                                                                                             |
+| 18 | `go generate ./...` — no drift                                                                                              | wrote `schema/report.schema.json` (5777 bytes)                                                           |
+| 19 | `art-dupl` at `-t 3` — **0 clone groups**                                                                                   | matches AGENTS.md "clone-free at aggressive `-t 3`" claim                                                |
+| 20 | `art-dupl` at `-t 4` (user-specified threshold) — **0 clone groups**                                                        | user-stated goal met                                                                                     |
+| 21 | `art-dupl` at `-t 15` (CI gate threshold) — **0 clone groups**                                                              | project CI gate met                                                                                      |
 
 ## b) Partially Done
 
@@ -37,12 +37,12 @@ Nothing partial — every targeted clone group was fully eliminated.
 
 ## c) Not Started
 
-| Item | Reason |
-|------|--------|
-| Update `AGENTS.md` "Test helpers" section with new helpers (`setupRootAndChildScopeDBs`, `singleServiceWithExternalDepReportAndBuf`) | Not requested; memory hygiene deferred |
-| Update `CHANGELOG.md` with this dedup session | Not requested; deferred to commit |
-| Run html-report-kit for styled dashboard | Status requested as plain markdown per user instruction |
-| Commit the changes | Not requested; user has not said "commit" |
+| Item                                                                                                                                 | Reason                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| Update `AGENTS.md` "Test helpers" section with new helpers (`setupRootAndChildScopeDBs`, `singleServiceWithExternalDepReportAndBuf`) | Not requested; memory hygiene deferred                  |
+| Update `CHANGELOG.md` with this dedup session                                                                                        | Not requested; deferred to commit                       |
+| Run html-report-kit for styled dashboard                                                                                             | Status requested as plain markdown per user instruction |
+| Commit the changes                                                                                                                   | Not requested; user has not said "commit"               |
 
 ## d) Totally Fucked Up
 

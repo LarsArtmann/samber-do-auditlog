@@ -165,33 +165,33 @@ Beyond fixing section (d), structural improvements worth pursuing:
 
 Sorted by impact × value ÷ effort. Items marked ⚠️ are doc-trust fixes from section (d) — they are cheap and high-trust.
 
-| #   | Task                                                                                                      | Category     | Effort | Why                                               |
-| --- | --------------------------------------------------------------------------------------------------------- | ------------ | ------ | ------------------------------------------------- |
-| 1   | ⚠️ **Fix `FEATURES.md` PARTIALLY FUNCTIONAL section** — move parallelism + fuzz to DONE with real numbers | Doc-trust    | XS     | Worst credibility issue in repo; verifiably false |
-| 2   | ⚠️ **Fix `TODO_LIST.md` fuzz-target completion notes** — 5th/6th → actual 3                               | Doc-trust    | XS     | Checklist lists non-existent shipped work         |
-| 3   | ⚠️ **Fix `AGENTS.md` metrics** — 167 tests, 3128 LOC                                                      | Doc-trust    | XS     | Wrong numbers seed wrong mental models            |
-| 4   | ⚠️ **Push `3e8931b` to origin/master** (after user approval)                                              | Release      | XS     | Remote is behind intended state                   |
-| 5   | **Decide v0.1.0: ship-now vs JSON-schema-first**                                                          | Product      | S      | Unblocks ~6 downstream items                      |
-| 6   | **JSON Schema file** for the report format                                                                | Feature      | M      | Biggest missing artifact for consumers            |
-| 7   | **NDJSON import** (`ReadNDJSON`)                                                                          | Feature      | S      | Trivial via `buildReportFromCore`                 |
-| 8   | **Property-based `Diff` tests** (symmetry + round-trip)                                                   | Testing      | S      | Hardens the most-used query API                   |
-| 9   | **Property-based `MigrateReport` tests**                                                                  | Testing      | S      | Guards schema-evolution invariants                |
-| 10  | **`Report` constructor validation** (`NewReport(...) (Report, error)`)                                    | Architecture | M      | Makes invalid reports unrepresentable             |
-| 11  | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`)                                           | Architecture | M      | Compiler rejects accidental swaps                 |
-| 12  | **HTML golden-file test** (deterministic multi-service report)                                            | Testing      | S      | Catches viz regressions silently                  |
-| 13  | **Docs-freshness CI gate** (assert counts match `grep`)                                                   | CI           | S      | Prevents recurrence of #1–#3                      |
-| 14  | **Pre-commit hook: `go generate` must be no-op**                                                          | DX           | S      | Kills the html_templ.go whack-a-mole permanently  |
-| 15  | **Fix `flake.nix` "Go 1.26.3" description string**                                                        | DX           | XS     | Cosmetic lie                                      |
-| 16  | **CSV/TSV export**                                                                                        | Feature      | S      | High value for data-analysis workflows            |
-| 17  | **CLI tool** for report conversion/export/viz                                                             | Feature      | M      | Standalone binary, broad reach                    |
-| 18  | **`actionlint` in CI**                                                                                    | CI           | XS     | Validates workflow YAML                           |
-| 19  | **Prometheus exporter example** (parallel to OTel)                                                        | DX           | S      | OnEvent bridge reference                          |
-| 20  | **Fuzz filter inputs** (arbitrary `ReportOption` combos)                                                  | Testing      | S      | Untested combinatorial surface                    |
-| 21  | **WebSocket live stream** bridge for `OnEvent`                                                            | Feature      | M      | Real-time dashboards                              |
-| 22  | **Split `ServiceInfo`** into Identity/Lifecycle/Health/Graph                                              | Architecture | L      | Breaking; decide before v0.1.0                    |
-| 23  | **`govulncheck` in local devShell** (not only CI)                                                         | DX           | XS     | Local security scanning                           |
-| 24  | **Rolling `CURRENT.md` status** + archive old daily reports                                               | Doc hygiene  | S      | 3 same-day cross-referencing reports is confusing |
-| 25  | **v0.1.0 release** (tag + GitHub Release + schema)                                                        | Release      | M      | The keystone — depends on #5                      |
+| #  | Task                                                                                                     | Category     | Effort | Why                                               |
+| -- | -------------------------------------------------------------------------------------------------------- | ------------ | ------ | ------------------------------------------------- |
+| 1  | ⚠️ **Fix `FEATURES.md` PARTIALLY FUNCTIONAL section** — move parallelism + fuzz to DONE with real numbers | Doc-trust    | XS     | Worst credibility issue in repo; verifiably false |
+| 2  | ⚠️ **Fix `TODO_LIST.md` fuzz-target completion notes** — 5th/6th → actual 3                               | Doc-trust    | XS     | Checklist lists non-existent shipped work         |
+| 3  | ⚠️ **Fix `AGENTS.md` metrics** — 167 tests, 3128 LOC                                                      | Doc-trust    | XS     | Wrong numbers seed wrong mental models            |
+| 4  | ⚠️ **Push `3e8931b` to origin/master** (after user approval)                                              | Release      | XS     | Remote is behind intended state                   |
+| 5  | **Decide v0.1.0: ship-now vs JSON-schema-first**                                                         | Product      | S      | Unblocks ~6 downstream items                      |
+| 6  | **JSON Schema file** for the report format                                                               | Feature      | M      | Biggest missing artifact for consumers            |
+| 7  | **NDJSON import** (`ReadNDJSON`)                                                                         | Feature      | S      | Trivial via `buildReportFromCore`                 |
+| 8  | **Property-based `Diff` tests** (symmetry + round-trip)                                                  | Testing      | S      | Hardens the most-used query API                   |
+| 9  | **Property-based `MigrateReport` tests**                                                                 | Testing      | S      | Guards schema-evolution invariants                |
+| 10 | **`Report` constructor validation** (`NewReport(...) (Report, error)`)                                   | Architecture | M      | Makes invalid reports unrepresentable             |
+| 11 | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`)                                          | Architecture | M      | Compiler rejects accidental swaps                 |
+| 12 | **HTML golden-file test** (deterministic multi-service report)                                           | Testing      | S      | Catches viz regressions silently                  |
+| 13 | **Docs-freshness CI gate** (assert counts match `grep`)                                                  | CI           | S      | Prevents recurrence of #1–#3                      |
+| 14 | **Pre-commit hook: `go generate` must be no-op**                                                         | DX           | S      | Kills the html_templ.go whack-a-mole permanently  |
+| 15 | **Fix `flake.nix` "Go 1.26.3" description string**                                                       | DX           | XS     | Cosmetic lie                                      |
+| 16 | **CSV/TSV export**                                                                                       | Feature      | S      | High value for data-analysis workflows            |
+| 17 | **CLI tool** for report conversion/export/viz                                                            | Feature      | M      | Standalone binary, broad reach                    |
+| 18 | **`actionlint` in CI**                                                                                   | CI           | XS     | Validates workflow YAML                           |
+| 19 | **Prometheus exporter example** (parallel to OTel)                                                       | DX           | S      | OnEvent bridge reference                          |
+| 20 | **Fuzz filter inputs** (arbitrary `ReportOption` combos)                                                 | Testing      | S      | Untested combinatorial surface                    |
+| 21 | **WebSocket live stream** bridge for `OnEvent`                                                           | Feature      | M      | Real-time dashboards                              |
+| 22 | **Split `ServiceInfo`** into Identity/Lifecycle/Health/Graph                                             | Architecture | L      | Breaking; decide before v0.1.0                    |
+| 23 | **`govulncheck` in local devShell** (not only CI)                                                        | DX           | XS     | Local security scanning                           |
+| 24 | **Rolling `CURRENT.md` status** + archive old daily reports                                              | Doc hygiene  | S      | 3 same-day cross-referencing reports is confusing |
+| 25 | **v0.1.0 release** (tag + GitHub Release + schema)                                                       | Release      | M      | The keystone — depends on #5                      |
 
 ---
 

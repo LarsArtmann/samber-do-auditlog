@@ -148,33 +148,33 @@ The one self-inflicted issue during the session was the fuzz assertion `assertSt
 
 Sorted by impact × effort ratio (highest first).
 
-| #   | Task                                                 | Impact | Effort | Notes                                               |
-| --- | ---------------------------------------------------- | ------ | ------ | --------------------------------------------------- |
-| 1   | **Tag v0.2.0** — D2 export is the headline feature   | HIGH   | 5m     | Just tag + push                                     |
-| 2   | **Add Plugin.WriteD2/Mermaid/PlantUML/DOT wrappers** | HIGH   | 15m    | 4 one-liner methods for API consistency             |
-| 3   | **File upstream PR: add DedupEdges to go-output/d2** | HIGH   | 30m    | Eliminates `dedupGraphEdges`, unifies dedup path    |
-| 4   | **Add D2 + Mermaid to `example/exportReports()`**    | MEDIUM | 20m    | Closes diagram demo gap for all 4 formats           |
-| 5   | **Typed identifiers (v0.1.0 breaking batch)**        | HIGH   | 4h     | 65+ compile errors; zero bugs; do once              |
-| 6   | **ServiceInfo split (v0.1.0 breaking batch)**        | HIGH   | 6h     | Split into identity/lifecycle/health/graph          |
-| 7   | **Add D2 output example to README**                  | MEDIUM | 10m    | Sample D2 diagram in a code block                   |
-| 8   | **Collapse README diagram sections into one**        | LOW    | 10m    | Or add DOT+D2 sections to match Mermaid/PlantUML    |
-| 9   | **Strengthen D2 escaping test**                      | LOW    | 10m    | Assert full escaped label, not just `\"`            |
-| 10  | **Add backslash/newline/tab escaping tests for D2**  | LOW    | 10m    | Explicit coverage for all d2Replacer cases          |
-| 11  | **Property-based testing for Diff/Filter/Migrate**   | MEDIUM | 2h     | `rapid` or `gopter`                                 |
-| 12  | **Markdown table export via go-output/markdown**     | LOW    | 30m    | Zero new deps                                       |
-| 13  | **ASCII tree export via go-output/tree**             | LOW    | 30m    | Zero new deps                                       |
-| 14  | **WebSocket live stream bridge**                     | MEDIUM | 3h     | OnEvent → WebSocket                                 |
-| 15  | **Prometheus metrics exporter**                      | MEDIUM | 2h     | OnEvent → Prometheus                                |
-| 16  | **OTel bridge example**                              | MEDIUM | 2h     | OnEvent → OTel spans                                |
-| 17  | **Restore DOT dark background**                      | LOW    | 1h     | Blocked on go-output graph-attr support             |
-| 18  | **Add `auditlog graph` CLI subcommand**              | LOW    | 1h     | Standalone diagram generation from JSON             |
-| 19  | **Godoc polish for WriteD2**                         | LOW    | 5m     | Cross-reference to other formats                    |
-| 20  | **Add D2 to FEATURES.md "Example" table**            | LOW    | 5m     | Feature checklist row                               |
-| 21  | **Integrate govulncheck into pre-commit hook**       | LOW    | 15m    | Currently CI-only                                   |
-| 22  | **Add `--format d2` to `auditlog info` subcommand**  | LOW    | 10m    | Currently convert-only                              |
-| 23  | **Benchmark WriteD2**                                | LOW    | 10m    | Add to benchmarks_test.go                           |
-| 24  | **D2 classes for per-type node coloring**            | LOW    | 30m    | Color nodes by provider type (lazy/eager/transient) |
-| 25  | **Multi-module repository split**                    | LOW    | 4h     | Revisit at 5+ packages (currently 1)                |
+| #  | Task                                                 | Impact | Effort | Notes                                               |
+| -- | ---------------------------------------------------- | ------ | ------ | --------------------------------------------------- |
+| 1  | **Tag v0.2.0** — D2 export is the headline feature   | HIGH   | 5m     | Just tag + push                                     |
+| 2  | **Add Plugin.WriteD2/Mermaid/PlantUML/DOT wrappers** | HIGH   | 15m    | 4 one-liner methods for API consistency             |
+| 3  | **File upstream PR: add DedupEdges to go-output/d2** | HIGH   | 30m    | Eliminates `dedupGraphEdges`, unifies dedup path    |
+| 4  | **Add D2 + Mermaid to `example/exportReports()`**    | MEDIUM | 20m    | Closes diagram demo gap for all 4 formats           |
+| 5  | **Typed identifiers (v0.1.0 breaking batch)**        | HIGH   | 4h     | 65+ compile errors; zero bugs; do once              |
+| 6  | **ServiceInfo split (v0.1.0 breaking batch)**        | HIGH   | 6h     | Split into identity/lifecycle/health/graph          |
+| 7  | **Add D2 output example to README**                  | MEDIUM | 10m    | Sample D2 diagram in a code block                   |
+| 8  | **Collapse README diagram sections into one**        | LOW    | 10m    | Or add DOT+D2 sections to match Mermaid/PlantUML    |
+| 9  | **Strengthen D2 escaping test**                      | LOW    | 10m    | Assert full escaped label, not just `\"`            |
+| 10 | **Add backslash/newline/tab escaping tests for D2**  | LOW    | 10m    | Explicit coverage for all d2Replacer cases          |
+| 11 | **Property-based testing for Diff/Filter/Migrate**   | MEDIUM | 2h     | `rapid` or `gopter`                                 |
+| 12 | **Markdown table export via go-output/markdown**     | LOW    | 30m    | Zero new deps                                       |
+| 13 | **ASCII tree export via go-output/tree**             | LOW    | 30m    | Zero new deps                                       |
+| 14 | **WebSocket live stream bridge**                     | MEDIUM | 3h     | OnEvent → WebSocket                                 |
+| 15 | **Prometheus metrics exporter**                      | MEDIUM | 2h     | OnEvent → Prometheus                                |
+| 16 | **OTel bridge example**                              | MEDIUM | 2h     | OnEvent → OTel spans                                |
+| 17 | **Restore DOT dark background**                      | LOW    | 1h     | Blocked on go-output graph-attr support             |
+| 18 | **Add `auditlog graph` CLI subcommand**              | LOW    | 1h     | Standalone diagram generation from JSON             |
+| 19 | **Godoc polish for WriteD2**                         | LOW    | 5m     | Cross-reference to other formats                    |
+| 20 | **Add D2 to FEATURES.md "Example" table**            | LOW    | 5m     | Feature checklist row                               |
+| 21 | **Integrate govulncheck into pre-commit hook**       | LOW    | 15m    | Currently CI-only                                   |
+| 22 | **Add `--format d2` to `auditlog info` subcommand**  | LOW    | 10m    | Currently convert-only                              |
+| 23 | **Benchmark WriteD2**                                | LOW    | 10m    | Add to benchmarks_test.go                           |
+| 24 | **D2 classes for per-type node coloring**            | LOW    | 30m    | Color nodes by provider type (lazy/eager/transient) |
+| 25 | **Multi-module repository split**                    | LOW    | 4h     | Revisit at 5+ packages (currently 1)                |
 
 ---
 
