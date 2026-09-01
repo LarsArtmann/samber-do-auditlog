@@ -33,7 +33,7 @@ golangci-lint run
 golangci-lint config verify
 sh scripts/coverage-gate.sh                        # ≥94% gate
 go generate ./... && git diff --exit-code          # no drift
-GOTOOLCHAIN=go1.26.5 go mod tidy && git diff --exit-code go.mod go.sum  # no drift
+GOTOOLCHAIN=go1.26.7 go mod tidy && git diff --exit-code go.mod go.sum  # no drift
 
 # Fuzz tests (15s per target)
 for fuzz in FuzzPluginHTML FuzzMigrateReport FuzzDiagramSpecialChars FuzzFilterInputs FuzzReadEvents FuzzMultiWriter FuzzNDJSONStreamer FuzzClassifyAdversarialChains; do
@@ -117,7 +117,7 @@ git diff --exit-code   # should be no changes
 
 Verify no go.mod/go.sum drift (CI's `mod-tidy` job checks this):
 ```bash
-GOTOOLCHAIN=go1.26.5 go mod tidy
+GOTOOLCHAIN=go1.26.7 go mod tidy
 git diff --exit-code go.mod go.sum
 ```
 
@@ -286,11 +286,11 @@ The project requires `GOEXPERIMENT=jsonv2` to build (transitive deps use
 If running outside the devShell, prefix commands with `export
 GOEXPERIMENT=jsonv2` or they will fail with obscure import errors.
 
-### GOTOOLCHAIN=go1.26.5
+### GOTOOLCHAIN=go1.26.7
 
 `go mod tidy` can silently rewrite `go.mod` to a different Go version if a
 different `go` binary shadows the devShell's. Always prefix with
-`GOTOOLCHAIN=go1.26.5` when running outside the devShell.
+`GOTOOLCHAIN=go1.26.7` when running outside the devShell.
 
 ---
 
