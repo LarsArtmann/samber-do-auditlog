@@ -681,7 +681,7 @@ func TestServer_SSE_Heartbeat(t *testing.T) {
 		t.Fatalf("create request: %v", err)
 	}
 
-	resp2, err := http.DefaultClient.Do(req2) //nolint:bodyclose // closed below
+	resp2, err := http.DefaultClient.Do(req2)
 	if err != nil {
 		t.Fatalf("connect SSE: %v", err)
 	}

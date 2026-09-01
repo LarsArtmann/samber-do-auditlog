@@ -126,7 +126,7 @@ func NewNDJSONStreamer(w io.Writer, opts ...NDJSONStreamerOption) *NDJSONStreame
 // Unlike [Plugin.ExportEventsToNDJSON] (which uses atomic temp-file + rename),
 // this writes directly to path so consumers can tail the file in real time.
 func CreateNDJSONStreamer(path string, opts ...NDJSONStreamerOption) (*NDJSONStreamer, error) {
-	file, err := os.Create(path) //nolint:gosec // path is user-provided by design
+	file, err := os.Create(path)
 	if err != nil {
 		return nil, fmt.Errorf("create ndjson stream file %q: %w", path, err)
 	}

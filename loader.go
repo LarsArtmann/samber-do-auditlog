@@ -46,8 +46,6 @@ func WithFormat(format Format) LoadOption {
 // events) are loaded via ReadEvents + ReplayEvents.
 //
 // Returns the loaded Report, the detected Format, and any error.
-//
-//nolint:gosec // G304: path is user-provided CLI input, not a security risk
 func LoadReport(path string, opts ...LoadOption) (Report, Format, error) {
 	cfg := loadConfig{format: FormatAuto}
 	for _, opt := range opts {
