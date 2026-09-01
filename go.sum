@@ -90,8 +90,6 @@ github.com/larsartmann/go-output/testhelpers/graphtest v0.37.0 h1:nG8o0DeTKVCRgC
 github.com/larsartmann/go-output/testhelpers/graphtest v0.37.0/go.mod h1:6/wyVNbz5sGg02mBqQlWx8TX74X6Pcq6SW2xigOyfkU=
 github.com/larsartmann/go-output/tree v0.37.0 h1:MTH3noReMY3AE9J+VBVLN15rJod+deE9WAMz9mOj6ls=
 github.com/larsartmann/go-output/tree v0.37.0/go.mod h1:uSH510k+u3XVZRSW3wsumLwDhSP4doWJZSb+DmALEjc=
-github.com/larsartmann/go-sse v0.5.0 h1:6KC4fh/cDxNvaZE10ByT39y6ib65KH+nQIgw8sfVYRY=
-github.com/larsartmann/go-sse v0.5.0/go.mod h1:kj1Gv+cnHIWKeqL0hRvbzkyM96/ZHAfub4FpgFtehHg=
 github.com/larsartmann/go-sse v0.5.1 h1:WxTNZp+DfShA2yXPne4+Jp5sFKTDlng+VMOniCiFVu8=
 github.com/larsartmann/go-sse v0.5.1/go.mod h1:TJl45pMXjwZTdhGgyu6RZWmmXyr28XwpnNJ7rVyyUxU=
 github.com/larsartmann/go-sse/ssetest v0.2.0 h1:xnze3rcrYrTyssums3SWZmZeCt1prJ2J6CBttovOzRM=
