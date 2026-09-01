@@ -51,6 +51,10 @@ export default defineConfig({
       title: "do-auditlog",
       favicon: "/favicon.svg",
       customCss: ["./src/styles/starlight.css"],
+      lastUpdated: true,
+      editLink: {
+        baseUrl: "https://github.com/LarsArtmann/samber-do-auditlog/edit/master/website",
+      },
       expressiveCode: {
         themes: ["github-light", "github-dark"],
         frames: {
@@ -68,6 +72,7 @@ export default defineConfig({
         {
           label: "Guides",
           items: [
+            { label: "Live Dashboard", slug: "guides/live-dashboard" },
             { label: "Export Formats", slug: "guides/export-formats" },
             { label: "Dependency Tracking", slug: "guides/dependency-tracking" },
             { label: "Health Checks", slug: "guides/health-checks" },

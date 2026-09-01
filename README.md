@@ -12,7 +12,7 @@ Audit-log plugin for [samber/do v2](https://github.com/samber/do) — track ever
 [![Coverage](https://img.shields.io/badge/Coverage-94%25-brightgreen)](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[Documentation](https://do-auditlog.lars.software) &middot; [Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/) &middot; [API Reference](https://do-auditlog.lars.software/api-reference/)
+[Documentation](https://do-auditlog.lars.software) &middot; [Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/) &middot; [API Reference](https://do-auditlog.lars.software/api-reference/) &middot; <a href="https://do-auditlog.lars.software/#demo">Watch the 25s demo</a>
 
 </div>
 
@@ -67,6 +67,23 @@ samber/do v2 gives you lifecycle hooks but nothing to consume them. No recorder,
 
 Then export the whole thing as JSON, NDJSON, or a self-contained HTML page you can open in any browser.
 
+## Who is this for?
+
+- **Backend engineers using samber/do v2** who want to see what their container actually did — without wiring a single log line.
+- **Platform teams** who need audit trails of service lifecycles for compliance or post-incident review.
+- **Library authors building on samber/do** who want to ship observability instead of asking users to hand-roll hooks.
+- **Developers debugging startup order** — slow builds, unexpected resolution order, mystery circular dependencies.
+- **SREs wiring DI metrics** into Prometheus/OTel via the `OnEvent` callback or the SSE live dashboard.
+
+## When NOT to use this
+
+Skip this library if:
+
+- **You don't use samber/do v2** — this is a plugin for do's hook system, nothing else. Reach for OpenTelemetry or plain structured logging instead.
+- **You need compile-time dependency analysis** — do-auditlog observes runtime behavior; it does not analyze source code. Use `wire analyze` or static tooling for that.
+- **You need a persistent audit store** — exports are files (JSON/NDJSON/HTML); there is no built-in database sink. Pipe the `OnEvent` callback or NDJSON stream into your own storage.
+- **You need per-request tracing** — this records service lifecycle (registration, build, invoke, shutdown, health), not HTTP request traces. Use OpenTelemetry for request-scoped spans.
+
 ## Install
 
 ```bash
@@ -74,6 +91,9 @@ go get github.com/larsartmann/samber-do-auditlog
 ```
 
 Requires Go 1.26+ and [samber/do v2](https://github.com/samber/do).
+
+> [!IMPORTANT]
+> **Build flag required:** transitive dependencies use `encoding/json/v2`, which is gated behind an experiment in Go 1.26. Set `GOEXPERIMENT=jsonv2` wherever you build or test code that imports this library (shell profile, CI env, or Nix devShell), or the build fails with `build constraints exclude all Go files`. This requirement disappears when Go 1.27 stabilizes json/v2.
 
 > **Try the demo:** `git clone` this repo and run `DO_AUDITLOG_ENABLED=true go run ./example` — 20 services across 4 scopes with health checks, shutdowns, and invocation errors.
 
@@ -413,6 +433,7 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 | Resource                                                                             | What you'll find                          |
 | ------------------------------------------------------------------------------------ | ----------------------------------------- |
 | [Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/)        | From zero to HTML report in 60 seconds    |
+| [Live Dashboard](https://do-auditlog.lars.software/guides/live-dashboard/)           | Real-time SSE dashboard for your container |
 | [Dependency Tracking](https://do-auditlog.lars.software/guides/dependency-tracking/) | How the invocation stack infers the graph |
 | [Export Formats](https://do-auditlog.lars.software/guides/export-formats/)           | Every format with examples                |
 | [Filtered Reports](https://do-auditlog.lars.software/guides/filtered-reports/)       | Slice by name, type, scope, time          |

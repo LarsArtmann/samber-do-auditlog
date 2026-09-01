@@ -1,0 +1,177 @@
+<template>
+  <style>
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+    }
+
+    /* full-bleed ground — dark register (canvas role), dedicated lowest-track clip */
+    #root .f02-ground {
+      position: absolute;
+      inset: 0;
+      background: #1c1915;
+    }
+
+    /* content stage — size container so cqw/cqh resolve against the 1920x1080 frame */
+    #root .f02-stage {
+      position: absolute;
+      inset: 0;
+      container-type: size;
+      font-family: sans-serif;
+      color: #c4b89e;
+    }
+
+    /* scenes 1–3 — full-screen kinetic beats, centered anchor (blueprint: kinetic-type-beats) */
+    #root .f02-beat {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      font-weight: 700;
+      font-size: 11.5cqw;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      text-align: center;
+      text-transform: lowercase;
+      will-change: transform, opacity;
+    }
+    #root .f02-beat > span {
+      display: block;
+    }
+    #root .f02-acc {
+      color: #e8a838;
+      font-style: normal;
+    }
+    #root #f02-beat1 {
+      visibility: visible;
+    }
+
+    /* scene 4 — stacked escalation list (opacity ladder) + thesis payoff */
+    #root .f02-scene4 {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      padding-bottom: 14cqh;
+    }
+    #root .f02-row {
+      font-weight: 700;
+      font-size: 4.5cqw;
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      text-transform: lowercase;
+      will-change: transform, opacity;
+    }
+    #root .f02-thesis {
+      margin-top: 3.5cqw;
+      font-weight: 700;
+      font-size: 6.2cqw;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      text-align: center;
+      text-transform: lowercase;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+    #root .f02-thesis-line {
+      display: block;
+    }
+  </style>
+
+  <div id="root" data-composition-id="02-see-everything" data-width="1920" data-height="1080">
+    <div class="clip f02-ground" data-start="0" data-duration="5" data-track-index="0"></div>
+    <div class="clip f02-stage" data-start="0" data-duration="5" data-track-index="1">
+      <div class="f02-beat" id="f02-beat1" data-layout-allow-occlusion data-layout-allow-overlap><span class="f02-acc" data-layout-allow-occlusion data-layout-allow-overlap>every</span><span>registration</span></div>
+      <div class="f02-beat" id="f02-beat2" data-layout-allow-occlusion data-layout-allow-overlap><span class="f02-acc" data-layout-allow-occlusion data-layout-allow-overlap>every</span><span>invocation</span></div>
+      <div class="f02-beat" id="f02-beat3" data-layout-allow-occlusion data-layout-allow-overlap><span class="f02-acc" data-layout-allow-occlusion data-layout-allow-overlap>every</span><span>shutdown</span></div>
+      <div class="f02-scene4" id="f02-scene4" data-layout-allow-occlusion data-layout-allow-overlap>
+        <div class="f02-row" id="f02-row1" data-layout-allow-occlusion data-layout-allow-overlap><span class="f02-acc" data-layout-allow-occlusion data-layout-allow-overlap>every</span> registration</div>
+        <div class="f02-row" id="f02-row2" data-layout-allow-occlusion data-layout-allow-overlap><span class="f02-acc" data-layout-allow-occlusion data-layout-allow-overlap>every</span> invocation</div>
+        <div class="f02-row" id="f02-row3" data-layout-allow-occlusion data-layout-allow-overlap><span class="f02-acc" data-layout-allow-occlusion data-layout-allow-overlap>every</span> shutdown</div>
+        <div class="f02-thesis" id="f02-thesis" data-layout-allow-occlusion data-layout-allow-overlap>
+          <span class="f02-thesis-line" data-layout-allow-occlusion data-layout-allow-overlap>See <em class="f02-acc" data-layout-allow-occlusion data-layout-allow-overlap>every</em> dependency.</span>
+          <span class="f02-thesis-line" data-layout-allow-occlusion data-layout-allow-overlap><em class="f02-acc" data-layout-allow-occlusion data-layout-allow-overlap>Every</em> event.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (() => {
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines = window.__timelines || {};
+      window.__timelines["02-see-everything"] = tl;
+
+      // discrete-text-sequence — whole-beat state swaps at time thresholds.
+      // Reverse search for the latest entry whose t has passed; display jumps
+      // instantly between states (the hard-cut engine of the beat swaps).
+      const BEATS = [
+        { t: 0.0, el: document.getElementById("f02-beat1") },
+        { t: 1.3, el: document.getElementById("f02-beat2") },
+        { t: 2.4, el: document.getElementById("f02-beat3") },
+        { t: 3.4, el: document.getElementById("f02-scene4") },
+      ];
+      const beatAt = (time) => {
+        for (let i = BEATS.length - 1; i >= 0; i--) {
+          if (time >= BEATS[i].t) return BEATS[i].el;
+        }
+        return BEATS[0].el;
+      };
+      const driver = { t: 0 };
+      tl.to(
+        driver,
+        {
+          t: 5,
+          duration: 5,
+          ease: "none",
+          onUpdate: () => {
+            const el = beatAt(driver.t);
+            for (const b of BEATS) b.el.style.visibility = b.el === el ? "visible" : "hidden";
+          },
+        },
+        0
+      );
+
+      // Scene 1 (0.0–1.3s) — "every registration" percussive slam, settles fast.
+      tl.fromTo(
+        "#f02-beat1",
+        { scale: 2.2, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.45, ease: "expo.out" },
+        0
+      );
+
+      // Scene 4 (3.4–5.0s) — the three beats compress upward into the stacked list;
+      // the opacity ladder (1.0 / 0.5 / 0.22) rides in the tween targets.
+      const ROWS = [
+        ["#f02-row1", 1.0, 3.4],
+        ["#f02-row2", 0.5, 3.49],
+        ["#f02-row3", 0.22, 3.58],
+      ];
+      for (const [sel, op, at] of ROWS) {
+        tl.fromTo(
+          sel,
+          { y: 130, scale: 0.94, opacity: 0 },
+          { y: 0, scale: 1, opacity: op, duration: 0.45, ease: "power3.out" },
+          at
+        );
+      }
+
+      // Thesis spring-pops beneath (both "every" words amber); lands ~4.35s, holds the read.
+      tl.fromTo(
+        "#f02-thesis",
+        { scale: 0, opacity: 0, y: 24 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.55, ease: "power3.out" },
+        3.8
+      );
+    })();
+  </script>
+</template>

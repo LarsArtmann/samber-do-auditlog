@@ -1,0 +1,140 @@
+<template>
+  <style>
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+      font-family: sans-serif;
+    }
+    #root .clip {
+      position: absolute;
+      inset: 0;
+    }
+    #root [class~="01-black-box-bg"] {
+      background-color: #1c1915;
+    }
+    #root [class~="01-black-box-state"] {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #root [class~="01-black-box-hero"] {
+      font-size: 12cqw;
+      font-weight: 700;
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+      color: #c4b89e;
+      white-space: nowrap;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+    #root [class~="01-black-box-fixed"] {
+      font-size: 4.5cqw;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: #c4b89e;
+      white-space: nowrap;
+    }
+    #root [class~="01-black-box-swap"] {
+      margin-top: 1.2cqw;
+      font-size: 13cqw;
+      font-weight: 700;
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+      color: #e8a838;
+      white-space: nowrap;
+      will-change: transform;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+
+  <div
+    id="root"
+    data-composition-id="01-black-box"
+    data-start="0"
+    data-duration="4"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div class="clip 01-black-box-bg" data-start="0" data-duration="4" data-track-index="0"></div>
+
+    <div class="clip 01-black-box-state" data-start="0" data-duration="4" data-track-index="1">
+      <!-- Scene 1 (0.0–1.4s): "flying blind." slams in dead-center and settles -->
+      <div class="01-black-box-state" id="01-black-box-state-a">
+        <div class="01-black-box-hero" id="01-black-box-hero">flying blind.</div>
+      </div>
+
+      <!-- Scene 2+3 (1.4–4.0s): fixed line seats, amber token "black box." fires -->
+      <div class="01-black-box-state" id="01-black-box-state-b">
+        <div class="01-black-box-fixed" id="01-black-box-fixed" style="visibility: hidden">
+          your DI container is a
+        </div>
+        <div class="01-black-box-swap" id="01-black-box-swap" style="visibility: hidden">
+          black box.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      var el = function (id) {
+        return document.getElementById(id);
+      };
+      var stateA = el("01-black-box-state-a");
+      var fixed = el("01-black-box-fixed");
+      var swap = el("01-black-box-swap");
+
+      var tl = gsap.timeline({ paused: true });
+
+      // Scene 1 — spring-pop entrance: smooth long-tail slam, no overshoot.
+      tl.fromTo(
+        el("01-black-box-hero"),
+        { scale: 0, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.55, ease: "expo.out" },
+        0.05,
+      );
+
+      // Scene 2 — hard-cut token swap: instant state swap, no fade/roll.
+      tl.set(stateA, { autoAlpha: 0 }, 1.4);
+      tl.set(fixed, { autoAlpha: 1 }, 1.4);
+      tl.set(swap, { autoAlpha: 1 }, 1.52);
+
+      // Scenes 2–3 — sanctioned low-amplitude jitter on "black box." only from 2.6s.
+      // Pure function of absolute timeline time, so every seek renders deterministically.
+      var d = { t: 0 };
+      tl.fromTo(
+        d,
+        { t: 0 },
+        {
+          t: 4,
+          duration: 4,
+          ease: "none",
+          onUpdate: function () {
+            if (!swap) return;
+            if (d.t < 2.6) {
+              gsap.set(swap, { x: 0, y: 0 });
+              return;
+            }
+            var u = d.t - 2.6;
+            gsap.set(swap, {
+              x: Math.sin(u * Math.PI * 2 * 6.3) * 3,
+              y: Math.sin(u * Math.PI * 2 * 4.7 + 1.1) * 2,
+            });
+          },
+        },
+        0,
+      );
+
+      window.__timelines["01-black-box"] = tl;
+    })();
+  </script>
+</template>

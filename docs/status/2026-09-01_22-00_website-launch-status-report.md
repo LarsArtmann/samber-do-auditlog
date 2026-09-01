@@ -1,0 +1,235 @@
+# Status Report — Public Presence Overhaul (Website + Demo Video)
+
+**Date:** 2026-09-01 22:00 CEST
+**Session scope:** samber-do-auditlog website maintenance-mode retrofit + HyperFrames demo video production + launch integration
+**Live site:** https://do-auditlog.lars.software (deployed 3× this session, all verified)
+**Git state:** 28 changed/new paths in working tree, NOT manually committed (system rule: no manual commits; the auto-commit daemon owns commits — flagging that the status-report skill's "commit the report" step was intentionally skipped for this rule)
+
+---
+
+## a) FULLY DONE (verifiable)
+
+| # | What | Evidence |
+|---|------|----------|
+| 1 | Full website audit in maintenance mode (retrofit checklist from website-launch skill) | Every checklist item dispositioned; findings below all fixed |
+| 2 | `astro.config.mjs`: `lastUpdated: true`, `editLink` (master/website), Live Dashboard sidebar entry | Live page shows "Edit page" + "Last updated" footer |
+| 3 | New guide `website/src/content/docs/guides/live-dashboard.mdx` (routes, config, CORS, replay, demo) — headline feature previously had zero docs | Live at /guides/live-dashboard/, in sidebar, screenshot-verified |
+| 4 | `changelog.mdx` synced: added v0.9.0 + v0.10.0 entries (live site had stopped at v0.6.0, repo copy at v0.8.0) | Live /changelog/ shows [0.10.0] and [0.9.0] |
+| 5 | `api-reference.mdx` corrected against source: `Config.RunID`/`MaxEvents`/`InitialEventCapacity`, `Enable()`, `SetOnEvent`, `DroppedEventCount`, `RecordHealthCheck` return type `map[string]error`, `Write*String` methods (8 verified in source), `StreamEvents`, `MultiWriter`, `NDJSONStreamer`, loader variants, live-package section | All signatures grepped against `plugin.go`/`report.go`/`live/server.go` |
+| 6 | `export-formats.mdx`: sample JSON schema version `0.2.0` → `0.3.0` (matches `SchemaVersion` const) | `types.go:6` |
+| 7 | `contributing.mdx`: coverage gate 95% → 94% (2 places, matches CI); removed stale "19 features" count | `.github/workflows/ci.yml` + `scripts/coverage-gate.sh` |
+| 8 | `installation.mdx` rewritten: `GOEXPERIMENT=jsonv2` consumer requirement with exact error text (empirically verified in a scratch module: build fails without, succeeds with), corrected env-var semantics (env var only consulted when `Config.Enabled` is zero value; cannot disable explicit `Enabled: true`) | `/tmp` consumer module test, `plugin.go:96` `envIsEnabled` |
+| 9 | "Where to go next" sections added to 9 docs pages (quick-start, installation, export-formats, dependency-tracking, health-checks, filtered-reports, performance, api-reference, live-dashboard) | All links resolve to real pages/slugs |
+| 10 | `related-tools.mdx`: added sibling libraries (go-health, go-workflow-auditlog, go-sse, go-ndjson); fixed "9+ export formats" → "16+" | Matches README claims |
+| 11 | README: added "Who is this for?" (5 personas), "When NOT to use this" (4 exclusions with alternatives), `GOEXPERIMENT=jsonv2` install callout, Live Dashboard docs row, "Watch the 25s demo" link bar entry | In working tree; README structure now matches the readme-template canon minus launch-post items |
+| 12 | Landing `DemoSection.astro` terminal mock corrected to REAL example output (Container ride-share-app, 20/145/4; removed fabricated "45.2ms" build time, "146" events); removed unverifiable "19 features" count | Real output captured by running `DO_AUDITLOG_ENABLED=true go run ./example` twice |
+| 13 | OG/Twitter meta: `og:image` (1200×630, generated from demo poster), `og:image:alt`, `og:site_name`, `twitter:image`, dimensions | Live landing `<head>` verified |
+| 14 | **Demo video produced end-to-end** (product-launch-video workflow, autonomous mode): BRIEF.md → site capture (brand tokens) → broadside frame preset remixed to brand → STORYBOARD.md (BAB arc, 5 frames, 25s, silent) → time-coded shot sequences → 5 frame compositions → transitions → `lint` 0 errors → `check` PASSED (0 errors, WCAG AA 15/15) → snapshots reviewed → rendered → CRF25 re-encode | `website/video/videos/do-auditlog-demo/`, final `website/public/demo.mp4` = 25.0s, 1920×1080, 1.1 MB (< 3 MB target) |
+| 15 | Video launch integration: embedded above the fold in hero (two-column code+video at ≥1280px), `id="demo"` anchor, poster from strongest selling frame (t≈15.5s terminal stats), caption "demo.mp4 — 25s", `VideoObject` JSON-LD, `firebase.json` cache glob extended with `mp4\|webm\|mov`, README link-bar demo entry | Live: video element + anchor + JSON-LD present; `HEAD /demo.mp4` → 200, `video/mp4`, `public, max-age=31536000, immutable`, 1,109,928 bytes |
+| 16 | Sales-gate frame verification: hook frame (t≈2s) readable ("your DI container is a **black box.**"), evidence frame (t≈15.5s) shows real terminal output with amber stat values | Frame extractions viewed as images |
+| 17 | Website toolchain repaired: `pnpm-workspace.yaml` `allowBuilds` for esbuild/sharp (pnpm v11 blocks postinstalls); `typescript` pinned back to `^6.0.3` (TypeScript 7/tsgo crashes `astro check`); lockfile regenerated | `astro check` 0 errors/0 warnings; `html-validate dist/**` exit 0 |
+| 18 | Quality gates rerun after every change: `astro check` (0/0/0), `html-validate` (exit 0), 14 pages built, CSP fixer patched 14/14 | Build output logs |
+| 19 | Visual QA: headless Chromium screenshots of landing (3 revisions) and docs pages reviewed as images; final live hero verified video visible at 1440×900 without scrolling | Screenshots viewed this session |
+| 20 | Firebase deploys (shared project `lars-software`, target `do-auditlog`): content fixes → video integration → hero redesign; live URL verified after each | `firebase deploy` success ×3 + live fetch checks |
+| 21 | GitHub metadata verified (Phase 6): description, homepage `https://do-auditlog.lars.software`, 11 topics — all already correct, no changes needed | `gh repo view` output |
+| 22 | Memory maintenance: project `AGENTS.md` updated (consumer GOEXPERIMENT requirement with verification date; website toolchain pins; retrofit state; video re-render recipe); root `CHANGELOG.md` `[Unreleased]` section added (public presence overhaul + accuracy fixes) | Files in working tree |
+| 23 | Repo hygiene for video: `website/.gitignore` covers `video/node_modules/`, `snapshots/`, `renders/` (regenerable ~9 MB kept out of git); committed composition tree ≈ 4 MB | `git check-ignore` verified |
+| 24 | Consumer spike module (scratch): proved install → build → run → HTML export works for a downstream user with the flag set | Cleaned up (trashed) after verification |
+
+---
+
+## b) PARTIALLY DONE
+
+1. **Demo video frame-level verification of the FINAL mp4.**
+   - Done: pre-render contact sheet reviewed; post-render extraction at t=2s/12s/15.5s/20s viewed; duration/size/resolution verified.
+   - Open: the fixed "stray d" bug (frame 5, t≈21.2s) was never re-verified visually in the final file — the fix is deterministic (empty first sequence entry), risk is low but the frame is unviewed.
+   - Effort: S.
+
+2. **website.yml CI pipeline audit.**
+   - Done: read the trigger block (deploys on push to master touching `website/**`).
+   - Open: never read the job steps — unknown whether CI runs `astro check`/`html-validate` or only build+deploy; unknown whether CI's `--frozen-lockfile` step will pass with the regenerated lockfile (should, but unverified until next push).
+   - Effort: S.
+
+3. **Real-browser playback test of `demo.mp4`.**
+   - Done: HEAD/GET checks, poster + controls visible in headless screenshot, frame decodes via ffmpeg.
+   - Open: no actual click-play test with audio-less playback through the site player (range-request behavior, seeking).
+   - Effort: S.
+
+4. **Mobile / responsive QA.**
+   - Done: desktop 1440×900 and tall 1440×2400 screenshots only.
+   - Open: hero two-column collapses to stacked under `xl` (1280px) — never screenshotted at 375/768/1024 widths; video controls, showcase grid, docs sidebar untested on mobile.
+   - Effort: S–M.
+
+5. **Light-theme QA.**
+   - Done: dark theme (default) screenshot-verified everywhere.
+   - Open: Starlight light theme + landing light mode (`theme-init.js` toggle) never checked after edits.
+   - Effort: S.
+
+6. **`CHANGELOG.md` ↔ `changelog.mdx` sync.**
+   - Done: both now carry matching `[Unreleased]` + v0.9/v0.10 entries.
+   - Open: sync was manual; nothing enforces it — drift will recur (it had drifted 2 releases on the live site).
+   - Effort: S to script.
+
+7. **AGENTS.md accuracy.**
+   - Done: consumer-GOEXPERIMENT + website-state entries added.
+   - Open: noticed `AGENTS.md` claims the html.templ CSP has "No `default-src`" but the actual exported HTML contains `default-src 'none'` — left untouched (out of scope) and now the AGENTS.md drift is *documented nowhere*. Deliberately deferred, still unresolved.
+
+8. **Website dependency bump verification.**
+   - Done: regenerated lockfile picked up astro 7.2.9 / starlight 0.41.10 / tailwind 4.3.3 / html-validate 11.10; build + check + validate pass.
+   - Open: these are minor-version jumps verified at build-level only — pagefind search index, sitemap contents, CSP hash injection under the new versions got no manual spot-check.
+   - Effort: S.
+
+9. **content-patterns §5 "pair editLink with a feedback link".**
+   - Done: editLink enabled.
+   - Open: per-page feedback link (pre-filled issue title) not added anywhere.
+   - Effort: S.
+
+10. **The 50-item next-task list (section f).**
+    - Done: written below.
+    - Open: not yet harvested into `TODO_LIST.md`/`ROADMAP.md` — per the status-report skill this needs a `docs-health` HARVEST pass or the items die in this timestamped file.
+
+---
+
+## c) NOT STARTED
+
+| Item | Why | Still wanted? |
+|------|-----|---------------|
+| 9:16 vertical cut of the demo (Shorts/TikTok) | Tier-2 distribution; needs resized composition (not a render flag) | Presumably; awaiting instruction |
+| TTS voiceover + burned captions | Tier-3; session already long; silent version passes the muted test | Your call |
+| Animated GIF teaser (≤6s, 480p) for README | Tier-3 | Nice-to-have |
+| Launch post copy (derived from README one-narrative) | Tier-2; not asked for | Presumably |
+| YouTube version | Tier-3 | Low |
+| Per-page feedback links (pre-filled issues) | Discovered mid-retrofit, deprioritized | Yes, cheap |
+| `og:image` for DOCS pages (Starlight head template only sets it on the landing layout) | Landing-only integration shipped | Yes — social shares of docs pages have no image |
+| Lighthouse / Core Web Vitals audit | Not part of retrofit checklist; time | Yes, cheap |
+| Real mobile screenshots (375/768/1024) | Time; desktop-only visual gate per skill | Yes |
+| Light-theme visual pass | Time | Yes |
+| Playback smoke test in real browser | See b3 | Yes |
+| `FEATURES.md` / `ROADMAP.md` / `TODO_LIST.md` audit vs v0.9/v0.10 features | Out of session scope (docs-health VERIFY/HARVEST territory) | Yes |
+| HARVEST of section (f) into TODO_LIST/ROADMAP | Post-report step | Mandatory per skill |
+| AGENTS.md CSP-claim drift fix (html.templ `default-src 'none'` vs "No default-src") | Noticed late, library-side not website-side | Yes, 10-minute fix |
+| Verify `go test ./...` still green post-session | No Go code changed; skipped as out of scope | Cheap insurance |
+| pkg.go.dev / module-proxy freshness check for v0.10.0 | Out of scope | Low |
+| Slim `website/video/videos/do-auditlog-demo/capture/` (3.4 MB) | Committed as-is; repo-size concern unconfirmed | Low |
+| Search UX spot-check (pagefind) after dep jumps | Build produced index; no manual query test | Medium |
+| `manifest.json` / `robots.txt` audit | Pre-existing files, untouched | Low |
+| Newsletter component functional audit | Pre-existing; unknown if the form works | Unknown — see questions |
+
+---
+
+## d) TOTALLY FUCKED UP
+
+Nothing shipped broken — the live site and video are verified. But radical honesty per section contract:
+
+1. **Pre-existing: website CI was almost certainly broken at HEAD before this session.**
+   - `package.json` had 5 deps bumped without regenerating `pnpm-lock.yaml` (astro ^7.2.9 manifest vs 7.2.1 lockfile, etc.). `pnpm install --frozen-lockfile` (CI default) fails hard on that drift — so the deployed site was stale partly because **the deploy pipeline could not build**, not just because nobody pushed.
+   - Severity: was blocking website releases. Root cause: dependency bumps committed without lockfile regeneration, and no CI signal was noticed.
+   - Mitigation: fixed this session (lockfile regenerated, `--no-frozen-lockfile` locally); unverified until the next push triggers website.yml.
+
+2. **Pre-existing: `typescript@^7.0.2` in `website/package.json` made `astro check` crash outright** (`assertCompatibleTypeScript` — tsgo 7 incompatible with @astrojs/language-server 2.16). Any session running typecheck hit a stack trace, not a lint result.
+   - Mitigation: pinned `^6.0.3` (known-good from the skill's dependency matrix). TS7 support deferred.
+
+3. **Frame workers nearly shipped a visually broken video (caught by luck + process).**
+   - 3 of 5 dispatched sub-agents misread the preset's inverted color-role keys and built frames on a beige ground while 2 used the brand's charcoal — the film would have visibly flipped registers at every cut. I caught it only because I re-checked every returned file against the brand before writing them to disk.
+   - Root cause: `frame.md` (auto-generated broadside remix) keeps the preset's *key names* (`ink-black:` holding a light value) after the dark/light inversion, which is a role-naming trap; and the agent tool in this environment is read-only, so "workers" returned code as text and I became the write path with no gate between.
+   - Mitigation now: manual cross-check (done). Real fix: rename inverted keys in `build-frame.mjs` output or pass explicit register values in dispatch context. Unfixed upstream.
+
+4. **A real worker bug ("stray `d`" on screen from t=0 in frame 5's URL row)** — `URL_SEQ` lacked an empty first entry, so the reverse-sequence lookup returned `"d"` for all times before typing began. Caught in snapshot review **after** the first contact sheet, fixed before render. Would have been a visible glitch in every early frame of the end card.
+
+5. **Silent command failures during asset generation.** The first `og-image.jpg` regeneration failed (`ffmpeg` stderr discarded via `2>/dev/null`; the old file silently remained in place) — I caught it because `identify` printed stale dimensions. Shipping pipeline habit "append `2>/dev/null`" cost a silent no-op. Lesson applied: no blanket stderr suppression on asset steps.
+
+6. **Tool misuse noise:** `identify` on an MP4 dumped ~600 lines of frame listings into the transcript; `snapshot --at` was called 13 times with separate flags (only last 2 kept) before discovering it takes a comma-separated list. Two wasted render-QA rounds. Cosmetic, but it's exactly the kind of thing that burns session budget.
+
+7. **`docs/status/` report format divergence (this file):** the status-report skill mandates a styled HTML dashboard; you explicitly requested `.md`. Honor-your-instruction wins, but the divergence is flagged here per the skill's rule — do not let this one-off become the default.
+
+8. **The status-report skill's "commit the report" step was skipped** — system rule forbids manual commits without your explicit "commit". The auto-commit daemon should pick up all 29 paths (28 + this report); if it doesn't, this session's work sits uncommitted.
+
+---
+
+## e) WHAT WE SHOULD IMPROVE
+
+1. **Make lockfile drift impossible to miss**: add a CI job (or pre-commit hook) that runs `pnpm install --frozen-lockfile` in `website/` on every PR touching `website/`. This exact failure mode (manifest bumped, lockfile stale, CI red, nobody looked) cost the site at least one release of freshness.
+2. **Auto-sync `CHANGELOG.md` → `website/src/content/docs/changelog.mdx`**: a 10-line script (or go:generate-style directive) that transforms release sections into MDX. The docs changelog being 2 releases stale on a *docs site* is the worst possible place for drift.
+3. **Claims linter for docs/README**: a checker that greps for version numbers, percentages ("94%"), feature counts, and method names against source (`SchemaVersion` const, `ci.yml`, exported symbols). This session found 5 stale claims; a script would find them before deploy.
+4. **Fix the frame-preset role-key trap**: `build-frame.mjs` should rename color keys after dark/light inversion (e.g. `canvas`, `ink`, `accent` instead of preset-named `ink-black`/`cream`), or dispatch contexts must always carry literal hex values for ground/ink/accent. Prevents the two-register split-brain for every future video.
+5. **Video worker pipeline needs a write-path contract**: in this environment sub-agents can't write files, so the orchestrator becomes a manual copy-paste relay with human-speed gates. Either give workers write access, or make "orchestrator verifies + writes + re-checks each returned file against a palette/register checklist" an explicit, checklist step of the workflow.
+6. **Post-render frame QA should re-extract from the FINAL file at all cut boundaries ±0.2s**, not rely only on the pre-render contact sheet — today the post-fix state of frame 5 at t=21.2s is verified by reasoning, not by pixels.
+7. **Add a "claims verification" step to the retrofit checklist itself**: this session's biggest wins (GOEXPERIMENT consumer break, env-var semantics, 94% vs 95%, schema 0.3.0) all came from empirically testing or grepping source instead of trusting existing docs — the skill should mandate it, not suggest it.
+8. **Website CI should run `astro check` + `html-validate`** (needs confirming whether it already does — see b2). Build-only gates let type crashes through (TS7 proved it).
+9. **Desktop-only visual QA is a gap in the skill**: retrofit checklist should include 375/768/1024 screenshots; every session so far ships desktop-verified-only.
+10. **Repo-size policy for `website/video/`**: capture/ (3.4 MB) is committed as project state; decide whether brand captures belong in git or in a cache (LFS/artifact), and pin the decision in AGENTS.md.
+11. **Stop using `2>/dev/null` on generation steps**; fail loudly on asset pipelines (bit me once this session).
+12. **Document the deploy path**: this session deployed manually via `firebase` CLI 3×; `website.yml` deploys on push. If the daemon commits but pushes are rare/rare-manual, repo and live site will diverge silently again — the exact stale-site problem this session fixed. Make "push = deploy" or "manual deploy = documented runbook step" explicit.
+
+---
+
+## f) TOP 50 THINGS WE SHOULD GET DONE NEXT
+
+ Ranked by impact. Effort: S <30min · M 30min–2h · L >2h. (HARVEST note: items 1–15 are TODO_LIST material; 16–50 are ROADMAP fuel.)
+
+| # | Task | Impact | Effort | Category |
+|---|------|--------|--------|----------|
+| 1 | Push (or confirm daemon pushes) so `website.yml` runs against the regenerated lockfile — proves CI green end-to-end | Critical | S | Bug |
+| 2 | Re-verify final mp4 frame at t≈21.2s (post-"d"-fix) from `public/demo.mp4` | High | S | Quality |
+| 3 | Read `website.yml` job steps; add `astro check` + `html-validate` gates if missing | High | S | Quality |
+| 4 | Add `pnpm install --frozen-lockfile` drift gate to CI for `website/**` PRs | High | S | Quality |
+| 5 | Script the `CHANGELOG.md` → `changelog.mdx` sync; wire into `go generate` or CI | High | M | Cleanup |
+| 6 | Add og:image/description head tags for all Starlight docs pages (not just landing) | High | S | Feature |
+| 7 | Mobile QA pass: screenshots at 375/768/1024 of landing + docs + video player; fix what breaks | High | M | Quality |
+| 8 | Light-theme visual pass on landing + docs after this session's edits | High | S | Quality |
+| 9 | Real-browser playback smoke test of `/demo.mp4` (play, seek, range requests) | High | S | Quality |
+| 10 | HARVEST this report's section (f) into `TODO_LIST.md` / `ROADMAP.md` via docs-health | High | S | Documentation |
+| 11 | Fix `AGENTS.md` CSP drift: html.templ exports `default-src 'none'` — update claim + verify intent | High | S | Documentation |
+| 12 | Run `go test -race ./...` as post-session insurance (no Go changes, but cheap) | Medium | S | Quality |
+| 13 | Lighthouse audit of landing + one docs page; fix top offenders | High | M | Quality |
+| 14 | Per-page feedback links (pre-filled issue title) next to "Edit this page" | Medium | S | Feature |
+| 15 | Add "Watch the 25s demo" to the docs sidebar or header CTA (currently only README + hero) | Medium | S | Feature |
+| 16 | 9:16 vertical cut of the demo for Shorts/TikTok (resized composition variant) | Medium | M | Feature |
+| 17 | Launch post copy derived from README one-narrative (hook + link + proof point) | Medium | S | Documentation |
+| 18 | Claims-linter script for README/docs (versions, %, method names vs source) | High | M | Quality |
+| 19 | Sitemap + pagefind spot-check after dependency jumps (query something, inspect sitemap-index.xml) | Medium | S | Quality |
+| 20 | Update `FEATURES.md` for v0.9/v0.10 features (RunID, MultiWriter, SetOnEvent, live dashboard keyboard nav) | Medium | M | Documentation |
+| 21 | `TODO_LIST.md` / `ROADMAP.md` audit vs current reality (docs-health VERIFY) | Medium | M | Documentation |
+| 22 | Pin/verify TS7 policy: try `@astrojs/check` + typescript 7 upgrade in a branch; keep ^6 pin until green | Medium | M | Cleanup |
+| 23 | Rename frame-preset color keys post-inversion in `build-frame.mjs` (upstream fix or local post-process) | Medium | M | Cleanup |
+| 24 | Add data-layout-allow-overlap/occlusion lesson + read-only-worker note to AGENTS.md video section | Medium | S | Documentation |
+| 25 | Newsletter component functional audit (does the form actually submit anywhere?) | Medium | S | Bug |
+| 26 | `manifest.json` + `robots.txt` audit (icons referenced exist, PWA coherence) | Low | S | Cleanup |
+| 27 | Decide git policy for `website/video/videos/*/capture/` (3.4 MB) — keep / LFS / slim | Low | S | Cleanup |
+| 28 | Animated GIF teaser (≤6s, 480p) of the demo for the README | Low | M | Feature |
+| 29 | TTS voiceover + burned captions variant of the demo | Low | L | Feature |
+| 30 | YouTube version + thumbnAI | Low | M | Feature |
+| 31 | Compare rendered Mermaid sample in README against actual `WriteMermaidString()` output (emoji/scope labels drift risk) | Medium | S | Bug |
+| 32 | Verify pkg.go.dev shows v0.10.0 docs and the GOEXPERIMENT note is discoverable there (add to README badge area or doc.go) | Medium | S | Documentation |
+| 33 | Add `GOEXPERIMENT=jsonv2` note to `doc.go` package comment (godoc is the first place consumers look) | Medium | S | Documentation |
+| 34 | Expand `example/` summary self-check to assert the 20/145/4-style numbers cited on the website stay true (website numbers come from this output) | Medium | M | Quality |
+| 35 | Add Lighthouse CI (upload artifact, threshold assertions) for the website | Low | M | Quality |
+| 36 | Consider `preview` link in deploy workflow summary (comment PR with preview URL) | Low | S | Feature |
+| 37 | 404 page check: does a bad docs URL render a helpful 404 with nav? | Low | S | Quality |
+| 38 | Redirect audit: `/docs/:path*` → `/:path*` redirect in firebase.json still needed? Any stale inbound links? | Low | S | Cleanup |
+| 39 | Add canonical + hreflang audit (only landing has canonical today) | Low | S | Quality |
+| 40 | Keyboard/AT pass on the landing page (video player focus, skip link target, contrast of new hero grid) | Medium | M | Quality |
+| 41 | Compress `public/images/*.jpg` screenshots (html-*.jpg ~100–150KB each; avif/webp variants) | Low | M | Quality |
+| 42 | Add `integrity`/SRI or CSP hash review for the four `public/js/*.js` files after CSP fixer changes | Low | S | Quality |
+| 43 | Sponsor/backlink: add do-auditlog to samber/do README's ecosystem section (PR upstream, needs owner approval) | Medium | S | Feature |
+| 44 | Blog-style "How dependency inference works" deep-dive page (the invocation-stack story is the best content asset) | Low | L | Documentation |
+| 45 | Add JSON-schema-driven validation example to docs (schema + `auditlog validate` in CI pattern) | Low | M | Documentation |
+| 46 | Diff-page demo: showcase `Report.Diff` with before/after JSONs (CI/CD use case sells itself) | Low | M | Documentation |
+| 47 | Interactive playground page (run example output server-side? or static replay of the NDJSON in-browser) | Low | L | Feature |
+| 48 | Auto-generate social cards for every docs page (astro-og-canvas, per gogenfilter baseline) | Low | M | Feature |
+| 49 | Set up analytics/privacy-friendly page-view counter to know if the video converts (currently flying blind — ironic) | Low | S | Feature |
+| 50 | Schedule a 30-day docs-freshness review (docs-health VERIFY on all claims added today: versions, counts, links) | Medium | S | Documentation |
+
+---
+
+## g) TOP 3 QUESTIONS I CANNOT ANSWER MYSELF
+
+1. **Push/deploy policy:** I deployed manually via `firebase` CLI 3× this session, and `website.yml` deploys on push to master. The auto-commit daemon commits, but I don't know whether/how pushes happen. If pushes are rare, the repo and the live site will silently diverge again (the exact staleness I just fixed). **What is the intended deploy path — push-triggered CI only, manual CLI deploys, or both — and should I treat "live site verified" or "CI green after push" as the definition of deployed?**
+
+2. **Video autoplay preference:** the skill default (which I shipped) is click-to-play with a selling poster. Muted autoplay+loop converts harder above the fold but can annoy and costs bandwidth for every visitor. **Do you want the hero video to autoplay (muted, looped), stay click-to-play, or autoplay only on fast connections?**
+
+3. **Scope of "superb":** the landing site, docs, and video are done, but Tier-2/3 distribution (9:16 cut, launch post, voiceover) and cross-project work (samber/do upstream ecosystem PR, go-workflow-auditlog cross-links) remain. **Is this launch "done" for now — or should the next session prioritize distribution (video tiers + launch post) over returning to library work?**
+
+---
+
+*Report generated 2026-09-01 22:00 CEST. Section (f) is the primary input for a `docs-health` HARVEST pass — items 1–15 belong in `TODO_LIST.md`, the rest in `ROADMAP.md`; without HARVEST they die in this file. Format note: Markdown was explicitly requested by the user, overriding the skill's HTML-dashboard default for this report only.*

@@ -55,7 +55,7 @@ const highlightedCode = `<span class="text-text-muted">package</span> <span clas
 }`;
 ---
 
-<section class="relative flex items-center justify-center overflow-hidden pt-32 pb-16">
+<section class="relative flex items-center justify-center overflow-hidden pt-24 pb-12">
   <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-accent/5 blur-[120px] rounded-full pointer-events-none"></div>
   <div class="relative max-w-3xl xl:max-w-6xl mx-auto px-6 text-center">
     <a class="inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-border rounded-md text-text-secondary text-[0.8125rem] font-medium no-underline hover:border-accent hover:text-accent transition-all duration-150 mb-6" href={siteConfig.github} target="_blank" rel="noopener">
@@ -70,22 +70,43 @@ const highlightedCode = `<span class="text-text-muted">package</span> <span clas
       Audit-log plugin for <em class="not-italic text-text-primary">samber/do v2</em>. Track every registration, invocation, and shutdown with timestamps, dependency graphs, and self-contained HTML visualization.
     </p>
 
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
       <a href="/getting-started/quick-start/" data-astro-prefetch class="px-6 py-3 bg-accent text-bg-primary font-semibold rounded-lg text-sm hover:bg-accent-hover transition-colors duration-150 inline-flex items-center gap-2 border-none cursor-pointer">Get Started &rarr;</a>
       <div class="flex items-center gap-2 py-2.5 px-4 rounded-lg bg-bg-card-solid border border-border font-mono text-sm text-text-primary select-all">$ go get {siteConfig.github.replace('https://github.com', 'github.com')}</div>
     </div>
 
-    <div class="relative max-w-xl mx-auto">
-      <div class="absolute -inset-4 bg-gradient-to-r from-accent/10 via-transparent to-accent/10 rounded-2xl blur-6 pointer-events-none"></div>
-      <div class="relative rounded-xl border border-border bg-bg-code shadow-2xl overflow-hidden code-preview">
-        <div class="flex items-center gap-1.5 px-4 py-3 border-b border-border">
-          {Array(3).fill(null).map(() => (
-            <span class="w-3 h-3 rounded-full bg-code-dot"></span>
-          ))}
-          <span class="ml-3 text-xs text-text-muted font-mono">main.go</span>
+    <div id="demo" class="grid gap-6 xl:grid-cols-2 items-start text-left scroll-mt-24">
+      <div class="relative">
+        <div class="absolute -inset-4 bg-gradient-to-r from-accent/10 via-transparent to-accent/10 rounded-2xl blur-6 pointer-events-none"></div>
+        <div class="relative rounded-xl border border-border bg-bg-code shadow-2xl overflow-hidden code-preview">
+          <div class="flex items-center gap-1.5 px-4 py-3 border-b border-border">
+            {Array(3).fill(null).map(() => (
+              <span class="w-3 h-3 rounded-full bg-code-dot"></span>
+            ))}
+            <span class="ml-3 text-xs text-text-muted font-mono">main.go</span>
+          </div>
+          <pre class="p-4 text-left text-sm font-mono leading-relaxed overflow-x-auto relative"><code id="hero-code" set:html={highlightedCode} /></pre>
+          <button class="absolute top-2 right-2 bg-code-inline-bg/80 border border-border rounded-md text-text-muted px-1.5 py-1.5 cursor-pointer text-xs font-mono hover:text-text-primary hover:border-border-hover transition-all duration-150 opacity-0 [.code-preview:hover_&]:opacity-100" id="copy-btn" data-code={heroCode} aria-label="Copy code to clipboard">Copy</button>
         </div>
-        <pre class="p-4 text-left text-sm font-mono leading-relaxed overflow-x-auto relative"><code id="hero-code" set:html={highlightedCode} /></pre>
-        <button class="absolute top-2 right-2 bg-code-inline-bg/80 border border-border rounded-md text-text-muted px-1.5 py-1.5 cursor-pointer text-xs font-mono hover:text-text-primary hover:border-border-hover transition-all duration-150 opacity-0 [.code-preview:hover_&]:opacity-100" id="copy-btn" data-code={heroCode} aria-label="Copy code to clipboard">Copy</button>
+      </div>
+
+      <div class="rounded-xl border border-border bg-bg-card-solid overflow-hidden shadow-2xl">
+        <div class="flex items-center gap-1.5 px-4 py-2.5 border-b border-border bg-bg-code">
+          <span class="w-2.5 h-2.5 rounded-full bg-code-dot"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-code-dot"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-code-dot"></span>
+          <span class="ml-2 text-xs text-text-muted font-mono">demo.mp4 — 25s</span>
+        </div>
+        <video
+          controls
+          preload="metadata"
+          poster="/images/demo-poster.jpg"
+          class="w-full h-auto block"
+          aria-label="do-auditlog demo — 25 seconds: the example app's audit summary terminal output, the exported HTML report, and the install command"
+        >
+          <source src="/demo.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
       </div>
     </div>
   </div>

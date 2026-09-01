@@ -79,3 +79,10 @@ db := do.MustInvoke[*Database](i)
 
 - **Lazy providers that are never invoked** — if a service is registered but never resolved, it has no dependencies recorded. This is correct: no provider ran, so no `MustInvoke` calls were intercepted.
 - **Health check capabilities** — `IsHealthchecker` and `IsShutdowner` are populated via `do.ExplainInjector` at report time, not from the stack. Capabilities are only visible for invoked services.
+
+## Where to go next
+
+- [Export Formats](/guides/export-formats/) — render the graph as Mermaid, DOT, D2, or an interactive HTML DAG
+- [Filtered Reports](/guides/filtered-reports/) — slice the graph by scope or service type
+- [Live Dashboard](/guides/live-dashboard/) — watch dependencies resolve in real time
+- [Health Checks](/guides/health-checks/) — the other half of the service record

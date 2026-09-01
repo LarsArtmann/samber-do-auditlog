@@ -37,17 +37,18 @@ const checks = [
       <div class="p-4 font-mono text-sm text-text-primary overflow-x-auto bg-bg-code leading-relaxed">
         <div><span class="text-text-muted">$</span> <span id="demo-command-text">{command}</span></div>
         <div class="text-text-muted mt-2"><span class="text-success">===</span> Audit Summary <span class="text-success">===</span></div>
-        <div class="text-text-muted">  Services:  <span class="text-text-secondary">20</span></div>
-        <div class="text-text-muted">  Events:    <span class="text-text-secondary">146</span></div>
-        <div class="text-text-muted">  Scopes:    <span class="text-text-secondary">4</span></div>
-        <div class="text-text-muted">  Build:     <span class="text-text-secondary">45.2ms</span></div>
-        <div class="text-text-muted">  HTML:      <span class="text-accent">audit-report.html</span></div>
+        <div class="text-text-muted">  Container:  <span class="text-text-secondary">ride-share-app</span></div>
+        <div class="text-text-muted">  Services:   <span class="text-text-secondary">20</span></div>
+        <div class="text-text-muted">  Events:     <span class="text-text-secondary">145</span></div>
+        <div class="text-text-muted">  Scopes:     <span class="text-text-secondary">4</span></div>
+        <div class="text-text-muted">  Build:      <span class="text-text-secondary">0.128ms</span></div>
+        <div class="text-text-muted">  HTML:       <span class="text-accent">audit-report.html</span></div>
       </div>
     </div>
 
     <div class="pt-1">
       <p class="text-sm text-text-muted mb-5 leading-relaxed">
-        The example exercises 19 samber/do v2 features - eager and lazy providers, named services, transients, aliases, child scopes, cross-scope dependencies, health checks, and shutdown errors - then writes an HTML report you can open in any browser.
+        The example exercises every major samber/do v2 feature - eager and lazy providers, named services, transients, aliases, child scopes, cross-scope dependencies, health checks, and shutdown errors - then writes an HTML report you can open in any browser.
       </p>
       <div class="grid gap-2.5 sm:grid-cols-2 mb-6">
         {checks.map((check) => (

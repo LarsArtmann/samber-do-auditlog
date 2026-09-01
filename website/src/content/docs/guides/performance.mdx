@@ -54,5 +54,11 @@ Export is only paid when you need the data:
 ## Reproducing
 
 ```bash
-go test -bench=. -benchmem ./...
+GOEXPERIMENT=jsonv2 go test -bench=. -benchmem ./...
 ```
+
+## Where to go next
+
+- [Dependency Tracking](/guides/dependency-tracking/) — what the hot path actually does
+- [Export Formats](/guides/export-formats/) — the cost you pay only at export time
+- [Live Dashboard](/guides/live-dashboard/) — real-time streaming on top of the same events

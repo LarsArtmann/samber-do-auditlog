@@ -8,12 +8,33 @@ description: Install do-auditlog in your Go project.
 - Go 1.26 or later
 - [samber/do v2](https://github.com/samber/do) in your project
 - An active Go module (`go.mod`)
+- The `GOEXPERIMENT=jsonv2` build flag (see below)
 
 ## Install
 
 ```bash
 go get github.com/larsartmann/samber-do-auditlog
 ```
+
+## GOEXPERIMENT=jsonv2 (required)
+
+Transitive dependencies of do-auditlog use Go's next-generation `encoding/json/v2` packages, which are gated behind the `jsonv2` experiment in Go 1.26. Without the flag, the build fails with:
+
+```text
+imports github.com/larsartmann/go-ndjson
+imports encoding/json/v2: build constraints exclude all Go files
+```
+
+Set the environment variable wherever you build or test code that imports do-auditlog:
+
+```bash
+export GOEXPERIMENT=jsonv2
+go build ./...
+```
+
+:::tip
+Put the export in your shell profile, CI environment, or Nix devShell once and forget it. When Go 1.27 stabilizes `encoding/json/v2`, the flag becomes unnecessary.
+:::
 
 ## Quick Usage
 
@@ -51,14 +72,11 @@ func main() {
 Control the plugin at runtime without code changes:
 
 ```bash
-# Enable (default when Config.Enabled is true)
+# Enable (when Config.Enabled is false / zero value)
 DO_AUDITLOG_ENABLED=true
-
-# Disable — zero hooks, zero cost
-DO_AUDITLOG_ENABLED=false
 ```
 
-When `DO_AUDITLOG_ENABLED` is set, it overrides `Config.Enabled`. This lets you enable auditing in development and disable it in production without recompiling.
+The env var is consulted when `Config.Enabled` is left as the zero value. Accepted values: `true`, `1`, `yes`. This lets you ship the plugin wired (with `Enabled: false`) and activate auditing per environment — development, staging, a single debug pod — without recompiling. An explicit `Enabled: true` in code always wins; the env var cannot disable an explicitly enabled plugin.
 
 ## Import
 
@@ -69,11 +87,12 @@ import "github.com/larsartmann/samber-do-auditlog"
 ## Verify Installation
 
 ```bash
-go list -m github.com/larsartmann/samber-do-auditlog
+GOEXPERIMENT=jsonv2 go list -m github.com/larsartmann/samber-do-auditlog
 ```
 
-## Next Steps
+## Where to go next
 
-- Follow the [Quick Start](/getting-started/quick-start/) for complete examples
-- Learn about [Export Formats](/guides/export-formats/) to choose the right output
-- See [Dependency Tracking](/guides/dependency-tracking/) to understand graph inference
+- [Quick Start](/getting-started/quick-start/) — complete examples in 60 seconds
+- [Export Formats](/guides/export-formats/) — choose the right output format
+- [Dependency Tracking](/guides/dependency-tracking/) — how the graph is inferred
+- [Live Dashboard](/guides/live-dashboard/) — watch your container in real time

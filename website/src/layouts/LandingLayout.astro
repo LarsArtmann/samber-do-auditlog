@@ -24,9 +24,15 @@ const { title } = Astro.props;
     <meta property="og:description" content={siteConfig.description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={siteConfig.siteUrl} />
+    <meta property="og:site_name" content={siteConfig.name} />
+    <meta property="og:image" content={`${siteConfig.siteUrl}/images/og-image.jpg`} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="do-auditlog HTML report — services table with lifecycle waveform, type badges, and dependency columns" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={siteConfig.name} />
     <meta name="twitter:description" content={siteConfig.description} />
+    <meta name="twitter:image" content={`${siteConfig.siteUrl}/images/og-image.jpg`} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={siteConfig.siteUrl} />
     <link rel="manifest" href="/manifest.json" />
@@ -35,6 +41,17 @@ const { title } = Astro.props;
   </head>
   <body class="font-sans bg-bg-primary text-text-secondary antialiased leading-relaxed">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:bg-accent focus:text-bg-primary focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-semibold">Skip to content</a>
+    <script type="application/ld+json" is:inline set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "VideoObject",
+      "name": "do-auditlog demo — 25 seconds",
+      "description": "Your DI container is a black box. do-auditlog wires full lifecycle telemetry into samber/do v2 in one line — real terminal output, the exported HTML report, and the install command.",
+      "thumbnailUrl": [`${siteConfig.siteUrl}/images/demo-poster.jpg`],
+      "uploadDate": "2026-09-01",
+      "contentUrl": `${siteConfig.siteUrl}/demo.mp4`,
+      "duration": "PT25S",
+      "embedUrl": siteConfig.siteUrl
+    })} />
     <script type="application/ld+json" is:inline set:html={JSON.stringify({
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",

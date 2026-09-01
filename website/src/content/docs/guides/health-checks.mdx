@@ -63,3 +63,10 @@ The plugin resolves scope metadata from its internal `serviceRecord` map:
 // Handles both *do.RootScope and *do.Scope
 scopeID, scopeName, found := plugin.ResolveServiceScope(scope, "*main.Database")
 ```
+
+## Where to go next
+
+- [Dependency Tracking](/guides/dependency-tracking/) — how services and scopes are identified
+- [go-health](https://github.com/larsartmann/go-health) — Kubernetes health probes built on this integration
+- [Live Dashboard](/guides/live-dashboard/) — see health events appear as they run
+- [API Reference](/api-reference/) — `RecordHealthCheck*` signatures in full

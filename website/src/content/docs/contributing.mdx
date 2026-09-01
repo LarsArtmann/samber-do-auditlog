@@ -37,7 +37,7 @@ go test ./...
 # With race detector (CI uses this)
 go test -race ./...
 
-# Coverage gate (CI: >= 95% of non-example/ code)
+# Coverage gate (CI: >= 94% of non-example/cmd code)
 sh scripts/coverage-gate.sh
 ```
 
@@ -57,7 +57,7 @@ go vet ./...                  # static analysis
 DO_AUDITLOG_ENABLED=true go run ./example
 ```
 
-The example demonstrates 19 samber/do v2 features with a ride-sharing domain model.
+The example demonstrates every major samber/do v2 feature with a ride-sharing domain model.
 
 ## Code Style
 
@@ -80,7 +80,7 @@ The hook runs: generate drift check, `go vet`, `golangci-lint`, `go test -race`.
 
 All pull requests must pass 5 parallel jobs:
 
-1. **test**: `go vet`, `go build`, `go test -race` with coverage gate (>= 95%)
+1. **test**: `go vet`, `go build`, `go test -race` with coverage gate (>= 94%)
 2. **lint**: `golangci-lint config verify` then `golangci-lint v2.12.2`
 3. **vulncheck**: `govulncheck` via GitHub Action
 4. **mod-tidy**: `go mod tidy` drift check

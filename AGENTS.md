@@ -153,7 +153,9 @@ A `go.work` workspace at the parent directory may still link the projects for lo
 
 ### GOEXPERIMENT=jsonv2 requirement
 
-**The project requires `GOEXPERIMENT=jsonv2` to build.** This is set automatically in:
+**The project requires `GOEXPERIMENT=jsonv2` to build.** **Consumers need it too**: a downstream module that imports this library fails with `imports encoding/json/v2: build constraints exclude all Go files` unless `GOEXPERIMENT=jsonv2` is set (verified empirically 2026-09-01 with a minimal consumer). The README Install section and the website Installation page document this; keep them in sync.
+
+This is set automatically in:
 
 - The Nix devShell (`flake.nix` sets `GOEXPERIMENT = "jsonv2"`)
 - CI workflows (`.github/workflows/ci.yml` sets `env: GOEXPERIMENT: jsonv2` at the workflow level)
@@ -339,3 +341,7 @@ The `example/` package (split across `main.go`, `register.go`, `services.go`, an
 | Export enhancements      | `ExportFilteredToFile(path, opts...)`, `Report.WriteMermaid(writer)`                                                                |
 | Service type tracking    | Auto-detected via `do.ExplainNamedService`                                                                                          |
 | Live dashboard           | `go run ./example --live` starts the real-time SSE dashboard alongside the demo                                                     |
+
+- **Website demo video** (2026-09-01): a 25s silent HyperFrames promo lives at `website/video/videos/do-auditlog-demo/` (composition committed; renders in `renders/`), deployed as `website/public/demo.mp4` and embedded above the fold in the landing hero (`#demo` anchor). Re-render: `cd website/video/videos/do-auditlog-demo && HYPERFRAMES_BROWSER_PATH=$(ls -d /nix/store/*-chromium-*/bin/chromium | head -1) nix shell nixpkgs#nodejs -c node ../../node_modules/hyperframes/dist/cli.js render ...` (invoke the CLI directly; `npx` wrappers fail on NixOS). Size target <3MB — re-encode with `ffmpeg -crf 25` if a render exceeds it (25s @ 1080p ≈ 1.1MB at CRF 25).
+- **Website toolchain pins**: `website/pnpm-workspace.yaml` sets `allowBuilds: {esbuild: true, sharp: true}` (pnpm v11 blocks native postinstalls otherwise) and `website/package.json` must keep `typescript: ^6.0.3` — TypeScript 7 (tsgo) crashes `astro check` (`assertCompatibleTypeScript`). `astro check` = 0 errors and `html-validate dist/**/*.html` are the website quality gates; CI (`.github/workflows/website.yml`) deploys on push to master touching `website/**`.
+- **Website retrofit state** (2026-09-01): Starlight `lastUpdated` + `editLink` enabled; OG image (`public/images/og-image.jpg`, 1200x630, generated from the demo-video poster); new `guides/live-dashboard.mdx`; all docs pages carry curated "Where to go next" sections; README has "Who is this for?", "When NOT to use this", and the `GOEXPERIMENT=jsonv2` consumer requirement. Live site: `do-auditlog.lars.software` (Firebase shared project `lars-software`, hosting target `do-auditlog`).

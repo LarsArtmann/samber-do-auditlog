@@ -9,12 +9,15 @@ description: Complete API reference for the Plugin and Report types.
 | --------------------------------------------- | ---------------------------------------------------------- |
 | `New(config Config) (*Plugin, error)`         | Create plugin. Validates config, returns error if invalid. |
 | `Opts() *do.InjectorOpts`                     | Hooks for `do.NewWithOpts`. No-ops when `Enabled: false`.  |
+| `Enable()`                                    | Turn audit logging on after construction. Idempotent.      |
+| `SetOnEvent(fn func(Event))`                  | Set or replace the event callback after construction.      |
 | `Report() Report`                             | In-memory snapshot. No I/O.                                |
 | `ReportFiltered(opts...) Report`              | Filtered snapshot with functional options.                 |
 | `Events() []Event`                            | Defensive copy of raw event slice.                         |
 | `EventsCount() int`                           | Event count without copying.                               |
-| `RecordHealthCheck(injector)`                 | Wrap `injector.HealthCheck()` with audit events.           |
-| `RecordHealthCheckWithContext(ctx, injector)` | Same with context.                                         |
+| `DroppedEventCount() int64`                   | Events dropped after hitting `MaxEvents`.                  |
+| `RecordHealthCheck(injector) map[string]error` | Wrap `injector.HealthCheck()` with audit events.          |
+| `RecordHealthCheckWithContext(ctx, injector) map[string]error` | Same with context.                        |
 | `ResolveServiceScope(scope, name)`            | Resolve scope metadata for a service.                      |
 
 ### Export Methods (to io.Writer)
@@ -26,13 +29,24 @@ description: Complete API reference for the Plugin and Report types.
 | `WriteHTML(w) error`                | Self-contained HTML visualization.      |
 | `WriteReportCSV(w) error`           | CSV of all services.                    |
 | `WriteReportTSV(w) error`           | TSV of all services.                    |
-| `WriteMermaid(w) error`             | Mermaid flowchart.                      |
-| `WritePlantUML(w) error`            | PlantUML component diagram.             |
-| `WriteDOT(w) error`                 | Graphviz DOT digraph.                   |
-| `WriteD2(w) error`                  | D2 diagram.                             |
+| `WriteMermaid(w, opts...) error`    | Mermaid flowchart.                      |
+| `WritePlantUML(w, opts...) error`   | PlantUML component diagram.             |
+| `WriteDOT(w, opts...) error`        | Graphviz DOT digraph.                   |
+| `WriteD2(w, opts...) error`         | D2 diagram.                             |
 | `WriteTree(w) error`                | ASCII dependency tree.                  |
 | `WriteHTMLTree(w) error`            | HTML nested-list tree.                  |
 | `WriteTable(w, format, opts) error` | Service summary table (16+ formats).    |
+
+### String Convenience Methods (Report)
+
+Every format also has a `Write*String` variant that returns the output as a `string` — handy for templates and tests:
+
+```go
+mermaid, err := report.WriteMermaidString()
+html, err := report.WriteHTMLString()
+```
+
+Available: `WriteMermaidString`, `WritePlantUMLString`, `WriteDOTString`, `WriteD2String`, `WriteHTMLString`, `WriteTreeString`, `WriteHTMLTreeString`, `WriteTableString`.
 
 ### Export Methods (to file)
 
@@ -76,20 +90,41 @@ description: Complete API reference for the Plugin and Report types.
 | `New(config) (*Plugin, error)`                      | Construct a plugin from Config (validated).  |
 | `NewReport(...) (Report, error)`                    | Construct a validated Report from core data. |
 | `LoadReport(path, opts...) (Report, Format, error)` | Auto-detect JSON/NDJSON and load.            |
+| `LoadReportFromReader(r, format)`                   | Load from any `io.Reader`.                   |
+| `LoadReportFromBytes(data, format)`                 | Load from a byte slice.                      |
 | `ReadEvents(reader) ([]Event, error)`               | Read NDJSON event stream.                    |
+| `StreamEvents(reader, validate, fn) error`          | Callback-based NDJSON replay, no full materialization. |
 | `ReplayEvents(events) (Report, error)`              | Reconstruct a Report from events.            |
 | `MigrateReport(data) (Report, error)`               | Migrate/repair old JSON reports.             |
+| `NewMultiWriter(fns...) *MultiWriter`               | Fan events out to multiple callbacks.        |
+| `NewNDJSONStreamer(w, opts...) *NDJSONStreamer`     | Real-time NDJSON event streamer.             |
 | `JSONSchema() string`                               | Canonical JSON Schema for the report format. |
 
 ## Config
 
 ```go
 type Config struct {
-    Enabled     bool        // Toggle hooks on/off
-    ContainerID string      // Identifier for the container (must not contain / or \)
-    OnEvent     func(Event) // Callback fired after each event (outside mutex)
+    Enabled              bool        // Toggle hooks on/off (env var applies when false)
+    ContainerID          ContainerID // Identifier for the container (must not contain / or \\)
+    RunID                RunID       // Run correlation ID; auto-generated 128-bit hex when empty
+    OnEvent              func(Event) // Callback fired after each event (outside mutex)
+    MaxEvents            int         // Cap in-memory events; 0 = unbounded
+    InitialEventCapacity int         // Pre-allocate event slice; 0 = 1024
 }
 ```
+
+## Live Dashboard (`live/` sub-package)
+
+The `live` package wraps a plugin with an SSE-powered real-time dashboard:
+
+```go
+server, plugin, err := live.New(
+    auditlog.Config{Enabled: true, ContainerID: "my-app"},
+    live.Config{Addr: ":7777", Prefix: "/debug/di"},
+)
+```
+
+See the [Live Dashboard guide](/guides/live-dashboard/) for routes, configuration, and deployment notes.
 
 ## CLI
 
@@ -106,3 +141,10 @@ Subcommands:
 - `auditlog diff <a> <b>` — Compare two reports
 - `auditlog validate <file>` — Validate a report against the schema
 - `auditlog schema` — Print the JSON Schema
+
+## Where to go next
+
+- [Quick Start](/getting-started/quick-start/) — see the main APIs in context
+- [Export Formats](/guides/export-formats/) — pick a format, then find its method here
+- [Filtered Reports](/guides/filtered-reports/) — the functional options in depth
+- [pkg.go.dev](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog) — generated godoc for every identifier

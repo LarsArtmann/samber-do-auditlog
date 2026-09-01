@@ -19,6 +19,17 @@ go get github.com/samber/do/v2
 
 If you need custom diagram generation outside of do-auditlog, go-output is a standalone library with validated escaping for every format.
 
+## Sibling libraries
+
+Companion projects by the same author, used by or complementary to do-auditlog:
+
+| Library                                                                          | What it does                                                                     |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [go-health](https://github.com/larsartmann/go-health)                             | Kubernetes-style health probes for samber/do v2; `Plugin` implements its recorder interface |
+| [go-workflow-auditlog](https://github.com/larsartmann/go-workflow-auditlog)       | The same audit-log pattern for workflow engines — same export formats, same schema ideas     |
+| [go-sse](https://github.com/larsartmann/go-sse)                                   | Server-Sent Events toolkit powering the [live dashboard](/guides/live-dashboard/) |
+| [go-ndjson](https://github.com/larsartmann/go-ndjson)                             | NDJSON read/write and format detection behind the event-stream exports            |
+
 ## md-go-validator
 
 [md-go-validator](https://github.com/larsartmann/md-go-validator) validates code blocks in Markdown and MDX files. This website's CI uses it to ensure code examples are syntactically valid Go.
@@ -27,7 +38,7 @@ If you need custom diagram generation outside of do-auditlog, go-output is a sta
 
 | Tool                  | Scope             | How It Compares                                                    |
 | --------------------- | ----------------- | ------------------------------------------------------------------ |
-| **do-auditlog**       | samber/do v2 only | Full lifecycle audit with 9+ export formats and HTML visualization |
+| **do-auditlog**       | samber/do v2 only | Full lifecycle audit with 16+ export formats and HTML visualization |
 | **wire analyze**      | google/wire       | Compile-time only — no runtime audit                               |
 | **dig introspection** | uber/dig          | `dig.Container.Visualize` for graph output, no event timeline      |
 

@@ -12,6 +12,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Public Presence Overhaul
+
+- **Demo video**: 25s silent promo (real example output, real report screenshots) rendered with HyperFrames, embedded above the fold at `do-auditlog.lars.software/#demo` with poster, `og:image`, `VideoObject` JSON-LD, and long-cache headers. Composition committed under `website/video/`.
+- **Live Dashboard guide** (`guides/live-dashboard.mdx`): the `live/` sub-package finally has docs — routes, config, CORS, reconnection replay.
+- **README trust sections**: "Who is this for?" (5 personas) and "When NOT to use this" (with alternatives).
+- **GOEXPERIMENT=jsonv2 documented for consumers**: a downstream build fails without the flag (verified empirically); README and the website Installation page now say so with the exact error text.
+- **Docs retrofit**: Starlight `lastUpdated` + `editLink` enabled; curated "Where to go next" on every docs page; OG image (1200x630); Related Tools gained the sibling libraries (go-health, go-workflow-auditlog, go-sse, go-ndjson).
+
+### Fixed — Website Accuracy
+
+- **Changelog page synced**: the docs changelog stopped at v0.8.0 (live site even at v0.6.0); now includes v0.9.0 and v0.10.0.
+- **API reference updated**: `Config.RunID`/`MaxEvents`/`InitialEventCapacity`, `SetOnEvent`, `Enable`, `DroppedEventCount`, `Write*String` methods, `StreamEvents`, `MultiWriter`, live package section; sample JSON schema version corrected to `0.3.0`.
+- **Coverage gate number**: website Contributing page said 95%; the actual CI gate is 94%.
+- **Landing demo terminal**: numbers now match real example output (Services 20, Events ~145, Scopes 4); removed fabricated "45.2ms" build time.
+- **Env-var semantics corrected**: installation docs claimed `DO_AUDITLOG_ENABLED` overrides `Config.Enabled`; the env var is only consulted when `Config.Enabled` is the zero value.
+
 ## [0.10.0] - 2026-08-14
 
 A minor release for integrations that must create the plugin before they know

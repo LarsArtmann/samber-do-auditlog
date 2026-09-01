@@ -21,7 +21,7 @@ plugin.WriteReportJSON(os.Stdout)
 
 ```json
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "container_id": "my-app",
   "service_count": 3,
   "event_count": 20,
@@ -135,3 +135,12 @@ All four diagram formats share the warm-amber per-node style (`fill:#e8a838`, `s
 | Documentation     | Mermaid       | Renders natively on GitHub                       |
 | Presentations     | PlantUML / D2 | Polished, modern look                            |
 | Data analysis     | CSV / TSV     | Spreadsheet-ready                                |
+
+Every format above also has a `Write*String` variant returning the output as a `string` — see the [API Reference](/api-reference/).
+
+## Where to go next
+
+- [Filtered Reports](/guides/filtered-reports/) — export only the slice you need
+- [Loading & migrating reports](/api-reference/#package-functions) — `LoadReport`, `ReplayEvents`, `MigrateReport`
+- [Live Dashboard](/guides/live-dashboard/) — the same exports, one click from the browser
+- [Performance](/guides/performance/) — what each format costs at export time

@@ -1,0 +1,116 @@
+---
+title: Live Dashboard
+description: Watch your DI container lifecycle in real time with the SSE-powered live dashboard.
+---
+
+## Overview
+
+The `live` sub-package adds a real-time, browser-based dashboard to your samber/do v2 container. Every registration, invocation, shutdown, and health check appears the moment it happens — over Server-Sent Events, with no polling and no external dependencies.
+
+The dashboard is served by your application itself: one import, one constructor call, zero infrastructure.
+
+## Quick Start
+
+```go
+package main
+
+import (
+    "log"
+
+    auditlog "github.com/larsartmann/samber-do-auditlog"
+    "github.com/larsartmann/samber-do-auditlog/live"
+    "github.com/samber/do/v2"
+)
+
+func main() {
+    server, plugin, err := live.New(
+        auditlog.Config{Enabled: true, ContainerID: "my-app"},
+        live.Config{Addr: ":7777"},
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    injector := do.NewWithOpts(plugin.Opts())
+
+    // Register and invoke services as usual...
+
+    go server.ListenAndServe()
+    // Open http://localhost:7777/debug/di/
+}
+```
+
+`live.New` returns the HTTP server and a pre-wired plugin — the plugin's `OnEvent` callback is already connected to the SSE hub, so events stream automatically.
+
+## What You Get
+
+- **Real-time SSE stream** — events appear as services register, invoke, and shut down
+- **Interactive dependency graph** — Sugiyama-layered DAG with pan/zoom
+- **Event waveform** — every event plotted on a timeline, height-encoded by duration
+- **Live stats** — service, event, and scope counters updating in place
+- **Export buttons** — download JSON/NDJSON/HTML snapshots straight from the browser
+- **Search, filter, and pagination** — stays responsive at 100+ services
+- **Keyboard navigation** — `?` shows all shortcuts
+- **Reconnection replay** — a ring buffer replays missed events after a network blip
+
+## HTTP Endpoints
+
+All routes mount under a configurable prefix (default `/debug/di`):
+
+| Route                      | Purpose                                    |
+| -------------------------- | ------------------------------------------ |
+| `{prefix}/`                | Dashboard HTML                              |
+| `{prefix}/api/report`      | Current report snapshot (JSON)              |
+| `{prefix}/api/events`      | SSE event stream                            |
+| `{prefix}/api/health`      | Liveness + broadcaster health               |
+| `{prefix}/api/export/ndjson` | Download events as NDJSON                 |
+| `{prefix}/api/export/html` | Download a self-contained HTML report       |
+
+Set `Prefix: "/"` to mount everything at the root.
+
+## Configuration
+
+```go
+type Config struct {
+    Addr               string        // TCP address. Default ":0" (random port)
+    Prefix             string        // Route prefix. Default "/debug/di"
+    ReadHeaderTimeout  time.Duration // Default 5s. 0 disables
+    HeartbeatInterval  time.Duration // SSE keepalive. Default 15s. 0 disables
+    CORSAllowedOrigins string        // Default "*" (allow all). "" disables CORS
+    ReplayBufferSize   int           // SSE replay ring buffer. Default 1000
+}
+```
+
+:::caution
+`CORSAllowedOrigins` defaults to `"*"`, which is convenient for local development but too permissive for production. Restrict it to the origins that need embed access, or set it to `""` to disable CORS headers entirely.
+:::
+
+## Embedding in Your Own Dashboard
+
+The API endpoints emit CORS headers, so an external dashboard can read `/api/report` and subscribe to `/api/events` directly:
+
+```js
+const events = new EventSource("http://localhost:7777/debug/di/api/events");
+events.onmessage = (msg) => console.log(JSON.parse(msg.data));
+```
+
+## Try the Demo
+
+The repository ships a self-contained demo that registers services with realistic delays:
+
+```bash
+go run ./live/demo
+```
+
+or run the full example app in live mode:
+
+```bash
+go run ./example --live --live-addr :7777
+```
+
+## Where to go next
+
+- [Quick Start](/getting-started/quick-start/) — the batch (non-live) workflow in 60 seconds
+- [Dependency Tracking](/guides/dependency-tracking/) — what the graph on the dashboard means
+- [Health Checks](/guides/health-checks/) — the events behind the health column
+- [Export Formats](/guides/export-formats/) — what the export buttons produce

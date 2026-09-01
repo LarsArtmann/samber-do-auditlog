@@ -1,0 +1,269 @@
+<template>
+  <style>
+    /* Root styled via #root only (never a class on the data-composition-id element). */
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      font-family: monospace;
+    }
+    /* Class selectors escape the digit-leading "03-terminal-" prefix (.\30 3 = "03"). */
+    .\30 3-terminal-bg {
+      position: absolute;
+      inset: 0;
+      background: #14110d;
+    }
+    .\30 3-terminal-stage {
+      position: absolute;
+      inset: 0;
+    }
+    .\30 3-terminal-window {
+      position: absolute;
+      left: 96px;
+      top: 96px;
+      width: 1728px;
+      height: 688px;
+      background: #1c1915;
+      border: 1px solid rgba(74, 64, 48, 0.5);
+    }
+    .\30 3-terminal-titlebar {
+      position: relative;
+      height: 64px;
+      border-bottom: 1px solid rgba(74, 64, 48, 0.5);
+    }
+    .\30 3-terminal-dots {
+      position: absolute;
+      left: 28px;
+      top: 25px;
+      display: flex;
+      gap: 10px;
+    }
+    .\30 3-terminal-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(156, 144, 120, 0.35);
+    }
+    .\30 3-terminal-title {
+      text-align: center;
+      line-height: 64px;
+      font-family: monospace;
+      font-size: 20px;
+      letter-spacing: 0.14em;
+      color: #9c9078;
+    }
+    .\30 3-terminal-body {
+      padding: 52px 64px;
+      font-family: monospace;
+      font-size: 44px;
+      line-height: 1.7;
+      color: #c4b89e;
+    }
+    .\30 3-terminal-cmdline {
+      height: 75px;
+    }
+    .\30 3-terminal-prompt {
+      color: #9c9078;
+    }
+    .\30 3-terminal-cmdtext {
+      color: #f5ead6;
+      white-space: pre;
+    }
+    .\30 3-terminal-caret {
+      display: inline-block;
+      width: 22px;
+      height: 46px;
+      margin-left: 6px;
+      vertical-align: -6px;
+      background: #e8a838;
+    }
+    .\30 3-terminal-line-header {
+      margin-top: 26px;
+      height: 75px;
+    }
+    .\30 3-terminal-eq {
+      color: #9c9078;
+    }
+    .\30 3-terminal-headline {
+      color: #c4b89e;
+    }
+    .\30 3-terminal-row {
+      height: 75px;
+    }
+    .\30 3-terminal-label {
+      color: #9c9078;
+      white-space: pre;
+    }
+    .\30 3-terminal-value {
+      color: #c4b89e;
+    }
+    .\30 3-terminal-val {
+      display: inline-block;
+      min-width: 3ch;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      color: #e8a838;
+      transform-origin: left center;
+    }
+  </style>
+
+  <div id="root" data-composition-id="03-terminal" data-width="1920" data-height="1080">
+    <!-- full-bleed ground: dedicated full-duration clip, never a background on #root -->
+    <div class="clip 03-terminal-bg" data-start="0" data-duration="7" data-track-index="0"></div>
+
+    <div class="clip 03-terminal-stage" data-start="0" data-duration="7" data-track-index="1">
+      <div class="03-terminal-window">
+        <div class="03-terminal-titlebar">
+          <div class="03-terminal-dots">
+            <span class="03-terminal-dot"></span>
+            <span class="03-terminal-dot"></span>
+            <span class="03-terminal-dot"></span>
+          </div>
+          <div class="03-terminal-title">ride-share-app — demo</div>
+        </div>
+        <div class="03-terminal-body">
+          <div class="03-terminal-cmdline"><span class="03-terminal-prompt">$</span> <span class="03-terminal-cmdtext" id="03-terminal-cmdtext"></span><span class="03-terminal-caret" id="03-terminal-caret"></span></div>
+          <div class="03-terminal-line-header" id="03-terminal-line-header"><span class="03-terminal-eq">===</span> <span class="03-terminal-headline">Audit Summary</span> <span class="03-terminal-eq">===</span></div>
+          <div class="03-terminal-row" id="03-terminal-line-container"><span class="03-terminal-label">  Container:  </span><span class="03-terminal-value">ride-share-app</span></div>
+          <div class="03-terminal-row" id="03-terminal-line-services"><span class="03-terminal-label">  Services:   </span><span class="03-terminal-val" id="03-terminal-val-services">0</span></div>
+          <div class="03-terminal-row" id="03-terminal-line-events"><span class="03-terminal-label">  Events:     </span><span class="03-terminal-val" id="03-terminal-val-events">0</span></div>
+          <div class="03-terminal-row" id="03-terminal-line-scopes"><span class="03-terminal-label">  Scopes:     </span><span class="03-terminal-val" id="03-terminal-val-scopes">0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+    const $id = (s) => document.getElementById(s);
+    const DURATION = 7;
+
+    /* ---- Scene 1 (0.0–2.0s): command types char-by-char behind the amber caret
+       (discrete-text-sequence: sparse {t, text} states, reverse-searched each frame;
+       word-boundary pauses after "true" and "run") ---- */
+    const CMD = "DO_AUDITLOG_ENABLED=true go run ./example";
+    const TYPE_START = 0.3;
+    const KEY = 0.033;
+    const PAUSE_AFTER = { 24: 0.15, 31: 0.12 };
+    const SEQ = [{ t: 0, text: "" }];
+    let acc = TYPE_START;
+    for (let i = 1; i <= CMD.length; i++) {
+      acc += KEY + (PAUSE_AFTER[i - 1] || 0);
+      SEQ.push({ t: acc, text: CMD.slice(0, i) });
+    }
+    function textAt(time) {
+      for (let i = SEQ.length - 1; i >= 0; i--) {
+        if (time >= SEQ[i].t) return SEQ[i].text;
+      }
+      return "";
+    }
+    const cmdEl = $id("03-terminal-cmdtext");
+    const typeDriver = { t: 0 };
+    const TYPE_END = acc;
+    tl.to(
+      typeDriver,
+      {
+        t: TYPE_END,
+        duration: TYPE_END,
+        ease: "none",
+        onUpdate: () => {
+          cmdEl.textContent = textAt(typeDriver.t);
+        },
+      },
+      0,
+    );
+
+    /* Amber caret — deterministic sin square-wave blink on the timeline,
+       persists through submit beat and the final hold (sanctioned residual motion) */
+    const caretEl = $id("03-terminal-caret");
+    const blink = { p: 0 };
+    const BLINK_CYCLES = 12;
+    tl.to(
+      blink,
+      {
+        p: Math.PI * 2 * BLINK_CYCLES,
+        duration: DURATION,
+        ease: "none",
+        onUpdate: () => {
+          caretEl.style.opacity = Math.sin(blink.p + Math.PI / 2) > 0 ? "1" : "0";
+        },
+      },
+      0,
+    );
+
+    /* ---- Scene 2 (2.0–2.5s): submit beat — caret holds, one blink, silence. ---- */
+
+    /* ---- Scene 3 (2.5–5.8s): real Audit Summary cascades line-by-line.
+       dynamic-content-sequencing: per-line windows computed once at build;
+       entrances fromTo on the computed beat. ---- */
+    const CASCADE_START = 2.55;
+    const BASE = 0.34;
+    const SEC_PER_CHAR = 0.004;
+    const LINES = [
+      { id: "03-terminal-line-header", chars: 21, hold: 0.05 },
+      { id: "03-terminal-line-container", chars: 27, hold: 0.12 },
+      { id: "03-terminal-line-services", chars: 15, hold: 0.12 },
+      { id: "03-terminal-line-events", chars: 14, hold: 0.1 },
+      { id: "03-terminal-line-scopes", chars: 13, hold: 0 },
+    ];
+    let cumulative = CASCADE_START;
+    const TIMELINE = LINES.map((entry) => {
+      const start = cumulative;
+      cumulative += BASE + entry.chars * SEC_PER_CHAR + entry.hold;
+      return { ...entry, start };
+    });
+    const startOf = {};
+    TIMELINE.forEach((entry) => {
+      startOf[entry.id] = entry.start;
+      tl.fromTo(
+        $id(entry.id),
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: 0.34, ease: "power2.out" },
+        entry.start,
+      );
+    });
+
+    /* counting-dynamic-scale: value counts up while scale grows 0.45 → 1,
+       same duration + ease per stat; final font size is static CSS (tabular-nums,
+       fixed ch reserve — no per-frame layout). Amber reserved for these three. ---- */
+    const COUNT_DUR = 1.25;
+    const START_SCALE = 0.45;
+    const COUNT_EASE = "power3.out";
+    const STATS = [
+      { id: "03-terminal-val-services", target: 20, start: startOf["03-terminal-line-services"] },
+      { id: "03-terminal-val-events", target: 145, start: startOf["03-terminal-line-events"] },
+      { id: "03-terminal-val-scopes", target: 4, start: startOf["03-terminal-line-scopes"] },
+    ];
+    STATS.forEach((stat) => {
+      const el = $id(stat.id);
+      const state = { v: 0 };
+      tl.to(
+        state,
+        {
+          v: stat.target,
+          duration: COUNT_DUR,
+          ease: COUNT_EASE,
+          onUpdate: () => {
+            el.textContent = String(Math.round(state.v));
+          },
+        },
+        stat.start,
+      );
+      tl.fromTo(
+        el,
+        { scale: START_SCALE },
+        { scale: 1, duration: COUNT_DUR, ease: COUNT_EASE },
+        stat.start,
+      );
+    });
+
+    /* ---- Scene 4 (5.8–7.0s): hold — numbers settled at final size, static read;
+       only the caret blinks. No exits (root transition owns the exit). ---- */
+
+    window.__timelines["03-terminal"] = tl;
+  </script>
+</template>

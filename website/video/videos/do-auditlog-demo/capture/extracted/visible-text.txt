@@ -1,0 +1,164 @@
+[a] Skip to content
+[span] do-auditlog
+[a] 1 Stars
+[span] See every
+[span] dependency
+[span] , every event.
+[p] Audit-log plugin for
+[em] samber/do v2
+[p] . Track every registration, invocation, and shutdown with timestamps, dependency graphs, and self-contained HTML visualization.
+[a] Get Started →
+[div] $ go get github.com/LarsArtmann/samber-do-auditlog
+[span] main.go
+[span] package
+[span] main
+[span] import
+[span] "os"
+[code] auditlog
+[span] "github.com/LarsArtmann/samber-do-auditlog"
+[span] "github.com/samber/do/v2"
+[span] func
+[span] main
+[code] () {
+    plugin, err := auditlog.
+[span] New
+[code] (auditlog.Config{
+        Enabled:
+[span] true
+[code] ,
+        ContainerID:
+[span] "my-app"
+[code] ,
+    })
+[code] err !=
+[span] nil
+[span] panic
+[code] (err)
+    }
+
+    injector := do.
+[span] NewWithOpts
+[code] (plugin.
+[span] Opts
+[code] ())
+[span] // Register and invoke services as usual
+[code] do.
+[span] Provide
+[code] (injector,
+[span] func
+[code] (i do.Injector) (*Database, error) {
+[span] return
+[code] &Database{},
+[span] nil
+[code] })
+    do.
+[span] MustInvoke
+[code] [*Database](injector)
+[span] // Export when ready
+[code] plugin.
+[span] ExportToHTML
+[span] "audit.html"
+[code] )
+    plugin.
+[span] Report
+[code] ().
+[span] WriteMermaid
+[code] (os.Stdout)
+}
+[h2] What does it look like?
+[p] One self-contained HTML file. No server, no runtime dependencies, no external requests.
+[span] Services
+[span] Click to enlarge
+[span] Dependency Graph
+[span] Click to enlarge
+[span] Timeline
+[span] Click to enlarge
+[span] Events
+[span] Click to enlarge
+[h2] Everything you need to audit your DI container.
+[p] Drop-in observability with zero ceremony.
+[h3] Drop-in Setup
+[p] One line: do.NewWithOpts(plugin.Opts()). Zero config, zero ceremony.
+[h3] Dependency Graph
+[p] Infers which service resolved which — forward and reverse — without touching do's internals.
+[h3] Scope Tree
+[p] Full hierarchy with per-scope service lists, cross-scope resolution tracked automatically.
+[h3] 16+ Export Formats
+[p] JSON, NDJSON, CSV, TSV, HTML, Mermaid, PlantUML, DOT, D2, tree, and table.
+[h3] Health Check Audit
+[p] Wraps injector.HealthCheck() with per-service events and unhealthy-service detection.
+[h3] ~1.7us Overhead
+[p] In-memory capture during operation. Toggle off for zero cost. Export only when you need it.
+[h2] Try it in 30 seconds.
+[p] Clone the repo and run the self-checking example.
+[span] Copy
+[span] DO_AUDITLOG_ENABLED=true go run ./example
+[span] ===
+[div] Audit Summary
+[span] ===
+[div] Container:
+[span] ride-share-app
+[div] Services:
+[div] Events:
+[span] 145
+[div] Scopes:
+[div] Build:
+[span] 0.128ms
+[div] HTML:
+[span] audit-report.html
+[p] The example exercises every major samber/do v2 feature - eager and lazy providers, named services, transients, aliases, child scopes, cross-scope dependencies, health checks, and shutdown errors - then writes an HTML report you can open in any browser.
+[div] 20 services across 4 scopes
+[div] Dependency graph inference
+[div] Health checks & shutdown errors
+[div] Self-contained HTML export
+[a] Browse the example source
+[h2] How it works.
+[p] Three steps from zero to full observability.
+[h3] Create the Plugin
+[p] Pass plugin.Opts() to do.NewWithOpts. Hooks fire on every registration, invocation, and shutdown.
+[h3] Run Your Container
+[p] The plugin captures events in memory with an invocation stack that infers the dependency graph.
+[h3] Export & Visualize
+[p] Get a JSON snapshot, NDJSON event stream, or a self-contained HTML page. Or render Mermaid, DOT, D2, PlantUML.
+[h2] Why do-auditlog?
+[p] Purpose-built for samber/do v2 observability.
+[div] DIY
+[div] DIY
+[div] No built-in hooks consumer
+[div] Manual timestamp wiring
+[div] No dependency graph inference
+[div] No export formats
+[div] do-auditlog
+[div] Free
+[div] One-line setup
+[div] Auto-inferred dependency graph
+[div] 16+ export formats including HTML
+[div] Health check audit
+[div] Real-time event streaming
+[div] Manual
+[div] Manual
+[div] Hand-roll logging per service
+[div] No visualization
+[div] No replay or migration
+[div] Maintenance burden
+[h2] Built for real debugging.
+[p] Drop it into any Go service using samber/do.
+[h3] Debugging
+[p] Spot circular dependencies and slow builds instantly
+[h3] Observability
+[p] Stream events to Prometheus, OTel, or live dashboards
+[h3] CI / CD
+[p] Export reports as build artifacts for audit trails
+[h3] Performance
+[p] Profile first-build durations and invocation counts
+[h2] Start auditing in seconds.
+[p] One line to unlock full DI container observability.
+[a] Read the Docs
+[a] API Reference
+[h2] LarsArtmann Newsletter
+[p] Major releases and new open-source projects across all LarsArtmann work. No spam, unsubscribe anytime.
+[button] Subscribe
+[span] do-auditlog — MIT License — Built by
+[a] LarsArtmann
+[a] Documentation
+[a] pkg.go.dev

@@ -1,0 +1,200 @@
+<template>
+  <div id="root" data-composition-id="04-report" data-width="1920" data-height="1080">
+    <style>
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+      .f04r-scene {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        background: #1c1915;
+      }
+      .f04r-world {
+        position: absolute;
+        inset: 0;
+        transform-origin: 50% 50%;
+        will-change: transform;
+      }
+      .f04r-glow {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 980px 640px at 50% 41%,
+          rgba(232, 168, 56, 0.14),
+          rgba(232, 168, 56, 0.05) 46%,
+          rgba(232, 168, 56, 0) 72%
+        );
+        opacity: 0.9;
+        pointer-events: none;
+      }
+      .f04r-pulse {
+        position: absolute;
+        left: 0;
+        top: 132px;
+        width: 1920px;
+        height: 52px;
+        mix-blend-mode: screen;
+        background: linear-gradient(
+          90deg,
+          rgba(232, 168, 56, 0) 0%,
+          rgba(232, 168, 56, 0.2) 14%,
+          rgba(240, 188, 92, 0.32) 50%,
+          rgba(232, 168, 56, 0.2) 86%,
+          rgba(232, 168, 56, 0) 100%
+        );
+        opacity: 0.42;
+        pointer-events: none;
+      }
+      .f04r-panel {
+        position: absolute;
+        left: calc(50% - 443px);
+        top: 40px;
+        width: 886px;
+        height: 844px;
+        border: 1px solid rgba(196, 184, 158, 0.2);
+        background: #241f18;
+      }
+      .f04r-panel img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .f04r-rail-l {
+        position: absolute;
+        left: 96px;
+        top: 313px;
+        width: 392px;
+      }
+      .f04r-kicker {
+        font-family: monospace;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #e8a838;
+      }
+      .f04r-display {
+        margin-top: 18px;
+        font-family: sans-serif;
+        font-size: 92px;
+        font-weight: 700;
+        line-height: 0.98;
+        letter-spacing: -0.03em;
+        color: #c4b89e;
+      }
+      .f04r-rule {
+        margin-top: 28px;
+        width: 36px;
+        height: 2px;
+        background: #e8a838;
+      }
+      .f04r-note {
+        margin-top: 24px;
+        font-family: monospace;
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #b7b4af;
+      }
+      .f04r-rail-r {
+        position: absolute;
+        right: 96px;
+        top: 96px;
+        font-family: monospace;
+        font-size: 14px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(196, 184, 158, 0.55);
+      }
+    </style>
+
+    <div class="clip f04r-scene" data-start="0" data-duration="5" data-track-index="0">
+      <div class="f04r-world" id="f04r-world">
+        <div class="f04r-glow" id="f04r-glow"></div>
+
+        <div class="f04r-panel">
+          <img
+            src="assets/what-does-it-look-like.jpg"
+            alt=""
+            loading="eager"
+            decoding="sync"
+          />
+        </div>
+
+        <div class="f04r-rail-l">
+          <div class="f04r-kicker">self-contained html report</div>
+          <div class="f04r-display">the<br />report</div>
+          <div class="f04r-rule"></div>
+          <div class="f04r-note">services &middot; scopes &middot; dependencies &middot; events</div>
+        </div>
+
+        <div class="f04r-rail-r">no. 04</div>
+
+        <div class="f04r-pulse" id="f04r-pulse"></div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      window.__timelines = window.__timelines || {};
+
+      // Virtual camera (viewport-change): ONE cam object, ONE writer.
+      // Open tight (~1.5x) on the waveform strip; target = world (960, 157),
+      // offset from center (960, 540) = (0, -383); T = -offset x S = (0, 574.5).
+      const world = document.getElementById("f04r-world");
+      const cam = { scale: 1.5, x: 0, y: 574.5 };
+      const applyCamera = () => {
+        world.style.transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.scale})`;
+      };
+      applyCamera(); // seed frame 0 — punched-in on the waveform strip
+
+      const tl = gsap.timeline({ paused: true });
+
+      // Scene 1 (0-1.4s): tight on the strip; gentle outward creep (<15% travel).
+      tl.fromTo(
+        cam,
+        { scale: 1.5, x: 0, y: 574.5 },
+        { scale: 1.44, y: 551.5, duration: 1.4, ease: "sine.inOut", onUpdate: applyCamera },
+        0
+      );
+
+      // Scene 2 (1.4-3.9s): THE signature move — one continuous decelerating
+      // zoom-out reveals the containing report; the strip drifts to its home slot.
+      tl.to(
+        cam,
+        { scale: 1, x: 0, y: 0, duration: 2.5, ease: "power3.inOut", onUpdate: applyCamera },
+        1.4
+      );
+      // Scene 3 (4.0-5.0s): locked at 1.0x — stillness. No camera tweens after the lock.
+
+      // Bounded luminance pulse on the waveform strip (sine-wave-loop, onUpdate form):
+      // phase 0 -> 4pi, settle-and-fade tail so the locked frame ends clean.
+      const pulse = document.getElementById("f04r-pulse");
+      const glow = document.getElementById("f04r-glow");
+      const phase = { p: 0 };
+      tl.to(
+        phase,
+        {
+          p: Math.PI * 4,
+          duration: 3.3,
+          ease: "none", // sine is the curve
+          onUpdate: () => {
+            const s = Math.sin(phase.p);
+            const q = phase.p / (Math.PI * 4);
+            const env = q < 0.8 ? 1 : Math.max(0, (1 - q) / 0.2);
+            pulse.style.opacity = String((0.42 + s * 0.3) * env);
+            glow.style.opacity = String(0.72 + Math.sin(phase.p + Math.PI / 2) * 0.18 * env);
+          },
+        },
+        0.05
+      );
+
+      window.__timelines["04-report"] = tl;
+    </script>
+  </div>
+</template>

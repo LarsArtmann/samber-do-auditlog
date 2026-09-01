@@ -1,0 +1,250 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      container-type: size;
+      overflow: hidden;
+    }
+
+    /* full-bleed ground on a dedicated clip layer, never on #root — dark register */
+    .f05-bg {
+      position: absolute;
+      inset: 0;
+      background: #1c1915;
+    }
+    .f05-stage {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* ---- Scene 1 — mono chrome label + $ prompt + typed command ---- */
+    .f05-s1 {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      will-change: transform;
+    }
+    .f05-label {
+      margin-top: 288px;
+      font-family: monospace;
+      font-size: 1.3cqw;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #e8a838; /* kicker — the lone accent */
+    }
+    .f05-terminal {
+      margin-top: 110px;
+      display: flex;
+      align-items: baseline;
+      font-family: monospace;
+      font-size: 2.5cqw;
+      font-weight: 400;
+      line-height: 1;
+      white-space: pre;
+    }
+    .f05-prompt {
+      color: #9c9078;
+      margin-right: 16px;
+    }
+    .f05-text-wrap {
+      display: inline-flex;
+      align-items: baseline;
+      min-width: 1384px; /* ≥ widest state — stops right-edge jitter */
+      white-space: nowrap;
+    }
+    .f05-text {
+      color: #c4b89e;
+      white-space: pre;
+    }
+    .f05-cursor {
+      display: inline-block;
+      width: 16px;
+      height: 46px;
+      margin-left: 6px;
+      background: #e8a838; /* amber caret */
+      vertical-align: -9px;
+    }
+
+    /* ---- Scene 2+3 — brand payoff end card ---- */
+    .f05-s2 {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .f05-wordmark {
+      margin-top: 322px;
+      font-family: sans-serif;
+      font-size: 13cqw;
+      font-weight: 700;
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+      text-transform: lowercase;
+      color: #c4b89e;
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+    .f05-rule {
+      margin-top: 50px;
+      width: 150px;
+      height: 5px;
+      background: #e8a838; /* the system's only ornament */
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+    .f05-urlrow {
+      margin-top: 44px;
+      display: flex;
+      align-items: baseline;
+      font-family: monospace;
+      font-size: 1.56cqw;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      line-height: 1;
+      white-space: pre;
+    }
+    .f05-url {
+      color: rgba(196, 184, 158, 0.62);
+      white-space: pre;
+    }
+    .f05-cursor2 {
+      display: inline-block;
+      width: 11px;
+      height: 28px;
+      margin-left: 5px;
+      background: #e8a838;
+      vertical-align: -7px;
+    }
+  </style>
+
+  <div id="root" data-composition-id="05-install" data-width="1920" data-height="1080">
+    <div class="clip f05-bg" data-start="0" data-duration="4" data-track-index="0"></div>
+
+    <div class="clip f05-stage" data-start="0" data-duration="4" data-track-index="1">
+      <!-- Scene 1 (0.0–1.7s): label seats upper-third; command types behind a blinking amber caret -->
+      <div class="f05-s1" id="f05-s1">
+        <div class="f05-label" id="f05-label">add it to your container</div>
+        <div class="f05-terminal" id="f05-terminal">
+          <div class="f05-prompt">$</div>
+          <div class="f05-text-wrap"><span class="f05-text" id="f05-cmd"></span><span class="f05-cursor" id="f05-cursor1"></span></div>
+        </div>
+      </div>
+
+      <!-- Scene 2+3 (1.7–4.0s): collapse → wordmark pops → URL types beneath → hold -->
+      <div class="f05-s2" id="f05-s2">
+        <div class="f05-wordmark" id="f05-wordmark">do-auditlog</div>
+        <div class="f05-rule" id="f05-rule"></div>
+        <div class="f05-urlrow"><span class="f05-url" id="f05-url"></span><span class="f05-cursor2" id="f05-cursor2"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    // ---- palette (frame.md dark register) ----
+    const TEXT = "#c4b89e";
+    const TEXT_DIM = "rgba(196,184,158,0.45)";
+    const AMBER = "#e8a838";
+
+    const DURATION = 4;
+    const BLINK_CYCLES = 6; // whole number over 4s (period 0.667s) — clean end state
+    const GRACE = 0.18; // solid cursor while keystrokes land; blinks on idle
+
+    // ---- Scene 1+2: command types in chunks, holds complete, backspaces fast ----
+    const CMD = "go get github.com/larsartmann/samber-do-auditlog";
+    const CMD_SEQ = [
+      { t: 0.0, text: "", seg: "main" },
+      { t: 0.3, text: "go", seg: "main" },
+      { t: 0.42, text: "go ", seg: "main" },
+      { t: 0.55, text: "go get", seg: "main" },
+      { t: 0.66, text: "go get ", seg: "main" },
+      { t: 0.74, text: "go get github", seg: "brand" },
+      { t: 0.84, text: "go get github.com", seg: "brand" },
+      { t: 0.94, text: "go get github.com/larsartmann", seg: "brand" },
+      { t: 1.04, text: "go get github.com/larsartmann/samber", seg: "brand" },
+      { t: 1.14, text: "go get github.com/larsartmann/samber-do", seg: "brand" },
+      { t: 1.24, text: CMD, seg: "brand" },
+      { t: 1.46, text: CMD, seg: "done" },
+      { t: 1.72, text: "go get github.com/larsartmann/samber-do-", seg: "brand" },
+      { t: 1.79, text: "go get github.com/larsartmann/", seg: "brand" },
+      { t: 1.86, text: "go get github", seg: "brand" },
+      { t: 1.93, text: "go get ", seg: "main" },
+      { t: 1.99, text: "", seg: "main" },
+    ];
+    const CMD_CHANGES = CMD_SEQ.filter((e, i) => i > 0 && e.text !== CMD_SEQ[i - 1].text).map((e) => e.t);
+
+    // ---- Scene 3: the URL types in beneath the lockup ----
+    const URL_SEQ = [
+      { t: 0, text: "" },
+      { t: 2.8, text: "d" },
+      { t: 2.92, text: "do-" },
+      { t: 3.04, text: "do-audi" },
+      { t: 3.16, text: "do-auditlog" },
+      { t: 3.3, text: "do-auditlog." },
+      { t: 3.44, text: "do-auditlog.lars" },
+      { t: 3.58, text: "do-auditlog.lars.software" },
+    ];
+    const URL_CHANGES = URL_SEQ.filter((e, i) => i > 0 && e.text !== URL_SEQ[i - 1].text).map((e) => e.t);
+
+    // reverse-search — deterministic at any seek, either direction
+    function seqAt(seq, time, pick) {
+      for (let i = seq.length - 1; i >= 0; i--) if (time >= seq[i].t) return pick(seq[i]);
+      return pick(seq[0]);
+    }
+    function isTyping(changes, time) {
+      for (let i = 0; i < changes.length; i++) if (changes[i] <= time && time - changes[i] < GRACE) return true;
+      return false;
+    }
+    function blinkOn(time) {
+      return Math.sin((time * Math.PI * 2 * BLINK_CYCLES) / DURATION) > 0;
+    }
+
+    const cmdEl = document.getElementById("f05-cmd");
+    const cur1El = document.getElementById("f05-cursor1");
+    const urlEl = document.getElementById("f05-url");
+    const cur2El = document.getElementById("f05-cursor2");
+
+    // one linear driver; every visible value is a pure function of driver.t (seek-safe)
+    const driver = { t: 0 };
+    tl.to(
+      driver,
+      {
+        t: DURATION,
+        duration: DURATION,
+        ease: "none",
+        onUpdate: () => {
+          const t = driver.t;
+          const entry = seqAt(CMD_SEQ, t, (x) => x);
+          cmdEl.textContent = entry.text;
+          cur1El.style.height = entry.seg === "brand" ? "50px" : "46px"; // brand-segment emphasis
+          cur1El.style.opacity = t < 2.0 && (isTyping(CMD_CHANGES, t) || blinkOn(t)) ? "1" : "0";
+          urlEl.textContent = seqAt(URL_SEQ, t, (x) => x.text);
+          cur2El.style.opacity = t >= 2.74 && (isTyping(URL_CHANGES, t) || blinkOn(t)) ? "1" : "0";
+        },
+      },
+      0,
+    );
+
+    // ---- entrances (fromTo so t=0 is correct under seek; hero visible by 0.42s) ----
+    tl.fromTo("#f05-label", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 0.1);
+    tl.fromTo("#f05-terminal", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0.02);
+
+    // Scene 2 — typed line X-collapses to a point; wordmark spring-pops in its place
+    tl.fromTo("#f05-s1", { scaleX: 1, opacity: 1 }, { scaleX: 0, opacity: 0, duration: 0.16, ease: "power2.in" }, 2.03);
+    tl.fromTo("#f05-wordmark", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.55, ease: "power3.out" }, 2.12);
+
+    // Scene 3 — rule stub settles; URL types via the driver above; hold to end
+    tl.fromTo("#f05-rule", { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.3, ease: "power2.out" }, 2.66);
+
+    window.__timelines["05-install"] = tl;
+  </script>
+</template>

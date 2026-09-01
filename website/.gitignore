@@ -81,3 +81,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 # <<< buildflow-managed (.gitignore) <<<
+
+# HyperFrames video composition
+video/node_modules/
+video/videos/do-auditlog-demo/node_modules/
+
+# Regenerable video build artifacts
+snapshots/
+renders/

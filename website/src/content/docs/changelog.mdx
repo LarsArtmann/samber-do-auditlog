@@ -5,6 +5,53 @@ description: All notable changes to do-auditlog.
 
 ## [Unreleased]
 
+### Added
+
+- **Demo video** — 25s silent promo embedded on the landing page (`/#demo`): real example output, real report screenshots, install command. Composition committed under `website/video/`.
+- **Live Dashboard guide** — routes, configuration, CORS, and reconnection replay for the `live/` sub-package.
+- **README trust sections** — "Who is this for?" and "When NOT to use this".
+- **`GOEXPERIMENT=jsonv2` documented for consumers** — downstream builds fail without the flag; the error text and fix are now in the Installation guide.
+- **Docs retrofit** — `lastUpdated` + "Edit this page" on every page, curated "Where to go next" sections, OG image, sibling libraries in Related Tools.
+
+### Fixed
+
+- Changelog page was two releases stale (stopped at v0.8.0); now includes v0.9.0 and v0.10.0.
+- API reference: added `RunID`, `SetOnEvent`, `Enable`, `Write*String`, `StreamEvents`, `MultiWriter`; Config fields completed; sample schema version corrected to `0.3.0`.
+- Contributing page coverage gate corrected to 94% (was 95%).
+- Landing demo terminal now matches real example output.
+
+## [0.10.0] — 2026-08-14
+
+A minor release for integrations that must create the plugin before they know their runtime configuration. Non-breaking.
+
+### Added
+
+- **`Plugin.SetOnEvent(fn)`** — sets or replaces the `OnEvent` callback after `New()`. Race-safe with recording goroutines; replaces (does not chain) any `Config.OnEvent` callback — compose with `MultiWriter` beforehand if several sinks must all keep receiving events.
+- **`Plugin.Enable()`** — turns audit logging on after construction, regardless of `Config.Enabled` or `DO_AUDITLOG_ENABLED`. Idempotent.
+
+### Changed
+
+- Dependency upgrades: `go-sse` v0.5.0, `go-atomic-write` v0.5.0.
+
+## [0.9.0] — 2026-08-12
+
+A minor release introducing `RunID` for cross-system event correlation, `MultiWriter` for event fan-out, `StreamEvents` for callback-based NDJSON replay, SSE reconnection replay with a ring buffer, `Write*String` convenience methods, time-based flush for `NDJSONStreamer`, and full keyboard navigation across both dashboards. The `health/` sub-package was extracted to its own project, [go-health](https://github.com/larsartmann/go-health).
+
+**Breaking**: `NewRecorder` and `NewReport` signatures gained a `RunID` parameter. Report schema version bumped from `0.2.0` to `0.3.0` (old reports are auto-upgraded via `MigrateReport`).
+
+### Added
+
+- **`RunID` branded type** — 128-bit hex correlation ID, auto-generated via `crypto/rand` and stamped on every `Event` and the `Report`. Override via `Config.RunID`.
+- **`MultiWriter`** — event fan-out to multiple `OnEvent` callbacks simultaneously (streaming + live dashboard + custom handlers from a single recorder). Thread-safe, preserves callback order.
+- **`StreamEvents`** — callback-based NDJSON reader for replaying event files without full materialization.
+- **`WithFlushInterval`** — time-based flush option on `NDJSONStreamer` for bounded-latency flushing.
+- **`Write*String` methods** — `WriteMermaidString`, `WritePlantUMLString`, `WriteDOTString`, `WriteD2String`, `WriteHTMLString`, `WriteTreeString`, `WriteHTMLTreeString`, `WriteTableString` return output as a `string` — no `io.Writer` needed.
+- **SSE ring-buffer replay** (`live/`) — reconnecting clients with a `Last-Event-ID` header receive missed events via the configurable `ReplayBufferSize`.
+- **Full keyboard navigation** in both dashboards — skip link, ARIA tablist, `?` shortcuts dialog with focus trap, `/` focus search, sortable column headers with `aria-sort`.
+- **Timing deltas in `DiffResult`** — `TotalBuildDurationMsDelta` and `TotalShutdownDurationMsDelta`.
+- **Exported `testhelpers/`** — write integration tests against the audit-log types from downstream modules.
+- **Goreleaser + RELEASE.md** — release automation for the `auditlog` CLI binary (linux/darwin amd64/arm64).
+
 ## [0.8.0] — 2026-07-26
 
 A minor release: ALPHA→BETA status promotion, exported sentinel errors, and
