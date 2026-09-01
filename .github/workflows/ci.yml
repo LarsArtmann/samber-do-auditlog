@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.5"
+          go-version: "1.26.7"
           cache: true
       - name: go vet
         run: go vet ./...
@@ -29,11 +29,11 @@ jobs:
       - name: go test -race with coverage
         run: |
           go test -race -count=1 -coverprofile=cover.out -covermode=atomic ./...
-          # Exclude demo (example/, live/demo/), tooling (cmd/), and test
-          # infrastructure (internal/testhelpers/) packages from the coverage gate.
-          # Their logic is exercised by integration/golden tests or by every
-          # caller's test suite, not in-process.
-          grep -v -e '/example/' -e '/cmd/' -e '/live/demo/' -e '/internal/testhelpers/' cover.out > cover-filtered.out
+          # Exclude demo (example/, live/demo/), tooling (cmd/), test
+          # infrastructure (internal/testhelpers/), and generated code
+          # (*_templ.go) from the coverage gate. Their logic is exercised by
+          # integration/golden tests or produced by templ, not hand-written.
+          grep -v -e '/example/' -e '/cmd/' -e '/live/demo/' -e '/internal/testhelpers/' -e '_templ.go' cover.out > cover-filtered.out
           coverage=$(go tool cover -func=cover-filtered.out | grep '^total:' | awk '{print $3}' | tr -d '%')
           echo "Total coverage: ${coverage}%"
           if awk "BEGIN {exit !($coverage < 94.0)}"; then
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.5"
+          go-version: "1.26.7"
           cache: true
       - name: Install golangci-lint
         run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.5"
+          go-version: "1.26.7"
           cache: true
       - name: govulncheck
         run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.5"
+          go-version: "1.26.7"
           cache: true
       - name: go mod tidy
         run: go mod tidy
@@ -95,7 +95,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.5"
+          go-version: "1.26.7"
           cache: true
       - name: go generate
         run: go generate ./...
@@ -114,7 +114,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.5"
+          go-version: "1.26.7"
           cache: true
       - name: Install actionlint
         run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
@@ -128,9 +128,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.5"
+          go-version: "1.26.7"
           cache: true
       - name: Install goreleaser
-        run: go install github.com/goreleaser/goreleaser/v2@latest
+        # Pinned to the newest release whose go directive is satisfiable by the
+        # setup-go toolchain above (v2.18.0+ requires go >= 1.27.0 and the
+        # runners force GOTOOLCHAIN=local).
+        run: go install github.com/goreleaser/goreleaser/v2@v2.17.1
       - name: goreleaser check
         run: goreleaser check
