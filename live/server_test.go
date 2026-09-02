@@ -1325,3 +1325,49 @@ func TestServer_DashboardHTML_JavaScriptBalanced(t *testing.T) {
 
 	testhelpers.AssertJSBalanced(t, js)
 }
+
+// failingBodyRecorder wraps httptest.ResponseRecorder but fails every Write,
+// letting tests exercise the export handlers' write-error branches.
+type failingBodyRecorder struct {
+	httptest.ResponseRecorder
+}
+
+func (f *failingBodyRecorder) Write([]byte) (int, error) {
+	return 0, errWriteFailed
+}
+
+var errWriteFailed = errorString("simulated write failure")
+
+type errorString string
+
+func (e errorString) Error() string { return string(e) }
+
+func TestServer_ExportNDJSON_WriteError(t *testing.T) {
+	t.Parallel()
+
+	server := newTestServer(t)
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/export/ndjson", nil)
+	rec := &failingBodyRecorder{}
+
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500 on write failure, got %d", rec.Code)
+	}
+}
+
+func TestServer_ExportHTML_WriteError(t *testing.T) {
+	t.Parallel()
+
+	server := newTestServer(t)
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/export/html", nil)
+	rec := &failingBodyRecorder{}
+
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500 on write failure, got %d", rec.Code)
+	}
+}
