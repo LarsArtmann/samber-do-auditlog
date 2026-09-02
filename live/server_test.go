@@ -1342,12 +1342,37 @@ type errorString string
 
 func (e errorString) Error() string { return string(e) }
 
+// newTestServerWithEvents returns a server whose plugin has recorded events,
+// so export handlers have data to write.
+func newTestServerWithEvents(t *testing.T) *live.Server {
+	t.Helper()
+
+	plugin, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "export-test",
+	})
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+
+	injector := do.NewWithOpts(plugin.Opts())
+	do.ProvideNamed(injector, "svc", func(do.Injector) (*strings.Builder, error) {
+		return &strings.Builder{}, nil
+	})
+
+	if _, err := do.InvokeNamed[*strings.Builder](injector, "svc"); err != nil {
+		t.Fatalf("invoke: %v", err)
+	}
+
+	return live.NewServer(live.NewHub(), plugin, live.Config{})
+}
+
 func TestServer_ExportNDJSON_WriteError(t *testing.T) {
 	t.Parallel()
 
-	server := newTestServer(t)
+	server := newTestServerWithEvents(t)
 
-	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/export/ndjson", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/debug/di/api/export/ndjson", nil)
 	rec := &failingBodyRecorder{}
 
 	server.ServeHTTP(rec, req)
@@ -1362,7 +1387,7 @@ func TestServer_ExportHTML_WriteError(t *testing.T) {
 
 	server := newTestServer(t)
 
-	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/export/html", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/debug/di/api/export/html", nil)
 	rec := &failingBodyRecorder{}
 
 	server.ServeHTTP(rec, req)
