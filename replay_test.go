@@ -1025,7 +1025,8 @@ func TestReplayEvents_RejectsUnknownEnums(t *testing.T) {
 		},
 		{
 			name: "UnknownProviderType",
-			evt:  mkEvent(1, now, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "db", "c1", auditlog.ProviderType("quantum")),
+			evt: mkEvent(1, now, auditlog.EventTypeRegistration, auditlog.PhaseAfter,
+				"db", "c1", auditlog.ProviderType("quantum")),
 		},
 	}
 

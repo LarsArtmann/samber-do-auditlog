@@ -115,6 +115,27 @@ export default defineConfig({
               "Audit-log plugin for samber/do v2 — track every DI registration, invocation, and shutdown with timestamps, dependency graphs, and self-contained HTML visualization.",
           },
         },
+        {
+          tag: "meta",
+          attrs: {
+            property: "og:image",
+            content: "https://do-auditlog.lars.software/images/og-image.jpg",
+          },
+        },
+        {
+          tag: "meta",
+          attrs: {
+            name: "twitter:card",
+            content: "summary_large_image",
+          },
+        },
+        {
+          tag: "meta",
+          attrs: {
+            name: "twitter:image",
+            content: "https://do-auditlog.lars.software/images/og-image.jpg",
+          },
+        },
       ],
     }),
   ],

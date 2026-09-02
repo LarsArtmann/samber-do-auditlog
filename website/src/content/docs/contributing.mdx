@@ -5,7 +5,7 @@ description: How to contribute to do-auditlog.
 
 ## Development Setup
 
-**Requirements:** Go 1.26+, [Nix](https://nixos.org/) (optional but recommended)
+**Requirements:** Go 1.26.7 (exact — see `go.mod`), [Nix](https://nixos.org/) (optional but recommended)
 
 ```bash
 git clone https://github.com/LarsArtmann/samber-do-auditlog.git
@@ -78,13 +78,17 @@ The hook runs: generate drift check, `go vet`, `golangci-lint`, `go test -race`.
 
 ## CI
 
-All pull requests must pass 5 parallel jobs:
+All pull requests must pass 7 parallel jobs:
 
 1. **test**: `go vet`, `go build`, `go test -race` with coverage gate (>= 94%)
 2. **lint**: `golangci-lint config verify` then `golangci-lint v2.12.2`
-3. **vulncheck**: `govulncheck` via GitHub Action
-4. **mod-tidy**: `go mod tidy` drift check
-5. **stale-generation**: `go generate ./...` diff check
+3. **vulncheck**: `govulncheck` pinned via `go run golang.org/x/vuln/cmd/govulncheck@v1.7.0 ./...`
+4. **mod-tidy**: `go mod tidy` drift check (transport-flake tolerant)
+5. **stale-generation**: committed-generated-files guard + `go generate ./...` diff check
+6. **actionlint**: workflow lint
+7. **example-smoke**: runs the 23-feature self-checking example
+
+A weekly scheduled run (Mondays 05:00 UTC) sweeps for new advisories and rot between pushes.
 
 ## Pull Requests
 
