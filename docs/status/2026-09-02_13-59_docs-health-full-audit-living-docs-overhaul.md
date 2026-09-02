@@ -21,37 +21,37 @@
 
 ## a) FULLY DONE
 
-| # | Item | Evidence |
-|---|------|----------|
-| A1 | Full inventory of `**/2026-0*`: 109 files classified (68 status, 11 planning, 22 archive, 8 research/review) | `find` census; annotation-marker census per file |
-| A2 | Coverage re-measured with the official gate: **95.2% PASS** (root 94.9%, live **78.3%**, testhelpers 91.1%) — proves every coverage number now in the docs | `scripts/coverage-gate.sh` run, full `-race` suite green |
-| A3 | Claim-by-claim VERIFY of all 6 living docs against code/CI: Go 1.26.7 pins, go-output v0.37.0, go-sse v0.5.1, go-atomic-write v0.5.0, ssetest v0.2.0; 8 fuzz targets, 12 benchmarks, 8 examples, 73 live tests (38+31+4), 453 `t.Parallel()`, 108 enabled linters, CSP `default-src 'none'` present, design-token sync tests present | go.mod, `.golangci.yml` awk count, grep counts, `html.templ:9`, test files |
-| A4 | **TODO_LIST.md rebuilt**: stale "release v0.7.0" item deleted (v0.10.0 shipped Aug 14); all-[x] cross-project section removed; 20 open items harvested from the three 2026-09-01 reports + pareto plan, each citing its source report section; 5 owner questions | TODO_LIST.md (rewritten) |
-| A5 | **ROADMAP.md rebuilt**: ALPHA→BETA framing aligned with STABILITY.md (the canonical promise doc; AGENTS/ROADMAP were the outliers); BETA criterion updated to measured 78.3%; dangling "See TODO_LIST" ref removed; demo video moved to shipped; ecosystem/CI-resilience/API-idea sections harvested; 5 new raw ideas incl. status-report retention policy | ROADMAP.md (rewritten) |
-| A6 | **FEATURES.md**: 8 verified fixes — health/ ghost row deleted (package extracted to go-health, row contradicted line 175 of the same file); "Shared CSS drift risk" removed (`TestDesignTokensInSync`/`TestSharedComponentCSSInSync` exist); CI row now 7 jobs incl. actionlint; linters 109→108; fuzz 5→8; live tests 35→73; parallel 311→453; go-sse row v0.4.0→v0.5.1; footer re-dated 2026-09-01 with real split | FEATURES.md diff |
-| A7 | **AGENTS.md**: 8 fixes — Status ALPHA→BETA; CSP gotcha corrected (`default-src 'none'` IS present — old claim was false); coverage-gate exclusion list (example/, cmd/, live/demo/, internal/testhelpers/, `*_templ.go`); dep-family version stamp; 4 new gotchas (pnpm-missing-on-runners, proxy-flake rerun playbook, version-skew ledger for 4 nolint sites, hooksPath rot) | AGENTS.md diff |
-| A8 | **README.md**: minimal-deps row gained go-ndjson; all other claims re-verified (Beta caution, 94% badge, ~1.7 µs vs benchmarks 1,686 ns, filter table, CLI block) | README.md diff |
-| A9 | **CHANGELOG.md**: appended `[Unreleased] → Fixed — CI & Toolchain` — 33-day red-master repair, gate re-enforcement, ssetest promotion, website workflow SHA/cache/pnpm fixes, GOTOOLCHAIN pin, docs-sync note | CHANGELOG.md diff |
-| A10 | **website.yml fixed**: SHA-verified `pnpm/action-setup` v4.1.0 (`gh api repos/pnpm/action-setup/git/refs/tags/v4.1.0`) added to BOTH jobs + `pnpm install --frozen-lockfile`; root cause proven — run `33562593783` died in 9s with `Unable to locate executable file: pnpm`, exactly the T06 prediction; `actionlint` exit 0 | website.yml diff; `gh run view --log-failed`; actionlint |
-| A11 | **core.hooksPath fixed**: pointed at nonexistent `.githooks` → the documented pre-commit gate was silently disabled on this checkout; reset to `scripts/hooks` | `git config core.hooksPath` before/after |
-| A12 | **diff.go doc-lie fixed**: `Diff` had claimed dependency-edge comparison since June while `compareService` checks only status/invocation/health/error — comment now states the truth and points to the planned `DepsChanged`; build+vet green | diff.go:52-60; `go build`/`go vet` clean |
-| A13 | **3-agent archive verification** of 15 candidate reports against current code/CHANGELOG: per-item SHIPPED/ROUTED/OBSOLETE/OPEN verdicts; 14/15 NOT archive-ready, recurring open themes extracted and routed | Agent reports (session log); new TODO_LIST/ROADMAP rows |
-| A14 | **v0.10.0 report annotated inline (all items) and archived** — `git mv docs/status/2026-08-14_19-10_v0.10.0-setonevent-enable.md docs/archive/`; no dangling refs remain | git status `RM` entry; grep for old path |
-| A15 | **Inline annotations with evidence** on 5 artifacts: pareto plan (Wave 0 → run `33551718914` 7/7 green, lint-fix `cf5f205`, §0/§3/§4/§5 corrected in place), CI-repair report (B1/B2/D6, c.8/9, f.1/2/6/12/26/29/33), round-2 report (c.3/4/5, f.7/8/9/15), website-launch report (b.10, c-rows, f.3/10/11/12/20/21), June replay report (T10 items → doc-lie fixed, feature routed) | ~25 inline `~~…~~`/UPDATE markers, all citing hashes or runs |
-| A16 | Quality gates: `go build` + `go vet` clean; all 6 docs' internal links resolve; zero refs dangle to the archived file; health report printed inline with per-doc findings | Session-end verification runs |
+| #   | Item                                                                                                                                                                                                                                                                                                                                                                                                                 | Evidence                                                                   |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| A1  | Full inventory of `**/2026-0*`: 109 files classified (68 status, 11 planning, 22 archive, 8 research/review)                                                                                                                                                                                                                                                                                                         | `find` census; annotation-marker census per file                           |
+| A2  | Coverage re-measured with the official gate: **95.2% PASS** (root 94.9%, live **78.3%**, testhelpers 91.1%) — proves every coverage number now in the docs                                                                                                                                                                                                                                                           | `scripts/coverage-gate.sh` run, full `-race` suite green                   |
+| A3  | Claim-by-claim VERIFY of all 6 living docs against code/CI: Go 1.26.7 pins, go-output v0.37.0, go-sse v0.5.1, go-atomic-write v0.5.0, ssetest v0.2.0; 8 fuzz targets, 12 benchmarks, 8 examples, 73 live tests (38+31+4), 453 `t.Parallel()`, 108 enabled linters, CSP `default-src 'none'` present, design-token sync tests present                                                                                 | go.mod, `.golangci.yml` awk count, grep counts, `html.templ:9`, test files |
+| A4  | **TODO_LIST.md rebuilt**: stale "release v0.7.0" item deleted (v0.10.0 shipped Aug 14); all-[x] cross-project section removed; 20 open items harvested from the three 2026-09-01 reports + pareto plan, each citing its source report section; 5 owner questions                                                                                                                                                     | TODO_LIST.md (rewritten)                                                   |
+| A5  | **ROADMAP.md rebuilt**: ALPHA→BETA framing aligned with STABILITY.md (the canonical promise doc; AGENTS/ROADMAP were the outliers); BETA criterion updated to measured 78.3%; dangling "See TODO_LIST" ref removed; demo video moved to shipped; ecosystem/CI-resilience/API-idea sections harvested; 5 new raw ideas incl. status-report retention policy                                                           | ROADMAP.md (rewritten)                                                     |
+| A6  | **FEATURES.md**: 8 verified fixes — health/ ghost row deleted (package extracted to go-health, row contradicted line 175 of the same file); "Shared CSS drift risk" removed (`TestDesignTokensInSync`/`TestSharedComponentCSSInSync` exist); CI row now 7 jobs incl. actionlint; linters 109→108; fuzz 5→8; live tests 35→73; parallel 311→453; go-sse row v0.4.0→v0.5.1; footer re-dated 2026-09-01 with real split | FEATURES.md diff                                                           |
+| A7  | **AGENTS.md**: 8 fixes — Status ALPHA→BETA; CSP gotcha corrected (`default-src 'none'` IS present — old claim was false); coverage-gate exclusion list (example/, cmd/, live/demo/, internal/testhelpers/, `*_templ.go`); dep-family version stamp; 4 new gotchas (pnpm-missing-on-runners, proxy-flake rerun playbook, version-skew ledger for 4 nolint sites, hooksPath rot)                                       | AGENTS.md diff                                                             |
+| A8  | **README.md**: minimal-deps row gained go-ndjson; all other claims re-verified (Beta caution, 94% badge, ~1.7 µs vs benchmarks 1,686 ns, filter table, CLI block)                                                                                                                                                                                                                                                    | README.md diff                                                             |
+| A9  | **CHANGELOG.md**: appended `[Unreleased] → Fixed — CI & Toolchain` — 33-day red-master repair, gate re-enforcement, ssetest promotion, website workflow SHA/cache/pnpm fixes, GOTOOLCHAIN pin, docs-sync note                                                                                                                                                                                                        | CHANGELOG.md diff                                                          |
+| A10 | **website.yml fixed**: SHA-verified `pnpm/action-setup` v4.1.0 (`gh api repos/pnpm/action-setup/git/refs/tags/v4.1.0`) added to BOTH jobs + `pnpm install --frozen-lockfile`; root cause proven — run `33562593783` died in 9s with `Unable to locate executable file: pnpm`, exactly the T06 prediction; `actionlint` exit 0                                                                                        | website.yml diff; `gh run view --log-failed`; actionlint                   |
+| A11 | **core.hooksPath fixed**: pointed at nonexistent `.githooks` → the documented pre-commit gate was silently disabled on this checkout; reset to `scripts/hooks`                                                                                                                                                                                                                                                       | `git config core.hooksPath` before/after                                   |
+| A12 | **diff.go doc-lie fixed**: `Diff` had claimed dependency-edge comparison since June while `compareService` checks only status/invocation/health/error — comment now states the truth and points to the planned `DepsChanged`; build+vet green                                                                                                                                                                        | diff.go:52-60; `go build`/`go vet` clean                                   |
+| A13 | **3-agent archive verification** of 15 candidate reports against current code/CHANGELOG: per-item SHIPPED/ROUTED/OBSOLETE/OPEN verdicts; 14/15 NOT archive-ready, recurring open themes extracted and routed                                                                                                                                                                                                         | Agent reports (session log); new TODO_LIST/ROADMAP rows                    |
+| A14 | **v0.10.0 report annotated inline (all items) and archived** — `git mv docs/status/2026-08-14_19-10_v0.10.0-setonevent-enable.md docs/archive/`; no dangling refs remain                                                                                                                                                                                                                                             | git status `RM` entry; grep for old path                                   |
+| A15 | **Inline annotations with evidence** on 5 artifacts: pareto plan (Wave 0 → run `33551718914` 7/7 green, lint-fix `cf5f205`, §0/§3/§4/§5 corrected in place), CI-repair report (B1/B2/D6, c.8/9, f.1/2/6/12/26/29/33), round-2 report (c.3/4/5, f.7/8/9/15), website-launch report (b.10, c-rows, f.3/10/11/12/20/21), June replay report (T10 items → doc-lie fixed, feature routed)                                 | ~25 inline `~~…~~`/UPDATE markers, all citing hashes or runs               |
+| A16 | Quality gates: `go build` + `go vet` clean; all 6 docs' internal links resolve; zero refs dangle to the archived file; health report printed inline with per-doc findings                                                                                                                                                                                                                                            | Session-end verification runs                                              |
 
 ## b) PARTIALLY DONE
 
-| # | Item | What works | What remains | Effort |
-|---|------|-----------|--------------|--------|
-| B1 | **Working tree is not committed** | All 14 paths ready (7 living docs, website.yml, diff.go, 5 annotated reports, 1 archive rename) | Commit + push + watch CI AND Website workflows; the daemon committed nothing all session | S |
-| B2 | Website workflow proof | Fix written, SHA-verified, actionlint-clean | First real green execution (install → astro check → build → html-validate → deploy) on next `website/**` push; local e2e run not done either | S–M |
-| B3 | Status-report ANNOTATE | Freshest 5 artifacts annotated inline with evidence | ~8–10 sibling items that became resolved by my own fixes are still unstruck (see critique 5); 52 further reports never item-audited | S for the stragglers, L for the 52 |
-| B4 | Status-report ARCHIVE | 1 file archived via `git mv`; repo convention (`docs/archive/`) followed | 52 un-audited reports; decision needed on strictness vs throughput (see g.1) | — |
-| B5 | Skill fidelity | SKILL.md body followed end-to-end; inline-not-appendix discipline held; evidence cited everywhere | `references/` files unread; annotate scripts unused; report format improvised (critique 1–2) | S |
-| B6 | Markdown hygiene | Content correct, links resolve | Table padding ragged across the 4 edited living docs; no formatter run (critique 6) | S |
-| B7 | live/ coverage story | Drop measured precisely (89.7→78.3) and routed to the 1.0 bar | Root cause unverified (critique 4); per-package breakdown not captured | S |
-| B8 | Domain-language health | TODO/ROADMAP refreshed | `docs/DOMAIN_LANGUAGE.md` not audited; agent evidence says it lacks Streamer/DiagramOption/TableColumn/MultiWriter terms | S |
+| #  | Item                              | What works                                                                                        | What remains                                                                                                                                 | Effort                             |
+| -- | --------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| B1 | **Working tree is not committed** | All 14 paths ready (7 living docs, website.yml, diff.go, 5 annotated reports, 1 archive rename)   | Commit + push + watch CI AND Website workflows; the daemon committed nothing all session                                                     | S                                  |
+| B2 | Website workflow proof            | Fix written, SHA-verified, actionlint-clean                                                       | First real green execution (install → astro check → build → html-validate → deploy) on next `website/**` push; local e2e run not done either | S–M                                |
+| B3 | Status-report ANNOTATE            | Freshest 5 artifacts annotated inline with evidence                                               | ~8–10 sibling items that became resolved by my own fixes are still unstruck (see critique 5); 52 further reports never item-audited          | S for the stragglers, L for the 52 |
+| B4 | Status-report ARCHIVE             | 1 file archived via `git mv`; repo convention (`docs/archive/`) followed                          | 52 un-audited reports; decision needed on strictness vs throughput (see g.1)                                                                 | —                                  |
+| B5 | Skill fidelity                    | SKILL.md body followed end-to-end; inline-not-appendix discipline held; evidence cited everywhere | `references/` files unread; annotate scripts unused; report format improvised (critique 1–2)                                                 | S                                  |
+| B6 | Markdown hygiene                  | Content correct, links resolve                                                                    | Table padding ragged across the 4 edited living docs; no formatter run (critique 6)                                                          | S                                  |
+| B7 | live/ coverage story              | Drop measured precisely (89.7→78.3) and routed to the 1.0 bar                                     | Root cause unverified (critique 4); per-package breakdown not captured                                                                       | S                                  |
+| B8 | Domain-language health            | TODO/ROADMAP refreshed                                                                            | `docs/DOMAIN_LANGUAGE.md` not audited; agent evidence says it lacks Streamer/DiagramOption/TableColumn/MultiWriter terms                     | S                                  |
 
 ## c) NOT STARTED
 
@@ -65,21 +65,21 @@
 
 ## d) TOTALLY FUCKED UP
 
-| # | What is broken | Severity | Root cause | Mitigation |
-|---|----------------|----------|-----------|------------|
-| D1 | **Two known process rules were knowingly skipped**: skill `references/` unread; annotate scripts bypassed for hand edits. The second is the exact failure mode that shipped a marker-placement bug on 2026-08-18 | Medium (no damage this time; process trust) | Optimized for session throughput; judged the SKILL.md body "enough" | Both institutionalized in (e); next docs-health session starts with the references |
-| D2 | **Possible silent loss of a real bug record**: ROADMAP's `example/ --live` premature-shutdown pointer deleted on the strength of a dangling TODO ref, without running the demo once | Medium if the bug is real (next session won't know it existed) | Treated a broken cross-reference as evidence the bug was gone — the link rotted, not the bug | f.3 re-verifies; if real, restore to TODO_LIST with the original context |
-| D3 | **Unverified causal claim shipped in ROADMAP** (datastar rewrite "explains" the coverage drop) | Low–Medium (docs health is the product here; speculation in a verified doc erodes the standard) | Measured the what, didn't chase the why, wrote the why anyway | f.4 grounds or deletes the sentence |
-| D4 | **~8–10 items I resolved are still marked open in the very files I annotated** (e.g. website §b.7 CSP) | Low (reader checking those lines finds stale "unresolved" markers) | Annotated by action-taken, not by full-item sweep of each file | f.7 straggler pass |
-| D5 | **The health-report scorecard was invented, not derived** from the skill's format reference | Low (scores are directionally right but not rubric-clean) | Same root as D1 | Rerun scoring after reading `health-report-format.md` |
-| D6 | **Nothing committed** — 14 paths of verified work sit exposed in one working tree; any careless `git checkout`/crash loses the session | Medium (recoverable from this report, but unnecessary risk) | Daemon didn't fire (recurring, see round-2 item 35); I correctly didn't commit without approval | g.3 decides authority |
+| #  | What is broken                                                                                                                                                                                                   | Severity                                                                                        | Root cause                                                                                      | Mitigation                                                                         |
+| -- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| D1 | **Two known process rules were knowingly skipped**: skill `references/` unread; annotate scripts bypassed for hand edits. The second is the exact failure mode that shipped a marker-placement bug on 2026-08-18 | Medium (no damage this time; process trust)                                                     | Optimized for session throughput; judged the SKILL.md body "enough"                             | Both institutionalized in (e); next docs-health session starts with the references |
+| D2 | **Possible silent loss of a real bug record**: ROADMAP's `example/ --live` premature-shutdown pointer deleted on the strength of a dangling TODO ref, without running the demo once                              | Medium if the bug is real (next session won't know it existed)                                  | Treated a broken cross-reference as evidence the bug was gone — the link rotted, not the bug    | f.3 re-verifies; if real, restore to TODO_LIST with the original context           |
+| D3 | **Unverified causal claim shipped in ROADMAP** (datastar rewrite "explains" the coverage drop)                                                                                                                   | Low–Medium (docs health is the product here; speculation in a verified doc erodes the standard) | Measured the what, didn't chase the why, wrote the why anyway                                   | f.4 grounds or deletes the sentence                                                |
+| D4 | **~8–10 items I resolved are still marked open in the very files I annotated** (e.g. website §b.7 CSP)                                                                                                           | Low (reader checking those lines finds stale "unresolved" markers)                              | Annotated by action-taken, not by full-item sweep of each file                                  | f.7 straggler pass                                                                 |
+| D5 | **The health-report scorecard was invented, not derived** from the skill's format reference                                                                                                                      | Low (scores are directionally right but not rubric-clean)                                       | Same root as D1                                                                                 | Rerun scoring after reading `health-report-format.md`                              |
+| D6 | **Nothing committed** — 14 paths of verified work sit exposed in one working tree; any careless `git checkout`/crash loses the session                                                                           | Medium (recoverable from this report, but unnecessary risk)                                     | Daemon didn't fire (recurring, see round-2 item 35); I correctly didn't commit without approval | g.3 decides authority                                                              |
 
 ## e) WHAT WE SHOULD IMPROVE
 
 1. **Skill discipline order**: read SKILL.md **and** its referenced files before the first edit; the references exist because their absence already caused incidents. Cheap rule, zero exceptions.
 2. **Use the annotate scripts for anything beyond a handful of items**, dry-run first — even when hand-editing "feels" safe; the rule was written in this repo's own blood.
 3. **Annotate by sweep, not by action**: after fixing anything, re-grep every file touched this session for items the fix resolved, and strike them in the same pass.
-4. **Never delete a pointer to a bug without testing the bug** — a dangling cross-reference proves the *link* rotted, never the *defect*.
+4. **Never delete a pointer to a bug without testing the bug** — a dangling cross-reference proves the _link_ rotted, never the _defect_.
 5. **No causal claims without a measurement**: "X dropped because Y" requires the diff/probe that shows Y; otherwise write "cause unknown, see f.N".
 6. **Run the markdown formatter when touching any table**, before declaring docs done — content correctness and mechanical hygiene are separate gates.
 7. **Archive verification protocol is worth keeping**: 3 parallel agents + strict zero-open-items rule produced a genuinely honest archive set (1 of 15) instead of rubber-stamping; formalize it as the standard docs-health archive procedure with the scripts for the annotation half.
@@ -89,58 +89,58 @@
 
 Impact-ranked. Effort S <30 min, M 30 min–2 h, L >2 h. Items marked ★ are born from this session's self-critique.
 
-| # | Task | Impact | Effort | Category |
-|---|------|--------|--------|----------|
-| 1 | Commit + push the 14-path working tree (explicit paths); watch CI **and** Website workflows | Critical | S | Release |
-| 2 | Verify Website workflow's first fully green execution (install → check → build → validate → deploy) | Critical | S | Quality |
-| 3 | ★ Re-verify `example/ --live` premature-shutdown bug; restore to TODO_LIST if real | High | S | Bug |
-| 4 | ★ Ground or delete the ROADMAP causal claim for the live/ coverage drop (per-file coverage diff) | High | S | Documentation |
-| 5 | ★ Annotate the ~8–10 straggler items my fixes resolved (website §b.7, round-2 sc.4, CI-repair sc.1–4) | Medium | S | Documentation |
-| 6 | ★ Markdown formatter pass over TODO_LIST/ROADMAP/FEATURES/AGENTS tables | Medium | S | Cleanup |
-| 7 | ★ Rerun the health-report scoring with the skill's canonical `health-report-format.md` rubric | Low | S | Documentation |
-| 8 | Continue strict archive verification on the remaining 52 status reports (batch agents) | Medium | L | Documentation |
-| 9 | Decide + document the status-report retention/archive policy (ROADMAP idea → decision) | Medium | S | Documentation |
-| 10 | Go-version drift guard (`scripts/check-go-version.sh` + CI + hook) | High | S | Quality |
-| 11 | `go mod tidy`/`go generate` retry wrapper in CI (transport flakes only) | High | S | Quality |
-| 12 | Single-source coverage exclusions consumed by gate script + ci.yml | High | S | Quality |
-| 13 | CI ergonomics: concurrency group, coverage step-summary, `workflow_dispatch`, paths-ignore decision | Medium | M | Quality |
-| 14 | Pin govulncheck + firebase-tools; weekly scheduled vulncheck | Medium | M | Quality |
-| 15 | Lint infra: cache/prebuilt golangci-lint; retire 4 nolints when pin ≥ 2.13; depguard-replacement decision | Medium | M | Quality |
-| 16 | Release v0.10.1 from green master; re-baseline BENCHMARKS.md on 1.26.7 | High | M | Release |
-| 17 | Plumbing truths: `nix eval` locked `go_1_26`; `nix run .#coverage` / `.#auditlog` smokes | Medium | S | Quality |
-| 18 | Full fuzz sweep on 1.26.7 (8 targets) | Medium | M | Quality |
-| 19 | Nix templ-regression guard (retracted-v0.9.0 failure mode) | Medium | M | Quality |
-| 20 | Sibling-repo SHA/pin audit (go-workflow-auditlog, go-sse, go-ndjson, go-health) | High | M | Bug |
-| 21 | Website docs sync: contributing.mdx (7 jobs, govulncheck, Go 1.26.7) | Low | S | Documentation |
-| 22 | Implement `DepsChanged` in `Report.Diff` + tests + STABILITY row (doc-lie already fixed) | High | M | Feature |
-| 23 | Stale-changelog guard (CHANGELOG.md ↔ changelog.mdx CI check) | Medium | S | Quality |
-| 24 | `example/` CI smoke test (run the 23-feature self-check in CI) | Medium | S | Quality |
-| 25 | Strict enum parsing on load (`EventType`/`Phase`/`ProviderType`/`ServiceStatus`) | Medium | M | Feature |
-| 26 | CLI `--input-format`, `--verbose/--quiet` flags | Low | S | Feature |
-| 27 | Dependabot sweep: rebase 3 website PRs, verify both workflows, merge/close (blocked g.1) | High | S | Cleanup |
-| 28 | Owner: branch protection with 7 required checks + Website | High | S | Quality |
-| 29 | Owner: Dependabot auto-merge + rebase strategy | Medium | S | Cleanup |
-| 30 | Owner: master-failure notification | Medium | S | Quality |
-| 31 | Owner: register SSH commit-signing key (tags currently unverified) | Medium | S | Quality |
-| 32 | Owner: auto-commit-daemon policy decision | Medium | S | Quality |
-| 33 | Website: og:image for docs pages (not just landing) | Medium | S | Feature |
-| 34 | Website: mobile QA at 375/768/1024 | Medium | M | Quality |
-| 35 | Website: light-theme pass | Medium | S | Quality |
-| 36 | Website: real-browser playback smoke test of `/demo.mp4` | Medium | S | Quality |
-| 37 | Re-verify final mp4 frame at t≈21.2s post-"d"-fix | Medium | S | Quality |
-| 38 | Claims linter for README/docs (versions, %, counts vs source) | High | M | Quality |
-| 39 | Lighthouse audit of landing + one docs page | Medium | M | Quality |
-| 40 | Audit `docs/DOMAIN_LANGUAGE.md` (streaming/diagram/table terms missing) | Low | S | Documentation |
-| 41 | Add `GOEXPERIMENT=jsonv2` note to `doc.go` (godoc discoverability) | Medium | S | Documentation |
-| 42 | Verify README Mermaid sample against actual `WriteMermaidString()` output | Medium | S | Bug |
-| 43 | Verify pkg.go.dev surfaces the GOEXPERIMENT note for v0.10.0 | Medium | S | Documentation |
-| 44 | Inspect the 5 stray-strikethrough files from earlier sessions; normalize annotation conventions | Low | S | Documentation |
-| 45 | Post-green: run full pre-commit suite once as parity proof | Low | S | Quality |
-| 46 | Consider `paths-ignore` for docs-only pushes (decision, not code) | Medium | S | Quality |
-| 47 | Investigate setup-go cache not shielding mod-tidy from proxy downloads | Low | S | Quality |
-| 48 | Evaluate per-job `timeout-minutes` for fast-fail on transport hangs | Low | S | Quality |
-| 49 | Move the "raise live/ coverage to 90%" from ROADMAP bar to a concrete test plan (top untested: fragment renderers) | Medium | M | Quality |
-| 50 | ★ Read + apply the 8 docs-health reference files as a checklist item in the next docs-health run; note deviations in its report | Low | S | Process |
+| #  | Task                                                                                                                            | Impact   | Effort | Category      |
+| -- | ------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ------------- |
+| 1  | Commit + push the 14-path working tree (explicit paths); watch CI **and** Website workflows                                     | Critical | S      | Release       |
+| 2  | Verify Website workflow's first fully green execution (install → check → build → validate → deploy)                             | Critical | S      | Quality       |
+| 3  | ★ Re-verify `example/ --live` premature-shutdown bug; restore to TODO_LIST if real                                              | High     | S      | Bug           |
+| 4  | ★ Ground or delete the ROADMAP causal claim for the live/ coverage drop (per-file coverage diff)                                | High     | S      | Documentation |
+| 5  | ★ Annotate the ~8–10 straggler items my fixes resolved (website §b.7, round-2 sc.4, CI-repair sc.1–4)                           | Medium   | S      | Documentation |
+| 6  | ★ Markdown formatter pass over TODO_LIST/ROADMAP/FEATURES/AGENTS tables                                                         | Medium   | S      | Cleanup       |
+| 7  | ★ Rerun the health-report scoring with the skill's canonical `health-report-format.md` rubric                                   | Low      | S      | Documentation |
+| 8  | Continue strict archive verification on the remaining 52 status reports (batch agents)                                          | Medium   | L      | Documentation |
+| 9  | Decide + document the status-report retention/archive policy (ROADMAP idea → decision)                                          | Medium   | S      | Documentation |
+| 10 | Go-version drift guard (`scripts/check-go-version.sh` + CI + hook)                                                              | High     | S      | Quality       |
+| 11 | `go mod tidy`/`go generate` retry wrapper in CI (transport flakes only)                                                         | High     | S      | Quality       |
+| 12 | Single-source coverage exclusions consumed by gate script + ci.yml                                                              | High     | S      | Quality       |
+| 13 | CI ergonomics: concurrency group, coverage step-summary, `workflow_dispatch`, paths-ignore decision                             | Medium   | M      | Quality       |
+| 14 | Pin govulncheck + firebase-tools; weekly scheduled vulncheck                                                                    | Medium   | M      | Quality       |
+| 15 | Lint infra: cache/prebuilt golangci-lint; retire 4 nolints when pin ≥ 2.13; depguard-replacement decision                       | Medium   | M      | Quality       |
+| 16 | Release v0.10.1 from green master; re-baseline BENCHMARKS.md on 1.26.7                                                          | High     | M      | Release       |
+| 17 | Plumbing truths: `nix eval` locked `go_1_26`; `nix run .#coverage` / `.#auditlog` smokes                                        | Medium   | S      | Quality       |
+| 18 | Full fuzz sweep on 1.26.7 (8 targets)                                                                                           | Medium   | M      | Quality       |
+| 19 | Nix templ-regression guard (retracted-v0.9.0 failure mode)                                                                      | Medium   | M      | Quality       |
+| 20 | Sibling-repo SHA/pin audit (go-workflow-auditlog, go-sse, go-ndjson, go-health)                                                 | High     | M      | Bug           |
+| 21 | Website docs sync: contributing.mdx (7 jobs, govulncheck, Go 1.26.7)                                                            | Low      | S      | Documentation |
+| 22 | Implement `DepsChanged` in `Report.Diff` + tests + STABILITY row (doc-lie already fixed)                                        | High     | M      | Feature       |
+| 23 | Stale-changelog guard (CHANGELOG.md ↔ changelog.mdx CI check)                                                                   | Medium   | S      | Quality       |
+| 24 | `example/` CI smoke test (run the 23-feature self-check in CI)                                                                  | Medium   | S      | Quality       |
+| 25 | Strict enum parsing on load (`EventType`/`Phase`/`ProviderType`/`ServiceStatus`)                                                | Medium   | M      | Feature       |
+| 26 | CLI `--input-format`, `--verbose/--quiet` flags                                                                                 | Low      | S      | Feature       |
+| 27 | Dependabot sweep: rebase 3 website PRs, verify both workflows, merge/close (blocked g.1)                                        | High     | S      | Cleanup       |
+| 28 | Owner: branch protection with 7 required checks + Website                                                                       | High     | S      | Quality       |
+| 29 | Owner: Dependabot auto-merge + rebase strategy                                                                                  | Medium   | S      | Cleanup       |
+| 30 | Owner: master-failure notification                                                                                              | Medium   | S      | Quality       |
+| 31 | Owner: register SSH commit-signing key (tags currently unverified)                                                              | Medium   | S      | Quality       |
+| 32 | Owner: auto-commit-daemon policy decision                                                                                       | Medium   | S      | Quality       |
+| 33 | Website: og:image for docs pages (not just landing)                                                                             | Medium   | S      | Feature       |
+| 34 | Website: mobile QA at 375/768/1024                                                                                              | Medium   | M      | Quality       |
+| 35 | Website: light-theme pass                                                                                                       | Medium   | S      | Quality       |
+| 36 | Website: real-browser playback smoke test of `/demo.mp4`                                                                        | Medium   | S      | Quality       |
+| 37 | Re-verify final mp4 frame at t≈21.2s post-"d"-fix                                                                               | Medium   | S      | Quality       |
+| 38 | Claims linter for README/docs (versions, %, counts vs source)                                                                   | High     | M      | Quality       |
+| 39 | Lighthouse audit of landing + one docs page                                                                                     | Medium   | M      | Quality       |
+| 40 | Audit `docs/DOMAIN_LANGUAGE.md` (streaming/diagram/table terms missing)                                                         | Low      | S      | Documentation |
+| 41 | Add `GOEXPERIMENT=jsonv2` note to `doc.go` (godoc discoverability)                                                              | Medium   | S      | Documentation |
+| 42 | Verify README Mermaid sample against actual `WriteMermaidString()` output                                                       | Medium   | S      | Bug           |
+| 43 | Verify pkg.go.dev surfaces the GOEXPERIMENT note for v0.10.0                                                                    | Medium   | S      | Documentation |
+| 44 | Inspect the 5 stray-strikethrough files from earlier sessions; normalize annotation conventions                                 | Low      | S      | Documentation |
+| 45 | Post-green: run full pre-commit suite once as parity proof                                                                      | Low      | S      | Quality       |
+| 46 | Consider `paths-ignore` for docs-only pushes (decision, not code)                                                               | Medium   | S      | Quality       |
+| 47 | Investigate setup-go cache not shielding mod-tidy from proxy downloads                                                          | Low      | S      | Quality       |
+| 48 | Evaluate per-job `timeout-minutes` for fast-fail on transport hangs                                                             | Low      | S      | Quality       |
+| 49 | Move the "raise live/ coverage to 90%" from ROADMAP bar to a concrete test plan (top untested: fragment renderers)              | Medium   | M      | Quality       |
+| 50 | ★ Read + apply the 8 docs-health reference files as a checklist item in the next docs-health run; note deviations in its report | Low      | S      | Process       |
 
 ## g) Questions I cannot answer myself
 
@@ -150,4 +150,4 @@ Impact-ranked. Effort S <30 min, M 30 min–2 h, L >2 h. Items marked ★ are bo
 
 ---
 
-*Report generated 2026-09-02 13:59 CEST. Format: user-mandated `.md` status report (skill's HTML-dashboard default overridden by instruction, as with the three 2026-09-01 reports). Section (f) is the HARVEST input for the next docs-health pass; items already living in TODO_LIST.md are not duplicated here except where this session created them.*
+_Report generated 2026-09-02 13:59 CEST. Format: user-mandated `.md` status report (skill's HTML-dashboard default overridden by instruction, as with the three 2026-09-01 reports). Section (f) is the HARVEST input for the next docs-health pass; items already living in TODO_LIST.md are not duplicated here except where this session created them._

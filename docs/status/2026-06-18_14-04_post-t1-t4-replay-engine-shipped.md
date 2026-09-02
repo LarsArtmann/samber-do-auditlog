@@ -181,33 +181,33 @@ The `//nolint:unparam` directive was on the wrong function (`provideUserServiceW
 
 Sorted by **impact × value ÷ effort** (descending).
 
-| #  | Task                                                                                 | Impact    | Effort | Status      |
-| -- | ------------------------------------------------------------------------------------ | --------- | ------ | ----------- |
+| #  | Task                                                                                 | Impact    | Effort | Status                                                                                       |
+| -- | ------------------------------------------------------------------------------------ | --------- | ------ | -------------------------------------------------------------------------------------------- |
 | 1  | **T10: Diff dependency edges** — implement dep comparison + fix `diff.go:43` doc lie | 🔴 High   | 75m    | ~~Not started~~ HALF-DONE (2026-09-01): doc lie fixed; `DepsChanged` feature in TODO_LIST.md |
-| 2  | **T8: JSON Schema file** — `schema/report.schema.json` for v0.2.0                    | 🔴 High   | 75m    | Not started |
-| 3  | **T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`                        | 🟠 Medium | 60m    | Not started |
-| 4  | **T6: CLI `import`** — `auditlog import <file> -o report.html`                       | 🟠 Medium | 75m    | Not started |
-| 5  | **T7: CLI `export`** — 5 formats via library APIs                                    | 🟠 Medium | 60m    | Not started |
-| 6  | **T9: Schema validation** — embedded validator via santhosh-tekuri                   | 🟠 Medium | 60m    | Not started |
-| 7  | **T11: Diff scope tree** — flatten ScopeNode, set-diff scopes                        | 🟠 Medium | 60m    | Not started |
-| 8  | **T26: samber/ro adapter** — `EventsAsObservable()`                                  | 🟠 Medium | 75m    | Not started |
-| 9  | **T13: CLI `diff`** — text + JSON output, exit 3 on non-empty                        | 🟡 Low    | 60m    | Not started |
-| 10 | **T12: CLI `validate`** — `Report.Validate()` + schema check                         | 🟡 Low    | 45m    | Not started |
-| 11 | **T14: CLI `info`** — summary stats                                                  | 🟡 Low    | 30m    | Not started |
-| 12 | **T18: `nix build` binary** — replace README stub                                    | 🟡 Low    | 45m    | Not started |
-| 13 | **T17: CLI golden tests** — per-subcommand assertions                                | 🟡 Low    | 75m    | Not started |
-| 14 | **Typed identifiers** — distinct string types for IDs                                | 🟡 Low    | 60m    | Not started |
-| 15 | **`NewReport` constructor** — invalid states unrepresentable                         | 🟡 Low    | 45m    | Not started |
-| 16 | **T19: CI cross-compile** — 6-target matrix                                          | 🟡 Low    | 60m    | Not started |
-| 17 | **T20: CI smoke test** — build + `--version` + import                                | 🟡 Low    | 30m    | Not started |
-| 18 | **CSV/TSV export** — tabular export for spreadsheets                                 | 🟡 Low    | 60m    | Not started |
-| 19 | **Property-based Diff tests** — symmetry + identity                                  | 🟡 Low    | 60m    | Not started |
-| 20 | **HTML golden-file test** — deterministic fixture                                    | 🟡 Low    | 45m    | Not started |
-| 21 | **T21: README CLI section** — install + examples                                     | 🟡 Low    | 45m    | Not started |
-| 22 | **T22: AGENTS.md update** — file inventory + caveats                                 | 🟡 Low    | 30m    | Not started |
-| 23 | **T23: FEATURES + TODO sync** — flip to DONE                                         | 🟡 Low    | 30m    | Not started |
-| 24 | **T24: cli-workflow.md** — round-trip tutorial                                       | 🟡 Low    | 45m    | Not started |
-| 25 | **T25: CHANGELOG** — Unreleased section                                              | 🟡 Low    | 30m    | Not started |
+| 2  | **T8: JSON Schema file** — `schema/report.schema.json` for v0.2.0                    | 🔴 High   | 75m    | Not started                                                                                  |
+| 3  | **T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`                        | 🟠 Medium | 60m    | Not started                                                                                  |
+| 4  | **T6: CLI `import`** — `auditlog import <file> -o report.html`                       | 🟠 Medium | 75m    | Not started                                                                                  |
+| 5  | **T7: CLI `export`** — 5 formats via library APIs                                    | 🟠 Medium | 60m    | Not started                                                                                  |
+| 6  | **T9: Schema validation** — embedded validator via santhosh-tekuri                   | 🟠 Medium | 60m    | Not started                                                                                  |
+| 7  | **T11: Diff scope tree** — flatten ScopeNode, set-diff scopes                        | 🟠 Medium | 60m    | Not started                                                                                  |
+| 8  | **T26: samber/ro adapter** — `EventsAsObservable()`                                  | 🟠 Medium | 75m    | Not started                                                                                  |
+| 9  | **T13: CLI `diff`** — text + JSON output, exit 3 on non-empty                        | 🟡 Low    | 60m    | Not started                                                                                  |
+| 10 | **T12: CLI `validate`** — `Report.Validate()` + schema check                         | 🟡 Low    | 45m    | Not started                                                                                  |
+| 11 | **T14: CLI `info`** — summary stats                                                  | 🟡 Low    | 30m    | Not started                                                                                  |
+| 12 | **T18: `nix build` binary** — replace README stub                                    | 🟡 Low    | 45m    | Not started                                                                                  |
+| 13 | **T17: CLI golden tests** — per-subcommand assertions                                | 🟡 Low    | 75m    | Not started                                                                                  |
+| 14 | **Typed identifiers** — distinct string types for IDs                                | 🟡 Low    | 60m    | Not started                                                                                  |
+| 15 | **`NewReport` constructor** — invalid states unrepresentable                         | 🟡 Low    | 45m    | Not started                                                                                  |
+| 16 | **T19: CI cross-compile** — 6-target matrix                                          | 🟡 Low    | 60m    | Not started                                                                                  |
+| 17 | **T20: CI smoke test** — build + `--version` + import                                | 🟡 Low    | 30m    | Not started                                                                                  |
+| 18 | **CSV/TSV export** — tabular export for spreadsheets                                 | 🟡 Low    | 60m    | Not started                                                                                  |
+| 19 | **Property-based Diff tests** — symmetry + identity                                  | 🟡 Low    | 60m    | Not started                                                                                  |
+| 20 | **HTML golden-file test** — deterministic fixture                                    | 🟡 Low    | 45m    | Not started                                                                                  |
+| 21 | **T21: README CLI section** — install + examples                                     | 🟡 Low    | 45m    | Not started                                                                                  |
+| 22 | **T22: AGENTS.md update** — file inventory + caveats                                 | 🟡 Low    | 30m    | Not started                                                                                  |
+| 23 | **T23: FEATURES + TODO sync** — flip to DONE                                         | 🟡 Low    | 30m    | Not started                                                                                  |
+| 24 | **T24: cli-workflow.md** — round-trip tutorial                                       | 🟡 Low    | 45m    | Not started                                                                                  |
+| 25 | **T25: CHANGELOG** — Unreleased section                                              | 🟡 Low    | 30m    | Not started                                                                                  |
 
 ---
 

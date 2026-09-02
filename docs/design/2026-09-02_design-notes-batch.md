@@ -174,4 +174,4 @@ snippet (the OnEvent callback section). No dependency (log/slog is stdlib).
 
 ---
 
-*Generated 2026-09-02 from docs/planning/2026-09-02_14-15-pareto-master-plan-all-126-todos.html.*
+_Generated 2026-09-02 from docs/planning/2026-09-02_14-15-pareto-master-plan-all-126-todos.html._

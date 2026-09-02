@@ -21,13 +21,13 @@ benchstat /tmp/new.txt  # compare manually against the table below
 
 ## Environment
 
-| Property           | Value                                             |
-| ------------------ | ------------------------------------------------- |
+| Property           | Value                                                                      |
+| ------------------ | -------------------------------------------------------------------------- |
 | Date               | 2026-09-02 (re-baselined on Go 1.26.7, post-DepsChanged/strict-validation) |
-| Go                 | 1.26.7                                            |
-| OS                 | Linux (NixOS)                                     |
-| CPU                | AMD Ryzen AI MAX+ 395 (32 threads)                |
-| Runs per benchmark | 3                                                 |
+| Go                 | 1.26.7                                                                     |
+| OS                 | Linux (NixOS)                                                              |
+| CPU                | AMD Ryzen AI MAX+ 395 (32 threads)                                         |
+| Runs per benchmark | 3                                                                          |
 
 ---
 

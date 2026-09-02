@@ -178,7 +178,7 @@ func computeLegendItems(report auditlog.Report, meta auditlog.TypeMetadata) []le
 		}
 	}
 
-	order := []string{"lazy", "eager", "transient", "alias"} //nolint:goconst // provider type names match domain enums
+	order := []string{"lazy", "eager", "transient", "alias"}
 
 	var items []legendItem
 

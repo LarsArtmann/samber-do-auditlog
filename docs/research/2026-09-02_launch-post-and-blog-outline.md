@@ -35,6 +35,7 @@ posting anywhere.
 **I built a flight recorder for samber/do v2 dependency injection**
 
 What it does:
+
 - Records every registration / invocation / shutdown / health check with timestamps
 - Infers the real dependency graph from the invocation stack (A→B only when A actually resolves B)
 - Exports: JSON, NDJSON, CSV, Mermaid/PlantUML/DOT/D2 diagrams, and a single-file HTML dashboard (amber phosphor aesthetic, pan/zoom graph, waveform timeline)
@@ -42,6 +43,7 @@ What it does:
 - `Report.Diff` for CI: fail the build when the dependency graph changes unexpectedly
 
 Tradeoffs, honestly:
+
 - ALPHA→BETA maturity; API can still change before 1.0 (STABILITY.md documents exactly what's frozen)
 - Build needs `GOEXPERIMENT=jsonv2` on Go 1.26 (transitive dep requirement — documented in godoc)
 - samber/do v2 only
@@ -79,5 +81,5 @@ Reflection"**
 
 CTA: repo + live dashboard demo.
 
-*Status: outline approved for expansion; drafting blocked on owner go-ahead
-(content ships to the website's blog section once it exists).*
+_Status: outline approved for expansion; drafting blocked on owner go-ahead
+(content ships to the website's blog section once it exists)._

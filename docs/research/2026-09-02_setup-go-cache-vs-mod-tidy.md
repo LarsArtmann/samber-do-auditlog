@@ -27,13 +27,13 @@ errors (`stream error … INTERNAL_ERROR; received from peer`) — one in
 
 ## Mitigations (implemented or proposed)
 
-| Mitigation | Status |
-|---|---|
-| Retry wrapper (3 attempts, 15s) around `go mod tidy` and `go generate` in CI | ✅ implemented 2026-09-02 (transport flakes only; drift checks never retry) |
-| `GONOSUMDB`/`GOFLAGS=-mod=mod` tweaks | ❌ rejected — no effect on transport flakes |
-| Alternate proxy (GOPROXY fallback list `https://proxy.golang.org,direct`) | possible; adds variance, not reliability |
-| `actions/cache` of `~/go/pkg/mod` keyed independently of go.sum | ⚠️ risks stale-module false greens; setup-go's built-in cache is safer — do not layer |
-| Vendor the module graph | ❌ rejected (Explicitly Rejected in ROADMAP: repo-wide vendoring is churn for a mono-consumer library) |
+| Mitigation                                                                   | Status                                                                                                 |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Retry wrapper (3 attempts, 15s) around `go mod tidy` and `go generate` in CI | ✅ implemented 2026-09-02 (transport flakes only; drift checks never retry)                            |
+| `GONOSUMDB`/`GOFLAGS=-mod=mod` tweaks                                        | ❌ rejected — no effect on transport flakes                                                            |
+| Alternate proxy (GOPROXY fallback list `https://proxy.golang.org,direct`)    | possible; adds variance, not reliability                                                               |
+| `actions/cache` of `~/go/pkg/mod` keyed independently of go.sum              | ⚠️ risks stale-module false greens; setup-go's built-in cache is safer — do not layer                   |
+| Vendor the module graph                                                      | ❌ rejected (Explicitly Rejected in ROADMAP: repo-wide vendoring is churn for a mono-consumer library) |
 
 ## Conclusion
 
