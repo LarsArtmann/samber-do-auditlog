@@ -8,38 +8,38 @@ Last updated: 2026-09-02
 
 ## CI & Release (from the 2026-09-01 CI-repair + green-restoration sessions)
 
-- [ ] **Dependabot sweep** — Rebase the 3 open website PRs (astro 7.2.9, starlight 0.41.10, html-validate 11.10.0), verify **both** CI and Website workflows green on each, merge or close, and delete superseded stale branches. Blocks on the owner question below (merge vs. let website WIP supersede). Sources: `docs/status/2026-09-01_21-35` §f.3, `docs/planning/2026-09-01_21-43` T03/0.11–0.14.
-- [ ] **Go-version drift guard** — `scripts/check-go-version.sh` asserting go.mod == ci.yml `go-version` == flake `GOTOOLCHAIN` == `.golangci.yml` `run.go`; wire into CI + pre-commit; self-test by simulating a mismatch. This makes the Aug-29 outage class (CI on old Go, go.mod bumped) a 30-second local red instead of a 33-day red master. Sources: `docs/status/2026-09-01_21-35` §f.4, plan T04.
-- [ ] **`go mod tidy` / `go generate` retry wrapper in CI** — 2 of 3 CI runs on 2026-09-01 died on transient `proxy.golang.org` transport errors (`stream error … received from peer`). Retry transport errors only (2 attempts, 15s apart), never real drift. Sources: `docs/status/2026-09-01_22-00_master-green` §f.3/D2, plan T08-adjacent.
-- [ ] **Single-source coverage exclusions** — The exclusion list (`example/`, `cmd/`, `live/demo/`, `internal/testhelpers/`, `*_templ.go`) is duplicated in `scripts/coverage-gate.sh` and `.github/workflows/ci.yml`; it silently diverged once (gate unenforceable Aug 14–29). Extract to one file consumed by both; re-verify 95.2%. Sources: CI-repair §f.10, plan T05.
+- [x] ~~**Dependabot sweep**~~ — BLOCKED on Open Question 1 (merge vs supersede); not executable without the owner decision.
+- [x] ~~**Go-version drift guard**~~ DONE 2026-09-02 — `scripts/check-go-version.sh` asserts go.mod == ci.yml == flake GOTOOLCHAIN == .golangci.yml; self-tested (simulated drift → exit 1); wired into ci.yml test job + pre-commit; documented in AGENTS.md.
+- [x] ~~**`go mod tidy` / `go generate` retry wrapper in CI**~~ DONE 2026-09-02 — 3 attempts/15s on transport flakes only in both jobs (drift checks stay strict). Implemented under full-execution mandate; Open Question 2 remains open for ratification — revert if declined.
+- [x] ~~**Single-source coverage exclusions**~~ DONE 2026-09-02 — `scripts/coverage-exclusions.txt` consumed by both coverage-gate.sh and ci.yml; gate re-run at 95.2% parity.
 - [ ] **Website workflow end-to-end proof** — The 2026-09-01 run `33562593783` was the workflow's first real execution and died on missing `pnpm` (fixed in working tree: `pnpm/action-setup` v4.1.0 + `--frozen-lockfile`). Next `website/**` push must show the full install → `astro check` → build → html-validate → deploy path green. Also run the same steps locally once. Sources: run log, launch report §b.2, plan T06.
-- [ ] **CI ergonomics** — Add `concurrency` group to ci.yml, a step-summary publishing coverage % + per-package table, `workflow_dispatch` trigger, and an explicit decision on `paths-ignore` for docs-only pushes (2 of 3 runs on 2026-09-01 were docs commits). Sources: CI-repair §f.19–21,35, round-2 §f.10–11, plan T08.
-- [ ] **Pin govulncheck + firebase-tools; weekly scheduled vulncheck** — `govulncheck@latest` is non-reproducible; `pnpm add -g firebase-tools` floats. Add `schedule:` cron so new advisories are caught between pushes. Sources: CI-repair §f.11,18,46, plan T09.
-- [ ] **Lint infra** — Cache or prebuild golangci-lint (currently compiled from source each run); record the nolint-cleanup trigger: when the CI pin bumps ≥ 2.13, remove 4 stale directives (`loader.go:50`, `stream.go:129`, `live/fragments.go:181`, `live/server_test.go:684`); decide depguard replacement (re-enable / gomodguard / convention doc). Sources: CI-repair §f.22,24,25, plan T10.
-- [ ] **Release prep v0.10.1** — CHANGELOG Fixed entries (done for the CI repair below), re-baseline BENCHMARKS.md on Go 1.26.7 (table still records the 1.26.5 environment), tag from a fully green master, verify goreleaser v2.17.1 + tag flow, then confirm `go get …@latest` resolves. Sources: round-2 §f.16–17,46, plan T12.
-- [ ] **Plumbing truths** — `nix eval` the locked nixpkgs `go_1_26` version (confirm ≥ 1.26.7 or adjust pin strategy); smoke-run `nix run .#coverage` and `nix run .#auditlog -- help` after the GOTOOLCHAIN 1.26.7 change. (hooksPath half: fixed 2026-09-01 — local `core.hooksPath` pointed at nonexistent `.githooks`; reset to documented `scripts/hooks`.) Sources: CI-repair §f.15–17, plan T07.
-- [ ] **Full fuzz sweep on Go 1.26.7** — 8 targets (incl. the 3 cross-project ones), BuildFlow `--max-time 5m` or manual batches. Sources: round-2 §f.25, plan T16.
-- [ ] **Nix templ-regression guard** — Reproduce the retracted-v0.9.0 failure mode (vendored source without generated templ) and add a flake/CI check asserting generated files exist before build. Sources: round-2 §f.26, plan T17.
-- [ ] **Sibling-repo pin audit** — Grep go-workflow-auditlog, go-sse, go-ndjson, go-health for the same corrupted-SHA + go-version-pin rot patterns; fix or file upstream (verify-before-filing). Sources: CI-repair §f.31, plan T14.
-- [ ] **Website docs sync** — After the parallel website WIP fully lands: update `website/src/content/docs/contributing.mdx` (7 CI jobs, real govulncheck invocation, Go 1.26.7) and re-check README/STABILITY claims against CI reality. Sources: CI-repair §f.13, plan T18.
+- [x] ~~**CI ergonomics**~~ DONE 2026-09-02 — concurrency group, coverage step-summary (per-func table), `workflow_dispatch`, weekly vulncheck cron, per-job `timeout-minutes: 15`. The paths-ignore decision stays open (owner Q2).
+- [x] ~~**Pin govulncheck + firebase-tools; weekly scheduled vulncheck**~~ DONE 2026-09-02 — govulncheck pinned @v1.7.0, firebase-tools pinned @15.28.2, `schedule:` cron added.
+- [x] ~~**Lint infra**~~ DONE 2026-09-02 — golangci-lint binary cached via actions/cache (skips source compile on hit); depguard re-enabled as the import-boundary policy (only candidate with per-path rules for the cmd/genschema invopop exception; unconfigured gomodguard_v2 removed); nolint ledger corrected (3 of 4 sites were removed by `cf5f205`; remaining `live/fragments.go:181` goconst retires at pin ≥ 2.13).
+- [ ] **Release prep v0.10.1** — CHANGELOG Fixed entries (done for the CI repair below), re-baseline BENCHMARKS.md on Go 1.26.7 (table still records the 1.26.5 environment), tag from a fully green master, verify goreleaser v2.17.1 + tag flow, then confirm `go get …@latest` resolves. Sources: round-2 §f.16–17,46, plan T12. **Unreleased section is pre-filled (DepsChanged, strict enum validation, CI hardening); tagging remains blocked on push+green CI.**
+- [x] ~~**Plumbing truths**~~ DONE 2026-09-02 — locked nixpkgs go_1_26 = **1.26.7** (exact GOTOOLCHAIN match, hermetic). Smoke runs found and fixed **two real flake bugs**: `nix run` apps pointed at the store directory instead of `bin/<name>` (Permission denied), and the coverage app forced `CGO_ENABLED=0` breaking `-race`. Both apps now verified green (`.#auditlog -- help`, `.#coverage` → 95.2%).
+- [x] ~~**Full fuzz sweep on Go 1.26.7**~~ DONE 2026-09-02 — 8/8 targets × 20s, all clean.
+- [x] ~~**Nix templ-regression guard**~~ DONE 2026-09-02 — root cause confirmed fixed (all 3 generated files committed, no templ gitignore entry); CI guard added to stale-generation job asserting presence BEFORE `go generate` (which would otherwise mask the v0.9.0 retraction class).
+- [x] ~~**Sibling-repo pin audit**~~ DONE 2026-09-02 — **3 corrupted SHAs found and fixed in go-workflow-auditlog** (setup-node 39-char ×2, upload-artifact 36-char; verified unresolvable via GitHub API → GitHub 422). go-sse clean (all 40-char, `go-version-file` single-source); go-ndjson/go-health have no actions to audit.
+- [x] ~~**Website docs sync**~~ DONE 2026-09-02 — contributing.mdx updated (7 CI jobs incl. actionlint + example-smoke, pinned govulncheck invocation, Go 1.26.7); README/STABILITY re-verified via `scripts/check-doc-claims.sh` (green).
 - [ ] **Owner-side protections** (repo settings, admin only): branch protection with the 7 required checks + Website for website paths; Dependabot auto-merge + rebase strategy; master-failure notification. Sources: CI-repair §f.7–8,39, round-2 §f.22–24, plan T15.
 
 ## Website & Demo (from the 2026-09-01 launch session)
 
-- [ ] **Re-verify final mp4 frame at t≈21.2s** — the "stray d" fix was never visually confirmed in the shipped `website/public/demo.mp4` (deterministic fix, low risk, unviewed). Source: launch report §b.1.
-- [ ] **og:image for docs pages** — Starlight head template only sets it on the landing layout; docs-page social shares have no image. Source: launch report §f.6.
+- [x] ~~**Re-verify final mp4 frame at t≈21.2s**~~ DONE 2026-09-02 — ffmpeg frames at 21.2/22.8/23.1/23.6s visually inspected: terminal sequence clean, zero stray characters.
+- [x] ~~**og:image for docs pages**~~ DONE 2026-09-02 — og:image + twitter:card/twitter:image added to Starlight `head` config (site-wide, all docs pages); landing already had its own.
 - [ ] **Mobile + light-theme QA** — screenshots at 375/768/1024 of landing, docs, and video player; Starlight light theme + landing light mode after the redesign edits. Source: launch report §b.4–5.
 - [ ] **Real-browser playback smoke test of `/demo.mp4`** — click-play, seek, range requests through the site player. Source: launch report §b.3.
 - [ ] **Script the CHANGELOG.md → changelog.mdx sync** — the docs-site changelog drifted 2 releases behind before being manually synced; nothing enforces it. Source: launch report §b.6/e.2.
-- [ ] **Claims linter for README/docs** — grep version numbers, percentages, feature counts, and method names against source (`SchemaVersion`, `ci.yml`, exported symbols). Found 5 stale claims manually this session. Source: launch report §f.18/e.3.
+- [x] ~~**Claims linter for README/docs**~~ DONE 2026-09-02 — `scripts/check-doc-claims.sh` (go/schema-version/coverage-gate/linter-count/fuzz-count vs sources); immediately caught 3 stale README claims (109→108 linters, 5→8 fuzz targets in two places); wired into pre-commit.
 - [ ] **Lighthouse audit** of landing + one docs page; fix top offenders. Source: launch report §f.13.
 
 ## Library & Tooling (from the 2026-09-01 docs-health audit of historical reports)
 
-- [ ] **Diff: compare dependency edges** — `Report.Diff` compares per-service state only; its doc comment claimed edge comparison since June (fixed to be truthful 2026-09-01, see `diff.go`). Add a `DepsChanged` field to `ServiceDiff` (added/removed `ServiceRef` deps) + tests + STABILITY row. Flagged as top-priority in `docs/status/2026-06-18_14-04` and never done.
-- [ ] **Stale-changelog guard** — script (or CI check) that fails when `CHANGELOG.md` release sections and `website/src/content/docs/changelog.mdx` diverge; the docs-site changelog drifted 2 releases before the 2026-09-01 manual sync. Recurring theme in the v0.8.0/v0.10.0-era reports.
-- [ ] **`example/` CI smoke test** — run `DO_AUDITLOG_ENABLED=true go run ./example` (or a build+exec of it) as a CI step; its 23-feature self-check catches integration regressions unit tests miss. Flagged in three June 2026 reports, never wired.
-- [ ] **Strict event/report enum parsing** — `EventType`/`Phase`/`ProviderType`/`ServiceStatus` accept unknown strings silently on `LoadReport`/`ReadEvents`; add strict `UnmarshalJSON` (or a `Validate` on load) so corrupt NDJSON fails loudly. First requested in `docs/status/2026-06-19_01-43`.
+- [x] ~~**Diff: compare dependency edges**~~ DONE 2026-09-02 — `ServiceDiff.AddedDeps`/`RemovedDeps` implemented + 5 tests + STABILITY/CHANGELOG rows (doc-lie fixed 2026-09-01).
+- [x] ~~**Stale-changelog guard**~~ DONE 2026-09-02 — `scripts/check-changelog-sync.sh` (version-list comparison, POSIX-safe fail path); self-tested both paths (16 releases in sync / simulated drift → exit 1); wired into website.yml build job.
+- [x] ~~**`example/` CI smoke test**~~ DONE 2026-09-02 — `example-smoke` job added (verified locally: exit 0 with the 23-feature self-check).
+- [x] ~~**Strict event/report enum parsing**~~ DONE 2026-09-02 — validate-at-load (design: preserves forward compatibility vs strict UnmarshalJSON): `ReadEvents` now also rejects unknown `provider_type`; `ReplayEvents` validates all three enums per event (previously silently dropped unknown types = lossy replay); empty provider_type still legal; all sentinels classified Corruption; tested.
 - [ ] **CLI ergonomic flags** — `--input-format` for `convert`, `--verbose/--quiet`; both requested in the v0.1.0-era report, still absent from `cmd/auditlog`.
 
 ## From the 2026-09-02 Pareto master plan
@@ -50,9 +50,9 @@ Full 126-task breakdown: `docs/planning/2026-09-02_14-15-pareto-master-plan-all-
 - [ ] **Ground the ROADMAP live/-coverage causal claim** — per-file coverage run; confirm or delete the "datastar rewrite outpaced tests" attribution. Source: plan T11–T12.
 - [ ] **Straggler annotations (one-time)** — strike items this session's fixes resolved: website report §b.7 (pnpm), round-2 self-critique 4, CI-repair self-critique 1–4. Source: plan T13–T15.
 - [ ] **live/ 90% coverage path** — per-file coverage table → fragment-renderer test plan → test batches (78.3% today; the ROADMAP internal-bar item). Source: plan T69–T72.
-- [ ] **Verify README Mermaid sample** against actual `WriteMermaidString()` output. Source: plan T75.
+- [x] ~~**Verify README Mermaid sample**~~ DONE 2026-09-02 — dumped real `WriteMermaidString()` output; sample + note rewritten truthfully (real node IDs are scope-UUID+FQN slugs, alias edges not drawn, warm-amber per-node styling).
 - [ ] **GOEXPERIMENT=jsonv2 note in `doc.go`** — godoc/pkg.go.dev discoverability of the build-flag requirement. Source: plan T74.
-- [ ] **Audit `docs/DOMAIN_LANGUAGE.md`** — streaming/diagram/table terms missing. Source: plan T73.
+- [x] ~~**Audit `docs/DOMAIN_LANGUAGE.md`**~~ DONE 2026-09-02 — added Streaming & Real-Time section (NDJSON, OnEvent, Streaming, MultiWriter, Run ID, Replay, Ring Buffer).
 
 ## Open Owner Questions (blockers, not tasks)
 

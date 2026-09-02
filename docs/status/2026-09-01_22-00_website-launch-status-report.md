@@ -42,7 +42,7 @@
 
 1. **Demo video frame-level verification of the FINAL mp4.**
    - Done: pre-render contact sheet reviewed; post-render extraction at t=2s/12s/15.5s/20s viewed; duration/size/resolution verified.
-   - Open: the fixed "stray d" bug (frame 5, t≈21.2s) was never re-verified visually in the final file — the fix is deterministic (empty first sequence entry), risk is low but the frame is unviewed.
+   - Open: ~~the fixed "stray d" bug (frame 5, t≈21.2s) was never re-verified visually in the final file — the fix is deterministic (empty first sequence entry), risk is low but the frame is unviewed.~~ DONE 2026-09-02 — frames extracted at 21.2s/22.8s/23.1s/23.6s and visually inspected via ffmpeg: terminal sequence is clean (`$` → `$ go get github.com/larsartmann/…` → fade), zero stray characters.
    - Effort: S.
 
 2. **website.yml CI pipeline audit.**
