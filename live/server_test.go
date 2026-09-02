@@ -1336,11 +1336,11 @@ func (f *failingBodyRecorder) Write([]byte) (int, error) {
 	return 0, errWriteFailed
 }
 
-var errWriteFailed = errorString("simulated write failure")
+var errWriteFailed = writeError("simulated write failure")
 
-type errorString string
+type writeError string
 
-func (e errorString) Error() string { return string(e) }
+func (e writeError) Error() string { return string(e) }
 
 // newTestServerWithEvents returns a server whose plugin has recorded events,
 // so export handlers have data to write.
