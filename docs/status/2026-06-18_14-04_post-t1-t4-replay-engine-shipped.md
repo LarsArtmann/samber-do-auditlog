@@ -87,7 +87,7 @@ This session delivered the **keystone of the CLI/NDJSON/Schema plan**: the repla
 
 ### Diff capability — works but doc still lies
 
-`diff.go:43` still claims dependency edges are compared. `compareService` only checks Status, InvocationCount, HealthCheckCount, and error-transition. The fix (T10) is not yet implemented.
+`diff.go:43` still claims dependency edges are compared. `compareService` only checks Status, InvocationCount, HealthCheckCount, and error-transition. ~~The fix (T10) is not yet implemented.~~ PARTIALLY RESOLVED (docs-health pass 2026-09-01): the lying doc comment is fixed (now states edges are NOT compared); the `DepsChanged` feature itself is routed to TODO_LIST.md.
 
 ### NDJSON format — write side complete, read side new
 
@@ -127,7 +127,7 @@ From the Pareto plan, remaining tasks:
 
 ### D1. `diff.go:43` doc comment still lies — integrity bug
 
-Still unfixed. The doc claims dependency edges are diffed; `compareService` doesn't touch Dependencies/Dependents. T10 will fix both the code and the doc.
+Still unfixed. ~~The doc claims dependency edges are diffed; `compareService` doesn't touch Dependencies/Dependents. T10 will fix both the code and the doc.~~ UPDATE (docs-health pass 2026-09-01): doc lie fixed in `diff.go` (comment now truthful); dep comparison routed to TODO_LIST.md as `DepsChanged`. The code gap itself remains.
 
 ### D2. NDJSON has no schema version marker — format trap
 
@@ -183,7 +183,7 @@ Sorted by **impact × value ÷ effort** (descending).
 
 | #  | Task                                                                                 | Impact    | Effort | Status      |
 | -- | ------------------------------------------------------------------------------------ | --------- | ------ | ----------- |
-| 1  | **T10: Diff dependency edges** — implement dep comparison + fix `diff.go:43` doc lie | 🔴 High   | 75m    | Not started |
+| 1  | **T10: Diff dependency edges** — implement dep comparison + fix `diff.go:43` doc lie | 🔴 High   | 75m    | ~~Not started~~ HALF-DONE (2026-09-01): doc lie fixed; `DepsChanged` feature in TODO_LIST.md |
 | 2  | **T8: JSON Schema file** — `schema/report.schema.json` for v0.2.0                    | 🔴 High   | 75m    | Not started |
 | 3  | **T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`                        | 🟠 Medium | 60m    | Not started |
 | 4  | **T6: CLI `import`** — `auditlog import <file> -o report.html`                       | 🟠 Medium | 75m    | Not started |

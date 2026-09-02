@@ -144,23 +144,23 @@ func main() {
 
 ## Features
 
-| Feature                  | What it gives you                                                                   |
-| ------------------------ | ----------------------------------------------------------------------------------- |
-| **Drop-in setup**        | `do.NewWithOpts(plugin.Opts())` — one line, zero config                             |
-| **Dependency graph**     | Infers which service resolved which, without touching do's internal DAG             |
-| **Reverse dependencies** | Every service knows who depends on it                                               |
-| **Scope tree**           | Full hierarchy with per-scope service lists and cross-scope resolution              |
-| **Service types**        | Auto-detects lazy / eager / transient / alias via `do.ExplainNamedService`          |
-| **Timing**               | First build duration, shutdown duration, invocation count and order                 |
-| **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events                        |
-| **16+ export formats**   | JSON, NDJSON, CSV, TSV, HTML, Mermaid, PlantUML, DOT, D2, tree, table               |
-| **Filtered reports**     | Slice by name, type, scope, event type, or time range before exporting              |
-| **Real-time streaming**  | `OnEvent` callback fires on every event — stream to Prometheus, OTel, or dashboards |
-| **Env var toggle**       | `DO_AUDITLOG_ENABLED=true` activates the plugin without code changes                |
-| **Bounded memory**       | `MaxEvents` caps in-memory events; `DroppedEventCount()` tracks overflow            |
-| **Report diffing**       | `Report.Diff(other)` detects added, removed, and changed services for CI/CD         |
-| **~1.7 µs overhead**     | In-memory capture during operation. Toggle off for zero cost                        |
-| **Minimal deps**         | `samber/do/v2` + `a-h/templ` + `larsartmann/go-output` (diagrams and tables)        |
+| Feature                  | What it gives you                                                                                  |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| **Drop-in setup**        | `do.NewWithOpts(plugin.Opts())` — one line, zero config                                            |
+| **Dependency graph**     | Infers which service resolved which, without touching do's internal DAG                            |
+| **Reverse dependencies** | Every service knows who depends on it                                                              |
+| **Scope tree**           | Full hierarchy with per-scope service lists and cross-scope resolution                             |
+| **Service types**        | Auto-detects lazy / eager / transient / alias via `do.ExplainNamedService`                         |
+| **Timing**               | First build duration, shutdown duration, invocation count and order                                |
+| **Health checks**        | Wraps `injector.HealthCheck()` with per-service audit events                                       |
+| **16+ export formats**   | JSON, NDJSON, CSV, TSV, HTML, Mermaid, PlantUML, DOT, D2, tree, table                              |
+| **Filtered reports**     | Slice by name, type, scope, event type, or time range before exporting                             |
+| **Real-time streaming**  | `OnEvent` callback fires on every event — stream to Prometheus, OTel, or dashboards                |
+| **Env var toggle**       | `DO_AUDITLOG_ENABLED=true` activates the plugin without code changes                               |
+| **Bounded memory**       | `MaxEvents` caps in-memory events; `DroppedEventCount()` tracks overflow                           |
+| **Report diffing**       | `Report.Diff(other)` detects added, removed, and changed services for CI/CD                        |
+| **~1.7 µs overhead**     | In-memory capture during operation. Toggle off for zero cost                                       |
+| **Minimal deps**         | `samber/do/v2` + `a-h/templ` + `larsartmann/go-output` (diagrams/tables) + `go-ndjson` (streaming) |
 
 ## How It Works
 
@@ -191,18 +191,19 @@ Every format is a single method call. All write to `io.Writer`; most have a matc
 | **HTML Tree**           | `report.WriteHTMLTree(w)`           | Nested-list dependency tree              |
 | **Table (16+ formats)** | `report.WriteTable(w, format, ...)` | Markdown, YAML, TOML, XML, and more      |
 
-The Mermaid output renders natively on GitHub. Node labels include the provider-type emoji (😴 lazy, 🔁 eager, 🏭 transient):
+The Mermaid output renders natively on GitHub. Node labels include the provider-type emoji (😴 lazy, 🔁 eager, 🏭 transient), and edges point from consumer to dependency:
 
 ```mermaid
 flowchart TD
-    HTTPServer["HTTPServer 😴"] --> AppConfig["AppConfig 🔁"]
-    HTTPServer --> Cache["Cache 😴"]
-    HTTPServer --> Database["Database 😴"]
-    Database --> Logger["Logger"]
-    Notifier["Notifier"] --> EmailNotifier["EmailNotifier 😴"]
+    HTTPServer["*HTTPServer 😴"] --> AppConfig["*AppConfig 😴"]
+    HTTPServer --> Cache["*Cache 😴"]
+    HTTPServer --> Database["*Database 😴"]
+    HTTPServer --> Notifier["Notifier"]
+    Database --> Logger["*Logger"]
+    EmailNotifier["email 😴"]
 ```
 
-> **Note:** Node IDs above are simplified for readability. Real output includes scope prefixes (e.g., `[root]/HTTPServer`) when child scopes are involved.
+> **Note:** Node IDs and type names above are simplified for readability. Real output slugs node IDs from the scope ID and fully-qualified Go type names (e.g. `c2084dcd…__example_AppConfig`), applies warm-amber per-node styling, and does not draw a separate edge for `do.As` alias relationships — the alias interface appears as a dependency of its consumer.
 
 <details>
 <summary><b>JSON output shape</b> (click to expand)</summary>
@@ -422,32 +423,32 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 | Signal                | Detail                                                                                     |
 | --------------------- | ------------------------------------------------------------------------------------------ |
 | **CSP hardened**      | HTML reports use `base-uri 'none'; frame-ancestors 'none'`                                 |
-| **Fuzz tested**       | 5 fuzz targets covering HTML XSS, migration, diagrams, NDJSON                              |
+| **Fuzz tested**       | 8 fuzz targets covering HTML XSS, migration, diagrams, NDJSON                              |
 | **govulncheck**       | Runs on every CI push — zero known vulnerabilities                                         |
-| **109 linters**       | golangci-lint v2 with near-exhaustive linter set, minimal exemptions for tests and tooling |
+| **108 linters**       | golangci-lint v2 with near-exhaustive linter set, minimal exemptions for tests and tooling |
 | **94% coverage gate** | CI fails if coverage drops below 94% of non-example/cmd statements                         |
 | **JSON Schema**       | Canonical Draft 2020-12 schema generated from Go types                                     |
 
 ## Documentation
 
-| Resource                                                                             | What you'll find                          |
-| ------------------------------------------------------------------------------------ | ----------------------------------------- |
-| [Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/)        | From zero to HTML report in 60 seconds    |
+| Resource                                                                             | What you'll find                           |
+| ------------------------------------------------------------------------------------ | ------------------------------------------ |
+| [Quick Start](https://do-auditlog.lars.software/getting-started/quick-start/)        | From zero to HTML report in 60 seconds     |
 | [Live Dashboard](https://do-auditlog.lars.software/guides/live-dashboard/)           | Real-time SSE dashboard for your container |
-| [Dependency Tracking](https://do-auditlog.lars.software/guides/dependency-tracking/) | How the invocation stack infers the graph |
-| [Export Formats](https://do-auditlog.lars.software/guides/export-formats/)           | Every format with examples                |
-| [Filtered Reports](https://do-auditlog.lars.software/guides/filtered-reports/)       | Slice by name, type, scope, time          |
-| [Health Checks](https://do-auditlog.lars.software/guides/health-checks/)             | Per-service health audit events           |
-| [Performance](https://do-auditlog.lars.software/guides/performance/)                 | Benchmarks and tuning                     |
-| [API Reference](https://do-auditlog.lars.software/api-reference/)                    | Full API docs with examples               |
-| [pkg.go.dev](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog)           | Generated godoc                           |
-| [STABILITY.md](STABILITY.md)                                                         | API stability promise                     |
-| [CHANGELOG.md](CHANGELOG.md)                                                         | Release history                           |
-| [BENCHMARKS.md](BENCHMARKS.md)                                                       | Detailed benchmark numbers                |
+| [Dependency Tracking](https://do-auditlog.lars.software/guides/dependency-tracking/) | How the invocation stack infers the graph  |
+| [Export Formats](https://do-auditlog.lars.software/guides/export-formats/)           | Every format with examples                 |
+| [Filtered Reports](https://do-auditlog.lars.software/guides/filtered-reports/)       | Slice by name, type, scope, time           |
+| [Health Checks](https://do-auditlog.lars.software/guides/health-checks/)             | Per-service health audit events            |
+| [Performance](https://do-auditlog.lars.software/guides/performance/)                 | Benchmarks and tuning                      |
+| [API Reference](https://do-auditlog.lars.software/api-reference/)                    | Full API docs with examples                |
+| [pkg.go.dev](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog)           | Generated godoc                            |
+| [STABILITY.md](STABILITY.md)                                                         | API stability promise                      |
+| [CHANGELOG.md](CHANGELOG.md)                                                         | Release history                            |
+| [BENCHMARKS.md](BENCHMARKS.md)                                                       | Detailed benchmark numbers                 |
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). The project uses strict golangci-lint (109 linters), 94% test coverage gate, and 5 fuzz targets.
+See [CONTRIBUTING.md](CONTRIBUTING.md). The project uses strict golangci-lint (108 linters), 94% test coverage gate, and 8 fuzz targets.
 
 ## License
 

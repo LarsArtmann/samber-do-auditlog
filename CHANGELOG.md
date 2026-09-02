@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — Strict enum validation on load
+
+- **Corrupt event streams now fail loudly**: `ReadEvents` additionally rejects unknown `provider_type` values (previously only `event_type`/`phase` were checked), and `ReplayEvents` now validates all three enum fields per event — an unknown value previously caused `applyEvent` to silently drop the event, producing a lossy "successful" replay. Empty `provider_type` remains valid ("undetermined"). All three sentinels (`unknown event_type`, `unknown phase`, `unknown provider_type`) are classified as `errorfamily.Corruption`. Design note: validate-at-load was chosen over strict `UnmarshalJSON` on the enum types to preserve forward compatibility (older binaries can still parse newer streams) — see TODO plan T33.
+
+### Added — Dependency-edge diffing
+
+- **`Report.Diff` now compares dependency edges**: `ServiceDiff` gained `AddedDeps` / `RemovedDeps` (`[]ServiceRef`, JSON `added_deps` / `removed_deps`, omitted when empty). Rewiring an existing service's dependencies is now reported as a per-service change instead of being silently ignored — closing the gap the June 2026 status report flagged and the (then-untruthful) doc comment claimed. Both lists use the canonical ServiceRef ordering.
+
 ### Added — Public Presence Overhaul
 
 - **Demo video**: 25s silent promo (real example output, real report screenshots) rendered with HyperFrames, embedded above the fold at `do-auditlog.lars.software/#demo` with poster, `og:image`, `VideoObject` JSON-LD, and long-cache headers. Composition committed under `website/video/`.
@@ -27,6 +35,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Coverage gate number**: website Contributing page said 95%; the actual CI gate is 94%.
 - **Landing demo terminal**: numbers now match real example output (Services 20, Events ~145, Scopes 4); removed fabricated "45.2ms" build time.
 - **Env-var semantics corrected**: installation docs claimed `DO_AUDITLOG_ENABLED` overrides `Config.Enabled`; the env var is only consulted when `Config.Enabled` is the zero value.
+
+### Fixed — CI & Toolchain (2026-09-01 repair sessions)
+
+- **Master CI restored to green after 33 days red**: `ci.yml` `go-version` aligned with go.mod (1.26.7) in all jobs — a 2026-08-29 go.mod bump without the matching CI bump failed every Go job with `GOTOOLCHAIN=local` on runners. goreleaser pinned to v2.17.1 (v2.18.0+ requires Go ≥ 1.27).
+- **Coverage gate made enforceable again**: the CI grep now excludes generated `*_templ.go` (matching `scripts/coverage-gate.sh`); without it the gate read 87% and failed since Aug 14 while later failures masked it. Gate now passes at 95.2%.
+- **`go-sse/ssetest` promoted from `// indirect` to direct requirement** in `go.mod` (directly imported by tests since the ssetest migration, but the `go mod tidy` drift was pending).
+- **Website workflow can now run**: `setup-node` SHA typo fixed (every run died at action resolution in ~6s since ~Aug 14), cache path corrected to `pnpm-lock.yaml`, and `pnpm/action-setup` (v4.1.0, SHA-pinned) added to both jobs — runners do not ship pnpm, and the workflow's first real execution (2026-09-01) died on exactly that. `pnpm install` now runs `--frozen-lockfile` to catch manifest/lockfile drift.
+- **flake.nix `GOTOOLCHAIN` pinned to go1.26.7** (devShell + coverage + auditlog apps) in lockstep with go.mod.
+- **Docs synced to the above**: AGENTS.md toolchain-pin section (bump-in-same-commit rule), CONTRIBUTING.md, coverage-gate exclusion list, CSP claim (`default-src 'none'` is present), status reports.
 
 ## [0.10.0] - 2026-08-14
 

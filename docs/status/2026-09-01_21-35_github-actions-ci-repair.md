@@ -11,11 +11,11 @@
 1. **The loop is not closed.** I stopped at local verification because committing/pushing requires explicit user approval. Correct per my constraints, but the user's stated goal was "everything works" — GitHub Actions will still show red until a human (or an authorized follow-up) lands the 8 files. I should have ended with an explicit "say go and I will commit+push" instead of burying it.
 2. **Website workflow never executed end-to-end.** The two Website fixes (SHA, cache path) are verified at the YAML/API level, but I never ran `pnpm install → astro check → build → html-validate` locally — partly to avoid disturbing the parallel `website/` WIP (`website/video/` appeared mid-session). The assumption that pnpm exists on `ubuntu-24.04` runner images is unverified; `pnpm/action-setup` would remove it.
 3. **golangci-lint CI parity is inferred, not proven.** CI pins v2.12.2; local only has v2.13.1 (which reports 4 `nolintlint` findings). I inferred v2.12.2 passes from the Aug 14 green Lint run on essentially identical code. I did not attempt `nix shell`-based install of exactly v2.12.2.
-4. **Missed a doc edit I planned:** the AGENTS.md Commands table rows for the coverage gate still say "excludes example/ + cmd/" — they should mention `live/demo/`, `internal/testhelpers/`, and `*_templ.go`. Caught while writing this report.
+4. **Missed a doc edit I planned:** the AGENTS.md Commands table rows for the coverage gate still say "excludes example/ + cmd/" — they should mention `live/demo/`, `internal/testhelpers/`, and `*_templ.go`. Caught while writing this report. ~~Still open.~~ RESOLVED 2026-09-01 — docs-health session updated the AGENTS.md coverage-gate exclusion list.
 5. **No recurrence guard added.** Incident #1 (go.mod vs ci.yml version mismatch) is exactly the class of failure a 10-line drift-check step would catch pre-push. I fixed the instance, not the class.
 6. **Dependabot recovery left to assumption.** I asserted the 3 open PRs will go green after master lands (their runs use master's workflows via the merge ref) but did not trigger `@dependabot rebase` or verify auto-rebase behavior.
-7. **`nix eval` of `pkgs.go_1_26` version not checked** — flake pins `GOTOOLCHAIN=go1.26.7`; if the user's locked nixpkgs ships go_1_26 < 1.26.7, nix builds would force a non-hermetic toolchain download. Parse-checked only.
-8. **hooksPath anomaly noticed late:** local `core.hooksPath=.githooks` while AGENTS.md documents `scripts/hooks`. I don't know what `.githooks` contains; the documented pre-commit gate may not be what runs. Not investigated (flagged in (d)/(c)).
+7. **`nix eval` of `pkgs.go_1_26` version not checked** — flake pins `GOTOOLCHAIN=go1.26.7`; if the user's locked nixpkgs ships go_1_26 < 1.26.7, nix builds would force a non-hermetic toolchain download. ~~Parse-checked only.~~ RESOLVED 2026-09-02 — `nix eval` returned go_1_26 = **1.26.7**, an exact match with the GOTOOLCHAIN pin; no toolchain download risk.
+8. **hooksPath anomaly noticed late:** local `core.hooksPath=.githooks` while AGENTS.md documents `scripts/hooks`. I don't know what `.githooks` contains; the documented pre-commit gate may not be what runs. ~~Not investigated (flagged in (d)/(c)).~~ RESOLVED 2026-09-01 — docs-health session reset `core.hooksPath` to the documented `scripts/hooks` (`.githooks` did not exist; the hook had been silently disabled).
 
 ---
 
@@ -40,8 +40,8 @@ Evidence = local verification runs from this session. All changes are in the wor
 
 | # | Item | What works | What remains | Blocker | Effort |
 |---|------|-----------|--------------|---------|--------|
-| B1 | **Making GitHub green** | Every fix verified locally; 8 files ready (`ci.yml`, `website.yml`, `flake.nix`, `AGENTS.md`, `CONTRIBUTING.md`, release `SKILL.md`, `go.mod`, `go.sum`) | Commit + push + watch the real run | My operating rules forbid commit/push without explicit user approval | S |
-| B2 | golangci-lint validation | `config verify` OK (local v2.13.1); CI-pinned v2.12.2 last passed Aug 14 on essentially identical source; the 4 local `nolintlint` findings are v2.13.1 skew and were deliberately left (removing them could break 2.12.2) | Run of exactly v2.12.2 against the tightened config of `2cd47f6` — never executed anywhere (`go install` blocked by local policy; not attempted via nix) | none, just unattempted | S |
+| B1 | **Making GitHub green** | Every fix verified locally; 8 files ready (`ci.yml`, `website.yml`, `flake.nix`, `AGENTS.md`, `CONTRIBUTING.md`, release `SKILL.md`, `go.mod`, `go.sum`) | ~~Commit + push + watch the real run~~ DONE — pushed as `09cc695`/`0cc67b6`/`17db40b`/`65c213a`; run `33551718914` 7/7 green | ~~My operating rules forbid commit/push without explicit user approval~~ resolved by user approval | S |
+| B2 | golangci-lint validation | `config verify` OK (local v2.13.1); CI-pinned v2.12.2 last passed Aug 14 on essentially identical source; the 4 local `nolintlint` findings are v2.13.1 skew and were deliberately left (removing them could break 2.12.2) | ~~Run of exactly v2.12.2 against the tightened config of `2cd47f6` — never executed anywhere~~ DONE by real CI: v2.12.2 flagged 3 of the 4 directives (stale after `2cd47f6`'s config-level gosec exclusions); removed in `cf5f205`, `live/fragments.go:181` confirmed still needed — lesson: stale-baseline reasoning | none | S |
 | B3 | Website workflow readiness | SHA + cache path fixed; pnpm-lock.yaml exists; actionlint clean | End-to-end run (install → check → build → html-validate); confirmation that pnpm is preinstalled on runners (else `setup-node cache:pnpm` fails) | wanted to avoid clashing with parallel `website/` WIP | M |
 | B4 | Documentation accuracy | AGENTS.md/CONTRIBUTING/SKILL.md updated | AGENTS.md Commands-table gate description still narrow; `website/src/content/docs/contributing.mdx` still says "5 parallel jobs" + "govulncheck via GitHub Action" — but that file is mid-edit by another session; touching it risks conflict | parallel WIP on `website/**` | S |
 | B5 | Dependabot PR recovery | The 3 open PRs (astro 7.2.9, starlight 0.41.10, html-validate 11.10.0) run merge-ref workflows → master's fixed ci.yml/website.yml applies to their next run | Trigger rebase / verify they go green / merge-or-close decision | B1 + user intent (see question 2) | S |
@@ -55,8 +55,8 @@ Evidence = local verification runs from this session. All changes are in the wor
 5. **BENCHMARKS.md re-baseline on Go 1.26.7** — table still records the 1.26.5 measurement environment. Deliberately untouched this session (historical record). Not started.
 6. **`.githooks` vs `scripts/hooks` reconciliation** — local `core.hooksPath` is `.githooks`, AGENTS.md documents `scripts/hooks`. Unknown which is intended; not investigated. Priority: low-medium.
 7. **`nix run .#coverage` end-to-end check** after the flake GOTOOLCHAIN change (parse-checked only). Not run.
-8. **HARVEST of section (f) into `TODO_LIST.md`/`ROADMAP.md`** via docs-health — not started (belongs to a follow-up docs-health session, per skill handoff).
-9. **CHANGELOG entry** for the CI repair + go.mod tidy fix (release-relevant for contributors seeing the mod-tidy gate behavior change). Not started.
+8. ~~**HARVEST of section (f) into `TODO_LIST.md`/`ROADMAP.md`** via docs-health — not started~~ DONE — 2026-09-01 docs-health session harvested sections (f) of all three same-day reports into TODO_LIST.md/ROADMAP.md.
+9. ~~**CHANGELOG entry** for the CI repair + go.mod tidy fix~~ DONE — `[Unreleased]` → "Fixed — CI & Toolchain" in the docs-health session.
 10. **Post-mortem for the two-masking-failure-eras pattern** (test-gate failure hidden behind go-version failure). This report captures it; a standalone short post-mortem was not written.
 
 ## d) TOTALLY FUCKED UP
@@ -70,7 +70,7 @@ Radical honesty section. Items are about the state I found (and, where noted, my
 | D3 | **The coverage gate has been unenforceable since Aug 14** (86.5% < 94%) and nobody noticed for 18 days because the later go-version failures made every job red anyway. The documented gate ("≥94%") was a fiction: AGENTS.md and `scripts/coverage-gate.sh` both said `fragments_templ.go` is excluded — only ci.yml never got the memo | High (gate credibility) | Divergence between two copies of the same exclusion list (script vs workflow) — no single source of truth | Fixed (A6). Structural fix in (e): one canonical exclusion list |
 | D4 | **Dependabot PRs stacked red for days** (3 open website PRs, plus superseded red PR branches from Aug 29) with no rebase, no auto-merge, no close-stale | Medium (noise, merge debt, blocked dep security updates) | No required-checks/auto-merge plumbing; red master made every PR red regardless | Will clear once B1+B5 land |
 | D5 | **The Website workflow never once ran its build steps** — since the SHA typo landed (~Aug 14), every run died at action resolution in ~6s. All pnpm/dastro/html-validate logic in it is effectively untested-in-CI | Medium (false confidence in the "Build Website" check) | Corrupted SHA pin — almost certainly a copy/paste artifact (v6.5.0's real SHA differs by one character) | Fixed (A4/A5); still unproven end-to-end (B3) |
-| D6 | **My own session:** GitHub is still red as of this report. The user asked for "everything works"; I delivered "everything works locally" | Low (deliberate constraint, but an open loop) | No-commit/no-push without explicit approval; I flagged it in the final message but should have made the ask unmissable | One word from the user ("commit/push") closes it |
+| D6 | ~~**My own session:** GitHub is still red as of this report. The user asked for "everything works"; I delivered "everything works locally"~~ RESOLVED — repair set pushed same day; run `33551718914` 7/7 green | Low (deliberate constraint, but an open loop) | No-commit/no-push without explicit approval; I flagged it in the final message but should have made the ask unmissable | ~~One word from the user ("commit/push") closes it~~ closed |
 
 ## e) WHAT WE SHOULD IMPROVE
 
@@ -91,18 +91,18 @@ Impact-ranked. Effort: S <30min, M 30min–2h, L >2h. This section is the primar
 
 | # | Task | Impact | Effort | Category |
 |---|------|--------|--------|----------|
-| 1 | Commit + push the 8-file CI repair set; watch master run go green | Critical | S | Bug |
-| 2 | Verify all 7 CI jobs green on the real run; fix any CI-only surprises (runner env vs local) | Critical | S | Bug |
+| 1 | ~~Commit + push the 8-file CI repair set; watch master run go green~~ done at `09cc695`, `0cc67b6`, `17db40b`, `65c213a` | Critical | S | Bug |
+| 2 | ~~Verify all 7 CI jobs green on the real run; fix any CI-only surprises (runner env vs local)~~ done — run `33551718914` (one lint surprise, fixed `cf5f205`) | Critical | S | Bug |
 | 3 | `@dependabot rebase` the 3 open website PRs (astro 7.2.9, starlight 0.41.10, html-validate 11.10.0); confirm CI+Website green; merge or close | High | S | Cleanup |
 | 4 | Add `scripts/check-go-version.sh` drift guard (go.mod vs ci.yml vs flake vs .golangci) wired into CI + pre-commit | High | S | Quality |
 | 5 | Run Website workflow end-to-end locally (pnpm install → astro check → build → html-validate) to de-risk the runner assumptions | High | M | Quality |
-| 6 | Add `pnpm/action-setup` (SHA-pinned) reading `packageManager: pnpm@11.20.0` to website.yml | Medium | S | Feature |
+| 6 | ~~Add `pnpm/action-setup` (SHA-pinned) reading `packageManager: pnpm@11.20.0` to website.yml~~ done in docs-health session (working tree): `pnpm/action-setup` v4.1.0 SHA-pinned in BOTH jobs + `--frozen-lockfile`; runner-missing-pnpm confirmed by run `33562593783` | Medium | S | Feature |
 | 7 | Enable branch protection on master: require the 7 CI checks (+ Website for website paths) | High | S | Quality |
 | 8 | Enable Dependabot auto-merge for green dependency PRs; set rebase strategy | Medium | S | Cleanup |
 | 9 | Close superseded stale PR branches (html-validate 11.9.0, astro 7.2.4-era) | Low | S | Cleanup |
 | 10 | Extract coverage-exclusion list into one canonical place consumed by ci.yml + scripts/coverage-gate.sh | Medium | S | Quality |
 | 11 | Pin govulncheck to a fixed version (decide freshness policy; document in AGENTS.md) | Medium | S | Quality |
-| 12 | Update AGENTS.md Commands-table coverage rows: "excludes example/, cmd/, live/demo/, internal/testhelpers/, *_templ.go" | Low | S | Documentation |
+| 12 | ~~Update AGENTS.md Commands-table coverage rows: "excludes example/, cmd/, live/demo/, internal/testhelpers/, *_templ.go"~~ done in docs-health session | Low | S | Documentation |
 | 13 | After website WIP lands: update `website/src/content/docs/contributing.mdx` (7 jobs, govulncheck invocation, Go 1.26.7) | Low | S | Documentation |
 | 14 | Reconcile `core.hooksPath` = `.githooks` vs documented `scripts/hooks`; inspect `.githooks` contents; make AGENTS.md truthful | Medium | S | Cleanup |
 | 15 | `nix eval` the locked nixpkgs `go_1_26` version; confirm ≥ 1.26.7 or adjust flake pin strategy | Medium | S | Bug |
@@ -116,14 +116,14 @@ Impact-ranked. Effort: S <30min, M 30min–2h, L >2h. This section is the primar
 | 23 | Schedule a one-off full fuzz run on Go 1.26.7 (BuildFlow `--max-time 5m`, 8 targets) | Medium | M | Quality |
 | 24 | When CI's golangci-lint eventually bumps ≥ 2.13: remove the 4 stale `nolint` directives (loader.go:50, stream.go:129, live/fragments.go:181, live/server_test.go:684) | Low | S | Cleanup |
 | 25 | Decide depguard's replacement: either re-enable it or add `gomodguard`/convention doc for the `invopop/jsonschema`-in-cmd-only rule | Medium | S | Quality |
-| 26 | CHANGELOG "Fixed" entry: CI repair, go.mod ssetest promotion, gate exclusion | Low | S | Documentation |
+| 26 | ~~CHANGELOG "Fixed" entry: CI repair, go.mod ssetest promotion, gate exclusion~~ done in docs-health session (`[Unreleased]` → Fixed — CI & Toolchain) | Low | S | Documentation |
 | 27 | Tag next release with green CI (v0.10.1/v0.11.0); verify goreleaser v2.17.1 config + `GOTOOLCHAIN` interplay | High | M | Release |
 | 28 | Re-baseline BENCHMARKS.md on Go 1.26.7 (refresh environment metadata + numbers) | Low | M | Documentation |
-| 29 | Run docs-health HARVEST on this report → TODO_LIST.md / ROADMAP.md | Medium | S | Documentation |
+| 29 | ~~Run docs-health HARVEST on this report → TODO_LIST.md / ROADMAP.md~~ done in docs-health session | Medium | S | Documentation |
 | 30 | Add post-mortem note (short ADR or AGENTS.md history): "two failure eras masking each other" + same-commit bump rule | Low | S | Documentation |
 | 31 | Grep sibling repos (go-workflow-auditlog, go-sse, go-ndjson websites) for the same corrupted setup-node SHA pattern and Go-version/CI mismatches | High | S | Bug |
 | 32 | Decide GOTOOLCHAIN policy for tool installs (strict pin vs per-step `GOTOOLCHAIN=auto`); document tradeoff in AGENTS.md | Medium | S | Quality |
-| 33 | Confirm `GOEXPERIMENT=jsonv2` removal TODO exists in ROADMAP with a Go 1.27 trigger | Low | S | Documentation |
+| 33 | ~~Confirm `GOEXPERIMENT=jsonv2` removal TODO exists in ROADMAP with a Go 1.27 trigger~~ confirmed — ROADMAP "Go 1.27+ Migration" section (docs-health session); goreleaser-pin revisit added | Low | S | Documentation |
 | 34 | Verify `.golangci.yml` lint exclusions cover `_templ.go` paths consistently with the coverage policy | Low | S | Quality |
 | 35 | Add `workflow_dispatch` trigger to ci.yml for manual runs | Low | S | Feature |
 | 36 | Consider setup-go `cache-dependency-path: go.sum` for precise cache invalidation | Low | S | Quality |

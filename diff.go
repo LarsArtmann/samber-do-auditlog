@@ -30,6 +30,10 @@ type ServiceDiff struct {
 	InvocationCountDelta  int  `json:"invocation_count_delta"`
 	HealthCheckCountDelta int  `json:"health_check_count_delta"`
 	HasNewError           bool `json:"has_new_error"`
+	// AddedDeps are dependency edges present in `other` but not in `r`.
+	AddedDeps []ServiceRef `json:"added_deps,omitempty"`
+	// RemovedDeps are dependency edges present in `r` but not in `other`.
+	RemovedDeps []ServiceRef `json:"removed_deps,omitempty"`
 }
 
 // IsEmpty returns true when no differences were found.
@@ -53,8 +57,9 @@ func (d DiffResult) HasChanges() bool {
 // status differences. Useful for regression-testing DI graphs across deploys.
 //
 // The comparison key is (scope_id, service_name). Timestamps and durations are
-// intentionally ignored — only structural changes (added/removed services,
-// dependency edges, status transitions, error appearances) are reported.
+// intentionally ignored — reported changes are added/removed services, status
+// transitions, invocation/health-count deltas, error appearances, and
+// per-service dependency-edge changes (ServiceDiff.AddedDeps/RemovedDeps).
 func (r Report) Diff(other Report) DiffResult {
 	result := DiffResult{
 		AddedServices:                nil,
@@ -96,20 +101,56 @@ func (r Report) Diff(other Report) DiffResult {
 }
 
 func compareService(prev, other ServiceInfo) (ServiceDiff, bool) {
+	prevDeps := serviceRefSet(prev.Dependencies)
+	otherDeps := serviceRefSet(other.Dependencies)
+
 	diff := ServiceDiff{
 		ServiceRef:            prev.ServiceRef,
 		StatusChanged:         prev.Status != other.Status,
 		InvocationCountDelta:  other.InvocationCount - prev.InvocationCount,
 		HealthCheckCountDelta: other.HealthCheckCount - prev.HealthCheckCount,
 		HasNewError:           !prev.Status.IsError() && other.Status.IsError(),
+		AddedDeps:             serviceRefsOnlyIn(otherDeps, prevDeps),
+		RemovedDeps:           serviceRefsOnlyIn(prevDeps, otherDeps),
 	}
 
 	changed := diff.StatusChanged ||
 		diff.InvocationCountDelta != 0 ||
 		diff.HealthCheckCountDelta != 0 ||
-		diff.HasNewError
+		diff.HasNewError ||
+		len(diff.AddedDeps) > 0 ||
+		len(diff.RemovedDeps) > 0
 
 	return diff, changed
+}
+
+// serviceRefSet indexes ServiceRefs by the canonical (scope_id, service_name)
+// key used throughout the diff logic.
+func serviceRefSet(refs []ServiceRef) map[string]ServiceRef {
+	set := make(map[string]ServiceRef, len(refs))
+
+	for _, ref := range refs {
+		set[serviceKey(ref.ScopeID, ref.ServiceName)] = ref
+	}
+
+	return set
+}
+
+// serviceRefsOnlyIn returns the refs present in `a` but not in `b`, sorted
+// with the canonical ServiceRef ordering. Returns nil when the difference is
+// empty so JSON output stays lean.
+func serviceRefsOnlyIn(a, b map[string]ServiceRef) []ServiceRef {
+	var out []ServiceRef
+
+	for key, ref := range a {
+		if _, exists := b[key]; !exists {
+			out = append(out, ref)
+		}
+	}
+
+	slices.SortFunc(out, CompareServiceRefs)
+
+	return out
 }
 
 func indexServicesByKey(services []ServiceInfo) map[string]ServiceInfo {

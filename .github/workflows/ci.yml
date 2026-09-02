@@ -5,9 +5,17 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:
+  schedule:
+    # Weekly Monday 05:00 UTC sweep: catches new advisories and rot between pushes.
+    - cron: "0 5 * * 1"
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   GOEXPERIMENT: jsonv2
@@ -18,6 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: go-version drift guard
+        run: ./scripts/check-go-version.sh
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: "1.26.7"
@@ -29,17 +39,31 @@ jobs:
       - name: go test -race with coverage
         run: |
           go test -race -count=1 -coverprofile=cover.out -covermode=atomic ./...
-          # Exclude demo (example/, live/demo/), tooling (cmd/), test
-          # infrastructure (internal/testhelpers/), and generated code
-          # (*_templ.go) from the coverage gate. Their logic is exercised by
-          # integration/golden tests or produced by templ, not hand-written.
-          grep -v -e '/example/' -e '/cmd/' -e '/live/demo/' -e '/internal/testhelpers/' -e '_templ.go' cover.out > cover-filtered.out
+          # Exclusions are single-sourced in scripts/coverage-exclusions.txt
+          # (shared with scripts/coverage-gate.sh): demo (example/, live/demo/),
+          # tooling (cmd/), test infrastructure (internal/testhelpers/), and
+          # generated templ code (*_templ.go).
+          while IFS= read -r line; do
+            [ -n "$line" ] || continue
+            set -- "$@" -e "$line"
+          done < scripts/coverage-exclusions.txt
+          grep -v "$@" cover.out > cover-filtered.out
           coverage=$(go tool cover -func=cover-filtered.out | grep '^total:' | awk '{print $3}' | tr -d '%')
           echo "Total coverage: ${coverage}%"
           if awk "BEGIN {exit !($coverage < 94.0)}"; then
             echo "::error::Coverage ${coverage}% is below 94%"
             exit 1
           fi
+      - name: Publish coverage step summary
+        if: always()
+        run: |
+          {
+            echo "## Coverage"
+            echo ""
+            echo '```'
+            go tool cover -func=cover-filtered.out
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   lint:
     name: Lint
@@ -50,8 +74,13 @@ jobs:
         with:
           go-version: "1.26.7"
           cache: true
-      - name: Install golangci-lint
-        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+      - name: Cache golangci-lint binary
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/go/bin/golangci-lint
+          key: golangci-lint-v2.12.2-${{ runner.os }}
+      - name: Install golangci-lint (skipped on cache hit)
+        run: command -v golangci-lint >/dev/null 2>&1 || go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
       - name: Verify golangci-lint config
         run: golangci-lint config verify
       - name: golangci-lint
@@ -67,7 +96,8 @@ jobs:
           go-version: "1.26.7"
           cache: true
       - name: govulncheck
-        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+        # Pinned for reproducibility (@latest is non-reproducible). Bump deliberately.
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.7.0 ./...
 
   mod-tidy:
     name: go mod tidy check
@@ -78,8 +108,19 @@ jobs:
         with:
           go-version: "1.26.7"
           cache: true
-      - name: go mod tidy
-        run: go mod tidy
+      - name: go mod tidy (transport-flake tolerant)
+        # 2026-09-01: 2 of 3 CI runs died on transient proxy.golang.org
+        # transport errors. Retry downloads only — the drift check below stays
+        # strict and never retries.
+        run: |
+          for attempt in 1 2 3; do
+            if go mod tidy; then
+              exit 0
+            fi
+            echo "attempt $attempt failed (often a proxy.golang.org transport flake); retrying in 15s"
+            sleep 15
+          done
+          exit 1
       - name: Check for drift
         run: |
           if ! git diff --exit-code; then
@@ -97,8 +138,27 @@ jobs:
         with:
           go-version: "1.26.7"
           cache: true
-      - name: go generate
-        run: go generate ./...
+      - name: Generated files must be committed
+        # v0.9.0 was retracted because live/fragments_templ.go was gitignored
+        # and missing from the tag. Assert presence BEFORE go generate, which
+        # would otherwise silently recreate them and mask the regression.
+        run: |
+          for f in live/fragments_templ.go html_templ.go schema/report.schema.json; do
+            if [ ! -f "$f" ]; then
+              echo "::error::$f is missing from the repo — generated files must be committed (v0.9.0 retraction class)"
+              exit 1
+            fi
+          done
+      - name: go generate (transport-flake tolerant)
+        run: |
+          for attempt in 1 2 3; do
+            if go generate ./...; then
+              exit 0
+            fi
+            echo "attempt $attempt failed (often a proxy.golang.org transport flake); retrying in 15s"
+            sleep 15
+          done
+          exit 1
       - name: Check for drift in generated files
         run: |
           if ! git diff --exit-code; then
@@ -120,6 +180,20 @@ jobs:
         run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
       - name: Run actionlint
         run: actionlint -color
+
+  example-smoke:
+    name: Example smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.26.7"
+          cache: true
+      - name: Run example self-check (23-feature integration check)
+        env:
+          DO_AUDITLOG_ENABLED: "true"
+        run: go run ./example
 
   goreleaser:
     name: goreleaser check

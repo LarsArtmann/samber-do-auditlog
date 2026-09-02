@@ -14,9 +14,9 @@
 ## 0. Live state at planning time
 
 - Pushed to master just before this plan was written: `2cd47f6..65c213a` (4 semantic commits: ci.yml fix, website.yml fix, go.mod ssetest promotion, flake+docs sync). Status-report commit `3500517` included.
-- CI run **33551336011** queued on that push — Wave 0 verification is already in flight.
-- Untracked/modified `website/**` + `README.md` belong to a parallel session — **do not touch**.
-- Unanswered owner decisions: Dependabot PR intent (Q2), repo protections (Q3).
+- ~~CI run **33551336011** queued on that push — Wave 0 verification is already in flight.~~ That run hit a transport flake (stale-gen job, proxy.golang.org) and was superseded; **33551718914** is the green verification run (7/7 jobs), after one lint-fix cycle (`cf5f205`).
+- ~~Untracked/modified `website/**` + `README.md` belong to a parallel session — **do not touch**.~~ Landed 2026-09-01 as `c249f5d` (website launch overhaul).
+- Unanswered owner decisions: Dependabot PR intent (Q2), repo protections (Q3). — still unanswered as of the docs-health session (2026-09-01 late).
 
 ## 1. Pareto breakdown
 
@@ -87,8 +87,8 @@ Covers = item numbers in `docs/status/2026-09-01_21-35_github-actions-ci-repair.
 
 | ID | Wave | Task | Min | Impact | Effort | Customer value | Covers |
 |----|------|------|----:|--------|--------|----------------|--------|
-| T01 | 0 | Commit pending repair set as 4 semantic commits (ci fix / website fix / go.mod tidy / flake+docs) | 40 | Critical | S | Trustworthy master; every future bisect lands on a green-or-honest commit | 1 |
-| T02 | 0 | Push + watch run 33551336011 → require 7/7 green; triage-and-fix any CI-only surprise, re-push | 60 | Critical | M | CI checkmarks mean something again; releases unblocked | 2 |
+| T01 | 0 | ~~Commit pending repair set as 4 semantic commits (ci fix / website fix / go.mod tidy / flake+docs)~~ done at `09cc695`, `0cc67b6`, `17db40b`, `65c213a` | 40 | Critical | S | Trustworthy master; every future bisect lands on a green-or-honest commit | 1 |
+| T02 | 0 | ~~Push + watch run 33551336011 → require 7/7 green; triage-and-fix any CI-only surprise, re-push~~ done at `cf5f205` (lint fix), verified green as run **33551718914** | 60 | Critical | M | CI checkmarks mean something again; releases unblocked | 2 |
 | T03 | 0 | Dependabot sweep: `@dependabot rebase` the 3 website PRs, verify CI **and** Website workflows green on them, merge or close | 45 | High | S | Pending dep/security updates ship; red-PR noise gone; Website workflow's first real run | 3, 9, 38 |
 | T04 | 1 | Go-version drift guard: `scripts/check-go-version.sh` asserting go.mod == ci.yml(×7) == flake GOTOOLCHAIN(×3) == .golangci run.go; wire into CI + pre-commit; self-test by simulating a mismatch | 60 | High | M | The Aug-29 outage class becomes a 30-second red local hook instead of a 33-day red master | 4, 45 |
 | T05 | 1 | Single-source coverage exclusions: one canonical list file consumed by `scripts/coverage-gate.sh` **and** ci.yml; re-verify 95.2% gate | 45 | High | S | Coverage gate can never silently diverge from documented intent again | 10, 35 |
@@ -122,11 +122,11 @@ Done items are marked. Parent = Level-1 task. All times are minutes.
 | 0.3 | Commit go.mod/go.sum ssetest promotion after double-tidy stability check | 6 | T01 | ✅ done (17db40b) |
 | 0.4 | Commit flake GOTOOLCHAIN 1.26.7 (×3) + AGENTS/CONTRIBUTING/SKILL doc sync | 10 | T01 | ✅ done (65c213a) |
 | 0.5 | Push master `2cd47f6..65c213a`; confirm CI run queued (33551336011) | 3 | T01 | ✅ done |
-| 0.6 | Watch run: test job (vet, build, race+gate ≥94) | 12 | T02 | pending |
-| 0.7 | Watch run: lint job (config verify + v2.12.2 run) | 10 | T02 | pending |
-| 0.8 | Watch run: vulncheck, mod-tidy, stale-generation jobs | 10 | T02 | pending |
-| 0.9 | Watch run: actionlint + goreleaser jobs | 5 | T02 | pending |
-| 0.10 | If any red: capture step log, fix, re-push, re-watch (loop ≤2×) | 12 | T02 | pending |
+| 0.6 | Watch run: test job (vet, build, race+gate ≥94) | 12 | T02 | ~~pending~~ ✅ done — run 33551718914, gate 95.2% |
+| 0.7 | Watch run: lint job (config verify + v2.12.2 run) | 10 | T02 | ~~pending~~ ✅ done after lint-fix cycle `cf5f205` (CI flagged 3 of 4 local nolintlint findings; `live/fragments.go:181` confirmed still needed) |
+| 0.8 | Watch run: vulncheck, mod-tidy, stale-generation jobs | 10 | T02 | ~~pending~~ ✅ done — run 33551718914 (after one mod-tidy transport-flake rerun) |
+| 0.9 | Watch run: actionlint + goreleaser jobs | 5 | T02 | ~~pending~~ ✅ done — run 33551718914 |
+| 0.10 | If any red: capture step log, fix, re-push, re-watch (loop ≤2×) | 12 | T02 | ~~pending~~ ✅ done — exactly one cycle: `cf5f205` |
 | 0.11 | `@dependabot rebase` on astro 7.2.9, starlight 0.41.10, html-validate 11.10.0 PRs | 6 | T03 | pending |
 | 0.12 | Wait for rebased PR CI; verify each PR's **CI** run green | 12 | T03 | pending |
 | 0.13 | Verify each PR's **Website** run green (first real execution of fixed workflow) | 12 | T03 | pending |
@@ -223,7 +223,7 @@ Totals: 19 Level-1 tasks / **84 Level-2 tasks**, every status-report item (1–5
 
 ## 5. What was already executed while planning
 
-Per the skill's "commit pending work first" rule and the user's explicit `git commit & git push`: Wave 0 tasks 0.1–0.5 are **done** (commits 09cc695, 0cc67b6, 17db40b, 65c213a pushed; CI run 33551336011 queued). Wave 0 verification (0.6–0.14) continues immediately after this plan is committed.
+Per the skill's "commit pending work first" rule and the user's explicit `git commit & git push`: Wave 0 tasks 0.1–0.5 are **done** (commits 09cc695, 0cc67b6, 17db40b, 65c213a pushed; CI run 33551336011 queued). ~~Wave 0 verification (0.6–0.14) continues immediately after this plan is committed.~~ **Execution state (2026-09-01 docs-health):** 0.6–0.10 DONE — run `33551718914` 7/7 green after lint-fix `cf5f205` and one transport-flake rerun; 0.11–0.14 (Dependabot sweep) remain BLOCKED on owner Q1. The launch-overhaul push (`c249f5d`) then gave the fixed Website workflow its first real execution — it failed on missing pnpm; fix written in the working tree (`pnpm/action-setup` v4.1.0, both jobs), verification pending the next `website/**` push.
 
 ## 6. Handoff
 

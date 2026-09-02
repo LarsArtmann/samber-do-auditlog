@@ -7,12 +7,15 @@ For short-term work, see [TODO_LIST.md](TODO_LIST.md). For shipped features, see
 
 ## Stability Path
 
-The project is in **ALPHA**. The path to BETA requires:
+The public stability stage is **BETA** ([STABILITY.md](STABILITY.md)): the API is stabilizing but breaking changes are still possible before 1.0.
 
-1. `go-sse` and `go-ndjson` published to GitHub with stable tags ✓ (replace directives removed). The temporary `go-output/testhelpers` replacements have also been removed; explicit indirect requirements select their valid published tags over upstream's broken pseudo-versions.
-2. `live/` sub-package coverage above 90% (currently 89.7%)
+The internal quality bar on the path to 1.0:
 
-The coverage gate (94%) and `GOEXPERIMENT=jsonv2` flag are already stable in CI. The live dashboard has reached feature parity with the static HTML export.
+1. ~~`go-sse` and `go-ndjson` published to GitHub with stable tags~~ ✓ (replace directives removed). The temporary `go-output/testhelpers` replacements have also been removed; explicit indirect requirements select their valid published tags over upstream's broken pseudo-versions.
+2. `live/` sub-package coverage above 90% — **currently 78.3%** (2026-09-01 gate run; the datastar/templ rewrite and post-cleanup growth outpaced live tests — per-function data 2026-09-02 confirms the templ fragment renderers are the dominant gap, mostly 58–78% coverage). This is the main outstanding internal-bar item.
+3. `go-sse` dependency tracking is current (v0.5.1); keep the family of sibling libraries (go-output, go-sse, go-ndjson, go-atomic-write, go-error-family) on green, non-retracted tags.
+
+The coverage gate (94%, currently at 95.2%) and the `GOEXPERIMENT=jsonv2` flag are stable in CI. The live dashboard has reached feature parity with the static HTML export.
 
 The path from BETA to 1.0 is:
 
@@ -29,19 +32,45 @@ When Go 1.27 stabilizes `encoding/json/v2`:
 - **Drop the `GOEXPERIMENT=jsonv2` requirement** — the `go-ndjson` module can ship without build-constraint hacks
 - **Evaluate json/v2 adoption in this project's own code** — currently uses `encoding/json` (v1). Json/v2 offers safer escaping, streaming, and `jsontext` for low-level control. Migration is optional but would align with `go-ndjson`.
 - **Revisit the `encoding/json/v2` exclusion policy in AGENTS.md** — the policy exists because json/v2 is behind a build constraint in Go 1.26.x. Once stable, the exclusion should be lifted.
+- **Revisit the goreleaser v2.17.1 pin** — v2.18.0+ requires Go ≥ 1.27; the pin exists only because runners force `GOTOOLCHAIN=local`.
 - **Consider typed generics** — `Register[T any](name ServiceName)` for type-safe service registries. Currently not possible because samber/do v2's hook interface is string-based.
 
 ---
 
 ## Live Dashboard Evolution
 
-The `live/` sub-package has reached near-feature-parity with the static HTML export:
+The `live/` sub-package has reached feature parity with the static HTML export:
 
-- **Shipped**: scope tree tab, pagination, export buttons, CORS support, live demo (`live/demo/main.go`), `example/ --live` integration, SSE ring buffer replay
-- **Shared CSS** ✓ — `DesignTokensCSS` (`design_tokens.go`) is the single source of truth, enforced by `TestDesignTokensInSync`
+- **Shipped**: scope tree tab, pagination, export buttons, CORS support, live demo (`live/demo/main.go`), `example/ --live` integration, SSE ring buffer replay, keyboard navigation, datastar-powered reactivity
+- **Shared CSS** ✓ — `DesignTokensCSS` (`design_tokens.go`) is the single source of truth, enforced by `TestDesignTokensInSync` and `TestSharedComponentCSSInSync`
+- **Raise live/ test coverage** — 78.3% today vs the 90% internal bar; the templ fragment renderers are the biggest untested surface (confirmed by per-function coverage 2026-09-02: `fragments_templ.go` functions at 58–78%, plus two 50% handlers in `server.go`)
 - **Dark/light theme toggle** — The warm amber aesthetic currently has no light variant
-- **Fix `example/ --live` premature shutdown** — See [TODO_LIST.md](TODO_LIST.md)
 - **Cross-origin CSP** — CORS headers are set but `connect-src 'self'` blocks cross-origin dashboard embedding; needs configurable CSP or documentation of the limitation
+
+---
+
+## Ecosystem & Distribution (from the 2026-09-01 launch session)
+
+Ideas from shipping the website + demo video, not yet scheduled:
+
+- **9:16 vertical demo cut** (Shorts/TikTok) and **animated GIF teaser** (≤6s, 480p) for the README
+- **Launch post copy** derived from the README one-narrative; **YouTube version**
+- **samber/do ecosystem PR** — add do-auditlog to samber/do's README ecosystem section (upstream, needs owner approval)
+- **Privacy-friendly analytics** to learn whether the demo converts
+- **Blog-style "How dependency inference works" deep-dive** — the invocation-stack story is the best content asset
+- **Diff-page demo** — showcase `Report.Diff` with before/after JSONs (CI/CD use case)
+- **Interactive playground** — embed a live HTML report on the website where users paste a report JSON and see the visualization
+
+---
+
+## CI Resilience Ideas
+
+Born from the 2026-09-01 outage post-mortem (33 days of red master):
+
+- **Transport-flake tolerance** — proxy.golang.org errors can redden any push; the retry wrapper (TODO_LIST) plus a written rerun playbook covers this
+- **GOPROXY hardening** — evaluate alternate proxy or vendor/ for CI; investigate why setup-go's cache didn't shield mod-tidy from downloads
+- **Per-job `timeout-minutes`** so transport-hang failures fail fast and rerun cheaply
+- **Version-skew ledger** — directives that differ between local and pinned tool versions (e.g. `live/fragments.go:181` nolint, retired when the golangci-lint pin bumps ≥ 2.13) — tracked in AGENTS.md
 
 ---
 
@@ -49,6 +78,11 @@ The `live/` sub-package has reached near-feature-parity with the static HTML exp
 
 These are ideas that need design exploration before becoming TODO items:
 
+- **Diff deepening** — beyond the planned `DepsChanged` (TODO_LIST): a `ScopeDiff` type, event-type deltas, and a `--format` for CI-friendly diff output. Requested June 2026, design never explored.
+- **Event schema versioning** — NDJSON event lines carry no `schema_version` (only the report does); replay of future-schema event streams is silently lossy. Needs a design before the next schema bump.
+- **Schema-validation mode** — optional `auditlog validate --schema` against the embedded JSON Schema via a validator dependency (stdlib-only CLI decision currently blocks this).
+- **Docker image for the CLI** — goreleaser docker section; requested June 2026.
+- **Status-report retention policy** — `docs/status/` grows unbounded (68+ files, none archived since June); define an archive rule (e.g. archive on docs-health pass when zero open items) so the directory stays navigable.
 - **Branded type enforcement** — `ContainerID`, `ScopeID`, `ServiceName` are named string types but carry no validation. Consider constructors (`NewServiceName(string) (ServiceName, error)`) that reject empty strings or whitespace. Blocked on deciding whether validation belongs in the type or in the constructor.
 - **Event type splitting** — Currently `Event` is one struct with a `Phase` field (before/after). Making before-events and after-events separate types would make impossible states unrepresentable (e.g., a "before" event with a `DurationMs`). Large blast radius; needs careful migration plan.
 - **ServiceInfo sub-struct placement review** — `IsShutdowner` is in `ServiceLifecycle` but `IsHealthchecker` is in `ServiceHealth`. Both are capability flags detected by `do.ExplainInjector`. This split-brain may be wrong. Moving `IsShutdowner` to `ServiceHealth` changes JSON field order.
@@ -61,11 +95,21 @@ These are ideas that need design exploration before becoming TODO items:
 
 Ideas for deeper documentation (website + README):
 
-- **Interactive playground** — Embed a live HTML report on the website (iframe with CSP sandbox) where users paste a report JSON and see the visualization
-- **Video demo** — A 30-second GIF or video showing the interactive graph (pan/zoom/click-to-highlight) and the waveform
 - **Comparison section** — Real competitor analysis vs manual logging, vs OpenTelemetry, vs pprof
 - **Migration guide** — Step-by-step for v0.1.0 to v0.2.0+ (MigrateReport exists but has no docs page)
 - **Architecture deep-dive** — Single-package design, concurrency model, hook system, invocation-stack dependency inference
+- **JSON-schema-driven validation example** — schema + `auditlog validate` in a CI pattern
+- **Per-page feedback links** (pre-filled issue title) next to "Edit this page"
+- **Auto-generated social cards for every docs page** (astro-og-canvas pattern)
+
+---
+
+## Open Questions (owner input needed)
+
+- Merge the 3 open Dependabot website PRs vs. treat the committed website overhaul as superseding them (blocks the Wave-0 finisher).
+- Approve CI behavior changes: tidy-retry wrapper, docs-only `paths-ignore`.
+- Hero video: stay click-to-play, or muted autoplay/loop above the fold?
+- Deploy path: is "push-triggered CI deploy" the definition of deployed, or is manual `firebase deploy` a supported runbook step?
 
 ---
 

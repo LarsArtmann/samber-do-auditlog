@@ -23,6 +23,12 @@ snapshot() {
 	fi
 }
 
+echo "▶ go-version drift guard"
+./scripts/check-go-version.sh
+
+echo "▶ doc claims linter"
+./scripts/check-doc-claims.sh
+
 echo "▶ go generate (drift check)"
 before=$(snapshot)
 go generate ./...

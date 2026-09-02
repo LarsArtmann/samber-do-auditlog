@@ -69,22 +69,26 @@
           apps = {
             coverage = {
               type = "app";
-              program = toString (
+              program = "${
                 pkgs.writeShellApplication {
                   name = "coverage-gate";
-                  runtimeInputs = [ goPkg ];
+                  runtimeInputs = [
+                    goPkg
+                    pkgs.stdenv.cc
+                  ];
                   text = ''
-                    export CGO_ENABLED=0
+                    # -race requires cgo; the C toolchain must be on PATH.
+                    export CGO_ENABLED=1
                     export GOTOOLCHAIN=go1.26.7
                     exec sh ./scripts/coverage-gate.sh "$@"
                   '';
                 }
-              );
+              }/bin/coverage-gate";
             };
 
             auditlog = {
               type = "app";
-              program = toString (
+              program = "${
                 pkgs.writeShellApplication {
                   name = "auditlog";
                   runtimeInputs = [ goPkg ];
@@ -94,7 +98,7 @@
                     exec go run ./cmd/auditlog "$@"
                   '';
                 }
-              );
+              }/bin/auditlog";
             };
 
             default = config.apps.auditlog;

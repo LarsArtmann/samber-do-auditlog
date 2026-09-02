@@ -63,6 +63,18 @@ Every term below should mean the **same thing** to everyone who reads it.
 | Shutdown Event     | Fired when a service is cleaned up during container shutdown | Before and after, includes duration |
 | Health Check Event | Fired after a health check is performed on a service         | After only, no duration             |
 
+## Streaming & Real-Time
+
+| Term        | Definition                                                                        | Context                            |
+| ----------- | --------------------------------------------------------------------------------- | ---------------------------------- |
+| NDJSON      | Newline-delimited JSON — one event object per line                                | Event stream format                |
+| OnEvent     | Config callback invoked after each event is captured, outside the lock            | Real-time observation hook         |
+| Streaming   | Writing events to a consumer as they happen instead of at report time             | `NDJSONStreamer`, `StreamEvents`   |
+| MultiWriter | Fan-out of each event to multiple OnEvent callbacks, in registration order        | `multi_writer.go`                  |
+| Run ID      | 128-bit hex identifier stamped on every event and report of one process run       | Cross-system correlation           |
+| Replay      | Reconstructing a full Report from a flat event stream (inverse of live recording) | `ReplayEvents`                     |
+| Ring Buffer | Fixed-size memory of recent SSE events resent to reconnecting dashboard clients   | Live dashboard reconnection replay |
+
 ## Commands
 
 | Term                         | Definition                                                                                                                            | Context             |

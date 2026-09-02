@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pareto Master Plan — All 126 Todos — samber-do-auditlog</title>
+    <style>
+      /* =========================================================================
+         BAUHAUS DARK — Dashboard template
+         Design language: form follows function. Primary colors on graphite.
+         Zero external dependencies: system fonts, no CDN, no build step.
+         Token architecture: see references/bauhaus-tokens.md
+         ========================================================================= */
+
+      :root {
+        /* --- Primitive palette (Bauhaus Dark) --- */
+        --color-graphite: #0e0e10;
+        --color-graphite-2: #18181d;
+        --color-graphite-3: #16161a;
+        --color-bone: #f4f4f0;
+        --color-red: #ff6b6b;
+        --color-blue: #6eb5ff;
+        --color-yellow: #f4d35e;
+        --color-amber: #ffb347;
+        --color-hairline: rgba(244, 244, 240, 0.12);
+        --color-hairline-strong: rgba(244, 244, 240, 0.25);
+
+        /* --- Semantic layer (shared vocabulary with editorial template) --- */
+        --surface: var(--color-graphite);
+        --surface-raised: var(--color-graphite-2);
+        --surface-sunken: var(--color-graphite-3);
+        --text: var(--color-bone);
+        --text-muted: rgba(244, 244, 240, 0.72);
+        --text-faint: rgba(244, 244, 240, 0.45);
+        --border: var(--color-hairline);
+        --border-strong: var(--color-hairline-strong);
+        --accent: var(--color-amber);
+        --problem: var(--color-red);
+        --solution: var(--color-blue);
+        --warning: var(--color-yellow);
+
+        /* --- Backward-compatible aliases (do not break consumer skills) --- */
+        --bg: var(--surface);
+        --bg-elevated: var(--surface-raised);
+        --bg-sunken: var(--surface-sunken);
+        --bg-card: var(--surface-raised);
+        --bg-code: var(--surface-sunken);
+        --ink: var(--text);
+        --ink-secondary: var(--text-muted);
+        --ink-muted: var(--text-faint);
+        --rose: var(--problem);
+        --rose-glow: color-mix(in srgb, var(--problem) 15%, transparent);
+        --emerald: var(--solution);
+        --emerald-glow: color-mix(in srgb, var(--solution) 15%, transparent);
+        --amber-glow: color-mix(in srgb, var(--warning) 15%, transparent);
+        --coral: var(--problem);
+        --coral-light: color-mix(in srgb, var(--problem) 15%, transparent);
+        --teal: var(--solution);
+        --teal-light: color-mix(in srgb, var(--solution) 15%, transparent);
+        --amber-light: color-mix(in srgb, var(--warning) 20%, transparent);
+
+        /* --- Shape --- */
+        --radius: 0px; /* Bauhaus default: sharp corners */
+        --radius-sm: 0px;
+
+        /* --- Type stacks (system only — zero external fonts) --- */
+        --font-heading:
+          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-body:
+          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-mono:
+          ui-monospace, "Cascadia Code", "Source Code Pro", "JetBrains Mono",
+          Menlo, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      /* Sticky-header offset for anchor jumps */
+      section[id],
+      [id] {
+        scroll-margin-top: 60px;
+      }
+
+      body {
+        background: var(--surface);
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 15px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* --- Accessibility: keyboard focus --- */
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      a:focus-visible {
+        outline-offset: -1px;
+      }
+
+      /* --- Full-bleed top bar --- */
+      .top-bar {
+        background: var(--text);
+        color: var(--surface);
+        padding: 0.6rem 2rem;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* --- Layout: optional sticky sidebar TOC --- */
+      .layout {
+        display: flex;
+        gap: 2.5rem;
+        padding: 2rem;
+      }
+      .sidebar {
+        width: 220px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 1rem;
+        align-self: flex-start;
+        height: calc(100vh - 2rem);
+        overflow-y: auto;
+        display: none;
+      }
+      .sidebar nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .sidebar .label {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--accent);
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 2px solid var(--border-strong);
+      }
+      .sidebar a {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        padding: 0.45rem 0.75rem;
+        border-left: 2px solid transparent;
+        transition: all 0.15s ease;
+        line-height: 1.4;
+        font-weight: 500;
+      }
+      .sidebar a:hover,
+      .sidebar a.active {
+        color: var(--accent);
+        border-left-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 8%, transparent);
+      }
+      .main {
+        flex: 1;
+        min-width: 0;
+      }
+
+      /* --- Headings --- */
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: var(--font-heading);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      h1 {
+        font-size: clamp(1.8rem, 4vw, 2.6rem);
+        line-height: 1.1;
+        margin: 0 0 0.6rem;
+      }
+      h2 {
+        font-size: 1.4rem;
+        margin: 2.5rem 0 1rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 2px solid var(--border-strong);
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+      }
+      h2 .num {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--accent);
+        font-weight: 700;
+        letter-spacing: 0.06em;
+      }
+      h3 {
+        font-size: 1.1rem;
+        margin: 0 0 0.4rem;
+        font-weight: 700;
+      }
+      h4 {
+        font-size: 0.98rem;
+        margin: 0 0 0.3rem;
+        font-weight: 700;
+      }
+      p {
+        margin: 0 0 1rem;
+      }
+
+      /* --- Hero --- */
+      .hero {
+        padding: 1.5rem 0 1.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid var(--border-strong);
+      }
+      .hero-badge {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--surface);
+        background: var(--accent);
+        padding: 0.3rem 0.7rem;
+        margin-bottom: 0.9rem;
+      }
+      .hero-subtitle {
+        font-size: 1.05rem;
+        color: var(--text-muted);
+        max-width: 70ch;
+        margin: 0;
+      }
+
+      /* Bauhaus signature: geometric shape cluster (optional) */
+      .hero-shapes {
+        position: relative;
+        height: 80px;
+        margin-bottom: 1rem;
+      }
+      .hero-shapes .circle {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 56px;
+        height: 56px;
+        background: var(--problem);
+        border-radius: 50%;
+      }
+      .hero-shapes .square {
+        position: absolute;
+        top: 24px;
+        left: 72px;
+        width: 48px;
+        height: 48px;
+        background: var(--solution);
+      }
+      .hero-shapes .tri {
+        position: absolute;
+        top: 8px;
+        left: 140px;
+        width: 0;
+        height: 0;
+        border-left: 28px solid transparent;
+        border-right: 28px solid transparent;
+        border-bottom: 48px solid var(--warning);
+      }
+
+      /* --- General cards --- */
+      .card {
+        background: var(--surface-raised);
+        border: 1px solid var(--border);
+        padding: 1.1rem 1.3rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid var(--border-strong);
+      }
+      .card-problem {
+        border-left-color: var(--problem);
+        background: color-mix(
+          in srgb,
+          var(--problem) 8%,
+          var(--surface-raised)
+        );
+      }
+      .card-solution {
+        border-left-color: var(--solution);
+        background: color-mix(
+          in srgb,
+          var(--solution) 8%,
+          var(--surface-raised)
+        );
+      }
+      .card-warning {
+        border-left-color: var(--warning);
+        background: color-mix(
+          in srgb,
+          var(--warning) 8%,
+          var(--surface-raised)
+        );
+      }
+
+      /* --- Issue cards --- */
+      .issue {
+        background: var(--surface-raised);
+        border: 1px solid var(--border);
+        padding: 1.1rem 1.3rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid var(--border-strong);
+      }
+      .issue-critical {
+        border-left-color: var(--problem);
+        background: color-mix(
+          in srgb,
+          var(--problem) 8%,
+          var(--surface-raised)
+        );
+      }
+      .issue-important {
+        border-left-color: var(--warning);
+        background: color-mix(
+          in srgb,
+          var(--warning) 8%,
+          var(--surface-raised)
+        );
+      }
+      .issue-nice {
+        border-left-color: var(--solution);
+        background: color-mix(
+          in srgb,
+          var(--solution) 8%,
+          var(--surface-raised)
+        );
+      }
+      .issue h3 {
+        margin-bottom: 0.3rem;
+      }
+      .issue .where {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--text-faint);
+        margin: 0.2rem 0 0.6rem;
+      }
+      .issue p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* --- Severity badges (used inside issue cards) --- */
+      .severity {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.2rem 0.55rem;
+        margin-bottom: 0.6rem;
+        color: var(--surface);
+      }
+      .severity-critical {
+        background: var(--problem);
+      }
+      .severity-important {
+        background: var(--warning);
+      }
+      .severity-nice {
+        background: var(--solution);
+      }
+
+      /* --- Inline badges (used in tables) --- */
+      .badge {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 0.18rem 0.5rem;
+        border: 1px solid var(--border-strong);
+        color: var(--text-muted);
+      }
+      .badge-critical {
+        color: var(--problem);
+        border-color: var(--problem);
+      }
+      .badge-high {
+        color: var(--warning);
+        border-color: var(--warning);
+      }
+      .badge-medium {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+      .badge-low {
+        color: var(--text-muted);
+      }
+      .badge-fixed {
+        color: var(--solution);
+        border-color: var(--solution);
+      }
+
+      /* --- Callouts (used inside issues or standalone) --- */
+      .callout {
+        margin: 0.8rem 0 0;
+        padding: 0.7rem 0.9rem;
+        border-left: 3px solid var(--border-strong);
+        background: color-mix(in srgb, var(--text) 5%, transparent);
+        font-size: 0.9rem;
+      }
+      .callout strong {
+        display: inline-block;
+        margin-right: 0.4rem;
+      }
+      .callout-solution {
+        border-left-color: var(--solution);
+        background: color-mix(in srgb, var(--solution) 10%, transparent);
+      }
+      .callout-warning {
+        border-left-color: var(--warning);
+        background: color-mix(in srgb, var(--warning) 10%, transparent);
+      }
+
+      /* --- Stat cards / scorecards (aliased vocabulary) --- */
+      .stat-grid,
+      .scorecard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+        margin: 1rem 0 1.5rem;
+      }
+      .stat-card,
+      .score-card {
+        background: var(--surface-raised);
+        border: 1px solid var(--border);
+        padding: 1.1rem 1rem;
+        position: relative;
+      }
+      .stat-card::before,
+      .score-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--border-strong);
+      }
+      .stat-bad,
+      .score-bad {
+        /* default top bar already set */
+      }
+      .stat-bad::before,
+      .score-bad::before {
+        background: var(--problem);
+      }
+      .stat-good::before,
+      .score-good::before {
+        background: var(--solution);
+      }
+      .stat-warn::before,
+      .score-warn::before {
+        background: var(--warning);
+      }
+      .stat-value,
+      .score {
+        font-family: var(--font-heading);
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        color: var(--text);
+      }
+      .stat-bad .stat-value,
+      .score-bad .score {
+        color: var(--problem);
+      }
+      .stat-good .stat-value,
+      .score-good .score {
+        color: var(--solution);
+      }
+      .stat-warn .stat-value,
+      .score-warn .score {
+        color: var(--warning);
+      }
+      .stat-label,
+      .score-card .label {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-faint);
+        margin-top: 0.5rem;
+      }
+
+      /* --- Strengths list --- */
+      .strengths {
+        display: grid;
+        gap: 0.5rem;
+        margin: 1rem 0 1.5rem;
+      }
+      .strength {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.8rem;
+        padding: 0.7rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .strength .check {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--solution);
+        font-size: 1.1rem;
+        line-height: 1.4;
+      }
+      .strength .text strong {
+        display: block;
+        margin-bottom: 0.15rem;
+      }
+      .strength .text span {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+      }
+
+      /* --- Tables --- */
+      .table-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0 1.5rem;
+        font-size: 0.9rem;
+      }
+      th {
+        text-align: left;
+        padding: 0.6rem 0.9rem;
+        background: var(--surface-raised);
+        color: var(--text-faint);
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--border-strong);
+      }
+      td {
+        padding: 0.6rem 0.9rem;
+        border-bottom: 1px solid var(--border);
+      }
+      tr:hover td {
+        background: var(--surface-raised);
+      }
+
+      /* --- Before/After comparison --- */
+      .compare-header {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin: 1rem 0 0.5rem;
+      }
+      .compare-before,
+      .compare-after {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 0.4rem 0.7rem;
+        color: var(--surface);
+      }
+      .compare-before {
+        background: var(--problem);
+      }
+      .compare-after {
+        background: var(--solution);
+      }
+      .compare-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .compare-row pre {
+        margin: 0;
+      }
+
+      /* --- Code blocks + syntax highlighting --- */
+      pre {
+        background: var(--surface-sunken);
+        border: 1px solid var(--border);
+        padding: 1rem 1.2rem;
+        margin: 1rem 0;
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        line-height: 1.65;
+        overflow-x: auto;
+      }
+      code {
+        font-family: var(--font-mono);
+      }
+      p code,
+      li code,
+      td code {
+        font-size: 0.88em;
+        background: var(--surface-sunken);
+        padding: 0.1rem 0.35rem;
+      }
+      .tok-keyword {
+        color: var(--accent);
+      } /* func, type, struct, if, return */
+      .tok-type {
+        color: var(--warning);
+      } /* int, string, bool, error */
+      .tok-string {
+        color: var(--solution);
+      } /* "quoted strings" */
+      .tok-comment {
+        color: var(--text-faint);
+        font-style: italic;
+      }
+      .tok-func {
+        color: #74a9ff;
+      } /* function names */
+      .tok-number {
+        color: var(--accent);
+      } /* 42, 3.14 */
+      .tok-generic {
+        color: var(--problem);
+      } /* T, ID in generics */
+      .tok-builtin {
+        color: #4dd9ff;
+      } /* make, len, append */
+      .tok-punct {
+        color: var(--text-muted);
+      } /* { } ( ) ; = : */
+      .tok-attr {
+        color: var(--accent);
+      } /* Nix attribute names */
+
+      /* --- Dependency tree / ASCII diagrams --- */
+      .dep-tree {
+        background: var(--surface-sunken);
+        border: 1px solid var(--border);
+        padding: 1rem 1.2rem;
+        margin: 1rem 0;
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        line-height: 1.7;
+        white-space: pre;
+        overflow-x: auto;
+      }
+      .dep-tree .root {
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .dep-tree .ok {
+        color: var(--solution);
+      }
+      .dep-tree .unwanted {
+        color: var(--problem);
+      }
+
+      /* --- Inline node-and-arrow diagrams --- */
+      .diagram {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+        background: var(--surface-raised);
+        border: 1px solid var(--border);
+      }
+      .node {
+        display: inline-block;
+        padding: 0.35rem 0.7rem;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        font-weight: 600;
+        background: var(--surface-sunken);
+        border: 1px solid var(--border-strong);
+      }
+      .node-core {
+        background: var(--accent);
+        color: var(--surface);
+        border-color: var(--accent);
+      }
+      .node-problem {
+        background: var(--problem);
+        color: var(--surface);
+        border-color: var(--problem);
+      }
+      .node-good {
+        background: var(--solution);
+        color: var(--surface);
+        border-color: var(--solution);
+      }
+      .arrow {
+        color: var(--text-faint);
+        font-family: var(--font-mono);
+      }
+
+      /* --- Grids (responsive) --- */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin: 1rem 0;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin: 1rem 0;
+      }
+
+      /* --- Inline TOC (alternative to sidebar) --- */
+      .toc {
+        background: var(--surface-raised);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--accent);
+        padding: 1rem 1.3rem;
+        margin: 1rem 0 1.5rem;
+      }
+      .toc h3 {
+        margin-bottom: 0.5rem;
+      }
+      .toc ul {
+        list-style: none;
+        padding: 0;
+      }
+      .toc li {
+        margin: 0.25rem 0;
+      }
+      .toc a {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+      .toc a:hover {
+        color: var(--accent);
+      }
+
+      /* --- Migration / numbered steps --- */
+      .migration-step {
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        gap: 1rem;
+        margin: 1rem 0;
+        padding: 1rem;
+        background: var(--surface-raised);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--accent);
+      }
+      .migration-num {
+        font-family: var(--font-mono);
+        font-weight: 800;
+        font-size: 1.5rem;
+        color: var(--accent);
+        line-height: 1;
+      }
+      .migration-content h4 {
+        margin-bottom: 0.2rem;
+      }
+      .migration-content p {
+        margin-bottom: 0;
+        color: var(--text-muted);
+        font-size: 0.92rem;
+      }
+
+      /* --- Footer --- */
+      .footer {
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.8rem;
+        color: var(--text-faint);
+        font-family: var(--font-mono);
+      }
+
+      /* --- Responsive --- */
+      @media (min-width: 1024px) {
+        .sidebar {
+          display: block;
+        }
+      }
+      @media (max-width: 768px) {
+        .layout {
+          flex-direction: column;
+          padding: 1rem;
+        }
+        .top-bar {
+          padding: 0.6rem 1rem;
+          flex-wrap: wrap;
+          gap: 0.3rem;
+        }
+        .grid-2,
+        .grid-3 {
+          grid-template-columns: 1fr;
+        }
+        .compare-header,
+        .compare-row {
+          grid-template-columns: 1fr;
+        }
+        .stat-grid,
+        .scorecard {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .migration-step {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top-bar">
+      <span>PARETO EXECUTION PLAN</span>
+      <span>2026-09-02</span>
+      <span>samber-do-auditlog · master · v0.10.0</span>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar" data-nav>
+        <nav>
+          <div class="label">Contents</div>
+          <a href="#summary">Summary</a>
+          <a href="#pareto">Pareto Breakdown</a>
+          <a href="#graph">Execution Graph</a>
+          <a href="#tasks">All 126 Tasks</a>
+          <a href="#gates">Owner Gates</a>
+          <a href="#sources">Sources</a>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <div class="hero">
+          <div class="hero-shapes">
+            <div class="circle"></div>
+            <div class="square"></div>
+            <div class="tri"></div>
+          </div>
+          <div class="hero-badge">Master Plan · ≤12 min tasks</div>
+          <h1>All Todos, One Sorted Plan</h1>
+          <p class="hero-subtitle">
+            126 tasks — every open TODO from TODO_LIST.md, ROADMAP.md, the 2026-09-02 audit f-list,
+            and the docs-health session follow-ups — decomposed to ≤12-minute units and sorted by
+            Pareto tier, impact, effort, and customer value.
+          </p>
+        </div>
+
+        <section id="summary">
+          <h2><span class="num">00</span>Summary</h2>
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-value">126</div>
+              <div class="stat-label">Tasks (all ≤12 min)</div>
+            </div>
+            <div class="stat-card stat-good">
+              <div class="stat-value">≈19 h</div>
+              <div class="stat-label">Total estimated effort</div>
+            </div>
+            <div class="stat-card stat-warn">
+              <div class="stat-value">13</div>
+              <div class="stat-label">Owner-gated tasks</div>
+            </div>
+            <div class="stat-card stat-bad">
+              <div class="stat-value">15</div>
+              <div class="stat-label">Uncommitted paths awaiting g.3</div>
+            </div>
+          </div>
+          <div class="callout callout-warning">
+            <strong>Gate at the top:</strong> nothing executes until the owner answers g.1–g.3
+            (commit authority, archive strictness, <code>example/ --live</code> bug). Tier 0 is
+            4 commits + a push away from converting the entire docs-health session into landed,
+            CI-proven work.
+          </div>
+        </section>
+
+        <section id="pareto">
+          <h2><span class="num">01</span>Pareto Breakdown</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Tier</th><th>Tasks</th><th>Effort</th><th>Cumulative result</th><th>Contents</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="badge badge-critical">1%</span></td>
+                  <td>T01–T04</td>
+                  <td>≈32 min</td>
+                  <td><strong>51%</strong></td>
+                  <td>Commit the 15 verified paths (3 semantic commits) + push. The session's entire verified output becomes real; every downstream task unblocks.</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-critical">4%</span></td>
+                  <td>+T05–T29</td>
+                  <td>+≈2.6 h</td>
+                  <td><strong>64%</strong></td>
+                  <td>Prove both workflows green (CI 7/7 + Website first e2e), verify this session's two deleted claims (--live bug, ROADMAP causal claim), and make the Aug-29 outage class structurally impossible: go-version drift guard, coverage-exclusion single-source, tidy/generate retry wrapper. v0.10.1 prep.</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-high">20%</span></td>
+                  <td>+T30–T60</td>
+                  <td>+≈4.4 h</td>
+                  <td><strong>80%</strong></td>
+                  <td>Library quality (DepsChanged, strict enum parsing, example/ CI smoke) + CI trust (claims linter, changelog guard, ergonomics, pinned tooling, lint infra, fuzz sweep, plumbing truths, nix templ guard, sibling-repo audit).</td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-medium">Rest</span></td>
+                  <td>+T61–T126</td>
+                  <td>+≈11.5 h</td>
+                  <td><strong>100%</strong></td>
+                  <td>Website QA &amp; polish, live/ 90% coverage path, docs depth pages, ecosystem assets, 12 API/observability design notes, archive verification (52 reports), owner repo protections, Dependabot sweep.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="graph">
+          <h2><span class="num">02</span>Execution Graph</h2>
+<?xml version="1.0" encoding="utf-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-d2-version="v0.8.1-HEAD" preserveAspectRatio="xMinYMin meet" viewBox="0 0 3189 2063"><svg class="d2-3876770603 d2-svg" width="3189" height="2063" viewBox="-91 -101 3189 2063"><rect x="-91.000000" y="-101.000000" width="3189.000000" height="2063.000000" rx="0.000000" fill="#FFFFFF" class=" fill-N7" stroke-width="0" /><style type="text/css"><![CDATA[
+.d2-3876770603 .text {
+	font-family: "d2-3876770603-font-regular";
+}
+@font-face {
+	font-family: d2-3876770603-font-regular;
+	src: url("data:application/font-woff;base64,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");
+}
+.d2-3876770603 .text-bold {
+	font-family: "d2-3876770603-font-bold";
+}
+@font-face {
+	font-family: d2-3876770603-font-bold;
+	src: url("data:application/font-woff;base64,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");
+}
+.d2-3876770603 .text-italic {
+	font-family: "d2-3876770603-font-italic";
+}
+@font-face {
+	font-family: d2-3876770603-font-italic;
+	src: url("data:application/font-woff;base64,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");
+}]]></style><style type="text/css"><![CDATA[.shape {
+  shape-rendering: geometricPrecision;
+  stroke-linejoin: round;
+}
+.connection {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.blend {
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
+
+		.d2-3876770603 .fill-N1{fill:#0A0F25;}
+		.d2-3876770603 .fill-N2{fill:#676C7E;}
+		.d2-3876770603 .fill-N3{fill:#9499AB;}
+		.d2-3876770603 .fill-N4{fill:#CFD2DD;}
+		.d2-3876770603 .fill-N5{fill:#DEE1EB;}
+		.d2-3876770603 .fill-N6{fill:#EEF1F8;}
+		.d2-3876770603 .fill-N7{fill:#FFFFFF;}
+		.d2-3876770603 .fill-B1{fill:#0D32B2;}
+		.d2-3876770603 .fill-B2{fill:#0D32B2;}
+		.d2-3876770603 .fill-B3{fill:#E3E9FD;}
+		.d2-3876770603 .fill-B4{fill:#E3E9FD;}
+		.d2-3876770603 .fill-B5{fill:#EDF0FD;}
+		.d2-3876770603 .fill-B6{fill:#F7F8FE;}
+		.d2-3876770603 .fill-AA2{fill:#4A6FF3;}
+		.d2-3876770603 .fill-AA4{fill:#EDF0FD;}
+		.d2-3876770603 .fill-AA5{fill:#F7F8FE;}
+		.d2-3876770603 .fill-AB4{fill:#EDF0FD;}
+		.d2-3876770603 .fill-AB5{fill:#F7F8FE;}
+		.d2-3876770603 .stroke-N1{stroke:#0A0F25;}
+		.d2-3876770603 .stroke-N2{stroke:#676C7E;}
+		.d2-3876770603 .stroke-N3{stroke:#9499AB;}
+		.d2-3876770603 .stroke-N4{stroke:#CFD2DD;}
+		.d2-3876770603 .stroke-N5{stroke:#DEE1EB;}
+		.d2-3876770603 .stroke-N6{stroke:#EEF1F8;}
+		.d2-3876770603 .stroke-N7{stroke:#FFFFFF;}
+		.d2-3876770603 .stroke-B1{stroke:#0D32B2;}
+		.d2-3876770603 .stroke-B2{stroke:#0D32B2;}
+		.d2-3876770603 .stroke-B3{stroke:#E3E9FD;}
+		.d2-3876770603 .stroke-B4{stroke:#E3E9FD;}
+		.d2-3876770603 .stroke-B5{stroke:#EDF0FD;}
+		.d2-3876770603 .stroke-B6{stroke:#F7F8FE;}
+		.d2-3876770603 .stroke-AA2{stroke:#4A6FF3;}
+		.d2-3876770603 .stroke-AA4{stroke:#EDF0FD;}
+		.d2-3876770603 .stroke-AA5{stroke:#F7F8FE;}
+		.d2-3876770603 .stroke-AB4{stroke:#EDF0FD;}
+		.d2-3876770603 .stroke-AB5{stroke:#F7F8FE;}
+		.d2-3876770603 .background-color-N1{background-color:#0A0F25;}
+		.d2-3876770603 .background-color-N2{background-color:#676C7E;}
+		.d2-3876770603 .background-color-N3{background-color:#9499AB;}
+		.d2-3876770603 .background-color-N4{background-color:#CFD2DD;}
+		.d2-3876770603 .background-color-N5{background-color:#DEE1EB;}
+		.d2-3876770603 .background-color-N6{background-color:#EEF1F8;}
+		.d2-3876770603 .background-color-N7{background-color:#FFFFFF;}
+		.d2-3876770603 .background-color-B1{background-color:#0D32B2;}
+		.d2-3876770603 .background-color-B2{background-color:#0D32B2;}
+		.d2-3876770603 .background-color-B3{background-color:#E3E9FD;}
+		.d2-3876770603 .background-color-B4{background-color:#E3E9FD;}
+		.d2-3876770603 .background-color-B5{background-color:#EDF0FD;}
+		.d2-3876770603 .background-color-B6{background-color:#F7F8FE;}
+		.d2-3876770603 .background-color-AA2{background-color:#4A6FF3;}
+		.d2-3876770603 .background-color-AA4{background-color:#EDF0FD;}
+		.d2-3876770603 .background-color-AA5{background-color:#F7F8FE;}
+		.d2-3876770603 .background-color-AB4{background-color:#EDF0FD;}
+		.d2-3876770603 .background-color-AB5{background-color:#F7F8FE;}
+		.d2-3876770603 .color-N1{color:#0A0F25;}
+		.d2-3876770603 .color-N2{color:#676C7E;}
+		.d2-3876770603 .color-N3{color:#9499AB;}
+		.d2-3876770603 .color-N4{color:#CFD2DD;}
+		.d2-3876770603 .color-N5{color:#DEE1EB;}
+		.d2-3876770603 .color-N6{color:#EEF1F8;}
+		.d2-3876770603 .color-N7{color:#FFFFFF;}
+		.d2-3876770603 .color-B1{color:#0D32B2;}
+		.d2-3876770603 .color-B2{color:#0D32B2;}
+		.d2-3876770603 .color-B3{color:#E3E9FD;}
+		.d2-3876770603 .color-B4{color:#E3E9FD;}
+		.d2-3876770603 .color-B5{color:#EDF0FD;}
+		.d2-3876770603 .color-B6{color:#F7F8FE;}
+		.d2-3876770603 .color-AA2{color:#4A6FF3;}
+		.d2-3876770603 .color-AA4{color:#EDF0FD;}
+		.d2-3876770603 .color-AA5{color:#F7F8FE;}
+		.d2-3876770603 .color-AB4{color:#EDF0FD;}
+		.d2-3876770603 .color-AB5{color:#F7F8FE;}.appendix text.text{fill:#0A0F25}.md{--color-fg-default:#0A0F25;--color-fg-muted:#676C7E;--color-fg-subtle:#9499AB;--color-canvas-default:#FFFFFF;--color-canvas-subtle:#EEF1F8;--color-border-default:#0D32B2;--color-border-muted:#0D32B2;--color-neutral-muted:#EEF1F8;--color-accent-fg:#0D32B2;--color-accent-emphasis:#0D32B2;--color-attention-subtle:#676C7E;--color-danger-fg:red;}.sketch-overlay-B1{fill:url(#streaks-darker-d2-3876770603);mix-blend-mode:lighten}.sketch-overlay-B2{fill:url(#streaks-darker-d2-3876770603);mix-blend-mode:lighten}.sketch-overlay-B3{fill:url(#streaks-bright-d2-3876770603);mix-blend-mode:darken}.sketch-overlay-B4{fill:url(#streaks-bright-d2-3876770603);mix-blend-mode:darken}.sketch-overlay-B5{fill:url(#streaks-bright-d2-3876770603);mix-blend-mode:darken}.sketch-overlay-B6{fill:url(#streaks-bright-d2-3876770603);mix-blend-mode:darken}.sketch-overlay-AA2{fill:url(#streaks-dark-d2-3876770603);mix-blend-mode:overlay}.sketch-overlay-AA4{fill:url(#streaks-bright-d2-3876770603);mix-blend-mode:darken}.sketch-overlay-AA5{fill:url(#streaks-bright-d2-3876770603);mix-blend-mode:darken}.sketch-overlay-AB4{fill:url(#streaks-bright-d2-3876770603);mix-blend-mode:darken}.sketch-overlay-AB5{fill:url(#streaks-bright-d2-3876770603);mix-blend-mode:darken}.sketch-overlay-N1{fill:url(#streaks-darker-d2-3876770603);mix-blend-mode:lighten}.sketch-overlay-N2{fill:url(#streaks-dark-d2-3876770603);mix-blend-mode:overlay}.sketch-overlay-N3{fill:url(#streaks-normal-d2-3876770603);mix-blend-mode:color-burn}.sketch-overlay-N4{fill:url(#streaks-normal-d2-3876770603);mix-blend-mode:color-burn}.sketch-overlay-N5{fill:url(#streaks-bright-d2-3876770603);mix-blend-mode:darken}.sketch-overlay-N6{fill:url(#streaks-bright-d2-3876770603);mix-blend-mode:darken}.sketch-overlay-N7{fill:url(#streaks-bright-d2-3876770603);mix-blend-mode:darken}.light-code{display: block}.dark-code{display: none}]]></style><g class="b3duZXI="><g class="shape" ><path d="M 1991 0 L 1900 34 L 1991 69 L 2172 69 L 2263 34 L 2172 0 Z" stroke="#0D32B2" fill="#ff6b6b" class=" stroke-B1" style="stroke-width:2;" /></g><text x="2081.500000" y="40.000000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">OWNER GATES (g.1-g.3, Q1-Q5)</text></g><g class="dzA="><g class="shape" ><rect x="1086.000000" y="210.000000" width="520.000000" height="790.000000" stroke="#0D32B2" fill="#E3E9FD" class=" stroke-B1 fill-B4" style="stroke-width:2;" /></g><text x="1346.000000" y="197.000000" fill="#0A0F25" class="text fill-N1" style="text-anchor:middle;font-size:28px">Tier 0 - 1% -&gt; 51%: Land verified work</text></g><g class="dzE="><g class="shape" ><rect x="229.000000" y="1161.000000" width="2270.000000" height="126.000000" stroke="#0D32B2" fill="#E3E9FD" class=" stroke-B1 fill-B4" style="stroke-width:2;" /></g><text x="1364.000000" y="1148.000000" fill="#0A0F25" class="text fill-N1" style="text-anchor:middle;font-size:28px">Tier 1 - 4% -&gt; 64%: Verify claims + kill outage class</text></g><g class="dzI="><g class="shape" ><rect x="10.000000" y="1448.000000" width="2798.000000" height="126.000000" stroke="#0D32B2" fill="#E3E9FD" class=" stroke-B1 fill-B4" style="stroke-width:2;" /></g><text x="1409.000000" y="1435.000000" fill="#0A0F25" class="text fill-N1" style="text-anchor:middle;font-size:28px">Tier 2 - 20% -&gt; 80%: Library + CI trust</text></g><g class="dzM="><g class="shape" ><rect x="218.000000" y="1735.000000" width="2779.000000" height="126.000000" stroke="#0D32B2" fill="#E3E9FD" class=" stroke-B1 fill-B4" style="stroke-width:2;" /></g><text x="1607.500000" y="1722.000000" fill="#0A0F25" class="text fill-N1" style="text-anchor:middle;font-size:28px">Tier 3 - remaining 80%</text></g><g class="dzAuYzE="><g class="shape" ><rect x="1146.000000" y="240.000000" width="357.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1324.500000" y="278.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Commit 1/3 code fixes (website.yml, diff.go)</text></g><g class="dzAuYzI="><g class="shape" ><rect x="1194.000000" y="406.000000" width="261.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1324.500000" y="444.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Commit 2/3 living docs (7 files)</text></g><g class="dzAuYzM="><g class="shape" ><rect x="1152.000000" y="572.000000" width="344.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1324.000000" y="610.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Commit 3/3 annotations + archive + report</text></g><g class="dzAucHVzaA=="><g class="shape" ><rect x="1258.000000" y="738.000000" width="133.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1324.500000" y="776.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Push master</text></g><g class="dzAuY2k="><g class="shape" ><rect x="1116.000000" y="904.000000" width="157.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1194.500000" y="942.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">CI run 7/7 green</text></g><g class="dzAud2Vi"><g class="shape" ><rect x="1333.000000" y="904.000000" width="243.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1454.500000" y="942.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Website first fully-green run</text></g><g class="dzEubGl2ZQ=="><g class="shape" ><rect x="259.000000" y="1191.000000" width="223.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="370.500000" y="1229.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">example/--live bug verify</text></g><g class="dzEuY2xhaW0="><g class="shape" ><rect x="542.000000" y="1191.000000" width="281.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="682.500000" y="1229.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Ground ROADMAP coverage claim</text></g><g class="dzEuc3RyYWc="><g class="shape" ><rect x="883.000000" y="1191.000000" width="220.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="993.000000" y="1229.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Straggler annotations x3</text></g><g class="dzEuZHJpZnQ="><g class="shape" ><rect x="1163.000000" y="1191.000000" width="323.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1324.500000" y="1229.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Go-version drift guard (script+CI+hook)</text></g><g class="dzEuZXhjbA=="><g class="shape" ><rect x="1546.000000" y="1191.000000" width="287.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1689.500000" y="1229.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Coverage exclusions single-source</text></g><g class="dzEucmV0cnk="><g class="shape" ><rect x="1893.000000" y="1191.000000" width="245.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="2015.500000" y="1229.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">tidy/generate retry wrapper</text></g><g class="dzEucmVs"><g class="shape" ><rect x="2198.000000" y="1191.000000" width="271.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="2333.500000" y="1229.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">v0.10.1 prep (bench, tag, verify)</text></g><g class="dzIuZGVwcw=="><g class="shape" ><rect x="40.000000" y="1478.000000" width="196.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="138.000000" y="1516.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">DepsChanged feature</text></g><g class="dzIuZW51bQ=="><g class="shape" ><rect x="296.000000" y="1478.000000" width="185.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="388.500000" y="1516.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Strict enum parsing</text></g><g class="dzIuc21va2U="><g class="shape" ><rect x="541.000000" y="1478.000000" width="179.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="630.500000" y="1516.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">example/ CI smoke</text></g><g class="dzIuY2xhaW1z"><g class="shape" ><rect x="780.000000" y="1478.000000" width="136.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="848.000000" y="1516.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Claims linter</text></g><g class="dzIuY2hsb2c="><g class="shape" ><rect x="976.000000" y="1478.000000" width="205.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1078.500000" y="1516.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Stale-changelog guard</text></g><g class="dzIuZXJnbw=="><g class="shape" ><rect x="1241.000000" y="1478.000000" width="166.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1324.000000" y="1516.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">CI ergonomics x4</text></g><g class="dzIucGlucw=="><g class="shape" ><rect x="1467.000000" y="1478.000000" width="253.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1593.500000" y="1516.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Pin vulncheck/firebase + cron</text></g><g class="dzIubGludA=="><g class="shape" ><rect x="1780.000000" y="1478.000000" width="240.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1900.000000" y="1516.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Lint infra (cache, depguard)</text></g><g class="dzIuZnV6eg=="><g class="shape" ><rect x="2080.000000" y="1478.000000" width="191.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="2175.500000" y="1516.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Fuzz sweep 8 targets</text></g><g class="dzIubml4"><g class="shape" ><rect x="2331.000000" y="1478.000000" width="214.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="2438.000000" y="1516.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Plumbing + templ guard</text></g><g class="dzIuc2li"><g class="shape" ><rect x="2605.000000" y="1478.000000" width="173.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="2691.500000" y="1516.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Sibling-repo audit</text></g><g class="dzMuc2l0ZQ=="><g class="shape" ><rect x="248.000000" y="1765.000000" width="183.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="339.500000" y="1803.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Website QA + polish</text></g><g class="dzMuY292"><g class="shape" ><rect x="491.000000" y="1765.000000" width="227.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="604.500000" y="1803.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">live/ coverage plan + tests</text></g><g class="dzMuZG9jcw=="><g class="shape" ><rect x="778.000000" y="1765.000000" width="168.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="862.000000" y="1803.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Docs depth pages</text></g><g class="dzMuZWNv"><g class="shape" ><rect x="1006.000000" y="1765.000000" width="167.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1089.500000" y="1803.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Ecosystem assets</text></g><g class="dzMuYXBp"><g class="shape" ><rect x="1233.000000" y="1765.000000" width="182.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1324.000000" y="1803.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">API design notes x9</text></g><g class="dzMub2Jz"><g class="shape" ><rect x="1643.000000" y="1765.000000" width="203.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="1744.500000" y="1803.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Observability notes x3</text></g><g class="dzMucHJvYw=="><g class="shape" ><rect x="1906.000000" y="1765.000000" width="318.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="2065.000000" y="1803.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Process (retention, archives x4, rubric)</text></g><g class="dzMub3du"><g class="shape" ><rect x="2284.000000" y="1765.000000" width="197.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="2382.500000" y="1803.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Owner protections x5</text></g><g class="dzMuZGVw"><g class="shape" ><rect x="2710.000000" y="1765.000000" width="257.000000" height="66.000000" stroke="#0D32B2" fill="#EDF0FD" class=" stroke-B1 fill-B5" style="stroke-width:2;" /></g><text x="2838.500000" y="1803.500000" fill="#0A0F25" class="text-bold fill-N1" style="text-anchor:middle;font-size:16px">Dependabot sweep (gated Q1)</text></g><g class="dzAuKGMxIC0mZ3Q7IGMyKVswXQ=="><marker id="mk-d2-3876770603-3488378134" markerWidth="10.000000" markerHeight="12.000000" refX="7.000000" refY="6.000000" viewBox="0.000000 0.000000 10.000000 12.000000" orient="auto" markerUnits="userSpaceOnUse"> <polygon points="0.000000,0.000000 10.000000,6.000000 0.000000,12.000000" fill="#0D32B2" class="connection fill-B1" stroke-width="2" /> </marker><path d="M 1324.000000 308.000000 C 1324.000000 346.000000 1324.000000 366.000000 1324.000000 402.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-3876770603-3488378134)" mask="url(#d2-3876770603)" /></g><g class="dzAuKGMyIC0mZ3Q7IGMzKVswXQ=="><path d="M 1324.000000 474.000000 C 1324.000000 512.000000 1324.000000 532.000000 1324.000000 568.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-3876770603-3488378134)" mask="url(#d2-3876770603)" /></g><g class="dzAuKGMzIC0mZ3Q7IHB1c2gpWzBd"><path d="M 1324.000000 640.000000 C 1324.000000 678.000000 1324.000000 698.000000 1324.000000 734.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-3876770603-3488378134)" mask="url(#d2-3876770603)" /></g><g class="dzAuKHB1c2ggLSZndDsgY2kpWzBd"><path d="M 1270.316242 805.079332 C 1209.599976 844.000000 1194.000000 864.000000 1194.000000 900.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-3876770603-3488378134)" mask="url(#d2-3876770603)" /></g><g class="dzAuKHB1c2ggLSZndDsgd2ViKVswXQ=="><path d="M 1377.683758 805.079332 C 1438.400024 844.000000 1454.000000 864.000000 1454.000000 900.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-3876770603-3488378134)" mask="url(#d2-3876770603)" /></g><g class="KG93bmVyIC0mZ3Q7IHcwKVswXQ=="><path d="M 1944.015346 52.247284 C 1448.400024 114.000000 1324.000000 137.500000 1324.000000 165.500000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-3876770603-3488378134)" mask="url(#d2-3876770603)" /><text x="1618.500000" y="98.000000" fill="#676C7E" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">say commit / approve push</text></g><g class="KHcwLmNpIC0mZ3Q7IHcxKVswXQ=="><path d="M 1194.000000 972.000000 C 1194.000000 1010.000000 1194.000000 1088.500000 1194.000000 1116.500000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-3876770603-3488378134)" mask="url(#d2-3876770603)" /><text x="1194.500000" y="1051.000000" fill="#676C7E" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">green master</text></g><g class="KHcwLndlYiAtJmd0OyB3MSlbMF0="><path d="M 1454.000000 972.000000 C 1454.000000 1010.000000 1454.000000 1088.500000 1454.000000 1116.500000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-3876770603-3488378134)" mask="url(#d2-3876770603)" /><text x="1454.500000" y="1051.000000" fill="#676C7E" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">deploy path proven</text></g><g class="KHcxIC0mZ3Q7IHcyKVswXQ=="><path d="M 1324.000000 1288.500000 C 1324.000000 1351.300049 1324.000000 1375.500000 1324.000000 1403.500000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-3876770603-3488378134)" mask="url(#d2-3876770603)" /><text x="1324.000000" y="1353.000000" fill="#676C7E" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">claims verified + guards in</text></g><g class="KHcyIC0mZ3Q7IHczKVswXQ=="><path d="M 1324.000000 1575.500000 C 1324.000000 1638.300049 1324.000000 1670.699951 1324.000000 1731.500000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-3876770603-3488378134)" mask="url(#d2-3876770603)" /><text x="1324.000000" y="1660.000000" fill="#676C7E" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">80% floor</text></g><g class="KG93bmVyIC0mZ3Q7IHczLmRlcClbMF0="><path d="M 2218.984605 52.247676 C 2713.800049 114.000000 2838.000000 141.600006 2838.000000 159.750000 C 2838.000000 177.899994 2838.000000 206.600006 2838.000000 231.500000 C 2838.000000 256.398987 2838.000000 289.600006 2838.000000 314.500000 C 2838.000000 339.399994 2838.000000 372.600006 2838.000000 397.500000 C 2838.000000 422.399994 2838.000000 455.600006 2838.000000 480.500000 C 2838.000000 505.399994 2838.000000 538.599976 2838.000000 563.500000 C 2838.000000 588.400024 2838.000000 621.599976 2838.000000 646.500000 C 2838.000000 671.400024 2838.000000 704.599976 2838.000000 729.500000 C 2838.000000 754.400024 2838.000000 787.599976 2838.000000 812.500000 C 2838.000000 837.400024 2838.000000 870.599976 2838.000000 895.500000 C 2838.000000 920.400024 2838.000000 953.599976 2838.000000 978.500000 C 2838.000000 1003.400024 2838.000000 1032.098999 2838.000000 1050.250000 C 2838.000000 1068.400024 2838.000000 1092.599976 2838.000000 1110.750000 C 2838.000000 1128.900024 2838.000000 1157.599976 2838.000000 1182.500000 C 2838.000000 1207.400024 2838.000000 1240.599976 2838.000000 1265.500000 C 2838.000000 1290.400024 2838.000000 1319.099976 2838.000000 1337.250000 C 2838.000000 1355.400024 2838.000000 1379.599976 2838.000000 1397.750000 C 2838.000000 1415.900024 2838.000000 1444.599976 2838.000000 1469.500000 C 2838.000000 1494.400024 2838.000000 1527.599976 2838.000000 1552.500000 C 2838.000000 1577.400024 2838.000000 1606.099976 2838.000000 1624.250000 C 2838.000000 1642.400024 2838.000000 1725.000000 2838.000000 1761.000000" stroke="#0D32B2" fill="none" class="connection stroke-B1" style="stroke-width:2;" marker-end="url(#mk-d2-3876770603-3488378134)" mask="url(#d2-3876770603)" /><text x="2838.500000" y="645.000000" fill="#676C7E" class="text-italic fill-N2" style="text-anchor:middle;font-size:16px">Q1 verdict</text></g><mask id="d2-3876770603" maskUnits="userSpaceOnUse" x="-91" y="-101" width="3189" height="2063">
+<rect x="-91" y="-101" width="3189" height="2063" fill="white"></rect>
+<rect x="1528.000000" y="82.000000" width="181" height="21" fill="black"></rect>
+<rect x="1148.000000" y="1035.000000" width="93" height="21" fill="black"></rect>
+<rect x="1389.000000" y="1035.000000" width="131" height="21" fill="black"></rect>
+<rect x="1237.000000" y="1337.000000" width="174" height="21" fill="black"></rect>
+<rect x="1290.000000" y="1644.000000" width="68" height="21" fill="black"></rect>
+<rect x="2803.000000" y="629.000000" width="71" height="21" fill="black"></rect>
+</mask></svg></svg>
+        </section>
+
+          <section id="tasks">
+          <h2><span class="num">03</span>All 126 Tasks (sorted: tier → impact → effort → value)</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>#</th><th>Tier</th><th>Task</th><th>Impact</th><th>Min</th><th>Category</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>001</td><td><span class="badge badge-critical">1%</span></td><td>Commit 1/3 — code fixes: website.yml (pnpm setup) + diff.go (truthful comment) <span class="badge badge-critical">g.3</span></td><td>Critical</td><td>10m</td><td>Release</td></tr>
+                <tr><td>002</td><td><span class="badge badge-critical">1%</span></td><td>Commit 2/3 — living docs: TODO_LIST, ROADMAP, FEATURES, AGENTS, README, CHANGELOG <span class="badge badge-critical">g.3</span></td><td>Critical</td><td>10m</td><td>Release</td></tr>
+                <tr><td>003</td><td><span class="badge badge-critical">1%</span></td><td>Commit 3/3 — report annotations + archive move + docs-health status report <span class="badge badge-critical">g.3</span></td><td>Critical</td><td>10m</td><td>Release</td></tr>
+                <tr><td>004</td><td><span class="badge badge-critical">1%</span></td><td>Push master to origin <span class="badge badge-critical">approval</span></td><td>Critical</td><td>2m</td><td>Release</td></tr>
+                <tr><td>005</td><td><span class="badge badge-critical">1%</span></td><td>Watch CI run → 7/7 jobs green</td><td>Critical</td><td>8m</td><td>Quality</td></tr>
+                <tr><td>006</td><td><span class="badge badge-critical">1%</span></td><td>Watch Website workflow → first fully-green e2e (install→check→build→validate→deploy)</td><td>Critical</td><td>10m</td><td>Quality</td></tr>
+                <tr><td>007</td><td><span class="badge badge-critical">1%</span></td><td>Spot-check deployed site (URL live, demo.mp4 200)</td><td>High</td><td>5m</td><td>Quality</td></tr>
+                <tr><td>008</td><td><span class="badge badge-critical">1%</span></td><td>OWNER: answer g.1 archive strictness / g.2 --live bug / g.3 commit authority <span class="badge badge-critical">owner</span></td><td>Critical</td><td>10m</td><td>Owner</td></tr>
+                <tr><td>009</td><td><span class="badge badge-high">4%</span></td><td>Reproduce example/ --live premature-shutdown bug (DO_AUDITLOG_ENABLED=true, --live)</td><td>High</td><td>10m</td><td>Bug</td></tr>
+                <tr><td>010</td><td><span class="badge badge-high">4%</span></td><td>Record --live verdict: restore TODO item + annotate, or mark fixed</td><td>High</td><td>5m</td><td>Bug</td></tr>
+                <tr><td>011</td><td><span class="badge badge-high">4%</span></td><td>Per-file live/ coverage run → ground or refute ROADMAP causal claim</td><td>High</td><td>10m</td><td>Documentation</td></tr>
+                <tr><td>012</td><td><span class="badge badge-high">4%</span></td><td>Correct/confirm ROADMAP §Stability coverage-drop wording with evidence</td><td>Medium</td><td>5m</td><td>Documentation</td></tr>
+                <tr><td>013</td><td><span class="badge badge-high">4%</span></td><td>Annotate website report §b.7 — pnpm fix landed in working tree</td><td>Medium</td><td>5m</td><td>Documentation</td></tr>
+                <tr><td>014</td><td><span class="badge badge-high">4%</span></td><td>Annotate round-2 report self-critique item 4 — resolved by this session</td><td>Medium</td><td>5m</td><td>Documentation</td></tr>
+                <tr><td>015</td><td><span class="badge badge-high">4%</span></td><td>Annotate CI-repair report self-critique items 1–4 — resolved</td><td>Medium</td><td>8m</td><td>Documentation</td></tr>
+                <tr><td>016</td><td><span class="badge badge-high">4%</span></td><td>Write scripts/check-go-version.sh (go.mod == ci.yml == flake GOTOOLCHAIN == golangci run.go)</td><td>High</td><td>12m</td><td>Quality</td></tr>
+                <tr><td>017</td><td><span class="badge badge-high">4%</span></td><td>Self-test drift guard: simulate mismatch → exit 1</td><td>High</td><td>5m</td><td>Quality</td></tr>
+                <tr><td>018</td><td><span class="badge badge-high">4%</span></td><td>Wire drift guard into ci.yml + pre-commit hook</td><td>High</td><td>8m</td><td>Quality</td></tr>
+                <tr><td>019</td><td><span class="badge badge-high">4%</span></td><td>Document drift guard in AGENTS.md commands table</td><td>Medium</td><td>5m</td><td>Documentation</td></tr>
+                <tr><td>020</td><td><span class="badge badge-high">4%</span></td><td>Extract coverage-exclusion list to scripts/coverage-exclusions.txt</td><td>High</td><td>8m</td><td>Quality</td></tr>
+                <tr><td>021</td><td><span class="badge badge-high">4%</span></td><td>Refactor coverage-gate.sh to consume shared exclusion list</td><td>High</td><td>8m</td><td>Quality</td></tr>
+                <tr><td>022</td><td><span class="badge badge-high">4%</span></td><td>Refactor ci.yml coverage step to consume shared exclusion list</td><td>High</td><td>8m</td><td>Quality</td></tr>
+                <tr><td>023</td><td><span class="badge badge-high">4%</span></td><td>Re-run coverage gate → 95.2% parity + actionlint clean</td><td>High</td><td>8m</td><td>Quality</td></tr>
+                <tr><td>024</td><td><span class="badge badge-high">4%</span></td><td>Retry wrapper in mod-tidy job (transport errors only, 2 attempts, 15s) <span class="badge badge-critical">Q2</span></td><td>High</td><td>10m</td><td>Quality</td></tr>
+                <tr><td>025</td><td><span class="badge badge-high">4%</span></td><td>Retry wrapper in stale-generation job <span class="badge badge-critical">Q2</span></td><td>Medium</td><td>8m</td><td>Quality</td></tr>
+                <tr><td>026</td><td><span class="badge badge-high">4%</span></td><td>Re-baseline BENCHMARKS.md on Go 1.26.7 (run full suite)</td><td>High</td><td>12m</td><td>Release</td></tr>
+                <tr><td>027</td><td><span class="badge badge-high">4%</span></td><td>v0.10.1: CHANGELOG release section + date</td><td>High</td><td>10m</td><td>Release</td></tr>
+                <tr><td>028</td><td><span class="badge badge-high">4%</span></td><td>Tag v0.10.1 from green master + goreleaser check flow <span class="badge badge-critical">T05</span></td><td>High</td><td>10m</td><td>Release</td></tr>
+                <tr><td>029</td><td><span class="badge badge-high">4%</span></td><td>Verify go get …@latest resolves + pkg.go.dev updated</td><td>High</td><td>5m</td><td>Release</td></tr>
+                <tr><td>030</td><td><span class="badge badge-medium">20%</span></td><td>DepsChanged: add field to ServiceDiff + populate in compareService</td><td>High</td><td>12m</td><td>Feature</td></tr>
+                <tr><td>031</td><td><span class="badge badge-medium">20%</span></td><td>DepsChanged: tests (added/removed edges, replay golden)</td><td>High</td><td>10m</td><td>Feature</td></tr>
+                <tr><td>032</td><td><span class="badge badge-medium">20%</span></td><td>DepsChanged: STABILITY.md + CHANGELOG rows</td><td>Medium</td><td>5m</td><td>Feature</td></tr>
+                <tr><td>033</td><td><span class="badge badge-medium">20%</span></td><td>Design strict enum parsing: UnmarshalJSON vs Validate-on-load</td><td>High</td><td>10m</td><td>Feature</td></tr>
+                <tr><td>034</td><td><span class="badge badge-medium">20%</span></td><td>Implement strict parsing for 4 enums (EventType/Phase/ProviderType/ServiceStatus)</td><td>High</td><td>12m</td><td>Feature</td></tr>
+                <tr><td>035</td><td><span class="badge badge-medium">20%</span></td><td>Tests: corrupt NDJSON enum fails loudly on Load/Read</td><td>High</td><td>10m</td><td>Feature</td></tr>
+                <tr><td>036</td><td><span class="badge badge-medium">20%</span></td><td>example/ CI smoke step (enabled=true, 23-feature self-check, exit 0)</td><td>Medium</td><td>10m</td><td>Quality</td></tr>
+                <tr><td>037</td><td><span class="badge badge-medium">20%</span></td><td>Write scripts/check-doc-claims.sh (versions/%, counts vs SchemaVersion/ci.yml/symbols)</td><td>High</td><td>12m</td><td>Quality</td></tr>
+                <tr><td>038</td><td><span class="badge badge-medium">20%</span></td><td>Run claims linter + fix findings</td><td>High</td><td>10m</td><td>Quality</td></tr>
+                <tr><td>039</td><td><span class="badge badge-medium">20%</span></td><td>Write stale-changelog guard (CHANGELOG.md ↔ changelog.mdx)</td><td>Medium</td><td>10m</td><td>Quality</td></tr>
+                <tr><td>040</td><td><span class="badge badge-medium">20%</span></td><td>Wire changelog guard into website workflow</td><td>Medium</td><td>5m</td><td>Quality</td></tr>
+                <tr><td>041</td><td><span class="badge badge-medium">20%</span></td><td>ci.yml concurrency group (cancel superseded runs)</td><td>Medium</td><td>5m</td><td>Quality</td></tr>
+                <tr><td>042</td><td><span class="badge badge-medium">20%</span></td><td>Coverage step-summary (publish % + per-package table)</td><td>Medium</td><td>8m</td><td>Quality</td></tr>
+                <tr><td>043</td><td><span class="badge badge-medium">20%</span></td><td>workflow_dispatch trigger on ci.yml</td><td>Medium</td><td>3m</td><td>Quality</td></tr>
+                <tr><td>044</td><td><span class="badge badge-medium">20%</span></td><td>Decide + document docs-only paths-ignore policy <span class="badge badge-critical">Q2</span></td><td>Medium</td><td>8m</td><td>Quality</td></tr>
+                <tr><td>045</td><td><span class="badge badge-medium">20%</span></td><td>Pin govulncheck action version (non-reproducible @latest)</td><td>Medium</td><td>5m</td><td>Quality</td></tr>
+                <tr><td>046</td><td><span class="badge badge-medium">20%</span></td><td>Pin firebase-tools + add weekly scheduled vulncheck cron</td><td>Medium</td><td>8m</td><td>Quality</td></tr>
+                <tr><td>047</td><td><span class="badge badge-medium">20%</span></td><td>Cache or prebuild golangci-lint in CI (no source compile per run)</td><td>Medium</td><td>10m</td><td>Quality</td></tr>
+                <tr><td>048</td><td><span class="badge badge-medium">20%</span></td><td>Depguard replacement decision (re-enable / gomodguard / convention doc)</td><td>Medium</td><td>10m</td><td>Quality</td></tr>
+                <tr><td>049</td><td><span class="badge badge-medium">20%</span></td><td>Fuzz sweep batch 1/2 (4 targets, Go 1.26.7)</td><td>Medium</td><td>10m</td><td>Quality</td></tr>
+                <tr><td>050</td><td><span class="badge badge-medium">20%</span></td><td>Fuzz sweep batch 2/2 (4 targets incl. cross-project)</td><td>Medium</td><td>10m</td><td>Quality</td></tr>
+                <tr><td>051</td><td><span class="badge badge-medium">20%</span></td><td>Plumbing: nix eval locked nixpkgs go_1_26 version (≥1.26.7?)</td><td>Medium</td><td>5m</td><td>Quality</td></tr>
+                <tr><td>052</td><td><span class="badge badge-medium">20%</span></td><td>Plumbing: smoke nix run .#coverage</td><td>Medium</td><td>8m</td><td>Quality</td></tr>
+                <tr><td>053</td><td><span class="badge badge-medium">20%</span></td><td>Plumbing: smoke nix run .#auditlog -- help</td><td>Medium</td><td>5m</td><td>Quality</td></tr>
+                <tr><td>054</td><td><span class="badge badge-medium">20%</span></td><td>Nix templ guard: reproduce retracted-v0.9.0 failure mode</td><td>Medium</td><td>10m</td><td>Quality</td></tr>
+                <tr><td>055</td><td><span class="badge badge-medium">20%</span></td><td>Add generated-files-exist check to flake/CI</td><td>Medium</td><td>10m</td><td>Quality</td></tr>
+                <tr><td>056</td><td><span class="badge badge-medium">20%</span></td><td>Sibling audit: go-workflow-auditlog + go-sse (corrupted-SHA / pin rot)</td><td>High</td><td>10m</td><td>Bug</td></tr>
+                <tr><td>057</td><td><span class="badge badge-medium">20%</span></td><td>Sibling audit: go-ndjson + go-health; fix or file upstream (verify-before-filing)</td><td>High</td><td>10m</td><td>Bug</td></tr>
+                <tr><td>058</td><td><span class="badge badge-medium">20%</span></td><td>Verify nolint-cleanup ledger current (4 sites, trigger ≥2.13)</td><td>Low</td><td>5m</td><td>Cleanup</td></tr>
+                <tr><td>059</td><td><span class="badge badge-medium">20%</span></td><td>website contributing.mdx sync (7 CI jobs, real govulncheck, Go 1.26.7)</td><td>Low</td><td>10m</td><td>Documentation</td></tr>
+                <tr><td>060</td><td><span class="badge badge-medium">20%</span></td><td>Re-check README/STABILITY claims vs CI reality post-sync</td><td>Medium</td><td>8m</td><td>Documentation</td></tr>
+                <tr><td>061</td><td><span class="badge badge-low">Rest</span></td><td>Website: og:image for docs pages (Starlight head template)</td><td>Medium</td><td>12m</td><td>Website</td></tr>
+                <tr><td>062</td><td><span class="badge badge-low">Rest</span></td><td>Website: mobile QA screenshots 375px (landing/docs/player)</td><td>Medium</td><td>10m</td><td>Website</td></tr>
+                <tr><td>063</td><td><span class="badge badge-low">Rest</span></td><td>Website: mobile QA 768/1024</td><td>Medium</td><td>10m</td><td>Website</td></tr>
+                <tr><td>064</td><td><span class="badge badge-low">Rest</span></td><td>Website: light-theme pass (Starlight + landing)</td><td>Medium</td><td>12m</td><td>Website</td></tr>
+                <tr><td>065</td><td><span class="badge badge-low">Rest</span></td><td>Website: real-browser /demo.mp4 playback smoke (play/seek/range)</td><td>Medium</td><td>10m</td><td>Website</td></tr>
+                <tr><td>066</td><td><span class="badge badge-low">Rest</span></td><td>Website: re-verify final mp4 frame t≈21.2s post-'d'-fix</td><td>Medium</td><td>8m</td><td>Website</td></tr>
+                <tr><td>067</td><td><span class="badge badge-low">Rest</span></td><td>Website: Lighthouse audit landing</td><td>Medium</td><td>10m</td><td>Website</td></tr>
+                <tr><td>068</td><td><span class="badge badge-low">Rest</span></td><td>Website: Lighthouse docs page + fix top offenders</td><td>Low</td><td>12m</td><td>Website</td></tr>
+                <tr><td>069</td><td><span class="badge badge-low">Rest</span></td><td>live/: per-file coverage table (identify top untested files)</td><td>Medium</td><td>8m</td><td>Quality</td></tr>
+                <tr><td>070</td><td><span class="badge badge-low">Rest</span></td><td>live/: write 90%-coverage test plan (fragment renderers first)</td><td>Medium</td><td>10m</td><td>Quality</td></tr>
+                <tr><td>071</td><td><span class="badge badge-low">Rest</span></td><td>live/: fragment-renderer tests batch 1</td><td>Medium</td><td>12m</td><td>Quality</td></tr>
+                <tr><td>072</td><td><span class="badge badge-low">Rest</span></td><td>live/: fragment-renderer tests batch 2</td><td>Medium</td><td>12m</td><td>Quality</td></tr>
+                <tr><td>073</td><td><span class="badge badge-low">Rest</span></td><td>Audit docs/DOMAIN_LANGUAGE.md (streaming/diagram/table terms missing)</td><td>Low</td><td>8m</td><td>Documentation</td></tr>
+                <tr><td>074</td><td><span class="badge badge-low">Rest</span></td><td>Add GOEXPERIMENT=jsonv2 note to doc.go (godoc discoverability)</td><td>Medium</td><td>5m</td><td>Documentation</td></tr>
+                <tr><td>075</td><td><span class="badge badge-low">Rest</span></td><td>Verify README Mermaid sample vs actual WriteMermaidString() output</td><td>Medium</td><td>8m</td><td>Bug</td></tr>
+                <tr><td>076</td><td><span class="badge badge-low">Rest</span></td><td>Verify pkg.go.dev surfaces GOEXPERIMENT note for v0.10.0</td><td>Low</td><td>5m</td><td>Documentation</td></tr>
+                <tr><td>077</td><td><span class="badge badge-low">Rest</span></td><td>Migration-guide docs page (MigrateReport walkthrough)</td><td>Low</td><td>12m</td><td>Docs-depth</td></tr>
+                <tr><td>078</td><td><span class="badge badge-low">Rest</span></td><td>Comparison section draft (vs manual logging / OTel / pprof)</td><td>Low</td><td>12m</td><td>Docs-depth</td></tr>
+                <tr><td>079</td><td><span class="badge badge-low">Rest</span></td><td>Architecture deep-dive draft (hooks, stack inference, concurrency)</td><td>Low</td><td>12m</td><td>Docs-depth</td></tr>
+                <tr><td>080</td><td><span class="badge badge-low">Rest</span></td><td>Schema-validation CI example page (schema + auditlog validate)</td><td>Low</td><td>10m</td><td>Docs-depth</td></tr>
+                <tr><td>081</td><td><span class="badge badge-low">Rest</span></td><td>Per-page feedback links (pre-filled issue title)</td><td>Low</td><td>10m</td><td>Docs-depth</td></tr>
+                <tr><td>082</td><td><span class="badge badge-low">Rest</span></td><td>Auto social cards research (astro-og-canvas pattern)</td><td>Low</td><td>10m</td><td>Docs-depth</td></tr>
+                <tr><td>083</td><td><span class="badge badge-low">Rest</span></td><td>9:16 vertical demo cut (Shorts/TikTok)</td><td>Low</td><td>12m</td><td>Ecosystem</td></tr>
+                <tr><td>084</td><td><span class="badge badge-low">Rest</span></td><td>Animated GIF teaser ≤6s 480p for README</td><td>Low</td><td>12m</td><td>Ecosystem</td></tr>
+                <tr><td>085</td><td><span class="badge badge-low">Rest</span></td><td>Launch-post copy from README one-narrative</td><td>Low</td><td>10m</td><td>Ecosystem</td></tr>
+                <tr><td>086</td><td><span class="badge badge-low">Rest</span></td><td>YouTube version of demo</td><td>Low</td><td>12m</td><td>Ecosystem</td></tr>
+                <tr><td>087</td><td><span class="badge badge-low">Rest</span></td><td>samber/do ecosystem PR draft (README section) <span class="badge badge-critical">owner</span></td><td>Low</td><td>10m</td><td>Ecosystem</td></tr>
+                <tr><td>088</td><td><span class="badge badge-low">Rest</span></td><td>Privacy-friendly analytics choice + wiring</td><td>Low</td><td>12m</td><td>Ecosystem</td></tr>
+                <tr><td>089</td><td><span class="badge badge-low">Rest</span></td><td>Deep-dive blog outline: how dependency inference works</td><td>Low</td><td>12m</td><td>Ecosystem</td></tr>
+                <tr><td>090</td><td><span class="badge badge-low">Rest</span></td><td>Diff-page demo (Report.Diff before/after JSONs)</td><td>Low</td><td>12m</td><td>Ecosystem</td></tr>
+                <tr><td>091</td><td><span class="badge badge-low">Rest</span></td><td>Interactive playground spike (paste report JSON → viz)</td><td>Low</td><td>12m</td><td>Ecosystem</td></tr>
+                <tr><td>092</td><td><span class="badge badge-low">Rest</span></td><td>Design note: ScopeDiff type + diff --format for CI</td><td>Low</td><td>10m</td><td>API-design</td></tr>
+                <tr><td>093</td><td><span class="badge badge-low">Rest</span></td><td>Design note: NDJSON event-line schema_version</td><td>Medium</td><td>10m</td><td>API-design</td></tr>
+                <tr><td>094</td><td><span class="badge badge-low">Rest</span></td><td>Design note: auditlog validate --schema (stdlib-only constraint)</td><td>Low</td><td>10m</td><td>API-design</td></tr>
+                <tr><td>095</td><td><span class="badge badge-low">Rest</span></td><td>Design note: Docker image for CLI (goreleaser section)</td><td>Low</td><td>10m</td><td>API-design</td></tr>
+                <tr><td>096</td><td><span class="badge badge-low">Rest</span></td><td>Design note: branded-type constructors (validation placement)</td><td>Low</td><td>10m</td><td>API-design</td></tr>
+                <tr><td>097</td><td><span class="badge badge-low">Rest</span></td><td>Design note: Event type splitting (before/after blast radius)</td><td>Low</td><td>12m</td><td>API-design</td></tr>
+                <tr><td>098</td><td><span class="badge badge-low">Rest</span></td><td>Design note: ServiceInfo sub-struct placement review (IsShutdowner)</td><td>Low</td><td>8m</td><td>API-design</td></tr>
+                <tr><td>099</td><td><span class="badge badge-low">Rest</span></td><td>Design note: ScopeName as named type</td><td>Low</td><td>5m</td><td>API-design</td></tr>
+                <tr><td>100</td><td><span class="badge badge-low">Rest</span></td><td>Design note: DurationMs → time.Duration (schema impact)</td><td>Low</td><td>8m</td><td>API-design</td></tr>
+                <tr><td>101</td><td><span class="badge badge-low">Rest</span></td><td>Design note: Prometheus metrics interface for live Hub</td><td>Low</td><td>10m</td><td>Observability</td></tr>
+                <tr><td>102</td><td><span class="badge badge-low">Rest</span></td><td>Design note: OTel bridge (spans from audit events)</td><td>Low</td><td>10m</td><td>Observability</td></tr>
+                <tr><td>103</td><td><span class="badge badge-low">Rest</span></td><td>Design note: slog/zap/zerolog adapter via OnEvent</td><td>Low</td><td>8m</td><td>Observability</td></tr>
+                <tr><td>104</td><td><span class="badge badge-low">Rest</span></td><td>Decide + document status-report retention/archive policy (g.1) <span class="badge badge-critical">g.1</span></td><td>Medium</td><td>10m</td><td>Process</td></tr>
+                <tr><td>105</td><td><span class="badge badge-low">Rest</span></td><td>Archive verification batch 1/4 (13 of 52 reports) <span class="badge badge-critical">g.1</span></td><td>Low</td><td>12m</td><td>Process</td></tr>
+                <tr><td>106</td><td><span class="badge badge-low">Rest</span></td><td>Archive verification batch 2/4 (13 reports) <span class="badge badge-critical">g.1</span></td><td>Low</td><td>12m</td><td>Process</td></tr>
+                <tr><td>107</td><td><span class="badge badge-low">Rest</span></td><td>Archive verification batch 3/4 (13 reports) <span class="badge badge-critical">g.1</span></td><td>Low</td><td>12m</td><td>Process</td></tr>
+                <tr><td>108</td><td><span class="badge badge-low">Rest</span></td><td>Archive verification batch 4/4 (13 reports) <span class="badge badge-critical">g.1</span></td><td>Low</td><td>12m</td><td>Process</td></tr>
+                <tr><td>109</td><td><span class="badge badge-low">Rest</span></td><td>Normalize annotation conventions in 5 stray-strikethrough files</td><td>Low</td><td>10m</td><td>Process</td></tr>
+                <tr><td>110</td><td><span class="badge badge-low">Rest</span></td><td>Rerun health report with canonical rubric (health-report-format.md)</td><td>Low</td><td>10m</td><td>Process</td></tr>
+                <tr><td>111</td><td><span class="badge badge-low">Rest</span></td><td>Apply 8 docs-health reference files next run; note deviations</td><td>Low</td><td>10m</td><td>Process</td></tr>
+                <tr><td>112</td><td><span class="badge badge-low">Rest</span></td><td>Full pre-commit suite parity run post-green</td><td>Low</td><td>10m</td><td>Process</td></tr>
+                <tr><td>113</td><td><span class="badge badge-low">Rest</span></td><td>Investigate setup-go cache not shielding mod-tidy from proxy</td><td>Low</td><td>10m</td><td>Process</td></tr>
+                <tr><td>114</td><td><span class="badge badge-low">Rest</span></td><td>Evaluate per-job timeout-minutes (fast-fail transport hangs)</td><td>Low</td><td>8m</td><td>Process</td></tr>
+                <tr><td>115</td><td><span class="badge badge-low">Rest</span></td><td>Markdown formatter pass over 4 living docs tables</td><td>Low</td><td>10m</td><td>Cleanup</td></tr>
+                <tr><td>116</td><td><span class="badge badge-low">Rest</span></td><td>Live dashboard: dark/light theme toggle</td><td>Low</td><td>12m</td><td>Live-dash</td></tr>
+                <tr><td>117</td><td><span class="badge badge-low">Rest</span></td><td>Live dashboard: cross-origin CSP configurable or documented</td><td>Low</td><td>10m</td><td>Live-dash</td></tr>
+                <tr><td>118</td><td><span class="badge badge-low">Rest</span></td><td>OWNER: branch protection (7 required checks + Website for website paths) <span class="badge badge-critical">owner</span></td><td>High</td><td>10m</td><td>Owner</td></tr>
+                <tr><td>119</td><td><span class="badge badge-low">Rest</span></td><td>OWNER: Dependabot auto-merge + rebase strategy <span class="badge badge-critical">owner</span></td><td>Medium</td><td>8m</td><td>Owner</td></tr>
+                <tr><td>120</td><td><span class="badge badge-low">Rest</span></td><td>OWNER: master-failure notification channel <span class="badge badge-critical">owner</span></td><td>Medium</td><td>5m</td><td>Owner</td></tr>
+                <tr><td>121</td><td><span class="badge badge-low">Rest</span></td><td>OWNER: register SSH commit-signing key (tags unverified today) <span class="badge badge-critical">owner</span></td><td>Medium</td><td>8m</td><td>Owner</td></tr>
+                <tr><td>122</td><td><span class="badge badge-low">Rest</span></td><td>OWNER: auto-commit-daemon policy decision <span class="badge badge-critical">owner</span></td><td>Medium</td><td>8m</td><td>Owner</td></tr>
+                <tr><td>123</td><td><span class="badge badge-low">Rest</span></td><td>OWNER: hero video autoplay + deploy-path definition (ROADMAP Qs) <span class="badge badge-critical">owner</span></td><td>Medium</td><td>8m</td><td>Owner</td></tr>
+                <tr><td>124</td><td><span class="badge badge-low">Rest</span></td><td>Dependabot sweep: rebase 3 website PRs, both workflows green <span class="badge badge-critical">Q1</span></td><td>High</td><td>10m</td><td>Cleanup</td></tr>
+                <tr><td>125</td><td><span class="badge badge-low">Rest</span></td><td>Dependabot sweep: merge/close + delete superseded branches <span class="badge badge-critical">Q1</span></td><td>High</td><td>12m</td><td>Cleanup</td></tr>
+                <tr><td>126</td><td><span class="badge badge-low">Rest</span></td><td>Sync this plan's new items into TODO_LIST.md (living source)</td><td>Medium</td><td>8m</td><td>Process</td></tr>
+              </tbody>
+            </table>
+          </div>
+          </section>
+
+          <section id="gates">
+            <h2><span class="num">04</span>Owner Gates (13 tasks blocked)</h2>
+            <div class="card-problem">
+              <h3>G.1 — Archive strictness</h3>
+              <p>Keep the strict zero-open-items rule (≈1 archive per 15 files) or adopt a coarser
+              "session-complete" policy so <code>docs/status/</code> shrinks? Decides tasks T104–T108.</p>
+            </div>
+            <div class="card-problem">
+              <h3>G.2 — example/ --live premature-shutdown bug</h3>
+              <p>Still real, or fixed? Decides whether T09–T10 is a 15-minute verification or a bug restoration.</p>
+            </div>
+            <div class="card-problem">
+              <h3>G.3 — Commit authority</h3>
+              <p>Daemon or explicit "commit"? 15 verified paths are waiting. Decides T01–T04, which gate everything.</p>
+            </div>
+            <div class="card-warning">
+              <h3>Q1 — Dependabot intent</h3>
+              <p>Merge the 3 open website PRs or let the committed overhaul supersede them? Gates T124–T125.</p>
+            </div>
+            <div class="card-warning">
+              <h3>Q2 — CI behavior changes</h3>
+              <p>Approve tidy-retry wrapper (T24–T25) and docs-only paths-ignore (T44)? Both change what a red X means.</p>
+            </div>
+          </section>
+
+          <section id="sources">
+            <h2><span class="num">05</span>Sources</h2>
+            <ul>
+              <li><code>TODO_LIST.md</code> — 28 open tasks (CI/Release 15, Website 8, Library/Tooling 5) + 5 owner questions</li>
+              <li><code>ROADMAP.md</code> — raw ideas: Ecosystem (7), CI Resilience (4), API Design (10), Docs Depth (6), Live Dashboard (2), Observability (3)</li>
+              <li><code>docs/status/2026-09-02_13-59_docs-health-full-audit…md</code> — f-list items 1–50 (uniques: f.3–f.9, f.40–f.50)</li>
+              <li>Session follow-ups — 15 uncommitted paths, g.1–g.3, straggler annotations, plan sync</li>
+            </ul>
+            <p class="hero-subtitle">Point-in-time snapshot. Living source: TODO_LIST.md (synced with this plan, T126). Next docs-health pass harvests from here.</p>
+          </section>
+
+          <footer class="footer">
+            <span>Pareto master plan · samber-do-auditlog · 2026-09-02 14:15 CEST</span>
+            <span>126 tasks · ≈19.2 h · 13 owner-gated</span>
+          </footer>
+        </main>
+      </div>
+
+      <script>
+        (function () {
+          if (!("IntersectionObserver" in window)) return;
+          var nav = document.querySelector("[data-nav]");
+          if (!nav) return;
+          var links = nav.querySelectorAll('a[href^="#"]');
+          var ids = Array.from(links).map(function (l) {
+            return l.getAttribute("href").slice(1);
+          });
+          var sections = ids
+            .map(function (id) {
+              return document.getElementById(id);
+            })
+            .filter(Boolean);
+          if (!sections.length) return;
+          var observer = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  links.forEach(function (link) {
+                    link.classList.toggle(
+                      "active",
+                      link.getAttribute("href") === "#" + entry.target.id,
+                    );
+                  });
+                }
+              });
+            },
+            { rootMargin: "-80px 0px -60% 0px", threshold: 0 },
+          );
+          sections.forEach(function (s) {
+            observer.observe(s);
+          });
+        })();
+      </script>
+      </body>
+      </html>

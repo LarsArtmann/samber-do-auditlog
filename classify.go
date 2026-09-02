@@ -36,6 +36,7 @@ func ErrorClassifications() map[error]errorfamily.Family {
 		ErrReportEmptyVersion:          errorfamily.Corruption,
 		errUnknownEventType:            errorfamily.Corruption,
 		errUnknownPhase:                errorfamily.Corruption,
+		errUnknownProviderType:         errorfamily.Corruption,
 		ErrReplayValidationFailed:      errorfamily.Corruption,
 
 		// Rejection — bad caller input or invalid operation. The caller sent

@@ -60,7 +60,14 @@ func ReplayEvents(events []Event) (Report, error) {
 
 	state := newReplayState()
 
-	for _, evt := range events {
+	for i, evt := range events {
+		// Reject corrupt enum values loudly. applyEvent's switch would
+		// otherwise silently drop the event, producing a lossy "successful"
+		// replay.
+		if err := validateEventEnums(evt); err != nil {
+			return Report{}, fmt.Errorf("%w: event %d: %w", ErrReplayValidationFailed, i, err)
+		}
+
 		applyEvent(evt, state)
 	}
 

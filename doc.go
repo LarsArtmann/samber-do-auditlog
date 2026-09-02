@@ -9,4 +9,11 @@
 // Config.Validate() checks configuration constraints. Export formats include JSON
 // reports, NDJSON event streams, CSV/TSV, self-contained HTML, Mermaid,
 // PlantUML, Graphviz DOT, and D2 diagrams.
+//
+// # Build requirement
+//
+// Building (not importing) this library requires GOEXPERIMENT=jsonv2 on Go
+// 1.26.x, because a transitive dependency (go-output) uses encoding/json/v2
+// features. Set the env var or the build fails with "package encoding/json/v2
+// is not in std". The flag will not be needed once Go 1.27 stabilizes json/v2.
 package auditlog

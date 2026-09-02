@@ -970,6 +970,16 @@ func TestReadEvents_RejectsInvalidInput(t *testing.T) {
 			input:      `{"sequence":1,"timestamp":"2026-01-01T00:00:00Z","event_type":"registration","phase":"mid","container_id":"x","scope_id":"s","scope_name":"s","service_name":"db"}`,
 			wantSubstr: "unknown phase",
 		},
+		{
+			name:       "UnknownProviderType",
+			input:      `{"sequence":1,"timestamp":"2026-01-01T00:00:00Z","event_type":"registration","phase":"after","container_id":"x","scope_id":"s","scope_name":"s","service_name":"db","service_type":"singularity"}`,
+			wantSubstr: "unknown provider_type",
+		},
+		{
+			name:       "EmptyProviderTypeAllowed",
+			input:      `{"sequence":1,"timestamp":"2026-01-01T00:00:00Z","event_type":"registration","phase":"after","container_id":"x","scope_id":"s","scope_name":"s","service_name":"db"}`,
+			wantSubstr: "",
+		},
 	}
 
 	for _, tt := range tests {
@@ -977,12 +987,55 @@ func TestReadEvents_RejectsInvalidInput(t *testing.T) {
 			t.Parallel()
 
 			_, err := auditlog.ReadEvents(strings.NewReader(tt.input))
+			if tt.wantSubstr == "" {
+				if err != nil {
+					t.Fatalf("expected success, got %v", err)
+				}
+
+				return
+			}
+
 			if err == nil {
 				t.Fatal("expected error, got nil")
 			}
 
 			if !strings.Contains(err.Error(), tt.wantSubstr) {
 				t.Errorf("error should mention %q, got: %v", tt.wantSubstr, err)
+			}
+		})
+	}
+}
+
+func TestReplayEvents_RejectsUnknownEnums(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+
+	tests := []struct {
+		name string
+		evt  auditlog.Event
+	}{
+		{
+			name: "UnknownEventType",
+			evt:  mkEvent(1, now, auditlog.EventType("singularity"), auditlog.PhaseAfter, "db", "c1", ""),
+		},
+		{
+			name: "UnknownPhase",
+			evt:  mkEvent(1, now, auditlog.EventTypeRegistration, auditlog.Phase("mid"), "db", "c1", ""),
+		},
+		{
+			name: "UnknownProviderType",
+			evt:  mkEvent(1, now, auditlog.EventTypeRegistration, auditlog.PhaseAfter, "db", "c1", auditlog.ProviderType("quantum")),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := auditlog.ReplayEvents([]auditlog.Event{tt.evt})
+			if !errors.Is(err, auditlog.ErrReplayValidationFailed) {
+				t.Errorf("expected ErrReplayValidationFailed, got %v", err)
 			}
 		})
 	}

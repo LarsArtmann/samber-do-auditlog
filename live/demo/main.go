@@ -8,7 +8,9 @@
 //
 //	go run ./live/demo
 //
-// Then open http://localhost:7777/debug/di/ in your browser.
+// Open http://localhost:7777/debug/di/ immediately — the lifecycle runs at
+// startup (~10s, services build with delays) and then the server serves the
+// final state until interrupted.
 package main
 
 import (

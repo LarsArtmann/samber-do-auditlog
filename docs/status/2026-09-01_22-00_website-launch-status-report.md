@@ -72,7 +72,7 @@
 
 7. **AGENTS.md accuracy.**
    - Done: consumer-GOEXPERIMENT + website-state entries added.
-   - Open: noticed `AGENTS.md` claims the html.templ CSP has "No `default-src`" but the actual exported HTML contains `default-src 'none'` — left untouched (out of scope) and now the AGENTS.md drift is *documented nowhere*. Deliberately deferred, still unresolved.
+   - Open: ~~noticed `AGENTS.md` claims the html.templ CSP has "No `default-src`" but the actual exported HTML contains `default-src 'none'` — left untouched (out of scope) and now the AGENTS.md drift is *documented nowhere*. Deliberately deferred, still unresolved.~~ DONE — docs-health session (2026-09-01) corrected the CSP gotcha in AGENTS.md (`default-src 'none'` verified present at html.templ:9).
 
 8. **Website dependency bump verification.**
    - Done: regenerated lockfile picked up astro 7.2.9 / starlight 0.41.10 / tailwind 4.3.3 / html-validate 11.10; build + check + validate pass.
@@ -86,7 +86,7 @@
 
 10. **The 50-item next-task list (section f).**
     - Done: written below.
-    - Open: not yet harvested into `TODO_LIST.md`/`ROADMAP.md` — per the status-report skill this needs a `docs-health` HARVEST pass or the items die in this timestamped file.
+    - ~~Open: not yet harvested into `TODO_LIST.md`/`ROADMAP.md` — per the status-report skill this needs a `docs-health` HARVEST pass or the items die in this timestamped file.~~ DONE — docs-health session (2026-09-01 late) harvested items into TODO_LIST.md (Website & Demo + CI sections) and ROADMAP.md (Ecosystem & Distribution).
 
 ---
 
@@ -105,10 +105,10 @@
 | Real mobile screenshots (375/768/1024) | Time; desktop-only visual gate per skill | Yes |
 | Light-theme visual pass | Time | Yes |
 | Playback smoke test in real browser | See b3 | Yes |
-| `FEATURES.md` / `ROADMAP.md` / `TODO_LIST.md` audit vs v0.9/v0.10 features | Out of session scope (docs-health VERIFY/HARVEST territory) | Yes |
-| HARVEST of section (f) into TODO_LIST/ROADMAP | Post-report step | Mandatory per skill |
-| AGENTS.md CSP-claim drift fix (html.templ `default-src 'none'` vs "No default-src") | Noticed late, library-side not website-side | Yes, 10-minute fix |
-| Verify `go test ./...` still green post-session | No Go code changed; skipped as out of scope | Cheap insurance |
+| ~~`FEATURES.md` / `ROADMAP.md` / `TODO_LIST.md` audit vs v0.9/v0.10 features~~ DONE (docs-health session: FEATURES updated — live tests 73, fuzz 8, 453 parallel, health/ ghost removed; ROADMAP rebuilt) | Out of session scope (docs-health VERIFY/HARVEST territory) | Yes |
+| ~~HARVEST of section (f) into TODO_LIST/ROADMAP~~ DONE (docs-health session) | Post-report step | Mandatory per skill |
+| ~~AGENTS.md CSP-claim drift fix (html.templ `default-src 'none'` vs "No default-src")~~ DONE (docs-health session — claim corrected) | Noticed late, library-side not website-side | Yes, 10-minute fix |
+| ~~Verify `go test ./...` still green post-session~~ DONE (docs-health session: full suite + race + gate 95.2% pass) | No Go code changed; skipped as out of scope | Cheap insurance |
 | pkg.go.dev / module-proxy freshness check for v0.10.0 | Out of scope | Low |
 | Slim `website/video/videos/do-auditlog-demo/capture/` (3.4 MB) | Committed as-is; repo-size concern unconfirmed | Low |
 | Search UX spot-check (pagefind) after dep jumps | Build produced index; no manual query test | Medium |
@@ -171,16 +171,16 @@ Nothing shipped broken — the live site and video are verified. But radical hon
 |---|------|--------|--------|----------|
 | 1 | Push (or confirm daemon pushes) so `website.yml` runs against the regenerated lockfile — proves CI green end-to-end | Critical | S | Bug |
 | 2 | Re-verify final mp4 frame at t≈21.2s (post-"d"-fix) from `public/demo.mp4` | High | S | Quality |
-| 3 | Read `website.yml` job steps; add `astro check` + `html-validate` gates if missing | High | S | Quality |
+| 3 | ~~Read `website.yml` job steps; add `astro check` + `html-validate` gates if missing~~ verified present (astro check + html-validate + pnpm audit already in build job); pnpm/action-setup added in docs-health session after first real run died on missing pnpm | High | S | Quality |
 | 4 | Add `pnpm install --frozen-lockfile` drift gate to CI for `website/**` PRs | High | S | Quality |
 | 5 | Script the `CHANGELOG.md` → `changelog.mdx` sync; wire into `go generate` or CI | High | M | Cleanup |
 | 6 | Add og:image/description head tags for all Starlight docs pages (not just landing) | High | S | Feature |
 | 7 | Mobile QA pass: screenshots at 375/768/1024 of landing + docs + video player; fix what breaks | High | M | Quality |
 | 8 | Light-theme visual pass on landing + docs after this session's edits | High | S | Quality |
 | 9 | Real-browser playback smoke test of `/demo.mp4` (play, seek, range requests) | High | S | Quality |
-| 10 | HARVEST this report's section (f) into `TODO_LIST.md` / `ROADMAP.md` via docs-health | High | S | Documentation |
-| 11 | Fix `AGENTS.md` CSP drift: html.templ exports `default-src 'none'` — update claim + verify intent | High | S | Documentation |
-| 12 | Run `go test -race ./...` as post-session insurance (no Go changes, but cheap) | Medium | S | Quality |
+| 10 | ~~HARVEST this report's section (f) into `TODO_LIST.md` / `ROADMAP.md` via docs-health~~ done in docs-health session | High | S | Documentation |
+| 11 | ~~Fix `AGENTS.md` CSP drift: html.templ exports `default-src 'none'` — update claim + verify intent~~ done in docs-health session | High | S | Documentation |
+| 12 | ~~Run `go test -race ./...` as post-session insurance~~ done in docs-health session (gate run, all green) | Medium | S | Quality |
 | 13 | Lighthouse audit of landing + one docs page; fix top offenders | High | M | Quality |
 | 14 | Per-page feedback links (pre-filled issue title) next to "Edit this page" | Medium | S | Feature |
 | 15 | Add "Watch the 25s demo" to the docs sidebar or header CTA (currently only README + hero) | Medium | S | Feature |
@@ -188,8 +188,8 @@ Nothing shipped broken — the live site and video are verified. But radical hon
 | 17 | Launch post copy derived from README one-narrative (hook + link + proof point) | Medium | S | Documentation |
 | 18 | Claims-linter script for README/docs (versions, %, method names vs source) | High | M | Quality |
 | 19 | Sitemap + pagefind spot-check after dependency jumps (query something, inspect sitemap-index.xml) | Medium | S | Quality |
-| 20 | Update `FEATURES.md` for v0.9/v0.10 features (RunID, MultiWriter, SetOnEvent, live dashboard keyboard nav) | Medium | M | Documentation |
-| 21 | `TODO_LIST.md` / `ROADMAP.md` audit vs current reality (docs-health VERIFY) | Medium | M | Documentation |
+| 20 | ~~Update `FEATURES.md` for v0.9/v0.10 features (RunID, MultiWriter, SetOnEvent, live dashboard keyboard nav)~~ done in docs-health session (features verified/updated; keyboard nav already present) | Medium | M | Documentation |
+| 21 | ~~`TODO_LIST.md` / `ROADMAP.md` audit vs current reality (docs-health VERIFY)~~ done in docs-health session (stale v0.7.0 release item removed; completed cross-project section removed; harvest applied) | Medium | M | Documentation |
 | 22 | Pin/verify TS7 policy: try `@astrojs/check` + typescript 7 upgrade in a branch; keep ^6 pin until green | Medium | M | Cleanup |
 | 23 | Rename frame-preset color keys post-inversion in `build-frame.mjs` (upstream fix or local post-process) | Medium | M | Cleanup |
 | 24 | Add data-layout-allow-overlap/occlusion lesson + read-only-worker note to AGENTS.md video section | Medium | S | Documentation |

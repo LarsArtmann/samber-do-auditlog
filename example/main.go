@@ -64,7 +64,7 @@ func main() {
 
 func runLive(addr string) {
 	fmt.Printf("=== samber-do-auditlog LIVE dashboard ===\n")
-	fmt.Printf("Open http://localhost%s/debug/di/ in your browser\n", addr)
+	fmt.Printf("Open http://localhost%s/debug/di/ in your browser — the lifecycle demo runs immediately (~6s) and then serves the final state\n", addr)
 	fmt.Println()
 
 	hub := live.NewHub()

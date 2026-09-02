@@ -21,8 +21,9 @@ var (
 
 // Domain-specific validation errors.
 var (
-	errUnknownEventType = errors.New("unknown event_type")
-	errUnknownPhase     = errors.New("unknown phase")
+	errUnknownEventType    = errors.New("unknown event_type")
+	errUnknownPhase        = errors.New("unknown phase")
+	errUnknownProviderType = errors.New("unknown provider_type")
 )
 
 // ReadEvents reads line-delimited JSON events from reader.
@@ -40,14 +41,32 @@ func ReadEvents(reader io.Reader) ([]Event, error) {
 	return events, nil
 }
 
-// validateEvent checks that event_type and phase are recognized values.
+// validateEvent checks that event_type, phase, and provider_type are
+// recognized values. An empty provider_type is allowed: it legitimately means
+// "could not be determined" for some registration paths.
 func validateEvent(lineNum int, evt Event) error {
+	if err := validateEventEnums(evt); err != nil {
+		return fmt.Errorf("line %d: %w", lineNum, err)
+	}
+
+	return nil
+}
+
+// validateEventEnums checks an Event's enum fields without position context.
+// Shared by the NDJSON load path (which adds the line number) and the replay
+// path (which adds the event index) so corrupt data fails loudly at both
+// boundaries instead of being silently dropped.
+func validateEventEnums(evt Event) error {
 	if evt.EventType != "" && !evt.EventType.IsKnown() {
-		return fmt.Errorf("line %d: %w: %q", lineNum, errUnknownEventType, evt.EventType)
+		return fmt.Errorf("%w: %q", errUnknownEventType, evt.EventType)
 	}
 
 	if evt.Phase != "" && !evt.Phase.IsKnown() {
-		return fmt.Errorf("line %d: %w: %q", lineNum, errUnknownPhase, evt.Phase)
+		return fmt.Errorf("%w: %q", errUnknownPhase, evt.Phase)
+	}
+
+	if evt.ServiceType != "" && !evt.ServiceType.IsKnown() {
+		return fmt.Errorf("%w: %q", errUnknownProviderType, evt.ServiceType)
 	}
 
 	return nil
