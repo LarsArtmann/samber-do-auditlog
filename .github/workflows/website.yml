@@ -41,7 +41,8 @@ jobs:
           cache-dependency-path: website/pnpm-lock.yaml
 
       - name: Changelog sync guard
-        run: scripts/check-changelog-sync.sh
+        run: "${{ github.workspace }}/scripts/check-changelog-sync.sh"
+        working-directory: .
 
       - run: pnpm install --frozen-lockfile
         working-directory: website
