@@ -23,8 +23,8 @@ benchstat /tmp/new.txt  # compare manually against the table below
 
 | Property           | Value                                             |
 | ------------------ | ------------------------------------------------- |
-| Date               | 2026-06-21 (re-baselined post-go-output adoption) |
-| Go                 | 1.26.5                                            |
+| Date               | 2026-09-02 (re-baselined on Go 1.26.7, post-DepsChanged/strict-validation) |
+| Go                 | 1.26.7                                            |
 | OS                 | Linux (NixOS)                                     |
 | CPU                | AMD Ryzen AI MAX+ 395 (32 threads)                |
 | Runs per benchmark | 3                                                 |
@@ -37,20 +37,20 @@ Median of 3 runs. Lower is better.
 
 | Benchmark                            | Time/op    | Bytes/op  | Allocs/op | Notes                                                                    |
 | ------------------------------------ | ---------- | --------- | --------- | ------------------------------------------------------------------------ |
-| `BenchmarkHookOverhead_Invocation`   | 1,658 ns   | 2,019 B   | 6         | Hot path: single service invoke (before+after hooks)                     |
-| `BenchmarkHookOverhead_Disabled`     | 113 ns     | 96 B      | 4         | Zero-cost disabled path (empty hooks, samber/do overhead only)           |
-| `BenchmarkHookOverhead_Registration` | 21,982 ns  | 167,671 B | 54        | Full registration lifecycle (scope, stack, event, service record)        |
-| `BenchmarkHookOnAfterInvocation`     | 633 ns     | 1,897 B   | 6         | After-invocation hook only                                               |
-| `BenchmarkHookRegistrationOnly`      | 31,881 ns  | 167,924 B | 58        | Registration hook (slightly heavier than full registration due to setup) |
-| `BenchmarkConcurrentInvocation`      | 1,014 ns   | 2,002 B   | 6         | Invocation under concurrent access                                       |
-| `BenchmarkBuildReport/services=50`   | 110,653 ns | 80,855 B  | 53        | BuildReport with 50 services                                             |
-| `BenchmarkBuildReport/services=100`  | 127,492 ns | 163,183 B | 60        | BuildReport with 100 services                                            |
-| `BenchmarkBuildReport/services=500`  | 540,531 ns | 851,222 B | 80        | BuildReport with 500 services                                            |
-| `BenchmarkEnrichCapabilities`        | 48,091 ns  | 80,854 B  | 53        | `do.ExplainInjector` capability detection (outside mutex)                |
-| `BenchmarkEventsCopy`                | 21,985 ns  | 32,768 B  | 1         | Defensive copy of all events                                             |
-| `BenchmarkOnEventCallback`           | 1,686 ns   | 1,853 B   | 6         | OnEvent callback overhead per event                                      |
-| `BenchmarkHealthCheck`               | 41,484 ns  | 16,265 B  | 147       | Full health check cycle (bulk HealthCheckWithContext)                    |
-| `BenchmarkWriteD2`                   | 48,969 ns  | 96,085 B  | 1,176     | D2 diagram export (build + render + write, 50 services)                  |
+| `BenchmarkHookOverhead_Invocation`   | 856 ns     | 2,204 B   | 6         | Hot path: single service invoke (before+after hooks)                     |
+| `BenchmarkHookOverhead_Disabled`     | 121 ns     | 96 B      | 4         | Zero-cost disabled path (empty hooks, samber/do overhead only)           |
+| `BenchmarkHookOverhead_Registration` | 27,920 ns  | 183,777 B | 51        | Full registration lifecycle (scope, stack, event, service record)        |
+| `BenchmarkHookOnAfterInvocation`     | 805 ns     | 2,044 B   | 6         | After-invocation hook only                                               |
+| `BenchmarkHookRegistrationOnly`      | 26,021 ns  | 184,097 B | 55        | Registration hook (slightly heavier than full registration due to setup) |
+| `BenchmarkConcurrentInvocation`      | 1,141 ns   | 2,234 B   | 6         | Invocation under concurrent access                                       |
+| `BenchmarkBuildReport/services=50`   | 47,545 ns  | 81,515 B  | 45        | BuildReport with 50 services                                             |
+| `BenchmarkBuildReport/services=100`  | 143,083 ns | 153,694 B | 49        | BuildReport with 100 services                                            |
+| `BenchmarkBuildReport/services=500`  | 588,634 ns | 771,002 B | 60        | BuildReport with 500 services                                            |
+| `BenchmarkEnrichCapabilities`        | 53,163 ns  | 81,514 B  | 45        | `do.ExplainInjector` capability detection (outside mutex)                |
+| `BenchmarkEventsCopy`                | 11,218 ns  | 40,960 B  | 1         | Defensive copy of all events                                             |
+| `BenchmarkOnEventCallback`           | 1,086 ns   | 2,185 B   | 6         | OnEvent callback overhead per event                                      |
+| `BenchmarkHealthCheck`               | 18,282 ns  | 17,686 B  | 147       | Full health check cycle (bulk HealthCheckWithContext)                    |
+| `BenchmarkWriteD2`                   | 88,871 ns  | 108,278 B | 1,378     | D2 diagram export (build + render + write, 50 services)                  |
 
 ---
 

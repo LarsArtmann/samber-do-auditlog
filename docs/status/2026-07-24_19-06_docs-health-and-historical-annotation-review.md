@@ -161,7 +161,7 @@ AGENTS.md is the FIRST file any AI session reads. It's listed as a living doc in
 
 ### 5. The ROADMAP.md "Stability Path" strikethrough formatting may break
 
-I used `~~strikethrough~~` to mark resolved items in the Stability Path. This renders correctly on GitHub, but the strikethrough items are still technically "there" — a reader sees crossed-out text and wonders why. The correct approach per docs-health is to rewrite the section to reflect current reality, not to leave archaeological layers. The Stability Path should say "Coverage gate passes (94.1%)" not "~~Coverage gate failing~~ FIXED".
+~~I used `~~strikethrough~~` to mark resolved items in the Stability Path.~~ SUPERSEDED 2026-09-02 — the owner explicitly mandated inline strikethrough + done-at evidence annotations; this session's docs-health passes apply that convention (see line below for the original reasoning, kept for context). I used `~~strikethrough~~` to mark resolved items in the Stability Path. This renders correctly on GitHub, but the strikethrough items are still technically "there" — a reader sees crossed-out text and wonders why. The correct approach per docs-health is to rewrite the section to reflect current reality, not to leave archaeological layers. The Stability Path should say "Coverage gate passes (94.1%)" not "~~Coverage gate failing~~ FIXED".
 
 ---
 

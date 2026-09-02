@@ -105,7 +105,7 @@ Updated 3 stale AGENTS.md gotchas + 1 section:
 
 ### Documentation Improvements
 
-8. **AGENTS.md gotcha style** — The "RESOLVED via" prefix I added is ad-hoc. Consider a consistent annotation system for resolved gotchas (e.g., a `~~/strikethrough~~` convention or moving resolved items to a separate "Historical" section).
+8. **AGENTS.md gotcha style** — ~~The "RESOLVED via" prefix I added is ad-hoc. Consider a consistent annotation system for resolved gotchas (e.g., a `~~/strikethrough~~` convention or moving resolved items to a separate "Historical" section).~~ ADOPTED 2026-09-02 — the standard convention is now `~~old text~~ DONE <date> — <evidence>`, applied across docs/status and docs/planning.
 9. **`.buildflow.yml` comment references "Go 1.27"** — This is a forward-looking assumption. When Go 1.27 actually ships, someone needs to verify json/v2 is truly stable (not just experimentally available) before re-enabling `go-auto-upgrade`.
 
 ---

@@ -161,7 +161,7 @@ I created a package-level `errInnerTest` sentinel just to satisfy the `err113` l
 
 ### Immediate (this session's gaps)
 
-1. ~~Tag v0.7.0~~ (manual, requires user)
+1. ~~Tag v0.7.0~~ DONE 2026-07-25 — v0.7.0 shipped (manual, owner-executed).
 2. Add fuzz test for NDJSONStreamer (`FuzzNDJSONStreamer`)
 3. Add plugin-integration test for streaming (wire OnEvent into Config.OnEvent)
 4. Test Mermaid `DirectionLeft` (RL) branch

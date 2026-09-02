@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-22 18:14
 **Session:** Typed string identifier propagation (`ContainerID`, `ScopeID`, `ServiceName`)
-**Outcome:** ~~BUILD GREEN, ALL TESTS PASS, COVERAGE 94.1%~~ **Correction (2026-07-24):** The "BUILD GREEN" claim was false. The ServiceInfo split (commit `253b2af`) had already landed from a concurrent session, breaking ~30 test files. The build was actually red. Both features shipped successfully after the 18:35 fix session.
+**Outcome:** ~~BUILD GREEN, ALL TESTS PASS, COVERAGE 94.1%~~ CORRECTED 2026-07-24 — The "BUILD GREEN" claim was false. The ServiceInfo split (commit `253b2af`) had already landed from a concurrent session, breaking ~30 test files. The build was actually red. Both features shipped successfully after the 18:35 fix session.
 
 ---
 
