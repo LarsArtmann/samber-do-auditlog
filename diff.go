@@ -168,10 +168,23 @@ func indexServicesByKey(services []ServiceInfo) map[string]ServiceInfo {
 // primary by ServiceName, secondary by ScopeID. Used by report builders and
 // diff output so all ServiceRef lists are consistently ordered.
 func CompareServiceRefs(a, b ServiceRef) int {
-	return cmp.Or(
-		cmp.Compare(a.ServiceName, b.ServiceName),
-		cmp.Compare(a.ScopeID, b.ScopeID),
-	)
+	if a.ServiceName != b.ServiceName {
+		if a.ServiceName < b.ServiceName {
+			return -1
+		}
+
+		return 1
+	}
+
+	if a.ScopeID != b.ScopeID {
+		if a.ScopeID < b.ScopeID {
+			return -1
+		}
+
+		return 1
+	}
+
+	return 0
 }
 
 func sortServiceDiffs(a, b ServiceDiff) int {

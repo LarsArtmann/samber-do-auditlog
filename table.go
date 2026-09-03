@@ -9,23 +9,23 @@ import (
 	"strings"
 )
 
-// Format identifies a table output format. It replaces the go-output Format
-// type on the Go 1.18 branch; string literals ("table", "json", "csv", ...)
-// remain valid call sites.
-type Format string
+// TableFormat identifies a table output format. It replaces the go-output
+// Format type on the Go 1.18 branch; string literals ("table", "json",
+// "csv", ...) remain valid call sites.
+type TableFormat string
 
 // Supported table formats.
 const (
-	// FormatTable is a plain-text ASCII table.
-	FormatTable Format = "table"
-	// FormatJSON is a JSON object with headers and rows.
-	FormatJSON Format = "json"
-	// FormatCSV is comma-separated values.
-	FormatCSV Format = "csv"
-	// FormatTSV is tab-separated values.
-	FormatTSV Format = "tsv"
-	// FormatMarkdown is a GitHub-flavored Markdown table.
-	FormatMarkdown Format = "markdown"
+	// TableFormatTable is a plain-text ASCII table.
+	TableFormatTable TableFormat = "table"
+	// TableFormatJSON is a JSON object with headers and rows.
+	TableFormatJSON TableFormat = "json"
+	// TableFormatCSV is comma-separated values.
+	TableFormatCSV TableFormat = "csv"
+	// TableFormatTSV is tab-separated values.
+	TableFormatTSV TableFormat = "tsv"
+	// TableFormatMarkdown is a GitHub-flavored Markdown table.
+	TableFormatMarkdown TableFormat = "markdown"
 )
 
 // errUnsupportedTableFormat is returned by WriteTable for formats this build
@@ -93,7 +93,7 @@ func (r Report) buildServiceTableRows(columns []TableColumn) ([]string, [][]stri
 // Scope, Type, Status, Invocations, Build(ms), Error).
 func (r Report) WriteTable(
 	writer io.Writer,
-	format Format,
+	format TableFormat,
 	opts RenderOptions,
 	tableOpts ...TableOption,
 ) error {
@@ -103,15 +103,15 @@ func (r Report) WriteTable(
 	var err error
 
 	switch format {
-	case FormatTable:
+	case TableFormatTable:
 		err = writeASCIITable(writer, headers, rows)
-	case FormatJSON:
+	case TableFormatJSON:
 		err = writeJSONTable(writer, headers, rows)
-	case FormatCSV:
+	case TableFormatCSV:
 		err = writeDelimitedTable(writer, headers, rows, ',')
-	case FormatTSV:
+	case TableFormatTSV:
 		err = writeDelimitedTable(writer, headers, rows, '\t')
-	case FormatMarkdown:
+	case TableFormatMarkdown:
 		err = writeMarkdownTable(writer, headers, rows)
 	default:
 		err = fmt.Errorf("%w: %s", errUnsupportedTableFormat, format)
@@ -127,7 +127,7 @@ func (r Report) WriteTable(
 // WriteTableString returns the service summary table as a string in the
 // specified format. See WriteTable for supported formats.
 func (r Report) WriteTableString(
-	format Format,
+	format TableFormat,
 	opts RenderOptions,
 	tableOpts ...TableOption,
 ) (string, error) {
