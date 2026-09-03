@@ -292,7 +292,17 @@ The callback fires **outside the mutex** on every event. Keep it fast.
 
 ## Live Dashboard
 
-The real-time SSE dashboard (`live/` sub-package) lives on the `master` branch only — it depends on Go 1.25+/1.26-only libraries (templ, go-sse). This Go 1.23 compatibility line ships the static self-contained HTML report instead: `Report.WriteHTML` renders the same five-tab "Container Telemetry" dashboard (services, scopes, graph, timeline, events) as a single file with zero external resources.
+The real-time SSE dashboard (`live/` sub-package) works on this Go 1.23 line: it is implemented with the standard library only (`net/http` + `html/template`), with no dependency on templ or go-sse. The dashboard keeps the same warm-amber "Container Telemetry" UI, updating live via Server-Sent Events as services register, invoke, and shut down — element IDs and datastar attributes are wire-compatible with the original.
+
+Run it with the demo:
+
+```sh
+DO_AUDITLOG_ENABLED=true go run ./example --live --live-addr :7777
+```
+
+Then open `http://localhost:7777/debug/di/`. The demo registers ~20 services, invokes them, runs health checks, shuts down, and the browser watches it happen in real time. Export buttons serve JSON, NDJSON, and the static self-contained HTML report; `GET /debug/di/api/events` is the raw SSE stream.
+
+The static HTML report (`Report.WriteHTML`) remains available for point-in-time snapshots.
 
 ## Health Probes
 
