@@ -7,11 +7,11 @@ import (
 	"io"
 )
 
-// The Go 1.18 branch renders the self-contained HTML report with
+// The Go 1.23 branch renders the self-contained HTML report with
 // html/template instead of templ (a-h/templ requires Go 1.25). The output
 // keeps the warm-amber "Container Telemetry" identity, the five-tab layout,
-// search/error filters, keyboard navigation, and a Mermaid rendering of the
-// dependency graph — all server-rendered, zero external resources.
+// sortable/filterable tables, keyboard navigation, and a Mermaid rendering of
+// the dependency graph — all server-rendered, zero external resources.
 
 // htmlReportFuncs provides the template.CSS wrapper so embedded stylesheets
 // are not HTML-escaped.
@@ -107,6 +107,10 @@ h1 { font-size: 1.5rem; color: var(--accent); letter-spacing: 0.02em; }
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 th, td { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
 th { color: var(--text-muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; }
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:focus { outline: 2px solid var(--accent); outline-offset: -2px; color: var(--text); }
+th.sort-asc::after { content: ' ▴'; color: var(--accent); }
+th.sort-desc::after { content: ' ▾'; color: var(--accent); }
 tr:last-child td { border-bottom: none; }
 tbody tr:hover { background: var(--surface); }
 .type-badge, .status-badge, .event-badge { display: inline-block; border-radius: 999px; padding: 0.1rem 0.55rem;
@@ -154,7 +158,7 @@ footer { margin-top: 2rem; color: var(--text-dim); font-size: 0.78rem; display: 
 </style>
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <header>
   <h1>Container Telemetry — {{.ContainerID}}</h1>
   <div class="meta mono">exported {{.ExportedAt}} · schema v{{.SchemaVersion}}</div>
@@ -164,13 +168,13 @@ footer { margin-top: 2rem; color: var(--text-dim); font-size: 0.78rem; display: 
   {{end}}
 </section>
 <nav class="tabs" role="tablist" aria-label="Report sections">
-  <button class="tab active" role="tab" aria-selected="true" data-tab="services" id="tabbtn-services">Services</button>
-  <button class="tab" role="tab" aria-selected="false" data-tab="scopes">Scopes</button>
-  <button class="tab" role="tab" aria-selected="false" data-tab="graph">Graph</button>
-  <button class="tab" role="tab" aria-selected="false" data-tab="timeline">Timeline</button>
-  <button class="tab" role="tab" aria-selected="false" data-tab="events">Events</button>
+  <button class="tab active" role="tab" aria-selected="true" aria-controls="tab-services" data-tab="services" id="tabbtn-services" tabindex="0">Services</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-scopes" data-tab="scopes" tabindex="-1">Scopes</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-graph" data-tab="graph" tabindex="-1">Graph</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-timeline" data-tab="timeline" tabindex="-1">Timeline</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-events" data-tab="events" tabindex="-1">Events</button>
 </nav>
-<main id="main" tabindex="-1">
+<main id="main-content" tabindex="-1">
 
 <section class="tab-content active" id="tab-services" role="tabpanel">
   <div class="toolbar">
@@ -181,12 +185,20 @@ footer { margin-top: 2rem; color: var(--text-dim); font-size: 0.78rem; display: 
   <div class="table-wrap">
   <table>
     <thead><tr>
-      <th>Service</th><th>Type</th><th>Scope</th><th>Status</th><th>Order</th>
-      <th>Invocations</th><th>Build (ms)</th><th>Shutdown (ms)</th>
+      <th class="sortable" data-sort="name" tabindex="0" aria-sort="none">Service</th>
+      <th class="sortable" data-sort="type" tabindex="0" aria-sort="none">Type</th>
+      <th class="sortable" data-sort="scope" tabindex="0" aria-sort="none">Scope</th>
+      <th class="sortable" data-sort="status" tabindex="0" aria-sort="none">Status</th>
+      <th class="sortable" data-sort="order" tabindex="0" aria-sort="none">Order</th>
+      <th class="sortable" data-sort="invocations" tabindex="0" aria-sort="none">Invocations</th>
+      <th class="sortable" data-sort="build" tabindex="0" aria-sort="none">Build (ms)</th>
+      <th class="sortable" data-sort="shutdown" tabindex="0" aria-sort="none">Shutdown (ms)</th>
       <th>Depends on</th><th>Dependents</th><th>Health</th>
     </tr></thead>
     <tbody id="services-tbody">
-    {{if .Services}}{{range .Services}}<tr data-search="{{.Name}} {{.Scope}} {{.Type}}" data-has-error="{{if .HasError}}1{{else}}0{{end}}">
+    {{if .Services}}{{range .Services}}<tr data-search="{{.Name}} {{.Scope}} {{.Type}}" data-has-error="{{if .HasError}}1{{else}}0{{end}}"
+      data-sort-name="{{.Name}}" data-sort-type="{{.Type}}" data-sort-scope="{{.Scope}}" data-sort-status="{{.Status}}"
+      data-sort-order="{{.Order}}" data-sort-invocations="{{.Invocations}}" data-sort-build="{{.BuildMs}}" data-sort-shutdown="{{.ShutdownMs}}">
       <td class="mono" title="{{.Times}}">{{if .Icon}}{{.Icon}} {{end}}{{.Name}}</td>
       <td>{{if .Type}}<span class="type-badge {{.Type}}" title="{{.TypeBadge}}">{{.TypeBadge}}</span>{{end}}</td>
       <td>{{.Scope}}</td>
@@ -255,7 +267,7 @@ footer { margin-top: 2rem; color: var(--text-dim); font-size: 0.78rem; display: 
 
 </main>
 <footer>
-  <span>Generated by <strong>do-auditlog</strong> (Go 1.18 build)</span>
+  <span>Generated by <strong>do-auditlog</strong> · Press ? for keyboard shortcuts</span>
   <span class="mono">schema v{{.SchemaVersion}} · {{len .Events}} events · {{len .Services}} services</span>
 </footer>
 <script>
@@ -273,21 +285,74 @@ footer { margin-top: 2rem; color: var(--text-dim); font-size: 0.78rem; display: 
     tabs.forEach(function (t) {
       t.classList.remove('active');
       t.setAttribute('aria-selected', 'false');
+      t.setAttribute('tabindex', '-1');
     });
     Object.keys(panels).forEach(function (key) {
       panels[key].classList.remove('active');
     });
     btn.classList.add('active');
     btn.setAttribute('aria-selected', 'true');
+    btn.setAttribute('tabindex', '0');
     panels[btn.dataset.tab].classList.add('active');
   }
 
-  tabs.forEach(function (tab, idx) {
+  tabs.forEach(function (tab) {
     tab.addEventListener('click', function () { switchTab(tab); });
-    tab.setAttribute('tabindex', idx === 0 ? '0' : '-1');
   });
 
+  var kbdHelpPrevFocus = null;
+
+  function closeKbdHelp() {
+    var help = document.getElementById('kbd-help');
+    if (!help) { return; }
+    help.remove();
+    if (kbdHelpPrevFocus) {
+      kbdHelpPrevFocus.focus();
+      kbdHelpPrevFocus = null;
+    }
+  }
+
+  function showShortcutsHelp() {
+    if (document.getElementById('kbd-help')) { closeKbdHelp(); return; }
+    kbdHelpPrevFocus = document.activeElement;
+    var div = document.createElement('div');
+    div.id = 'kbd-help';
+    div.className = 'kbd-help';
+    div.setAttribute('role', 'dialog');
+    div.setAttribute('aria-modal', 'true');
+    div.setAttribute('aria-label', 'Keyboard shortcuts');
+    div.innerHTML = '<div class="kbd-help-content"><h2>Keyboard shortcuts</h2><ul>'
+      + '<li><span>Switch to tab 1–5</span><kbd>1</kbd>–<kbd>5</kbd></li>'
+      + '<li><span>Next / previous tab</span><kbd>←</kbd> <kbd>→</kbd></li>'
+      + '<li><span>Focus service search</span><kbd>/</kbd></li>'
+      + '<li><span>Toggle errors-only filter</span><kbd>e</kbd></li>'
+      + '<li><span>Sort services table</span><kbd>Enter</kbd>/<kbd>Space</kbd> on headers</li>'
+      + '<li><span>Show this help</span><kbd>?</kbd></li>'
+      + '<li><span>Close help</span><kbd>Esc</kbd></li>'
+      + '</ul><button class="chip" id="kbd-help-close">Close</button></div>';
+    document.body.appendChild(div);
+    var closeBtn = document.getElementById('kbd-help-close');
+    closeBtn.addEventListener('click', closeKbdHelp);
+    closeBtn.focus();
+    div.addEventListener('keydown', function (e) {
+      if (e.key!=='Tab') { return; }
+      var focusables = div.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');
+      if (focusables.length === 0) { return; }
+      if (e.shiftKey && document.activeElement === focusables[0]) {
+        e.preventDefault();
+        focusables[focusables.length - 1].focus();
+      } else if (!e.shiftKey && document.activeElement === focusables[focusables.length - 1]) {
+        e.preventDefault();
+        focusables[0].focus();
+      }
+    });
+  }
+
   document.addEventListener('keydown', function (e) {
+    if (document.getElementById('kbd-help') && e.key === 'Escape') {
+      closeKbdHelp();
+      return;
+    }
     var onTab = e.target.classList && e.target.classList.contains('tab');
     var current = tabs.indexOf(e.target);
     if (onTab && e.key === 'ArrowRight') {
@@ -305,22 +370,83 @@ footer { margin-top: 2rem; color: var(--text-dim); font-size: 0.78rem; display: 
       return;
     }
     var tag = e.target.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON') { return; }
+    var inField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON';
+    if (e.key==='?') {
+      e.preventDefault();
+      showShortcutsHelp();
+      return;
+    }
+    if (inField) { return; }
     var num = parseInt(e.key, 10);
     if (num >= 1 && num <= tabs.length) {
       tabs[num - 1].focus();
       switchTab(tabs[num - 1]);
       return;
     }
-    if (e.key === '/') {
+    if (e.key==='/') {
       e.preventDefault();
       var search = document.getElementById('service-search');
       if (search) { search.focus(); }
+      return;
+    }
+    if (e.key==='e') {
+      var errBtn = document.getElementById('svc-errors-only');
+      if (errBtn) { errBtn.click(); }
     }
   });
 
-  var svcRows = Array.prototype.slice.call(document.querySelectorAll('#services-tbody tr[data-search]'));
+  var svcTbody = document.getElementById('services-tbody');
+  var svcRows = Array.prototype.slice.call(svcTbody.querySelectorAll('tr[data-search]'));
   var countEl = document.getElementById('svc-result-count');
+  var sortKey = 'order';
+  var sortDir = 1;
+  var numericSortKeys = ['order', 'invocations', 'build', 'shutdown'];
+
+  function applySvcSort() {
+    svcRows.sort(function (a, b) {
+      var av = a.dataset['sort' + sortKey.charAt(0).toUpperCase() + sortKey.slice(1)];
+      var bv = b.dataset['sort' + sortKey.charAt(0).toUpperCase() + sortKey.slice(1)];
+      var cmp = 0;
+      if (numericSortKeys.indexOf(sortKey) !== -1) {
+        cmp = parseFloat(av || '0') - parseFloat(bv || '0');
+      } else {
+        av = (av || '').toLowerCase();
+        bv = (bv || '').toLowerCase();
+        cmp = av < bv ? -1 : (av > bv ? 1 : 0);
+      }
+      return cmp * sortDir;
+    });
+    svcRows.forEach(function (tr) { svcTbody.appendChild(tr); });
+    Array.prototype.slice.call(svcTbody.closest('table').querySelectorAll('th.sortable')).forEach(function (th) {
+      th.classList.remove('sort-asc', 'sort-desc');
+      if (th.dataset.sort === sortKey) {
+        th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+        th.setAttribute('aria-sort', sortDir === 1 ? 'ascending' : 'descending');
+      } else {
+        th.setAttribute('aria-sort', 'none');
+      }
+    });
+  }
+
+  Array.prototype.slice.call(document.querySelectorAll('th.sortable')).forEach(function (th) {
+    function activate() {
+      var key = th.dataset.sort;
+      if (sortKey === key) {
+        sortDir *= -1;
+      } else {
+        sortKey = key;
+        sortDir = 1;
+      }
+      applySvcSort();
+    }
+    th.addEventListener('click', activate);
+    th.addEventListener('keydown', function (e) {
+      if (e.key==='Enter' || e.key === ' ') {
+        e.preventDefault();
+        activate();
+      }
+    });
+  });
 
   function applySvcFilter() {
     var q = document.getElementById('service-search').value.toLowerCase();
@@ -365,6 +491,8 @@ footer { margin-top: 2rem; color: var(--text-dim); font-size: 0.78rem; display: 
       });
     });
   });
+
+  applySvcSort();
 })();
 </script>
 </body>
