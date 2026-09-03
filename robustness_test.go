@@ -2,7 +2,6 @@ package auditlog_test
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -237,8 +236,8 @@ func TestPlugin_AtomicWriteSemantics(t *testing.T) {
 		t.Errorf("exported file should be JSON, got %.40s", got)
 	}
 
-	if err := assertNoTempStrays(t, tmpDir); err != nil {
-		t.Error(err)
+	if stray := findTempStray(t, tmpDir); stray != "" {
+		t.Errorf("stray temp file: %s", stray)
 	}
 
 	// The file must be byte-stable across repeated reads with no writes.
@@ -252,21 +251,21 @@ func TestPlugin_AtomicWriteSemantics(t *testing.T) {
 	}
 }
 
-// assertNoTempStrays fails when writeToFile leaves temp files behind.
-func assertNoTempStrays(t *testing.T, dir string) error {
+// findTempStray returns the name of a leftover writeToFile temp file, or "".
+func findTempStray(t *testing.T, dir string) string {
 	t.Helper()
 
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return fmt.Errorf("read dir: %w", err)
+		t.Fatalf("read dir: %v", err)
 	}
 
 	for _, entry := range entries {
 		name := entry.Name()
 		if strings.HasPrefix(name, ".do-auditlog-") && strings.HasSuffix(name, ".tmp") {
-			return fmt.Errorf("stray temp file: %s", name)
+			return name
 		}
 	}
 
-	return nil
+	return ""
 }

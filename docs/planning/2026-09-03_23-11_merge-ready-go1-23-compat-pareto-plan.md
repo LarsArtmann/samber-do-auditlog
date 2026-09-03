@@ -247,3 +247,41 @@ flowchart TD
 ---
 
 *Point-in-time plan — 2026-09-03 23:11 CEST. When picking this up later, run docs-health → ANNOTATE on this file first; TODO_LIST.md (after M11/F52) is the living source, this file is the snapshot.*
+
+---
+
+## 9. COMPLETION ADDENDUM — 2026-09-04 (executed to 100%)
+
+All macro tasks M01–M18 executed and verified. Highlights against the plan:
+
+- **M01–M06 (the 1%)**: live/ restored on Go 1.23 — `live/sse.go`,
+  `live/broadcaster.go`, `live/replay.go`, hub/server ports, html/template
+  fragments with identical element IDs + datastar attributes, dashboard
+  assets carried verbatim, `example --live` restored and curl-equivalent
+  smoke-verified end-to-end (SSE client observes patch-elements +
+  patch-signals).
+- **M07–M09 (the 4%)**: external SSE suite ported off `ssetest` onto a
+  stdlib wire client; `-race` green; coverage gate **94.9%** (live/ 94.2%),
+  `/live/demo/` exclusion restored for master parity; **CI all 7 jobs green**
+  via `workflow_dispatch` (run `33813979691`) — first run triaged three real
+  findings (actionlint v1.7.12 uninstallable on 1.23 → pinned v1.7.7; goconst
+  on html_view CSS strings → constants; govulncheck stdlib advisories on EOL
+  1.23 → visible-but-non-blocking with rationale); `nix flake check` green
+  for the first time + devShell hardened against ambient `GOEXPERIMENT`.
+- **M10–M12 (the 20%)**: README/FEATURES/TODO_LIST/ROADMAP/CHANGELOG/
+  AGENTS/STABILITY all truth-synced; BENCHMARKS re-baselined on the real
+  go1.23.12 toolchain.
+- **M13–M16 (the 100%)**: `docs/proposal/api-diff.md`,
+  `docs/proposal/merge-samber-do.md` (the ask to samber, credit wording per
+  D5), `docs/proposal/do-improvements.md` (D6: health-check hooks proposal +
+  ExplainInjector deadlock documentation request); go1.18 scrub clean;
+  `go mod verify` green; local govulncheck confirms the stdlib-only advisory
+  profile (27 findings, all fixed in ≥1.24 toolchains — unfixable on the
+  locked floor, immune class for third-party risk).
+- **M17–M18 (stretch)**: cross-platform atomic-write semantics tests (also
+  fixed a latent wrong temp-prefix assertion); `-count=10` flake loop green;
+  table-formats and testhelpers-JS evaluations recorded in TODO_LIST.
+
+Plan deviations: none material. The daemon raced several commits (auto
+messages), and CI needed one extra dispatch cycle to absorb the three
+findings above — both anticipated by the gotcha register.
