@@ -425,7 +425,7 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 | **CSP hardened**      | HTML reports use `base-uri 'none'; frame-ancestors 'none'`                                 |
 | **Fuzz tested**       | 8 fuzz targets covering HTML XSS, migration, diagrams, NDJSON                              |
 | **govulncheck**       | Runs on every CI push — zero known vulnerabilities                                         |
-| **107 linters**       | golangci-lint v2 with near-exhaustive linter set, minimal exemptions for tests and tooling |
+| **108 linters**       | golangci-lint v2 with near-exhaustive linter set, minimal exemptions for tests and tooling |
 | **94% coverage gate** | CI fails if coverage drops below 94% of non-example/cmd statements                         |
 | **JSON Schema**       | Canonical Draft 2020-12 schema generated from Go types                                     |
 
@@ -448,7 +448,7 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). The project uses strict golangci-lint (107 linters), 94% test coverage gate, and 8 fuzz targets.
+See [CONTRIBUTING.md](CONTRIBUTING.md). The project uses strict golangci-lint (108 linters), 94% test coverage gate, and 8 fuzz targets.
 
 ## License
 
