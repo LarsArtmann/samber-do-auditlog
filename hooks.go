@@ -60,7 +60,8 @@ func getOrCreateServiceRecord(
 // found. Used by both the live Recorder path (under r.mu) and the replay
 // path (no lock).
 func popStackFrame(stack []stackEntry, scopeID ScopeID, serviceName ServiceName) ([]stackEntry, stackEntry, bool) {
-	for i, frame := range slices.Backward(stack) {
+	for i := len(stack) - 1; i >= 0; i-- {
+		frame := stack[i]
 		if frame.serviceName == serviceName && frame.scopeID == scopeID {
 			if i == len(stack)-1 {
 				stack = stack[:i]
@@ -388,7 +389,8 @@ func (r *Recorder) updateInvocationAggregate(
 
 	if rec.firstInvokedAt == nil {
 		rec.firstInvokedAt = &now
-		rec.invocationOrder = int(r.invocationSeq.Add(1)) - 1
+		r.invocationSeq++
+		rec.invocationOrder = int(r.invocationSeq) - 1
 	}
 
 	if durationMs != nil && rec.firstBuildDurationMs == nil {

@@ -65,7 +65,7 @@ func ReplayEvents(events []Event) (Report, error) {
 		// otherwise silently drop the event, producing a lossy "successful"
 		// replay.
 		if err := validateEventEnums(evt); err != nil {
-			return Report{}, fmt.Errorf("%w: event %d: %w", ErrReplayValidationFailed, i, err)
+			return Report{}, fmt.Errorf("%w: event %d: %v", ErrReplayValidationFailed, i, err)
 		}
 
 		applyEvent(evt, state)
@@ -95,7 +95,7 @@ func ReplayEvents(events []Event) (Report, error) {
 		runID,
 		time.Now(),
 		0, // replayed reports have no dropped events
-		slices.Clone(events),
+		cloneEvents(events),
 		services,
 		scopeTree,
 	)
@@ -103,7 +103,7 @@ func ReplayEvents(events []Event) (Report, error) {
 
 	err := report.Validate()
 	if err != nil {
-		return report, fmt.Errorf("%w: %w", ErrReplayValidationFailed, err)
+		return report, fmt.Errorf("%w: %v", ErrReplayValidationFailed, err)
 	}
 
 	return report, nil

@@ -1,9 +1,8 @@
 package auditlog
 
 import (
-	"cmp"
-	"maps"
-	"slices"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/samber/do/v2"
@@ -16,7 +15,9 @@ func (r *Recorder) BuildReport() Report {
 	scopeTree := r.buildScopeTreeLocked()
 	events := append([]Event(nil), r.events...)
 	scopesCopy := make(map[ScopeID]scopeMeta, len(r.scopes))
-	maps.Copy(scopesCopy, r.scopes)
+	for id, meta := range r.scopes {
+		scopesCopy[id] = meta
+	}
 
 	r.mu.RUnlock()
 
@@ -27,7 +28,7 @@ func (r *Recorder) BuildReport() Report {
 		r.containerID,
 		r.runID,
 		time.Now(),
-		r.droppedEvents.Load(),
+		r.droppedEvents,
 		events,
 		services,
 		scopeTree,
@@ -35,8 +36,8 @@ func (r *Recorder) BuildReport() Report {
 }
 
 func sortServiceInfos(services []ServiceInfo) {
-	slices.SortFunc(services, func(a, b ServiceInfo) int {
-		return CompareServiceRefs(a.ServiceRef, b.ServiceRef)
+	sort.Slice(services, func(i, j int) bool {
+		return CompareServiceRefs(services[i].ServiceRef, services[j].ServiceRef) < 0
 	})
 }
 
@@ -147,7 +148,9 @@ func depRecToRef(rec *serviceRecord) ServiceRef {
 }
 
 func sortDepRefs(refs []ServiceRef) {
-	slices.SortFunc(refs, CompareServiceRefs)
+	sort.Slice(refs, func(i, j int) bool {
+		return CompareServiceRefs(refs[i], refs[j]) < 0
+	})
 }
 
 // buildDependentsMapLocked builds the reverse-dependency map.
@@ -188,7 +191,7 @@ func scopeServicesForServices(services map[svcKey]*serviceRecord) map[ScopeID][]
 	}
 
 	for id, names := range scopeServices {
-		slices.Sort(names)
+		sort.Strings(names)
 		scopeServices[id] = names
 	}
 
@@ -281,16 +284,16 @@ func sortedScopes(scopes map[ScopeID]scopeMeta) []scopeMeta {
 		result = append(result, meta)
 	}
 
-	slices.SortFunc(result, func(a, b scopeMeta) int {
-		return cmp.Compare(a.id, b.id)
+	sort.Slice(result, func(i, j int) bool {
+		return string(result[i].id) < string(result[j].id)
 	})
 
 	return result
 }
 
 func sortScopeNodes(nodes []ScopeNode) []ScopeNode {
-	slices.SortFunc(nodes, func(a, b ScopeNode) int {
-		return cmp.Compare(a.Name, b.Name)
+	sort.Slice(nodes, func(i, j int) bool {
+		return strings.Compare(string(nodes[i].Name), string(nodes[j].Name)) < 0
 	})
 
 	for i := range nodes {

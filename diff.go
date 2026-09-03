@@ -1,8 +1,7 @@
 package auditlog
 
 import (
-	"cmp"
-	"slices"
+	"sort"
 )
 
 // DiffResult describes the differences between two Reports.
@@ -93,9 +92,11 @@ func (r Report) Diff(other Report) DiffResult {
 		}
 	}
 
-	slices.SortFunc(result.AddedServices, CompareServiceRefs)
-	slices.SortFunc(result.RemovedServices, CompareServiceRefs)
-	slices.SortFunc(result.ChangedServices, sortServiceDiffs)
+	sortDepRefs(result.AddedServices)
+	sortDepRefs(result.RemovedServices)
+	sort.Slice(result.ChangedServices, func(i, j int) bool {
+		return sortServiceDiffs(result.ChangedServices[i], result.ChangedServices[j]) < 0
+	})
 
 	return result
 }
@@ -148,7 +149,7 @@ func serviceRefsOnlyIn(a, b map[string]ServiceRef) []ServiceRef {
 		}
 	}
 
-	slices.SortFunc(out, CompareServiceRefs)
+	sortDepRefs(out)
 
 	return out
 }
