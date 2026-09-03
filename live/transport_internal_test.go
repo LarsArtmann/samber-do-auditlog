@@ -25,7 +25,12 @@ func TestSSEKeyedLines(t *testing.T) {
 		{name: "single line", key: "elements", value: "<div></div>", want: "elements <div></div>"},
 		{name: "multi line", key: "elements", value: "<div>\n</div>", want: "elements <div>\nelements </div>"},
 		{name: "empty value", key: "elements", value: "", want: ""},
-		{name: "crlf normalized", key: "signals", value: "{\"a\":1}\r\n{\"b\":2}", want: "signals {\"a\":1}\nsignals {\"b\":2}"},
+		{
+			name:  "crlf normalized",
+			key:   "signals",
+			value: "{\"a\":1}\r\n{\"b\":2}",
+			want:  "signals {\"a\":1}\nsignals {\"b\":2}",
+		},
 		{name: "trailing newline dropped", key: "k", value: "a\n", want: "k a"},
 	}
 
@@ -91,7 +96,7 @@ func TestWriteSSEEventWireFormat(t *testing.T) {
 func TestWriteSSEEventWrapsWriteError(t *testing.T) {
 	t.Parallel()
 
-	sentinel := errors.New("broken pipe")
+	sentinel := errBrokenPipe
 
 	err := writeSSEEvent(failingWriter{err: sentinel}, sseEvent{Name: "evt", Data: "x"})
 	if err == nil {
@@ -393,3 +398,5 @@ func TestNewSSEStreamHeartbeat(t *testing.T) {
 		t.Errorf("expected at least 2 heartbeat frames in 40ms, got %d", got)
 	}
 }
+
+var errBrokenPipe = errors.New("broken pipe")

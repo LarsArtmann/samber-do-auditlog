@@ -65,20 +65,20 @@ func newBroadcaster(bufferSize int) *broadcaster {
 // subscribe registers a new subscriber and returns its event channel. After
 // shutdown has started, subscribe returns a closed channel (no-op).
 func (b *broadcaster) subscribe() <-chan sseEvent {
-	ch := make(chan sseEvent, b.bufferSize)
+	subCh := make(chan sseEvent, b.bufferSize)
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	if b.subscribers == nil || b.draining {
-		close(ch)
+		close(subCh)
 
-		return ch
+		return subCh
 	}
 
-	b.subscribers[sseChannelPtr(ch)] = ch
+	b.subscribers[sseChannelPtr(subCh)] = subCh
 
-	return ch
+	return subCh
 }
 
 // unsubscribe removes a subscriber channel and closes it. Unknown channels

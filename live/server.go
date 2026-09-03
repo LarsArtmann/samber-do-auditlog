@@ -196,7 +196,7 @@ func (srv *Server) ListenAndServe() error {
 
 	srv.startTime = time.Now()
 
-	srv.httpServer = &http.Server{
+	srv.httpServer = &http.Server{ //nolint:exhaustruct // minimal config
 		Addr:              srv.config.Addr,
 		Handler:           srv.mux,
 		ReadHeaderTimeout: srv.config.ReadHeaderTimeout,

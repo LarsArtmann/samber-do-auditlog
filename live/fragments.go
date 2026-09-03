@@ -84,19 +84,19 @@ type serviceRow struct {
 
 // eventRow is one precomputed <tr> for the events table.
 type eventRow struct {
-	Signals   string
-	ShowExpr  string
-	Num       int
-	Time      string
-	Color     string
-	Label     string
-	Phase     string
-	PhaseUp   bool
-	Name      string
-	Duration  string
-	HasError  bool
-	ErrTitle  string
-	ErrMsg    string
+	Signals  string
+	ShowExpr string
+	Num      int
+	Time     string
+	Color    string
+	Label    string
+	Phase    string
+	PhaseUp  bool
+	Name     string
+	Duration string
+	HasError bool
+	ErrTitle string
+	ErrMsg   string
 }
 
 // scopeNodeView is one precomputed node of the scope tree.
@@ -160,12 +160,27 @@ func renderAllFragments(
 	return []fragmentPatch{
 		{"#stats", renderFragment("statsFragment", statsFragmentData{Entries: buildStatsEntries(report, errorCount)})},
 		{"#legend", renderFragment("legendFragment", legendFragmentData{Items: computeLegendItems(report, meta)})},
-		{"#waveform", renderFragment("waveformFragment", waveformFragmentData{Marks: computeWaveformMarks(events, meta)})},
-		{"#services-tbody", renderFragment("servicesTbody", servicesTbodyData{Rows: buildServiceRows(report.Services, meta)})},
+		{
+			"#waveform",
+			renderFragment("waveformFragment", waveformFragmentData{Marks: computeWaveformMarks(events, meta)}),
+		},
+		{
+			"#services-tbody",
+			renderFragment("servicesTbody", servicesTbodyData{Rows: buildServiceRows(report.Services, meta)}),
+		},
 		{"#events-tbody", renderFragment("eventsTbody", eventsTbodyData{Rows: buildEventRows(events, meta)})},
-		{"#scope-tree-container", renderFragment("scopeTreeFragment", scopeTreeFragmentData{Root: buildScopeTreeViews(report.ScopeTree)})},
-		{"#graph-container", renderFragment("graphFragment", graphFragmentData{Nodes: buildGraphNodeViews(report.Services)})},
-		{"#timeline-container", renderFragment("timelineFragment", timelineFragmentData{Rows: buildTimelineRows(report.Services)})},
+		{
+			"#scope-tree-container",
+			renderFragment("scopeTreeFragment", scopeTreeFragmentData{Root: buildScopeTreeViews(report.ScopeTree)}),
+		},
+		{
+			"#graph-container",
+			renderFragment("graphFragment", graphFragmentData{Nodes: buildGraphNodeViews(report.Services)}),
+		},
+		{
+			"#timeline-container",
+			renderFragment("timelineFragment", timelineFragmentData{Rows: buildTimelineRows(report.Services)}),
+		},
 		{"#footer-stats", renderFragment("footerStatsFragment", footerStatsData{
 			Version:      footerVersion(report),
 			EventCount:   len(events),
@@ -235,6 +250,9 @@ func buildServiceRows(services []auditlog.ServiceInfo, meta auditlog.TypeMetadat
 			Invocations: svc.InvocationCount,
 			Build:       mdash,
 			Deps:        depNamesString(svc.Dependencies),
+			HasError:    false,
+			ErrTitle:    "",
+			ErrMsg:      "",
 		}
 
 		if svc.FirstBuildDurationMs != nil {
@@ -262,16 +280,19 @@ func buildEventRows(events []auditlog.Event, meta auditlog.TypeMetadata) []event
 
 	for idx, evt := range events {
 		row := eventRow{
-			Signals:   eventRowSignalsJSON(evt, idx),
-			ShowExpr:  eventsShowExpr,
-			Num:       idx + 1,
-			Time:      evt.Timestamp.Format("15:04:05"),
-			Color:     eventBadgeColor(evt, meta),
-			Label:     eventBadgeLabel(evt, meta),
-			PhaseUp:   evt.Phase == auditlog.PhaseBefore,
-			Phase:     string(evt.Phase),
-			Name:      string(evt.ServiceName),
-			Duration:  mdash,
+			Signals:  eventRowSignalsJSON(evt, idx),
+			ShowExpr: eventsShowExpr,
+			Num:      idx + 1,
+			Time:     evt.Timestamp.Format("15:04:05"),
+			Color:    eventBadgeColor(evt, meta),
+			Label:    eventBadgeLabel(evt, meta),
+			PhaseUp:  evt.Phase == auditlog.PhaseBefore,
+			Phase:    string(evt.Phase),
+			Name:     string(evt.ServiceName),
+			Duration: mdash,
+			HasError: false,
+			ErrTitle: "",
+			ErrMsg:   "",
 		}
 
 		if evt.DurationMs != nil {
@@ -302,8 +323,10 @@ func buildScopeTreeViews(root auditlog.ScopeNode) *scopeNodeView {
 
 func buildScopeNodeView(node auditlog.ScopeNode, depth int) scopeNodeView {
 	view := scopeNodeView{
-		Name:   scopeNodeName(node),
-		Indent: fmt.Sprintf("margin-left:%dpx", depth*scopeIndentPx),
+		Name:     scopeNodeName(node),
+		Indent:   fmt.Sprintf("margin-left:%dpx", depth*scopeIndentPx),
+		Services: nil,
+		Children: nil,
 	}
 
 	for _, svc := range node.Services {
@@ -372,12 +395,12 @@ func countErrors(services []auditlog.ServiceInfo) int {
 
 func buildStatsEntries(report auditlog.Report, errorCount int) []statsEntry {
 	stats := []statsEntry{
-		{Label: "Services", Value: strconv.Itoa(report.ServiceCount)},
-		{Label: "Events", Value: strconv.Itoa(report.EventCount)},
-		{Label: "Scopes", Value: strconv.Itoa(report.ScopeCount)},
+		{Label: "Services", Value: strconv.Itoa(report.ServiceCount), Class: ""},
+		{Label: "Events", Value: strconv.Itoa(report.EventCount), Class: ""},
+		{Label: "Scopes", Value: strconv.Itoa(report.ScopeCount), Class: ""},
 		{Label: "Errors", Value: strconv.Itoa(errorCount), Class: errorCountClass(errorCount)},
-		{Label: "Build (ms)", Value: humanizeDuration(report.TotalBuildDurationMs)},
-		{Label: "Shutdown (ms)", Value: humanizeDuration(report.TotalShutdownDurationMs)},
+		{Label: "Build (ms)", Value: humanizeDuration(report.TotalBuildDurationMs), Class: ""},
+		{Label: "Shutdown (ms)", Value: humanizeDuration(report.TotalShutdownDurationMs), Class: ""},
 	}
 
 	if report.HealthCheckedCount > 0 {
@@ -403,7 +426,7 @@ func computeLegendItems(report auditlog.Report, meta auditlog.TypeMetadata) []le
 
 	order := []string{"lazy", "eager", "transient", "alias"}
 
-	var items []legendItem
+	items := make([]legendItem, 0, len(order))
 
 	for _, providerType := range order {
 		count := counts[providerType]

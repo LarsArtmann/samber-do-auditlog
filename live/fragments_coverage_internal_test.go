@@ -34,7 +34,7 @@ func fixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
 	})
 
 	do.ProvideNamed(injector, "fixture-failing", func(do.Injector) (*bytes.Buffer, error) {
-		return nil, errors.New("provider boom")
+		return nil, errProviderBoom
 	})
 
 	if _, err := do.InvokeNamed[*strings.Reader](injector, "fixture-healthy"); err != nil {
@@ -267,7 +267,10 @@ func TestContainerIDFragmentEmpty(t *testing.T) {
 func TestMarshalSignalsOrEmpty(t *testing.T) {
 	t.Parallel()
 
-	if got := marshalSignalsOrEmpty(rowSignals{RowName: "x", RowScope: "[root]", RowIdx: 2}); !strings.Contains(got, `"rowIdx":2`) {
+	if got := marshalSignalsOrEmpty(rowSignals{RowName: "x", RowScope: "[root]", RowIdx: 2}); !strings.Contains(
+		got,
+		`"rowIdx":2`,
+	) {
 		t.Errorf("marshalSignalsOrEmpty = %q", got)
 	}
 
@@ -298,3 +301,5 @@ func TestEventTimeFormat(t *testing.T) {
 		t.Errorf("event time = %q, want 23:59:09", rows[0].Time)
 	}
 }
+
+var errProviderBoom = errors.New("provider boom")

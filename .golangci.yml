@@ -184,7 +184,7 @@ linters:
                 - sync.RWMutex
                 - sync.Mutex
                 - atomic.Int64
-                - github.com/larsartmann/go-sse.Event
+                - github.com/larsartmann/samber-do-auditlog/live.sseEvent
                 - github.com/larsartmann/samber-do-auditlog/live.Hub
                 - github.com/larsartmann/samber-do-auditlog/live.Server
                 - github.com/larsartmann/samber-do-auditlog/live.healthResponse

@@ -109,7 +109,7 @@ func sseConnect(t *testing.T, client *http.Client, url, lastEventID string) (*ss
 		req.Header.Set("Last-Event-ID", lastEventID)
 	}
 
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) //nolint:bodyclose // closed via returned cleanup
 	if err != nil {
 		cancel()
 		t.Fatalf("connect SSE: %v", err)
@@ -671,9 +671,16 @@ func TestServer_HandleSSE_NoFlusher(t *testing.T) {
 
 type nonFlusherRecorder struct{ rec *httptest.ResponseRecorder }
 
-func (r *nonFlusherRecorder) Header() http.Header         { return r.rec.Header() }
-func (r *nonFlusherRecorder) Write(b []byte) (int, error) { return r.rec.Write(b) }
-func (r *nonFlusherRecorder) WriteHeader(code int)        { r.rec.WriteHeader(code) }
+func (r *nonFlusherRecorder) Header() http.Header { return r.rec.Header() }
+func (r *nonFlusherRecorder) Write(b []byte) (int, error) {
+	n, err := r.rec.Write(b)
+	if err != nil {
+		return n, fmt.Errorf("recorder write: %w", err)
+	}
+
+	return n, nil
+}
+func (r *nonFlusherRecorder) WriteHeader(code int) { r.rec.WriteHeader(code) }
 
 // --- Export write errors ---
 
@@ -699,11 +706,13 @@ func TestServer_ExportHTML_WriteError(t *testing.T) {
 	server.ServeHTTP(rec, req)
 }
 
+var errWriteFailed = errors.New("write failed")
+
 type failingResponseWriter struct{ header http.Header }
 
 func (w *failingResponseWriter) Header() http.Header { return w.header }
 func (w *failingResponseWriter) Write([]byte) (int, error) {
-	return 0, errors.New("write failed")
+	return 0, errWriteFailed
 }
 func (w *failingResponseWriter) WriteHeader(int) {}
 

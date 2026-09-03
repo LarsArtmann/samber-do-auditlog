@@ -34,6 +34,10 @@ const (
 
 	// base10 is the numeric base for decimal integer formatting.
 	base10 = 10
+
+	// initialEventCap is the starting capacity of the wire-format buffer;
+	// most events fit without a re-allocation.
+	initialEventCap = 64
 )
 
 // sseEvent is a single Server-Sent Event in wire-ready form.
@@ -50,35 +54,35 @@ type sseEvent struct {
 	Retry uint
 }
 
-// sseSplitLines splits s into lines for SSE data field formatting. Per the
+// sseSplitLines splits the input into lines for SSE data field formatting. Per the
 // SSE spec, CR, LF, and CRLF are all valid line endings and are normalized
 // to LF here. An empty input yields a single empty line.
-func sseSplitLines(s string) []string {
-	if s == "" {
+func sseSplitLines(input string) []string {
+	if input == "" {
 		return []string{""}
 	}
 
-	if !strings.ContainsAny(s, "\n\r") {
-		return []string{s}
+	if !strings.ContainsAny(input, "\n\r") {
+		return []string{input}
 	}
 
-	lines := make([]string, 0, strings.Count(s, "\n")+1)
+	lines := make([]string, 0, strings.Count(input, "\n")+1)
 
 	start := 0
 
-	for i := 0; i < len(s); {
-		switch s[i] {
+	for i := 0; i < len(input); {
+		switch input[i] {
 		case '\r':
-			lines = append(lines, s[start:i])
+			lines = append(lines, input[start:i])
 			i++
 
-			if i < len(s) && s[i] == '\n' {
+			if i < len(input) && input[i] == '\n' {
 				i++
 			}
 
 			start = i
 		case '\n':
-			lines = append(lines, s[start:i])
+			lines = append(lines, input[start:i])
 			i++
 			start = i
 		default:
@@ -86,8 +90,8 @@ func sseSplitLines(s string) []string {
 		}
 	}
 
-	if start < len(s) {
-		lines = append(lines, s[start:])
+	if start < len(input) {
+		lines = append(lines, input[start:])
 	}
 
 	return lines
@@ -136,7 +140,7 @@ func sseKeyedLines(key, value string) string {
 // writeSSEEvent writes a single SSE event to w in the standard wire format.
 // The caller is responsible for flushing (sseStream.send does this).
 func writeSSEEvent(w io.Writer, evt sseEvent) error {
-	var buf []byte
+	buf := make([]byte, 0, initialEventCap)
 
 	if evt.Name != "" {
 		buf = append(buf, "event: "...)

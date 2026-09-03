@@ -9,7 +9,7 @@ import (
 	"github.com/samber/do/v2"
 )
 
-func mkFragmentPlugin(t *testing.T) (*auditlog.Plugin, do.Injector) {
+func mkFragmentPlugin(t *testing.T) *auditlog.Plugin {
 	t.Helper()
 
 	plugin, err := auditlog.New(auditlog.Config{
@@ -30,13 +30,15 @@ func mkFragmentPlugin(t *testing.T) (*auditlog.Plugin, do.Injector) {
 		t.Fatalf("invoke db: %v", err)
 	}
 
-	return plugin, injector
+	_ = injector
+
+	return plugin
 }
 
 func TestRenderAllFragmentsProducesAllSelectors(t *testing.T) {
 	t.Parallel()
 
-	plugin, _ := mkFragmentPlugin(t)
+	plugin := mkFragmentPlugin(t)
 
 	report := plugin.Report()
 	events := plugin.Events()
@@ -68,7 +70,7 @@ func TestRenderAllFragmentsProducesAllSelectors(t *testing.T) {
 func TestRenderedFragmentsContent(t *testing.T) {
 	t.Parallel()
 
-	plugin, _ := mkFragmentPlugin(t)
+	plugin := mkFragmentPlugin(t)
 
 	report := plugin.Report()
 	meta := auditlog.BuildTypeMetadata()
@@ -102,7 +104,7 @@ func TestRenderedFragmentsContent(t *testing.T) {
 func TestRenderedFragmentDatastarAttributes(t *testing.T) {
 	t.Parallel()
 
-	plugin, _ := mkFragmentPlugin(t)
+	plugin := mkFragmentPlugin(t)
 
 	var servicesHTML string
 
@@ -155,8 +157,20 @@ func TestComputeWaveformMarksEmptyAndFilled(t *testing.T) {
 
 	dur := 12.0
 	events := []auditlog.Event{
-		{Sequence: 1, EventType: auditlog.EventTypeRegistration, Phase: auditlog.PhaseBefore, Timestamp: time.UnixMilli(100)},
-		{Sequence: 2, EventType: auditlog.EventTypeInvocation, Phase: auditlog.PhaseAfter, Timestamp: time.UnixMilli(200), DurationMs: &dur, Error: strPtr("boom")},
+		{
+			Sequence:  1,
+			EventType: auditlog.EventTypeRegistration,
+			Phase:     auditlog.PhaseBefore,
+			Timestamp: time.UnixMilli(100),
+		},
+		{
+			Sequence:   2,
+			EventType:  auditlog.EventTypeInvocation,
+			Phase:      auditlog.PhaseAfter,
+			Timestamp:  time.UnixMilli(200),
+			DurationMs: &dur,
+			Error:      strPtr("boom"),
+		},
 	}
 
 	marks := computeWaveformMarks(events, auditlog.BuildTypeMetadata())

@@ -14,6 +14,8 @@ import (
 // #scope-tree-container, #graph-container, #timeline-container, #footer-stats,
 // #container-id) and the datastar attributes (data-signals, data-show) are
 // the wire contract with dashboard.js + datastar.js and MUST NOT change.
+//
+//nolint:gochecknoglobals // parsed once at package init
 var fragmentTemplates = template.Must(template.New("fragments").Parse(fragmentTemplateSource))
 
 // renderFragment executes the named fragment template into a string.
