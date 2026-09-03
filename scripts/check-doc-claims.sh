@@ -32,7 +32,7 @@ if [ -z "$SCHEMA_VERSION" ]; then
 	SCHEMA_VERSION="$(grep -oE 'SchemaVersion *= *"[0-9.]+"' types.go | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)"
 fi
 COVERAGE_GATE="$(grep -oE 'below [0-9]+(\.[0-9]+)?%' .github/workflows/ci.yml | grep -oE '[0-9]+(\.[0-9]+)?' | head -n 1)"
-LINTER_COUNT="$(sed -n "$(grep -n '^  enable:' .golangci.yml | head -1 | cut -d: -f1),$(grep -n '^  settings:' .golangci.yml | head -1 | cut -d: -f1)p" .golangci.yml | grep -c '^    - ' || true)"
+LINTER_COUNT="$(sed -n "$(grep -n '^ *enable:' .golangci.yml | head -1 | cut -d: -f1),$(grep -n '^ *settings:' .golangci.yml | head -1 | cut -d: -f1)p" .golangci.yml | grep -c '^ *- ' || true)"
 FUZZ_COUNT="$(grep -rh -o -E '^func (Fuzz[A-Za-z]+)' --include='*_test.go' . | wc -l | tr -d ' ')"
 
 # --- Checks ---------------------------------------------------------------
