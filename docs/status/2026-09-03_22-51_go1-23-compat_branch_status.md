@@ -195,4 +195,26 @@ The honest caveats: (1) roughly the first third of the session's downgrade work 
 
 ---
 
-*Point-in-time snapshot — 2026-09-03 22:51 CEST, branch `go1.23-compat`. Section (f) is HARVEST fuel for `TODO_LIST.md`/`ROADMAP.md` (docs-health), not a commitment list.*
+## h) ADDENDUM (2026-09-03 ~23:30 CEST) — samber chat ANSWERS all three questions from section (g)
+
+Source: LinkedIn DM transcript (2026-09-03, pasted by Lars). Impact on this report:
+
+| Section (g) question | samber's answer (verbatim) | Consequence |
+| --- | --- | --- |
+| Q1 merge vehicle | "What about importing this into 'do'?" + "I think it could replace the current http sub-package. Your API is much better." | **Subpackage inside `github.com/samber/do`**, replacing `http/` (the existing debug Web UI: index/scope/service pages + std/gin/fiber/echo/chi adapters). Import path, module identity, and integration shape are now samber/do's call, but the target is clear. Credit agreed: **GitHub release mention + README mention** (samber explicitly declined LICENSE attribution). |
+| Q2 Go floor | "Is Go 1.26 the min compatible version? Can we support older versions?" → "I don't think we need to support go 1.18. 1.23 means 2 years back. Seems good for a UI." | **1.23 CONFIRMED as the floor.** Action #44 (1.22/1.21 shim) stays Deferred/dead. This branch's floor is exactly right. |
+| Q3 live dashboard | "I would prefer keeping live update vs backward compatibility." | **Live updates are a merge REQUIREMENT.** "live/ stays master-only" is NOT acceptable for the merged artifact. The `live/` stdlib port becomes the branch's main open work item (see below). Lars already linked this branch to samber; master-only-live contradicts samber's stated preference. |
+
+**Additional chat signals:**
+
+- **Multi-module split question is moot here.** Samber floated splitting auditlog into multiple go modules (with a go workspace) "to limit the dependencies when you need only the Mermaid export format". This branch already achieved the underlying goal differently and more strongly: the stdlib ports reduced **runtime deps to `samber/do/v2` only** — there is nothing left to split. Answer for the merge proposal: "single subpackage, zero third-party deps beyond do itself."
+- **samber's hook question has a concrete answer** ("While building this tool did you miss some hooks? Did you make some hack that would need an improvement of do?"): (a) do has **no health-check hooks** — we wrap `injector.HealthCheckWithContext()` via `RecordHealthCheck` (wrapper pattern, documented gotcha); (b) `do.ExplainInjector()` **must not be called inside hooks** (internal-lock deadlock) — capabilities are enriched after the recorder lock is released. Both are candidate feature requests for do v2.1+ and belong in the merge proposal.
+- **Branch is public already** (`github.com/LarsArtmann/samber-do-auditlog/tree/go1.23-compat` was linked in the chat); local is 1 auto-commit ahead (this addendum) — push pending (rule: never push without explicit ask).
+
+**Updated priority order for section (f):**
+
+1. **NEW #1: port `live/` to Go 1.23 with stdlib** — replace go-sse with a stdlib SSE writer/fan-out (the `Hub` facade interface stays; write path = `Content-Type: text/event-stream` + `http.Flusher`, datastar `KeyedLines` wire format is 10 LOC) and replace templ fragments with `html/template` (same element IDs + datastar attributes so `dashboard.js`/`datastar.js` carry over untouched; `dashboard.go`, CSS, JS, and the 56KB `datastar.js` asset are version-independent already). Sized from master: hub 139 / server 553 / fragments 479+205(templ) / dashboard 208 LOC; tests server_test 1398 + fragments_internal_test 857 LOC need transport adaptation.
+2. Then: actionlint on ci.yml, `nix flake check`, FEATURES/TODO_LIST/ROADMAP adaptation, CHANGELOG, benchmark re-baseline (unchanged from section f).
+3. Then the samber-facing package: API diff doc + merge proposal + do-improvement list (hooks above).
+
+*Point-in-time snapshot — 2026-09-03 22:51 CEST, addendum ~23:30 CEST, branch `go1.23-compat`. Section (f) is HARVEST fuel for `TODO_LIST.md`/`ROADMAP.md` (docs-health), not a commitment list.*
