@@ -125,7 +125,7 @@ type RideRequest struct {
 	CreatedAt time.Time
 }
 
-var rideCounter atomic.Int64 //nolint:gochecknoglobals
+var rideCounter int64 //nolint:gochecknoglobals
 
 // --- Named services: multiple instances of the same type ---
 

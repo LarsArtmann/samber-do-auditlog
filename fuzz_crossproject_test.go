@@ -8,7 +8,6 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	errorfamily "github.com/larsartmann/go-error-family"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
@@ -184,20 +183,26 @@ func FuzzClassifyAdversarialChains(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, payload string) {
-		bare := fmt.Errorf("%s", payload) //nolint:err113 // fuzz input
-
-		family := errorfamily.Classify(bare)
-		if family != errorfamily.Transient {
-			t.Errorf("bare error should classify as Transient (fail-open), got %d", family)
-		}
-
-		for sentinel, expectedFamily := range auditlog.ErrorClassifications() {
+		for sentinel := range sentinelSetForFuzz() {
 			wrapped := fmt.Errorf("%s: %w: %s", payload, sentinel, payload)
 
-			wrappedFamily := errorfamily.Classify(wrapped)
-			if wrappedFamily != expectedFamily {
-				t.Errorf("wrapped sentinel classified as %d, want %d", wrappedFamily, expectedFamily)
+			if !errors.Is(wrapped, sentinel) {
+				t.Errorf("errors.Is lost sentinel %v through adversarial chain %q", sentinel, payload)
 			}
 		}
 	})
+}
+
+// sentinelSetForFuzz collects one sentinel per exported error family so the
+// fuzz target exercises representative chains without importing
+// go-error-family (dropped on the Go 1.18 branch).
+func sentinelSetForFuzz() map[error]struct{} {
+	return map[error]struct{}{
+		auditlog.ErrReportEventCountMismatch: {},
+		auditlog.ErrContainerIDPathSep:       {},
+		auditlog.ErrMigrationEmptyInput:      {},
+		auditlog.ErrUnsupportedFormat:        {},
+		auditlog.ErrReplayValidationFailed:   {},
+		auditlog.ErrEmpty:                    {},
+	}
 }
