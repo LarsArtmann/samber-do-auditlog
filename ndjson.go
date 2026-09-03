@@ -7,16 +7,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
-
-	"github.com/larsartmann/go-ndjson"
 )
 
-// Sentinel errors for NDJSON reading. Re-exported from go-ndjson
-// so existing callers can continue to match with errors.Is.
+// MaxLineBytes is the maximum allowed size for a single NDJSON line (1 MB).
+const MaxLineBytes = 1 << 20
+
+// Sentinel errors for NDJSON reading.
 var (
-	ErrEmpty         = ndjson.ErrEmpty
-	ErrNoEvents      = ndjson.ErrNoEvents
-	ErrOversizedLine = ndjson.ErrOversizedLine
+	ErrEmpty         = errors.New("ndjson input is empty")
+	ErrNoEvents      = errors.New("ndjson input contains no events")
+	ErrOversizedLine = errors.New("ndjson line exceeds maximum size")
 )
 
 // Domain-specific validation errors.
@@ -26,14 +26,78 @@ var (
 	errUnknownProviderType = errors.New("unknown provider_type")
 )
 
+// scanNDJSONLines scans reader line by line (1 MB line cap), invoking fn for
+// each non-blank line with its 1-based line number. Returns ErrEmpty when the
+// input holds no bytes at all and ErrNoEvents when every line was blank.
+// Oversized lines surface as ErrOversizedLine; other scanner errors are
+// wrapped with a "scan ndjson" prefix.
+func scanNDJSONLines(reader io.Reader, fn func(lineNum int, line []byte) error) error {
+	scanner := bufio.NewScanner(reader)
+	scanner.Buffer(make([]byte, 0, MaxLineBytes), MaxLineBytes)
+
+	lineNum := 0
+
+	nonBlank := 0
+
+	for scanner.Scan() {
+		lineNum++
+
+		line := scanner.Bytes()
+		if len(bytes.TrimSpace(line)) == 0 {
+			continue
+		}
+
+		nonBlank++
+
+		if err := fn(lineNum, line); err != nil {
+			return err
+		}
+	}
+
+	err := scanner.Err()
+	if err != nil {
+		if errors.Is(err, bufio.ErrTooLong) {
+			return fmt.Errorf("%w (max %d bytes)", ErrOversizedLine, MaxLineBytes)
+		}
+
+		return fmt.Errorf("scan ndjson: %w", err)
+	}
+
+	if lineNum == 0 {
+		return ErrEmpty
+	}
+
+	if nonBlank == 0 {
+		return ErrNoEvents
+	}
+
+	return nil
+}
+
 // ReadEvents reads line-delimited JSON events from reader.
 // Each line must be a single JSON-encoded Event object.
 // Blank lines are skipped. Returns the parsed events in order.
 //
 // Returns ErrEmpty if the input contains no bytes, ErrNoEvents if all lines
-// were blank, or ErrOversizedLine if any line exceeds 1 MB.
+// were blank, or ErrOversizedLine if any line exceeds MaxLineBytes.
 func ReadEvents(reader io.Reader) ([]Event, error) {
-	events, err := ndjson.Read(reader, validateEvent)
+	var events []Event
+
+	err := scanNDJSONLines(reader, func(lineNum int, line []byte) error {
+		var evt Event
+
+		if err := json.Unmarshal(line, &evt); err != nil {
+			return fmt.Errorf("ndjson line %d: %w", lineNum, err)
+		}
+
+		if err := validateEvent(lineNum, evt); err != nil {
+			return err
+		}
+
+		events = append(events, evt)
+
+		return nil
+	})
 	if err != nil {
 		return nil, fmt.Errorf("read ndjson events: %w", err)
 	}
@@ -94,65 +158,34 @@ type StreamEventsCallback func(lineNum int, evt Event) error
 // downstream failure (disk full, network drop, etc.).
 //
 // Returns ErrEmpty if the input contains no bytes, ErrNoEvents if all lines
-// were blank, or ErrOversizedLine if any line exceeds 1 MB — identical to
-// [ReadEvents].
+// were blank, or ErrOversizedLine if any line exceeds MaxLineBytes — identical
+// to [ReadEvents].
 func StreamEvents(reader io.Reader, validate func(lineNum int, evt Event) error, fn StreamEventsCallback) error {
 	if fn == nil {
 		return errNilStreamCallback
 	}
 
-	scanner := bufio.NewScanner(reader)
-	scanner.Buffer(make([]byte, 0, ndjson.MaxLineBytes), ndjson.MaxLineBytes)
-
-	lineNum := 0
-
-	delivered := 0
-
-	for scanner.Scan() {
-		lineNum++
-
-		line := scanner.Bytes()
-		if len(bytes.TrimSpace(line)) == 0 {
-			continue
-		}
-
+	err := scanNDJSONLines(reader, func(lineNum int, line []byte) error {
 		var evt Event
 
-		err := json.Unmarshal(line, &evt)
-		if err != nil {
+		if err := json.Unmarshal(line, &evt); err != nil {
 			return fmt.Errorf("ndjson line %d: %w", lineNum, err)
 		}
 
 		if validate != nil {
-			err = validate(lineNum, evt)
-			if err != nil {
+			if err := validate(lineNum, evt); err != nil {
 				return err
 			}
 		}
 
-		err = fn(lineNum, evt)
-		if err != nil {
+		if err := fn(lineNum, evt); err != nil {
 			return fmt.Errorf("ndjson line %d: callback: %w", lineNum, err)
 		}
 
-		delivered++
-	}
-
-	err := scanner.Err()
+		return nil
+	})
 	if err != nil {
-		if errors.Is(err, bufio.ErrTooLong) {
-			return fmt.Errorf("%w (max %d bytes)", ErrOversizedLine, ndjson.MaxLineBytes)
-		}
-
-		return fmt.Errorf("scan ndjson: %w", err)
-	}
-
-	if delivered == 0 {
-		if lineNum == 0 {
-			return ErrEmpty
-		}
-
-		return ErrNoEvents
+		return err
 	}
 
 	return nil

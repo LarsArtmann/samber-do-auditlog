@@ -64,11 +64,11 @@ type scopeMeta struct {
 	ref      *do.Scope
 }
 
-// newSequenceCounter returns a fresh atomic counter for sequence generation.
+// newSequenceCounter returns a fresh counter slot for sequence generation.
 // Using a per-recorder counter keeps the package free of global state and
 // avoids cross-test interference.
-func newSequenceCounter() *atomic.Int64 {
-	var counter atomic.Int64
+func newSequenceCounter() *int64 {
+	counter := int64(0)
 
 	return &counter
 }
@@ -83,8 +83,9 @@ func newSequenceCounter() *atomic.Int64 {
 //	Write path:  mu.Lock()   : all hook methods (OnBefore*, OnAfter*, RecordHealthCheck)
 //	Read path:   mu.RLock()  : BuildReport, Events, EventsCount, ResolveServiceScope
 //
-// The invocation counter (invocationSeq) uses atomic.Int64, eliminating a separate mutex.
-// Sequence numbers use a separate per-recorder atomic.Int64, also lock-free.
+// The invocation counter (invocationSeq) is a plain int64 guarded by mu
+// (all mutations happen while mu is held). Sequence numbers use a separate
+// per-recorder counter with the same discipline.
 //
 // The onEvent callback is always called outside the lock to prevent user code from
 // blocking or deadlocking the recorder.
@@ -104,8 +105,8 @@ type Recorder struct {
 	// shutdownStart stores per-service shutdown start times for duration calc.
 	shutdownStart map[svcKey]time.Time
 
-	sequence      *atomic.Int64
-	invocationSeq atomic.Int64
+	sequence      *int64
+	invocationSeq int64
 	containerID   ContainerID
 	runID         RunID
 
@@ -121,7 +122,7 @@ type Recorder struct {
 	// maxEvents caps the events slice. When > 0, new events are dropped
 	// (counter incremented) after this many events are stored.
 	maxEvents     int
-	droppedEvents atomic.Int64
+	droppedEvents int64
 }
 
 // NewRecorder creates a new event recorder.
@@ -140,7 +141,9 @@ func NewRecorder(containerID ContainerID, runID RunID, onEvent func(Event)) *Rec
 }
 
 func (r *Recorder) nextSequence() int {
-	return int(r.sequence.Add(1))
+	*r.sequence++
+
+	return int(*r.sequence)
 }
 
 // recordScopeLocked records scope metadata. Caller must hold r.mu.
@@ -172,7 +175,7 @@ func (r *Recorder) serviceTypeForLocked(key svcKey) ProviderType {
 // Caller must hold r.mu.
 func (r *Recorder) appendEventLocked(evt Event) {
 	if r.maxEvents > 0 && len(r.events) >= r.maxEvents {
-		r.droppedEvents.Add(1)
+		r.droppedEvents++
 
 		return
 	}
@@ -182,7 +185,10 @@ func (r *Recorder) appendEventLocked(evt Event) {
 
 // DroppedEventCount returns the number of events dropped due to MaxEvents cap.
 func (r *Recorder) DroppedEventCount() int64 {
-	return r.droppedEvents.Load()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	return r.droppedEvents
 }
 
 // Events returns a defensive copy of all captured events.

@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
-	atomicwrite "github.com/larsartmann/go-atomic-write"
-	"github.com/larsartmann/go-output"
 	"github.com/samber/do/v2"
 )
 
@@ -293,8 +292,8 @@ func (p *Plugin) WriteHTMLTree(writer io.Writer) error {
 // WriteTable writes the service summary as a table in the specified format to writer.
 func (p *Plugin) WriteTable(
 	writer io.Writer,
-	format output.Format,
-	opts output.RenderOptions,
+	format Format,
+	opts RenderOptions,
 	tableOpts ...TableOption,
 ) error {
 	return p.Report().WriteTable(writer, format, opts, tableOpts...)
@@ -313,8 +312,8 @@ func (p *Plugin) ExportToHTMLTree(path string) error {
 // ExportToTable writes the service summary table to path in the specified format.
 func (p *Plugin) ExportToTable(
 	path string,
-	format output.Format,
-	opts output.RenderOptions,
+	format Format,
+	opts RenderOptions,
 	tableOpts ...TableOption,
 ) error {
 	return writeToFile(path, func(w io.Writer) error {
@@ -377,13 +376,44 @@ func (p *Plugin) RecordHealthCheck(injector do.Injector) map[string]error {
 }
 
 // writeToFile creates a file at path and writes to it atomically via a
-// streaming callback. Delegates to go-atomic-write for TOCTOU-safe writes
-// with fsync durability and cross-platform atomic rename. A crash during
-// write leaves the previous file (if any) intact rather than a partial file.
-func writeToFile(path string, fn func(io.Writer) error) error {
-	err := atomicwrite.WriteFunc(path, fn)
+// streaming callback. The payload is written to a temp file in the target
+// directory, fsynced, closed, then renamed over the destination. A crash
+// during write leaves the previous file (if any) intact rather than a partial
+// file. Stdlib replacement for go-atomic-write (Go 1.18 branch).
+func writeToFile(path string, fn func(io.Writer) error) (err error) {
+	dir := filepath.Dir(path)
+
+	tmp, err := os.CreateTemp(dir, ".do-auditlog-*.tmp")
 	if err != nil {
-		return fmt.Errorf("atomic write %q: %w", path, err)
+		return fmt.Errorf("atomic write %q: create temp file: %w", path, err)
+	}
+
+	tmpName := tmp.Name()
+
+	defer func() {
+		if err != nil {
+			_ = os.Remove(tmpName)
+		}
+	}()
+
+	writeErr := fn(tmp)
+	if writeErr == nil {
+		writeErr = tmp.Sync()
+	}
+
+	closeErr := tmp.Close()
+	if writeErr != nil {
+		return fmt.Errorf("atomic write %q: %w", path, writeErr)
+	}
+
+	if closeErr != nil {
+		err = fmt.Errorf("atomic write %q: close temp file: %w", path, closeErr)
+
+		return err
+	}
+
+	if err = os.Rename(tmpName, path); err != nil {
+		return fmt.Errorf("atomic write %q: rename: %w", path, err)
 	}
 
 	return nil
