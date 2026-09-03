@@ -2,6 +2,7 @@ package live
 
 import (
 	"context"
+	"fmt"
 	"maps"
 	"reflect"
 	"slices"
@@ -176,7 +177,7 @@ func (b *broadcaster) waitForDrain(ctx context.Context, subs []chan sseEvent) er
 
 		select {
 		case <-ctx.Done():
-			return context.DeadlineExceeded
+			return fmt.Errorf("drain %d subscribers: %w", len(subs), ctx.Err())
 		case <-time.After(drainPollInterval):
 		}
 	}
