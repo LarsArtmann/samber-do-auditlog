@@ -60,8 +60,6 @@ func TestWriteHTML_EventsTabContent(t *testing.T) {
 	htmlLower := strings.ToLower(html)
 
 	assertHTMLContains(t, html, "events-tbody")
-	assertHTMLContains(t, html, "allEvents")
-	assertHTMLContains(t, html, "report.events.map")
 	assertHTMLContains(t, html, "data-type=")
 	assertHTMLContains(t, htmlLower, "event-badge")
 }
@@ -79,20 +77,22 @@ func TestWriteHTML_AllFiveTabs(t *testing.T) {
 
 	assertHTMLContains(t, html, "services-tbody")
 	assertHTMLContains(t, html, "scope-tree")
-	assertHTMLContains(t, html, "graph-container")
-	assertHTMLContains(t, html, "timeline-container")
+	assertHTMLContains(t, html, "mermaid-src")
+	assertHTMLContains(t, html, "timeline-track")
 	assertHTMLContains(t, html, "events-tbody")
 }
 
-func TestWriteHTML_TypeMetadataInjected(t *testing.T) {
+func TestWriteHTML_TypeMetadataRendered(t *testing.T) {
 	t.Parallel()
 
 	html := writeHTMLToString(t)
 
-	assertHTMLContains(t, html, "type-metadata")
-	assertHTMLContains(t, html, "providers")
-	assertHTMLContains(t, html, "statuses")
-	assertHTMLContains(t, html, "events")
+	// On this branch the enum display metadata is baked in server-side from
+	// the same Go enum methods (metadata.go) the master branch injects as
+	// JSON — so the HTML must carry the rendered badge markup directly.
+	assertHTMLContains(t, html, "type-badge")
+	assertHTMLContains(t, html, "status-badge")
+	assertHTMLContains(t, html, "event-badge")
 }
 
 func TestWriteHTML_MultiServiceIntegration(t *testing.T) {
@@ -125,7 +125,7 @@ func TestWriteHTML_MultiServiceIntegration(t *testing.T) {
 	}
 
 	assertHTMLContains(t, html, "child-scope")
-	assertHTMLContains(t, html, "scope_count")
+	assertHTMLContains(t, html, ">Scopes<")
 
 	report := p.Report()
 	assertHTMLContains(t, html, string(report.ContainerID))
@@ -137,8 +137,8 @@ func TestWriteHTML_MultiServiceIntegration(t *testing.T) {
 	assertHTMLContains(t, html, "services-tbody")
 	assertHTMLContains(t, html, "events-tbody")
 	assertHTMLContains(t, html, "scope-tree")
-	assertHTMLContains(t, html, "graph-container")
-	assertHTMLContains(t, html, "timeline-container")
+	assertHTMLContains(t, html, "mermaid-src")
+	assertHTMLContains(t, html, "timeline-track")
 	assertHTMLContains(t, html, "event-filters")
 	assertHTMLContains(t, html, "service-search")
 }

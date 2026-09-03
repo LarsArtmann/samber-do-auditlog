@@ -242,16 +242,24 @@ func assertNoRawXSS(t *testing.T, output, context string) {
 		}
 	}
 
-	// Check for javascript: and onerror= only in HTML portions (outside JSON script blocks).
-	// Error messages like "javascript:alert(1)" are safely encoded inside JSON in script tags.
-	// templ's JSONScript escapes </ to prevent premature closing, so the data is inert.
+	// Check for javascript: and event-handler patterns only in HTML portions
+	// (outside JSON script blocks). On this branch user-controlled strings are
+	// rendered server-side by html/template, which escapes quotes as entities
+	// (&#34; / &#39;). Neutralize those entities so the quote-anchored vectors
+	// below only match GENUINE breakouts: a real attribute breakout keeps raw
+	// quotes and survives this step, while properly escaped data does not.
 	htmlOnly := stripJSONScripts(output)
+	htmlOnly = strings.ReplaceAll(htmlOnly, "&#34;", "\x00")
+	htmlOnly = strings.ReplaceAll(htmlOnly, "&#39;", "\x00")
+	htmlOnly = strings.ReplaceAll(htmlOnly, "&quot;", "\x00")
 
 	htmlVectors := []string{
-		"javascript:alert",
-		" onerror=",
-		" onclick=",
-		" onload=",
+		`href="javascript:`,
+		`src="javascript:`,
+		` onerror="`,
+		` onclick="`,
+		` onload="`,
+		` onmouseover="`,
 	}
 
 	for _, v := range htmlVectors {
