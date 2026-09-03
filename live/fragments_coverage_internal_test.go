@@ -1,15 +1,18 @@
 package live
 
 import (
+	"bytes"
+	"errors"
 	"strings"
 	"testing"
 	"time"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
+	"github.com/samber/do/v2"
 )
 
 // fixtureReport builds a report + events exercising every display branch:
-// health checks, invocation errors, shutdown errors, durations, deps.
+// health checks, invocation errors, durations, deps, clean shutdown.
 func fixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
 	t.Helper()
 
@@ -18,20 +21,37 @@ func fixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
 		t.Fatalf("create plugin: %v", err)
 	}
 
-	injector := doNewInjector(plugin)
+	injector := do.NewWithOpts(plugin.Opts())
 
-	doProvideHealthyDB(injector)
-	doProvideFailing(injector)
+	do.ProvideNamed(injector, "fixture-healthy", func(do.Injector) (*strings.Reader, error) {
+		return strings.NewReader("data"), nil
+	})
 
-	invokeAll(t, injector, "fixture-healthy", "fixture-failing")
+	do.ProvideNamed(injector, "fixture-dep", func(i do.Injector) (*strings.Builder, error) {
+		_ = do.MustInvokeNamed[*strings.Reader](i, "fixture-healthy")
 
-	if err := auditlog.RecordHealthCheckWithContext(injector, plugin); err != nil {
-		t.Fatalf("health check: %v", err)
+		return &strings.Builder{}, nil
+	})
+
+	do.ProvideNamed(injector, "fixture-failing", func(do.Injector) (*bytes.Buffer, error) {
+		return nil, errors.New("provider boom")
+	})
+
+	if _, err := do.InvokeNamed[*strings.Reader](injector, "fixture-healthy"); err != nil {
+		t.Fatalf("invoke healthy: %v", err)
 	}
 
-	if err := injector.Shutdown(); err != nil {
-		t.Fatalf("shutdown: %v", err)
+	if _, err := do.InvokeNamed[*strings.Builder](injector, "fixture-dep"); err != nil {
+		t.Fatalf("invoke dep: %v", err)
 	}
+
+	// The failing invocation records an invocation error event.
+	_, _ = do.InvokeNamed[*bytes.Buffer](injector, "fixture-failing")
+
+	_ = plugin.RecordHealthCheck(injector)
+
+	// Shutdown errors are irrelevant to fragment rendering.
+	_ = injector.Shutdown()
 
 	return plugin.Report(), plugin.Events()
 }
