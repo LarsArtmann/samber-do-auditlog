@@ -12,8 +12,9 @@
 //
 // # Build requirement
 //
-// Building (not importing) this library requires GOEXPERIMENT=jsonv2 on Go
-// 1.26.x, because a transitive dependency (go-output) uses encoding/json/v2
-// features. Set the env var or the build fails with "package encoding/json/v2
-// is not in std". The flag will not be needed once Go 1.27 stabilizes json/v2.
+// This module builds on Go 1.23+ with no GOEXPERIMENT and no third-party
+// runtime dependencies (samber/do/v2 is the only runtime require). Do NOT set
+// GOEXPERIMENT=jsonv2 here — a stale ambient value breaks the go1.23
+// toolchain. (The upstream samber-do-auditlog master line requires it on Go
+// 1.26.x; that constraint does not apply to this module.)
 package auditlog
