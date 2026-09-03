@@ -96,7 +96,7 @@ var htmlEventTypes = []string{ //nolint:gochecknoglobals // read-only filter lis
 
 // buildHTMLView converts a Report into the template-facing view model,
 // precomputing every formatted string so the template stays logic-free.
-func (r Report) buildHTMLView() (htmlView, error) {
+func buildHTMLView() (htmlView, error) { //nolint:exhaustruct // accumulator: remaining fields assigned below
 	mermaid, err := r.WriteMermaidString()
 	if err != nil {
 		return htmlView{}, fmt.Errorf("render dependency graph: %w", err)
@@ -157,7 +157,7 @@ func buildHTMLService(svc *ServiceInfo) htmlService {
 		dependents = append(dependents, string(dep.ServiceName))
 	}
 
-	row := htmlService{
+	row := htmlService{ //nolint:exhaustruct // ErrorMsg and HealthCell set conditionally below
 		Icon:        svc.ServiceType.Icon(),
 		TypeIcon:    svc.ServiceType.Icon(),
 		Name:        string(svc.ServiceName),
@@ -231,11 +231,11 @@ func buildHTMLEvents(events []Event) []htmlEvent {
 // buildHTMLStats assembles the stat cards shown under the header.
 func buildHTMLStats(r Report, serviceCount, depCount, errorCount, unhealthy int) []htmlStat {
 	stats := []htmlStat{
-		{Label: "Services", Value: strconv.Itoa(serviceCount)},
-		{Label: "Scopes", Value: strconv.Itoa(r.ScopeCount)},
-		{Label: "Events", Value: strconv.Itoa(r.EventCount)},
-		{Label: "Dependencies", Value: strconv.Itoa(depCount)},
-		{Label: "Total Build", Value: strconv.FormatFloat(r.TotalBuildDurationMs, 'f', 2, 64) + "ms"},
+		{Label: "Services", Value: strconv.Itoa(serviceCount), Class: ""},
+		{Label: "Scopes", Value: strconv.Itoa(r.ScopeCount), Class: ""},
+		{Label: "Events", Value: strconv.Itoa(r.EventCount), Class: ""},
+		{Label: "Dependencies", Value: strconv.Itoa(depCount), Class: ""},
+		{Label: "Total Build", Value: strconv.FormatFloat(r.TotalBuildDurationMs, 'f', 2, 64) + "ms", Class: ""},
 		{
 			Label: "Errors",
 			Value: strconv.Itoa(errorCount),
@@ -285,8 +285,10 @@ func buildHTMLTimeline(services []ServiceInfo) []htmlTimelineRow {
 			continue
 		}
 
+		label := svc.ServiceType.Icon() + " " + string(svc.ServiceName)
+
 		rows = append(rows, htmlTimelineRow{
-			Label:     strconv.Itoa(svc.InvocationOrder) + ". " + svc.ServiceType.Icon() + " " + string(svc.ServiceName),
+			Label:     strconv.Itoa(svc.InvocationOrder) + ". " + label,
 			BuildPct:  percentOf(svc.FirstBuildDurationMs, maxMs),
 			BuildTip:  "Build: " + formatMsPtr(svc.FirstBuildDurationMs) + "ms",
 			ShutPct:   percentOf(svc.ShutdownDurationMs, maxMs),

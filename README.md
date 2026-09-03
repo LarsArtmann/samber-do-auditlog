@@ -8,7 +8,7 @@ Audit-log plugin for [samber/do v2](https://github.com/samber/do) — track ever
 
 [![CI](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml/badge.svg)](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/samber-do-auditlog.svg)](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog)
-[![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
+[![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
 [![Coverage](https://img.shields.io/badge/Coverage-94%25-brightgreen)](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -90,10 +90,7 @@ Skip this library if:
 go get github.com/larsartmann/samber-do-auditlog
 ```
 
-Requires Go 1.26+ and [samber/do v2](https://github.com/samber/do).
-
-> [!IMPORTANT]
-> **Build flag required:** transitive dependencies use `encoding/json/v2`, which is gated behind an experiment in Go 1.26. Set `GOEXPERIMENT=jsonv2` wherever you build or test code that imports this library (shell profile, CI env, or Nix devShell), or the build fails with `build constraints exclude all Go files`. This requirement disappears when Go 1.27 stabilizes json/v2.
+Requires Go 1.23+ and [samber/do v2](https://github.com/samber/do).
 
 > **Try the demo:** `git clone` this repo and run `DO_AUDITLOG_ENABLED=true go run ./example` — 20 services across 4 scopes with health checks, shutdowns, and invocation errors.
 
@@ -160,7 +157,7 @@ func main() {
 | **Bounded memory**       | `MaxEvents` caps in-memory events; `DroppedEventCount()` tracks overflow                           |
 | **Report diffing**       | `Report.Diff(other)` detects added, removed, and changed services for CI/CD                        |
 | **~1.7 µs overhead**     | In-memory capture during operation. Toggle off for zero cost                                       |
-| **Minimal deps**         | `samber/do/v2` + `a-h/templ` + `larsartmann/go-output` (diagrams/tables) + `go-ndjson` (streaming) |
+| **Minimal deps**         | `samber/do/v2` is the only runtime dependency — every exporter is stdlib                              |
 
 ## How It Works
 
@@ -295,46 +292,7 @@ The callback fires **outside the mutex** on every event. Keep it fast.
 
 ## Live Dashboard
 
-The `live/` sub-package provides a real-time SSE-powered dashboard that shows your DI container lifecycle as it happens:
-
-```go
-import "github.com/larsartmann/samber-do-auditlog/live"
-
-server, plugin, err := live.New(
-    auditlog.Config{Enabled: true, ContainerID: "my-app"},
-    live.Config{Addr: ":7777"},
-)
-if err != nil {
-    log.Fatal(err)
-}
-
-injector := do.NewWithOpts(plugin.Opts())
-// Register and invoke services...
-
-go server.ListenAndServe()
-// Open http://localhost:7777/debug/di/ in your browser
-```
-
-Features:
-
-- **Real-time SSE** — events stream live as services register, invoke, and shut down
-- **Interactive graph** — Sugiyama layered DAG with pan/zoom
-- **Event waveform** — timeline of all events with duration-encoded height
-- **Export buttons** — download JSON/NDJSON/HTML snapshots
-- **Pagination** — handles 100+ services without overwhelming the browser
-- **CORS support** — embed the dashboard in external dashboards
-
-Run the standalone demo:
-
-```bash
-go run ./live/demo
-```
-
-Or add `--live` to the example app:
-
-```bash
-go run ./example --live --live-addr :7777
-```
+The real-time SSE dashboard (`live/` sub-package) lives on the `master` branch only — it depends on Go 1.25+/1.26-only libraries (templ, go-sse). This Go 1.23 compatibility line ships the static self-contained HTML report instead: `Report.WriteHTML` renders the same five-tab "Container Telemetry" dashboard (services, scopes, graph, timeline, events) as a single file with zero external resources.
 
 ## Health Probes
 

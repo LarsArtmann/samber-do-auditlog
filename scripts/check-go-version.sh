@@ -68,8 +68,8 @@ for v in $FLAKE_VERSIONS; do
 	esac
 done
 
-# 4. .golangci.yml — run.go must match.
-LINT_VERSION="$(sed -n 's/^  go: *\([0-9][0-9.]*\)$/\1/p' "$ROOT/.golangci.yml" | head -n 1)"
+# 4. .golangci.yml — run.go must match (quoted or bare).
+LINT_VERSION="$(sed -n 's/^ *go: *["]*\([0-9][0-9.]*\)["]*$/\1/p' "$ROOT/.golangci.yml" | head -n 1)"
 if [ -z "$LINT_VERSION" ]; then
 	echo "FAIL: could not read run.go from .golangci.yml"
 	fail=1
