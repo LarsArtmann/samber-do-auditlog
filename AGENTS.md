@@ -6,6 +6,23 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 
 ---
 
+## THIS BRANCH: `go1.23-compat` (divergence contract for the samber/do merge)
+
+Created 2026-09-03 because **samber is considering merging the plugin into `github.com/samber/do`**, whose own go.mod floor is `go 1.18`; samber approved **Go 1.23** as the target (exactly what master's code needs — `slices.Backward` is 1.23). Everything below describes how this branch differs from master. Master remains the flagship (Go 1.26.7, full dep family, live dashboard).
+
+- **go.mod: `go 1.23`.** Runtime deps: `github.com/samber/do/v2` ONLY (+ `samber/go-type-to-string` transitively). Tooling dep: `invopop/jsonschema v0.13.0` (v0.14 needs go 1.24; v0.13 needs 1.18 and regenerates `schema/report.schema.json` byte-identically — verified).
+- **GOEXPERIMENT=jsonv2 is GONE** — it existed only for the master dep family. Consumers no longer set any env var. README/CONTRIBUTING/BENCHMARKS/.buildflow.yml/ci.yml all scrubbed.
+- **All `larsartmann/*` deps replaced with stdlib ports** (they require go 1.26.x): go-output → `diagram.go` (Mermaid/DOT/PlantUML/D2 renderers + escapes ported byte-for-byte from go-output v0.37.0 for our node/edge shapes) and `table.go` (ASCII/JSON/CSV/TSV/Markdown via `TableFormat`; the other 11 go-output table formats return `errUnsupportedTableFormat`); go-ndjson → `ndjson.go`/`loader.go` (same sentinels/messages, `MaxLineBytes` 1 MB); go-atomic-write → `writeToFile` in `plugin.go` (temp+fsync+rename); go-error-family → `classify.go` DELETED (feature is master-only; `fuzz_crossproject_test.go` now fuzzes `errors.Is` through adversarial chains).
+- **templ (needs go 1.25) replaced by `html/template`**: `html.go` (API + template) + `html_view.go` (view models). Same five-tab warm-amber identity, CSP hardened (`default-src 'none'`), zero external resources, sortable columns with `aria-sort`, `?` help dialog with focus trap, `e` errors-toggle, `/` search — the master a11y feature set is preserved. `html.templ`/`html_templ.go`/`daghtml_adapter.go` deleted; golden-file test replaced by `TestReport_WriteHTML_Structure` + `TestDesignTokensInSync`/`TestSharedComponentCSSInSync` now assert the constants are embedded verbatim in rendered output.
+- **`live/` DELETED** (needs go-sse 1.26.7 + templ 1.25 + datastar). Master-only feature; README's Live Dashboard section points back to master. `example --live` flag removed.
+- **API deltas vs master**: `Report.WriteTable(w, format TableFormat, opts RenderOptions, ...)` (string literals still work; old `output.FormatCSV` → `auditlog.TableFormatCSV`); `Direction`/`WithDirection` are local (was `output.Direction`); file-format `Format`/`FormatAuto`/`FormatJSON`/`FormatNDJSON` unchanged. All other public API identical.
+- **CI (ci.yml)**: all jobs `go-version: "1.23"`; golangci-lint pinned **v2.1.6** (newest v2 whose go directive ≤ 1.23 — v2.12.2 needs go 1.25 to `go install` on GOTOOLCHAIN=local runners); govulncheck pinned **v1.1.4** (same reason); goreleaser job DROPPED (releases happen from master); stale-generation checks only `schema/report.schema.json`; `.golangci.yml` trimmed of the 9 post-2.1.6 linters + `run.go: "1.23"` (quoted — 1.23 parses as YAML number otherwise) + templ/live paths. Local lint verified: `golangci-lint v2.1.6` → 0 issues.
+- **flake.nix**: `go_1_23` no longer exists in nixpkgs (EOL-removed) — devShell uses bootstrap `pkgs.go` + `GOTOOLCHAIN = "go1.23.12"` (bare `go1.23` is NOT a valid toolchain name; must be a full patch version). `scripts/check-go-version.sh` accepts patch-extended flake pins and quoted `.golangci.yml` values.
+- **Tests**: `b.Loop` → `for range b.N`, `wg.Go` → `wg.Add`+`go`+`Done` (sync.Go is 1.25), fuzz XSS vectors re-anchored on RAW quotes (`html/template` escapes quotes as entities in attributes, so `&#34; onload=&#34;` is inert — strip entities before matching, so only genuine breakouts with raw quotes trip the check).
+- **Verification status 2026-09-03**: build ✓ vet ✓ full test ✓ `go test -race` ✓ coverage gate ✓ lint (v2.1.6) ✓ `go generate` drift ✓ `sh scripts/check-go-version.sh` ✓ real go1.23.12 toolchain ✓ (see below).
+
+---
+
 ## Commands
 
 | Command               | Purpose                                         |
