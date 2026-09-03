@@ -48,6 +48,10 @@
             };
 
             GOTOOLCHAIN = "go1.23.12";
+            # Explicitly clear the experiment: a stale GOEXPERIMENT=jsonv2
+            # from an ambient shell otherwise breaks the go1.23 toolchain
+            # ("unknown GOEXPERIMENT jsonv2").
+            GOEXPERIMENT = "";
             BUILDFLOW_LANGUAGE = "go";
           };
 
