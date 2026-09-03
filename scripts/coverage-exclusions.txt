@@ -1,2 +1,3 @@
 /example/
 /cmd/
+/live/demo/
