@@ -316,19 +316,19 @@ func writeMermaidNodeStyles(b *strings.Builder, nodes []diagramNode) {
 }
 
 // mermaidStyleParts converts a diagramNodeStyle into Mermaid style pairs.
-func mermaidStyleParts(s diagramNodeStyle) []string {
+func mermaidStyleParts(style diagramNodeStyle) []string {
 	var parts []string
 
-	if s.Fill != "" {
-		parts = append(parts, "fill:"+mermaidText(s.Fill))
+	if style.Fill != "" {
+		parts = append(parts, "fill:"+mermaidText(style.Fill))
 	}
 
-	if s.Stroke != "" {
-		parts = append(parts, "stroke:"+mermaidText(s.Stroke))
+	if style.Stroke != "" {
+		parts = append(parts, "stroke:"+mermaidText(style.Stroke))
 	}
 
-	if s.FontColor != "" {
-		parts = append(parts, "color:"+mermaidText(s.FontColor))
+	if style.FontColor != "" {
+		parts = append(parts, "color:"+mermaidText(style.FontColor))
 	}
 
 	return parts
@@ -433,19 +433,19 @@ func renderPlantUML(nodes []diagramNode, edges []diagramEdge) string {
 
 // plantumlColorSpec converts a diagramNodeStyle into a PlantUML color
 // specification string (e.g. #e8a838;line:#4a4030;text:#14110d).
-func plantumlColorSpec(s diagramNodeStyle) string {
+func plantumlColorSpec(style diagramNodeStyle) string {
 	var parts []string
 
-	if s.Fill != "" {
-		parts = append(parts, plantumlColorValue(s.Fill))
+	if style.Fill != "" {
+		parts = append(parts, plantumlColorValue(style.Fill))
 	}
 
-	if s.Stroke != "" {
-		parts = append(parts, "line:"+plantumlColorValue(s.Stroke))
+	if style.Stroke != "" {
+		parts = append(parts, "line:"+plantumlColorValue(style.Stroke))
 	}
 
-	if s.FontColor != "" {
-		parts = append(parts, "text:"+plantumlColorValue(s.FontColor))
+	if style.FontColor != "" {
+		parts = append(parts, "text:"+plantumlColorValue(style.FontColor))
 	}
 
 	result := strings.Join(parts, ";")

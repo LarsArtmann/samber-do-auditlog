@@ -17,7 +17,7 @@ type treeNode struct {
 }
 
 func newTreeNode(id, label string) *treeNode {
-	return &treeNode{ID: id, Label: label}
+	return &treeNode{ID: id, Label: label, Children: nil}
 }
 
 func (n *treeNode) addChild(child *treeNode) {

@@ -379,8 +379,8 @@ func (p *Plugin) RecordHealthCheck(injector do.Injector) map[string]error {
 // streaming callback. The payload is written to a temp file in the target
 // directory, fsynced, closed, then renamed over the destination. A crash
 // during write leaves the previous file (if any) intact rather than a partial
-// file. Stdlib replacement for go-atomic-write (Go 1.18 branch).
-func writeToFile(path string, fn func(io.Writer) error) (err error) {
+// file. Stdlib replacement for go-atomic-write (Go 1.23 branch).
+func writeToFile(path string, fn func(io.Writer) error) (err error) { //nolint:nonamedreturns // defer cleanup
 	dir := filepath.Dir(path)
 
 	tmp, err := os.CreateTemp(dir, ".do-auditlog-*.tmp")

@@ -142,6 +142,7 @@ func (r Report) WriteTableString(
 
 // writeASCIITable renders a plain-text table with padded columns.
 func writeASCIITable(writer io.Writer, headers []string, rows [][]string) error {
+	//nolint:makezero // widths is indexed and mutated in place, never appended to
 	widths := make([]int, len(headers))
 	for i, h := range headers {
 		widths[i] = len(h)
@@ -245,7 +246,12 @@ func writeDelimitedTable(writer io.Writer, headers []string, rows [][]string, co
 
 	w.Flush()
 
-	return w.Error()
+	err := w.Error()
+	if err != nil {
+		return fmt.Errorf("flush table writer: %w", err)
+	}
+
+	return nil
 }
 
 // writeMarkdownTable writes a GitHub-flavored Markdown table.

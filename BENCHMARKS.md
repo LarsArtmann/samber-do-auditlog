@@ -4,10 +4,8 @@ Baseline benchmark results for `samber-do-auditlog`, captured post-v0.0.3.
 
 These serve as a regression detection baseline. Re-run with:
 
-> **Requires `GOEXPERIMENT=jsonv2`** — set in the Nix devShell automatically, or `export GOEXPERIMENT=jsonv2` manually. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
 ```bash
-GOEXPERIMENT=jsonv2 go test -bench=. -benchmem -count=3 -run=^$ ./...
+go test -bench=. -benchmem -count=3 -run=^$ ./...
 ```
 
 Compare against this file with `benchstat`:
@@ -23,8 +21,8 @@ benchstat /tmp/new.txt  # compare manually against the table below
 
 | Property           | Value                                                                      |
 | ------------------ | -------------------------------------------------------------------------- |
-| Date               | 2026-09-02 (re-baselined on Go 1.26.7, post-DepsChanged/strict-validation) |
-| Go                 | 1.26.7                                                                     |
+| Date               | 2026-09-02 (re-baselined on Go 1.26.7 master; Go 1.23 branch numbers may differ) |
+| Go                 | 1.26.7 (master baseline; this branch targets Go 1.23)                      |
 | OS                 | Linux (NixOS)                                                              |
 | CPU                | AMD Ryzen AI MAX+ 395 (32 threads)                                         |
 | Runs per benchmark | 3                                                                          |

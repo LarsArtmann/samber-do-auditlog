@@ -220,8 +220,7 @@ func buildScopeChildren[T any](
 	metaParent func(T) ScopeID,
 	scopeServices map[ScopeID][]ServiceName,
 ) []ScopeNode {
-	var children []ScopeNode
-
+	children := make([]ScopeNode, 0, len(sorted))
 	for _, meta := range sorted {
 		if metaParent(meta) != parentID {
 			continue

@@ -155,6 +155,10 @@ func LoadReportFromBytes(data []byte, format Format) (Report, Format, error) {
 	}
 
 	switch format {
+	case FormatAuto:
+		// detectFormat already ran; a residual Auto means the caller forced it
+		// on empty content — treat as JSON like Detect's multi-line fallback.
+		return loadJSONFromBytes(data)
 	case FormatJSON:
 		return loadJSONFromBytes(data)
 	case FormatNDJSON:

@@ -16,7 +16,9 @@ import (
 // htmlReportFuncs provides the template.CSS wrapper so embedded stylesheets
 // are not HTML-escaped.
 var htmlReportFuncs = template.FuncMap{ //nolint:gochecknoglobals // immutable func map
-	"css": func(s string) template.CSS { return template.CSS(s) },
+	"css": func(s string) template.CSS {
+		return template.CSS(s) //nolint:gosec // G203 — input is an audited in-repo CSS constant
+	},
 }
 
 // ExportToHTML writes a self-contained HTML visualization to a file.
@@ -62,7 +64,7 @@ func (r Report) WriteHTMLString() (string, error) {
 // is data-bound through html/template's contextual auto-escaping; only the
 // two audited CSS constants pass through the css() func.
 //
-//nolint:gochecknoglobals // parsed once, immutable
+//nolint:gochecknoglobals,dupword // parsed once, immutable; "ul ul" is a valid CSS descendant selector
 var htmlReportTemplate = template.Must(template.New("report").Funcs(htmlReportFuncs).Parse(`<!DOCTYPE html>
 <html lang="en">
 <head>

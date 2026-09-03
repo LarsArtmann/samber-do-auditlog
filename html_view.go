@@ -96,13 +96,13 @@ var htmlEventTypes = []string{ //nolint:gochecknoglobals // read-only filter lis
 
 // buildHTMLView converts a Report into the template-facing view model,
 // precomputing every formatted string so the template stays logic-free.
-func buildHTMLView() (htmlView, error) { //nolint:exhaustruct // accumulator: remaining fields assigned below
+func (r Report) buildHTMLView() (htmlView, error) {
 	mermaid, err := r.WriteMermaidString()
 	if err != nil {
 		return htmlView{}, fmt.Errorf("render dependency graph: %w", err)
 	}
 
-	view := htmlView{
+	view := htmlView{ //nolint:exhaustruct // accumulator: remaining fields assigned below
 		ContainerID:   string(r.ContainerID),
 		ExportedAt:    r.ExportedAt.Format(time.RFC3339),
 		SchemaVersion: SchemaVersion,

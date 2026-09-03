@@ -1,17 +1,11 @@
 # BuildFlow Configuration for samber-do-auditlog
 # ================================================
 #
-# go-auto-upgrade is SKIPPED — its jsonv1tov2 migrator is incompatible with
-# this project's encoding/json/v2 exclusion policy (see AGENTS.md).
-#
-# The migrator detects GOEXPERIMENT=jsonv2 (required by transitive deps:
-# go-output, go-branded-id, go-ndjson) and naively rewrites encoding/json to
-# encoding/json/v2 + encoding/json/jsontext. This breaks API calls — e.g.
-# enc.SetIndent("", "  ") has no equivalent on jsontext.Encoder — and violates
-# the exclusion policy that forbids json/v2 imports until Go 1.27 stabilizes it.
-#
-# Re-enable go-auto-upgrade when Go 1.27 stabilizes json/v2 and the project
-# lifts its json/v2 exclusion policy.
+# go-auto-upgrade is SKIPPED as belt-and-braces: its jsonv1tov2 migrator
+# rewrites encoding/json to encoding/json/v2, which this Go 1.23 branch
+# forbids (json/v2 needs Go 1.25+). This branch has no json/v2 dependencies,
+# so the migrator would not trigger anyway — keep the skip until master's
+# policy is ported back, if ever.
 
 build_mode: full
 
@@ -29,8 +23,6 @@ todo_min_severity: info
 skip_steps:
   - go-auto-upgrade
 
-env:
-  GOEXPERIMENT: jsonv2
 
 auto_fix: false
 
