@@ -9,14 +9,13 @@
 
 set -e
 
-export GOEXPERIMENT=jsonv2
 
 go test -race -count=1 -coverprofile=cover.out -covermode=atomic ./...
 
 # Exclude the packages listed in scripts/coverage-exclusions.txt (single
 # source shared with the CI test job): example/ (demo), cmd/ (tooling),
-# live/demo/, internal/testhelpers/ (test infrastructure), and generated templ
-# code (*_templ.go) from the gate.
+# (test infrastructure) and generated
+# code from the gate.
 while IFS= read -r line; do
 	[ -n "$line" ] || continue
 	set -- "$@" -e "$line"

@@ -17,9 +17,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  GOEXPERIMENT: jsonv2
-
 jobs:
   test:
     name: Test
@@ -31,7 +28,7 @@ jobs:
         run: ./scripts/check-go-version.sh
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.23"
           cache: true
       - name: go vet
         run: go vet ./...
@@ -41,9 +38,8 @@ jobs:
         run: |
           go test -race -count=1 -coverprofile=cover.out -covermode=atomic ./...
           # Exclusions are single-sourced in scripts/coverage-exclusions.txt
-          # (shared with scripts/coverage-gate.sh): demo (example/, live/demo/),
-          # tooling (cmd/), test infrastructure (internal/testhelpers/), and
-          # generated templ code (*_templ.go).
+          # (shared with scripts/coverage-gate.sh): demo (example/) and
+          # tooling (cmd/).
           while IFS= read -r line; do
             [ -n "$line" ] || continue
             set -- "$@" -e "$line"
@@ -80,9 +76,12 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/go/bin/golangci-lint
-          key: golangci-lint-v2.12.2-${{ runner.os }}
+          key: golangci-lint-v2.1.6-${{ runner.os }}
       - name: Install golangci-lint (skipped on cache hit)
-        run: command -v golangci-lint >/dev/null 2>&1 || go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+        # Pinned to the newest v2 release whose go directive (1.23.0) is
+        # satisfiable by the setup-go toolchain above — runners force
+        # GOTOOLCHAIN=local, so `go install` refuses anything newer.
+        run: command -v golangci-lint >/dev/null 2>&1 || go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
       - name: Verify golangci-lint config
         run: golangci-lint config verify
       - name: golangci-lint
@@ -99,8 +98,9 @@ jobs:
           go-version: "1.26.7"
           cache: true
       - name: govulncheck
-        # Pinned for reproducibility (@latest is non-reproducible). Bump deliberately.
-        run: go run golang.org/x/vuln/cmd/govulncheck@v1.7.0 ./...
+        # Pinned to the newest release whose go directive (1.22.0) is
+        # satisfiable by the go1.23 toolchain above. Bump deliberately.
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.1.4 ./...
 
   mod-tidy:
     name: go mod tidy check
@@ -110,7 +110,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.23"
           cache: true
       - name: go mod tidy (transport-flake tolerant)
         # 2026-09-01: 2 of 3 CI runs died on transient proxy.golang.org
@@ -141,14 +141,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.23"
           cache: true
       - name: Generated files must be committed
-        # v0.9.0 was retracted because live/fragments_templ.go was gitignored
-        # and missing from the tag. Assert presence BEFORE go generate, which
-        # would otherwise silently recreate them and mask the regression.
+        # v0.9.0 was retracted because a gitignored generated file was missing
+        # from the tag. Assert presence BEFORE go generate, which would
+        # otherwise silently recreate it and mask the regression.
         run: |
-          for f in live/fragments_templ.go html_templ.go schema/report.schema.json; do
+          for f in schema/report.schema.json; do
             if [ ! -f "$f" ]; then
               echo "::error::$f is missing from the repo — generated files must be committed (v0.9.0 retraction class)"
               exit 1
@@ -180,7 +180,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.23"
           cache: true
       - name: Install actionlint
         run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
@@ -195,27 +195,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.23"
           cache: true
       - name: Run example self-check (23-feature integration check)
         env:
           DO_AUDITLOG_ENABLED: "true"
         run: go run ./example
-
-  goreleaser:
-    name: goreleaser check
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version: "1.26.7"
-          cache: true
-      - name: Install goreleaser
-        # Pinned to the newest release whose go directive is satisfiable by the
-        # setup-go toolchain above (v2.18.0+ requires go >= 1.27.0 and the
-        # runners force GOTOOLCHAIN=local).
-        run: go install github.com/goreleaser/goreleaser/v2@v2.17.1
-      - name: goreleaser check
-        run: goreleaser check

@@ -1,5 +1,2 @@
 /example/
 /cmd/
-/live/demo/
-/internal/testhelpers/
-_templ\.go

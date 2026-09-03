@@ -55,7 +55,17 @@ if [ -z "$FLAKE_VERSIONS" ]; then
 	fail=1
 fi
 for v in $FLAKE_VERSIONS; do
-	check "flake.nix GOTOOLCHAIN (go$v) vs go.mod ($EXPECTED)" "$EXPECTED" "$v"
+	# The flake may pin a full toolchain version (go1.23.12) while go.mod
+	# declares the language line (go 1.23) — accept a patch-level extension.
+	case "$v" in
+	"$EXPECTED"|"$EXPECTED".*)
+		;;
+	*)
+		echo "FAIL: flake.nix GOTOOLCHAIN (go$v) vs go.mod ($EXPECTED)"
+		echo "      expected: $EXPECTED or $EXPECTED.x"
+		fail=1
+		;;
+	esac
 done
 
 # 4. .golangci.yml — run.go must match.
