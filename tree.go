@@ -2,18 +2,31 @@ package auditlog
 
 import (
 	"fmt"
+	"html/template"
 	"io"
 	"strings"
-
-	"github.com/larsartmann/go-output"
-	"github.com/larsartmann/go-output/markup"
-	"github.com/larsartmann/go-output/tree"
 )
 
+// treeNode is a minimal tree structure served to the ASCII and HTML tree
+// renderers. It replaces the go-output TreeNode for the Go 1.18 branch.
+type treeNode struct {
+	id       string
+	label    string
+	children []*treeNode
+}
+
+func newTreeNode(id, label string) *treeNode {
+	return &treeNode{id: id, label: label}
+}
+
+func (n *treeNode) addChild(child *treeNode) {
+	n.children = append(n.children, child)
+}
+
 // addTreeChildren recursively adds dependent services as children to the parent
-// TreeNode, using the provided lookup map and visited set to avoid cycles.
+// treeNode, using the provided lookup map and visited set to avoid cycles.
 func addTreeChildren(
-	parent *output.TreeNode,
+	parent *treeNode,
 	svc ServiceInfo,
 	byKey map[string]ServiceInfo,
 	visited map[string]struct{},
@@ -31,26 +44,26 @@ func addTreeChildren(
 			continue
 		}
 
-		childNode := output.NewTreeNode(
+		childNode := newTreeNode(
 			diagramNodeID(childSvc.ScopeID, childSvc.ServiceName),
 			serviceLabel(childSvc),
 		)
-		parent.AddChild(childNode)
+		parent.addChild(childNode)
 		addTreeChildren(childNode, childSvc, byKey, visited)
 	}
 }
 
-// buildServiceTreeNodes constructs a forest of TreeNodes from the service
+// buildServiceTreeNodes constructs a forest of treeNodes from the service
 // dependency graph. Root nodes are services with no dependencies; children are
 // their dependents (services that depend on the parent). The result is wrapped
 // in a single root node for the renderer.
-func (r Report) buildServiceTreeNodes() *output.TreeNode {
+func (r Report) buildServiceTreeNodes() *treeNode {
 	title := string(r.ContainerID)
 	if title == "" {
 		title = "container"
 	}
 
-	forestRoot := output.NewTreeNode("container", title)
+	forestRoot := newTreeNode("container", title)
 
 	if len(r.Services) == 0 {
 		return forestRoot
@@ -76,26 +89,109 @@ func (r Report) buildServiceTreeNodes() *output.TreeNode {
 	visited := make(map[string]struct{})
 
 	for _, rootSvc := range roots {
-		rootNode := output.NewTreeNode(
+		rootNode := newTreeNode(
 			diagramNodeID(rootSvc.ScopeID, rootSvc.ServiceName),
 			serviceLabel(rootSvc),
 		)
-		forestRoot.AddChild(rootNode)
+		forestRoot.addChild(rootNode)
 		addTreeChildren(rootNode, rootSvc, byKey, visited)
 	}
 
 	return forestRoot
 }
 
-// writeTree renders the dependency DAG with the given renderer and writes the
-// output to writer. Shared implementation for WriteTree and WriteHTMLTree.
-// The error is wrapped with a generic "render/write tree" message; callers
-// may add a more specific format prefix if needed.
-func (r Report) writeTree(writer io.Writer, renderer output.TreeRenderer) error {
-	root := r.buildServiceTreeNodes()
-	renderer.SetRoot(root)
+// renderASCIITree renders the tree with box-drawing connectors, matching the
+// go-output ASCII tree renderer's output (no color; color required a TTY which
+// file/string captures never have).
+func renderASCIITree(root *treeNode) string {
+	if root == nil {
+		return ""
+	}
 
-	out, err := renderer.Render()
+	var b strings.Builder
+
+	renderASCIINode(&b, root, "", true)
+
+	return b.String()
+}
+
+// renderASCIINode recursively writes one node and its children.
+func renderASCIINode(b *strings.Builder, node *treeNode, prefix string, isLast bool) {
+	connector := "├── "
+	if isLast {
+		connector = "└── "
+	}
+
+	b.WriteString(prefix)
+	b.WriteString(connector)
+	b.WriteString(node.label)
+	b.WriteString("\n")
+
+	childPrefix := prefix + "│   "
+	if isLast {
+		childPrefix = prefix + "    "
+	}
+
+	for i, child := range node.children {
+		renderASCIINode(b, child, childPrefix, i == len(node.children)-1)
+	}
+}
+
+// htmlTreeTemplate renders the tree as nested HTML lists, ported verbatim
+// from the go-output markup.HTMLTreeRenderer (html/template auto-escapes
+// labels).
+//
+//nolint:gochecknoglobals // Parsed once at package init; immutable.
+var htmlTreeTemplate = template.Must(template.New("treeNode").Parse(
+	`<ul class="tree">
+{{template "treeNodeRec" .}}
+</ul>
+` + treeNodeRecTemplate,
+))
+
+// treeNodeRecTemplate is the recursive body of the HTML tree template.
+const treeNodeRecTemplate = `{{define "treeNodeRec"}}<li>{{.label}}
+{{- if .children}}
+<ul>
+{{- range .children}}
+{{template "treeNodeRec" .}}
+{{- end}}
+</ul>
+{{- end}}
+</li>
+{{end}}`
+
+// renderHTMLTree renders the tree as an HTML nested list.
+func renderHTMLTree(root *treeNode) (string, error) {
+	if root == nil {
+		return `<ul class="tree"></ul>`, nil
+	}
+
+	var b strings.Builder
+
+	if err := htmlTreeTemplate.Execute(&b, root); err != nil {
+		return "", fmt.Errorf("render html tree: %w", err)
+	}
+
+	return b.String(), nil
+}
+
+// WriteTree writes the service dependency DAG as an ASCII tree.
+// Nodes are labeled with service name and provider-type icon.
+func (r Report) WriteTree(writer io.Writer) error {
+	out := renderASCIITree(r.buildServiceTreeNodes())
+
+	if _, err := fmt.Fprintln(writer, out); err != nil {
+		return fmt.Errorf("write tree output: %w", err)
+	}
+
+	return nil
+}
+
+// WriteHTMLTree writes the service dependency DAG as an HTML nested list tree.
+// Nodes are labeled with service name and provider-type icon.
+func (r Report) WriteHTMLTree(writer io.Writer) error {
+	out, err := renderHTMLTree(r.buildServiceTreeNodes())
 	if err != nil {
 		return fmt.Errorf("render tree: %w", err)
 	}
@@ -105,18 +201,6 @@ func (r Report) writeTree(writer io.Writer, renderer output.TreeRenderer) error 
 	}
 
 	return nil
-}
-
-// WriteTree writes the service dependency DAG as an ASCII tree.
-// Nodes are labeled with service name and provider-type icon.
-func (r Report) WriteTree(writer io.Writer) error {
-	return r.writeTree(writer, tree.NewASCIITreeRenderer())
-}
-
-// WriteHTMLTree writes the service dependency DAG as an HTML nested list tree.
-// Nodes are labeled with service name and provider-type icon.
-func (r Report) WriteHTMLTree(writer io.Writer) error {
-	return r.writeTree(writer, markup.NewHTMLTreeRenderer())
 }
 
 // WriteTreeString returns the ASCII tree as a string.

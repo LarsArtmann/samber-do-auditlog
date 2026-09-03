@@ -2,8 +2,22 @@ package auditlog
 
 import (
 	"strings"
+)
 
-	"github.com/larsartmann/go-output"
+// Direction represents a canonical layout direction for diagrams.
+// It bridges D2 vocabulary ("down"/"right") and DOT vocabulary ("TB"/"LR")
+// through a single canonical type.
+type Direction string
+
+const (
+	// DirectionDown lays out top-to-bottom (the default for most formats).
+	DirectionDown Direction = "down"
+	// DirectionUp lays out bottom-to-top.
+	DirectionUp Direction = "up"
+	// DirectionLeft lays out right-to-left.
+	DirectionLeft Direction = "left"
+	// DirectionRight lays out left-to-right.
+	DirectionRight Direction = "right"
 )
 
 // DiagramOption configures diagram output (Mermaid, DOT, PlantUML, D2).
@@ -12,19 +26,19 @@ import (
 type DiagramOption func(*diagramConfig)
 
 type diagramConfig struct {
-	direction output.Direction
+	direction Direction
 }
 
 // WithDirection sets the layout direction for diagram output.
 // Applies to all diagram formats (Mermaid, DOT, D2, PlantUML).
 //
-// The default is top-down ([output.DirectionDown]). For wide DAGs,
-// [output.DirectionRight] (left-to-right) often produces more readable diagrams.
+// The default is top-down ([DirectionDown]). For wide DAGs,
+// [DirectionRight] (left-to-right) often produces more readable diagrams.
 //
 // Example:
 //
-//	report.WriteMermaid(w, auditlog.WithDirection(output.DirectionRight))
-func WithDirection(d output.Direction) DiagramOption {
+//	report.WriteMermaid(w, auditlog.WithDirection(auditlog.DirectionRight))
+func WithDirection(d Direction) DiagramOption {
 	return func(c *diagramConfig) { c.direction = d }
 }
 
@@ -39,20 +53,36 @@ func applyDiagramOpts(opts []DiagramOption) diagramConfig {
 
 // hasDirection returns true when a non-default direction was configured.
 func (c diagramConfig) hasDirection() bool {
-	return c.direction != "" && c.direction != output.DirectionDown
+	return c.direction != "" && c.direction != DirectionDown
 }
 
-// mermaidDirection maps the canonical output.Direction to the Mermaid
-// flowchart direction keyword (TD, LR, BT, RL).
-func mermaidDirection(d output.Direction) string {
+// toRankDir converts Direction to DOT's rankdir string.
+func (d Direction) toRankDir() string {
 	switch d {
-	case output.DirectionDown:
-		return "TD"
-	case output.DirectionUp:
+	case DirectionDown:
+		return "TB"
+	case DirectionUp:
 		return "BT"
-	case output.DirectionRight:
+	case DirectionLeft:
+		return "RL"
+	case DirectionRight:
 		return "LR"
-	case output.DirectionLeft:
+	default:
+		return "TB"
+	}
+}
+
+// mermaidDirection maps the canonical Direction to the Mermaid flowchart
+// direction keyword (TD, LR, BT, RL).
+func mermaidDirection(d Direction) string {
+	switch d {
+	case DirectionDown:
+		return "TD"
+	case DirectionUp:
+		return "BT"
+	case DirectionRight:
+		return "LR"
+	case DirectionLeft:
 		return "RL"
 	default:
 		return "TD"
@@ -63,8 +93,8 @@ func mermaidDirection(d output.Direction) string {
 // given direction. PlantUML supports two layouts: top-to-bottom (default)
 // and left-to-right. Directions that map to left-to-right return the
 // command; others return empty (use the default).
-func plantumlDirectionCommand(d output.Direction) string {
-	if d == output.DirectionRight || d == output.DirectionLeft {
+func plantumlDirectionCommand(d Direction) string {
+	if d == DirectionRight || d == DirectionLeft {
 		return "left to right direction"
 	}
 

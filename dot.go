@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"io"
 	"strings"
-
-	"github.com/larsartmann/go-output/graph"
 )
+
+// dotGraphID is the digraph identifier used in all DOT output.
+const dotGraphID = "do_auditlog"
 
 // WriteDOT writes a Graphviz DOT digraph representing the dependency graph.
 // Each service is a node; edges point from dependent -> dependency. The output
@@ -15,20 +16,19 @@ import (
 //
 // Use [WithDirection] to change the layout direction (default: left-to-right):
 //
-//	report.WriteDOT(w, auditlog.WithDirection(output.DirectionDown))
+//	report.WriteDOT(w, auditlog.WithDirection(auditlog.DirectionDown))
 func (r Report) WriteDOT(writer io.Writer, opts ...DiagramOption) error {
 	cfg := applyDiagramOpts(opts)
-	renderer := graph.NewDOTRenderer()
-	renderer.SetGraphID("do_auditlog")
 
+	rankdir := "LR"
 	if cfg.hasDirection() {
-		renderer.SetDirection(cfg.direction)
-	} else {
-		renderer.SetRankDir(graph.RankDirLR)
+		rankdir = cfg.direction.toRankDir()
 	}
 
-	err := renderGraphDiagram(writer, r, renderer)
-	if err != nil {
+	nodes := buildDiagramNodes(r)
+	edges := dedupDiagramEdges(buildDiagramEdges(r))
+
+	if err := writeDiagram(writer, renderDOT(dotGraphID, rankdir, nodes, edges)); err != nil {
 		return fmt.Errorf("write dot diagram: %w", err)
 	}
 

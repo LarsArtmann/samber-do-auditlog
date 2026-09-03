@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-
-	"github.com/larsartmann/go-output/graph"
 )
 
 // WriteMermaid writes a Mermaid flowchart representing the dependency graph.
@@ -14,21 +12,21 @@ import (
 //
 // Use [WithDirection] to change the layout direction (default: TD):
 //
-//	report.WriteMermaid(w, auditlog.WithDirection(output.DirectionRight))
+//	report.WriteMermaid(w, auditlog.WithDirection(auditlog.DirectionRight))
 func (r Report) WriteMermaid(writer io.Writer, opts ...DiagramOption) error {
 	cfg := applyDiagramOpts(opts)
-	renderer := graph.NewMermaidRenderer().SetCodeFence(false)
 
-	var transform func(string) string
+	nodes := buildDiagramNodes(r)
+	edges := dedupDiagramEdges(buildDiagramEdges(r))
+
+	rendered := renderMermaid(nodes, edges)
 
 	if cfg.hasDirection() {
 		keyword := mermaidDirection(cfg.direction)
-		transform = func(out string) string {
-			return strings.Replace(out, "flowchart TD", "flowchart "+keyword, 1)
-		}
+		rendered = strings.Replace(rendered, "flowchart TD", "flowchart "+keyword, 1)
 	}
 
-	if err := renderGraphDiagramTransform(writer, r, renderer, transform); err != nil {
+	if err := writeDiagram(writer, rendered); err != nil {
 		return fmt.Errorf("write mermaid diagram: %w", err)
 	}
 

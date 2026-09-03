@@ -2,6 +2,7 @@ package auditlog_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"

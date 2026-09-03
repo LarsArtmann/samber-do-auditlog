@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-
-	"github.com/larsartmann/go-output/plantuml"
 )
 
 // WritePlantUML writes a PlantUML component diagram representing the dependency
@@ -15,21 +13,21 @@ import (
 //
 // Use [WithDirection] to change the layout direction (default: top-down):
 //
-//	report.WritePlantUML(w, auditlog.WithDirection(output.DirectionRight))
+//	report.WritePlantUML(w, auditlog.WithDirection(auditlog.DirectionRight))
 func (r Report) WritePlantUML(writer io.Writer, opts ...DiagramOption) error {
 	cfg := applyDiagramOpts(opts)
-	renderer := plantuml.NewPlantUMLDiagram()
 
-	var transform func(string) string
+	nodes := buildDiagramNodes(r)
+	edges := dedupDiagramEdges(buildDiagramEdges(r))
+
+	rendered := renderPlantUML(nodes, edges)
 
 	if cfg.hasDirection() {
 		cmd := plantumlDirectionCommand(cfg.direction)
-		transform = func(out string) string {
-			return applyPlantumlDirection(out, cmd)
-		}
+		rendered = applyPlantumlDirection(rendered, cmd)
 	}
 
-	if err := renderGraphDiagramTransform(writer, r, renderer, transform); err != nil {
+	if err := writeDiagram(writer, rendered); err != nil {
 		return fmt.Errorf("write plantuml diagram: %w", err)
 	}
 
