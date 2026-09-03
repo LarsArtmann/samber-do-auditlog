@@ -36,7 +36,7 @@ func BenchmarkHookOverhead_Disabled(b *testing.B) {
 func BenchmarkHookOverhead_Registration(b *testing.B) {
 	b.ResetTimer()
 
-	for b.Loop() {
+	for range b.N {
 		p := mustNew(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(p.Opts())
 		provideDB(injector, "svc", "test")
@@ -58,7 +58,7 @@ func BenchmarkHookOnAfterInvocation(b *testing.B) {
 func BenchmarkHookRegistrationOnly(b *testing.B) {
 	b.ResetTimer()
 
-	for b.Loop() {
+	for range b.N {
 		p := mustNew(auditlog.Config{Enabled: true})
 		injector := do.NewWithOpts(p.Opts())
 		do.ProvideValue(injector, &Database{URL: "test"})
@@ -91,7 +91,7 @@ func BenchmarkBuildReport(b *testing.B) {
 
 			b.ResetTimer()
 
-			for b.Loop() {
+			for range b.N {
 				_ = p.Report()
 			}
 		})
@@ -112,7 +112,7 @@ func BenchmarkEnrichCapabilities(b *testing.B) {
 
 	b.ResetTimer()
 
-	for b.Loop() {
+	for range b.N {
 		_ = p.Report()
 	}
 }
@@ -125,7 +125,7 @@ func BenchmarkEventsCopy(b *testing.B) {
 
 	b.ResetTimer()
 
-	for b.Loop() {
+	for range b.N {
 		_ = p.Events()
 	}
 }
@@ -158,7 +158,7 @@ func BenchmarkHealthCheck(b *testing.B) {
 
 	b.ResetTimer()
 
-	for b.Loop() {
+	for range b.N {
 		_ = p.RecordHealthCheck(injector)
 	}
 }
@@ -182,19 +182,19 @@ func BenchmarkWriteD2(b *testing.B) {
 
 	b.ResetTimer()
 
-	for b.Loop() {
+	for range b.N {
 		_ = report.WriteD2(io.Discard)
 	}
 }
 
-// bmInvokeNamed is the standard "for b.Loop() { _, _ = do.InvokeNamed[T](injector, name) }"
+// bmInvokeNamed is the standard "for range b.N { _, _ = do.InvokeNamed[T](injector, name) }"
 // benchmark body. Centralizes the 3-line loop shared by every InvokeNamed
 // benchmark (HookOverhead_Invocation, HookOverhead_Disabled, HookOnAfterInvocation,
 // OnEventCallback). Keeps each benchmark focused on its own setup/takedown.
 func bmInvokeNamed[T any](b *testing.B, injector do.Injector, serviceName string) {
 	b.Helper()
 
-	for b.Loop() {
+	for range b.N {
 		_, _ = do.InvokeNamed[T](injector, serviceName)
 	}
 }

@@ -1,7 +1,6 @@
 package auditlog
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 	"strings"

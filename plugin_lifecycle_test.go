@@ -210,9 +210,12 @@ func TestPlugin_ConcurrentInvocations(t *testing.T) {
 	var wg sync.WaitGroup
 
 	for range 10 {
-		wg.Go(func() {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
 			_, _ = do.InvokeNamed[*Database](injector, "db")
-		})
+		}()
 	}
 
 	wg.Wait()

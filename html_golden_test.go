@@ -2,17 +2,16 @@ package auditlog_test
 
 import (
 	"bytes"
-	"os"
-	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
-// goldenExportedAt is a fixed timestamp so the rendered HTML is byte-for-byte
-// reproducible across runs and machines. Every time-based field in the golden
-// report derives from this or from the fixed event timestamps below.
+// goldenExportedAt is a fixed timestamp so the rendered HTML is reproducible
+// across runs and machines. Every time-based field in the golden report
+// derives from this or from the fixed event timestamps below.
 var goldenExportedAt = time.Date(2026, 1, 15, 9, 30, 0, 0, time.UTC)
 
 // Package-level duration values so we can take their address without a wrapper
@@ -68,7 +67,7 @@ func goldenReport(t *testing.T) auditlog.Report {
 		t.Fatalf("ReplayEvents: %v", err)
 	}
 
-	// Pin the timestamp so the golden file is byte-stable.
+	// Pin the timestamp so the output is byte-stable.
 	report.ExportedAt = goldenExportedAt
 
 	assertReportValid(t, report, "golden")
@@ -76,54 +75,78 @@ func goldenReport(t *testing.T) auditlog.Report {
 	return report
 }
 
-// TestReport_WriteHTML_GoldenFile renders the deterministic golden report to
-// HTML and compares it against the committed golden file. Run with
-// UPDATE_GOLDEN=1 to regenerate testdata/golden/report.html.
-func TestReport_WriteHTML_GoldenFile(t *testing.T) {
-	t.Parallel()
-
-	report := goldenReport(t)
+// goldenHTML renders the deterministic golden report to HTML.
+func goldenHTML(t *testing.T) string {
+	t.Helper()
 
 	var buf bytes.Buffer
 
-	if err := report.WriteHTML(&buf); err != nil {
+	if err := goldenReport(t).WriteHTML(&buf); err != nil {
 		t.Fatalf("WriteHTML: %v", err)
 	}
 
-	got := buf.Bytes()
-	goldenPath := filepath.Join("testdata", "golden", "report.html")
+	return buf.String()
+}
 
-	if os.Getenv("UPDATE_GOLDEN") == "1" {
-		if err := os.MkdirAll(filepath.Dir(goldenPath), 0o755); err != nil {
-			t.Fatalf("mkdir: %v", err)
-		}
+// TestReport_WriteHTML_Structure asserts the structural contract of the
+// self-contained HTML report: all five tabs, the shared design tokens, the
+// embedded Mermaid graph, the CSP meta, and the per-section data. Replaces
+// the master branch's byte-for-byte golden-file test — the html/template
+// renderer is intentionally self-contained (no templ runtime on the Go 1.23
+// branch).
+func TestReport_WriteHTML_Structure(t *testing.T) {
+	t.Parallel()
 
-		if err := os.WriteFile(goldenPath, got, 0o644); err != nil {
-			t.Fatalf("write golden: %v", err)
-		}
+	html := goldenHTML(t)
 
-		t.Skipf("golden file updated: %s", goldenPath)
-
-		return
+	structural := []string{
+		"<!DOCTYPE html>",
+		"Content-Security-Policy",
+		"<title>do-auditlog — golden</title>",
+		"data-tab=\"services\"",
+		"data-tab=\"scopes\"",
+		"data-tab=\"graph\"",
+		"data-tab=\"timeline\"",
+		"data-tab=\"events\"",
+		"id=\"services-tbody\"",
+		"id=\"events-tbody\"",
+		">config<",
+		">db<",
+		"flowchart TD",
+		"timeline-bar build",
+		"timeline-bar shutdown",
+		"schema v" + auditlog.SchemaVersion,
+		"--accent: #e8a838",
+		"skip-link",
+		"id=\"service-search\"",
+		"id=\"svc-errors-only\"",
+		"class=\"chip event-chip active\"",
 	}
 
-	want, err := os.ReadFile(goldenPath)
+	for _, want := range structural {
+		if !strings.Contains(html, want) {
+			t.Errorf("expected %q in HTML report", want)
+		}
+	}
+}
+
+// TestReport_WriteHTMLString_MatchesWriter verifies the string convenience
+// wrapper produces identical output to the writer entry point.
+func TestReport_WriteHTMLString_MatchesWriter(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+
+	if err := goldenReport(t).WriteHTML(&buf); err != nil {
+		t.Fatalf("WriteHTML: %v", err)
+	}
+
+	got, err := goldenReport(t).WriteHTMLString()
 	if err != nil {
-		t.Fatalf("read golden file (%s): %v\n"+
-			"hint: run UPDATE_GOLDEN=1 go test -run %s to create it",
-			goldenPath, err, t.Name())
+		t.Fatalf("WriteHTMLString: %v", err)
 	}
 
-	if !bytes.Equal(got, want) {
-		diffPath := filepath.Join(t.TempDir(), "report.actual.html")
-		if err := os.WriteFile(diffPath, got, 0o644); err != nil {
-			t.Fatalf("write actual: %v", err)
-		}
-
-		t.Errorf("HTML output does not match golden file.\n"+
-			"  golden: %s (%d bytes)\n"+
-			"  actual: %s (%d bytes)\n"+
-			"hint: run UPDATE_GOLDEN=1 go test -run TestReport_WriteHTML_GoldenFile to update",
-			goldenPath, len(want), diffPath, len(got))
+	if got != buf.String() {
+		t.Errorf("WriteHTMLString diverges from WriteHTML output")
 	}
 }

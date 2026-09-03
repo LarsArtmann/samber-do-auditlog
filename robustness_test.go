@@ -20,13 +20,17 @@ func registerNUniqueDatabases(goroutines, regsPerGoroutine int, nameCounter *ato
 	var wg sync.WaitGroup
 
 	for range goroutines {
-		wg.Go(func() {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
 			for range regsPerGoroutine {
 				num := nameCounter.Add(1)
 
 				provideDB(injector, "db-"+strconv.FormatInt(num, 10), "test")
 			}
-		})
+		}()
 	}
 
 	wg.Wait()

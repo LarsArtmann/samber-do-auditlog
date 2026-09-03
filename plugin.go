@@ -292,7 +292,7 @@ func (p *Plugin) WriteHTMLTree(writer io.Writer) error {
 // WriteTable writes the service summary as a table in the specified format to writer.
 func (p *Plugin) WriteTable(
 	writer io.Writer,
-	format Format,
+	format TableFormat,
 	opts RenderOptions,
 	tableOpts ...TableOption,
 ) error {
@@ -312,7 +312,7 @@ func (p *Plugin) ExportToHTMLTree(path string) error {
 // ExportToTable writes the service summary table to path in the specified format.
 func (p *Plugin) ExportToTable(
 	path string,
-	format Format,
+	format TableFormat,
 	opts RenderOptions,
 	tableOpts ...TableOption,
 ) error {
