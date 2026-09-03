@@ -1,12 +1,9 @@
 package auditlog
 
 // DesignTokensCSS is the single source of truth for the warm amber "Container
-// Telemetry" design palette. Both the static HTML report (html.templ) and the
+// Telemetry" design palette. Both the static HTML report (html_view.go) and the
 // live dashboard (live/base_css.go) reference these exact CSS custom properties
 // to prevent visual drift.
-//
-// TestDesignTokensInSync (in design_tokens_test.go) verifies that the inline
-// :root block in html.templ matches this constant exactly.
 //
 //nolint:gochecknoglobals,gosec // read-only CSS constant (gosec G101 false positive on "Token" in name)
 var DesignTokensCSS = `:root {

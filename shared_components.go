@@ -1,12 +1,9 @@
 package auditlog
 
 // SharedComponentCSS contains keyboard-navigation overlay styles that are used
-// by both the static HTML report (html.templ) and the live dashboard
+// by both the static HTML report (html_view.go) and the live dashboard
 // (live/base_css.go). Keeping these in a single constant prevents visual and
 // behavioural drift between the two dashboards.
-//
-// TestSharedComponentCSSInSync (in shared_components_test.go) verifies that the
-// inline styles in html.templ match this constant exactly.
 //
 // Token names used here (--bg-elevated, --border-active, etc.) exist in both
 // dashboards via DesignTokensCSS. The live dashboard aliases some of them

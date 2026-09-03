@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// The Go 1.18 branch renders the self-contained HTML report with
+// The Go 1.23 branch renders the self-contained HTML report with
 // html/template instead of templ (a-h/templ requires Go 1.25). The output
 // keeps the warm-amber "Container Telemetry" identity, the five-tab layout,
 // search/error filters, keyboard navigation, and a Mermaid rendering of the

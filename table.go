@@ -10,7 +10,7 @@ import (
 )
 
 // TableFormat identifies a table output format. It replaces the go-output
-// Format type on the Go 1.18 branch; string literals ("table", "json",
+// Format type on the Go 1.23 branch; string literals ("table", "json",
 // "csv", ...) remain valid call sites.
 type TableFormat string
 
