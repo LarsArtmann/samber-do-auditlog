@@ -13,6 +13,13 @@ import (
 // search/error filters, keyboard navigation, and a Mermaid rendering of the
 // dependency graph — all server-rendered, zero external resources.
 
+// CSS status classes shared by the HTML report stats; named to satisfy
+// goconst (these recur across stat rows).
+const (
+	classSuccess = "success"
+	classError   = "error"
+)
+
 // htmlView is the top-level data model for the HTML report template.
 type htmlView struct {
 	ContainerID   string
@@ -135,11 +142,11 @@ func (r Report) buildHTMLView() (htmlView, error) {
 	view.Timeline = buildHTMLTimeline(r.Services)
 	view.HasHealth = r.HealthCheckedCount > 0
 	view.HealthLabel = strconv.Itoa(r.HealthCheckedCount) + " checked"
-	view.HealthClass = "success"
+	view.HealthClass = classSuccess
 
 	if r.HealthCheckedCount > 0 && !r.HealthCheckSucceeded {
 		view.HealthLabel += ", " + strconv.Itoa(unhealthy) + " unhealthy"
-		view.HealthClass = "error"
+		view.HealthClass = classError
 	}
 
 	return view, nil
@@ -239,7 +246,7 @@ func buildHTMLStats(r Report, serviceCount, depCount, errorCount, unhealthy int)
 		{
 			Label: "Errors",
 			Value: strconv.Itoa(errorCount),
-			Class: boolClass(errorCount > 0, "error", "success"),
+			Class: boolClass(errorCount > 0, classError, classSuccess),
 		},
 	}
 
@@ -247,12 +254,12 @@ func buildHTMLStats(r Report, serviceCount, depCount, errorCount, unhealthy int)
 		health := htmlStat{
 			Label: "Health Checks",
 			Value: strconv.Itoa(r.HealthCheckedCount) + " checked",
-			Class: "success",
+			Class: classSuccess,
 		}
 
 		if unhealthy > 0 {
 			health.Value += ", " + strconv.Itoa(unhealthy) + " unhealthy"
-			health.Class = "error"
+			health.Class = classError
 		}
 
 		stats = append(stats, health)
