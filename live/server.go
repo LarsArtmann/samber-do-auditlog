@@ -407,15 +407,21 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Subscribe BEFORE the initial snapshot: an event fired between
+	// rendering and subscribing would otherwise be invisible to this client
+	// until the next event arrives. Subscribing first guarantees any event
+	// after the snapshot render is already queued for the render loop (and
+	// the snapshot itself reads current state, so pre-subscribe events are
+	// still included in what the client sees).
+	eventCh := srv.hub.Subscribe()
+	defer srv.hub.Unsubscribe(eventCh)
+
 	// Send initial snapshot as datastar patch-elements + patch-signals.
 	// On reconnect this IS the replay — the full current state replaces
 	// any missed events.
 	if err := srv.sendDatastarSnapshot(stream); err != nil {
 		return
 	}
-
-	eventCh := srv.hub.Subscribe()
-	defer srv.hub.Unsubscribe(eventCh)
 
 	go stream.heartbeat(r.Context(), srv.config.HeartbeatInterval)
 
