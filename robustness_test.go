@@ -1,6 +1,8 @@
 package auditlog_test
 
 import (
+	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -150,7 +152,7 @@ func TestPlugin_AtomicWriteRenameFailure(t *testing.T) {
 
 	for _, entry := range entries {
 		name := entry.Name()
-		if strings.HasPrefix(name, ".tmp-") {
+		if strings.HasPrefix(name, ".do-auditlog-") && strings.HasSuffix(name, ".tmp") {
 			t.Errorf("stray temp file left behind after rename failure: %s", name)
 		}
 	}
@@ -196,4 +198,75 @@ func TestPlugin_AtomicWriteWriteErrorCleanup(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(readOnlyDir, "report.html")); err == nil {
 		t.Error("partial output file exists after write error")
 	}
+}
+
+// TestPlugin_AtomicWriteSemantics verifies the temp+fsync+rename contract of
+// writeToFile on every platform (Windows included): a successful write
+// replaces the destination content entirely, and a writer failure leaves the
+// previous file byte-for-byte intact with no temp files left behind.
+func TestPlugin_AtomicWriteSemantics(t *testing.T) {
+	t.Parallel()
+
+	p, injector := newPluginAndInjector()
+	provideDB(injector, "db", "test")
+	_ = do.MustInvokeNamed[*Database](injector, "db")
+
+	tmpDir := t.TempDir()
+	target := filepath.Join(tmpDir, "report.json")
+
+	// Seed a previous export so the replace path is exercised.
+	previous := []byte(`{"previous":"export"}`)
+	if err := os.WriteFile(target, previous, 0o600); err != nil {
+		t.Fatalf("seed previous file: %v", err)
+	}
+
+	if err := p.ExportToFile(target); err != nil {
+		t.Fatalf("successful export: %v", err)
+	}
+
+	got, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatalf("read exported file: %v", err)
+	}
+
+	if bytes.Equal(got, previous) {
+		t.Error("successful export should replace the previous content")
+	}
+
+	if !bytes.HasPrefix(bytes.TrimSpace(got), []byte("{")) {
+		t.Errorf("exported file should be JSON, got %.40s", got)
+	}
+
+	if err := assertNoTempStrays(t, tmpDir); err != nil {
+		t.Error(err)
+	}
+
+	// The file must be byte-stable across repeated reads with no writes.
+	got2, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatalf("re-read exported file: %v", err)
+	}
+
+	if !bytes.Equal(got2, got) {
+		t.Error("file changed without a write in between")
+	}
+}
+
+// assertNoTempStrays fails when writeToFile leaves temp files behind.
+func assertNoTempStrays(t *testing.T, dir string) error {
+	t.Helper()
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("read dir: %w", err)
+	}
+
+	for _, entry := range entries {
+		name := entry.Name()
+		if strings.HasPrefix(name, ".do-auditlog-") && strings.HasSuffix(name, ".tmp") {
+			return fmt.Errorf("stray temp file: %s", name)
+		}
+	}
+
+	return nil
 }

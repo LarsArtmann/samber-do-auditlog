@@ -16,6 +16,8 @@ Last updated: 2026-09-04
 - [ ] **Master: 2 high Dependabot vulnerabilities** — flagged on the default branch's dependency family (go1.26 line). This branch is immune (zero third-party runtime deps). Needs an owner decision: bump the family on master or fast-track the merge. Sources: GitHub Dependabot alert banner 2026-09-03; status report addendum h.
 - [ ] **Version-skew ledger additions** (master lint-pin hygiene): `httptest.NewRequest` noctx findings fire only on golangci-lint ≥ 2.13 and the suggested `httptest.NewRequestWithContext` fix requires Go ≥ 1.24 — keep nolint-free until the CI pin bumps; retire `live/fragments.go` goconst nolint entry when it moves to master (its 2026-08 line numbers no longer exist here).
 - [ ] **Backport candidates to master (after merge direction is decided)**: html_view CSS-class constants (already committable), devShell `GOEXPERIMENT=""` hardening, coverage-exclusion for `live/demo/` parity.
+- [x] ~~**Stretch evaluations (M18)**~~ DONE 2026-09-04 — (a) extra table formats: xml/asciidoc are feasible as hand-rolled stdlib renderers (~60 LOC each, same shape as `table.go`), but no consumer asked; declined for now, revisit on demand. (b) `testhelpers` JS-balance helper: already layout-agnostic (concatenates every non-JSON `<script>`), verified working against both the single-script static report and the live dashboard on this branch — no adaptation needed.
+- [x] ~~**Website note decision**~~ DONE 2026-09-04 — no website change from this branch: the site deploys from master via `website.yml` (path-filtered), and the merge proposal (`docs/proposal/`) is the correct place to describe the 1.23 line publicly. Revisit a "compat line" page only if the merge ships as a separate module.
 
 ---
 
