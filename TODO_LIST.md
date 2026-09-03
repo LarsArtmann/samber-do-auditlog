@@ -2,7 +2,20 @@
 
 Short- and mid-term improvement tasks, verified against actual code state.
 Completed items are in [CHANGELOG.md](CHANGELOG.md). Rejected proposals are in [ROADMAP.md](ROADMAP.md).
-Last updated: 2026-09-02
+Last updated: 2026-09-04
+
+---
+
+## go1.23-compat merge line (this branch, 2026-09-04)
+
+- [x] ~~**live/ stdlib port**~~ DONE 2026-09-04 — real-time dashboard restored on Go 1.23 with zero third-party deps: stdlib SSE transport + broadcaster + ring replay + html/template fragments (element IDs and datastar attributes wire-compatible, dashboard.js/datastar.js carried over verbatim). `example --live` smoke-tested end-to-end; `go test -race` green; coverage gate holds at 94.9% with live/ at 94.2%.
+- [x] ~~**live/ 90% coverage path**~~ DONE on this branch (supersedes the master item below) — the templ fragment-renderer gap no longer exists; if master adopts the stdlib port (see merge proposal, `docs/proposal/`), the item retires there too.
+- [x] ~~**CI validation of the branch pins**~~ DONE 2026-09-04 — first green-in-progress workflow_dispatch runs; found+fixed: actionlint v1.7.12 uninstallable on go 1.23 (pinned v1.7.7), goconst on `html_view.go` CSS class strings (extracted constants), govulncheck stdlib advisories on the EOL 1.23 floor (scan kept visible, made non-blocking with rationale).
+- [x] ~~**nix flake evaluation**~~ DONE 2026-09-04 — `nix flake check` green for the first time since the branch's flake edit; devShell hardened to clear a stale ambient `GOEXPERIMENT=jsonv2` (previously poisoned `nix develop -c go build`).
+- [ ] **Send the merge package to samber** — proposal + API diff + do-improvement list (drafted in `docs/proposal/`); includes the D5 credit wording (README + release note, no LICENSE change).
+- [ ] **Master: 2 high Dependabot vulnerabilities** — flagged on the default branch's dependency family (go1.26 line). This branch is immune (zero third-party runtime deps). Needs an owner decision: bump the family on master or fast-track the merge. Sources: GitHub Dependabot alert banner 2026-09-03; status report addendum h.
+- [ ] **Version-skew ledger additions** (master lint-pin hygiene): `httptest.NewRequest` noctx findings fire only on golangci-lint ≥ 2.13 and the suggested `httptest.NewRequestWithContext` fix requires Go ≥ 1.24 — keep nolint-free until the CI pin bumps; retire `live/fragments.go` goconst nolint entry when it moves to master (its 2026-08 line numbers no longer exist here).
+- [ ] **Backport candidates to master (after merge direction is decided)**: html_view CSS-class constants (already committable), devShell `GOEXPERIMENT=""` hardening, coverage-exclusion for `live/demo/` parity.
 
 ---
 
@@ -49,9 +62,9 @@ Full 126-task breakdown: `docs/planning/2026-09-02_14-15-pareto-master-plan-all-
 - [x] ~~**Verify `example/ --live` premature-shutdown bug** — repro with `DO_AUDITLOG_ENABLED=true go run ./example --live`; restore a TODO item if real, annotate the audit report if fixed. Blocks on Open Question g.2. Source: plan T09–T10.~~ DONE 2026-09-02 — verified empirically: NOT a malfunction. Both `example/ --live` and `live/demo` intentionally run the full lifecycle at startup (~6s) then serve the final state until Ctrl+C ("Lifecycle complete. Dashboard shows final state."). Nothing crashes or shuts down early. The only defect was misleading instructions — fixed in both demos (lifecycle timing now stated). The ROADMAP pointer deleted in the docs-health session was correct cleanup.
 - [ ] **Ground the ROADMAP live/-coverage causal claim** — per-file coverage run; confirm or delete the "datastar rewrite outpaced tests" attribution. Source: plan T11–T12.
 - [ ] **Straggler annotations (one-time)** — strike items this session's fixes resolved: website report §b.7 (pnpm), round-2 self-critique 4, CI-repair self-critique 1–4. Source: plan T13–T15.
-- [ ] **live/ 90% coverage path** — per-file coverage table → fragment-renderer test plan → test batches (78.3% today; the ROADMAP internal-bar item). Source: plan T69–T72.
+- [x] ~~**live/ 90% coverage path**~~ DONE 2026-09-04 on the go1.23-compat line — stdlib port renders the templ gap moot; live/ measures 94.2% under the repo gate. Master follow-up depends on the merge decision.
 - [x] ~~**Verify README Mermaid sample**~~ DONE 2026-09-02 — dumped real `WriteMermaidString()` output; sample + note rewritten truthfully (real node IDs are scope-UUID+FQN slugs, alias edges not drawn, warm-amber per-node styling).
-- [ ] **GOEXPERIMENT=jsonv2 note in `doc.go`** — godoc/pkg.go.dev discoverability of the build-flag requirement. Source: plan T74.
+- [x] ~~**GOEXPERIMENT=jsonv2 note in `doc.go`**~~ N/A on the go1.23-compat line — the branch has zero third-party runtime deps and needs no GOEXPERIMENT. Still valid on master; kept for the master backlog.
 - [x] ~~**Audit `docs/DOMAIN_LANGUAGE.md`**~~ DONE 2026-09-02 — added Streaming & Real-Time section (NDJSON, OnEvent, Streaming, MultiWriter, Run ID, Replay, Ring Buffer).
 
 ## Open Owner Questions (blockers, not tasks)

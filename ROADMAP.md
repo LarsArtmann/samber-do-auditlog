@@ -12,10 +12,10 @@ The public stability stage is **BETA** ([STABILITY.md](STABILITY.md)): the API i
 The internal quality bar on the path to 1.0:
 
 1. ~~`go-sse` and `go-ndjson` published to GitHub with stable tags~~ ✓ (replace directives removed). The temporary `go-output/testhelpers` replacements have also been removed; explicit indirect requirements select their valid published tags over upstream's broken pseudo-versions.
-2. `live/` sub-package coverage above 90% — **currently 78.3%** (2026-09-01 gate run; the datastar/templ rewrite and post-cleanup growth outpaced live tests — per-function data 2026-09-02 confirms the templ fragment renderers are the dominant gap, mostly 58–78% coverage). This is the main outstanding internal-bar item.
-3. `go-sse` dependency tracking is current (v0.5.1); keep the family of sibling libraries (go-output, go-sse, go-ndjson, go-atomic-write, go-error-family) on green, non-retracted tags.
+2. `live/` sub-package coverage above 90% — **DONE on the go1.23-compat line (2026-09-04)**: the stdlib port measures 94.2% under the repo-wide 94% gate; the templ fragment-renderer gap no longer exists. Master still owes this number (78.3% there) unless the stdlib port merges upstream.
+3. Dependency family tracking — on the go1.23-compat line this is trivially green: zero third-party runtime deps. Master keeps the sibling-library family (go-output, go-sse, go-ndjson, go-atomic-write, go-error-family) on green, non-retracted tags.
 
-The coverage gate (94%, currently at 95.2%) and the `GOEXPERIMENT=jsonv2` flag are stable in CI. The live dashboard has reached feature parity with the static HTML export.
+The coverage gate (94%, currently at 94.9% on the branch) is stable in CI. The Go 1.23 line needs no `GOEXPERIMENT` flag (master does). The live dashboard has reached feature parity with the static HTML export — on the branch with a stdlib SSE stack, on master via go-sse.
 
 The path from BETA to 1.0 is:
 
@@ -43,7 +43,8 @@ The `live/` sub-package has reached feature parity with the static HTML export:
 
 - **Shipped**: scope tree tab, pagination, export buttons, CORS support, live demo (`live/demo/main.go`), `example/ --live` integration, SSE ring buffer replay, keyboard navigation, datastar-powered reactivity
 - **Shared CSS** ✓ — `DesignTokensCSS` (`design_tokens.go`) is the single source of truth, enforced by `TestDesignTokensInSync` and `TestSharedComponentCSSInSync`
-- **Raise live/ test coverage** — 78.3% today vs the 90% internal bar; the templ fragment renderers are the biggest untested surface (confirmed by per-function coverage 2026-09-02: `fragments_templ.go` functions at 58–78%, plus two 50% handlers in `server.go`)
+- **Raise live/ test coverage** — resolved on the go1.23-compat line (94.2%, stdlib `html/template` fragments with no generated code); on master the templ fragment renderers remain the biggest untested surface (58–78% per-function, confirmed 2026-09-02)
+- **Adopt the stdlib SSE stack upstream** — if the go1.23-compat port merges into samber/do (merge proposal in `docs/proposal/`), master can eventually converge on it and drop the go-sse/templ requirements for the live dashboard
 - **Dark/light theme toggle** — The warm amber aesthetic currently has no light variant
 - **Cross-origin CSP** — CORS headers are set but `connect-src 'self'` blocks cross-origin dashboard embedding; needs configurable CSP or documentation of the limitation
 
@@ -117,7 +118,9 @@ Ideas for deeper documentation (website + README):
 
 Proposals evaluated and deliberately not pursued. Documented here so they are not re-proposed without new context.
 
-- **Multi-module split** — Project is too small (1 package, ~2500 LOC core + live/ sub-package). Revisit at 5+ packages.
+- **Multi-module split** — Project is too small (1 package, ~2500 LOC core + live/ sub-package). Revisit at 5+ packages. Also answered definitively for the samber/do merge: samber's dependency concern is moot on the go1.23-compat line because it carries zero third-party runtime deps (D4 in the merge proposal).
+- **Go 1.21/1.22 compatibility shims** — Rejected 2026-09-03 by samber's floor decision: "Go 1.23 means 2 years back. Seems good for a UI" (D2). `slices.Backward` and friends stay; no shim will be pursued.
+- **GOEXPERIMENT=jsonv2 on the go1.23-compat line** — Not needed there (zero transitive json/v2 users). Master keeps the flag until Go 1.27 stabilizes json/v2.
 - **External storage backends** — File and `io.Writer` exports are sufficient.
 - **Prometheus/OpenTelemetry integration as a dependency** — Out of scope. Use `OnEvent` callback instead.
 - **`samber/lo` dependency** — Current stdlib `slices`/`cmp` usage is sufficient.
