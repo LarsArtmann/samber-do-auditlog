@@ -400,6 +400,16 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
+	// Subscribe BEFORE replay/snapshot. If the subscription were registered
+	// after the snapshot was rendered, an event emitted in between would be
+	// in neither the snapshot nor the live stream — silently lost for this
+	// client (and the live-delivery test can hang waiting for it). With the
+	// subscription first, the replay covers everything up to now, the
+	// snapshot covers current state, and anything after Subscribe arrives
+	// via the live stream — no gap, no duplication.
+	eventCh := srv.hub.Subscribe()
+	defer srv.hub.Unsubscribe(eventCh)
+
 	// Reconnection replay: if the client sends Last-Event-ID, replay any
 	// missed events from the ring buffer before sending the snapshot.
 	if lastID := stream.LastEventID(); !lastID.IsZero() {
@@ -414,9 +424,6 @@ func (srv *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 	if err := srv.sendDatastarSnapshot(ctx, stream); err != nil {
 		return
 	}
-
-	eventCh := srv.hub.Subscribe()
-	defer srv.hub.Unsubscribe(eventCh)
 
 	go stream.Heartbeat(r.Context(), srv.config.HeartbeatInterval)
 
