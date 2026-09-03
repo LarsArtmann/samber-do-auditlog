@@ -127,8 +127,6 @@ linters:
                 example:
                     allow:
                         - $gostd
-                        - github.com/a-h/templ
-                        - github.com/larsartmann/go-output
                         - github.com/larsartmann/samber-do-auditlog
                         - github.com/samber
                     files:
@@ -136,12 +134,6 @@ linters:
                 main:
                     allow:
                         - $gostd
-                        - github.com/a-h/templ
-                        - github.com/larsartmann/go-atomic-write
-                        - github.com/larsartmann/go-error-family
-                        - github.com/larsartmann/go-ndjson
-                        - github.com/larsartmann/go-output
-                        - github.com/larsartmann/go-sse
                         - github.com/larsartmann/samber-do-auditlog
                         - github.com/samber
                     files:
@@ -151,10 +143,6 @@ linters:
                 tests:
                     allow:
                         - $gostd
-                        - github.com/a-h/templ
-                        - github.com/larsartmann/go-error-family
-                        - github.com/larsartmann/go-output
-                        - github.com/larsartmann/go-sse
                         - github.com/larsartmann/samber-do-auditlog
                         - github.com/samber
                     files:
