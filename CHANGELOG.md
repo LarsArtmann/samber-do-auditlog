@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — live dashboard could hide events from newly connected clients
+
+- **Snapshot/subscribe race closed in `live/server.go`**: a new SSE client was sent the full snapshot *before* its subscription was registered in the broadcaster, so any event emitted in that gap was in neither the snapshot nor the live stream — the client silently never saw it (found by a CI test flake, fixed at the root cause). The server now subscribes first, then renders and sends the snapshot; events between the two are delivered by the live stream itself, and reconnecting clients are covered by the replay ring buffer as before.
+
 ### Changed — go1.23-compat line: live dashboard restored on the Go 1.23 floor
 
 - **The real-time SSE dashboard works on Go 1.23 again** — `live/` is reimplemented on the standard library only (`net/http` + `html/template`), removing the go-sse and templ requirements that previously forced a Go 1.25+/1.26 toolchain for live mode. The wire format (SSE framing, datastar `patch-elements`/`patch-signals`, element IDs, datastar attributes) is byte-compatible with the original, so the browser-side `dashboard.js` and the datastar runtime carry over verbatim.
