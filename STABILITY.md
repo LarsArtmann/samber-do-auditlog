@@ -79,6 +79,23 @@ that is **independent** of release tags:
 A schema bump (e.g. `0.2.0` → `0.3.0`) does NOT require a release tag bump.
 Old schemas can always be migrated forward via `MigrateReport`.
 
+## Branch status: `go1.23-compat` (2026-09-04)
+
+This branch is the **merge candidate** for contributing the plugin upstream to
+`samber/do` as a debug sub-package (proposal in `docs/proposal/`). Stability
+contract per line:
+
+- **master** — the flagship BETA line (Go 1.26.7, full dependency family). The
+  tables above describe master.
+- **`go1.23-compat`** — same BETA contract, Go 1.23 floor, zero third-party
+  runtime deps. Intentional API deltas vs master (all documented in the merge
+  proposal's API diff): `TableFormat` (5 string-literal formats), local
+  `Direction`/`WithDirection` types, `live/` stdlib transport with
+  `Hub.ReplayStore()` replacing `Hub.EventStore()`, `classify.go` error-family
+  registration absent (sentinel identities unchanged via `errors.Is`).
+  Merging into samber/do means *its* stability policy governs the imported
+  package, not this file.
+
 ## What "breaking" means in 0.x
 
 A **breaking change** is any of:

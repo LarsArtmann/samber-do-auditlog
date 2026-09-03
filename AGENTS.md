@@ -2,7 +2,7 @@
 
 Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI container lifecycle event (registration, invocation, shutdown) with timestamps, dependency graph inference, build duration tracking, and export to JSON / NDJSON / self-contained HTML.
 
-**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.26.7 (go.mod + devShell) · **Status**: BETA (per [STABILITY.md](STABILITY.md); internal 1.0 bar tracked in ROADMAP.md)
+**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.23 on this branch (`go1.23-compat`; master is 1.26.7) · **Status**: BETA (per [STABILITY.md](STABILITY.md); internal 1.0 bar tracked in ROADMAP.md)
 
 ---
 
@@ -16,12 +16,14 @@ Created 2026-09-03 because **samber is considering merging the plugin into `gith
 - **GOEXPERIMENT=jsonv2 is GONE** — it existed only for the master dep family. Consumers no longer set any env var. README/CONTRIBUTING/BENCHMARKS/.buildflow.yml/ci.yml all scrubbed.
 - **All `larsartmann/*` deps replaced with stdlib ports** (they require go 1.26.x): go-output → `diagram.go` (Mermaid/DOT/PlantUML/D2 renderers + escapes ported byte-for-byte from go-output v0.37.0 for our node/edge shapes) and `table.go` (ASCII/JSON/CSV/TSV/Markdown via `TableFormat`; the other 11 go-output table formats return `errUnsupportedTableFormat`); go-ndjson → `ndjson.go`/`loader.go` (same sentinels/messages, `MaxLineBytes` 1 MB); go-atomic-write → `writeToFile` in `plugin.go` (temp+fsync+rename); go-error-family → `classify.go` DELETED (feature is master-only; `fuzz_crossproject_test.go` now fuzzes `errors.Is` through adversarial chains).
 - **templ (needs go 1.25) replaced by `html/template`**: `html.go` (API + template) + `html_view.go` (view models). Same five-tab warm-amber identity, CSP hardened (`default-src 'none'`), zero external resources, sortable columns with `aria-sort`, `?` help dialog with focus trap, `e` errors-toggle, `/` search — the master a11y feature set is preserved. `html.templ`/`html_templ.go`/`daghtml_adapter.go` deleted; golden-file test replaced by `TestReport_WriteHTML_Structure` + `TestDesignTokensInSync`/`TestSharedComponentCSSInSync` now assert the constants are embedded verbatim in rendered output.
-- **`live/` DELETED on this branch** (needs go-sse 1.26.7 + templ 1.25) — **but the samber chat of 2026-09-03 makes live updates a merge requirement** ("I would prefer keeping live update vs backward compatibility"), so a stdlib port is the branch's main open work item: go-sse → stdlib SSE writer/fan-out (~300–400 LOC, Hub facade interface stays), templ fragments → html/template (~600 LOC); `dashboard.go`, `dashboard.css/js` and `datastar.js` (56KB embedded asset) are Go-version-independent and carry over verbatim. README's Live Dashboard section points back to master. `example --live` flag removed.
+- **`live/` RESTORED on this branch as a pure-stdlib port (2026-09-04)** — samber's chat made live updates a merge requirement ("I would prefer keeping live update vs backward compatibility"). go-sse → `live/sse.go` (wire format, per-connection stream writer, heartbeats, Last-Event-ID) + `live/broadcaster.go` (drop-on-overflow fan-out, graceful drain) + `live/replay.go` (FIFO ring buffer); `Hub.EventStore()` renamed to `Hub.ReplayStore()` (concrete type, no interface). templ fragments → `live/fragments_html.go` (`html/template` with PRECOMPUTED view rows in `live/fragments.go` — same pattern as the static report) with IDENTICAL element IDs + datastar attributes so `dashboard.js`/`datastar.js` (56KB) carried over verbatim from master. `example --live` restored; smoke-tested end-to-end (SSE client observes patch-elements + patch-signals). Tests: stdlib SSE wire client replaces `ssetest`; suites cover transport, ring, broadcaster drain, hub replay, view builders, and the full external HTTP surface. Coverage: live/ 94.2%, gate 94.9% (demo/ excluded like master).
 - **API deltas vs master**: `Report.WriteTable(w, format TableFormat, opts RenderOptions, ...)` (string literals still work; old `output.FormatCSV` → `auditlog.TableFormatCSV`); `Direction`/`WithDirection` are local (was `output.Direction`); file-format `Format`/`FormatAuto`/`FormatJSON`/`FormatNDJSON` unchanged. All other public API identical.
 - **CI (ci.yml)**: all jobs `go-version: "1.23"`; golangci-lint pinned **v2.1.6** (newest v2 whose go directive ≤ 1.23 — v2.12.2 needs go 1.25 to `go install` on GOTOOLCHAIN=local runners); govulncheck pinned **v1.1.4** (same reason); goreleaser job DROPPED (releases happen from master); stale-generation checks only `schema/report.schema.json`; `.golangci.yml` trimmed of the 9 post-2.1.6 linters + `run.go: "1.23"` (quoted — 1.23 parses as YAML number otherwise) + templ/live paths. Local lint verified: `golangci-lint v2.1.6` → 0 issues.
 - **flake.nix**: `go_1_23` no longer exists in nixpkgs (EOL-removed) — devShell uses bootstrap `pkgs.go` + `GOTOOLCHAIN = "go1.23.12"` (bare `go1.23` is NOT a valid toolchain name; must be a full patch version). `scripts/check-go-version.sh` accepts patch-extended flake pins and quoted `.golangci.yml` values.
 - **Tests**: `b.Loop` → `for range b.N`, `wg.Go` → `wg.Add`+`go`+`Done` (sync.Go is 1.25), fuzz XSS vectors re-anchored on RAW quotes (`html/template` escapes quotes as entities in attributes, so `&#34; onload=&#34;` is inert — strip entities before matching, so only genuine breakouts with raw quotes trip the check).
-- **Verification status 2026-09-03**: build ✓ vet ✓ full test ✓ `go test -race` ✓ coverage gate ✓ lint (v2.1.6) ✓ `go generate` drift ✓ `sh scripts/check-go-version.sh` ✓ real go1.23.12 toolchain ✓ (see below).
+- **Verification status 2026-09-04**: build ✓ vet ✓ full test ✓ `go test -race` ✓ coverage gate 94.9% (incl. live/ 94.2%) ✓ lint (v2.1.6, fresh cache) ✓ `go generate` drift ✓ `sh scripts/check-go-version.sh` ✓ real go1.23.12 toolchain ✓ `nix flake check` ✓ (first green evaluation) ✓ `nix develop -c go build` ✓ (with hostile ambient GOEXPERIMENT) ✓ **CI: all 7 jobs green via workflow_dispatch** (run 33813979691: Test, Lint, actionlint, vulncheck, mod-tidy, stale-generation, example-smoke).
+- **CI findings fixed on 2026-09-04**: actionlint pin v1.7.12 → **v1.7.7** (v1.7.9+ need go ≥1.24 — uninstallable on the 1.23 job with GOTOOLCHAIN=local); `html_view.go` "error"/"success" string triple → `classError`/`classSuccess` constants (goconst); vulncheck job `continue-on-error: true` with rationale (Go 1.23 is EOL; all findings are stdlib advisories fixed only in newer toolchains; zero third-party deps) — scan stays visible in logs.
+- **Version-skew ledger (branch)**: `httptest.NewRequest` noctx findings fire only on golangci-lint ≥ 2.13 and their suggested fix (`httptest.NewRequestWithContext`) requires Go ≥ 1.24 — do NOT add nolint directives for them (they would be "unused" under the CI-pinned v2.1.6's nolintlint); do NOT run local golangci-lint 2.13.1 as the gate. The shared local lint cache (`/mnt/buildcache/golangci-lint`) can serve stale package verdicts — use `GOLANGCI_LINT_CACHE=/tmp/...` for authoritative local runs.
 
 ---
 
@@ -29,18 +31,18 @@ Created 2026-09-03 because **samber is considering merging the plugin into `gith
 
 | Command               | Purpose                                         |
 | --------------------- | ----------------------------------------------- |
-| `go generate ./...`   | Regenerate templ (and any other generated code) |
+| `go generate ./...`   | Regenerate the JSON schema (templ is gone on this branch)      |
 | `go test ./...`       | Run all tests                                   |
 | `go test -race ./...` | Run all tests with race detector (CI uses this) |
 
 | `GOEXPERIMENT=jsonv2 go test -race -coverprofile=cover.out \\
   -covermode=atomic ./...` | Run tests with coverage (CI gate: ≥94% of non-`example/`/`cmd/` code) — **`GOEXPERIMENT=jsonv2` is set automatically in the Nix devShell and CI** |
 | `go test -run TestPlugin_DisabledIsNoOp` | Run single test |
-| `go vet ./...` | Static analysis (**`GOEXPERIMENT=jsonv2` required** — set automatically in Nix devShell) |
+| `go vet ./...` | Static analysis (plain `go vet`; no GOEXPERIMENT on this branch) |
 | `golangci-lint config verify` | Validate the lint config (CI runs this before `lint run`) |
 | `golangci-lint run` | Full lint (heavy config, see below) |
 | `go mod tidy` | Sync `go.sum` (CI `mod-tidy` job fails on drift) |
-| `nix develop` | Enter devShell (Go 1.26.7, golangci-lint, govulncheck, actionlint, golines, **GOEXPERIMENT=jsonv2 enabled**) |
+| `nix develop` | Enter devShell (go1.23.12 via GOTOOLCHAIN, golangci-lint, govulncheck, actionlint, golines; **GOEXPERIMENT explicitly cleared** so ambient jsonv2 cannot leak) |
 | `go run ./example` | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
 | `go run ./cmd/auditlog help` | CLI: inspect/convert/diff/validate reports |
 | `go install ./cmd/auditlog` | Install the `auditlog` CLI to `$GOBIN` |
@@ -172,7 +174,9 @@ public API so existing callers are unaffected.
 Both `go-sse` and `go-ndjson` are now public — no `replace` directives remain in `go.mod`.
 A `go.work` workspace at the parent directory may still link the projects for local development.
 
-### GOEXPERIMENT=jsonv2 requirement
+### GOEXPERIMENT=jsonv2 requirement (MASTER ONLY — not this branch)
+
+> **go1.23-compat note**: this branch has zero third-party runtime deps and needs NO GOEXPERIMENT anywhere. The section below describes master. Do not set the flag when working here — a stale ambient value breaks the go1.23 toolchain ("unknown GOEXPERIMENT jsonv2"); the devShell clears it.
 
 **The project requires `GOEXPERIMENT=jsonv2` to build.** **Consumers need it too**: a downstream module that imports this library fails with `imports encoding/json/v2: build constraints exclude all Go files` unless `GOEXPERIMENT=jsonv2` is set (verified empirically 2026-09-01 with a minimal consumer). The README Install section and the website Installation page document this; keep them in sync.
 
