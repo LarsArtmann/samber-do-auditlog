@@ -48,7 +48,7 @@ func registerServices(injector do.Injector) *do.Scope {
 
 	// 5. Transient provider
 	do.ProvideTransient(injector, func(i do.Injector) (*RideRequest, error) {
-		id := atomic.AddInt64(&rideCounter, 1)
+		id := rideCounter.Add(1)
 
 		return &RideRequest{
 			ID:        id,

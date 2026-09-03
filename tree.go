@@ -8,19 +8,20 @@ import (
 )
 
 // treeNode is a minimal tree structure served to the ASCII and HTML tree
-// renderers. It replaces the go-output TreeNode for the Go 1.18 branch.
+// renderers. It replaces the go-output TreeNode for the Go 1.23 branch.
+// Fields are exported so html/template can read them.
 type treeNode struct {
-	id       string
-	label    string
-	children []*treeNode
+	ID       string
+	Label    string
+	Children []*treeNode
 }
 
 func newTreeNode(id, label string) *treeNode {
-	return &treeNode{id: id, label: label}
+	return &treeNode{ID: id, Label: label}
 }
 
 func (n *treeNode) addChild(child *treeNode) {
-	n.children = append(n.children, child)
+	n.Children = append(n.Children, child)
 }
 
 // addTreeChildren recursively adds dependent services as children to the parent
@@ -124,7 +125,7 @@ func renderASCIINode(b *strings.Builder, node *treeNode, prefix string, isLast b
 
 	b.WriteString(prefix)
 	b.WriteString(connector)
-	b.WriteString(node.label)
+	b.WriteString(node.Label)
 	b.WriteString("\n")
 
 	childPrefix := prefix + "│   "
@@ -132,8 +133,8 @@ func renderASCIINode(b *strings.Builder, node *treeNode, prefix string, isLast b
 		childPrefix = prefix + "    "
 	}
 
-	for i, child := range node.children {
-		renderASCIINode(b, child, childPrefix, i == len(node.children)-1)
+	for i, child := range node.Children {
+		renderASCIINode(b, child, childPrefix, i == len(node.Children)-1)
 	}
 }
 
@@ -150,10 +151,10 @@ var htmlTreeTemplate = template.Must(template.New("treeNode").Parse(
 ))
 
 // treeNodeRecTemplate is the recursive body of the HTML tree template.
-const treeNodeRecTemplate = `{{define "treeNodeRec"}}<li>{{.label}}
-{{- if .children}}
+const treeNodeRecTemplate = `{{define "treeNodeRec"}}<li>{{.Label}}
+{{- if .Children}}
 <ul>
-{{- range .children}}
+{{- range .Children}}
 {{template "treeNodeRec" .}}
 {{- end}}
 </ul>

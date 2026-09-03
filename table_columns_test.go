@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/larsartmann/go-output"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/samber/do/v2"
 )
@@ -15,7 +14,7 @@ func TestTableColumns_DefaultColumns(t *testing.T) {
 
 	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	err := report.WriteTable(buf, output.FormatCSV, auditlog.DefaultTableOpts())
+	err := report.WriteTable(buf, auditlog.TableFormatCSV, auditlog.DefaultTableOpts())
 	if err != nil {
 		t.Fatalf("WriteTable: %v", err)
 	}
@@ -34,7 +33,7 @@ func TestTableColumns_CustomSelection(t *testing.T) {
 	report, buf := singleServiceWithExternalDepReportAndBuf()
 
 	err := report.WriteTable(
-		buf, output.FormatCSV, auditlog.DefaultTableOpts(),
+		buf, auditlog.TableFormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnService, auditlog.ColumnStatus),
 	)
 	if err != nil {
@@ -64,7 +63,7 @@ func TestTableColumns_AllColumns(t *testing.T) {
 	report, buf := singleServiceWithExternalDepReportAndBuf()
 
 	err := report.WriteTable(
-		buf, output.FormatCSV, auditlog.DefaultTableOpts(),
+		buf, auditlog.TableFormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.AllTableColumns()...),
 	)
 	if err != nil {
@@ -86,7 +85,7 @@ func TestTableColumns_ColumnOrderPreserved(t *testing.T) {
 	report, buf := singleServiceWithExternalDepReportAndBuf()
 
 	err := report.WriteTable(
-		buf, output.FormatCSV, auditlog.DefaultTableOpts(),
+		buf, auditlog.TableFormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnError, auditlog.ColumnService),
 	)
 	if err != nil {
@@ -125,7 +124,7 @@ func TestTableColumns_WithDependentsColumn(t *testing.T) {
 	var buf bytes.Buffer
 
 	err := report.WriteTable(
-		&buf, output.FormatCSV, auditlog.DefaultTableOpts(),
+		&buf, auditlog.TableFormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnService, auditlog.ColumnDependencies, auditlog.ColumnDependents),
 	)
 	if err != nil {
@@ -154,7 +153,7 @@ func TestTableColumns_WriteTableString(t *testing.T) {
 	report := singleServiceWithExternalDepReport()
 
 	result, err := report.WriteTableString(
-		output.FormatCSV, auditlog.DefaultTableOpts(),
+		auditlog.TableFormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnService),
 	)
 	if err != nil {
@@ -184,7 +183,7 @@ func TestTableColumns_DefaultTableColumnsImmutable(t *testing.T) {
 	var buf1 bytes.Buffer
 
 	err := report.WriteTable(
-		&buf1, output.FormatCSV, auditlog.DefaultTableOpts(),
+		&buf1, auditlog.TableFormatCSV, auditlog.DefaultTableOpts(),
 		auditlog.WithColumns(auditlog.ColumnService),
 	)
 	if err != nil {
@@ -194,7 +193,7 @@ func TestTableColumns_DefaultTableColumnsImmutable(t *testing.T) {
 	// Now call without WithColumns — should use the original default columns.
 	var buf2 bytes.Buffer
 
-	err = report.WriteTable(&buf2, output.FormatCSV, auditlog.DefaultTableOpts())
+	err = report.WriteTable(&buf2, auditlog.TableFormatCSV, auditlog.DefaultTableOpts())
 	if err != nil {
 		t.Fatalf("WriteTable (default): %v", err)
 	}

@@ -1,8 +1,9 @@
 package auditlog
 
 import (
-	"sort"
-	"strings"
+	"cmp"
+	"maps"
+	"slices"
 	"time"
 
 	"github.com/samber/do/v2"
@@ -15,9 +16,7 @@ func (r *Recorder) BuildReport() Report {
 	scopeTree := r.buildScopeTreeLocked()
 	events := append([]Event(nil), r.events...)
 	scopesCopy := make(map[ScopeID]scopeMeta, len(r.scopes))
-	for id, meta := range r.scopes {
-		scopesCopy[id] = meta
-	}
+	maps.Copy(scopesCopy, r.scopes)
 
 	r.mu.RUnlock()
 
@@ -28,7 +27,7 @@ func (r *Recorder) BuildReport() Report {
 		r.containerID,
 		r.runID,
 		time.Now(),
-		r.droppedEvents,
+		r.droppedEvents.Load(),
 		events,
 		services,
 		scopeTree,
@@ -36,8 +35,8 @@ func (r *Recorder) BuildReport() Report {
 }
 
 func sortServiceInfos(services []ServiceInfo) {
-	sort.Slice(services, func(i, j int) bool {
-		return CompareServiceRefs(services[i].ServiceRef, services[j].ServiceRef) < 0
+	slices.SortFunc(services, func(a, b ServiceInfo) int {
+		return CompareServiceRefs(a.ServiceRef, b.ServiceRef)
 	})
 }
 
@@ -148,9 +147,7 @@ func depRecToRef(rec *serviceRecord) ServiceRef {
 }
 
 func sortDepRefs(refs []ServiceRef) {
-	sort.Slice(refs, func(i, j int) bool {
-		return CompareServiceRefs(refs[i], refs[j]) < 0
-	})
+	slices.SortFunc(refs, CompareServiceRefs)
 }
 
 // buildDependentsMapLocked builds the reverse-dependency map.
@@ -191,7 +188,7 @@ func scopeServicesForServices(services map[svcKey]*serviceRecord) map[ScopeID][]
 	}
 
 	for id, names := range scopeServices {
-		sort.Strings(names)
+		slices.Sort(names)
 		scopeServices[id] = names
 	}
 
@@ -284,16 +281,16 @@ func sortedScopes(scopes map[ScopeID]scopeMeta) []scopeMeta {
 		result = append(result, meta)
 	}
 
-	sort.Slice(result, func(i, j int) bool {
-		return string(result[i].id) < string(result[j].id)
+	slices.SortFunc(result, func(a, b scopeMeta) int {
+		return cmp.Compare(a.id, b.id)
 	})
 
 	return result
 }
 
 func sortScopeNodes(nodes []ScopeNode) []ScopeNode {
-	sort.Slice(nodes, func(i, j int) bool {
-		return strings.Compare(string(nodes[i].Name), string(nodes[j].Name)) < 0
+	slices.SortFunc(nodes, func(a, b ScopeNode) int {
+		return cmp.Compare(a.Name, b.Name)
 	})
 
 	for i := range nodes {

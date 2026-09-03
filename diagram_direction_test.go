@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/larsartmann/go-output"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
@@ -29,7 +28,7 @@ func TestDiagram_MermaidDirectionRight(t *testing.T) {
 
 	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	err := report.WriteMermaid(buf, auditlog.WithDirection(output.DirectionRight))
+	err := report.WriteMermaid(buf, auditlog.WithDirection(auditlog.DirectionRight))
 	if err != nil {
 		t.Fatalf("WriteMermaid: %v", err)
 	}
@@ -63,7 +62,7 @@ func TestDiagram_DOTDirectionDown(t *testing.T) {
 
 	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	err := report.WriteDOT(buf, auditlog.WithDirection(output.DirectionUp))
+	err := report.WriteDOT(buf, auditlog.WithDirection(auditlog.DirectionUp))
 	if err != nil {
 		t.Fatalf("WriteDOT: %v", err)
 	}
@@ -78,7 +77,7 @@ func TestDiagram_D2DirectionRight(t *testing.T) {
 
 	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	err := report.WriteD2(buf, auditlog.WithDirection(output.DirectionRight))
+	err := report.WriteD2(buf, auditlog.WithDirection(auditlog.DirectionRight))
 	if err != nil {
 		t.Fatalf("WriteD2: %v", err)
 	}
@@ -108,7 +107,7 @@ func TestDiagram_PlantUMLDirectionRight(t *testing.T) {
 
 	report, buf := singleServiceWithExternalDepReportAndBuf()
 
-	err := report.WritePlantUML(buf, auditlog.WithDirection(output.DirectionRight))
+	err := report.WritePlantUML(buf, auditlog.WithDirection(auditlog.DirectionRight))
 	if err != nil {
 		t.Fatalf("WritePlantUML: %v", err)
 	}
@@ -140,13 +139,13 @@ func TestDiagram_MermaidAllDirections(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		direction output.Direction
+		direction auditlog.Direction
 		keyword   string
 	}{
-		{"Down", output.DirectionDown, "flowchart TD"},
-		{"Up", output.DirectionUp, "flowchart BT"},
-		{"Left", output.DirectionLeft, "flowchart RL"},
-		{"Right", output.DirectionRight, "flowchart LR"},
+		{"Down", auditlog.DirectionDown, "flowchart TD"},
+		{"Up", auditlog.DirectionUp, "flowchart BT"},
+		{"Left", auditlog.DirectionLeft, "flowchart RL"},
+		{"Right", auditlog.DirectionRight, "flowchart LR"},
 	}
 
 	for _, tt := range tests {
@@ -171,7 +170,7 @@ func TestDiagram_AllFormatsAcceptDirectionOption(t *testing.T) {
 	t.Parallel()
 
 	report := singleServiceWithExternalDepReport()
-	opts := []auditlog.DiagramOption{auditlog.WithDirection(output.DirectionRight)}
+	opts := []auditlog.DiagramOption{auditlog.WithDirection(auditlog.DirectionRight)}
 
 	tests := []struct {
 		name string

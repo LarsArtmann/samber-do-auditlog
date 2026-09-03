@@ -1,7 +1,8 @@
 package auditlog
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 )
 
 // DiffResult describes the differences between two Reports.
@@ -92,11 +93,9 @@ func (r Report) Diff(other Report) DiffResult {
 		}
 	}
 
-	sortDepRefs(result.AddedServices)
-	sortDepRefs(result.RemovedServices)
-	sort.Slice(result.ChangedServices, func(i, j int) bool {
-		return sortServiceDiffs(result.ChangedServices[i], result.ChangedServices[j]) < 0
-	})
+	slices.SortFunc(result.AddedServices, CompareServiceRefs)
+	slices.SortFunc(result.RemovedServices, CompareServiceRefs)
+	slices.SortFunc(result.ChangedServices, sortServiceDiffs)
 
 	return result
 }
@@ -149,7 +148,7 @@ func serviceRefsOnlyIn(a, b map[string]ServiceRef) []ServiceRef {
 		}
 	}
 
-	sortDepRefs(out)
+	slices.SortFunc(out, CompareServiceRefs)
 
 	return out
 }
@@ -168,23 +167,10 @@ func indexServicesByKey(services []ServiceInfo) map[string]ServiceInfo {
 // primary by ServiceName, secondary by ScopeID. Used by report builders and
 // diff output so all ServiceRef lists are consistently ordered.
 func CompareServiceRefs(a, b ServiceRef) int {
-	if a.ServiceName != b.ServiceName {
-		if a.ServiceName < b.ServiceName {
-			return -1
-		}
-
-		return 1
-	}
-
-	if a.ScopeID != b.ScopeID {
-		if a.ScopeID < b.ScopeID {
-			return -1
-		}
-
-		return 1
-	}
-
-	return 0
+	return cmp.Or(
+		cmp.Compare(a.ServiceName, b.ServiceName),
+		cmp.Compare(a.ScopeID, b.ScopeID),
+	)
 }
 
 func sortServiceDiffs(a, b ServiceDiff) int {
