@@ -107,14 +107,14 @@ func sseJoinLines(lines ...string) string {
 // sseStripNewlines removes CR and LF from a single-line SSE field value
 // (event name, id). Newlines inside these fields would inject additional
 // fields into the wire frame; multi-line payloads belong in Data.
-func sseStripNewlines(s string) string {
-	if !strings.ContainsAny(s, "\n\r") {
-		return s
+func sseStripNewlines(value string) string {
+	if !strings.ContainsAny(value, "\n\r") {
+		return value
 	}
 
 	replacer := strings.NewReplacer("\r", "", "\n", "")
 
-	return replacer.Replace(s)
+	return replacer.Replace(value)
 }
 
 // sseKeyedLines prefixes every line of value with "key ", producing the

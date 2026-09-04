@@ -91,12 +91,12 @@ func FuzzRingEventsAfter(f *testing.F) {
 
 		rb := newEventRingBuffer(capacity)
 
-		ids := make([]uint64, n)
+		ids := make([]uint64, 0, n)
 
 		for i := range n {
-			ids[i] = uint64(i) + 1
+			ids = append(ids, uint64(i)+1)
 
-			rb.add(sseEvent{ID: strconv.FormatUint(ids[i], 10), Data: "d"})
+			rb.add(sseEvent{ID: strconv.FormatUint(uint64(i)+1, 10), Data: "d"})
 		}
 
 		got := rb.eventsAfter(lastID)
@@ -110,48 +110,59 @@ func FuzzRingEventsAfter(f *testing.F) {
 			return
 		}
 
-		var prev uint64
-
-		for i, evt := range got {
-			seq, err := strconv.ParseUint(evt.ID, 10, 64)
-			if err != nil {
-				t.Fatalf("result contains non-numeric ID %q", evt.ID)
-			}
-
-			if seq <= lastSeq {
-				t.Fatalf("event %d (id %d) not after lastID %d", i, seq, lastSeq)
-			}
-
-			if i > 0 && seq <= prev {
-				t.Fatalf("result not ascending: %d after %d", seq, prev)
-			}
-
-			prev = seq
-		}
-
-		if len(got) > capacity {
-			t.Fatalf("got %d events, ring capacity is %d", len(got), capacity)
-		}
-
-		// Only ids still retained by the ring can be replayed: the ring
-		// evicts from the front once capacity is exceeded.
-		retained := ids
-		if len(ids) > capacity {
-			retained = ids[len(ids)-capacity:]
-		}
-
-		want := 0
-
-		for _, id := range retained {
-			if id > lastSeq {
-				want++
-			}
-		}
-
-		if len(got) != want {
-			t.Fatalf("lastID %q: got %d events, want %d", lastID, len(got), want)
-		}
+		assertRingReplay(t, got, lastSeq, capacity, retainedIDs(ids, capacity))
 	})
+}
+
+// assertRingReplay checks the ordering, membership, and size invariants of
+// a replay result against the ids still retained by the ring.
+func assertRingReplay(t *testing.T, got []sseEvent, lastSeq uint64, capacity int, retained []uint64) {
+	t.Helper()
+
+	var prev uint64
+
+	for i, evt := range got {
+		seq, err := strconv.ParseUint(evt.ID, 10, 64)
+		if err != nil {
+			t.Fatalf("result contains non-numeric ID %q", evt.ID)
+		}
+
+		if seq <= lastSeq {
+			t.Fatalf("event %d (id %d) not after lastID %d", i, seq, lastSeq)
+		}
+
+		if i > 0 && seq <= prev {
+			t.Fatalf("result not ascending: %d after %d", seq, prev)
+		}
+
+		prev = seq
+	}
+
+	if len(got) > capacity {
+		t.Fatalf("got %d events, ring capacity is %d", len(got), capacity)
+	}
+
+	want := 0
+
+	for _, id := range retained {
+		if id > lastSeq {
+			want++
+		}
+	}
+
+	if len(got) != want {
+		t.Fatalf("lastID %d: got %d events, want %d", lastSeq, len(got), want)
+	}
+}
+
+// retainedIDs returns the suffix of inserted ids that a ring of the given
+// capacity still holds (the ring evicts from the front).
+func retainedIDs(ids []uint64, capacity int) []uint64 {
+	if len(ids) > capacity {
+		return ids[len(ids)-capacity:]
+	}
+
+	return ids
 }
 
 func clampNonNegative(v, ceiling int) int {
