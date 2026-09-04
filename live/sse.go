@@ -104,6 +104,19 @@ func sseJoinLines(lines ...string) string {
 	return strings.Join(lines, "\n")
 }
 
+// sseStripNewlines removes CR and LF from a single-line SSE field value
+// (event name, id). Newlines inside these fields would inject additional
+// fields into the wire frame; multi-line payloads belong in Data.
+func sseStripNewlines(s string) string {
+	if !strings.ContainsAny(s, "\n\r") {
+		return s
+	}
+
+	replacer := strings.NewReplacer("\r", "", "\n", "")
+
+	return replacer.Replace(s)
+}
+
 // sseKeyedLines prefixes every line of value with "key ", producing the
 // newline-joined string that writeSSEEvent splits into individual "data:"
 // lines. This is the building block for the datastar wire format, whose
@@ -138,13 +151,17 @@ func sseKeyedLines(key, value string) string {
 }
 
 // writeSSEEvent writes a single SSE event to w in the standard wire format.
-// The caller is responsible for flushing (sseStream.send does this).
+// Name and ID have CR/LF stripped: a newline inside a single-line field
+// would let arbitrary data inject additional SSE fields into the frame
+// (field-injection). Multi-line payloads belong in Data, which is split
+// into per-line "data:" fields. The caller is responsible for flushing
+// (sseStream.send does this).
 func writeSSEEvent(w io.Writer, evt sseEvent) error {
 	buf := make([]byte, 0, initialEventCap)
 
-	if evt.Name != "" {
+	if name := sseStripNewlines(evt.Name); name != "" {
 		buf = append(buf, "event: "...)
-		buf = append(buf, evt.Name...)
+		buf = append(buf, name...)
 		buf = append(buf, '\n')
 	}
 
@@ -154,9 +171,9 @@ func writeSSEEvent(w io.Writer, evt sseEvent) error {
 		buf = append(buf, '\n')
 	}
 
-	if evt.ID != "" {
+	if id := sseStripNewlines(evt.ID); id != "" {
 		buf = append(buf, "id: "...)
-		buf = append(buf, evt.ID...)
+		buf = append(buf, id...)
 		buf = append(buf, '\n')
 	}
 

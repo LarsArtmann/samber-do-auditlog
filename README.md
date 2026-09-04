@@ -391,7 +391,7 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 | Signal                | Detail                                                                                     |
 | --------------------- | ------------------------------------------------------------------------------------------ |
 | **CSP hardened**      | HTML reports use `base-uri 'none'; frame-ancestors 'none'`                                 |
-| **Fuzz tested**       | 8 fuzz targets covering HTML XSS, migration, diagrams, NDJSON                              |
+| **Fuzz tested**       | 10 fuzz targets covering HTML XSS, migration, diagrams, NDJSON, SSE wire, replay ring       |
 | **govulncheck**       | Runs on every CI push — zero known vulnerabilities                                         |
 | **99 linters**        | golangci-lint v2 with near-exhaustive linter set, minimal exemptions for tests and tooling |
 | **94% coverage gate** | CI fails if coverage drops below 94% of non-example/cmd statements                         |
@@ -416,7 +416,7 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). The project uses strict golangci-lint (99 linters), 94% test coverage gate, and 8 fuzz targets.
+See [CONTRIBUTING.md](CONTRIBUTING.md). The project uses strict golangci-lint (99 linters), 94% test coverage gate, and 10 fuzz targets.
 
 ## License
 

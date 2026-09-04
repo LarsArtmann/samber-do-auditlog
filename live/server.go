@@ -51,12 +51,6 @@ type Config struct {
 	ReplayBufferSize int
 }
 
-// HealthInfo provides dynamic health check data.
-type HealthInfo struct {
-	Events  int   `json:"events"`
-	Dropped int64 `json:"dropped"`
-}
-
 // snapshotSignals is the initial signal payload sent on SSE connect.
 // These are server-owned signals; client-owned signals (activeTab,
 // serviceSearch, etc.) are declared in the HTML template's data-signals.
