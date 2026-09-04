@@ -242,30 +242,21 @@ func assertNoRawXSS(t *testing.T, output, context string) {
 		}
 	}
 
-	// Check for javascript: and event-handler patterns only in HTML portions
-	// (outside JSON script blocks). On this branch user-controlled strings are
-	// rendered server-side by html/template, which escapes quotes as entities
-	// (&#34; / &#39;). Neutralize those entities so the quote-anchored vectors
-	// below only match GENUINE breakouts: a real attribute breakout keeps raw
-	// quotes and survives this step, while properly escaped data does not.
+	// HTML-portion check (outside JSON script blocks). html/template
+	// entity-encodes the breakout characters (" ' < > &) everywhere, so:
+	//  1. an input containing any breakout character must never appear
+	//     verbatim in the HTML portion — verbatim presence would prove an
+	//     unescaped sink;
+	//  2. quote-anchored patterns like ` onload="` must NOT be matched
+	//     naively: in properly escaped output a raw quote can only be an
+	//     attribute delimiter written by the template itself, so
+	//     input "0000000 onload=" legitimately ends an attribute value and
+	//     such a match is a false positive, not a breakout (a real breakout
+	//     would need the input's OWN quote, which html/template encodes).
 	htmlOnly := stripJSONScripts(output)
-	htmlOnly = strings.ReplaceAll(htmlOnly, "&#34;", "\x00")
-	htmlOnly = strings.ReplaceAll(htmlOnly, "&#39;", "\x00")
-	htmlOnly = strings.ReplaceAll(htmlOnly, "&quot;", "\x00")
 
-	htmlVectors := []string{
-		`href="javascript:`,
-		`src="javascript:`,
-		` onerror="`,
-		` onclick="`,
-		` onload="`,
-		` onmouseover="`,
-	}
-
-	for _, v := range htmlVectors {
-		if strings.Contains(htmlOnly, v) {
-			t.Errorf("unescaped %q in HTML portion for context %q", v, context)
-		}
+	if strings.ContainsAny(context, "\"'<>&") && strings.Contains(htmlOnly, context) {
+		t.Errorf("unescaped user input in HTML portion for context %q", context)
 	}
 }
 

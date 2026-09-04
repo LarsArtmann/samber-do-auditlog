@@ -2,6 +2,7 @@ package auditlog_test
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -9,36 +10,40 @@ import (
 	"github.com/samber/do/v2"
 )
 
-func TestXSSReproOnload(t *testing.T) {
+func TestXSSReproServiceName(t *testing.T) {
 	input := "0000000 onload="
-	plugin, err := auditlog.New(auditlog.Config{ContainerID: auditlog.ContainerID(input), Enabled: true})
+	plugin, err := auditlog.New(auditlog.Config{Enabled: true})
 	if err != nil {
 		t.Fatal(err)
 	}
 	injector := do.NewWithOpts(plugin.Opts())
-	do.Provide(injector, func(do.Injector) (string, error) { return "v", nil })
-	_ = injector
+	do.ProvideNamed(injector, input, func(do.Injector) (string, error) {
+		return "v", nil
+	})
+	_, _ = do.InvokeNamed[string](injector, input)
+	do.ProvideNamed(injector, "error-svc", func(_ do.Injector) (string, error) {
+		return "", fmt.Errorf("%s", input)
+	})
+	_, _ = do.InvokeNamed[string](injector, "error-svc")
 	var buf bytes.Buffer
 	if err := plugin.WriteHTML(&buf); err != nil {
 		t.Fatal(err)
 	}
 	out := buf.String()
-	idx := strings.Index(out, ` onload="`)
-	for idx >= 0 {
-		start := idx - 80
+	n := 0
+	idx := 0
+	for {
+		idx = strings.Index(out[idx:], ` onload="`)
+		if idx < 0 {
+			break
+		}
+		n++
+		start := idx - 100
 		if start < 0 {
 			start = 0
 		}
-		t.Logf("RAW HIT at %d: ...%q...", idx, out[start:idx+20])
-		idx = strings.Index(out[idx+1:], ` onload="`)
-		if idx >= 0 {
-			idx += strings.Index(out[:0], "") + 1
-			break
-		}
+		t.Logf("RAW #%d: %q", n, out[start:idx+30])
+		idx++
 	}
-	if !strings.Contains(out, ` onload="`) {
-		t.Log("no raw hit found in this path")
-	}
-	htmlOnly := strings.ReplaceAll(strings.ReplaceAll(out, "htmlOnly := stripJSONScriptsForTest(t, out)#34;", "\x00"), "htmlOnly := stripJSONScriptsForTest(t, out)#39;", "\x00")
-	t.Log("htmlOnly len", len(htmlOnly))
+	t.Logf("total raw hits: %d", n)
 }
