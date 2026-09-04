@@ -178,7 +178,12 @@ func computeLegendItems(report auditlog.Report, meta auditlog.TypeMetadata) []le
 		}
 	}
 
-	order := []string{"lazy", "eager", "transient", "alias"}
+	order := []string{
+		string(auditlog.ProviderTypeLazy),
+		string(auditlog.ProviderTypeEager),
+		string(auditlog.ProviderTypeTransient),
+		string(auditlog.ProviderTypeAlias),
+	}
 
 	var items []legendItem
 
