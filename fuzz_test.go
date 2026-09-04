@@ -117,7 +117,7 @@ func renderXSSVectorHTML(t *testing.T, input string) string {
 // markupChars are the characters whose raw presence in HTML output carries
 // parse meaning: tag delimiters and attribute delimiters. html/template
 // encodes all of them in user data (&lt; &gt; &#34; &#39;).
-var markupChars = []byte{'<', '>', '"', '\''} //nolint:gochecknoglobals // fixed constant table for the differential XSS check
+var markupChars = []byte{'<', '>', '"', '\''}
 
 func assertMarkupCountsEqual(t *testing.T, output, baseline, input string) {
 	t.Helper()
@@ -127,7 +127,10 @@ func assertMarkupCountsEqual(t *testing.T, output, baseline, input string) {
 		want := bytes.Count([]byte(baseline), []byte{ch})
 
 		if got != want {
-			t.Fatalf("markup breakout: raw %q count %d differs from benign baseline %d for input %q", ch, got, want, input)
+			t.Fatalf(
+				"markup breakout: raw %q count %d differs from benign baseline %d for input %q",
+				ch, got, want, input,
+			)
 		}
 	}
 }
