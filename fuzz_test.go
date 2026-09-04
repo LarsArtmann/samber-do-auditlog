@@ -46,43 +46,90 @@ func FuzzPluginHTML(f *testing.F) {
 			t.Skip()
 		}
 
-		plugin := mustNew(auditlog.Config{Enabled: true})
-		injector := do.NewWithOpts(plugin.Opts())
-
-		// Vector 1: service name XSS.
-		provideString(injector, input, "val")
-
-		_, err := do.InvokeNamed[string](injector, input)
-		if err != nil {
+		output := renderXSSVectorHTML(t, input)
+		if output == "" {
 			t.Skip()
 		}
 
-		// Vector 2: error-message XSS.
-		do.ProvideNamed(injector, "error-svc", func(_ do.Injector) (string, error) {
-			return "", fmt.Errorf("%s", input) //nolint:err113
-		})
+		assertNoRawXSS(t, output, input)
 
-		_, _ = do.InvokeNamed[string](injector, "error-svc")
-
-		// Vector 3: dependency-chain XSS.
-		do.ProvideNamed(injector, "parent-svc", func(i do.Injector) (string, error) {
-			_, _ = do.InvokeNamed[string](i, input)
-
-			return "parent-val", nil
-		})
-
-		_, _ = do.InvokeNamed[string](injector, "parent-svc")
-
-		var buf bytes.Buffer
-
-		writeErr := plugin.WriteHTML(&buf)
-		if writeErr != nil {
-			return
+		// Differential invariant: rendering the same vectors with a benign
+		// twin (same length, digits only) must produce EXACTLY the same
+		// number of raw markup-structure characters (< > " '). html/template
+		// entity-encodes those characters in user data, so any breakout —
+		// injecting a raw quote or angle bracket the template did not write
+		// — changes the count. This catches breakouts regardless of where
+		// the input lands, including degenerate inputs like a lone quote
+		// for which "input appears verbatim" checks are meaningless.
+		baseline := renderXSSVectorHTML(t, strings.Repeat("0", len(input)))
+		if baseline == "" {
+			t.Skip()
 		}
 
-		output := buf.String()
-		assertNoRawXSS(t, output, input)
+		assertMarkupCountsEqual(t, output, baseline, input)
 	})
+}
+
+// renderXSSVectorHTML builds a plugin whose service name, error message,
+// and dependency chain all carry the input, then renders the self-contained
+// HTML report. Returns "" if the input cannot be a service name or the
+// render fails (not an XSS concern).
+func renderXSSVectorHTML(t *testing.T, input string) string {
+	t.Helper()
+
+	plugin := mustNew(auditlog.Config{Enabled: true})
+	injector := do.NewWithOpts(plugin.Opts())
+
+	// Vector 1: service name XSS.
+	provideString(injector, input, "val")
+
+	_, err := do.InvokeNamed[string](injector, input)
+	if err != nil {
+		t.Skip()
+	}
+
+	// Vector 2: error-message XSS.
+	do.ProvideNamed(injector, "error-svc", func(_ do.Injector) (string, error) {
+		return "", fmt.Errorf("%s", input) //nolint:err113
+	})
+
+	_, _ = do.InvokeNamed[string](injector, "error-svc")
+
+	// Vector 3: dependency-chain XSS.
+	do.ProvideNamed(injector, "parent-svc", func(i do.Injector) (string, error) {
+		_, _ = do.InvokeNamed[string](i, input)
+
+		return "parent-val", nil
+	})
+
+	_, _ = do.InvokeNamed[string](injector, "parent-svc")
+
+	var buf bytes.Buffer
+
+	writeErr := plugin.WriteHTML(&buf)
+	if writeErr != nil {
+		return ""
+	}
+
+	return buf.String()
+}
+
+// markupChars are the characters whose raw presence in HTML output carries
+// parse meaning: tag delimiters and attribute delimiters. html/template
+// encodes all of them in user data (&lt; &gt; &#34; &#39;).
+var markupChars = []byte{'<', '>', '"', '\''} //nolint:gochecknoglobals // fixed constant table for the differential XSS check
+
+func assertMarkupCountsEqual(t *testing.T, output, baseline, input string) {
+	t.Helper()
+
+	for _, ch := range markupChars {
+		got := bytes.Count([]byte(output), []byte{ch})
+		want := bytes.Count([]byte(baseline), []byte{ch})
+
+		if got != want {
+			t.Fatalf("markup breakout: raw %q count %d differs from benign baseline %d for input %q", ch, got, want, input)
+		}
+	}
 }
 
 func FuzzMigrateReport(f *testing.F) {
@@ -228,6 +275,11 @@ func FuzzDiagramSpecialChars(f *testing.F) {
 func assertNoRawXSS(t *testing.T, output, context string) {
 	t.Helper()
 
+	// Static attack-pattern vectors, checked on the HTML portion only:
+	// JSON script blocks legitimately contain angle brackets from the input
+	// (JSON does not escape them) and are inert in the browser.
+	htmlOnly := stripJSONScripts(output)
+
 	vectors := []string{
 		"<script>alert",
 		"<img src=x onerror=",
@@ -237,26 +289,9 @@ func assertNoRawXSS(t *testing.T, output, context string) {
 	}
 
 	for _, v := range vectors {
-		if strings.Contains(output, v) {
+		if strings.Contains(htmlOnly, v) {
 			t.Errorf("unescaped %q in HTML output for context %q", v, context)
 		}
-	}
-
-	// HTML-portion check (outside JSON script blocks). html/template
-	// entity-encodes the breakout characters (" ' < > &) everywhere, so:
-	//  1. an input containing any breakout character must never appear
-	//     verbatim in the HTML portion — verbatim presence would prove an
-	//     unescaped sink;
-	//  2. quote-anchored patterns like ` onload="` must NOT be matched
-	//     naively: in properly escaped output a raw quote can only be an
-	//     attribute delimiter written by the template itself, so
-	//     input "0000000 onload=" legitimately ends an attribute value and
-	//     such a match is a false positive, not a breakout (a real breakout
-	//     would need the input's OWN quote, which html/template encodes).
-	htmlOnly := stripJSONScripts(output)
-
-	if strings.ContainsAny(context, "\"'<>&") && strings.Contains(htmlOnly, context) {
-		t.Errorf("unescaped user input in HTML portion for context %q", context)
 	}
 }
 
