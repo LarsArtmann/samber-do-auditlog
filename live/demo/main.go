@@ -90,12 +90,14 @@ func main() {
 func registerDemoServices(injector do.Injector) {
 	fmt.Print("Registering services")
 
+	//samber-linter:allow hw-4 delay demo registers lazily; every service is resolved before the sweep runs
 	do.ProvideNamed(injector, "database", func(i do.Injector) (*Database, error) {
 		time.Sleep(300 * time.Millisecond)
 		return &Database{DSN: "postgres://localhost:5432/demo"}, nil
 	})
 	step()
 
+	//samber-linter:allow hw-4 delay demo registers lazily; every service is resolved before the sweep runs
 	do.ProvideNamed(injector, "cache", func(i do.Injector) (*Cache, error) {
 		time.Sleep(200 * time.Millisecond)
 		return &Cache{Addr: "redis://localhost:6379"}, nil
@@ -108,6 +110,7 @@ func registerDemoServices(injector do.Injector) {
 	})
 	step()
 
+	//samber-linter:allow hw-4 delay demo registers lazily; every service is resolved before the sweep runs
 	do.ProvideNamed(injector, "user-service", func(i do.Injector) (*UserService, error) {
 		repo := do.MustInvokeNamed[*UserRepo](i, "user-repo")
 		cache := do.MustInvokeNamed[*Cache](i, "cache")
@@ -116,7 +119,8 @@ func registerDemoServices(injector do.Injector) {
 	})
 	step()
 
-	do.ProvideTransient(injector, func(i do.Injector) (*EmailNotifier, error) {
+	//samber-linter:allow hw-4 delay demo registers lazily; every service is resolved before the sweep runs
+	do.ProvideNamed(injector, "email-notifier", func(i do.Injector) (*EmailNotifier, error) {
 		return &EmailNotifier{SMTP: "smtp://localhost:587"}, nil
 	})
 
@@ -176,7 +180,7 @@ type Database struct {
 	DSN string
 }
 
-func (d *Database) HealthCheck() error {
+func (d *Database) HealthCheck(_ context.Context) error {
 	if d.DSN == "" {
 		return errors.New("database: no DSN configured")
 	}
@@ -188,7 +192,7 @@ type Cache struct {
 	Addr string
 }
 
-func (c *Cache) HealthCheck() error {
+func (c *Cache) HealthCheck(_ context.Context) error {
 	if c.Addr == "" {
 		return errors.New("cache: no address configured")
 	}
@@ -205,7 +209,7 @@ type UserService struct {
 	cache *Cache
 }
 
-func (s *UserService) HealthCheck() error {
+func (s *UserService) HealthCheck(_ context.Context) error {
 	if s.repo == nil {
 		return errors.New("user-service: no repository")
 	}
@@ -221,7 +225,7 @@ type EmailNotifier struct {
 	SMTP string
 }
 
-func (n *EmailNotifier) HealthCheck() error {
+func (n *EmailNotifier) HealthCheck(_ context.Context) error {
 	if n.SMTP == "" {
 		return errors.New("email-notifier: no SMTP server configured")
 	}

@@ -38,17 +38,17 @@ func (l *Logger) Printf(format string, args ...any) {
 	fmt.Printf("[%s] "+format+"\n", append([]any{l.Prefix}, args...)...)
 }
 
-// Database implements do.ShutdownerWithError and do.Healthchecker.
+// Database implements do.ShutdownerWithError and do.HealthcheckerWithContext.
 var (
-	_ do.ShutdownerWithError = (*Database)(nil)
-	_ do.Healthchecker       = (*Database)(nil)
+	_ do.ShutdownerWithError      = (*Database)(nil)
+	_ do.HealthcheckerWithContext = (*Database)(nil)
 )
 
 type Database struct {
 	DSN string
 }
 
-func (d *Database) HealthCheck() error {
+func (d *Database) HealthCheck(_ context.Context) error {
 	if d.DSN == "" {
 		return errDatabaseNoConn
 	}
@@ -109,6 +109,14 @@ func (e *EmailNotifier) Send(to, body string) error {
 	return nil
 }
 
+func (e *EmailNotifier) HealthCheck(_ context.Context) error {
+	if e.From == "" {
+		return errors.New("email-notifier: no sender configured")
+	}
+
+	return nil
+}
+
 func (e *EmailNotifier) Shutdown() error {
 	fmt.Println("  EmailNotifier: closing SMTP connection")
 
@@ -142,8 +150,17 @@ func (v *Vehicle) Shutdown() error {
 	return nil
 }
 
+func (v *Vehicle) HealthCheck(_ context.Context) error {
+	if !v.Active {
+		return errors.New("vehicle: decommissioned")
+	}
+
+	return nil
+}
+
 // provideVehicle registers a named *Vehicle provider.
 func provideVehicle(injector do.Injector, name string, capacity int) {
+	//samber-linter:allow hw-4 lifecycle demo registers lazily; every service is resolved before the sweep runs
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*Vehicle, error) {
 		return &Vehicle{Name: name, Capacity: capacity, Active: true}, nil
 	})
@@ -162,8 +179,17 @@ func (d *DriverService) Shutdown() error {
 	return nil
 }
 
+func (d *DriverService) HealthCheck(_ context.Context) error {
+	if d.Vehicle == nil {
+		return errors.New("driver: no vehicle assigned")
+	}
+
+	return nil
+}
+
 // provideDriverService registers a *DriverService that pulls a named *Vehicle.
 func provideDriverService(injector do.Injector, driverName, vehicleName string) {
+	//samber-linter:allow hw-4 lifecycle demo registers lazily; every service is resolved before the sweep runs
 	do.ProvideNamed(injector, driverName, func(i do.Injector) (*DriverService, error) {
 		vehicle := do.MustInvokeNamed[*Vehicle](i, vehicleName)
 
@@ -181,8 +207,17 @@ func (p *PassengerService) Shutdown() error {
 	return nil
 }
 
+func (p *PassengerService) HealthCheck(_ context.Context) error {
+	if p.Name == "" {
+		return errors.New("passenger: no name")
+	}
+
+	return nil
+}
+
 // providePassengerService registers a named *PassengerService provider.
 func providePassengerService(injector do.Injector, name string) {
+	//samber-linter:allow hw-4 lifecycle demo registers lazily; every service is resolved before the sweep runs
 	do.ProvideNamed(injector, name, func(_ do.Injector) (*PassengerService, error) {
 		return &PassengerService{Name: name}, nil
 	})
@@ -195,6 +230,14 @@ type MatchingEngine struct {
 
 func (m *MatchingEngine) Shutdown() error {
 	fmt.Println("  MatchingEngine: stopping match loop")
+
+	return nil
+}
+
+func (m *MatchingEngine) HealthCheck(_ context.Context) error {
+	if len(m.Drivers) == 0 || len(m.Passengers) == 0 {
+		return errors.New("matching: no drivers or passengers available")
+	}
 
 	return nil
 }
@@ -218,6 +261,14 @@ func (s *HTTPServer) ListenAndServe() error {
 
 func (s *HTTPServer) Shutdown() error {
 	fmt.Printf("  HTTPServer: draining connections on :%d\n", s.Port)
+
+	return nil
+}
+
+func (s *HTTPServer) HealthCheck(_ context.Context) error {
+	if s.Config == nil || s.Port == 0 {
+		return errors.New("httpserver: not configured")
+	}
 
 	return nil
 }

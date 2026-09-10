@@ -26,6 +26,7 @@ func registerServices(injector do.Injector) *do.Scope {
 		return &Logger{Prefix: cfg.AppName}, nil
 	})
 
+	//samber-linter:allow hw-4 lifecycle demo registers lazily; every service is resolved before the sweep runs
 	do.Provide(injector, func(i do.Injector) (*Database, error) {
 		dsn := do.MustInvokeNamed[string](i, "config.db.dsn")
 		logger := do.MustInvoke[*Logger](i)
@@ -35,11 +36,13 @@ func registerServices(injector do.Injector) *do.Scope {
 		return &Database{DSN: dsn}, nil
 	})
 
+	//samber-linter:allow hw-4 lifecycle demo registers lazily; every service is resolved before the sweep runs
 	do.Provide(injector, func(i do.Injector) (*Cache, error) {
 		return &Cache{Healthy: true}, nil
 	})
 
 	// 4. Interface aliasing
+	//samber-linter:allow hw-4 lifecycle demo registers lazily; every service is resolved before the sweep runs
 	do.Provide(injector, func(i do.Injector) (*EmailNotifier, error) {
 		return &EmailNotifier{From: "no-reply@rideshare.app"}, nil
 	})
@@ -74,6 +77,7 @@ func registerServices(injector do.Injector) *do.Scope {
 	providePassengerService(passengerScope, "passenger.charlie")
 	providePassengerService(passengerScope, "passenger.dana")
 
+	//samber-linter:allow hw-4 lifecycle demo registers lazily; every service is resolved before the sweep runs
 	do.Provide(matchingScope, func(i do.Injector) (*MatchingEngine, error) {
 		alice := do.MustInvokeNamed[*DriverService](driverScope, "alice")
 		bob := do.MustInvokeNamed[*DriverService](driverScope, "driver.bob")
@@ -103,6 +107,7 @@ func registerServices(injector do.Injector) *do.Scope {
 	})
 
 	// 9. HTTP server
+	//samber-linter:allow hw-4 lifecycle demo registers lazily; every service is resolved before the sweep runs
 	do.Provide(injector, func(i do.Injector) (*HTTPServer, error) {
 		cfg := do.MustInvoke[*AppConfig](i)
 		srvCfg := do.MustInvoke[*ServerConfig](i)
@@ -125,6 +130,7 @@ func registerServices(injector do.Injector) *do.Scope {
 		return nil, errUnreliableDep
 	})
 
+	//samber-linter:allow hw-1 shutdown-error demo subject; health is not the demonstrated failure mode
 	do.Provide(injector, func(i do.Injector) (*LeakyService, error) {
 		return &LeakyService{}, nil
 	})
