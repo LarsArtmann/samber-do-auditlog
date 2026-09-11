@@ -203,6 +203,9 @@ Health probes are the most frequently-called endpoints in production (kubelet po
 
 ## g) Questions (cannot figure out myself)
 
+> **Resolution (2026-09-11):** superseded — `health/` was extracted to [github.com/larsartmann/go-health](https://github.com/larsartmann/go-health) as its own repository with its own go.mod; `*Plugin` satisfies its `HealthRecorder` interface implicitly.
+
+
 ### 1. Should `health/` be a sub-module (`go.mod`) or stay as a sub-package?
 
 The `live/` sub-package is part of the main module. But `health/` only depends on `samber/do` and the parent `auditlog` package — it could be a separate module with fewer dependencies (no go-output, no templ, no go-sse). This matters because users who only want health probes shouldn't have to pull in the entire auditlog dependency tree. Should we split it, or keep it simple as a sub-package?

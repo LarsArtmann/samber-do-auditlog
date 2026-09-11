@@ -268,6 +268,9 @@ I added `Probe.Validate()` and 5 tests for it, but I never wired it into `New()`
 
 ## g) Questions
 
+> **Resolution (2026-09-11):** superseded — `health/` was extracted to [github.com/larsartmann/go-health](https://github.com/larsartmann/go-health) as its own repository with its own go.mod; `*Plugin` satisfies its `HealthRecorder` interface implicitly.
+
+
 ### 1. Should `Validate()` be enforced or opt-in?
 
 I added `Probe.Validate()` as an opt-in method — callers must remember to call it. If someone constructs `health.New(injector, health.WithTimeout(0))`, they get silent runtime failures (every health check times out immediately). Three options:

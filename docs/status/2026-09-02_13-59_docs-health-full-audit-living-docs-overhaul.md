@@ -91,33 +91,33 @@ Impact-ranked. Effort S <30 min, M 30 min–2 h, L >2 h. Items marked ★ are bo
 
 | #  | Task                                                                                                                            | Impact   | Effort | Category      |
 | -- | ------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ------------- |
-| 1  | Commit + push the 14-path working tree (explicit paths); watch CI **and** Website workflows                                     | Critical | S      | Release       |
-| 2  | Verify Website workflow's first fully green execution (install → check → build → validate → deploy)                             | Critical | S      | Quality       |
+| ~~1~~  | ~~Commit + push the 14-path working tree (explicit paths); watch CI **and** Website workflows~~ done — landed via auto-commit daemon 2026-09-02; CI green since | ~~Critical~~ | ~~S~~ | ~~Release~~ |
+| ~~2~~  | ~~Verify Website workflow's first fully green execution (install → check → build → validate → deploy)~~ done — website.yml green since 2026-09-04 | ~~Critical~~ | ~~S~~ | ~~Quality~~ |
 | 3  | ★ Re-verify `example/ --live` premature-shutdown bug; restore to TODO_LIST if real                                              | High     | S      | Bug           |
-| 4  | ★ Ground or delete the ROADMAP causal claim for the live/ coverage drop (per-file coverage diff)                                | High     | S      | Documentation |
-| 5  | ★ Annotate the ~8–10 straggler items my fixes resolved (website §b.7, round-2 sc.4, CI-repair sc.1–4)                           | Medium   | S      | Documentation |
+| ~~4~~  | ~~★ Ground or delete the ROADMAP causal claim for the live/ coverage drop (per-file coverage diff)~~ done — grounded — per-function coverage 2026-09-02; ROADMAP cites the data | ~~High~~ | ~~S~~ | ~~Documentation~~ |
+| ~~5~~  | ~~★ Annotate the ~8–10 straggler items my fixes resolved (website §b.7, round-2 sc.4, CI-repair sc.1–4)~~ done — straggler pass completed by docs-health 2026-09-11 (13 reports archived) | ~~Medium~~ | ~~S~~ | ~~Documentation~~ |
 | 6  | ★ Markdown formatter pass over TODO_LIST/ROADMAP/FEATURES/AGENTS tables                                                         | Medium   | S      | Cleanup       |
-| 7  | ★ Rerun the health-report scoring with the skill's canonical `health-report-format.md` rubric                                   | Low      | S      | Documentation |
-| 8  | Continue strict archive verification on the remaining 52 status reports (batch agents)                                          | Medium   | L      | Documentation |
-| 9  | Decide + document the status-report retention/archive policy (ROADMAP idea → decision)                                          | Medium   | S      | Documentation |
-| 10 | Go-version drift guard (`scripts/check-go-version.sh` + CI + hook)                                                              | High     | S      | Quality       |
+| ~~7~~  | ~~★ Rerun the health-report scoring with the skill's canonical `health-report-format.md` rubric~~ done — health-report rerun 2026-09-11 uses the canonical rubric inline | ~~Low~~ | ~~S~~ | ~~Documentation~~ |
+| ~~8~~  | ~~Continue strict archive verification on the remaining 52 status reports (batch agents)~~ done — 13 more reports annotated + archived 2026-09-11; policy decided | ~~Medium~~ | ~~L~~ | ~~Documentation~~ |
+| ~~9~~  | ~~Decide + document the status-report retention/archive policy (ROADMAP idea → decision)~~ done — decided 2026-09-11 — archive fully-resolved files on docs-health pass | ~~Medium~~ | ~~S~~ | ~~Documentation~~ |
+| ~~10~~ | ~~Go-version drift guard (`scripts/check-go-version.sh` + CI + hook)~~ done — scripts/check-go-version.sh in CI + pre-commit | ~~High~~ | ~~S~~ | ~~Quality~~ |
 | 11 | `go mod tidy`/`go generate` retry wrapper in CI (transport flakes only)                                                         | High     | S      | Quality       |
-| 12 | Single-source coverage exclusions consumed by gate script + ci.yml                                                              | High     | S      | Quality       |
+| ~~12~~ | ~~Single-source coverage exclusions consumed by gate script + ci.yml~~ done — scripts/coverage-exclusions.txt consumed by gate + ci.yml | ~~High~~ | ~~S~~ | ~~Quality~~ |
 | 13 | CI ergonomics: concurrency group, coverage step-summary, `workflow_dispatch`, paths-ignore decision                             | Medium   | M      | Quality       |
-| 14 | Pin govulncheck + firebase-tools; weekly scheduled vulncheck                                                                    | Medium   | M      | Quality       |
+| ~~14~~ | ~~Pin govulncheck + firebase-tools; weekly scheduled vulncheck~~ done — govulncheck @v1.7.0 + firebase-tools @15.28.2 + weekly cron | ~~Medium~~ | ~~M~~ | ~~Quality~~ |
 | 15 | Lint infra: cache/prebuilt golangci-lint; retire 4 nolints when pin ≥ 2.13; depguard-replacement decision                       | Medium   | M      | Quality       |
-| 16 | Release v0.10.1 from green master; re-baseline BENCHMARKS.md on 1.26.7                                                          | High     | M      | Release       |
-| 17 | Plumbing truths: `nix eval` locked `go_1_26`; `nix run .#coverage` / `.#auditlog` smokes                                        | Medium   | S      | Quality       |
-| 18 | Full fuzz sweep on 1.26.7 (8 targets)                                                                                           | Medium   | M      | Quality       |
+| 16 | Release v0.10.1 from green master; re-baseline BENCHMARKS.md on 1.26.7| High | M | Release |
+| ~~17~~ | ~~Plumbing truths: `nix eval` locked `go_1_26`; `nix run .#coverage` / `.#auditlog` smokes~~ done — nix apps verified green (TODO_LIST 2026-09-02) | ~~Medium~~ | ~~S~~ | ~~Quality~~ |
+| ~~18~~ | ~~Full fuzz sweep on 1.26.7 (8 targets)~~ done — 8/8 targets × 20s clean (2026-09-02) | ~~Medium~~ | ~~M~~ | ~~Quality~~ |
 | 19 | Nix templ-regression guard (retracted-v0.9.0 failure mode)                                                                      | Medium   | M      | Quality       |
-| 20 | Sibling-repo SHA/pin audit (go-workflow-auditlog, go-sse, go-ndjson, go-health)                                                 | High     | M      | Bug           |
-| 21 | Website docs sync: contributing.mdx (7 jobs, govulncheck, Go 1.26.7)                                                            | Low      | S      | Documentation |
-| 22 | Implement `DepsChanged` in `Report.Diff` + tests + STABILITY row (doc-lie already fixed)                                        | High     | M      | Feature       |
-| 23 | Stale-changelog guard (CHANGELOG.md ↔ changelog.mdx CI check)                                                                   | Medium   | S      | Quality       |
-| 24 | `example/` CI smoke test (run the 23-feature self-check in CI)                                                                  | Medium   | S      | Quality       |
-| 25 | Strict enum parsing on load (`EventType`/`Phase`/`ProviderType`/`ServiceStatus`)                                                | Medium   | M      | Feature       |
+| ~~20~~ | ~~Sibling-repo SHA/pin audit (go-workflow-auditlog, go-sse, go-ndjson, go-health)~~ done — sibling audit 2026-09-02 — 3 SHAs fixed in go-workflow-auditlog | ~~High~~ | ~~M~~ | ~~Bug~~ |
+| ~~21~~ | ~~Website docs sync: contributing.mdx (7 jobs, govulncheck, Go 1.26.7)~~ done — contributing.mdx synced (7 jobs, pinned govulncheck, Go 1.26.7) | ~~Low~~ | ~~S~~ | ~~Documentation~~ |
+| ~~22~~ | ~~Implement `DepsChanged` in `Report.Diff` + tests + STABILITY row (doc-lie already fixed)~~ done — diff.go AddedDeps/RemovedDeps shipped 2026-09-02 | ~~High~~ | ~~M~~ | ~~Feature~~ |
+| ~~23~~ | ~~Stale-changelog guard (CHANGELOG.md ↔ changelog.mdx CI check)~~ done — scripts/check-changelog-sync.sh in website.yml | ~~Medium~~ | ~~S~~ | ~~Quality~~ |
+| ~~24~~ | ~~`example/` CI smoke test (run the 23-feature self-check in CI)~~ done — ci.yml example-smoke job | ~~Medium~~ | ~~S~~ | ~~Quality~~ |
+| ~~25~~ | ~~Strict enum parsing on load (`EventType`/`Phase`/`ProviderType`/`ServiceStatus`)~~ done — strict enum validation shipped 2026-09-02 | ~~Medium~~ | ~~M~~ | ~~Feature~~ |
 | 26 | CLI `--input-format`, `--verbose/--quiet` flags                                                                                 | Low      | S      | Feature       |
-| 27 | Dependabot sweep: rebase 3 website PRs, verify both workflows, merge/close (blocked g.1)                                        | High     | S      | Cleanup       |
+| 27 | Dependabot sweep: rebase 3 website PRs, verify both workflows, merge/close (blocked g.1)| High | S | Cleanup |
 | 28 | Owner: branch protection with 7 required checks + Website                                                                       | High     | S      | Quality       |
 | 29 | Owner: Dependabot auto-merge + rebase strategy                                                                                  | Medium   | S      | Cleanup       |
 | 30 | Owner: master-failure notification                                                                                              | Medium   | S      | Quality       |
@@ -128,19 +128,19 @@ Impact-ranked. Effort S <30 min, M 30 min–2 h, L >2 h. Items marked ★ are bo
 | 35 | Website: light-theme pass                                                                                                       | Medium   | S      | Quality       |
 | 36 | Website: real-browser playback smoke test of `/demo.mp4`                                                                        | Medium   | S      | Quality       |
 | 37 | Re-verify final mp4 frame at t≈21.2s post-"d"-fix                                                                               | Medium   | S      | Quality       |
-| 38 | Claims linter for README/docs (versions, %, counts vs source)                                                                   | High     | M      | Quality       |
+| ~~38~~ | ~~Claims linter for README/docs (versions, %, counts vs source)~~ done — scripts/check-doc-claims.sh wired into pre-commit | ~~High~~ | ~~M~~ | ~~Quality~~ |
 | 39 | Lighthouse audit of landing + one docs page                                                                                     | Medium   | M      | Quality       |
-| 40 | Audit `docs/DOMAIN_LANGUAGE.md` (streaming/diagram/table terms missing)                                                         | Low      | S      | Documentation |
-| 41 | Add `GOEXPERIMENT=jsonv2` note to `doc.go` (godoc discoverability)                                                              | Medium   | S      | Documentation |
-| 42 | Verify README Mermaid sample against actual `WriteMermaidString()` output                                                       | Medium   | S      | Bug           |
+| ~~40~~ | ~~Audit `docs/DOMAIN_LANGUAGE.md` (streaming/diagram/table terms missing)~~ done — DOMAIN_LANGUAGE Streaming section added 2026-09-02 | ~~Low~~ | ~~S~~ | ~~Documentation~~ |
+| ~~41~~ | ~~Add `GOEXPERIMENT=jsonv2` note to `doc.go` (godoc discoverability)~~ done — doc.go:15 GOEXPERIMENT note | ~~Medium~~ | ~~S~~ | ~~Documentation~~ |
+| ~~42~~ | ~~Verify README Mermaid sample against actual `WriteMermaidString()` output~~ done — README Mermaid sample verified truthful 2026-09-02 | ~~Medium~~ | ~~S~~ | ~~Bug~~ |
 | 43 | Verify pkg.go.dev surfaces the GOEXPERIMENT note for v0.10.0                                                                    | Medium   | S      | Documentation |
-| 44 | Inspect the 5 stray-strikethrough files from earlier sessions; normalize annotation conventions                                 | Low      | S      | Documentation |
+| ~~44~~ | ~~Inspect the 5 stray-strikethrough files from earlier sessions; normalize annotation conventions~~ done — 5 files normalized to standard marker convention 2026-09-02 | ~~Low~~ | ~~S~~ | ~~Documentation~~ |
 | 45 | Post-green: run full pre-commit suite once as parity proof                                                                      | Low      | S      | Quality       |
 | 46 | Consider `paths-ignore` for docs-only pushes (decision, not code)                                                               | Medium   | S      | Quality       |
 | 47 | Investigate setup-go cache not shielding mod-tidy from proxy downloads                                                          | Low      | S      | Quality       |
 | 48 | Evaluate per-job `timeout-minutes` for fast-fail on transport hangs                                                             | Low      | S      | Quality       |
 | 49 | Move the "raise live/ coverage to 90%" from ROADMAP bar to a concrete test plan (top untested: fragment renderers)              | Medium   | M      | Quality       |
-| 50 | ★ Read + apply the 8 docs-health reference files as a checklist item in the next docs-health run; note deviations in its report | Low      | S      | Process       |
+| ~~50~~ | ~~★ Read + apply the 8 docs-health reference files as a checklist item in the next docs-health run; note deviations in its report~~ done — all 8 references read + applied by the 2026-09-11 docs-health pass | ~~Low~~ | ~~S~~ | ~~Process~~ |
 
 ## g) Questions I cannot answer myself
 

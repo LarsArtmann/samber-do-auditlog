@@ -49,19 +49,19 @@ Nothing partially done. The revert was binary — either the code compiles or it
 
 The `go-auto-upgrade` migrator in BuildFlow committed 7 categories of damage simultaneously:
 
-1. **Import rewrite to non-existent packages**: Rewrote `encoding/json` → `encoding/json/v2` + `encoding/json/jsontext` in 5 files (`export.go`, `report.go`, `ndjson.go`, `loader.go`, `migration.go`). Both packages are **build-constraint-excluded** in Go 1.26.4 — they physically exist in the nix store but `//go:build goexperiment.jsonv2` (or equivalent) is not satisfied.
+1. ~~**Import rewrite to non-existent packages**: Rewrote `encoding/json` → `encoding/json/v2` + `encoding/json/jsontext` in 5 files (`export.go`, `report.go`, `ndjson.go`, `loader.go`, `migration.go`). Both packages are **build-constraint-excluded** in Go 1.26.4 — they physically exist in the nix store but `//go:build goexperiment.jsonv2` (or equivalent) is not satisfied.~~ done (reverted — see Resolution)
 
-2. **API migration with wrong API**: `export.go` changed `json.NewEncoder(w)` → `jsontext.NewEncoder(w)` then `enc.Encode()` → `json.MarshalEncode()`. `report.go` used `enc.SetIndent("", "  ")` which doesn't exist on `*jsontext.Encoder` — it should have been `jsontext.WithIndent("  ")` passed to the encoder constructor. The migration was half-baked.
+2. ~~**API migration with wrong API**: `export.go` changed `json.NewEncoder(w)` → `jsontext.NewEncoder(w)` then `enc.Encode()` → `json.MarshalEncode()`. `report.go` used `enc.SetIndent("", "  ")` which doesn't exist on `*jsontext.Encoder` — it should have been `jsontext.WithIndent("  ")` passed to the encoder constructor. The migration was half-baked.~~ done (reverted — see Resolution)
 
-3. **Deleted a public function**: `CompareServiceRefs()` was deleted from `diff.go` but **4 call sites still referenced it** (`diff.go:76`, `diff.go:77`, `report_builder.go:38`, `report_builder.go:141`). The tool tried to inline it into `sortServiceDiffs` but botched the refactor — `sortServiceDiffs` now takes `ServiceDiff` params and reads `.ServiceName`/`.ScopeID` directly, but the function signature lost the `ServiceRef` comparison logic.
+3. ~~**Deleted a public function**: `CompareServiceRefs()` was deleted from `diff.go` but **4 call sites still referenced it** (`diff.go:76`, `diff.go:77`, `report_builder.go:38`, `report_builder.go:141`). The tool tried to inline it into `sortServiceDiffs` but botched the refactor — `sortServiceDiffs` now takes `ServiceDiff` params and reads `.ServiceName`/`.ScopeID` directly, but the function signature lost the `ServiceRef` comparison logic.~~ done (restored at diff.go:169)
 
-4. **Dependency upgrade**: Bumped `go-output` from v0.30.1 → v0.30.4 across 11 module lines. This made the breakage **transitive** — even reverting local code wouldn't help because go-output v0.30.4 itself imports `encoding/json/v2`.
+4. ~~**Dependency upgrade**: Bumped `go-output` from v0.30.1 → v0.30.4 across 11 module lines. This made the breakage **transitive** — even reverting local code wouldn't help because go-output v0.30.4 itself imports `encoding/json/v2`.~~ done (now v0.38.0 lockstep)
 
-5. **Import ordering violation**: `cmd/genschema/main.go` had `encoding/json/jsontext` placed in the third-party import group (after `github.com/...`), violating gci grouping rules.
+5. ~~**Import ordering violation**: `cmd/genschema/main.go` had `encoding/json/jsontext` placed in the third-party import group (after `github.com/...`), violating gci grouping rules.~~ done (resolved)
 
-6. **Removed `go-output/testhelpers` from go.mod**: An indirect dependency was dropped, potentially affecting test infrastructure.
+6. ~~**Removed `go-output/testhelpers` from go.mod**: An indirect dependency was dropped, potentially affecting test infrastructure.~~ done (resolved — v0.38.0 clean manifests)
 
-7. **Cascading build failures**: All 6 BuildFlow steps downstream of `go-auto-upgrade` failed: `go-fix`, `go-generate`, `govalid-generate`, `golangci-lint:repair`, `test-race`, and `test-coverage`. 11 more steps were skipped as blocked.
+7. ~~**Cascading build failures**: All 6 BuildFlow steps downstream of `go-auto-upgrade` failed: `go-fix`, `go-generate`, `govalid-generate`, `golangci-lint:repair`, `test-race`, and `test-coverage`. 11 more steps were skipped as blocked.~~ done (repaired — CI green since)
 
 ### Why It Happened
 

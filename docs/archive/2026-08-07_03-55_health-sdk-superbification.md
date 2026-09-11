@@ -246,6 +246,9 @@ The guide explicitly says in Step 1: "Add a compile-time guard." All 4 test serv
 
 ## g) Questions (cannot figure out myself)
 
+> **Resolution (2026-09-11):** superseded — `health/` was extracted to [github.com/larsartmann/go-health](https://github.com/larsartmann/go-health) as its own repository with its own go.mod; `*Plugin` satisfies its `HealthRecorder` interface implicitly.
+
+
 ### 1. Should benchmark numbers be in FEATURES.md/CHANGELOG.md at all?
 
 I hardcoded specific ns/op values (`3.3µs`, `9.6µs`) in FEATURES.md and CHANGELOG.md, but these are already stale (second run showed different numbers). Should I (a) remove all specific numbers and use qualitative claims only, (b) keep numbers but add "indicative, see BENCHMARKS.md" disclaimer, or (c) move all numbers to BENCHMARKS.md only? The project convention in BENCHMARKS.md uses a dated environment header for regression baselines — I'm unsure if FEATURES.md should have any performance claims at all.
