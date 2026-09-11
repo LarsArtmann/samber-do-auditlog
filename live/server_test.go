@@ -74,6 +74,39 @@ func TestServer_DashboardHTML(t *testing.T) {
 	}
 }
 
+func TestServer_DashboardCSP(t *testing.T) {
+	t.Parallel()
+
+	server := newTestServer(t)
+
+	ctx := t.Context()
+
+	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/", nil)
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	csp := rec.Header().Get("Content-Security-Policy")
+	if csp != "frame-ancestors 'none'" {
+		t.Errorf("expected frame-ancestors CSP response header, got %q", csp)
+	}
+
+	body := rec.Body.String()
+
+	meta := `script-src 'unsafe-inline' 'unsafe-eval'`
+	if !strings.Contains(body, meta) {
+		t.Errorf("dashboard CSP meta must allow 'unsafe-eval' for the datastar Function()-based expression engine, missing %q", meta)
+	}
+
+	if strings.Contains(body, "frame-ancestors") {
+		t.Error("dashboard CSP meta must not contain frame-ancestors: browsers ignore it in <meta> (header-only directive)")
+	}
+}
+
 func TestServer_HealthEndpoint(t *testing.T) {
 	t.Parallel()
 
