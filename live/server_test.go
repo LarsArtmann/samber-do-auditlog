@@ -99,11 +99,11 @@ func TestServer_DashboardCSP(t *testing.T) {
 
 	meta := `script-src 'unsafe-inline' 'unsafe-eval'`
 	if !strings.Contains(body, meta) {
-		t.Errorf("dashboard CSP meta must allow 'unsafe-eval' for the datastar Function()-based expression engine, missing %q", meta)
+		t.Errorf("dashboard CSP meta must allow 'unsafe-eval' for datastar expressions, missing %q", meta)
 	}
 
 	if strings.Contains(body, "frame-ancestors") {
-		t.Error("dashboard CSP meta must not contain frame-ancestors: browsers ignore it in <meta> (header-only directive)")
+		t.Error("dashboard CSP meta must not contain frame-ancestors: ignored in <meta> (header-only directive)")
 	}
 }
 
