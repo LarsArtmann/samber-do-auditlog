@@ -236,27 +236,27 @@ Three `apply*` methods in `replay.go` took a `key svcKey` parameter that was nev
 
 ### Architecture Improvements
 
-1. **Stop calling `gochecknoglobals` violations "dedup wins"** — The map-based enum metadata in `types.go` should either stay as switches (idiomatic, no lint issue) or be documented as an explicit architectural choice. The `//nolint` directives are a band-aid.
+1. ~~**Stop calling `gochecknoglobals` violations "dedup wins"** — The map-based enum metadata in `types.go` should either stay as switches (idiomatic, no lint issue) or be documented as an explicit architectural choice. The `//nolint` directives are a band-aid.~~ done (types.go:57 nolint decision)
 
 2. **Unify the hook method pattern** — The 3 remaining clone groups in `hooks.go` are all structural similarity between hook methods (OnBeforeShutdown ≈ OnAfterRegistration, OnAfterShutdown ≈ OnAfterInvocation). A table-driven hook dispatcher could eliminate these, but the tradeoff is readability. May not be worth it.
 
-3. **`Report` constructor validation** — Currently `Report` is a public struct that anyone can construct with invalid data. `NewReport()` should enforce `Validate()` at construction time. This is the single biggest "make impossible states unrepresentable" win.
+3. ~~**`Report` constructor validation** — Currently `Report` is a public struct that anyone can construct with invalid data. `NewReport()` should enforce `Validate()` at construction time. This is the single biggest "make impossible states unrepresentable" win.~~ done (report.go NewReport)
 
-4. **Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` as distinct types would prevent accidental argument swaps (e.g., `ServiceByName(scopeID, name)` vs `ServiceByRef(name, scopeID)`). The blast radius is ~80 sites but mechanical.
+4. ~~**Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` as distinct types would prevent accidental argument swaps (e.g., `ServiceByName(scopeID, name)` vs `ServiceByRef(name, scopeID)`). The blast radius is ~80 sites but mechanical.~~ done (types.go)
 
 ### Process Improvements
 
-5. **Always run `golangci-lint run` after changes** — Not just `go build` + `go test`. The lint config is extremely strict and catches issues the compiler doesn't.
+5. ~~**Always run `golangci-lint run` after changes** — Not just `go build` + `go test`. The lint config is extremely strict and catches issues the compiler doesn't.~~ done (scripts/hooks/pre-commit)
 
-6. **Never run `golangci-lint fmt`** — It reformats generated files (`html_templ.go`) in ways that conflict with `go generate`. Use `gofumpt` directly on specific files instead.
+6. ~~**Never run `golangci-lint fmt`** — It reformats generated files (`html_templ.go`) in ways that conflict with `go generate`. Use `gofumpt` directly on specific files instead.~~ done (.golangci.yml _templ excludes)
 
-7. **Consider a pre-commit hook** — Running `go generate ./... && golangci-lint run && go test -race ./...` before every commit would prevent CI surprises.
+7. ~~**Consider a pre-commit hook** — Running `go generate ./... && golangci-lint run && go test -race ./...` before every commit would prevent CI surprises.~~ done (scripts/hooks/pre-commit)
 
 ### Documentation Improvements
 
-8. **CHANGELOG should note the lint fix** — The `gochecknoglobals` + `varnamelen` fixes should be documented under `[Unreleased] → Fixed`.
+8. ~~**CHANGELOG should note the lint fix** — The `gochecknoglobals` + `varnamelen` fixes should be documented under `[Unreleased] → Fixed`.~~ done (CHANGELOG maintained)
 
-9. **AGENTS.md should document the `html_templ.go` formatting trap** — So future contributors don't run `golangci-lint fmt` and create drift.
+9. ~~**AGENTS.md should document the `html_templ.go` formatting trap** — So future contributors don't run `golangci-lint fmt` and create drift.~~ done (AGENTS.md + CONTRIBUTING.md)
 
 ---
 
@@ -268,51 +268,51 @@ Sorted by **impact ÷ effort** (highest first).
 
 | # | Task                                                                                          | Effort | Impact |
 | - | --------------------------------------------------------------------------------------------- | ------ | ------ |
-| 1 | **v0.0.5 release** — tag current state, 35 commits since v0.0.4                               | 30min  | HIGH   |
-| 2 | **Add `WriteCSV`/`WriteTSV` to `Plugin` export methods** — wire through from Plugin to Report | 15min  | MED    |
-| 3 | **HTML golden-file test** — deterministic report → assert output matches committed file       | 1h     | MED    |
-| 4 | **Property-based `Diff` tests** — `Diff(a,a)` empty, `Diff(a,b)`/`Diff(b,a)` symmetry         | 2h     | MED    |
-| 5 | **`actionlint` in CI** — validate `.github/workflows/ci.yml`                                  | 30min  | LOW    |
+| ~~1~~ | ~~**v0.0.5 release** — tag current state, 35 commits since v0.0.4~~ done — v0.0.5+ tagged — now v0.10.0 | ~~30min~~ | ~~HIGH~~ |
+| ~~2~~ | ~~**Add `WriteCSV`/`WriteTSV` to `Plugin` export methods** — wire through from Plugin to Report~~ done — plugin.go:216 WriteCSV | ~~15min~~ | ~~MED~~ |
+| ~~3~~ | ~~**HTML golden-file test** — deterministic report → assert output matches committed file~~ done — html_golden_test.go | ~~1h~~ | ~~MED~~ |
+| ~~4~~ | ~~**Property-based `Diff` tests** — `Diff(a,a)` empty, `Diff(a,b)`/`Diff(b,a)` symmetry~~ done — diff_property_test.go | ~~2h~~ | ~~MED~~ |
+| ~~5~~ | ~~**`actionlint` in CI** — validate `.github/workflows/ci.yml`~~ done — ci.yml actionlint | ~~30min~~ | ~~LOW~~ |
 
 ### Tier 2 — High Impact, Medium Effort
 
 | #  | Task                                                                           | Effort | Impact |
 | -- | ------------------------------------------------------------------------------ | ------ | ------ |
-| 6  | **`NewReport()` constructor** — `(Report, error)` enforcing `Validate()`       | 2h     | HIGH   |
-| 7  | **Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` distinct types | 2h     | HIGH   |
-| 8  | **JSON Schema generation** — derive `schema.json` from Go types                | 3h     | HIGH   |
-| 9  | **Property-based `MigrateReport` tests** — arbitrary JSON → migrate → validate | 2h     | MED    |
-| 10 | **Prometheus exporter example** — parallel to OTel example                     | 2h     | MED    |
+| ~~6~~  | ~~**`NewReport()` constructor** — `(Report, error)` enforcing `Validate()`~~ done — report.go NewReport | ~~2h~~ | ~~HIGH~~ |
+| ~~7~~  | ~~**Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` distinct types~~ done — types.go | ~~2h~~ | ~~HIGH~~ |
+| ~~8~~  | ~~**JSON Schema generation** — derive `schema.json` from Go types~~ done — invopop/jsonschema | ~~3h~~ | ~~HIGH~~ |
+| ~~9~~  | ~~**Property-based `MigrateReport` tests** — arbitrary JSON → migrate → validate~~ done — migration_property_test.go | ~~2h~~ | ~~MED~~ |
+| ~~10~~ | ~~**Prometheus exporter example** — parallel to OTel example~~ done — prometheus-bridge.md | ~~2h~~ | ~~MED~~ |
 
 ### Tier 3 — Medium Impact, Medium Effort
 
 | #  | Task                                                                     | Effort | Impact |
 | -- | ------------------------------------------------------------------------ | ------ | ------ |
-| 11 | **CLI tool** — `auditlog convert --format html report.json`              | 4h     | HIGH   |
-| 12 | **WebSocket live stream** bridge — `OnEvent` → browser dashboard         | 3h     | MED    |
-| 13 | **Split `ServiceInfo` into 4 structs** — identity/lifecycle/health/graph | 6h     | HIGH   |
-| 14 | **Flake app for coverage gate** — replace inline shell in CI             | 1h     | LOW    |
-| 15 | **Fuzz filter inputs** — arbitrary `ReportOption` combinations           | 2h     | LOW    |
+| ~~11~~ | ~~**CLI tool** — `auditlog convert --format html report.json`~~ done — cmd/auditlog | ~~4h~~ | ~~HIGH~~ |
+| ~~12~~ | ~~**WebSocket live stream** bridge — `OnEvent` → browser dashboard~~ done — websocket-stream.md | ~~3h~~ | ~~MED~~ |
+| ~~13~~ | ~~**Split `ServiceInfo` into 4 structs** — identity/lifecycle/health/graph~~ done — service.go | ~~6h~~ | ~~HIGH~~ |
+| ~~14~~ | ~~**Flake app for coverage gate** — replace inline shell in CI~~ done — flake.nix | ~~1h~~ | ~~LOW~~ |
+| ~~15~~ | ~~**Fuzz filter inputs** — arbitrary `ReportOption` combinations~~ done — FuzzFilterInputs | ~~2h~~ | ~~LOW~~ |
 
 ### Tier 4 — Lower Priority
 
 | #  | Task                                                            | Effort | Impact |
 | -- | --------------------------------------------------------------- | ------ | ------ |
-| 16 | **DOT diagram format** via `go-output` v0.12.0                  | 3h     | LOW    |
-| 17 | **`go-output` adoption** — replace custom Mermaid/PlantUML      | 4h     | LOW    |
-| 18 | **Pre-commit hook** — `go generate + lint + test` before commit | 30min  | LOW    |
-| 19 | **Coverage gate as Nix flake check** — replace inline CI shell  | 1h     | LOW    |
+| ~~16~~ | ~~**DOT diagram format** via `go-output` v0.12.0~~ done — dot.go | ~~3h~~ | ~~LOW~~ |
+| ~~17~~ | ~~**`go-output` adoption** — replace custom Mermaid/PlantUML~~ done — go-output family | ~~4h~~ | ~~LOW~~ |
+| ~~18~~ | ~~**Pre-commit hook** — `go generate + lint + test` before commit~~ done — scripts/hooks/pre-commit | ~~30min~~ | ~~LOW~~ |
+| ~~19~~ | ~~**Coverage gate as Nix flake check** — replace inline CI shell~~ done — flake.nix checks | ~~1h~~ | ~~LOW~~ |
 | 20 | **BDD tests** for critical user journeys (via Ginkgo)           | 3h     | LOW    |
 
 ### Tier 5 — Rejected / Deferred
 
 | #  | Task                             | Status                                            |
 | -- | -------------------------------- | ------------------------------------------------- |
-| 21 | **Multi-module split**           | ❌ Rejected — too small (1 package)               |
-| 22 | **External storage backends**    | ❌ Rejected — file + io.Writer sufficient         |
-| 23 | **`samber/lo` dependency**       | ❌ Rejected — stdlib slices/cmp sufficient        |
-| 24 | **`encoding/json/v2`**           | ❌ Rejected — risk of breaking JSON format        |
-| 25 | **NDJSON import (`ReadNDJSON`)** | ✅ Already done via `ReadEvents` + `ReplayEvents` |
+| ~~21~~ | ~~**Multi-module split**~~ **Won't implement — rejected — see ROADMAP Explicitly Rejected.** | ~~❌ Rejected — too small (1 package)~~ |
+| ~~22~~ | ~~**External storage backends**~~ **Won't implement — rejected — see ROADMAP Explicitly Rejected.** | ~~❌ Rejected — file + io.Writer sufficient~~ |
+| ~~23~~ | ~~**`samber/lo` dependency**~~ **Won't implement — rejected — see ROADMAP Explicitly Rejected.** | ~~❌ Rejected — stdlib slices/cmp sufficient~~ |
+| ~~24~~ | ~~**`encoding/json/v2`**~~ **Won't implement — rejected — json/v2 policy section.** | ~~❌ Rejected — risk of breaking JSON format~~ |
+| ~~25~~ | ~~**NDJSON import (`ReadNDJSON`)**~~ done — ReadEvents | ~~✅ Already done via `ReadEvents` + `ReplayEvents`~~ |
 
 ---
 

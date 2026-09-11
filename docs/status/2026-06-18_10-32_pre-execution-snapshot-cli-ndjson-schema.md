@@ -178,41 +178,41 @@ Consumers (the planned CLI, third-party tools, future dashboard rebuilds) have n
 
 ### Architecture / Type Models
 
-1. **Typed identifiers** (TODO:54): `ContainerID`, `ScopeID`, `ServiceName` as distinct named string types. Today they are all bare `string`, so `ServiceRef{ScopeID: serviceName, ServiceName: scopeID}` compiles. This is a classic "stringly-typed" anti-pattern. **Low effort, high safety.** Should be done before v0.1.0.
+1. ~~**Typed identifiers** (TODO:54): `ContainerID`, `ScopeID`, `ServiceName` as distinct named string types. Today they are all bare `string`, so `ServiceRef{ScopeID: serviceName, ServiceName: scopeID}` compiles. This is a classic "stringly-typed" anti-pattern. **Low effort, high safety.** Should be done before v0.1.0.~~ done (types.go)
 
-2. **`NewReport(...)` constructor** (TODO:56): Today `Report` is a public struct anyone can instantiate with zero values. `Validate()` then catches problems at runtime. A `NewReport` returning `(Report, error)` would make invalid states unrepresentable — the same pattern already used for `Plugin.New`. **Low effort, aligns with existing codebase style.**
+2. ~~**`NewReport(...)` constructor** (TODO:56): Today `Report` is a public struct anyone can instantiate with zero values. `Validate()` then catches problems at runtime. A `NewReport` returning `(Report, error)` would make invalid states unrepresentable — the same pattern already used for `Plugin.New`. **Low effort, aligns with existing codebase style.**~~ done (report.go NewReport)
 
-3. **Split `ServiceInfo`** (TODO:57): The 21-field `ServiceInfo` is a god object mixing identity, lifecycle, graph, and health concerns. Splitting into `ServiceIdentity` / `ServiceLifecycle` / `ServiceHealth` / `ServiceGraph` (composed in `ServiceInfo`) would clarify each axis. **Breaking change — must decide before v0.1.0.**
+3. ~~**Split `ServiceInfo`** (TODO:57): The 21-field `ServiceInfo` is a god object mixing identity, lifecycle, graph, and health concerns. Splitting into `ServiceIdentity` / `ServiceLifecycle` / `ServiceHealth` / `ServiceGraph` (composed in `ServiceInfo`) would clarify each axis. **Breaking change — must decide before v0.1.0.**~~ done (service.go)
 
-4. **`Reconstructed` flag on Report**: Once T2 (ReplayEvents) lands, this bool should be added so consumers can detect capability-flag absence. Additive, non-breaking.
+4. ~~**`Reconstructed` flag on Report**: Once T2 (ReplayEvents) lands, this bool should be added so consumers can detect capability-flag absence. Additive, non-breaking.~~ done (report.go Reconstructed)
 
-5. **Reuse `MigrateReport` for JSON loading**: The existing `MigrateReport` already does version-agnostic re-derivation. The plan's T4.3 routes `LoadReportFromJSON` through it — **no new logic needed** for v0.1.0 → v0.2.0 upgrade on import.
+5. ~~**Reuse `MigrateReport` for JSON loading**: The existing `MigrateReport` already does version-agnostic re-derivation. The plan's T4.3 routes `LoadReportFromJSON` through it — **no new logic needed** for v0.1.0 → v0.2.0 upgrade on import.~~ done (loader.go)
 
 ### Library Leverage (don't reinvent wheels)
 
-6. **`samber/lo`**: TODO_LIST.md:42 explicitly rejected `samber/lo` ("stdlib `slices`/`cmp` is sufficient"). This is **correct for the current codebase** and should not be reversed for existing code. However, the new CLI code (cmd/) will benefit from `lo` for terminal output helpers — reconsider the rejection **scoped to cmd/** only.
+6. ~~**`samber/lo`**: TODO_LIST.md:42 explicitly rejected `samber/lo` ("stdlib `slices`/`cmp` is sufficient"). This is **correct for the current codebase** and should not be reversed for existing code. However, the new CLI code (cmd/) will benefit from `lo` for terminal output helpers — reconsider the rejection **scoped to cmd/** only.~~ **Won't implement — stdlib-only CLI shipped instead.**
 
-7. **`samber/ro` for live streaming (T26)**: Depguard already allows `github.com/samber/*`. A `ro.Observable[Event]` adapter gives filter/debounce/window/zip for free — strictly better than bespoke `chan`/`iter.Seq` plumbing. Fills the documented live-streaming gap.
+7. ~~**`samber/ro` for live streaming (T26)**: Depguard already allows `github.com/samber/*`. A `ro.Observable[Event]` adapter gives filter/debounce/window/zip for free — strictly better than bespoke `chan`/`iter.Seq` plumbing. Fills the documented live-streaming gap.~~ done (docs/examples/samber-ro-adapter.md)
 
-8. **`santhosh-tekuri/jsonschema/v6` for schema validation (T9)**: Pure Go, zero transitive deps, draft 2020-12 compliant. Avoids pulling in `xeipuuv/gojsonschema` (unmaintained) or `go-playground/validator` (banned by `how-to-golang`).
+8. ~~**`santhosh-tekuri/jsonschema/v6` for schema validation (T9)**: Pure Go, zero transitive deps, draft 2020-12 compliant. Avoids pulling in `xeipuuv/gojsonschema` (unmaintained) or `go-playground/validator` (banned by `how-to-golang`).~~ done (invopop/jsonschema adopted)
 
-9. **`spf13/cobra` for CLI (T5)**: Matches samber's own `do-template-cli` boilerplate and his `golang-cli` skill recommendation. Not the `how-to-golang` preferred `charm.land/fang/v2`, but fang wraps cobra — adopting cobra now keeps the fang upgrade path open. **Decision needed — see Question 1.**
+9. ~~**`spf13/cobra` for CLI (T5)**: Matches samber's own `do-template-cli` boilerplate and his `golang-cli` skill recommendation. Not the `how-to-golang` preferred `charm.land/fang/v2`, but fang wraps cobra — adopting cobra now keeps the fang upgrade path open. **Decision needed — see Question 1.**~~ **Won't implement — stdlib flag CLI shipped instead.**
 
-10. **Reuse `buildReportFromCore` for replay**: The plan's T2.4 routes the replay engine's output through the existing finalizer. This means **counts cannot drift** between live and replayed Reports — the invariant is preserved by construction.
+10. ~~**Reuse `buildReportFromCore` for replay**: The plan's T2.4 routes the replay engine's output through the existing finalizer. This means **counts cannot drift** between live and replayed Reports — the invariant is preserved by construction.~~ done (replay.go)
 
 ### Testing
 
-11. **Property-based tests for Diff symmetry**: `Diff(a,a)` should be empty; `Diff(a,b).Added == Diff(b,a).Removed`. Currently only golden-style tests exist. PBT would have caught the doc/code drift in D1.
+11. ~~**Property-based tests for Diff symmetry**: `Diff(a,a)` should be empty; `Diff(a,b).Added == Diff(b,a).Removed`. Currently only golden-style tests exist. PBT would have caught the doc/code drift in D1.~~ done (diff_property_test.go)
 
-12. **HTML golden-file test** (TODO:71): The HTML output is currently tested via assertions on substrings (`assertHTMLContains`). A committed golden file would catch visual regressions deterministically.
+12. ~~**HTML golden-file test** (TODO:71): The HTML output is currently tested via assertions on substrings (`assertHTMLContains`). A committed golden file would catch visual regressions deterministically.~~ done (html_golden_test.go)
 
-13. **Filter fuzzing** (FEATURES.md:157): The only "partially functional" item. `MigrateReport`, HTML XSS, and diagram escaping are fuzzed; arbitrary `ReportOption` combinations are not.
+13. ~~**Filter fuzzing** (FEATURES.md:157): The only "partially functional" item. `MigrateReport`, HTML XSS, and diagram escaping are fuzzed; arbitrary `ReportOption` combinations are not.~~ done (FuzzFilterInputs)
 
 ### Process
 
-14. **`actionlint` in CI** (TODO:78): The workflow at `.github/workflows/ci.yml` is hand-edited YAML. `actionlint` would catch syntax errors and deprecated action versions before they hit a PR.
+14. ~~**`actionlint` in CI** (TODO:78): The workflow at `.github/workflows/ci.yml` is hand-edited YAML. `actionlint` would catch syntax errors and deprecated action versions before they hit a PR.~~ done (ci.yml actionlint)
 
-15. **Coverage gate as flake app** (TODO:80): The inline shell at `ci.yml:27-36` is duplicated logic. A `nix run .#coverage-gate` would be reusable locally and in CI.
+15. ~~**Coverage gate as flake app** (TODO:80): The inline shell at `ci.yml:27-36` is duplicated logic. A `nix run .#coverage-gate` would be reusable locally and in CI.~~ done (flake.nix)
 
 ---
 
@@ -222,31 +222,31 @@ Sorted by **impact × value ÷ effort** (descending). Tier labels refer to the P
 
 | #  | Task                                                                                                                                | Impact      | Effort        | Source                  |
 | -- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------- | ----------------------- |
-| 1  | **T1+T2: Replay engine** — extract event-application logic from Recorder hooks into pure `ReplayEvents([]Event) → Report`           | 🔴 Critical | L (100m)      | Plan T1+T2              |
-| 2  | **T3: NDJSON reader** — `ReadEvents(io.Reader) ([]Event, error)` with per-line errors                                               | 🔴 Critical | S (45m)       | Plan T3                 |
-| 3  | **T4: Loader API** — `LoadReport(path)` auto-detects JSON vs NDJSON                                                                 | 🔴 Critical | M (60m)       | Plan T4                 |
-| 4  | **D1 fix: Implement dependency-edge diffing + correct `diff.go:43` doc lie**                                                        | 🔴 High     | M (75m)       | Plan T10, integrity bug |
-| 5  | **T15: Replay golden tests** — capture demo fixture, assert `ReplayEvents(ndjson) ≈ report` modulo capability flags                 | 🔴 High     | L (90m)       | Plan T15                |
-| 6  | **T8: JSON Schema file** (`schema/report.schema.json`) for v0.2.0 — all 4 enums, RFC3339 timestamps, omitempty-aware required lists | 🔴 High     | M (75m)       | Plan T8, TODO:76        |
-| 7  | **T9: Embedded schema validator** — `ValidateAgainstSchema(Report)` via `santhosh-tekuri/jsonschema`                                | 🟠 Medium   | M (60m)       | Plan T9                 |
-| 8  | **T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`, persistent flags                                                     | 🟠 Medium   | M (60m)       | Plan T5, FEATURES:170   |
-| 9  | **T6: CLI `import`** — `auditlog import <file> -o report.html` round-trip works                                                     | 🟠 Medium   | M (75m)       | Plan T6                 |
-| 10 | **T7: CLI `export`** — 5 formats via library APIs                                                                                   | 🟠 Medium   | S (60m)       | Plan T7                 |
-| 11 | **T11: Diff scope tree** — flatten ScopeNode by path, set-diff added/removed scopes                                                 | 🟠 Medium   | M (60m)       | Plan T11                |
-| 12 | **T26: samber/ro reactive adapter** — `EventsAsObservable()` via BehaviorSubject                                                    | 🟠 Medium   | M (75m)       | Plan T26                |
-| 13 | **T2.5: Add `Report.Reconstructed` field** — lets consumers detect capability-flag absence                                          | 🟡 Low      | XS (10m)      | Plan, Risk A mitigation |
-| 14 | **T12: CLI `validate`** — `auditlog validate <file>` runs `Report.Validate()` + schema check                                        | 🟡 Low      | S (45m)       | Plan T12                |
-| 15 | **T13: CLI `diff`** — `auditlog diff <a> <b>` text + JSON output, exit 3 on non-empty                                               | 🟡 Low      | S (60m)       | Plan T13                |
-| 16 | **T14: CLI `info`** — summary stats, `--json` output                                                                                | 🟡 Low      | XS (30m)      | Plan T14                |
-| 17 | **T16+T17: NDJSON reader + CLI golden tests** — roundtrip, fuzz, exit codes                                                         | 🟡 Low      | M (135m)      | Plan T16+T17            |
-| 18 | **Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` distinct types; breaking change                                     | 🟡 Low      | S (60m)       | TODO:54                 |
-| 19 | **`NewReport(...)` constructor** — invalid Reports unrepresentable                                                                  | 🟡 Low      | S (45m)       | TODO:56                 |
-| 20 | **T18: `nix build .#auditlog` binary** — replace README stub with real `buildGoModule`                                              | 🟡 Low      | S (45m)       | Plan T18, D4 fix        |
-| 21 | **T19: CI cross-compile matrix** — linux/darwin/windows × amd64/arm64, ldflags version injection, artifact upload                   | 🟡 Low      | M (60m)       | Plan T19                |
-| 22 | **CSV/TSV export** — tabular export of services/events for spreadsheets                                                             | 🟡 Low      | S (60m)       | FEATURES:169, TODO:62   |
-| 23 | **Property-based Diff tests** — `rapid`/`gopter`, assert symmetry + identity                                                        | 🟡 Low      | S (60m)       | TODO:68                 |
-| 24 | **HTML golden-file test** — deterministic multi-service report → committed golden                                                   | 🟡 Low      | S (45m)       | TODO:71                 |
-| 25 | **T21-T25: Docs sync** — README CLI section, AGENTS.md update, FEATURES/TODO flip to DONE, cli-workflow.md, CHANGELOG               | 🟡 Low      | L (~3h total) | Plan T21-T25            |
+| ~~1~~  | ~~**T1+T2: Replay engine** — extract event-application logic from Recorder hooks into pure `ReplayEvents([]Event) → Report`~~ done — replay.go ReplayEvents | ~~🔴 Critical~~ | ~~L (100m)~~ | ~~Plan T1+T2~~ |
+| ~~2~~  | ~~**T3: NDJSON reader** — `ReadEvents(io.Reader) ([]Event, error)` with per-line errors~~ done — ndjson.go ReadEvents | ~~🔴 Critical~~ | ~~S (45m)~~ | ~~Plan T3~~ |
+| ~~3~~  | ~~**T4: Loader API** — `LoadReport(path)` auto-detects JSON vs NDJSON~~ done — loader.go LoadReport | ~~🔴 Critical~~ | ~~M (60m)~~ | ~~Plan T4~~ |
+| ~~4~~  | ~~**D1 fix: Implement dependency-edge diffing + correct `diff.go:43` doc lie**~~ done — diff.go AddedDeps/RemovedDeps | ~~🔴 High~~ | ~~M (75m)~~ | ~~Plan T10, integrity bug~~ |
+| ~~5~~  | ~~**T15: Replay golden tests** — capture demo fixture, assert `ReplayEvents(ndjson) ≈ report` modulo capability flags~~ done — replayFromPlugin helper | ~~🔴 High~~ | ~~L (90m)~~ | ~~Plan T15~~ |
+| ~~6~~  | ~~**T8: JSON Schema file** (`schema/report.schema.json`) for v0.2.0 — all 4 enums, RFC3339 timestamps, omitempty-aware required lists~~ done — schema/report.schema.json | ~~🔴 High~~ | ~~M (75m)~~ | ~~Plan T8, TODO:76~~ |
+| ~~7~~  | ~~**T9: Embedded schema validator** — `ValidateAgainstSchema(Report)` via `santhosh-tekuri/jsonschema`~~ done — schema.go JSONSchema() | ~~🟠 Medium~~ | ~~M (60m)~~ | ~~Plan T9~~ |
+| ~~8~~  | ~~**T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`, persistent flags~~ done — cmd/auditlog | ~~🟠 Medium~~ | ~~M (60m)~~ | ~~Plan T5, FEATURES:170~~ |
+| ~~9~~  | ~~**T6: CLI `import`** — `auditlog import <file> -o report.html` round-trip works~~ done — cmd/auditlog convert | ~~🟠 Medium~~ | ~~M (75m)~~ | ~~Plan T6~~ |
+| ~~10~~ | ~~**T7: CLI `export`** — 5 formats via library APIs~~ done — cmd/auditlog convert | ~~🟠 Medium~~ | ~~S (60m)~~ | ~~Plan T7~~ |
+| ~~11~~ | ~~**T11: Diff scope tree** — flatten ScopeNode by path, set-diff added/removed scopes~~ **Won't implement — routed to ROADMAP.md — Diff deepening (ScopeDiff).** | ~~🟠 Medium~~ | ~~M (60m)~~ | ~~Plan T11~~ |
+| ~~12~~ | ~~**T26: samber/ro reactive adapter** — `EventsAsObservable()` via BehaviorSubject~~ done — samber-ro-adapter.md | ~~🟠 Medium~~ | ~~M (75m)~~ | ~~Plan T26~~ |
+| ~~13~~ | ~~**T2.5: Add `Report.Reconstructed` field** — lets consumers detect capability-flag absence~~ done — report.go Reconstructed | ~~🟡 Low~~ | ~~XS (10m)~~ | ~~Plan, Risk A mitigation~~ |
+| ~~14~~ | ~~**T12: CLI `validate`** — `auditlog validate <file>` runs `Report.Validate()` + schema check~~ done — cmd/auditlog/validate.go | ~~🟡 Low~~ | ~~S (45m)~~ | ~~Plan T12~~ |
+| ~~15~~ | ~~**T13: CLI `diff`** — `auditlog diff <a> <b>` text + JSON output, exit 3 on non-empty~~ done — cmd/auditlog/diff.go | ~~🟡 Low~~ | ~~S (60m)~~ | ~~Plan T13~~ |
+| ~~16~~ | ~~**T14: CLI `info`** — summary stats, `--json` output~~ done — cmd/auditlog/info.go | ~~🟡 Low~~ | ~~XS (30m)~~ | ~~Plan T14~~ |
+| ~~17~~ | ~~**T16+T17: NDJSON reader + CLI golden tests** — roundtrip, fuzz, exit codes~~ done — cli_integration_test.go | ~~🟡 Low~~ | ~~M (135m)~~ | ~~Plan T16+T17~~ |
+| ~~18~~ | ~~**Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` distinct types; breaking change~~ done — types.go | ~~🟡 Low~~ | ~~S (60m)~~ | ~~TODO:54~~ |
+| ~~19~~ | ~~**`NewReport(...)` constructor** — invalid Reports unrepresentable~~ done — report.go NewReport | ~~🟡 Low~~ | ~~S (45m)~~ | ~~TODO:56~~ |
+| ~~20~~ | ~~**T18: `nix build .#auditlog` binary** — replace README stub with real `buildGoModule`~~ done — flake.nix auditlog app | ~~🟡 Low~~ | ~~S (45m)~~ | ~~Plan T18, D4 fix~~ |
+| ~~21~~ | ~~**T19: CI cross-compile matrix** — linux/darwin/windows × amd64/arm64, ldflags version injection, artifact upload~~ done — .goreleaser.yml matrix | ~~🟡 Low~~ | ~~M (60m)~~ | ~~Plan T19~~ |
+| ~~22~~ | ~~**CSV/TSV export** — tabular export of services/events for spreadsheets~~ done — csv.go | ~~🟡 Low~~ | ~~S (60m)~~ | ~~FEATURES:169, TODO:62~~ |
+| ~~23~~ | ~~**Property-based Diff tests** — `rapid`/`gopter`, assert symmetry + identity~~ done — diff_property_test.go | ~~🟡 Low~~ | ~~S (60m)~~ | ~~TODO:68~~ |
+| ~~24~~ | ~~**HTML golden-file test** — deterministic multi-service report → committed golden~~ done — html_golden_test.go | ~~🟡 Low~~ | ~~S (45m)~~ | ~~TODO:71~~ |
+| ~~25~~ | ~~**T21-T25: Docs sync** — README CLI section, AGENTS.md update, FEATURES/TODO flip to DONE, cli-workflow.md, CHANGELOG~~ done — README + docs synced | ~~🟡 Low~~ | ~~L (~3h total)~~ | ~~Plan T21-T25~~ |
 
 **Out of scope for next iteration** (deferred to roadmap): WebSocket live stream, multi-module split, Prometheus dep, `encoding/json/v2` migration, HTML diff visualization, NDJSON sidecar metadata.
 

@@ -57,27 +57,27 @@
 
 ## b) PARTIALLY DONE
 
-1. **v0.1.0 release readiness** — The project meets `STABILITY.md` criteria and has comprehensive features. **Blocked on:** JSON-schema-first decision (should the report format have a committed `schema.json` before semver stability promise?).
-2. **CSV/TSV export** — Not started but `go-output` review confirmed it's low-effort if prioritized (can be done locally with `encoding/csv`, no dependency needed).
-3. **DOT graph export** — `go-output` has a DOT renderer; the review noted this could be a future format. Not started, dep cost disproportionate for now.
-4. **Report filtering completeness** — 5 filter options exist (`WithServicesByName`, `WithServicesByScope`, etc.). Property-based fuzz testing of arbitrary filter combinations is TODO.
+1. ~~**v0.1.0 release readiness** — The project meets `STABILITY.md` criteria and has comprehensive features. **Blocked on:** JSON-schema-first decision (should the report format have a committed `schema.json` before semver stability promise?).~~ done (v0.1.0 tagged)
+2. ~~**CSV/TSV export** — Not started but `go-output` review confirmed it's low-effort if prioritized (can be done locally with `encoding/csv`, no dependency needed).~~ done (csv.go)
+3. ~~**DOT graph export** — `go-output` has a DOT renderer; the review noted this could be a future format. Not started, dep cost disproportionate for now.~~ done (dot.go)
+4. ~~**Report filtering completeness** — 5 filter options exist (`WithServicesByName`, `WithServicesByScope`, etc.). Property-based fuzz testing of arbitrary filter combinations is TODO.~~ done (FuzzFilterInputs)
 
 ---
 
 ## c) NOT STARTED
 
-1. **Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` as distinct named string types (compiler rejects accidental swaps). High value, low effort.
-2. **NDJSON import** — `ReadNDJSON(reader) (Report, error)`. Trivial now that `buildReportFromCore` centralizes construction.
-3. **`NewReport(...)` constructor** — Returns `(Report, error)` so invalid reports are unrepresentable.
-4. **JSON Schema file** — Derive `schema.json` from Go types. Biggest missing piece for report consumers.
-5. **CLI tool** — Report conversion/export/visualization binary.
-6. **WebSocket live stream** — Bridge `OnEvent` to a WebSocket for live dashboards.
-7. **HTML golden-file test** — Deterministic multi-service report → assert output matches committed golden file.
-8. **Property-based `Diff` tests** — Random reports, assert `Diff(a,a)` empty + symmetry.
-9. **Property-based `MigrateReport` tests** — Arbitrary JSON → migrate → validate round-trips.
-10. **Prometheus exporter example** — Parallel to the OTel example.
-11. **`actionlint` in CI** — Workflow validation.
-12. **Flake app for coverage gate** — Replace inline shell in CI.
+1. ~~**Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` as distinct named string types (compiler rejects accidental swaps). High value, low effort.~~ done (types.go)
+2. ~~**NDJSON import** — `ReadNDJSON(reader) (Report, error)`. Trivial now that `buildReportFromCore` centralizes construction.~~ done (ReadEvents)
+3. ~~**`NewReport(...)` constructor** — Returns `(Report, error)` so invalid reports are unrepresentable.~~ done (report.go NewReport)
+4. ~~**JSON Schema file** — Derive `schema.json` from Go types. Biggest missing piece for report consumers.~~ done (schema/report.schema.json)
+5. ~~**CLI tool** — Report conversion/export/visualization binary.~~ done (cmd/auditlog)
+6. ~~**WebSocket live stream** — Bridge `OnEvent` to a WebSocket for live dashboards.~~ done (websocket-stream.md)
+7. ~~**HTML golden-file test** — Deterministic multi-service report → assert output matches committed golden file.~~ done (html_golden_test.go)
+8. ~~**Property-based `Diff` tests** — Random reports, assert `Diff(a,a)` empty + symmetry.~~ done (diff_property_test.go)
+9. ~~**Property-based `MigrateReport` tests** — Arbitrary JSON → migrate → validate round-trips.~~ done (migration_property_test.go)
+10. ~~**Prometheus exporter example** — Parallel to the OTel example.~~ done (prometheus-bridge.md)
+11. ~~**`actionlint` in CI** — Workflow validation.~~ done (ci.yml actionlint)
+12. ~~**Flake app for coverage gate** — Replace inline shell in CI.~~ done (flake.nix)
 
 ---
 
@@ -91,13 +91,13 @@ The closest thing to a concern: the **stale LSP diagnostics** for `zz_dump_test.
 
 ## e) WHAT WE SHOULD IMPROVE
 
-1. **Schema-first design gap** — The JSON report format has no committed `schema.json`. Consumers can't validate reports programmatically. This is the single biggest architectural gap before v0.1.0.
-2. **String-typed identity** — `ScopeID`, `ServiceName`, `ContainerID` are all bare `string`. Accidental swaps compile fine. Named types would make impossible states unrepresentable.
-3. **`ServiceInfo` is a 19-field god struct** — Mixes identity, lifecycle, health, and graph concerns. Should split into `ServiceIdentity` / `ServiceLifecycle` / `ServiceHealth` / `ServiceGraph` before v0.1.0 (breaking change, better now than later).
-4. **No HTML golden-file test** — The HTML output is complex (5 tabs, JS, CSS) and tested only via string-contains assertions. A golden-file test would catch visual regressions deterministically.
-5. **Property-based test coverage** — `Diff`, `MigrateReport`, and filter combinations lack property-based / fuzz testing. Table-driven tests cover known cases but not the combinatorial space.
-6. **`example/` has 0% coverage** — CI gate excludes it, but the demo could silently break.
-7. **`docs/status/` is growing** — 5 status reports in `docs/status/`, 12+ in `docs/archive/`. Consider a retention policy (keep last 5, archive rest).
+1. ~~**Schema-first design gap** — The JSON report format has no committed `schema.json`. Consumers can't validate reports programmatically. This is the single biggest architectural gap before v0.1.0.~~ done (schema 0.3.0 + JSONSchema())
+2. ~~**String-typed identity** — `ScopeID`, `ServiceName`, `ContainerID` are all bare `string`. Accidental swaps compile fine. Named types would make impossible states unrepresentable.~~ done (types.go named types)
+3. ~~**`ServiceInfo` is a 19-field god struct** — Mixes identity, lifecycle, health, and graph concerns. Should split into `ServiceIdentity` / `ServiceLifecycle` / `ServiceHealth` / `ServiceGraph` before v0.1.0 (breaking change, better now than later).~~ done (service.go sub-structs)
+4. ~~**No HTML golden-file test** — The HTML output is complex (5 tabs, JS, CSS) and tested only via string-contains assertions. A golden-file test would catch visual regressions deterministically.~~ done (html_golden_test.go)
+5. ~~**Property-based test coverage** — `Diff`, `MigrateReport`, and filter combinations lack property-based / fuzz testing. Table-driven tests cover known cases but not the combinatorial space.~~ done (property + fuzz tests)
+6. ~~**`example/` has 0% coverage** — CI gate excludes it, but the demo could silently break.~~ done (ci.yml example-smoke)
+7. ~~**`docs/status/` is growing** — 5 status reports in `docs/status/`, 12+ in `docs/archive/`. Consider a retention policy (keep last 5, archive rest).~~ **Won't implement — superseded — archive/ + annotation practice.**
 
 ---
 
@@ -107,28 +107,28 @@ Sorted by impact × value ÷ effort:
 
 | #  | Task                                                            | Impact | Effort  | Notes                                                      |
 | -- | --------------------------------------------------------------- | ------ | ------- | ---------------------------------------------------------- |
-| 1  | **Add `CHANGELOG.md` entry** for the diagram escaping fix       | High   | Trivial | `[Unreleased]` section is empty                            |
-| 2  | **JSON Schema file** (`schema.json`) for report format          | High   | Medium  | Biggest gap for consumers; blocks v0.1.0                   |
-| 3  | **Typed identifiers** (`ScopeID`, `ServiceName`, `ContainerID`) | High   | Low     | Compiler-enforced safety                                   |
-| 4  | **NDJSON import** (`ReadNDJSON`)                                | Medium | Low     | Symmetry with export; trivial via `buildReportFromCore`    |
-| 5  | **CSV/TSV export**                                              | Medium | Low     | `encoding/csv`, no dep; high value for data analysis       |
-| 6  | **HTML golden-file test**                                       | Medium | Medium  | Deterministic multi-service → golden file                  |
-| 7  | **Split `ServiceInfo`** into identity/lifecycle/health/graph    | High   | High    | Breaking change; decide before v0.1.0                      |
-| 8  | **`NewReport(...)` constructor** returning `(Report, error)`    | Medium | Low     | Makes invalid reports unrepresentable                      |
-| 9  | **Property-based `Diff` tests**                                 | Medium | Low     | Random reports, symmetry assertions                        |
-| 10 | **Property-based `MigrateReport` tests**                        | Medium | Low     | Arbitrary JSON → migrate → validate                        |
-| 11 | **Fuzz filter inputs**                                          | Low    | Low     | Arbitrary `ReportOption` combinations                      |
-| 12 | **Prometheus exporter example**                                 | Medium | Low     | Parallel to OTel bridge doc                                |
-| 13 | **`actionlint` in CI**                                          | Low    | Trivial | Workflow validation                                        |
-| 14 | **Flake app for coverage gate**                                 | Low    | Low     | Replace inline CI shell                                    |
-| 15 | **DOT graph export**                                            | Low    | Medium  | New diagram format; local impl preferred over dep          |
-| 16 | **CLI tool** (`auditlog-convert`)                               | Medium | High    | Report conversion/export binary                            |
-| 17 | **WebSocket live stream** bridge for `OnEvent`                  | Medium | High    | Live dashboards                                            |
-| 18 | **v0.1.0 release**                                              | High   | Medium  | Blocked on #2 (schema) and decision on #7 (split)          |
-| 19 | **`RELEASING.md`** or release checklist                         | Low    | Trivial | In CONTRIBUTING.md                                         |
-| 20 | **`example/` smoke test**                                       | Low    | Low     | At least a basic integration test                          |
-| 21 | **`docs/status/` retention policy**                             | Low    | Trivial | Keep last 5, archive rest                                  |
-| 22 | **Add diagram escaping to fuzz target**                         | Medium | Low     | Extend `FuzzDiagramSpecialChars` with bracket/quote corpus |
+| ~~1~~  | ~~**Add `CHANGELOG.md` entry** for the diagram escaping fix~~ done — CHANGELOG entry | ~~High~~ | ~~Trivial~~ | ~~`[Unreleased]` section is empty~~ |
+| ~~2~~  | ~~**JSON Schema file** (`schema.json`) for report format~~ done — schema/report.schema.json | ~~High~~ | ~~Medium~~ | ~~Biggest gap for consumers; blocks v0.1.0~~ |
+| ~~3~~  | ~~**Typed identifiers** (`ScopeID`, `ServiceName`, `ContainerID`)~~ done — types.go | ~~High~~ | ~~Low~~ | ~~Compiler-enforced safety~~ |
+| ~~4~~  | ~~**NDJSON import** (`ReadNDJSON`)~~ done — ReadEvents | ~~Medium~~ | ~~Low~~ | ~~Symmetry with export; trivial via `buildReportFromCore`~~ |
+| ~~5~~  | ~~**CSV/TSV export**~~ done — csv.go | ~~Medium~~ | ~~Low~~ | ~~`encoding/csv`, no dep; high value for data analysis~~ |
+| ~~6~~  | ~~**HTML golden-file test**~~ done — html_golden_test.go | ~~Medium~~ | ~~Medium~~ | ~~Deterministic multi-service → golden file~~ |
+| ~~7~~  | ~~**Split `ServiceInfo`** into identity/lifecycle/health/graph~~ done — service.go | ~~High~~ | ~~High~~ | ~~Breaking change; decide before v0.1.0~~ |
+| ~~8~~  | ~~**`NewReport(...)` constructor** returning `(Report, error)`~~ done — report.go NewReport | ~~Medium~~ | ~~Low~~ | ~~Makes invalid reports unrepresentable~~ |
+| ~~9~~  | ~~**Property-based `Diff` tests**~~ done — diff_property_test.go | ~~Medium~~ | ~~Low~~ | ~~Random reports, symmetry assertions~~ |
+| ~~10~~ | ~~**Property-based `MigrateReport` tests**~~ done — migration_property_test.go | ~~Medium~~ | ~~Low~~ | ~~Arbitrary JSON → migrate → validate~~ |
+| ~~11~~ | ~~**Fuzz filter inputs**~~ done — FuzzFilterInputs | ~~Low~~ | ~~Low~~ | ~~Arbitrary `ReportOption` combinations~~ |
+| ~~12~~ | ~~**Prometheus exporter example**~~ done — prometheus-bridge.md | ~~Medium~~ | ~~Low~~ | ~~Parallel to OTel bridge doc~~ |
+| ~~13~~ | ~~**`actionlint` in CI**~~ done — ci.yml actionlint | ~~Low~~ | ~~Trivial~~ | ~~Workflow validation~~ |
+| ~~14~~ | ~~**Flake app for coverage gate**~~ done — flake.nix | ~~Low~~ | ~~Low~~ | ~~Replace inline CI shell~~ |
+| ~~15~~ | ~~**DOT graph export**~~ done — dot.go | ~~Low~~ | ~~Medium~~ | ~~New diagram format; local impl preferred over dep~~ |
+| ~~16~~ | ~~**CLI tool** (`auditlog-convert`)~~ done — cmd/auditlog | ~~Medium~~ | ~~High~~ | ~~Report conversion/export binary~~ |
+| ~~17~~ | ~~**WebSocket live stream** bridge for `OnEvent`~~ done — websocket-stream.md | ~~Medium~~ | ~~High~~ | ~~Live dashboards~~ |
+| ~~18~~ | ~~**v0.1.0 release**~~ done — v0.1.0 tagged | ~~High~~ | ~~Medium~~ | ~~Blocked on #2 (schema) and decision on #7 (split)~~ |
+| ~~19~~ | ~~**`RELEASING.md`** or release checklist~~ done — RELEASE.md | ~~Low~~ | ~~Trivial~~ | ~~In CONTRIBUTING.md~~ |
+| ~~20~~ | ~~**`example/` smoke test**~~ done — ci.yml example-smoke | ~~Low~~ | ~~Low~~ | ~~At least a basic integration test~~ |
+| ~~21~~ | ~~**`docs/status/` retention policy**~~ **Won't implement — superseded — archive/ + annotation practice.** | ~~Low~~ | ~~Trivial~~ | ~~Keep last 5, archive rest~~ |
+| ~~22~~ | ~~**Add diagram escaping to fuzz target**~~ done — fuzz seeds | ~~Medium~~ | ~~Low~~ | ~~Extend `FuzzDiagramSpecialChars` with bracket/quote corpus~~ |
 | 23 | **Coverage gate as separate CI step**                           | Low    | Low     | Clearer failure messages                                   |
 | 24 | **Review `ServiceStatus` priority** for completeness            | Low    | Low     | Is there a missing state (e.g. "health_error")?            |
 | 25 | **Benchmark the escaping functions**                            | Low    | Trivial | Ensure no hot-path regression from `sanitizeDiagramID`     |

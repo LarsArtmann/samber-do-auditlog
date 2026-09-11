@@ -144,33 +144,33 @@ This session was a **deduplication sprint** that started with the directive "de-
 
 ### Architecture
 
-1. **Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` should be distinct named string types. Currently they're all `string`, so the compiler can't catch `ContainerID` being passed where `ServiceName` is expected. This is the single biggest type-safety win available.
+1. ~~**Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` should be distinct named string types. Currently they're all `string`, so the compiler can't catch `ContainerID` being passed where `ServiceName` is expected. This is the single biggest type-safety win available.~~ done (types.go)
 
-2. **`ServiceInfo` is a 19-field god struct** — It mixes identity (`ServiceRef`), lifecycle (`RegisteredAt`, `FirstInvokedAt`, `ShutdownAt`), health (`HealthCheckCount`, `HealthCheckError`), and graph (`Dependencies`, `Dependents`) concerns. Splitting into `ServiceIdentity` / `ServiceLifecycle` / `ServiceHealth` / `ServiceGraph` would make the model more honest. Breaking change — decide before v0.1.0.
+2. ~~**`ServiceInfo` is a 19-field god struct** — It mixes identity (`ServiceRef`), lifecycle (`RegisteredAt`, `FirstInvokedAt`, `ShutdownAt`), health (`HealthCheckCount`, `HealthCheckError`), and graph (`Dependencies`, `Dependents`) concerns. Splitting into `ServiceIdentity` / `ServiceLifecycle` / `ServiceHealth` / `ServiceGraph` would make the model more honest. Breaking change — decide before v0.1.0.~~ done (service.go)
 
-3. **`Report` has no constructor** — Consumers can construct invalid reports by hand. `NewReport(...)` returning `(Report, error)` would make invalid states unrepresentable. `Validate()` becomes a constructor check, not a post-hoc audit.
+3. ~~**`Report` has no constructor** — Consumers can construct invalid reports by hand. `NewReport(...)` returning `(Report, error)` would make invalid states unrepresentable. `Validate()` becomes a constructor check, not a post-hoc audit.~~ done (report.go NewReport)
 
-4. **JSON Schema is still missing** — The biggest gap for report consumers. A `schema.json` derived from Go types would enable validation in any language.
+4. ~~**JSON Schema is still missing** — The biggest gap for report consumers. A `schema.json` derived from Go types would enable validation in any language.~~ done (schema/report.schema.json)
 
 ### Code Quality
 
-5. **`replay.go` unused parameters** — `applyRegistrationAfter`, `applyInvocationBefore`, `applyHealthCheck` all take a `key svcKey` parameter that's now unused (the helper computes the key internally). Either remove the parameter or use it.
+5. ~~**`replay.go` unused parameters** — `applyRegistrationAfter`, `applyInvocationBefore`, `applyHealthCheck` all take a `key svcKey` parameter that's now unused (the helper computes the key internally). Either remove the parameter or use it.~~ done (fixed 2026-06-18_20-38 session)
 
-6. **LSP diagnostics are stale** — gopls reports warnings for `upsertServiceRecord` and `benchLoop` that no longer exist. A `lsp_restart` or editor refresh would clear these.
+6. ~~**LSP diagnostics are stale** — gopls reports warnings for `upsertServiceRecord` and `benchLoop` that no longer exist. A `lsp_restart` or editor refresh would clear these.~~ **Won't implement — one-time session state.**
 
-7. **`example/register.go` demo duplication** — `do.ProvideValue` vs `do.OverrideValue` blocks are structurally identical (different values). This is intentional (showcases paired APIs) but art-dupl flags it. Document or add `//nolint` comment.
+7. ~~**`example/register.go` demo duplication** — `do.ProvideValue` vs `do.OverrideValue` blocks are structurally identical (different values). This is intentional (showcases paired APIs) but art-dupl flags it. Document or add `//nolint` comment.~~ done (example/register.go:95 comment)
 
 ### Testing
 
-8. **Property-based tests missing** — `Diff` and `MigrateReport` would benefit from property-based testing (random inputs, invariant assertions). Currently only example-based.
+8. ~~**Property-based tests missing** — `Diff` and `MigrateReport` would benefit from property-based testing (random inputs, invariant assertions). Currently only example-based.~~ done (property test files)
 
-9. **HTML golden-file test** — No deterministic output test for the HTML visualization. Changes to `html.templ` could break rendering without detection.
+9. ~~**HTML golden-file test** — No deterministic output test for the HTML visualization. Changes to `html.templ` could break rendering without detection.~~ done (html_golden_test.go)
 
 ### Process
 
-10. **CHANGELOG.md not updated** — This session's changes (dedup helpers, scope-tree unification) should be in `[Unreleased]`.
+10. ~~**CHANGELOG.md not updated** — This session's changes (dedup helpers, scope-tree unification) should be in `[Unreleased]`.~~ done (CHANGELOG maintained)
 
-11. **No release since v0.0.4** — Multiple feature commits since the last tag. Consider v0.0.5.
+11. ~~**No release since v0.0.4** — Multiple feature commits since the last tag. Consider v0.0.5.~~ done (tagged through v0.10.0)
 
 ---
 
@@ -182,46 +182,46 @@ Sorted by impact ÷ effort (highest first).
 
 | # | Task                                                   | Effort | Impact | Why                                                                  |
 | - | ------------------------------------------------------ | ------ | ------ | -------------------------------------------------------------------- |
-| 1 | **Fix `replay.go` unused `key` parameters**            | 10min  | MED    | LSP warns on 3 unused params. Clean up or use them.                  |
-| 2 | **Update CHANGELOG.md `[Unreleased]`**                 | 15min  | LOW    | Document dedup session changes.                                      |
-| 3 | **Update AGENTS.md Architecture section**              | 15min  | MED    | File descriptions reference stale helper names.                      |
-| 4 | **Add `//nolint` or comment on `example/register.go`** | 5min   | LOW    | Document that ProvideValue/OverrideValue duplication is intentional. |
-| 5 | **Restart LSP to clear stale diagnostics**             | 1min   | LOW    | gopls shows warnings for deleted code.                               |
+| ~~1~~ | ~~**Fix `replay.go` unused `key` parameters**~~ done — fixed 20-38 session | ~~10min~~ | ~~MED~~ | ~~LSP warns on 3 unused params. Clean up or use them.~~ |
+| ~~2~~ | ~~**Update CHANGELOG.md `[Unreleased]`**~~ done — CHANGELOG maintained | ~~15min~~ | ~~LOW~~ | ~~Document dedup session changes.~~ |
+| ~~3~~ | ~~**Update AGENTS.md Architecture section**~~ done — AGENTS.md maintained | ~~15min~~ | ~~MED~~ | ~~File descriptions reference stale helper names.~~ |
+| ~~4~~ | ~~**Add `//nolint` or comment on `example/register.go`**~~ done — register.go:95 comment | ~~5min~~ | ~~LOW~~ | ~~Document that ProvideValue/OverrideValue duplication is intentional.~~ |
+| ~~5~~ | ~~**Restart LSP to clear stale diagnostics**~~ **Won't implement — one-time action.** | ~~1min~~ | ~~LOW~~ | ~~gopls shows warnings for deleted code.~~ |
 
 ### Tier 2 — High Impact, Medium Effort
 
 | #  | Task                                                            | Effort | Impact | Why                                                       |
 | -- | --------------------------------------------------------------- | ------ | ------ | --------------------------------------------------------- |
-| 6  | **Typed identifiers (`ContainerID`, `ScopeID`, `ServiceName`)** | 2h     | HIGH   | Compiler-enforced type safety. Biggest architectural win. |
-| 7  | **JSON Schema generation from Go types**                        | 3h     | HIGH   | Enables cross-language validation. Blocks v0.1.0.         |
-| 8  | **`Report` constructor (`NewReport() → (Report, error)`)**      | 2h     | HIGH   | Makes invalid reports unrepresentable.                    |
-| 9  | **CSV/TSV export**                                              | 1h     | MED    | High value for data analysis workflows. Low effort.       |
-| 10 | **Property-based `Diff` tests**                                 | 2h     | MED    | Catches symmetry/inverse bugs.                            |
-| 11 | **HTML golden-file test**                                       | 1h     | MED    | Catches templ rendering regressions.                      |
-| 12 | **v0.0.5 release**                                              | 30min  | MED    | Tag current state. Multiple commits since v0.0.4.         |
+| ~~6~~  | ~~**Typed identifiers (`ContainerID`, `ScopeID`, `ServiceName`)**~~ done — types.go | ~~2h~~ | ~~HIGH~~ | ~~Compiler-enforced type safety. Biggest architectural win.~~ |
+| ~~7~~  | ~~**JSON Schema generation from Go types**~~ done — schema.go | ~~3h~~ | ~~HIGH~~ | ~~Enables cross-language validation. Blocks v0.1.0.~~ |
+| ~~8~~  | ~~**`Report` constructor (`NewReport() → (Report, error)`)**~~ done — report.go NewReport | ~~2h~~ | ~~HIGH~~ | ~~Makes invalid reports unrepresentable.~~ |
+| ~~9~~  | ~~**CSV/TSV export**~~ done — csv.go | ~~1h~~ | ~~MED~~ | ~~High value for data analysis workflows. Low effort.~~ |
+| ~~10~~ | ~~**Property-based `Diff` tests**~~ done — diff_property_test.go | ~~2h~~ | ~~MED~~ | ~~Catches symmetry/inverse bugs.~~ |
+| ~~11~~ | ~~**HTML golden-file test**~~ done — html_golden_test.go | ~~1h~~ | ~~MED~~ | ~~Catches templ rendering regressions.~~ |
+| ~~12~~ | ~~**v0.0.5 release**~~ done — v0.0.5+ tagged — now v0.10.0 | ~~30min~~ | ~~MED~~ | ~~Tag current state. Multiple commits since v0.0.4.~~ |
 
 ### Tier 3 — Medium Impact, Medium Effort
 
 | #  | Task                                     | Effort | Impact | Why                                                             |
 | -- | ---------------------------------------- | ------ | ------ | --------------------------------------------------------------- |
-| 13 | **CLI tool for report conversion**       | 4h     | HIGH   | Standalone binary: `auditlog convert --format html report.json` |
-| 14 | **Property-based `MigrateReport` tests** | 2h     | MED    | Validates schema migration robustness.                          |
-| 15 | **`actionlint` in CI**                   | 30min  | LOW    | Validates `.github/workflows/ci.yml` syntax.                    |
-| 16 | **Split `ServiceInfo` into 4 structs**   | 6h     | HIGH   | Breaking change. Decide before v0.1.0.                          |
-| 17 | **Flake app for coverage gate**          | 1h     | LOW    | Replaces inline shell in CI.                                    |
-| 18 | **WebSocket live stream example**        | 3h     | MED    | Bridges `OnEvent` to browser dashboards.                        |
-| 19 | **Prometheus exporter example**          | 2h     | MED    | Parallel to existing OTel example.                              |
+| ~~13~~ | ~~**CLI tool for report conversion**~~ done — cmd/auditlog | ~~4h~~ | ~~HIGH~~ | ~~Standalone binary: `auditlog convert --format html report.json`~~ |
+| ~~14~~ | ~~**Property-based `MigrateReport` tests**~~ done — migration_property_test.go | ~~2h~~ | ~~MED~~ | ~~Validates schema migration robustness.~~ |
+| ~~15~~ | ~~**`actionlint` in CI**~~ done — ci.yml actionlint | ~~30min~~ | ~~LOW~~ | ~~Validates `.github/workflows/ci.yml` syntax.~~ |
+| ~~16~~ | ~~**Split `ServiceInfo` into 4 structs**~~ done — service.go | ~~6h~~ | ~~HIGH~~ | ~~Breaking change. Decide before v0.1.0.~~ |
+| ~~17~~ | ~~**Flake app for coverage gate**~~ done — flake.nix | ~~1h~~ | ~~LOW~~ | ~~Replaces inline shell in CI.~~ |
+| ~~18~~ | ~~**WebSocket live stream example**~~ done — websocket-stream.md | ~~3h~~ | ~~MED~~ | ~~Bridges `OnEvent` to browser dashboards.~~ |
+| ~~19~~ | ~~**Prometheus exporter example**~~ done — prometheus-bridge.md | ~~2h~~ | ~~MED~~ | ~~Parallel to existing OTel example.~~ |
 
 ### Tier 4 — Lower Priority
 
 | #  | Task                             | Effort | Impact | Why                                                         |
 | -- | -------------------------------- | ------ | ------ | ----------------------------------------------------------- |
-| 20 | **Fuzz filter inputs**           | 2h     | LOW    | Arbitrary `ReportOption` combinations.                      |
-| 21 | **DOT diagram format**           | 3h     | LOW    | 3rd diagram format. `go-output` now viable.                 |
-| 22 | **`go-output` adoption**         | 4h     | LOW    | Replaces custom Mermaid/PlantUML.                           |
-| 23 | **NDJSON import (`ReadNDJSON`)** | 1h     | LOW    | Already effectively done via `ReadEvents` + `ReplayEvents`. |
-| 24 | **RELEASING.md checklist**       | 30min  | LOW    | Already in CONTRIBUTING.md.                                 |
-| 25 | **Multi-module split**           | —      | —      | Explicitly rejected. Too small.                             |
+| ~~20~~ | ~~**Fuzz filter inputs**~~ done — FuzzFilterInputs | ~~2h~~ | ~~LOW~~ | ~~Arbitrary `ReportOption` combinations.~~ |
+| ~~21~~ | ~~**DOT diagram format**~~ done — dot.go | ~~3h~~ | ~~LOW~~ | ~~3rd diagram format. `go-output` now viable.~~ |
+| ~~22~~ | ~~**`go-output` adoption**~~ done — go-output family in go.mod | ~~4h~~ | ~~LOW~~ | ~~Replaces custom Mermaid/PlantUML.~~ |
+| ~~23~~ | ~~**NDJSON import (`ReadNDJSON`)**~~ done — ReadEvents | ~~1h~~ | ~~LOW~~ | ~~Already effectively done via `ReadEvents` + `ReplayEvents`.~~ |
+| ~~24~~ | ~~**RELEASING.md checklist**~~ done — RELEASE.md | ~~30min~~ | ~~LOW~~ | ~~Already in CONTRIBUTING.md.~~ |
+| ~~25~~ | ~~**Multi-module split**~~ **Won't implement — rejected in this report.** | ~~—~~ | ~~—~~ | ~~Explicitly rejected. Too small.~~ |
 
 ---
 

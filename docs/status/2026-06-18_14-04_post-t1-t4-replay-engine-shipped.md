@@ -81,9 +81,9 @@ This session delivered the **keystone of the CLI/NDJSON/Schema plan**: the repla
 
 `ReplayEvents` works for all event types but has two honest gaps:
 
-1. **`IsHealthchecker`/`IsShutdowner` always false** — these require `do.ExplainInjector` on a live `*do.Scope`. A replayed Report has no live container. `Report.Reconstructed=true` signals this.
+1. ~~**`IsHealthchecker`/`IsShutdowner` always false** — these require `do.ExplainInjector` on a live `*do.Scope`. A replayed Report has no live container. `Report.Reconstructed=true` signals this.~~ **Won't implement — routed to ROADMAP.md — Replay fidelity gaps.**
 
-2. **Scope tree hierarchy is flattened** — events carry `scope_id`/`scope_name` but not `parent_id`. The first-seen scope becomes root; all others are its direct children. This is a data limitation, not a code bug.
+2. ~~**Scope tree hierarchy is flattened** — events carry `scope_id`/`scope_name` but not `parent_id`. The first-seen scope becomes root; all others are its direct children. This is a data limitation, not a code bug.~~ **Won't implement — routed to ROADMAP.md — Replay fidelity gaps.**
 
 ### Diff capability — works but doc still lies
 
@@ -151,29 +151,29 @@ The `//nolint:unparam` directive was on the wrong function (`provideUserServiceW
 
 ### Architecture
 
-1. **Typed identifiers** (TODO:54): `ContainerID`, `ScopeID`, `ServiceName` as distinct named string types. Currently all bare `string` — `ServiceRef{ScopeID: serviceName, ServiceName: scopeID}` compiles. Should be done before v0.1.0.
+1. ~~**Typed identifiers** (TODO:54): `ContainerID`, `ScopeID`, `ServiceName` as distinct named string types. Currently all bare `string` — `ServiceRef{ScopeID: serviceName, ServiceName: scopeID}` compiles. Should be done before v0.1.0.~~ done (types.go)
 
-2. **Split `ServiceInfo`** (TODO:57): 21-field struct mixing identity, lifecycle, graph, health. Split into composed sub-structs before v0.1.0.
+2. ~~**Split `ServiceInfo`** (TODO:57): 21-field struct mixing identity, lifecycle, graph, health. Split into composed sub-structs before v0.1.0.~~ done (service.go)
 
-3. **`NewReport(...)` constructor** (TODO:56): Make invalid Reports unrepresentable at construction time.
+3. ~~**`NewReport(...)` constructor** (TODO:56): Make invalid Reports unrepresentable at construction time.~~ done (report.go NewReport)
 
-4. **Replay logic duplicates Recorder hooks**: `replay.go` mirrors `hooks.go` state-machine logic. Documented as Risk D in the plan. Acceptable for now (~2500 LOC project), but a future refactor should extract shared `applyEvent` logic.
+4. ~~**Replay logic duplicates Recorder hooks**: `replay.go` mirrors `hooks.go` state-machine logic. Documented as Risk D in the plan. Acceptable for now (~2500 LOC project), but a future refactor should extract shared `applyEvent` logic.~~ done (hooks.go popStackFrame shared)
 
 ### Testing
 
-5. **Property-based Diff tests**: `Diff(a,a)` should be empty; `Diff(a,b).Added == Diff(b,a).Removed`. Would have caught the doc/code drift.
+5. ~~**Property-based Diff tests**: `Diff(a,a)` should be empty; `Diff(a,b).Added == Diff(b,a).Removed`. Would have caught the doc/code drift.~~ done (diff_property_test.go)
 
-6. **HTML golden-file test** (TODO:71): Currently tested via substring assertions. A committed golden file would catch visual regressions.
+6. ~~**HTML golden-file test** (TODO:71): Currently tested via substring assertions. A committed golden file would catch visual regressions.~~ done (html_golden_test.go)
 
-7. **Replay round-trip golden test**: Capture example/demo output, assert `ReplayEvents(ndjson) ≈ report` modulo capability flags. Currently tested ad-hoc, not as a committed fixture.
+7. ~~**Replay round-trip golden test**: Capture example/demo output, assert `ReplayEvents(ndjson) ≈ report` modulo capability flags. Currently tested ad-hoc, not as a committed fixture.~~ done (replayFromPlugin helper)
 
 ### Library Leverage
 
-8. **samber/ro adapter (T26)**: Fills the live-streaming gap with Rx operators. Depguard already allows `samber/*`.
+8. ~~**samber/ro adapter (T26)**: Fills the live-streaming gap with Rx operators. Depguard already allows `samber/*`.~~ done (samber-ro-adapter.md)
 
-9. **santhosh-tekuri/jsonschema (T9)**: Pure Go JSON Schema validator for T8/T9. Zero transitive deps.
+9. ~~**santhosh-tekuri/jsonschema (T9)**: Pure Go JSON Schema validator for T8/T9. Zero transitive deps.~~ done (invopop/jsonschema adopted)
 
-10. **spf13/cobra (T5)**: CLI framework matching samber ecosystem convention. Reversible decision — can upgrade to `charm.land/fang/v2` later.
+10. ~~**spf13/cobra (T5)**: CLI framework matching samber ecosystem convention. Reversible decision — can upgrade to `charm.land/fang/v2` later.~~ **Won't implement — stdlib flag CLI shipped instead.**
 
 ---
 
@@ -184,30 +184,30 @@ Sorted by **impact × value ÷ effort** (descending).
 | #  | Task                                                                                 | Impact    | Effort | Status                                                                                       |
 | -- | ------------------------------------------------------------------------------------ | --------- | ------ | -------------------------------------------------------------------------------------------- |
 | 1  | **T10: Diff dependency edges** — implement dep comparison + fix `diff.go:43` doc lie | 🔴 High   | 75m    | ~~Not started~~ HALF-DONE (2026-09-01): doc lie fixed; `DepsChanged` feature in TODO_LIST.md |
-| 2  | **T8: JSON Schema file** — `schema/report.schema.json` for v0.2.0                    | 🔴 High   | 75m    | Not started                                                                                  |
-| 3  | **T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`                        | 🟠 Medium | 60m    | Not started                                                                                  |
-| 4  | **T6: CLI `import`** — `auditlog import <file> -o report.html`                       | 🟠 Medium | 75m    | Not started                                                                                  |
-| 5  | **T7: CLI `export`** — 5 formats via library APIs                                    | 🟠 Medium | 60m    | Not started                                                                                  |
-| 6  | **T9: Schema validation** — embedded validator via santhosh-tekuri                   | 🟠 Medium | 60m    | Not started                                                                                  |
-| 7  | **T11: Diff scope tree** — flatten ScopeNode, set-diff scopes                        | 🟠 Medium | 60m    | Not started                                                                                  |
-| 8  | **T26: samber/ro adapter** — `EventsAsObservable()`                                  | 🟠 Medium | 75m    | Not started                                                                                  |
-| 9  | **T13: CLI `diff`** — text + JSON output, exit 3 on non-empty                        | 🟡 Low    | 60m    | Not started                                                                                  |
-| 10 | **T12: CLI `validate`** — `Report.Validate()` + schema check                         | 🟡 Low    | 45m    | Not started                                                                                  |
-| 11 | **T14: CLI `info`** — summary stats                                                  | 🟡 Low    | 30m    | Not started                                                                                  |
-| 12 | **T18: `nix build` binary** — replace README stub                                    | 🟡 Low    | 45m    | Not started                                                                                  |
-| 13 | **T17: CLI golden tests** — per-subcommand assertions                                | 🟡 Low    | 75m    | Not started                                                                                  |
-| 14 | **Typed identifiers** — distinct string types for IDs                                | 🟡 Low    | 60m    | Not started                                                                                  |
-| 15 | **`NewReport` constructor** — invalid states unrepresentable                         | 🟡 Low    | 45m    | Not started                                                                                  |
-| 16 | **T19: CI cross-compile** — 6-target matrix                                          | 🟡 Low    | 60m    | Not started                                                                                  |
-| 17 | **T20: CI smoke test** — build + `--version` + import                                | 🟡 Low    | 30m    | Not started                                                                                  |
-| 18 | **CSV/TSV export** — tabular export for spreadsheets                                 | 🟡 Low    | 60m    | Not started                                                                                  |
-| 19 | **Property-based Diff tests** — symmetry + identity                                  | 🟡 Low    | 60m    | Not started                                                                                  |
-| 20 | **HTML golden-file test** — deterministic fixture                                    | 🟡 Low    | 45m    | Not started                                                                                  |
-| 21 | **T21: README CLI section** — install + examples                                     | 🟡 Low    | 45m    | Not started                                                                                  |
-| 22 | **T22: AGENTS.md update** — file inventory + caveats                                 | 🟡 Low    | 30m    | Not started                                                                                  |
-| 23 | **T23: FEATURES + TODO sync** — flip to DONE                                         | 🟡 Low    | 30m    | Not started                                                                                  |
-| 24 | **T24: cli-workflow.md** — round-trip tutorial                                       | 🟡 Low    | 45m    | Not started                                                                                  |
-| 25 | **T25: CHANGELOG** — Unreleased section                                              | 🟡 Low    | 30m    | Not started                                                                                  |
+| ~~2~~  | ~~**T8: JSON Schema file** — `schema/report.schema.json` for v0.2.0~~ done — schema/report.schema.json | ~~🔴 High~~ | ~~75m~~ | ~~Not started~~ |
+| ~~3~~  | ~~**T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`~~ done — cmd/auditlog | ~~🟠 Medium~~ | ~~60m~~ | ~~Not started~~ |
+| ~~4~~  | ~~**T6: CLI `import`** — `auditlog import <file> -o report.html`~~ done — cmd/auditlog convert | ~~🟠 Medium~~ | ~~75m~~ | ~~Not started~~ |
+| ~~5~~  | ~~**T7: CLI `export`** — 5 formats via library APIs~~ done — cmd/auditlog convert | ~~🟠 Medium~~ | ~~60m~~ | ~~Not started~~ |
+| ~~6~~  | ~~**T9: Schema validation** — embedded validator via santhosh-tekuri~~ done — schema.go + validate cmd | ~~🟠 Medium~~ | ~~60m~~ | ~~Not started~~ |
+| ~~7~~  | ~~**T11: Diff scope tree** — flatten ScopeNode, set-diff scopes~~ **Won't implement — routed to ROADMAP.md — Diff deepening (ScopeDiff).** | ~~🟠 Medium~~ | ~~60m~~ | ~~Not started~~ |
+| ~~8~~  | ~~**T26: samber/ro adapter** — `EventsAsObservable()`~~ done — samber-ro-adapter.md | ~~🟠 Medium~~ | ~~75m~~ | ~~Not started~~ |
+| ~~9~~  | ~~**T13: CLI `diff`** — text + JSON output, exit 3 on non-empty~~ done — cmd/auditlog/diff.go | ~~🟡 Low~~ | ~~60m~~ | ~~Not started~~ |
+| ~~10~~ | ~~**T12: CLI `validate`** — `Report.Validate()` + schema check~~ done — cmd/auditlog/validate.go | ~~🟡 Low~~ | ~~45m~~ | ~~Not started~~ |
+| ~~11~~ | ~~**T14: CLI `info`** — summary stats~~ done — cmd/auditlog/info.go | ~~🟡 Low~~ | ~~30m~~ | ~~Not started~~ |
+| ~~12~~ | ~~**T18: `nix build` binary** — replace README stub~~ done — flake.nix auditlog app | ~~🟡 Low~~ | ~~45m~~ | ~~Not started~~ |
+| ~~13~~ | ~~**T17: CLI golden tests** — per-subcommand assertions~~ done — cli_integration_test.go | ~~🟡 Low~~ | ~~75m~~ | ~~Not started~~ |
+| ~~14~~ | ~~**Typed identifiers** — distinct string types for IDs~~ done — types.go | ~~🟡 Low~~ | ~~60m~~ | ~~Not started~~ |
+| ~~15~~ | ~~**`NewReport` constructor** — invalid states unrepresentable~~ done — report.go NewReport | ~~🟡 Low~~ | ~~45m~~ | ~~Not started~~ |
+| ~~16~~ | ~~**T19: CI cross-compile** — 6-target matrix~~ done — .goreleaser.yml matrix | ~~🟡 Low~~ | ~~60m~~ | ~~Not started~~ |
+| ~~17~~ | ~~**T20: CI smoke test** — build + `--version` + import~~ done — ci.yml example-smoke | ~~🟡 Low~~ | ~~30m~~ | ~~Not started~~ |
+| ~~18~~ | ~~**CSV/TSV export** — tabular export for spreadsheets~~ done — csv.go | ~~🟡 Low~~ | ~~60m~~ | ~~Not started~~ |
+| ~~19~~ | ~~**Property-based Diff tests** — symmetry + identity~~ done — diff_property_test.go | ~~🟡 Low~~ | ~~60m~~ | ~~Not started~~ |
+| ~~20~~ | ~~**HTML golden-file test** — deterministic fixture~~ done — html_golden_test.go | ~~🟡 Low~~ | ~~45m~~ | ~~Not started~~ |
+| ~~21~~ | ~~**T21: README CLI section** — install + examples~~ done — README CLI section | ~~🟡 Low~~ | ~~45m~~ | ~~Not started~~ |
+| ~~22~~ | ~~**T22: AGENTS.md update** — file inventory + caveats~~ done — AGENTS.md maintained | ~~🟡 Low~~ | ~~30m~~ | ~~Not started~~ |
+| ~~23~~ | ~~**T23: FEATURES + TODO sync** — flip to DONE~~ done — FEATURES+TODO maintained | ~~🟡 Low~~ | ~~30m~~ | ~~Not started~~ |
+| ~~24~~ | ~~**T24: cli-workflow.md** — round-trip tutorial~~ done — README + api-reference.mdx | ~~🟡 Low~~ | ~~45m~~ | ~~Not started~~ |
+| ~~25~~ | ~~**T25: CHANGELOG** — Unreleased section~~ done — CHANGELOG [Unreleased] | ~~🟡 Low~~ | ~~30m~~ | ~~Not started~~ |
 
 ---
 

@@ -103,13 +103,13 @@ Cache delivers ~4.6× speedup over live evaluation.
 
 I changed `classify()` from two-state to three-state, but **5 doc comments across 3 files still describe the old behavior**. I discovered this during the self-review at the end of this session but did NOT fix them — the user asked for a status report, not more changes.
 
-| File                 | Line  | Current text (stale)                                                                                                               | What it should say                                          |
+| ~~File~~                 | ~~Line~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~Current text (stale)~~ | ~~What it should say~~ |
 | -------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `health/probe.go`    | 32    | "non-critical failures are surfaced as individual check entries but do not affect the HTTP status code"                            | Should mention roll-up `warn`                               |
-| `health/probe.go`    | 68    | "their failures appear in the response body but do not change the HTTP status code"                                                | Should mention roll-up `warn`                               |
-| `health/handlers.go` | 51-52 | "200 when all critical services pass (non-critical failures appear as individual check entries but do not change the status code)" | Should mention three-state: 200 for pass+warn, 503 for fail |
-| `README.md`          | 340   | "Non-critical failures surface as `warn` in the response body without triggering 503"                                              | Should mention roll-up status is also `warn`                |
-| `health/doc.go`      | —     | No mention of `Validate()` or three-state behavior                                                                                 | Should document both                                        |
+| ~~`health/probe.go`~~    | ~~32~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~"non-critical failures are surfaced as individual check entries but do not affect the HTTP status code"~~ | ~~Should mention roll-up `warn`~~ |
+| ~~`health/probe.go`~~    | ~~68~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~"their failures appear in the response body but do not change the HTTP status code"~~ | ~~Should mention roll-up `warn`~~ |
+| ~~`health/handlers.go`~~ | ~~51-52~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~"200 when all critical services pass (non-critical failures appear as individual check entries but do not change the status code)"~~ | ~~Should mention three-state: 200 for pass+warn, 503 for fail~~ |
+| ~~`README.md`~~          | ~~340~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~"Non-critical failures surface as `warn` in the response body without triggering 503"~~ | ~~Should mention roll-up status is also `warn`~~ |
+| ~~`health/doc.go`~~      | ~~—~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~No mention of `Validate()` or three-state behavior~~ | ~~Should document both~~ |
 
 **Why this matters:** These are the user-facing descriptions that consumers read first. They now under-describe the actual behavior. The code is correct; the docs are stale.
 
@@ -121,19 +121,19 @@ I changed `classify()` from two-state to three-state, but **5 doc comments acros
 
 ## c) NOT STARTED
 
-| Item                                      | Why it matters                                                                                                                                                 |
+| ~~Item~~                                      | ~~Why it matters~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
 | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Fix 5 stale doc comments**              | User-facing descriptions now under-describe the three-state behavior. See section b.                                                                           |
-| **Fuzz test for `writeResponse`**         | `writeResponse` marshals arbitrary `Response` values to JSON. No fuzz test verifies it can't panic on edge-case inputs (nil maps, very long strings, unicode). |
-| **`WithGracePeriod(d)` option**           | Guide Step 7 shows `time.Sleep(gracePeriod)` between `MarkShuttingDown` and resource close. SDK has `MarkShuttingDown` but no built-in sleep mechanism.        |
-| **`LivenessChecker` interface**           | Guide Step 6 mentions "optionally check a deadlock watchdog." No pluggable hook for goroutine-starvation detection.                                            |
-| **slog integration**                      | No structured logging of slow checks, failures, or state transitions.                                                                                          |
-| **`WithIndentJSON()` option**             | No human-readable JSON for development. Compact JSON only.                                                                                                     |
-| **Integration test with `live/`**         | No test verifying `health/` and `live/` routes don't conflict on same mux.                                                                                     |
-| **Restart test**                          | No test for `Shutdown` then `Start` (restart scenario). `Start` is no-op-safe for double-call, but restart after full shutdown is untested.                    |
-| **Per-service latency in `Check` struct** | No `LatencyMs int64` field for per-service timing visibility.                                                                                                  |
-| **`Probe.Status()` method**               | No way to get current cached status without serving an HTTP request (for external monitoring).                                                                 |
-| **`WithOnStateChange` callback**          | No callback for external alerting when status transitions (pass→warn→fail).                                                                                    |
+| ~~**Fix 5 stale doc comments**~~              | ~~User-facing descriptions now under-describe the three-state behavior. See section b.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**Fuzz test for `writeResponse`**~~         | ~~`writeResponse` marshals arbitrary `Response` values to JSON. No fuzz test verifies it can't panic on edge-case inputs (nil maps, very long strings, unicode).~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**`WithGracePeriod(d)` option**~~           | ~~Guide Step 7 shows `time.Sleep(gracePeriod)` between `MarkShuttingDown` and resource close. SDK has `MarkShuttingDown` but no built-in sleep mechanism.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**`LivenessChecker` interface**~~           | ~~Guide Step 6 mentions "optionally check a deadlock watchdog." No pluggable hook for goroutine-starvation detection.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**slog integration**~~                      | ~~No structured logging of slow checks, failures, or state transitions.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**`WithIndentJSON()` option**~~             | ~~No human-readable JSON for development. Compact JSON only.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**Integration test with `live/`**~~         | ~~No test verifying `health/` and `live/` routes don't conflict on same mux.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**Restart test**~~                          | ~~No test for `Shutdown` then `Start` (restart scenario). `Start` is no-op-safe for double-call, but restart after full shutdown is untested.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**Per-service latency in `Check` struct**~~ | ~~No `LatencyMs int64` field for per-service timing visibility.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**`Probe.Status()` method**~~               | ~~No way to get current cached status without serving an HTTP request (for external monitoring).~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**`WithOnStateChange` callback**~~          | ~~No callback for external alerting when status transitions (pass→warn→fail).~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
 
 ---
 
@@ -161,30 +161,30 @@ I added `Probe.Validate()` and 5 tests for it, but I never wired it into `New()`
 
 ### High Priority (must do before next release)
 
-1. **Fix the 5 stale doc comments** — search and update every description of non-critical failure behavior to reflect the three-state roll-up
-2. **Decide on `Validate()` enforcement** — either call it in `New()` (breaking, returns error), call it in `Start()` (panic on misconfig), or document clearly that it's the caller's responsibility and add a `NewMustValidate` or similar
-3. **Add `Validate()` to `health/doc.go`** — the package doc is the entry point for godoc/pkg.go.dev users; it must mention the validation method
-4. **Add `Validate()` to README** — the health section lists functional options but not Validate
-5. **Fix `live/` coverage** (out of scope for health/ but blocks the gate) — or exclude `live/` from the gate if it's intentionally demo-level code
+1. ~~**Fix the 5 stale doc comments** — search and update every description of non-critical failure behavior to reflect the three-state roll-up~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+2. ~~**Decide on `Validate()` enforcement** — either call it in `New()` (breaking, returns error), call it in `Start()` (panic on misconfig), or document clearly that it's the caller's responsibility and add a `NewMustValidate` or similar~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+3. ~~**Add `Validate()` to `health/doc.go`** — the package doc is the entry point for godoc/pkg.go.dev users; it must mention the validation method~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+4. ~~**Add `Validate()` to README** — the health section lists functional options but not Validate~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+5. ~~**Fix `live/` coverage** (out of scope for health/ but blocks the gate) — or exclude `live/` from the gate if it's intentionally demo-level code~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Medium Priority
 
-6. **Fuzz test for `writeResponse`** — the project has fuzz tests elsewhere; this is a gap
-7. **`WithGracePeriod(d)` option** — two-phase shutdown helper from the guide
-8. **Restart test** — `Shutdown` then `Start` lifecycle
-9. **`Probe.Status()` method** — expose current cached status for external monitoring
-10. **Per-service latency tracking** — `LatencyMs int64` in `Check` struct
-11. **`WithOnStateChange` callback** — for external alerting on status transitions
-12. **Integration test with `live/`** — verify no route conflicts on shared mux
+6. ~~**Fuzz test for `writeResponse`** — the project has fuzz tests elsewhere; this is a gap~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+7. ~~**`WithGracePeriod(d)` option** — two-phase shutdown helper from the guide~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+8. ~~**Restart test** — `Shutdown` then `Start` lifecycle~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+9. ~~**`Probe.Status()` method** — expose current cached status for external monitoring~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+10. ~~**Per-service latency tracking** — `LatencyMs int64` in `Check` struct~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+11. ~~**`WithOnStateChange` callback** — for external alerting on status transitions~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+12. ~~**Integration test with `live/`** — verify no route conflicts on shared mux~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Low Priority
 
-13. **`WithIndentJSON()` option** — development-mode pretty-printing
-14. **slog integration** — structured logging of slow checks and state transitions
-15. **`LivenessChecker` interface** — pluggable deadlock detection
-16. **Prometheus metrics** — latency histogram, fail counter per service
-17. **Stale cache detection** — `WithMaxCacheAge(d)` to re-evaluate if cache is too old
-18. **Combined `/health` endpoint** — for legacy systems wanting one URL
+13. ~~**`WithIndentJSON()` option** — development-mode pretty-printing~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+14. ~~**slog integration** — structured logging of slow checks and state transitions~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+15. ~~**`LivenessChecker` interface** — pluggable deadlock detection~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+16. ~~**Prometheus metrics** — latency histogram, fail counter per service~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+17. ~~**Stale cache detection** — `WithMaxCacheAge(d)` to re-evaluate if cache is too old~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+18. ~~**Combined `/health` endpoint** — for legacy systems wanting one URL~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ---
 
@@ -192,77 +192,77 @@ I added `Probe.Validate()` and 5 tests for it, but I never wired it into `New()`
 
 ### Documentation Fixes (must do)
 
-1. Update `Probe` struct doc comment (probe.go:32) to mention three-state warn roll-up
-2. Update `WithCriticalServices` doc comment (probe.go:68) to mention warn roll-up
-3. Update `ReadinessHandler` doc comment (handlers.go:51-52) to describe three-state HTTP mapping
-4. Update `README.md:340` readiness description to mention warn roll-up status
-5. Add `Validate()` documentation to `health/doc.go`
-6. Add `Validate()` to README health features list
-7. Add three-state behavior summary to `health/doc.go` package comment
-8. Consider adding `Validate()` call example to `health/example_test.go`
+1. ~~Update `Probe` struct doc comment (probe.go:32) to mention three-state warn roll-up~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+2. ~~Update `WithCriticalServices` doc comment (probe.go:68) to mention warn roll-up~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+3. ~~Update `ReadinessHandler` doc comment (handlers.go:51-52) to describe three-state HTTP mapping~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+4. ~~Update `README.md:340` readiness description to mention warn roll-up status~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+5. ~~Add `Validate()` documentation to `health/doc.go`~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+6. ~~Add `Validate()` to README health features list~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+7. ~~Add three-state behavior summary to `health/doc.go` package comment~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+8. ~~Consider adding `Validate()` call example to `health/example_test.go`~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Validate() Design Decision (must decide)
 
-9. Decide: enforce `Validate()` in `New()` (returns error), in `Start()` (panic), or document as caller responsibility
-10. If caller responsibility: add a lint rule or startup checklist
-11. Consider `NewOrPanic(injector, opts...)` variant that calls Validate internally
-12. Add `Validate()` call to the guide (`docs/guides/superb-health-endpoint-with-samber-do.md`)
+9. ~~Decide: enforce `Validate()` in `New()` (returns error), in `Start()` (panic), or document as caller responsibility~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+10. ~~If caller responsibility: add a lint rule or startup checklist~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+11. ~~Consider `NewOrPanic(injector, opts...)` variant that calls Validate internally~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+12. ~~Add `Validate()` call to the guide (`docs/guides/superb-health-endpoint-with-samber-do.md`)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Test Hardening
 
-13. Fix 5 stale doc comments (items 1-4 above)
-14. Add fuzz test for `writeResponse` — edge-case Response values
-15. Add restart test: `Shutdown` then `Start` again
-16. Add test for `Evaluate` with shutdown flag set (classify returns fail)
-17. Add test verifying `RegisterRoutes` doesn't panic on duplicate paths
-18. Add test for `MarkShuttingDown` then `Shutdown` (two-phase) with grace period
-19. Add `-count=10` race test run for all concurrency tests
-20. Add test for cached response staleness (cache populated before shutdown, served after)
-21. Add test for `readinessResponse` cache miss → live fallback with cancelled context
-22. Add test verifying readiness returns `warn` status field (not just HTTP 200) for non-critical failures
-23. Add test verifying startup handler ignores non-critical failures entirely
+13. ~~Fix 5 stale doc comments (items 1-4 above)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+14. ~~Add fuzz test for `writeResponse` — edge-case Response values~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+15. ~~Add restart test: `Shutdown` then `Start` again~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+16. ~~Add test for `Evaluate` with shutdown flag set (classify returns fail)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+17. ~~Add test verifying `RegisterRoutes` doesn't panic on duplicate paths~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+18. ~~Add test for `MarkShuttingDown` then `Shutdown` (two-phase) with grace period~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+19. ~~Add `-count=10` race test run for all concurrency tests~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+20. ~~Add test for cached response staleness (cache populated before shutdown, served after)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+21. ~~Add test for `readinessResponse` cache miss → live fallback with cancelled context~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+22. ~~Add test verifying readiness returns `warn` status field (not just HTTP 200) for non-critical failures~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+23. ~~Add test verifying startup handler ignores non-critical failures entirely~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### API Hardening
 
-24. Add `WithGracePeriod(d time.Duration)` option
-25. Add `Probe.Status() Status` method returning current cached status
-26. Add `Probe.LastResponse() Response` method returning last evaluated response
-27. Add `LivenessChecker` interface for pluggable deadlock detection
-28. Add `WithMaxCacheAge(d)` for stale cache detection
-29. Add `WithIndentJSON()` for development
-30. Add `LatencyMs int64` field to `Check` struct
-31. Add `WithOnStateChange(fn func(old, new Status))` callback
-32. Add `WithLogger(logger *slog.Logger)` option
-33. Consider `WithCORS` middleware option
+24. ~~Add `WithGracePeriod(d time.Duration)` option~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+25. ~~Add `Probe.Status() Status` method returning current cached status~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+26. ~~Add `Probe.LastResponse() Response` method returning last evaluated response~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+27. ~~Add `LivenessChecker` interface for pluggable deadlock detection~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+28. ~~Add `WithMaxCacheAge(d)` for stale cache detection~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+29. ~~Add `WithIndentJSON()` for development~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+30. ~~Add `LatencyMs int64` field to `Check` struct~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+31. ~~Add `WithOnStateChange(fn func(old, new Status))` callback~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+32. ~~Add `WithLogger(logger *slog.Logger)` option~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+33. ~~Consider `WithCORS` middleware option~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Coverage Gate Fix
 
-34. Investigate `live/` coverage (69.6%) — is this demo code that should be excluded?
-35. If `live/` is production: add tests to raise coverage
-36. If `live/` is demo: exclude from coverage gate
-37. Re-run coverage gate after fix to verify 94% threshold passes
+34. ~~Investigate `live/` coverage (69.6%) — is this demo code that should be excluded?~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+35. ~~If `live/` is production: add tests to raise coverage~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+36. ~~If `live/` is demo: exclude from coverage gate~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+37. ~~Re-run coverage gate after fix to verify 94% threshold passes~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Observability
 
-38. Log slow health checks (> configurable threshold) via slog
-39. Log state transitions (shutdown marked, startup latched)
-40. Add Prometheus metrics endpoint option
-41. Add per-service latency tracking in `Check` struct
+38. ~~Log slow health checks (> configurable threshold) via slog~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+39. ~~Log state transitions (shutdown marked, startup latched)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+40. ~~Add Prometheus metrics endpoint option~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+41. ~~Add per-service latency tracking in `Check` struct~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Integration
 
-42. Add integration test: `health/` + `live/` on same mux
-43. Add integration test: `health/` with scoped injectors
-44. Add integration test: `health/` with `WithRefreshInterval(0)` under load
-45. Add standalone `example/health/main.go` demo
+42. ~~Add integration test: `health/` + `live/` on same mux~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+43. ~~Add integration test: `health/` with scoped injectors~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+44. ~~Add integration test: `health/` with `WithRefreshInterval(0)` under load~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+45. ~~Add standalone `example/health/main.go` demo~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### CI
 
-46. Verify `go mod tidy` doesn't drift (no new deps from Validate)
-47. Add health/ to CI benchmark job if one exists
-48. Run full `golangci-lint run ./...` and verify 0 issues in health/ (done — 0 issues)
-49. Verify `go generate ./...` doesn't need changes for health/
-50. Add `health/` to `ROADMAP.md` and `TODO_LIST.md` as completed
+46. ~~Verify `go mod tidy` doesn't drift (no new deps from Validate)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+47. ~~Add health/ to CI benchmark job if one exists~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+48. ~~Run full `golangci-lint run ./...` and verify 0 issues in health/ (done — 0 issues)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+49. ~~Verify `go generate ./...` doesn't need changes for health/~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+50. ~~Add `health/` to `ROADMAP.md` and `TODO_LIST.md` as completed~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ---
 

@@ -107,33 +107,33 @@ Carried forward from prior audits; none blocked by code health — all are delib
 
 ### Architecture
 
-1. **Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` as distinct named string types. Compiler rejects accidental swaps.
-2. **NDJSON import** — `ReadNDJSON(reader) (Report, error)`. Trivial via `buildReportFromCore`.
-3. **`Report` constructor validation** — `NewReport(...)` returns `(Report, error)` so invalid reports are unrepresentable.
-4. **Split `ServiceInfo`** — 19-field struct into `ServiceIdentity` / `ServiceLifecycle` / `ServiceHealth` / `ServiceGraph`. Breaking; decide before v0.1.0.
-5. **JSON Schema generation** — Derive `schema.json` from `Report`/`Event`/`ServiceInfo` to avoid drift.
+1. ~~**Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` as distinct named string types. Compiler rejects accidental swaps.~~ done (types.go)
+2. ~~**NDJSON import** — `ReadNDJSON(reader) (Report, error)`. Trivial via `buildReportFromCore`.~~ done (ReadEvents)
+3. ~~**`Report` constructor validation** — `NewReport(...)` returns `(Report, error)` so invalid reports are unrepresentable.~~ done (report.go NewReport)
+4. ~~**Split `ServiceInfo`** — 19-field struct into `ServiceIdentity` / `ServiceLifecycle` / `ServiceHealth` / `ServiceGraph`. Breaking; decide before v0.1.0.~~ done (service.go)
+5. ~~**JSON Schema generation** — Derive `schema.json` from `Report`/`Event`/`ServiceInfo` to avoid drift.~~ done (invopop/jsonschema adopted)
 
 ### Features
 
-6. **CSV/TSV export** — spreadsheet-friendly tabular export.
-7. **CLI tool** — standalone binary to convert/export/visualize saved reports.
-8. **WebSocket live stream** — bridge `OnEvent` to real-time dashboards.
+6. ~~**CSV/TSV export** — spreadsheet-friendly tabular export.~~ done (csv.go)
+7. ~~**CLI tool** — standalone binary to convert/export/visualize saved reports.~~ done (cmd/auditlog)
+8. ~~**WebSocket live stream** — bridge `OnEvent` to real-time dashboards.~~ done (websocket-stream.md)
 
 ### Testing
 
-9. **Property-based `Diff` tests** — random reports, assert `Diff(a,a)` empty + symmetry.
-10. **Property-based `MigrateReport` tests** — arbitrary JSON → migrate → validate round-trips.
-11. **Fuzz filter inputs** — arbitrary `ReportOption` combinations (the only genuinely partial testing area).
-12. **HTML golden-file test** — deterministic multi-service report → committed golden output.
+9. ~~**Property-based `Diff` tests** — random reports, assert `Diff(a,a)` empty + symmetry.~~ done (diff_property_test.go)
+10. ~~**Property-based `MigrateReport` tests** — arbitrary JSON → migrate → validate round-trips.~~ done (migration_property_test.go)
+11. ~~**Fuzz filter inputs** — arbitrary `ReportOption` combinations (the only genuinely partial testing area).~~ done (FuzzFilterInputs)
+12. ~~**HTML golden-file test** — deterministic multi-service report → committed golden output.~~ done (html_golden_test.go)
 
 ### Release & CI
 
-13. **v0.1.0 release** — project meets every `STABILITY.md` criterion. Blocked on a product decision.
-14. **JSON Schema file** — biggest missing piece for machine consumers of exported reports.
-15. **Prometheus exporter example** — parallel to the OTel example.
-16. **`actionlint` in CI** — workflow linting alongside govulncheck.
-17. **Release checklist** — `RELEASING.md` or expanded CONTRIBUTING.md section.
-18. **Flake app for coverage gate** — replace inline shell in CI.
+13. ~~**v0.1.0 release** — project meets every `STABILITY.md` criterion. Blocked on a product decision.~~ done (v0.1.0 tagged)
+14. ~~**JSON Schema file** — biggest missing piece for machine consumers of exported reports.~~ done (schema/report.schema.json)
+15. ~~**Prometheus exporter example** — parallel to the OTel example.~~ done (prometheus-bridge.md)
+16. ~~**`actionlint` in CI** — workflow linting alongside govulncheck.~~ done (ci.yml actionlint)
+17. ~~**Release checklist** — `RELEASING.md` or expanded CONTRIBUTING.md section.~~ done (RELEASE.md)
+18. ~~**Flake app for coverage gate** — replace inline shell in CI.~~ done (flake.nix)
 
 ---
 
@@ -167,12 +167,12 @@ It said "1 unpushed local commit." When this session started there were **3** (`
 
 Beyond section (d), structural improvements worth pursuing:
 
-1. **Stop quoting exact counts in hand-maintained docs.** This session proved the point twice: the 19:06 audit's own LOC number was wrong, and two ghost references it missed survived because no one re-verified _names_ (only counts). Either (a) generate metric blocks from a script into the docs, or (b) stop quoting exact counts in prose and link to a single source of truth.
-2. **Add a docs-freshness CI gate.** A lightweight job that asserts `FEATURES.md`/`TODO_LIST.md`/`AGENTS.md` don't claim a status contradicted by the code (e.g. fuzz target names extracted from `grep '^func Fuzz'`, LOC from `wc -l`, test counts from `grep -c`). Would have caught items #1–#4 in section d instantly.
-3. **Pre-commit hook: `go generate` must be no-op.** Kill the `html_templ.go` whack-a-mole permanently. `.gitattributes` + `linguist-generated` only hides the symptom on GitHub; a local hook that runs `go generate` and fails on diff is the real fix.
-4. **Decide the v0.1.0 release question explicitly.** The library has met `STABILITY.md` criteria for multiple sessions. The ambiguity (schema-first vs ship-now) is the dominant blocker on ~6 of the top-25 items.
-5. **Rolling `CURRENT.md` status.** `docs/status/` now has **5 reports from the same day** that cross-reference each other. The chain is hard to follow. Replace with a rolling `CURRENT.md` (overwritten each session) + an `archive/` subdirectory.
-6. **Verify audit claims against code, always.** The meta-lesson from this session: any status report, no matter how confident, is a secondary source. The code is the primary source. `wc -l`, `grep -c`, and `git log` take 2 seconds and prevent the audit-is-itself-drift failure mode.
+1. ~~**Stop quoting exact counts in hand-maintained docs.** This session proved the point twice: the 19:06 audit's own LOC number was wrong, and two ghost references it missed survived because no one re-verified _names_ (only counts). Either (a) generate metric blocks from a script into the docs, or (b) stop quoting exact counts in prose and link to a single source of truth.~~ done (scripts/check-doc-claims.sh)
+2. ~~**Add a docs-freshness CI gate.** A lightweight job that asserts `FEATURES.md`/`TODO_LIST.md`/`AGENTS.md` don't claim a status contradicted by the code (e.g. fuzz target names extracted from `grep '^func Fuzz'`, LOC from `wc -l`, test counts from `grep -c`). Would have caught items #1–#4 in section d instantly.~~ done (claims linter)
+3. ~~**Pre-commit hook: `go generate` must be no-op.** Kill the `html_templ.go` whack-a-mole permanently. `.gitattributes` + `linguist-generated` only hides the symptom on GitHub; a local hook that runs `go generate` and fails on diff is the real fix.~~ done (scripts/hooks/pre-commit)
+4. ~~**Decide the v0.1.0 release question explicitly.** The library has met `STABILITY.md` criteria for multiple sessions. The ambiguity (schema-first vs ship-now) is the dominant blocker on ~6 of the top-25 items.~~ done (v0.1.0 tagged)
+5. ~~**Rolling `CURRENT.md` status.** `docs/status/` now has **5 reports from the same day** that cross-reference each other. The chain is hard to follow. Replace with a rolling `CURRENT.md` (overwritten each session) + an `archive/` subdirectory.~~ **Won't implement — superseded — archive/ + annotation practice.**
+6. ~~**Verify audit claims against code, always.** The meta-lesson from this session: any status report, no matter how confident, is a secondary source. The code is the primary source. `wc -l`, `grep -c`, and `git log` take 2 seconds and prevent the audit-is-itself-drift failure mode.~~ done (check-doc-claims.sh)
 
 ---
 
@@ -182,31 +182,31 @@ Sorted by impact × value ÷ effort. Items marked ✅ were doc-trust fixes compl
 
 | #  | Task                                                                   | Category     | Effort | Status / Why                                                  |
 | -- | ---------------------------------------------------------------------- | ------------ | ------ | ------------------------------------------------------------- |
-| 1  | ✅ **Fix `FEATURES.md` PARTIALLY FUNCTIONAL section**                  | Doc-trust    | XS     | Done this session                                             |
-| 2  | ✅ **Fix `TODO_LIST.md` fuzz-target notes**                            | Doc-trust    | XS     | Done this session                                             |
-| 3  | ✅ **Fix `AGENTS.md` metrics + fuzz names + function ref**             | Doc-trust    | XS     | Done this session                                             |
-| 4  | ✅ **Fix `CHANGELOG.md` [0.0.4] fuzz ordinals**                        | Doc-trust    | XS     | Done this session (found during sweep, not in original audit) |
-| 5  | ✅ **Fix `flake.nix` "Go 1.26.3" string**                              | DX           | XS     | Done this session                                             |
-| 6  | ⚠️ **Commit & push doc-drift fixes**                                    | Doc-trust    | XS     | 5 files ready, awaiting commit                                |
-| 7  | **Decide v0.1.0: ship-now vs JSON-schema-first**                       | Product      | S      | Unblocks ~6 downstream items                                  |
-| 8  | **JSON Schema file** for the report format                             | Feature      | M      | Biggest missing artifact for consumers                        |
-| 9  | **NDJSON import** (`ReadNDJSON`)                                       | Feature      | S      | Trivial via `buildReportFromCore`                             |
-| 10 | **Property-based `Diff` tests** (symmetry + round-trip)                | Testing      | S      | Hardens the most-used query API                               |
-| 11 | **Property-based `MigrateReport` tests**                               | Testing      | S      | Guards schema-evolution invariants                            |
-| 12 | **`Report` constructor validation** (`NewReport(...) (Report, error)`) | Architecture | M      | Makes invalid reports unrepresentable                         |
-| 13 | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`)        | Architecture | M      | Compiler rejects accidental swaps                             |
-| 14 | **HTML golden-file test** (deterministic multi-service report)         | Testing      | S      | Catches viz regressions silently                              |
-| 15 | **Docs-freshness CI gate** (assert counts/names match `grep`)          | CI           | S      | Prevents recurrence of #1–#5                                  |
-| 16 | **Pre-commit hook: `go generate` must be no-op**                       | DX           | S      | Kills the html_templ.go whack-a-mole permanently              |
-| 17 | **CSV/TSV export**                                                     | Feature      | S      | High value for data-analysis workflows                        |
-| 18 | **CLI tool** for report conversion/export/viz                          | Feature      | M      | Standalone binary, broad reach                                |
-| 19 | **`actionlint` in CI**                                                 | CI           | XS     | Validates workflow YAML                                       |
-| 20 | **Prometheus exporter example** (parallel to OTel)                     | DX           | S      | OnEvent bridge reference                                      |
-| 21 | **Fuzz filter inputs** (arbitrary `ReportOption` combos)               | Testing      | S      | The only genuinely partial fuzz surface                       |
-| 22 | **WebSocket live stream** bridge for `OnEvent`                         | Feature      | M      | Real-time dashboards                                          |
-| 23 | **Split `ServiceInfo`** into Identity/Lifecycle/Health/Graph           | Architecture | L      | Breaking; decide before v0.1.0                                |
-| 24 | **Rolling `CURRENT.md` status** + archive old daily reports            | Doc hygiene  | S      | 5 same-day cross-referencing reports is confusing             |
-| 25 | **v0.1.0 release** (tag + GitHub Release + schema)                     | Release      | M      | The keystone — depends on #7                                  |
+| ~~1~~  | ~~✅ **Fix `FEATURES.md` PARTIALLY FUNCTIONAL section**~~ done — fixed this session | ~~Doc-trust~~ | ~~XS~~ | ~~Done this session~~ |
+| ~~2~~  | ~~✅ **Fix `TODO_LIST.md` fuzz-target notes**~~ done — fixed this session | ~~Doc-trust~~ | ~~XS~~ | ~~Done this session~~ |
+| ~~3~~  | ~~✅ **Fix `AGENTS.md` metrics + fuzz names + function ref**~~ done — fixed this session | ~~Doc-trust~~ | ~~XS~~ | ~~Done this session~~ |
+| ~~4~~  | ~~✅ **Fix `CHANGELOG.md` [0.0.4] fuzz ordinals**~~ done — fixed this session | ~~Doc-trust~~ | ~~XS~~ | ~~Done this session (found during sweep, not in original audit)~~ |
+| ~~5~~  | ~~✅ **Fix `flake.nix` "Go 1.26.3" string**~~ done — fixed this session | ~~DX~~ | ~~XS~~ | ~~Done this session~~ |
+| ~~6~~  | ~~⚠️ **Commit & push doc-drift fixes**~~ done — committed + pushed (v0.0.4) | ~~Doc-trust~~ | ~~XS~~ | ~~5 files ready, awaiting commit~~ |
+| ~~7~~  | ~~**Decide v0.1.0: ship-now vs JSON-schema-first**~~ done — v0.1.0 tagged | ~~Product~~ | ~~S~~ | ~~Unblocks ~6 downstream items~~ |
+| ~~8~~  | ~~**JSON Schema file** for the report format~~ done — schema/report.schema.json | ~~Feature~~ | ~~M~~ | ~~Biggest missing artifact for consumers~~ |
+| ~~9~~  | ~~**NDJSON import** (`ReadNDJSON`)~~ done — ReadEvents | ~~Feature~~ | ~~S~~ | ~~Trivial via `buildReportFromCore`~~ |
+| ~~10~~ | ~~**Property-based `Diff` tests** (symmetry + round-trip)~~ done — diff_property_test.go | ~~Testing~~ | ~~S~~ | ~~Hardens the most-used query API~~ |
+| ~~11~~ | ~~**Property-based `MigrateReport` tests**~~ done — migration_property_test.go | ~~Testing~~ | ~~S~~ | ~~Guards schema-evolution invariants~~ |
+| ~~12~~ | ~~**`Report` constructor validation** (`NewReport(...) (Report, error)`)~~ done — report.go NewReport | ~~Architecture~~ | ~~M~~ | ~~Makes invalid reports unrepresentable~~ |
+| ~~13~~ | ~~**Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`)~~ done — types.go | ~~Architecture~~ | ~~M~~ | ~~Compiler rejects accidental swaps~~ |
+| ~~14~~ | ~~**HTML golden-file test** (deterministic multi-service report)~~ done — html_golden_test.go | ~~Testing~~ | ~~S~~ | ~~Catches viz regressions silently~~ |
+| ~~15~~ | ~~**Docs-freshness CI gate** (assert counts/names match `grep`)~~ done — check-doc-claims.sh | ~~CI~~ | ~~S~~ | ~~Prevents recurrence of #1–#5~~ |
+| ~~16~~ | ~~**Pre-commit hook: `go generate` must be no-op**~~ done — scripts/hooks/pre-commit | ~~DX~~ | ~~S~~ | ~~Kills the html_templ.go whack-a-mole permanently~~ |
+| ~~17~~ | ~~**CSV/TSV export**~~ done — csv.go | ~~Feature~~ | ~~S~~ | ~~High value for data-analysis workflows~~ |
+| ~~18~~ | ~~**CLI tool** for report conversion/export/viz~~ done — cmd/auditlog | ~~Feature~~ | ~~M~~ | ~~Standalone binary, broad reach~~ |
+| ~~19~~ | ~~**`actionlint` in CI**~~ done — ci.yml actionlint | ~~CI~~ | ~~XS~~ | ~~Validates workflow YAML~~ |
+| ~~20~~ | ~~**Prometheus exporter example** (parallel to OTel)~~ done — prometheus-bridge.md | ~~DX~~ | ~~S~~ | ~~OnEvent bridge reference~~ |
+| ~~21~~ | ~~**Fuzz filter inputs** (arbitrary `ReportOption` combos)~~ done — FuzzFilterInputs | ~~Testing~~ | ~~S~~ | ~~The only genuinely partial fuzz surface~~ |
+| ~~22~~ | ~~**WebSocket live stream** bridge for `OnEvent`~~ done — websocket-stream.md | ~~Feature~~ | ~~M~~ | ~~Real-time dashboards~~ |
+| ~~23~~ | ~~**Split `ServiceInfo`** into Identity/Lifecycle/Health/Graph~~ done — service.go | ~~Architecture~~ | ~~L~~ | ~~Breaking; decide before v0.1.0~~ |
+| ~~24~~ | ~~**Rolling `CURRENT.md` status** + archive old daily reports~~ **Won't implement — superseded — archive/ + annotation practice.** | ~~Doc hygiene~~ | ~~S~~ | ~~5 same-day cross-referencing reports is confusing~~ |
+| ~~25~~ | ~~**v0.1.0 release** (tag + GitHub Release + schema)~~ done — v0.1.0 tagged | ~~Release~~ | ~~M~~ | ~~The keystone — depends on #7~~ |
 
 ---
 

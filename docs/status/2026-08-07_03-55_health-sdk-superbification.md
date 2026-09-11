@@ -88,28 +88,28 @@ All three handlers (`LivenessHandler`, `ReadinessHandler`, `StartupHandler`) are
 
 ## b) PARTIALLY DONE
 
-| Item                       | What exists                                                                                     | What's missing                                                                                                                                                                                                                                                                        |
+| ~~Item~~                       | ~~What exists~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~What's missing~~ |
 | -------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GETOnly test coverage      | `TestGETOnly_RejectsNonGET` tests POST/PUT/DELETE/HEAD against `LivenessHandler` only           | Does NOT verify `ReadinessHandler` or `StartupHandler` reject non-GET. The `guard()` wrapper is the same for all three, but there's no test proving all three handlers are actually wrapped. A regression where someone adds a 4th handler and forgets `guard()` would not be caught. |
-| Benchmark numbers in docs  | FEATURES.md and CHANGELOG.md cite specific numbers (3.3µs, 9.6µs)                               | These are from the FIRST benchmark run. The second run showed different numbers (~1µs, ~4.7µs). Benchmark results vary by machine and run — hardcoding them in docs is fragile and already stale. Should either remove specific numbers or note they're indicative.                   |
-| Example compile-time guard | `probe_test.go` has `var _ do.HealthcheckerWithContext = (*T)(nil)` on all 4 test service types | `example_test.go`'s `exampleDB` type does NOT have the compile-time guard. The guide Step 1 says "always add the guard." Examples should model best practices.                                                                                                                        |
+| ~~GETOnly test coverage~~      | ~~`TestGETOnly_RejectsNonGET` tests POST/PUT/DELETE/HEAD against `LivenessHandler` only~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~Does NOT verify `ReadinessHandler` or `StartupHandler` reject non-GET. The `guard()` wrapper is the same for all three, but there's no test proving all three handlers are actually wrapped. A regression where someone adds a 4th handler and forgets `guard()` would not be caught.~~ |
+| ~~Benchmark numbers in docs~~  | ~~FEATURES.md and CHANGELOG.md cite specific numbers (3.3µs, 9.6µs)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~These are from the FIRST benchmark run. The second run showed different numbers (~1µs, ~4.7µs). Benchmark results vary by machine and run — hardcoding them in docs is fragile and already stale. Should either remove specific numbers or note they're indicative.~~ |
+| ~~Example compile-time guard~~ | ~~`probe_test.go` has `var _ do.HealthcheckerWithContext = (*T)(nil)` on all 4 test service types~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~`example_test.go`'s `exampleDB` type does NOT have the compile-time guard. The guide Step 1 says "always add the guard." Examples should model best practices.~~ |
 
 ---
 
 ## c) NOT STARTED
 
-| Item                              | Why it matters                                                                                                                                                                                |
+| ~~Item~~                              | ~~Why it matters~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **BENCHMARKS.md not updated**     | The project maintains `BENCHMARKS.md` with baseline numbers for regression detection. The new health benchmarks are not listed there. CI doesn't enforce this, but it's a project convention. |
-| **Stress test**                   | No test for 1000 concurrent requests to cached readiness handler. The `atomic.Pointer[Response]` should handle this, but it's unproven under load.                                            |
-| **`Probe.Validate()` method**     | No validation that timeout > 0, refresh interval >= 0. Invalid values would cause panics or hangs at runtime.                                                                                 |
-| **Fuzz test for `writeResponse`** | The project has fuzz tests for HTML XSS, NDJSON parsing, etc. `writeResponse` marshals arbitrary `Response` values to JSON — no fuzz test verifies it can't panic on edge-case inputs.        |
-| **`WithGracePeriod` option**      | The guide Step 7 shows `time.Sleep(gracePeriod)` between `MarkShuttingDown` and resource close. The SDK has `MarkShuttingDown` but no built-in sleep mechanism.                               |
-| **`LivenessChecker` interface**   | The guide Step 6 mentions "optionally check a deadlock watchdog." No pluggable hook exists for goroutine-starvation or deadlock detection in the liveness handler.                            |
-| **slog integration**              | No structured logging of slow checks, failures, or state transitions (shutdown marked, startup latched).                                                                                      |
-| **Indented JSON option**          | No `WithIndentJSON()` for human-readable responses during development. Compact JSON only.                                                                                                     |
-| **Integration test with `live/`** | No test verifying `health/` and `live/` routes don't conflict when both are mounted on the same mux.                                                                                          |
-| **Restart test**                  | No test for `Shutdown` followed by `Start` (restart scenario). The current `Start` is no-op-safe for double-call, but restart after full shutdown is untested.                                |
+| ~~**BENCHMARKS.md not updated**~~     | ~~The project maintains `BENCHMARKS.md` with baseline numbers for regression detection. The new health benchmarks are not listed there. CI doesn't enforce this, but it's a project convention.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**Stress test**~~                   | ~~No test for 1000 concurrent requests to cached readiness handler. The `atomic.Pointer[Response]` should handle this, but it's unproven under load.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**`Probe.Validate()` method**~~     | ~~No validation that timeout > 0, refresh interval >= 0. Invalid values would cause panics or hangs at runtime.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**Fuzz test for `writeResponse`**~~ | ~~The project has fuzz tests for HTML XSS, NDJSON parsing, etc. `writeResponse` marshals arbitrary `Response` values to JSON — no fuzz test verifies it can't panic on edge-case inputs.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**`WithGracePeriod` option**~~      | ~~The guide Step 7 shows `time.Sleep(gracePeriod)` between `MarkShuttingDown` and resource close. The SDK has `MarkShuttingDown` but no built-in sleep mechanism.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**`LivenessChecker` interface**~~   | ~~The guide Step 6 mentions "optionally check a deadlock watchdog." No pluggable hook exists for goroutine-starvation or deadlock detection in the liveness handler.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**slog integration**~~              | ~~No structured logging of slow checks, failures, or state transitions (shutdown marked, startup latched).~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**Indented JSON option**~~          | ~~No `WithIndentJSON()` for human-readable responses during development. Compact JSON only.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**Integration test with `live/`**~~ | ~~No test verifying `health/` and `live/` routes don't conflict when both are mounted on the same mux.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**Restart test**~~                  | ~~No test for `Shutdown` followed by `Start` (restart scenario). The current `Start` is no-op-safe for double-call, but restart after full shutdown is untested.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
 
 ---
 
@@ -137,29 +137,29 @@ The guide explicitly says in Step 1: "Add a compile-time guard." All 4 test serv
 
 ### High Priority
 
-1. **Remove hardcoded benchmark numbers from FEATURES.md and CHANGELOG.md** — replace with qualitative claims. Precise numbers belong in BENCHMARKS.md only.
-2. **Add GETOnly test for all three handlers** — iterate over `LivenessHandler`, `ReadinessHandler`, `StartupHandler` and verify each rejects non-GET.
-3. **Add compile-time guard to `exampleDB`** in `example_test.go`.
-4. **Add health benchmarks to BENCHMARKS.md** — the project convention for regression baselines.
+1. ~~**Remove hardcoded benchmark numbers from FEATURES.md and CHANGELOG.md** — replace with qualitative claims. Precise numbers belong in BENCHMARKS.md only.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+2. ~~**Add GETOnly test for all three handlers** — iterate over `LivenessHandler`, `ReadinessHandler`, `StartupHandler` and verify each rejects non-GET.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+3. ~~**Add compile-time guard to `exampleDB`** in `example_test.go`.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+4. ~~**Add health benchmarks to BENCHMARKS.md** — the project convention for regression baselines.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Medium Priority
 
-5. **Add `Probe.Validate()` method** — validate timeout > 0, refresh interval >= 0, version string constraints.
-6. **Add fuzz test for `writeResponse`** — verify no panic on edge-case `Response` values (empty maps, nil checks, very long strings).
-7. **Add stress test** — 1000 concurrent requests to cached readiness handler, verify no race, no panic.
-8. **Add restart test** — `Shutdown` then `Start` again, verify background loop restarts.
-9. **Add `WithGracePeriod(d)` option** — sleep between `MarkShuttingDown` and `Shutdown` for two-phase graceful drain.
-10. **Add `LivenessChecker` interface** — pluggable hook for deadlock/goroutine-starvation detection.
-11. **Add integration test** — `health/` + `live/` on same mux, no route conflicts.
+5. ~~**Add `Probe.Validate()` method** — validate timeout > 0, refresh interval >= 0, version string constraints.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+6. ~~**Add fuzz test for `writeResponse`** — verify no panic on edge-case `Response` values (empty maps, nil checks, very long strings).~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+7. ~~**Add stress test** — 1000 concurrent requests to cached readiness handler, verify no race, no panic.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+8. ~~**Add restart test** — `Shutdown` then `Start` again, verify background loop restarts.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+9. ~~**Add `WithGracePeriod(d)` option** — sleep between `MarkShuttingDown` and `Shutdown` for two-phase graceful drain.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+10. ~~**Add `LivenessChecker` interface** — pluggable hook for deadlock/goroutine-starvation detection.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+11. ~~**Add integration test** — `health/` + `live/` on same mux, no route conflicts.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Low Priority
 
-12. **Add `WithIndentJSON()` option** — human-readable JSON for development.
-13. **Add slog integration** — log slow checks (>threshold), state transitions.
-14. **Add Prometheus metrics** — latency histogram, fail counter per service.
-15. **Add per-service latency in `Check` struct** — `LatencyMs int64` field.
-16. **Add stale cache detection** — `WithMaxCacheAge(d)` to re-evaluate if cache is too old.
-17. **Add combined `/health` endpoint option** — for legacy systems that want one URL.
+12. ~~**Add `WithIndentJSON()` option** — human-readable JSON for development.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+13. ~~**Add slog integration** — log slow checks (>threshold), state transitions.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+14. ~~**Add Prometheus metrics** — latency histogram, fail counter per service.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+15. ~~**Add per-service latency in `Check` struct** — `LatencyMs int64` field.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+16. ~~**Add stale cache detection** — `WithMaxCacheAge(d)` to re-evaluate if cache is too old.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+17. ~~**Add combined `/health` endpoint option** — for legacy systems that want one URL.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ---
 
@@ -167,80 +167,80 @@ The guide explicitly says in Step 1: "Add a compile-time guard." All 4 test serv
 
 ### Correctness Fixes (must do)
 
-1. Remove hardcoded benchmark ns/op numbers from FEATURES.md — use qualitative claims
-2. Remove hardcoded benchmark ns/op numbers from CHANGELOG.md — use qualitative claims
-3. Add `var _ do.HealthcheckerWithContext = (*exampleDB)(nil)` to `example_test.go`
-4. Add GETOnly rejection test for `ReadinessHandler`
-5. Add GETOnly rejection test for `StartupHandler`
-6. Consider table-testing all three handlers in one GETOnly test instead of handler-specific
+1. ~~Remove hardcoded benchmark ns/op numbers from FEATURES.md — use qualitative claims~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+2. ~~Remove hardcoded benchmark ns/op numbers from CHANGELOG.md — use qualitative claims~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+3. ~~Add `var _ do.HealthcheckerWithContext = (*exampleDB)(nil)` to `example_test.go`~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+4. ~~Add GETOnly rejection test for `ReadinessHandler`~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+5. ~~Add GETOnly rejection test for `StartupHandler`~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+6. ~~Consider table-testing all three handlers in one GETOnly test instead of handler-specific~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Benchmarks & Performance (must do)
 
-7. Add health benchmarks to `BENCHMARKS.md` with proper environment header
-8. Add `BenchmarkStartupHandler_Latched` — should be near-zero (just atomic load + JSON)
-9. Add `BenchmarkStartupHandler_Evaluating` — startup before latch
-10. Add allocation analysis — 15 allocs/op for liveness is high; can `time.Since().String()` allocation be avoided?
-11. Consider `sync.Pool` for `Response` structs in hot paths
-12. Add `-benchmem` assertions or documentation
+7. ~~Add health benchmarks to `BENCHMARKS.md` with proper environment header~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+8. ~~Add `BenchmarkStartupHandler_Latched` — should be near-zero (just atomic load + JSON)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+9. ~~Add `BenchmarkStartupHandler_Evaluating` — startup before latch~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+10. ~~Add allocation analysis — 15 allocs/op for liveness is high; can `time.Since().String()` allocation be avoided?~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+11. ~~Consider `sync.Pool` for `Response` structs in hot paths~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+12. ~~Add `-benchmem` assertions or documentation~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Test Hardening
 
-13. Add stress test: 1000 concurrent requests to cached readiness handler
-14. Add restart test: `Shutdown` then `Start` again
-15. Add test for `Evaluate` with shutdown flag set
-16. Add test for concurrent `Evaluate` calls (race detector)
-17. Add test for `readinessResponse` cache miss → live fallback with cancelled context
-18. Add fuzz test for `writeResponse` — edge-case `Response` values
-19. Add `-count=10` race test run for all cache/timing tests
-20. Add test verifying `RegisterRoutes` doesn't panic on duplicate paths
-21. Add test for `MarkShuttingDown` then `Shutdown` (two-phase)
+13. ~~Add stress test: 1000 concurrent requests to cached readiness handler~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+14. ~~Add restart test: `Shutdown` then `Start` again~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+15. ~~Add test for `Evaluate` with shutdown flag set~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+16. ~~Add test for concurrent `Evaluate` calls (race detector)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+17. ~~Add test for `readinessResponse` cache miss → live fallback with cancelled context~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+18. ~~Add fuzz test for `writeResponse` — edge-case `Response` values~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+19. ~~Add `-count=10` race test run for all cache/timing tests~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+20. ~~Add test verifying `RegisterRoutes` doesn't panic on duplicate paths~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+21. ~~Add test for `MarkShuttingDown` then `Shutdown` (two-phase)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### API Hardening
 
-22. Add `Probe.Validate()` method — timeout > 0, refresh interval >= 0
-23. Add `WithGracePeriod(d time.Duration)` option
-24. Add `LivenessChecker` interface for pluggable deadlock detection
-25. Add `WithMaxCacheAge(d)` for stale cache detection
-26. Add `WithIndentJSON()` for development
-27. Consider `WithCORS` middleware option
-28. Add `LatencyMs int64` field to `Check` struct for per-service timing
+22. ~~Add `Probe.Validate()` method — timeout > 0, refresh interval >= 0~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+23. ~~Add `WithGracePeriod(d time.Duration)` option~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+24. ~~Add `LivenessChecker` interface for pluggable deadlock detection~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+25. ~~Add `WithMaxCacheAge(d)` for stale cache detection~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+26. ~~Add `WithIndentJSON()` for development~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+27. ~~Consider `WithCORS` middleware option~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+28. ~~Add `LatencyMs int64` field to `Check` struct for per-service timing~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Observability
 
-29. Add `WithLogger(logger *slog.Logger)` option
-30. Log slow health checks (> configurable threshold)
-31. Log state transitions (shutdown marked, startup latched)
-32. Add Prometheus metrics endpoint option
-33. Add per-service latency tracking
+29. ~~Add `WithLogger(logger *slog.Logger)` option~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+30. ~~Log slow health checks (> configurable threshold)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+31. ~~Log state transitions (shutdown marked, startup latched)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+32. ~~Add Prometheus metrics endpoint option~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+33. ~~Add per-service latency tracking~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Integration
 
-34. Add integration test: `health/` + `live/` on same mux
-35. Add integration test: `health/` with scoped injectors
-36. Add integration test: `health/` with `WithRefreshInterval(0)` under load
-37. Verify `depguard` rules allow `health/` imports correctly
+34. ~~Add integration test: `health/` + `live/` on same mux~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+35. ~~Add integration test: `health/` with scoped injectors~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+36. ~~Add integration test: `health/` with `WithRefreshInterval(0)` under load~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+37. ~~Verify `depguard` rules allow `health/` imports correctly~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Documentation
 
-38. Add `health/` section to `STABILITY.md` if applicable
-39. Add `health/` to `ROADMAP.md` as completed
-40. Add `health/` to `TODO_LIST.md` as completed
-41. Consider standalone `example/health/main.go` demo
-42. Add `health/` to CLI `info` output if applicable
+38. ~~Add `health/` section to `STABILITY.md` if applicable~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+39. ~~Add `health/` to `ROADMAP.md` as completed~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+40. ~~Add `health/` to `TODO_LIST.md` as completed~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+41. ~~Consider standalone `example/health/main.go` demo~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+42. ~~Add `health/` to CLI `info` output if applicable~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### CI
 
-43. Verify `go generate ./...` doesn't need changes for health/
-44. Verify `go mod tidy` doesn't drift (no new deps)
-45. Verify CI coverage gate passes with health/ included (96.4% > 94% threshold)
-46. Run full `golangci-lint run ./...` and verify no health/ issues (done — 0 issues)
-47. Add health/ to CI benchmark job if one exists
+43. ~~Verify `go generate ./...` doesn't need changes for health/~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+44. ~~Verify `go mod tidy` doesn't drift (no new deps)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+45. ~~Verify CI coverage gate passes with health/ included (96.4% > 94% threshold)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+46. ~~Run full `golangci-lint run ./...` and verify no health/ issues (done — 0 issues)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+47. ~~Add health/ to CI benchmark job if one exists~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ### Polish
 
-48. Consider adding `Probe.Status()` method returning current cached status (for external monitoring)
-49. Consider adding `Probe.LastResponse()` method returning the last evaluated Response
-50. Consider adding `WithOnStateChange(fn func(old, new Status))` callback for external alerting
+48. ~~Consider adding `Probe.Status()` method returning current cached status (for external monitoring)~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+49. ~~Consider adding `Probe.LastResponse()` method returning the last evaluated Response~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
+50. ~~Consider adding `WithOnStateChange(fn func(old, new Status))` callback for external alerting~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**
 
 ---
 
