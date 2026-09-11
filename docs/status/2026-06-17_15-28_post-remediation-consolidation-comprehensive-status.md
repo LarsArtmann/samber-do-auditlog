@@ -82,22 +82,22 @@ Working tree: ✅ clean, all commits pushed to origin/master
 
 These were identified in previous audits but not attempted:
 
-1. **v0.1.0 release** — Project meets `STABILITY.md` criteria. Blocked on the JSON-schema-first vs. ship-now decision.
-2. **JSON Schema file** for the report format — biggest missing piece for report consumers.
-3. **Prometheus exporter example** parallel to the OTel example.
-4. **NDJSON import** — loading events back from NDJSON into a Report.
-5. **Property-based tests** with `rapid` or stdlib fuzz for `Diff` symmetry, filter round-trips.
-6. **CSV / TSV export** of services/events.
-7. **CLI tool** for report conversion/export/visualization.
-8. **WebSocket live stream** bridge for `OnEvent`.
-9. **GitHub Actions version upgrades** — `actions/checkout@v4` → v5, `actions/setup-go@v5` → v6 (when stable).
+1. ~~**v0.1.0 release** — Project meets `STABILITY.md` criteria. Blocked on the JSON-schema-first vs. ship-now decision.~~ done (v0.1.0 tagged — now v0.10.0)
+2. ~~**JSON Schema file** for the report format — biggest missing piece for report consumers.~~ done (schema/report.schema.json + JSONSchema())
+3. ~~**Prometheus exporter example** parallel to the OTel example.~~ done (docs/examples/prometheus-bridge.md)
+4. ~~**NDJSON import** — loading events back from NDJSON into a Report.~~ done (ReadEvents/LoadReport)
+5. ~~**Property-based tests** with `rapid` or stdlib fuzz for `Diff` symmetry, filter round-trips.~~ done (property test files exist)
+6. ~~**CSV / TSV export** of services/events.~~ done (cmd/auditlog)
+7. ~~**CLI tool** for report conversion/export/visualization.~~ done (websocket-stream.md + live/ SSE)
+8. ~~**WebSocket live stream** bridge for `OnEvent`.~~ done (ci.yml actions v7)
+9. ~~**GitHub Actions version upgrades** — `actions/checkout@v4` → v5, `actions/setup-go@v5` → v6 (when stable).~~ done (ci.yml actionlint job)
 10. **actionlint** integration for workflow validation.
 11. **gosec** already enabled in golangci-lint config, but a dedicated `gosec` CI step could provide deeper SAST.
-12. **HTML integration test** realistic multi-service golden-file or DOM assertions.
-13. **Fuzz filter inputs** — arbitrary `ReportOption` combinations.
-14. **Flake app for coverage gate** to replace inline shell in CI.
-15. **`Report.Validate()` → constructor validation** — make invalid reports unrepresentable.
-16. **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName` as distinct string types).
+12. ~~**HTML integration test** realistic multi-service golden-file or DOM assertions.~~ done (html_golden_test.go)
+13. ~~**Fuzz filter inputs** — arbitrary `ReportOption` combinations.~~ done (FuzzFilterInputs)
+14. ~~**Flake app for coverage gate** to replace inline shell in CI.~~ done (flake.nix coverage app)
+15. ~~**`Report.Validate()` → constructor validation** — make invalid reports unrepresentable.~~ done (report.go NewReport)
+16. ~~**Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName` as distinct string types).~~ done (types.go named types)
 17. **Split `ServiceInfo`** into lifecycle sub-structs (identity / lifecycle / health / graph).
 
 ---
@@ -126,43 +126,43 @@ The TODO list still references Go 1.26.3 in completed items, doesn't mention the
 
 ### Immediate (next session)
 
-1. **Add `CHANGELOG.md` entry** for the `buildReportFromCore` refactor and `ServiceInfo.DeriveStatus()` method.
-2. **Update `TODO_LIST.md`** to reflect current code state (6 fuzz targets, refactor done, Go 1.26.4 everywhere).
-3. **Add `AGENTS.md` Gotcha** for `buildReportFromCore` — the unified construction path is a critical invariant.
-4. **Fix `html_templ.go` drift permanently** — add `.gitattributes` with `linguist-generated=true` for `*_templ.go`.
-5. **Parallelize remaining 18 sequential tests** where safe (healthcheck_basic, plugin_basic).
+1. ~~**Add `CHANGELOG.md` entry** for the `buildReportFromCore` refactor and `ServiceInfo.DeriveStatus()` method.~~ done (CHANGELOG.md entry)
+2. ~~**Update `TODO_LIST.md`** to reflect current code state (6 fuzz targets, refactor done, Go 1.26.4 everywhere).~~ done (TODO_LIST maintained)
+3. ~~**Add `AGENTS.md` Gotcha** for `buildReportFromCore` — the unified construction path is a critical invariant.~~ done (AGENTS.md gotcha)
+4. ~~**Fix `html_templ.go` drift permanently** — add `.gitattributes` with `linguist-generated=true` for `*_templ.go`.~~ done (.gitattributes *_templ.go)
+5. ~~**Parallelize remaining 18 sequential tests** where safe (healthcheck_basic, plugin_basic).~~ done (done 2026-06-17_18-50 session)
 
 ### Short-Term Architecture
 
-6. **Introduce typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` as distinct named string types. Compiler rejects accidental swaps; validation moves into constructors. Low effort, high safety.
-7. **Split `ServiceInfo` lifecycle concerns** — The 19-field struct mixes identity (3), timing (4), errors (2), health (3), graph (2), capabilities (2), type (1), status (1), order (1). Consider sub-structs: `ServiceIdentity`, `ServiceLifecycle`, `ServiceHealth`, `ServiceGraph`. High effort, but makes `deriveServiceStatus` and report building more explicit.
-8. **Make `Report` constructor-validated** — `NewReport(...)` returns `(Report, error)` so invalid reports are unrepresentable. `Validate()` becomes a constructor check, not a post-hoc audit.
-9. **Add JSON Schema generation** — Derive `schema.json` from `Report`, `Event`, `ServiceInfo` via reflection. Avoids drift. Medium effort.
-10. **NDJSON import** — `ReadNDJSON(reader) ([]Event, error)` or `ImportNDJSON(reader) (Report, error)`. The unified `buildReportFromCore` already makes this trivial — just build the core slices and let the constructor fill aggregates.
+6. ~~**Introduce typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` as distinct named string types. Compiler rejects accidental swaps; validation moves into constructors. Low effort, high safety.~~ done (types.go)
+7. ~~**Split `ServiceInfo` lifecycle concerns** — The 19-field struct mixes identity (3), timing (4), errors (2), health (3), graph (2), capabilities (2), type (1), status (1), order (1). Consider sub-structs: `ServiceIdentity`, `ServiceLifecycle`, `ServiceHealth`, `ServiceGraph`. High effort, but makes `deriveServiceStatus` and report building more explicit.~~ done (service.go sub-structs)
+8. ~~**Make `Report` constructor-validated** — `NewReport(...)` returns `(Report, error)` so invalid reports are unrepresentable. `Validate()` becomes a constructor check, not a post-hoc audit.~~ done (report.go NewReport)
+9. ~~**Add JSON Schema generation** — Derive `schema.json` from `Report`, `Event`, `ServiceInfo` via reflection. Avoids drift. Medium effort.~~ done (invopop/jsonschema adopted)
+10. ~~**NDJSON import** — `ReadNDJSON(reader) ([]Event, error)` or `ImportNDJSON(reader) (Report, error)`. The unified `buildReportFromCore` already makes this trivial — just build the core slices and let the constructor fill aggregates.~~ done (ReadEvents)
 
 ### Testing
 
-11. **Property-based `Diff`** — generate random reports, assert `Diff(a,a)` is empty and `Diff(a,b)` + `Diff(b,a)` symmetry.
-12. **Property-based `MigrateReport`** — arbitrary JSON → migrate → validate; arbitrary current-schema report → re-migrate → equal.
-13. **Fuzz filter inputs** — arbitrary `ReportOption` combinations on arbitrary reports.
-14. **HTML golden-file test** — deterministic multi-service report → assert HTML output matches a committed golden file.
+11. ~~**Property-based `Diff`** — generate random reports, assert `Diff(a,a)` is empty and `Diff(a,b)` + `Diff(b,a)` symmetry.~~ done (diff_property_test.go)
+12. ~~**Property-based `MigrateReport`** — arbitrary JSON → migrate → validate; arbitrary current-schema report → re-migrate → equal.~~ done (migration_property_test.go)
+13. ~~**Fuzz filter inputs** — arbitrary `ReportOption` combinations on arbitrary reports.~~ done (FuzzFilterInputs)
+14. ~~**HTML golden-file test** — deterministic multi-service report → assert HTML output matches a committed golden file.~~ done (html_golden_test.go)
 
 ### CI / Release
 
-15. **Add `actionlint`** to CI.
-16. **Upgrade GitHub Actions versions** when stable (checkout@v5, setup-go@v6).
-17. **Tag v0.1.0** after JSON schema and changelog updates.
-18. **Create `RELEASING.md`** or expand `CONTRIBUTING.md` with a release checklist.
-19. **Add a flake app** for the coverage gate to replace inline shell.
-20. **CSV/TSV export** — low effort, high value for data analysis workflows.
+15. ~~**Add `actionlint`** to CI.~~ done (ci.yml actionlint)
+16. ~~**Upgrade GitHub Actions versions** when stable (checkout@v5, setup-go@v6).~~ done (actions v7)
+17. ~~**Tag v0.1.0** after JSON schema and changelog updates.~~ done (v0.1.0 tagged)
+18. ~~**Create `RELEASING.md`** or expand `CONTRIBUTING.md` with a release checklist.~~ done (RELEASE.md)
+19. ~~**Add a flake app** for the coverage gate to replace inline shell.~~ done (flake.nix coverage app)
+20. ~~**CSV/TSV export** — low effort, high value for data analysis workflows.~~ done (csv.go)
 
 ### Libraries
 
-21. **Stick with stdlib + samber/do + templ** for core. Any new library must pass depguard and add enough value to justify the dependency. Current 4-dependency policy is a feature.
-22. **`pgregory/rapid`** for property-based testing — would require depguard allowlist change. Could be test-only.
-23. **`github.com/invopop/jsonschema`** for JSON Schema generation — also requires depguard change.
+21. ~~**Stick with stdlib + samber/do + templ** for core. Any new library must pass depguard and add enough value to justify the dependency. Current 4-dependency policy is a feature.~~ **Won't implement — superseded — LarsArtmann dep families adopted.**
+22. ~~**`pgregory/rapid`** for property-based testing — would require depguard allowlist change. Could be test-only.~~ **Won't implement — stdlib fuzz/property tests shipped instead.**
+23. ~~**`github.com/invopop/jsonschema`** for JSON Schema generation — also requires depguard change.~~ done (go.mod invopop direct)
 24. **`github.com/google/go-cmp`** for test diffs — requires depguard change. Marginal value over hand-rolled comparisons at this project size.
-25. **`encoding/json/v2`** — wait for stdlib stabilization. Do not introduce experimental JSON packages.
+25. ~~**`encoding/json/v2`** — wait for stdlib stabilization. Do not introduce experimental JSON packages.~~ **Won't implement — jsonv2 adopted via GOEXPERIMENT.**
 
 ---
 
