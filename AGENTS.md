@@ -13,9 +13,7 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | `go generate ./...`   | Regenerate templ (and any other generated code) |
 | `go test ./...`       | Run all tests                                   |
 | `go test -race ./...` | Run all tests with race detector (CI uses this) |
-
-| `GOEXPERIMENT=jsonv2 go test -race -coverprofile=cover.out \\
-  -covermode=atomic ./...` | Run tests with coverage (CI gate: ≥94% of non-`example/`/`cmd/` code) — **`GOEXPERIMENT=jsonv2` is set automatically in the Nix devShell and CI** |
+| `GOEXPERIMENT=jsonv2 go test -race -coverprofile=cover.out -covermode=atomic ./...` | Tests with coverage (CI gate: ≥94% of non-`example/`/`cmd/` code) — `GOEXPERIMENT=jsonv2` is set automatically in the Nix devShell and CI |
 | `go test -run TestPlugin_DisabledIsNoOp` | Run single test |
 | `go vet ./...` | Static analysis (**`GOEXPERIMENT=jsonv2` required** — set automatically in Nix devShell) |
 | `golangci-lint config verify` | Validate the lint config (CI runs this before `lint run`) |
@@ -23,12 +21,15 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | `go mod tidy` | Sync `go.sum` (CI `mod-tidy` job fails on drift) |
 | `nix develop` | Enter devShell (Go 1.26.7, golangci-lint, govulncheck, actionlint, golines, **GOEXPERIMENT=jsonv2 enabled**) |
 | `go run ./example` | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
-| `go run ./cmd/auditlog help` | CLI: inspect/convert/diff/validate reports |
+| `go run ./example --live` | Example + real-time SSE dashboard |
+| `go run ./cmd/auditlog help` | CLI: info/convert/diff/validate/stats/schema subcommands |
 | `go install ./cmd/auditlog` | Install the `auditlog` CLI to `$GOBIN` |
 | `nix run .#auditlog -- help` | Run the CLI via Nix (no install) |
 | `nix run .#coverage` | Run the CI-equivalent coverage gate via Nix |
-| `sh scripts/coverage-gate.sh` | Coverage gate (exclusions single-sourced in `scripts/coverage-exclusions.txt`, shared with ci.yml; ≥94%) |
-| `sh scripts/check-go-version.sh` | Go-version drift guard: go.mod == ci.yml == flake GOTOOLCHAIN == .golangci.yml (runs in CI + pre-commit) |
+| `sh scripts/coverage-gate.sh` | Coverage gate (exclusions single-sourced in `scripts/coverage-exclusions.txt`; ≥94%) |
+| `sh scripts/check-go-version.sh` | Go-version drift guard: go.mod == ci.yml == flake GOTOOLCHAIN == .golangci.yml (CI + pre-commit) |
+| `sh scripts/check-doc-claims.sh` | Claims linter: go version, schema version, coverage gate, linter count, fuzz count vs machine truth (pre-commit) |
+| `sh scripts/check-changelog-sync.sh` | CHANGELOG.md ↔ website changelog.mdx version-list sync (website CI) |
 | `git config core.hooksPath scripts/hooks` | Install the pre-commit hook |
 
 A `flake.nix` devShell is available for Nix users. No Makefile, no justfile.
@@ -48,69 +49,63 @@ metadata.go         — TypeMetadata struct + BuildTypeMetadata() — Go enum di
 event.go            — Event type + convenience methods (IsRegistration, Duration, etc.)
 service.go          — ServiceInfo (split into ServiceIdentity/ServiceLifecycle/ServiceHealth/ServiceGraph embedded structs), ScopeNode types + methods (Uptime, HasHealthError, DeriveStatus)
 report.go           — Report type + Validate() + query methods (ServiceByName, EventsByType, Index, WriteNDJSON, WriteJSON, etc.) + buildReportFromCore/finalizeDenormalized (unified construction)
-diff.go             — Report.Diff(other) + DiffResult/ServiceDiff types
-report_builder.go   — BuildReport assembly: services, scope tree (generic buildScopeTreeFromMeta), capability enrichment, shared helpers (serviceRecordToInfo, buildServiceDeps, depRecToRef, sortServiceInfos)
+diff.go             — Report.Diff(other) + DiffResult/ServiceDiff types (incl. AddedDeps/RemovedDeps)
+report_builder.go   — BuildReport assembly: services, scope tree, capability enrichment, shared helpers (serviceRecordToInfo, buildServiceDeps, sortServiceInfos)
 report_helpers.go   — Report aggregate helpers (sumBuildMs, deriveServiceStatus, etc.)
 replay.go           — ReplayEvents: reconstructs Report from a flat event stream (inverse of hook-based recording)
-ndjson.go           — ReadEvents: re-exports go-ndjson reader with domain-specific event validation
+ndjson.go           — ReadEvents + StreamEvents: re-exports go-ndjson reader + callback-based NDJSON line scanner
 filter.go           — Report filtering (Filtered, ReportOption, WithServicesByName, etc.)
 healthcheck.go      — Health check recording (RecordHealthCheck, ResolveServiceScope)
 export.go           — Shared diagram label helpers (serviceLabel, serviceRefLabel)
 diagram.go          — go-output-backed graph builder: buildDiagramNodes/Edges, warmAmberNodeStyle, diagramNodeID, writeRendered
-mermaid.go          — Mermaid flowchart export (go-output graph.MermaidRenderer, code-fence off)
-plantuml.go         — PlantUML component diagram export (go-output plantuml.PlantUMLDiagram)
-dot.go              — Graphviz DOT digraph export (go-output graph.DOTRenderer, graphID="do_auditlog", rankdir=LR)
-d2.go               — D2 diagram export (go-output d2.D2Diagram, dedupGraphEdges helper)
+mermaid.go/plantuml.go/dot.go/d2.go — The 4 diagram exports (go-output renderers; graphID="do_auditlog", rankdir configurable)
 html.go             — HTML export entry points (Plugin.WriteHTML delegates to Report.WriteHTML)
 html.templ          — Templ template for self-contained HTML visualization (CSS + JS)
-html_templ.go       — Generated by `go tool templ generate` from html.templ (DO NOT EDIT)
+html_templ.go       — Generated by `go tool templ generate` (DO NOT EDIT)
 daghtml_adapter.go  — Bridges go-output/daghtml Sugiyama DAG SDK into the HTML template graph renderer
-loader.go           — LoadReport: auto-detecting loader (re-exports go-ndjson/loader Format + Detect, routes JSON via MigrateReport, NDJSON via ReadEvents + ReplayEvents)
-migration.go        — MigrateReport: upgrades older JSON reports to current schema, re-derives all denormalized fields and service Status
-csv.go              — WriteCSV/WriteTSV: delimited-value export of all services (uses stdlib encoding/csv)
-tree.go             — ASCII tree (go-output/tree.ASCIITreeRenderer) + HTML nested list tree (go-output/markup.HTMLTreeRenderer)
-table.go            — Service summary table export via go-output RenderTable: 16+ formats
-schema.go           — go:embed of schema/report.schema.json + JSONSchema() accessor + //go:generate directive
-design_tokens.go    — DesignTokensCSS: canonical CSS design tokens shared between static HTML + live dashboard (TestDesignTokensInSync enforces sync with html.templ)
-shared_components.go — SharedComponentCSS: canonical keyboard-nav overlay CSS (skip-link, kbd-help dialog) shared between static + live dashboards (TestSharedComponentCSSInSync enforces sync)
+loader.go           — LoadReport: auto-detecting loader (JSON via MigrateReport, NDJSON via ReadEvents + ReplayEvents)
+migration.go        — MigrateReport: upgrades older JSON reports to current schema, re-derives denormalized fields + Status
+csv.go              — WriteCSV/WriteTSV (stdlib encoding/csv)
+tree.go             — ASCII tree + HTML nested-list tree (go-output tree/markup renderers)
+table.go/table_options.go — Service summary table via go-output RenderTable (16+ formats); WithColumns selects 10 columns
+diagram_options.go  — DiagramOption/WithDirection: layout direction for all 4 diagram formats
+schema.go           — go:embed of schema/report.schema.json + JSONSchema() + //go:generate directive
+design_tokens.go    — DesignTokensCSS: canonical CSS design tokens shared static + live (TestDesignTokensInSync enforces sync with html.templ)
+shared_components.go — SharedComponentCSS: canonical keyboard-nav overlay CSS (TestSharedComponentCSSInSync enforces sync)
 classify.go         — Error classification: registers all sentinel errors into go-error-family families (Corruption/Rejection) via init()
-stream.go           — NDJSONStreamer: real-time NDJSON event streaming via Config.OnEvent (auto-flush, buffer size, thread-safe, WithFlushInterval for bounded-latency flushing)
-multi_writer.go     — MultiWriter: event fan-out to multiple OnEvent callbacks simultaneously (thread-safe, ordered)
-runid.go            — RunID: 128-bit hex branded string type for cross-system correlation (auto-generated via crypto/rand)
-ndjson.go           — ReadEvents + StreamEvents: re-exports go-ndjson reader + callback-based NDJSON line scanner
-diagram_options.go  — DiagramOption/WithDirection: layout direction for all 4 diagram formats (Mermaid/PlantUML/DOT/D2)
-table_options.go    — TableColumn/WithColumns: selectable columns for WriteTable (10 columns available, default matches original 7)
+stream.go           — NDJSONStreamer: real-time NDJSON event streaming via Config.OnEvent (auto-flush, buffer size, WithFlushInterval)
+multi_writer.go     — MultiWriter: event fan-out to multiple OnEvent callbacks (thread-safe, ordered)
+runid.go            — RunID: 128-bit hex branded string type (crypto/rand)
+doc.go              — Package doc comment (incl. the GOEXPERIMENT note)
 schema/             — report.schema.json: Draft 2020-12 JSON Schema generated by cmd/genschema
-cmd/genschema/      — JSON Schema generator (invoked by `go generate`; imports invopop/jsonschema — tooling-only, never imported by the library)
-cmd/auditlog/       — CLI binary: info/convert/diff/validate/schema subcommands (stdlib flag, no deps)
+cmd/genschema/      — JSON Schema generator (tooling-only; imports invopop/jsonschema — never linked by the library)
+cmd/auditlog/       — CLI binary: info/convert/diff/validate/stats subcommands (stdlib flag, no deps)
 testhelpers/        — Exported test helpers (JS syntax validation, etc.) for downstream integration testing
-scripts/hooks/      — pre-commit hook (generate drift check + vet + lint + test); install via `git config core.hooksPath scripts/hooks`
-scripts/coverage-gate.sh — CI-equivalent coverage gate (exclusions single-sourced in scripts/coverage-exclusions.txt, consumed by both the gate and ci.yml; ≥94% threshold)
-scripts/check-go-version.sh — Go-version drift guard (go.mod is canonical; asserts ci.yml go-version, flake GOTOOLCHAIN, .golangci.yml run.go agree; wired into ci.yml test job + pre-commit hook; test via CHECK_GO_VERSION_ROOT pointing at a doctored tree)
-doc.go              — Package doc comment
+scripts/hooks/      — pre-commit hook (generate drift + vet + lint + test); install via `git config core.hooksPath scripts/hooks`
+scripts/            — coverage-gate.sh, coverage-exclusions.txt, check-go-version.sh, check-doc-claims.sh, check-changelog-sync.sh
 example/            — Self-checking demo with 23 samber/do v2 features
 live/               — Real-time SSE dashboard sub-package (see below)
+```
 
 **Note:** The `health/` sub-package was extracted to its own project: [github.com/larsartmann/go-health](https://github.com/larsartmann/go-health). The `*Plugin` type satisfies `go-health`'s `HealthRecorder` interface implicitly via `RecordHealthCheckWithContext`.
-```
 
 ### `live/` sub-package files
 
 ```
-live/hub.go         — Hub: facade over sse.Broadcaster[sse.Event] with subscriber buffer (128 events), ring buffer for reconnection replay (ReplayBufferSize config), SignalComplete, OnEvent callback, EventStore()/BufferedEventCount() methods, Shutdown/Health pass-through. Defines sseEventType constant.
-live/server.go      — HTTP server with 6 endpoints (dashboard, report JSON, SSE events, health, export NDJSON, export HTML), configurable prefix, CORS middleware, graceful shutdown. SSE handler sends datastar-patch-elements + patch-signals via go-sse.
-live/fragments.go   — Go helpers for fragment rendering: constants, datastar signal structs, renderAllFragments(), pure-Go helpers (humanizeDuration, providerIcon, computeWaveformMarks, etc.), renderToString wrapper for templ components
-live/fragments.templ — Templ components for all dashboard sections: statsFragment, legendFragment, waveformFragment, servicesTbody, eventsTbody, scopeTreeFragment+scopeNode, graphFragment, timelineFragment, footerStatsFragment, containerIDFragment
-live/fragments_templ.go — Generated by `go tool templ generate` from fragments.templ (DO NOT EDIT). Excluded from coverage gate.
-live/fragments_internal_test.go — Internal tests for unexported helper functions
-live/dashboard.go   — Dashboard HTML template (datastar attributes: data-signals, data-init, data-bind, data-show, data-class:active, data-on:click). Embeds datastar.js via go:embed. Contains renderEventFilterChips().
-live/dashboard.css  — Dashboard stylesheet (warm amber theme, responsive layout)
-live/dashboard.js   — Keyboard nav (handleKeydown), export helpers (exportReport), scope tree toggle, keyboard help dialog (~223 lines)
-live/datastar.js    — Datastar v1.0.2 runtime (~56KB), embedded via go:embed. Handles SSE parsing, DOM morphing by element ID, reactive signal evaluation.
-live/base_css.go    — Live dashboard CSS: composes shared design tokens (auditlog.DesignTokensCSS) + live-specific aliases + base component styles
+live/hub.go         — Hub: facade over sse.Broadcaster[sse.Event] (subscriber buffer 128, ring-buffer replay via ReplayBufferSize, SignalComplete, OnEvent, EventStore()/BufferedEventCount(), Shutdown/Health). Defines sseEventType.
+live/server.go      — HTTP server with 6 endpoints (dashboard, report JSON, SSE, health, export NDJSON, export HTML), configurable prefix, CORS, graceful shutdown, CSP response header.
+live/replay.go      — Ring-buffer EventStore + reconnection replay on top of sse.Replay.
+live/fragments.go   — Go helpers for fragment rendering: signal structs, renderAllFragments(), pure helpers (humanizeDuration, providerIcon, computeWaveformMarks…), renderToString.
+live/fragments.templ / fragments_templ.go — Templ components for all dashboard sections (stats, legend, waveform, services/events tbody, scope tree, graph, timeline, footer).
+live/fragments_internal_test.go / fragments_render_internal_test.go — Internal tests for fragment helpers + renderers.
+live/dashboard.go   — Dashboard HTML template (datastar attributes: data-signals, data-init, data-bind, data-show, data-class:active, data-on:click). Embeds datastar.js via go:embed.
+live/dashboard.css  — Dashboard stylesheet (warm amber theme, responsive)
+live/dashboard.js   — Keyboard nav (handleKeydown), export helpers, scope tree toggle, keyboard help dialog (~223 lines)
+live/datastar.js    — Datastar v1.0.2 runtime (~56KB, go:embed). SSE parsing, DOM morphing by element ID, reactive signals.
+live/base_css.go    — Composes shared tokens (auditlog.DesignTokensCSS + SharedComponentCSS) + live aliases + base component styles
 live/doc.go         — Package doc comment
-live/server_test.go — External tests: server lifecycle, SSE streaming, handler edge cases, hub unit tests, CORS, export endpoints
-live/demo/          — Self-contained real-time demo (registers services with delays, shows dashboard updating live). Demo services implement do.Healthchecker.
+live/server_test.go / replay_test.go — External tests: server lifecycle, SSE streaming, handler edge cases, CORS, exports, replay
+live/demo/          — Self-contained real-time demo (services implement do.Healthchecker)
 ```
 
 ### Data Flow
@@ -124,232 +119,133 @@ live/demo/          — Self-contained real-time demo (registers services with d
 
 ### Concurrency Model
 
-- **`sync.RWMutex` (`mu`)** protects core mutable state: `events`, `services`, `scopes`, `stack`, `shutdownStart`. This reduces lock acquisition overhead from 2–4 per hook to exactly 1.
-- **`onEventMu sync.RWMutex`** (separate from `mu`) guards the `onEvent` callback so `Plugin.SetOnEvent` can swap it after creation. `fireEvent` copies the callback under `RLock` and invokes the copy outside any lock; `setOnEvent` takes `Lock` only on swap.
-- `sequence` and `invocationSeq` are `atomic.Int64` — no mutex needed for counters.
-- Each hook acquires `mu` once, performs all mutations (scope recording, stack management, event append, service updates), then releases.
-- `onEvent` callback is always invoked outside the lock to avoid blocking the hot path.
-- `BuildReport()` uses `mu.RLock()` for reading — concurrent reads don't block each other.
-- **`MultiWriter`** has its own internal `sync.Mutex` — safe for concurrent use from multiple hooks. Preserves callback registration order; callbacks fire sequentially per event.
-- **`RunID`** is immutable once set. Auto-generated in `New()` via `crypto/rand` (128-bit hex). Stored on `Recorder` and stamped on every `Event` and the `Report`. `Config.RunID` (non-zero) overrides auto-generation.
+- **`sync.RWMutex` (`mu`)** protects core mutable state: `events`, `services`, `scopes`, `stack`, `shutdownStart`. One lock acquisition per hook.
+- **`onEventMu sync.RWMutex`** (separate) guards the `onEvent` callback so `Plugin.SetOnEvent` can swap it after creation. `fireEvent` copies the callback under `RLock` and invokes the copy outside any lock.
+- `sequence` and `invocationSeq` are `atomic.Int64`.
+- The `onEvent` callback is always invoked outside the lock (hot path must not block).
+- `BuildReport()` uses `mu.RLock()` — concurrent reads don't block each other.
+- **MultiWriter** has its own `sync.Mutex`; callbacks fire sequentially per event in registration order.
+- **RunID** is immutable once set; auto-generated in `New()` via `crypto/rand` (128-bit hex); `Config.RunID` (non-zero) overrides.
 
-### Shared infrastructure: `go-sse`
+### Shared infrastructure: `go-sse` and `go-ndjson`
 
-The `live/` sub-package depends on [`github.com/larsartmann/go-sse`](https://github.com/larsartmann/go-sse)
-(v0.5.1, public) for the full SSE lifecycle — `Stream`, `Broadcaster[T]`,
-`Replay`/`EventStore`, plus wire-format primitives (`Event`, `WriteEvent`,
-`ContentType`). The domain-specific Hub (facade over `Broadcaster[sse.Event]`)
-and Server are implemented locally in `live/` (samber/do service events, scope
-tree, dashboard HTML) on top of those primitives; go-sse itself is
-transport-only and owns no domain types here.
-
-### Shared infrastructure: `go-ndjson`
-
-NDJSON read/write and format-detection logic delegate to the external
-[`github.com/larsartmann/go-ndjson`](https://github.com/larsartmann/go-ndjson) module
-(public, v0.0.1). The local `loader.go` and `ndjson.go` re-export the
-public API so existing callers are unaffected.
-
-Both `go-sse` and `go-ndjson` are now public — no `replace` directives remain in `go.mod`.
-A `go.work` workspace at the parent directory may still link the projects for local development.
+- [`go-sse`](https://github.com/larsartmann/go-sse) provides the full SSE lifecycle (`Stream`, `Broadcaster[T]`, `Replay`/`EventStore`, wire primitives). The domain Hub + Server are local; go-sse is transport-only. `go-sse/ssetest` (direct dep) parses SSE in tests.
+- [`go-ndjson`](https://github.com/larsartmann/go-ndjson) owns NDJSON read/write + format detection; `loader.go`/`ndjson.go` re-export the public API.
+- Both are public — no `replace` directives in go.mod. A `go.work` at the parent directory may link sibling projects for local dev.
 
 ### GOEXPERIMENT=jsonv2 requirement
 
-**The project requires `GOEXPERIMENT=jsonv2` to build.** **Consumers need it too**: a downstream module that imports this library fails with `imports encoding/json/v2: build constraints exclude all Go files` unless `GOEXPERIMENT=jsonv2` is set (verified empirically 2026-09-01 with a minimal consumer). The README Install section and the website Installation page document this; keep them in sync.
+**The project requires `GOEXPERIMENT=jsonv2` to build, and consumers need it too** — a downstream module that imports this library fails with `imports encoding/json/v2: build constraints exclude all Go files` without it (verified empirically with a minimal consumer). README Install + website Installation page document this; keep them in sync. Set automatically in: Nix devShell, CI workflows, `scripts/coverage-gate.sh`, direnv (`.envrc`), `.buildflow.yml`.
 
-This is set automatically in:
-
-- The Nix devShell (`flake.nix` sets `GOEXPERIMENT = "jsonv2"`)
-- CI workflows (`.github/workflows/ci.yml` sets `env: GOEXPERIMENT: jsonv2` at the workflow level)
-- The coverage-gate script (`scripts/coverage-gate.sh` exports it)
-- direnv (`.envrc` with `use flake` auto-loads the devShell on `cd`; see `.envrc.example`)
-- BuildFlow config (`.buildflow.yml` sets `env: GOEXPERIMENT: jsonv2` via `ApplyConfigEnv` at pipeline startup)
-
-The requirement exists because `go-output` (used for diagram/table rendering), `go-branded-id`
-(transitive dependency of `go-output`), and `go-ndjson` (v0.0.1, public dependency)
-intentionally use `encoding/json/v2` features
-(`jsontext.Encoder`, `json.Deterministic`, `json.MarshalEncode`). This project's own code does
-NOT import `encoding/json/v2` — the `encoding/json/v2` exclusion policy in AGENTS.md still holds
-for this project's `.go` files. The dependency is purely transitive through `go-output`.
-
-When Go 1.27 stabilizes `json/v2`, the `GOEXPERIMENT` flag requirement will be removed
-automatically.
+The requirement exists because `go-output` (diagram/table rendering), `go-branded-id` (transitive), and `go-ndjson` use `encoding/json/v2` features. This project's own code does NOT import `encoding/json/v2` (exclusion policy below). When Go 1.27 stabilizes `json/v2`, the flag requirement disappears.
 
 ### Go 1.26.7 toolchain pin
 
-**The canonical Go version is 1.26.7** (since commit `2cd47f6`; go-sse v0.5.1 itself declares `go 1.26.6`), pinned across (1) `go.mod` `go` directive, (2) `.github/workflows/ci.yml` (`go-version: "1.26.7"` in all 7 jobs), (3) `flake.nix` (`GOTOOLCHAIN=go1.26.7` in devShell + `coverage` + `auditlog` apps; `pkgs.go_1_26` tracks latest 1.26.x), (4) `CONTRIBUTING.md` / `BENCHMARKS.md`.
+**The canonical Go version is 1.26.7**, pinned across (1) `go.mod`, (2) `.github/workflows/ci.yml`, (3) `flake.nix` (`GOTOOLCHAIN=go1.26.7`), (4) `CONTRIBUTING.md`/`BENCHMARKS.md`. `scripts/check-go-version.sh` asserts all four agree.
 
-**Why it's mandatory, not discretionary:** Go computes the main module's language version as the maximum `go` directive across all dependencies, and `go mod tidy` rewrites the main `go` directive to match. GitHub runners set `GOTOOLCHAIN=local` globally, so a CI `go-version` below the `go.mod` requirement fails EVERY Go job instantly with `go: go.mod requires go >= 1.26.7 (running go 1.26.5; GOTOOLCHAIN=local)` — this exact mismatch (CI on 1.26.5, go.mod on 1.26.7) broke all 6 Go jobs on master on 2026-08-29. **Rule: bump `go-version` in ci.yml and `GOTOOLCHAIN` in flake.nix in the SAME commit as any `go.mod` bump.**
+**Rule: bump `go-version` in ci.yml and `GOTOOLCHAIN` in flake.nix in the SAME commit as any `go.mod` bump.** GitHub runners set `GOTOOLCHAIN=local`; a CI go-version below go.mod's requirement fails every Go job instantly. (This exact mismatch broke all Go jobs on master once — see git history.)
 
-**Gotcha:** A separately-installed newer `go` nix-store derivation (e.g. from `nix profile install nixpkgs#go`) can shadow the devShell's `go_1_26` on PATH. The `GOTOOLCHAIN` env var in `flake.nix` (devShell + `coverage` app + `auditlog` app) pins the effective toolchain even when a different `go` is on PATH. If you must run `go mod tidy` outside the devShell, prefix it with `GOTOOLCHAIN=go1.26.7 go mod tidy`.
+**Gotcha:** a separately-installed `go` nix-store derivation can shadow the devShell's `go_1_26` on PATH; the `GOTOOLCHAIN` env var pins the effective toolchain anyway. Outside the devShell, prefix with `GOTOOLCHAIN=go1.26.7`.
 
-**goreleaser coupling:** goreleaser v2.18.0+ declares `go >= 1.27.0`; with runner `GOTOOLCHAIN=local`, `go install .../goreleaser/v2@latest` fails under Go 1.26.x. CI pins goreleaser to `v2.17.1` (latest release with a `go 1.26.5` directive). Revisit the pin when CI's Go reaches 1.27.
-
-History: The Go directive bounced between 1.26.4 and 1.26.5 across three releases (v0.7.0–v0.8.0; see git blame for details). 7b361e8 bumped to 1.26.6 (forced by go-sse v0.5.1), 2cd47f6 to 1.26.7 (canonical). The `GOTOOLCHAIN` pin from v0.7.1 stays.
+**goreleaser coupling:** goreleaser v2.18.0+ declares `go >= 1.27.0` and fails under runner `GOTOOLCHAIN=local` on Go 1.26.x. CI pins goreleaser to `v2.17.1`; revisit when CI's Go reaches 1.27.
 
 ---
 
 ## CI
 
-GitHub Actions workflow at `.github/workflows/ci.yml` runs on every push and PR with 7 parallel jobs:
+`.github/workflows/ci.yml` runs on every push and PR (plus a weekly cron) with 8 parallel jobs:
 
-- **test**: `go vet`, `go build`, `go test -race` with a coverage profile, and a **coverage gate** that fails if non-`example/`/`cmd/` statement coverage drops below 94%.
-- **lint**: `golangci-lint config verify` then `golangci-lint v2.12.2` run (pinned to match local dev).
-- **vulncheck**: `go run golang.org/x/vuln/cmd/govulncheck@latest ./...`.
-- **mod-tidy**: runs `go mod tidy` and fails if `go.sum` drifts from the committed version.
-- **stale-generation**: runs `go generate ./...` (uses `go tool templ` from go.mod `tool` directive), fails on diff. No manual templ install needed — Go toolchain auto-builds the exact pinned version.
-- **actionlint**: workflow lint via `go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12`.
-- **goreleaser**: `goreleaser check` on `.goreleaser.yml`; goreleaser pinned to `v2.17.1` (v2.18.0+ needs Go 1.27, see toolchain pin section).
+- **test**: `go vet`, `go build`, `go test -race` with coverage, and the **coverage gate** (≥94% of non-`example/`/`cmd/` statements; exclusions from `scripts/coverage-exclusions.txt`; per-function step summary) + `check-go-version.sh` drift guard.
+- **lint**: `golangci-lint config verify` then the pinned `golangci-lint v2.12.2` run (binary cached).
+- **vulncheck**: govulncheck pinned `@v1.7.0`.
+- **mod-tidy**: `go mod tidy` fails on `go.sum` drift (transport-flake retry wrapper).
+- **stale-generation**: `go generate ./...` fails on diff (uses `go tool templ` from the go.mod `tool` directive — no manual install) + committed-generated-files guard (a v0.9.0-retraction-class failure).
+- **actionlint**: workflow lint.
+- **goreleaser**: `goreleaser check` on `.goreleaser.yml`.
+- **example-smoke**: runs the example's 23-feature self-check; fails if it exits non-zero.
+
+`website.yml` builds/deploys the docs site on pushes touching `website/**` (see Website section below).
 
 ## Lint Configuration (.golangci.yml)
 
-Extremely strict — nearly every golangci-lint linter enabled. Key implications:
+Extremely strict — nearly every golangci-lint linter enabled (~108). Key implications:
 
-- **exhaustruct**: All struct fields must be explicitly initialized. Tests are exempted. This is why `newEventFromRef()` and `newServiceRecordCore()` exist as constructor helpers — they centralize field init to satisfy exhaustruct in one place.
-- **depguard**: REMOVED from the enabled linters in `2cd47f6` — import restriction is now by convention (keep external non-stdlib deps out of `cmd/`).
-- **noinlineerr**: Use `err := ...` then check, not `if err := ...; err != nil`.
+- **exhaustruct**: All struct fields must be explicitly initialized (tests exempted). `newEventFromRef()` and `newServiceRecordCore()` centralize field init to satisfy it in one place.
+- **depguard**: per-path import rules — keep external non-stdlib deps out of `cmd/` (sole exception: `cmd/genschema` may use `invopop/jsonschema`).
+- **noinlineerr**: `err := ...` then check, not `if err := ...; err != nil`.
 - **forbidigo**: `fmt.Print*` forbidden in non-example code.
-- **exclusions for tests**: exhaustruct, testpackage, gochecknoglobals, funlen, cyclop, goconst are relaxed in `*_test.go`.
-- **Formatters**: gci, goimports, gofumpt, golines (max-len 120).
+- **goconst config key is `min-len`, NOT `min-length`** — every golangci-lint version rejects `min-length` at `config verify` with exit 3, killing the CI Lint job before `lint run` even starts.
+- Test relaxations (`*_test.go`): exhaustruct, testpackage, gochecknoglobals, funlen, cyclop, goconst.
+- Formatters: gci, goimports, gofumpt, golines (max-len 120).
 
 ---
 
 ## Gotchas
 
 - **Repo directory is `samber-do-metrics`** but `go.mod` says `samber-do-auditlog`. The module name is canonical.
-- **JSON tags use snake_case** (`scope_name`, `service_name`, etc.) via `tagliatelle` config set to `json: snake_case`. This is intentional for JSON API compatibility.
-- **`doc.go`** has the package-level doc comment. `plugin.go` has no package comment (the dual-comment issue was fixed).
-- **`Plugin.containerID` was removed** — containerID is stored only in `Recorder` (passed at construction via `NewRecorder`). `Plugin.Report()` calls parameterless `BuildReport()`.
-- **`Report.Services` is sorted** by (scope_name, service_name) for deterministic output across runs. Dependencies and dependents within each service are also sorted.
-- **`writeToFile()` helper** in `plugin.go` properly returns Close errors after write errors (write error takes priority).
-- **Test file uses external test package** (`auditlog_test`) — imports the package under test as `auditlog`.
-- **`example/` directory** is exempt from some lint rules (forbidigo, noinlineerr) since it's demo code.
-- **`html.templ` CSP meta tag** restricts to `default-src 'none'` + `inline styles/scripts + Google Fonts` (blocks external resource loads; `default-src 'none'` IS present — earlier docs claiming otherwise were wrong). The live dashboard's CSP (`live/dashboard.go`) additionally allows `connect-src 'self'` for SSE and **`script-src 'unsafe-eval'`** — required because the embedded datastar.js runtime compiles every `data-*` expression with the `Function()` constructor; without it the dashboard throws `GenerateExpression` EvalErrors and nothing renders (fixed 2026-09-11 after the dashboard shipped CSP-broken).
-- **`html.templ` XSS escaping**: all user-controlled strings use `esc()` function. Dependencies use `esc(d.service_name)`. Status classes use `esc(s.status)`. Error messages in `data-error` attributes are escaped.
-- **`html.templ` Events tab**: `allEvents` array built from `report.events.map(...)` with type badges, provider badges, phase icons (▲/▾), duration, error tooltips. Filter chips use `data-type` attribute on rows.
-- **`RootScopeName` constant** (`"[root]"`) in `types.go` replaces the magic string. Used in `IsRoot()` and test struct literals (not in JSON strings).
-- **`MigrateReport` validation**: rejects empty input (`errMigrationEmptyInput`), missing version (`errMigrationMissingVersion`). Returns early if already at current schema. Preserves original `ExportedAt`.
-- **Fuzz tests**: 5 targets — `FuzzPluginHTML` (HTML XSS across service names, error messages, and dependency chains), `FuzzMigrateReport` (schema-migration integrity), `FuzzDiagramSpecialChars` (Mermaid/PlantUML structural integrity), `FuzzFilterInputs` (filter option robustness), `FuzzReadEvents` (NDJSON parsing resilience). HTML target uses `stripJSONScripts()` to avoid false positives from JSON inside `<script>` tags and checks 6+ XSS vectors via `assertNoRawXSS`.
-- **`Config.Validate()`** validates ContainerID for path separators (`/` and `\`). Returns `errContainerIDPathSep` sentinel error wrapped with the offending value.
-- **Do NOT modularize** — Project is 1 package, ~2,500 LOC. Too small for multi-module split. Revisit at 5+ packages.
-- **`ServiceStatus`** is computed in `buildServicesLocked` via `computeServiceStatus()`. Priority: invocation_error > shutdown_error > shutdown > active > registered. The HTML template uses `s.status` instead of deriving from individual fields. The canonical public derivation entry point is `ServiceInfo.DeriveStatus()` — a method on the type it operates on, reusable beyond report building.
-- **`buildReportFromCore()` is the single Report construction path** — `BuildReport`, `Filtered`, `MigrateReport`, and `ReplayEvents` all route through `buildReportFromCore()` + `finalizeDenormalized()`. The public `NewReport()` wraps the same path but additionally re-derives per-service `Status` and enforces `Validate()`. **Critical invariant**: any new Report construction path MUST use `buildReportFromCore()` — never hand-compute aggregates, or they will drift from the underlying data and fail `Validate()`.
-- **`buildScopeTreeLocked`** uses `sortedScopesLocked()` to iterate scopes deterministically (sorted by scope ID), since map iteration order is non-deterministic in Go.
-- **`newServiceRecordCore`** uses lazy deps map (`nil` until first dependency recorded). `buildDepsLocked` returns `nil` for services with no deps (no empty slice allocation).
-- **`inferServiceType`** is called only during `OnAfterRegistration` (once per service), not per event. Events look up the type from the existing `serviceRecord`.
-- **Stack pop** uses LIFO fast path: checks last element first (O(1) common case), falls back to backward search only for unusual orderings.
-- **`serviceKey(scopeID, serviceName)`** is the single canonical function for the `scopeID + "/" + serviceName` key format. The `scopeKey()` helper was removed — all callers use `serviceKey` directly.
-- **Disabled path** is zero-cost: `Opts()` returns empty hooks, so samber/do never calls recorder methods. Disabled overhead is entirely samber/do's own (4 allocs, ~115ns).
-- **Benchmark suite** covers: Invocation (hot path), Disabled, Registration, ConcurrentInvocation, BuildReport (50/100/500 services), EventsCopy, OnEventCallback, HealthCheck.
-- **`ServiceRef`** (renamed from `DependencyRef`) is embedded in `Event` and `ServiceInfo` — single source of truth for service identity (ScopeID, ScopeName, ServiceName). JSON output is flat because Go flattens embedded struct fields.
-- **`ServiceType`** is captured via `do.ExplainNamedService(scope, serviceName)` in `OnAfterRegistration` → `inferServiceType()`. Uses the public `ExplainNamedService` API to get the provider type (lazy/eager/transient/alias). Empty string if the type cannot be determined.
-- **`Config.OnEvent`** callback is called after each event is captured, outside the mutex lock. Must not block. Enables real-time observability (Prometheus, OTel, live dashboards) without polling.
-- **Health checks use a wrapper pattern**, not hooks. samber/do v2 has no `HookBeforeHealthCheck`/`HookAfterHealthCheck` in `InjectorOpts`. The plugin provides `RecordHealthCheck[WithContext](injector)` which wraps `injector.HealthCheckWithContext()`, records `EventTypeHealthCheck` events (PhaseAfter only), and updates `ServiceInfo` health fields. When disabled, delegates directly to the injector without recording.
-- **`ResolveServiceScope`** resolves scope metadata from our `serviceRecord` map by service name. Handles both `*do.RootScope` (from `do.NewWithOpts`) and `*do.Scope` (from `injector.Scope()`). Returns `(scopeID, scopeName, found)` — no `*do.Scope` needed since `RecordHealthCheck` on Recorder takes metadata strings directly.
-- **Health check events are `PhaseAfter` only** — unlike registration/invocation/shutdown which have before+after phases. There's no interception point before the bulk health check runs.
-- **`IsHealthchecker`/`IsShutdowner` are populated via `enrichCapabilities()`** in `BuildReport()`. The function calls `do.ExplainInjector(scope)` on each stored `*do.Scope` reference AFTER releasing the recorder RLock. Capabilities are only visible for invoked services — lazy providers must be built before `ExplainInjector` can detect interface implementations. **DEADLOCK RISK**: `do.ExplainInjector()` MUST NOT be called from inside any hook — it acquires internal locks that conflict with the hook execution context.
-- **`Event.ServiceType`** (ProviderType) carries the provider type per event. Looked up from the existing `serviceRecord` in each hook, avoiding redundant `do.ExplainNamedService` calls. Health check events look up from the record too (empty string if not yet registered).
-- **`scopeMeta.ref`** stores `*do.Scope` references in the recorder. Used by `enrichCapabilities()` in `BuildReport()` to call `do.ExplainInjector` outside the mutex. Set in `recordScope`.
-- **`HealthCheckDurationMs` was removed** — Per-service timing is unavailable from the bulk `injector.HealthCheckWithContext()` API. Health check events have `DurationMs: nil`.
-- **`HealthCheckSucceeded` is `false` when no health checks ran** — `allHealthChecksPassed()` requires at least one health-checked service to return `true`.
-- **`newEventFromRef()`** builds events from `ServiceRef` instead of `*do.Scope`. Used by `RecordHealthCheck` which doesn't have a scope object.
-- **`serviceTypeForLocked()`** centralizes the `if rec, ok := r.services[key]; ok { svcType = rec.serviceType }` lookup used by all 3 hook handlers (invocation, shutdown-before, shutdown-after). Caller must hold `r.mu`.
-- **HTML redesign**: Warm amber "Container Telemetry" aesthetic — phosphor amber (#e8a838) on dark charcoal (#14110d) palette, Space Grotesk + IBM Plex Mono fonts, **lifecycle waveform** signature element (plots all events as colored vertical marks on a timeline, height-encoded by duration, colored by type, errors in coral), color-coded type badges (purple=lazy, amber=eager, warm orange=transient, jade=alias), animated tab transitions, stat cards with hover accent bar, reduced-motion support, subtle warm radial glow on body background.
-- **New() returns (\*Plugin, error)**: Breaking API change. `Config.Validate()` is enforced at construction. Tests use `mustNew()` helper (panics on error).
-- **TypeMetadata injection**: `BuildTypeMetadata()` in `metadata.go` calls enum methods (`ProviderType.Icon()`/`Label()`, `ServiceStatus.Icon()`, `EventType.Label()`/`Color()`) — single source of truth for display metadata. Injected into HTML via `@templ.JSONScript("type-metadata", ...)`. JS reads from injected metadata — no hardcoded constants.
-- **Report.Validate()**: Checks denormalized count fields (`EventCount`, `ServiceCount`, `ScopeCount`, `HealthCheckedCount`) match actual data, AND checks every `ServiceInfo.Status == DeriveStatus()` (status consistency). Uses sentinel errors (`errReportEventCountMismatch`, `errReportStatusDrift`, etc.) with `%w` wrapping.
-- **Diagram rendering via `go-output`**: Mermaid/PlantUML/DOT/D2 are produced by `github.com/larsartmann/go-output` renderers (`graph.MermaidRenderer`, `plantuml.PlantUMLDiagram`, `graph.DOTRenderer`, `d2.D2Diagram`). `diagram.go` builds `[]output.GraphNode`/`[]output.GraphEdge` from the report; each `Write*` method configures its renderer (`SetNodes`/`SetEdges`/`DedupEdges` for Mermaid/PlantUML/DOT, `dedupGraphEdges` helper for D2), then `writeRendered()` does the single `Render()+Write`. Escaping is go-output's validated `escape` package (`SlugifyID`+`MermaidID` for node IDs, `MermaidText`/`PlantUML`/`DOT`/`D2` for labels). Compiled go-output packages: root + enum + envdetect + escape + graph + plantuml + d2 (+ `go-branded-id`, `x/term`); `delimited`/`markdown`/`tree`/`testhelpers` are graph-verification-only, zero packages linked. Adoption logged in `docs/research/go-output-adoption-review.md` §9.
-- **Diagram theming (warm amber, per-node)**: `warmAmberNodeStyle` (`output.GraphStyle{Fill:#e8a838, Stroke:#4a4030, FontColor:#14110d}`) is applied per-node, replacing the former global Mermaid `%%{init}%%` directive and PlantUML `skinparam` block. Renderers translate it to Mermaid `style <id> fill:...,stroke:...,color:...`, PlantUML `#e8a838;line:#4a4030;text:#14110d`, DOT `fillcolor`/`color`. As of go-output v0.31.1, D2 hex colors and labels-with-spaces are properly quoted (e.g. `style.fill: "#e8a838"`, `"db 😴"`) — go-output's `d2Quote()` wraps values that D2 would misinterpret (`#` = comment char). **Tradeoff**: node fills/strokes/fonts preserved; edge line-colors and the DOT dark `bgcolor` are no longer emitted (go-output renderers lack a graph-level bgcolor setter). Re-introducing the DOT dark background requires adding graph-attribute support upstream in go-output.
-- **HTML pagination**: Services table shows first 50 rows; events table shows first 100. "Show all" button reveals remaining rows. Search and filter bypass pagination.
-- **Touch events**: Graph supports 1-finger pan and 2-finger pinch-zoom via touchstart/touchmove/touchend handlers with `passive:false`.
-- **Fuzz test XSS checking**: `stripJSONScripts()` replaces `stripScriptTags()` — targets `<script type="application/json">` blocks specifically using marker search + `LastIndex` backtracking. More robust than the old character-by-character parser.
-- **`MigrateReport` always re-derives per-service Status** from the underlying error/timestamp fields — the old `if Status == ""` guard that preserved stale statuses was removed. Combined with the Validate() status-consistency check, stale/hand-edited reports are repaired.
-- **`serviceRecordToInfo()`** is the single conversion function from internal `serviceRecord` to public `ServiceInfo`. Dependencies, Dependents, IsHealthchecker, and IsShutdowner are left as zero values for the caller to set. Any new field on ServiceInfo must be wired here.
-- **`diff.go` uses `Status.IsError()`** as the single error-detection path — the old `hasError()` helper that checked raw pointers was deleted to prevent drift.
-- **`Plugin.WriteReportJSON()` and `ExportFilteredToFile()`** delegate to `Report.WriteJSON()` — single JSON encoding path.
-- **CSP `frame-ancestors` is header-only**: browsers ignore it inside a `<meta>` element (spec-mandated, logs a console warning). It was therefore removed from both meta tags (`html.templ`, `live/dashboard.go`) — the live server delivers `Content-Security-Policy: frame-ancestors 'none'` as an HTTP response header in `handleDashboard` instead. The static report (opened via `file://`) cannot set headers, so it simply has no framing protection; `base-uri 'none'` (meta-compatible) remains in both. `TestServer_DashboardCSP` guards the live contract.
-- **JSON Schema** (`schema/report.schema.json`) is GENERATED from Go types by `cmd/genschema` (invoked via `//go:generate go run ./cmd/genschema` in `schema.go`). It is `go:embed`ded and exposed via `JSONSchema()`. Never hand-edit it — change the Go struct tags and regenerate. The `invopop/jsonschema` dependency is tooling-only (`cmd/`); the library never imports it.
-- **`cmd/` packages are tooling, not library code** — `cmd/genschema` (schema generator) and `cmd/auditlog` (CLI binary). The `.golangci.yml` `cmd/` path excludes pragmatic tooling linters (forbidigo, exhaustruct, gosec, err113, errcheck, wrapcheck, nlreturn, goconst). `cmd/` and `example/` are EXCLUDED from the 94% coverage gate (their logic is exercised by integration/golden tests that exec a built binary, not in-process).
-- **Adding a 4th diagram format** — DONE: D2 export added via `go-output/d2` (`Report.WriteD2()`). For formats that lack built-in edge dedup (like D2), use the `dedupGraphEdges()` helper before `SetEdges()`. Node IDs via `diagramNodeID(scopeID, serviceName)` (SlugifyID+MermaidID); labels via `serviceLabel(svc)` (with type icon) or bare `dep.ServiceName` for external deps.
-- **Typed identifiers + ServiceInfo split are DONE** — `ContainerID`/`ScopeID`/`ServiceName` are named string types propagated through the entire codebase (production, tests, CLI, example). `ServiceInfo` is split into four embedded structs: `ServiceIdentity` (ServiceRef + ServiceType), `ServiceLifecycle` (status, timestamps, errors, durations), `ServiceHealth` (health check fields), `ServiceGraph` (Dependencies + Dependents). Fields stay flat via Go embedding (both for code access and JSON output). **Key pattern**: external library calls (go-output, csv, fmt) wrap typed values with `string()` at the IO boundary. Test struct literals must use the embedded struct names (e.g. `ServiceIdentity: ServiceIdentity{ServiceRef: ...}`) — promoted fields cannot be used in composite literals.
-- **`.prettierignore`** excludes `testdata/`, `schema/`, `docs/`, and `CHANGELOG.md` from oxfmt (which reads `.prettierignore` by default). Without this, oxfmt pretty-prints the golden HTML test fixture (breaking `TestReport_WriteHTML_GoldenFile`), reformats generated JSON schema (breaking `stale-generation` CI check), and pads markdown tables (noise in docs/status reports).
-- **BuildFlow `--max-time`** (RESOLVED via `.buildflow.yml`): The default 2m hard timeout is too short for 5 fuzz targets (30s each = 2.5m). The config sets `max_time: 5m`. CLI `--max-time` overrides if needed.
-- **BuildFlow `GOEXPERIMENT=jsonv2`** (RESOLVED via `.buildflow.yml`): `.buildflow.yml` sets `env: GOEXPERIMENT: jsonv2`, applied via `ApplyConfigEnv` at pipeline startup (`pipeline.go:102`). Existing process env vars take precedence. Note: `config view` does NOT display the `env:` block (display-only limitation), but it IS applied at runtime. The `go-fix` step still requires the global `--fix` flag to be executable (otherwise: `no executable nodes after compilation`).
-- **BuildFlow `go-auto-upgrade`** (RESOLVED via `.buildflow.yml`): `go-auto-upgrade` is permanently skipped via `skip_steps` in `.buildflow.yml`. Its `jsonv1tov2` migrator rewrites `encoding/json` → `encoding/json/v2` + `jsontext`, which (1) breaks API calls (`enc.SetIndent` has no equivalent on `jsontext.Encoder`) and (2) violates the project's `encoding/json/v2` exclusion policy. The migrator runs because `GOEXPERIMENT=jsonv2` (required by transitive deps) makes `HasJSONv2Experiment()` return true. Incident post-mortem: `docs/status/2026-07-13_21-28_buildflow-go-auto-upgrade-breakage-remediation.md`. Re-enable when Go 1.27 stabilizes json/v2 and the project lifts its exclusion policy.
-- **`encoding/json/v2` exclusion policy**: No `.go` file in **this project** may import `encoding/json/v2` or `encoding/json/jsontext`. These packages are behind `//go:build goexperiment.jsonv2`. The project targets Go 1.26.x. Revisit when Go 1.27 stabilizes json/v2. **Exception**: transitive dependencies (`go-output`, `go-branded-id`, `go-ndjson`) use `encoding/json/v2` — the project builds with `GOEXPERIMENT=jsonv2` set automatically in the Nix devShell and CI. See the **GOEXPERIMENT=jsonv2 requirement** section above.
-- **Test helpers**: `mkEvent` (replay_test.go, `auditlog_test` package) and `mkRegEvent` (cli_integration_test.go, `main` package) create standard event structs. `mkEventWithDur` extends `mkEvent` with `DurationMs`. `mkInvAfterWithDur` extends with invocation-after semantics. `setupWithDB(url)` wraps `newPluginAndInjector + provideDB + invoke` (the standard 4-line plugin preamble). `replayFromPlugin(t, p)` wraps `WriteEventsNDJSON → ReadEvents → ReplayEvents` (the standard 8-line round-trip). `assertWriteFails`/`assertErrIs`/`assertLen`/`assertReportValidNoFatal` centralize the most common assertions. `csvServiceRef`/`rootRef`/`rootScopeTree`/`csvSplitLines`/`mkNewReport`/`assertMetadataLabel` centralize struct creation. Use these instead of inline struct literals to keep art-dupl clone-free.
-- **godoclint false positive**: `godoclint` reports "package has more than one godoc" because it counts the `// templ: version:` header in the generated `html_templ.go` as a second package doc. A text-based exclusion rule (`text: 'package has more than one godoc'`) in `.golangci.yml` suppresses this. The path exclusion `_templ\.go$` doesn't catch it because the issue is reported on `doc.go`, not the generated file.
-- **Pre-commit hook runs checks only**: The hook at `scripts/hooks/pre-commit` runs `go generate` drift check, `go vet`, `golangci-lint`, and `go test -race`. It does NOT auto-commit or auto-stage. Bypass with `git commit --no-verify`.
-- **CSS design tokens are shared**: `DesignTokensCSS` in `design_tokens.go` is the single source of truth for the warm amber color palette. The static HTML report (`html.templ`) embeds these tokens inline (necessary for self-contained HTML). The live dashboard (`live/base_css.go`) composes them from `auditlog.DesignTokensCSS` + live-specific aliases (`--bg-card`, `--bg-hover`, `--border-light`, `--font`, `--font-mono`). `TestDesignTokensInSync` verifies the html.templ inline `:root` block matches `DesignTokensCSS` exactly — if you change a color in one, update both or the test fails.
-- **Keyboard-nav overlay CSS is shared**: `SharedComponentCSS` in `shared_components.go` is the single source of truth for `.skip-link`, `.kbd-help`, `.kbd-help-content` styles. The static report inlines them in `html.templ`; the live dashboard composes them via `auditlog.SharedComponentCSS` in `live/base_css.go`. `TestSharedComponentCSSInSync` (in `shared_components_test.go`) verifies the html.templ inline rules match the Go constant — if you change a rule, update both or the test fails. Token names (`--bg-elevated`, `--border-active`) are canonical; the live dashboard's aliases (`--bg-card`, `--border-light`) resolve to the same values.
-- **Keyboard navigation architecture**: Both dashboards implement WAI-ARIA patterns: skip link → `<main tabindex="-1">`, tablist with Arrow/Home/End + roving tabindex, `?` help dialog with focus trap + restoration (`closeKbdHelp()` saves/restores `kbdHelpPrevFocus`, Tab cycles within dialog), `/` focuses search, `e` toggles errors-only (static only), Esc closes overlays. Sortable column headers have `tabindex="0"`, Enter/Space activation, and `aria-sort` state management. **The two dashboards use different JS styles**: static uses modern ES6 (arrow functions, `const`), live uses ES5-compatible IIFE (`var`, `function`). Shared JS extraction is intentionally NOT done — the style difference makes a shared file impractical.
-- **JS syntax validation test**: `TestHTMLJavaScriptSyntax` and `TestHTMLJavaScriptSyntax_MultiService` in `plugin_html_syntax_test.go` extract `<script>` content from the HTML report, strip strings/comments/regexes via a `jsStripper` state machine, and assert `{}`, `()`, `[]` delimiters are balanced. This catches syntax errors (like a stray `}`) that the golden byte-for-byte test misses.
-- **Dependency family versions (2026-09-01)**: `go-output` v0.37.0, `go-sse` v0.5.1 (+ `go-sse/ssetest` v0.2.0, direct), `go-atomic-write` v0.5.0, `go-error-family` v0.10.0, `go-ndjson` v0.0.1. Historical bullets below may cite older versions — go.mod is canonical.
-- **Website workflow needs pnpm on the runner** — GitHub runner images do not ship `pnpm`; `actions/setup-node` with `cache: pnpm` fails with `Unable to locate executable file: pnpm` unless `pnpm/action-setup` runs FIRST. Both website.yml jobs (build + deploy) carry it (added 2026-09-01 after run `33562593783` died exactly this way).
-- **Proxy transport flakes**: a red job whose log shows `stream error … INTERNAL_ERROR; received from peer` on a module download is upstream proxy.golang.org instability — `gh run rerun --failed` after a short cooldown; never "fix" code for it. 2 of 3 runs on 2026-09-01 hit this.
-- **Version-skew ledger**: `live/fragments.go:181` carries a `//nolint:goconst` (provider-type literals) needed by CI's pinned golangci-lint v2.12.2 but flagged as unused by local v2.13.1's nolintlint. Retire it when the CI pin bumps ≥ 2.13. The three other 2026-08 sites (`loader.go:50`, `stream.go:129`, `live/server_test.go:684`) were unused directives and were removed by the lint-fix commit `cf5f205` (2026-09-01).
-- **`.golangci.yml` goconst key is `min-len`, NOT `min-length`** (2026-09-11): commit `85a7e6f` introduced `min-length` — every golangci-lint version (v2.12.2 AND v2.13.x) rejects it at `config verify` with exit 3, killing the CI Lint job before `lint run` even starts. Local `golangci-lint run` may still execute with a warning, so a red CI Lint job that dies in "Verify golangci-lint config" means a schema-invalid key, not findings.
-- **Local `core.hooksPath` can silently rot**: a checkout pointing at a nonexistent dir (e.g. `.githooks`) disables the pre-commit hook with no error. The documented install command is `git config core.hooksPath scripts/hooks`; re-run it after fresh clones.
-- **go-output version history**: upgraded through v0.30.1 → v0.31.1 → v0.32.0 → … → v0.37.0 (all sub-modules in lockstep). v0.31.1 added `d2Quote()` (fixes D2 hex-color/label quoting — previously `#e8a838` was treated as a comment by D2). The v0.31.1 published manifests contained broken zero pseudo-versions for `testhelpers` and `testhelpers/graphtest` (local `replace` directives were not stripped before tagging), requiring consumer-side explicit indirect pins at v0.31.1; corrected manifests exist from v0.32.0 onward. The indirect pins in `go.mod` track the go-output family version.
-- **Cross-project feature ports from `go-workflow-auditlog`** (sibling project, same author, same patterns): Five patterns were ported from the sibling project: (1) **`go-error-family` classification** — `classify.go` registers all sentinel errors into Families (Corruption/Rejection) with auto-registration in `init()`; upgraded to v0.10.0 (direct dep). (2) **`go-atomic-write`** — `writeToFile()` in `plugin.go` delegates to `atomicwrite.WriteFunc` (v0.5.0) for crash-durable atomic writes. Note: v0.4.0 split the API — `WriteFunc(path, fn)` is the plain 2-arg write; `WriteFuncVerified` adds fingerprint TOCTOU protection. Audit exports use plain writes (no read-modify-write cycle). (3) **NDJSON streaming** — `stream.go` provides `NDJSONStreamer` for real-time event streaming via `Config.OnEvent` with `WithAutoFlush`/`WithStreamBufferSize`; uses standard `encoding/json` (no `jsontext` dependency). (4) **Diagram direction** — `diagram_options.go` provides `WithDirection(output.Direction)` across all 4 diagram formats. (5) **Table column selection** — `table_options.go` provides `WithColumns(TableColumn...)` with 10 selectable columns.
-- **Datastar-powered live dashboard** (v1.0.2): The live dashboard uses [Datastar](https://data-star.dev/) for SSE transport, DOM morphing, and signal-based reactivity. The server renders HTML fragments (`fragments.go`) and sends them as `datastar-patch-elements` SSE events (via go-sse `SendLines` + `KeyedLines`). Datastar morphs the DOM by element ID, preserving focus/scroll/transitions. Client-side state (tab, search, filter, pagination) is managed via datastar signals (`data-signals`, `data-bind`, `data-show`, `data-class`, `data-on:click`) — no hand-written rendering JS. The old 977-line `dashboard.js` SSE client/rendering engine is replaced by `datastar.js` (~56KB runtime) + a ~180-line keyboard nav/export helper script. Per-row `data-signals` + `data-show` expressions enable instant client-side search/filter/pagination without server roundtrips. The SSE handler coalesces event bursts via `drainEvents` (non-blocking channel drain) before re-rendering. Reconnection sends a fresh full snapshot (all fragments) — the snapshot IS the replay.
-- **go-sse full adoption** (since v0.4.0, now v0.5.1): `live/` uses `sse.Stream` (connection lifecycle, `Send`/`SendLines`/`SendKeyed`, `Heartbeat` goroutine), `sse.Broadcaster[sse.Event]` (fan-out with `Shutdown`/`Health`), and `sse.KeyedLines` (datastar wire format helper). The Hub is a thin facade over `Broadcaster`. `handleSSE` keeps the flusher check before `NewStream` (AD3). The SSE handler uses hub events as render triggers: on each event, it drains the channel (burst coalescing), re-renders all fragments from `plugin.Report()`, and sends them as `datastar-patch-elements` events. The old event-by-event JSON replay is replaced by snapshot-on-reconnect.
+- **JSON tags use snake_case** (`scope_name`, `service_name`, …) via `tagliatelle` — intentional for JSON API compatibility.
+- **Package doc comment lives in `doc.go`** (with the GOEXPERIMENT note); `plugin.go` has no package comment.
+- **`Report.Services` is sorted** by (scope_name, service_name); dependencies and dependents too — deterministic output across runs.
+- **Test files use the external test package** (`auditlog_test`), importing the package under test as `auditlog`.
+- **`example/` is exempt** from some lint rules (forbidigo, noinlineerr) — it's demo code; `cmd/` and `example/` are excluded from the coverage gate.
+- **`buildReportFromCore()` is the single Report construction path** — `BuildReport`, `Filtered`, `MigrateReport`, and `ReplayEvents` all route through it + `finalizeDenormalized()`; `NewReport()` additionally re-derives per-service `Status` and enforces `Validate()`. **Critical invariant**: any new Report construction path MUST use `buildReportFromCore()` — never hand-compute aggregates, or they will drift and fail `Validate()`.
+- **`serviceRecordToInfo()`** is the single `serviceRecord`→`ServiceInfo` conversion; Dependencies/Dependents/capability flags are left zero for the caller. Any new ServiceInfo field must be wired here.
+- **`do.ExplainInjector()` MUST NOT be called from inside any hook** — it acquires internal locks that conflict with the hook execution context (deadlock). It's called by `enrichCapabilities()` in `BuildReport()` after releasing the RLock, using `*do.Scope` refs stored in `scopeMeta.ref`. Capabilities are only visible for invoked services (lazy providers must be built first).
+- **Health checks use a wrapper pattern**, not hooks — samber/do v2 has no health-check hooks in `InjectorOpts`. `RecordHealthCheck[WithContext](injector)` wraps `injector.HealthCheckWithContext()`, records `EventTypeHealthCheck` events (**PhaseAfter only** — no interception point exists before the bulk check), and updates health fields. When disabled, it delegates directly. Per-service timing is unavailable from the bulk API (`DurationMs: nil`).
+- **`Report.HealthCheckSucceeded` is `false` when no health checks ran** — `allHealthChecksPassed()` requires ≥1 health-checked service.
+- **`serviceKey(scopeID, serviceName)`** is the canonical `scopeID + "/" + serviceName` key format.
+- **Stack pop uses a LIFO fast path** (checks last element first, O(1) common case).
+- **Disabled path is zero-cost**: `Opts()` returns empty hooks, so samber/do never calls recorder methods.
+- **`New()` returns `(*Plugin, error)`** — `Config.Validate()` (rejects ContainerID path separators) is enforced at construction; tests use the `mustNew()` helper.
+- **Typed identifiers**: `ContainerID`/`ScopeID`/`ServiceName` are named string types throughout. External library calls (go-output, csv, fmt) wrap with `string()` at the IO boundary. Test struct literals must use the embedded struct names (`ServiceIdentity: ServiceIdentity{ServiceRef: ...}`) — promoted fields can't be used in composite literals.
+- **JSON Schema** (`schema/report.schema.json`) is GENERATED by `cmd/genschema` (`//go:generate`), go:embed'ded, exposed via `JSONSchema()`. Never hand-edit — change struct tags and regenerate. `invopop/jsonschema` is tooling-only.
+- **Diagram rendering via `go-output`**: renderers (`graph.MermaidRenderer`, `plantuml.PlantUMLDiagram`, `graph.DOTRenderer`, `d2.D2Diagram`); `diagram.go` builds nodes/edges; escape via go-output's validated `escape` package. For formats lacking built-in edge dedup (D2), call `dedupGraphEdges()` before `SetEdges()`. Node IDs via `diagramNodeID()`, labels via `serviceLabel(svc)`.
+- **Diagram theming**: `warmAmberNodeStyle` applied per-node (fills/strokes/fonts); edge line-colors and DOT `bgcolor` are NOT emitted (go-output lacks a graph-level bgcolor setter — re-introducing needs upstream support).
+- **go-output sub-modules are mono-versioned in lockstep** — bump all together (see the go.mod comment). Old releases (≤ v0.31.1) had broken pseudo-version manifests for `testhelpers`; the indirect pins in go.mod track the family version.
+- **CSP — static report** (`html.templ`): `default-src 'none'` + inline styles/scripts + Google Fonts + `base-uri 'none'`. **CSP — live dashboard** (`live/dashboard.go`): additionally `connect-src 'self'` (SSE) and **`script-src 'unsafe-eval'`** — REQUIRED because the embedded datastar.js compiles every `data-*` expression with the `Function()` constructor; without it the dashboard throws EvalErrors and renders nothing. **`frame-ancestors` is header-only** (browsers ignore it in `<meta>`): the live server sends `Content-Security-Policy: frame-ancestors 'none'` as a response header; the static `file://` report simply has no framing protection. `TestServer_DashboardCSP` guards the live contract.
+- **`html.templ` XSS escaping**: all user-controlled strings use `esc()`.
+- **Fuzz tests** (8 targets): `FuzzPluginHTML` (XSS; uses `stripJSONScripts()` to avoid false positives from JSON in `<script>` tags, checks 6+ vectors), `FuzzMigrateReport`, `FuzzDiagramSpecialChars`, `FuzzFilterInputs`, `FuzzReadEvents`, `FuzzMultiWriter`, `FuzzNDJSONStreamer`, `FuzzClassifyAdversarialChains`.
+- **JS syntax validation test** (`plugin_html_syntax_test.go`): extracts `<script>` content, strips strings/comments/regexes via the `jsStripper` state machine (exported in `testhelpers/`), asserts delimiters balanced — catches syntax errors the golden byte-for-byte test misses.
+- **CSS is shared, sync-tested**: `DesignTokensCSS` (design_tokens.go) and `SharedComponentCSS` (shared_components.go) are the single sources of truth; `html.templ` inlines them, `live/base_css.go` composes them. `TestDesignTokensInSync` + `TestSharedComponentCSSInSync` enforce byte-equality — change both or the tests fail.
+- **Keyboard navigation**: both dashboards implement WAI-ARIA patterns (skip link, tablist roving tabindex, `?` help dialog with focus trap/restoration, `/` search, `e` errors-only [static], Esc, sortable headers with `aria-sort`). Static uses ES6, live uses ES5-compatible IIFE — shared JS extraction is intentionally NOT done.
+- **Datastar-powered live dashboard**: server renders templ fragments → `datastar-patch-elements` SSE events (go-sse `SendLines`/`KeyedLines`) → datastar.js morphs DOM by element ID. Client state via datastar signals (`data-signals`/`data-bind`/`data-show`/`data-class`/`data-on:click`) — no hand-written rendering JS; `dashboard.js` is only keyboard nav/export helpers. The SSE handler coalesces bursts via `drainEvents`; reconnection sends a fresh full snapshot (the snapshot IS the replay).
+- **`encoding/json/v2` exclusion policy**: no `.go` file in this project may import `encoding/json/v2`/`jsontext` (they're behind `//go:build goexperiment.jsonv2`; project targets Go 1.26.x). Transitive deps use it — hence GOEXPERIMENT. Revisit at Go 1.27.
+- **BuildFlow config** (`.buildflow.yml`): sets `env: GOEXPERIMENT=jsonv2` (applied at pipeline startup; `config view` doesn't display it), `max_time: 5m` (default 2m is too short for 8 fuzz targets), and **permanently skips `go-auto-upgrade`** — its `jsonv1tov2` migrator rewrites `encoding/json`→v2+jsontext, breaking API calls and violating the exclusion policy above. Re-enable only when Go 1.27 lifts the policy.
+- **Test helpers** (helpers_test.go + friends): `mkEvent`/`mkEventWithDur`/`mkInvAfterWithDur`, `mkRegEvent` (cmd), `setupWithDB`, `replayFromPlugin`, `newPluginAndInjector[WithID]`, `newPluginWithCapture`, assertion wrappers (`assertReportValid`, `assertErrIs`, …), struct factories (`rootRef`, `csvServiceRef`, `mkNewReport`). Use these instead of inline struct literals to keep art-dupl clone-free.
+- **Duplication policy**: art-dupl `-t 3 --semantic`, zero harmful clones in production AND tests (policy at `-t 15` gate is exceeded). Enum metadata uses map-based lookups (`eventTypeMetaTable`, `providerTypeMeta`, `serviceStatusIcons`).
+- **godoclint false positive**: "package has more than one godoc" — it counts the `// templ: version:` header in generated `html_templ.go`; suppressed via a text exclusion rule in `.golangci.yml`.
+- **Pre-commit hook runs checks only** (generate drift, vet, lint, test-race + claims linter) — never auto-commits/auto-stages. Bypass: `git commit --no-verify`. Local `core.hooksPath` can silently rot — re-run `git config core.hooksPath scripts/hooks` after fresh clones.
+- **`.prettierignore`** excludes `testdata/`, `schema/`, `docs/`, `CHANGELOG.md` from oxfmt — without it the golden HTML fixture, generated schema, and status reports get reformatted and break tests/CI.
+- **Website workflow needs pnpm on the runner** — runners don't ship pnpm; `pnpm/action-setup` must run BEFORE `actions/setup-node` (cache: pnpm fails otherwise).
+- **Proxy transport flakes**: a red job with `stream error … INTERNAL_ERROR; received from peer` on module download is proxy.golang.org instability — `gh run rerun --failed` after a cooldown; never "fix" code for it. CI's retry wrappers cover mod-tidy/generate.
+- **Version-skew ledger**: `live/fragments.go:181` carries `//nolint:goconst` (provider-type literals) needed by CI's pinned golangci-lint v2.12.2 but flagged unused by local v2.13.x nolintlint — retire when the CI pin bumps ≥ 2.13.
+- **Auto-commit daemon**: a daemon may commit working-tree changes mid-session as `chore: auto-commit …` heuristic blobs. Expect it; it never runs tests. Substantive fixes buried in those blobs need follow-up CHANGELOG/doc entries.
+- **docs/status/ is point-in-time**: status reports are historical snapshots, never rewritten — resolved items are annotated inline (`~~…~~ done at …`) by docs-health passes, and fully-resolved files are `git mv`'d to `docs/archive/`. Recent reports are the primary TODO_LIST harvest source.
 
 ---
 
 ## Testing Patterns
 
-- Standard `testing.T` + table-driven tests. No ginkgo/testify in this project.
-- Each test creates its own `Plugin` + `do.Injector` — no shared state.
-- `t.Setenv()` for testing `DO_AUDITLOG_ENABLED` env var behavior.
-- `t.TempDir()` for file export tests.
-- Benchmarks exist in the test file for performance measurement.
-- **Shared test helpers** in `helpers_test.go` (external test package `auditlog_test`):
-  - **Provider factories** — `provideDB`, `provideCacheWithSleep`, `provideCache`, `provideHealthyDB`, `provideUnhealthyCache`, `provideFailing`, `provideCrashing`, `provideString`, `provideUserServiceWithDB`, `provideUserServiceWithDeps`, `provideHTTPServerWithUsers`.
-  - **Service lookup** — `findServiceByName(t, report, name)`, `findServiceBySuffix(t, report, suffix)`.
-  - **Plugin construction** — `newPluginAndInjector()`, `newPluginAndInjectorWithID(id)`, `newPluginWithCapture()`.
-  - **Assertion helpers** — `assertVersion`, `assertIntField`, `assertStringField`, `assertContainerID`, `assertServiceCount`, `assertEventCount`, `assertDependenciesCount`, `assertServiceIntField`, `assertServiceInvocationCount`, `assertServiceHealthCheckCount`, `assertReportServiceCount`, `assertFilteredServiceCount`, `assertUnhealthyServiceCount`, `assertHTMLContains`, `assertStringContains`, `assertAllEventsOfType`, `assertAllEventsForService`, `assertErrorExpected`, `assertReportValid`, `requireOneService`, `unmarshalJSONForTest`.
-- Tests cover: disabled/enabled toggle, env var values, registration/invocation, dependency tracking, shutdown tracking (clean and error), scope tree, scope_id correctness, export formats (JSON, NDJSON, HTML to file and writer), error paths, container_id propagation, report version, event sequence numbers, empty report, concurrent invocations, ServiceStatus computation across all states, transient and value providers, health checks (healthy/unhealthy/multiple/disabled/count/report/scope/UnhealthyServices).
-- **Duplication policy**: art-dupl at `-t 15` with `--semantic` is the standard gate; the codebase is also clone-free at the aggressive `-t 3` threshold (zero groups, zero occurrences in production AND test code). **Zero harmful clones.** Test helpers (`mkEvent`, `mkEventWithDur`, `mkRegEvent`, `rootRef`, `assertEqual[T comparable]`, `newPluginAndInjector`, assertion wrappers) centralize struct creation, plugin setup, and assertions to prevent drift. Shared production helpers: `getOrCreateServiceRecord(evt)` (replay path), `recordDependencyFromStack`, `buildServiceDeps`, `depRecToRef`, `sortServiceInfos`, `buildScopeTreeFromMeta` (generic), `newFlagSet` (cmd/), `fireEvent` (hooks), `publishLockedEvent` (hooks — append + unlock + fire), `beginLockedBeforeHook` (hooks — context + lock + recordScope), `renderGraphDiagram` (diagram.go — SetNodes + SetEdges + DedupEdges + writeRendered for DOT/Mermaid/PlantUML), `graphRendererWithDedup` interface (subset of go-output renderers embedding `GraphRendererState`). Enum metadata uses map-based lookups (`eventTypeMetaTable`, `providerTypeMeta`, `serviceStatusIcons`) — single source of truth for Label/Icon/Color.
-- **Coverage**: see FEATURES.md for current numbers. Gate is ≥94% (excludes `example/` and `cmd/`). Nearly all tests use `t.Parallel()` — only `t.Setenv()` env-var tests run sequentially.
-- **HTML visualization features**: 5-tab layout (Services/Scopes/Graph/Timeline/Events), services table with type badges + status badges + shutdown duration + reverse deps + health column + search filter, collapsible scope tree with type emoji chips, Sugiyama layered DAG graph with type-colored nodes + pan/zoom + click-to-highlight, dual build+shutdown timeline bars with type icons, event type filter chips (registration/invocation/shutdown/health_check), keyboard nav (1-5), animated tab transitions, stat cards (including health checks when checked), responsive layout, footer with schema version.
-- **Tree export** (`WriteTree` / `WriteHTMLTree`): ASCII tree and HTML nested-list tree of the service dependency DAG, via go-output renderers. Available on both `Report` and `Plugin`.
-- **Table export** (`WriteTable`): 16+ format table export of service summary (Service, Scope, Type, Status, Invocations, Build(ms), Error) via go-output `RenderTable`. Formats include: table, json, csv, tsv, markdown, xml, d2, yaml, html, tree, mermaid, dot, jsonl, asciidoc, toml, plantuml. Available on both `Report` and `Plugin`.
-- **Service type tracking**: `ServiceInfo.ServiceType` field (JSON: `service_type`) populated from `do.ExplainNamedService`. Values: "lazy", "eager", "transient", "alias". Displayed with samber/do's canonical emojis throughout the HTML visualization.
+- Standard `testing.T` + table-driven tests; no ginkgo/testify. External test package (`auditlog_test`).
+- Each test creates its own `Plugin` + `do.Injector` — no shared state. `t.Setenv()` for the env var; `t.TempDir()` for file exports.
+- Shared provider factories, lookup/assertion helpers, and struct factories live in `helpers_test.go` (grep it before writing new setup code).
+- Nearly all tests use `t.Parallel()` — only `t.Setenv()` tests run sequentially.
+- Coverage gate ≥94% excluding `example/`, `cmd/`, generated `*_templ.go` (exclusions single-sourced in `scripts/coverage-exclusions.txt`). Current numbers: FEATURES.md footer.
+- Benchmarks (12) cover hot paths: Invocation, Disabled, Registration, ConcurrentInvocation, BuildReport (50/100/500), EventsCopy, OnEventCallback, HealthCheck, WriteD2 — see BENCHMARKS.md.
+- The HTML report's feature inventory (5-tab layout, waveform, Sugiyama DAG, filter chips, pagination, etc.) is owned by FEATURES.md; example/ verifies 23 features via its self-check (exit code 0 = all pass; the Unreliable/Leaky "failures" are intentional showcase).
 
 ---
 
 ## Example
 
-The `example/` package (split across `main.go`, `register.go`, `services.go`, and `summary.go`) demonstrates every major samber/do v2 feature with a ride-sharing domain model. 23 features verified by a self-checking feature checklist:
+The `example/` package (`main.go`, `register.go`, `services.go`, `summary.go`) demonstrates 23 samber/do v2 features with a ride-sharing domain model and a **self-checking feature checklist** (CI runs it as the `example-smoke` job). Run with `DO_AUDITLOG_ENABLED=true go run ./example`; add `--live` for the dashboard. The checklist and APIs are enumerated in `example/summary.go`.
 
-| Feature                  | API                                                                                                                                 |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Container with hooks     | `do.NewWithOpts(plugin.Opts())`                                                                                                     |
-| Eager value injection    | `do.ProvideValue`, `do.ProvideNamedValue`                                                                                           |
-| Lazy singletons          | `do.Provide`                                                                                                                        |
-| Named services           | `do.ProvideNamed`, `do.MustInvokeNamed`                                                                                             |
-| Transient providers      | `do.ProvideTransient`                                                                                                               |
-| Interface aliasing       | `do.As[*EmailNotifier, Notifier]`                                                                                                   |
-| Override (hot-swap)      | `do.OverrideValue`                                                                                                                  |
-| Child scopes             | `injector.Scope("drivers")`                                                                                                         |
-| Cross-scope dependencies | MatchingEngine invokes from driver/passenger scopes                                                                                 |
-| Dependency graph         | Auto-inferred from provider call chains                                                                                             |
-| Health checks            | `do.Healthchecker`, `do.HealthcheckerWithContext`, `plugin.RecordHealthCheck*`                                                      |
-| Health check audit       | `EventTypeHealthCheck`, `ServiceInfo.HealthCheckCount`, `Report.HealthCheckSucceeded`                                               |
-| Graceful shutdown        | `do.ShutdownerWithError`, `injector.Shutdown()`                                                                                     |
-| Invocation errors        | `UnreliableService` provider returns error                                                                                          |
-| Shutdown errors          | `LeakyService.Shutdown()` returns error                                                                                             |
-| Build duration           | Millisecond-precision per service                                                                                                   |
-| Scope tree               | Root → 3 child scopes with service listings                                                                                         |
-| OnEvent callback         | Real-time event streaming via `Config.OnEvent`                                                                                      |
-| Convenience methods      | `Report.ServiceByName`, `ServiceByRef`, `ServicesByScope`, `EventsByService`, `EventsByType`, `FailedServices`, `UnhealthyServices` |
-| Event helpers            | `Event.Duration()`, `ServiceInfo.Uptime()`, `Plugin.EventsCount()`                                                                  |
-| Report filtering         | `Report.Filtered(opts...)`, `Plugin.ReportFiltered(opts...)` with 5 filter options                                                  |
-| Export enhancements      | `ExportFilteredToFile(path, opts...)`, `Report.WriteMermaid(writer)`                                                                |
-| Service type tracking    | Auto-detected via `do.ExplainNamedService`                                                                                          |
-| Live dashboard           | `go run ./example --live` starts the real-time SSE dashboard alongside the demo                                                     |
+---
 
-- **Website demo video** (2026-09-01): a 25s silent HyperFrames promo lives at `website/video/videos/do-auditlog-demo/` (composition committed; renders in `renders/`), deployed as `website/public/demo.mp4` and embedded above the fold in the landing hero (`#demo` anchor). Re-render: `cd website/video/videos/do-auditlog-demo && HYPERFRAMES_BROWSER_PATH=$(ls -d /nix/store/*-chromium-*/bin/chromium | head -1) nix shell nixpkgs#nodejs -c node ../../node_modules/hyperframes/dist/cli.js render ...` (invoke the CLI directly; `npx` wrappers fail on NixOS). Size target <3MB — re-encode with `ffmpeg -crf 25` if a render exceeds it (25s @ 1080p ≈ 1.1MB at CRF 25).
-- **Website toolchain pins**: `website/pnpm-workspace.yaml` sets `allowBuilds: {esbuild: true, sharp: true}` (pnpm v11 blocks native postinstalls otherwise) and `website/package.json` must keep `typescript: ^6.0.3` — TypeScript 7 (tsgo) crashes `astro check` (`assertCompatibleTypeScript`). `astro check` = 0 errors and `html-validate dist/**/*.html` are the website quality gates; CI (`.github/workflows/website.yml`) deploys on push to master touching `website/**`.
-- **Website retrofit state** (2026-09-01): Starlight `lastUpdated` + `editLink` enabled; OG image (`public/images/og-image.jpg`, 1200x630, generated from the demo-video poster); new `guides/live-dashboard.mdx`; all docs pages carry curated "Where to go next" sections; README has "Who is this for?", "When NOT to use this", and the `GOEXPERIMENT=jsonv2` consumer requirement. Live site: `do-auditlog.lars.software` (Firebase shared project `lars-software`, hosting target `do-auditlog`).
+## Website
+
+The docs site (`website/`, Astro + Starlight + Tailwind v4 + Firebase Hosting) deploys on pushes touching `website/**` via `.github/workflows/website.yml` → **do-auditlog.lars.software** (Firebase shared project `lars-software`, hosting target `do-auditlog`). Quality gates: `astro check` = 0 errors, `html-validate dist/**/*.html`, `check-changelog-sync.sh` (CHANGELOG ↔ changelog.mdx).
+
+- **`website/package.json` must keep `typescript: ^6.0.3`** — TypeScript 7 (tsgo) crashes `astro check` (`assertCompatibleTypeScript`).
+- **`website/pnpm-workspace.yaml`** sets `allowBuilds: {esbuild: true, sharp: true}` (pnpm v11 blocks native postinstalls otherwise).
+- **Demo video**: 25s promo composition at `website/video/videos/do-auditlog-demo/`, deployed as `website/public/demo.mp4` (`#demo` anchor). Re-render via the HyperFrames CLI directly (`node …/hyperframes/dist/cli.js render`; `npx` wrappers fail on NixOS — set `HYPERFRAMES_BROWSER_PATH` to a nix chromium). Size target <3MB (`ffmpeg -crf 25`).
