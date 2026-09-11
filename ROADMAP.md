@@ -91,6 +91,7 @@ These are ideas that need design exploration before becoming TODO items:
 - **Duration as `time.Duration`** — `DurationMs` is `*float64`. Could be `time.Duration` for idiomatic Go, but this would change the JSON schema and break consumers.
 - **`go-atomic-write` `WriteFuncVerified` / `WriteIfChanged` evaluation** — audit exports use plain `WriteFunc`; the verified/fingerprint and change-detecting variants were never evaluated for the export paths.
 - **Diagram regression tests beyond D2/DOT** — Mermaid/PlantUML hex-color quoting has no regression test (D2 and DOT do); cross-format color-consistency test would catch them together.
+- **live/ extensibility hooks** — `Server.Handle(pattern, handler)` for mounting extra routes next to the dashboard, and `Hub.OnSubscribe`/`OnUnsubscribe` callbacks. Requested July 2026, never designed.
 - **Replay fidelity gaps** — `ReplayEvents` restores neither capability flags (`IsHealthchecker`/`IsShutdowner`, always false on replay — `replay.go` documents it) nor the parent/child scope tree (flattened). Both are accepted limitations today; fix if replay fidelity becomes a use case.
 - **Accessibility long-tail** — ARIA grid tables, `aria-live` announcements (filter counts, SSE connect/reconnect), WCAG contrast audit, graph keyboard traversal. The WAI-ARIA tablist/dialog baseline shipped; these are the follow-ups.
 

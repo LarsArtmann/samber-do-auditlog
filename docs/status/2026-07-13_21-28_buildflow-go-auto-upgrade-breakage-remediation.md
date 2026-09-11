@@ -37,9 +37,9 @@ Nothing partially done. The revert was binary — either the code compiles or it
 
 | # | Item                                                | Notes                                                                                                                                                                                                                                         |
 | - | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 | Go-output v0.30.4 upgrade                           | The upgrade itself may be desirable (v0.30.4 could have real fixes), but it's blocked until Go 1.26.4's build constraints are resolved or go-output drops `encoding/json/v2`. Not attempted this session — out of scope for emergency repair. |
-| 2 | Committing the revert                               | Not committed — per project rules, no commit without explicit user instruction.                                                                                                                                                               |
-| 3 | Investigating whether Go 1.27+ would enable json/v2 | Not researched.                                                                                                                                                                                                                               |
+| ~~1~~ | ~~Go-output v0.30.4 upgrade~~ done — go-output v0.38.0 lockstep | ~~The upgrade itself may be desirable (v0.30.4 could have real fixes), but it's blocked until Go 1.26.4's build constraints are resolved or go-output drops `encoding/json/v2`. Not attempted this session — out of scope for emergency repair.~~ |
+| ~~2~~ | ~~Committing the revert~~ done — committed — see Resolution | ~~Not committed — per project rules, no commit without explicit user instruction.~~ |
+| ~~3~~ | ~~Investigating whether Go 1.27+ would enable json/v2~~ done — GOEXPERIMENT=jsonv2 adopted | ~~Not researched.~~ |
 
 ---
 
@@ -73,17 +73,17 @@ The `go-auto-upgrade` migrator in BuildFlow committed 7 categories of damage sim
 
 ### Immediate / This Session
 
-1. **Pin or exclude `go-auto-upgrade` from BuildFlow**: This migrator is dangerous in its current form — it doesn't verify post-migration compilation before committing changes. Consider `buildflow -s go-auto-upgrade` exclusion or pin to `--detect` only (no `--repair`).
+1. ~~**Pin or exclude `go-auto-upgrade` from BuildFlow**: This migrator is dangerous in its current form — it doesn't verify post-migration compilation before committing changes. Consider `buildflow -s go-auto-upgrade` exclusion or pin to `--detect` only (no `--repair`).~~ done (.buildflow.yml skip_steps)
 
-2. **Add a CI guard for `encoding/json/v2` imports**: A simple grep-based check in the pre-commit hook or CI that fails if any file imports `encoding/json/v2` or `encoding/json/jsontext` — since the project targets Go 1.26.x which doesn't expose these packages without experiment flags.
+2. ~~**Add a CI guard for `encoding/json/v2` imports**: A simple grep-based check in the pre-commit hook or CI that fails if any file imports `encoding/json/v2` or `encoding/json/jsontext` — since the project targets Go 1.26.x which doesn't expose these packages without experiment flags.~~ **Won't implement — moot — json/v2 required via GOEXPERIMENT.**
 
-3. **Consider whether go-output v0.30.4 is worth pursuing**: If it has real fixes we need, we should either (a) enable `GOEXPERIMENT=jsonv2` in the devShell, or (b) wait for Go 1.27 where json/v2 may be stable. If not, pin go-output at v0.30.1 and add a comment explaining why.
+3. ~~**Consider whether go-output v0.30.4 is worth pursuing**: If it has real fixes we need, we should either (a) enable `GOEXPERIMENT=jsonv2` in the devShell, or (b) wait for Go 1.27 where json/v2 may be stable. If not, pin go-output at v0.30.1 and add a comment explaining why.~~ done (v0.38.0 adopted)
 
 ### Structural / Process
 
-4. **BuildFlow `--max-time` for fuzz tests**: The BuildFlow output noted that the default 2m timeout is too short for 5 fuzz targets (30s each = 2.5m). Already documented in AGENTS.md but still relevant.
+4. ~~**BuildFlow `--max-time` for fuzz tests**: The BuildFlow output noted that the default 2m timeout is too short for 5 fuzz targets (30s each = 2.5m). Already documented in AGENTS.md but still relevant.~~ done (.buildflow.yml 5m timeout)
 
-5. **`nix-fmt` failure on `website/flake.nix`**: The `nixfmt` formatter choked on `website/flake.nix` because it appears to be JSON-in-nix syntax (the `"description"` string with `:` confused the parser). This is a pre-existing issue unrelated to this session but surfaced in the BuildFlow output.
+5. ~~**`nix-fmt` failure on `website/flake.nix`**: The `nixfmt` formatter choked on `website/flake.nix` because it appears to be JSON-in-nix syntax (the `"description"` string with `:` confused the parser). This is a pre-existing issue unrelated to this session but surfaced in the BuildFlow output.~~ done (flake checks.format)
 
 ---
 
@@ -91,92 +91,92 @@ The `go-auto-upgrade` migrator in BuildFlow committed 7 categories of damage sim
 
 ### Critical (blocks future BuildFlow runs)
 
-1. **Exclude `go-auto-upgrade` from BuildFlow `--fix`** or run it in detect-only mode
-2. **Add pre-commit guard**: fail if `encoding/json/v2` or `encoding/json/jsontext` appears in any `.go` file
-3. **Decide on go-output version policy**: pin v0.30.1 with comment, or plan migration path to v0.30.4+
-4. **Investigate `GOEXPERIMENT=jsonv2`**: can it be enabled in `flake.nix` devShell? Would it unblock go-output v0.30.4?
+1. ~~**Exclude `go-auto-upgrade` from BuildFlow `--fix`** or run it in detect-only mode~~ done (.buildflow.yml skip_steps)
+2. ~~**Add pre-commit guard**: fail if `encoding/json/v2` or `encoding/json/jsontext` appears in any `.go` file~~ **Won't implement — moot — json/v2 required.**
+3. ~~**Decide on go-output version policy**: pin v0.30.1 with comment, or plan migration path to v0.30.4+~~ done (go.mod lockstep comment)
+4. ~~**Investigate `GOEXPERIMENT=jsonv2`**: can it be enabled in `flake.nix` devShell? Would it unblock go-output v0.30.4?~~ done (flake.nix:50)
 
 ### BuildFlow Configuration
 
-5. Fix `nix-fmt` failure on `website/flake.nix` (JSON-in-nix syntax confusing nixfmt)
-6. Investigate `govalid-generate` failures (prerequisites blocked by compilation cascade)
-7. Set `--max-time=5m` as default for BuildFlow runs with fuzz tests
-8. Review whether `gitignore-upserter:repair` should be promoted from `○` (skipped) to active
+5. ~~Fix `nix-fmt` failure on `website/flake.nix` (JSON-in-nix syntax confusing nixfmt)~~ done (checks.format)
+6. ~~Investigate `govalid-generate` failures (prerequisites blocked by compilation cascade)~~ **Won't implement — superseded.**
+7. ~~Set `--max-time=5m` as default for BuildFlow runs with fuzz tests~~ done (5m timeout)
+8. ~~Review whether `gitignore-upserter:repair` should be promoted from `○` (skipped) to active~~ **Won't implement — one-off review.**
 
 ### Dependency Hygiene
 
-9. Evaluate go-output v0.30.2, v0.30.3, v0.30.4 changelogs for relevant fixes
-10. Check if any other dependencies have migrated to `encoding/json/v2` upstream
-11. Pin `charmbracelet/ultraviolet` — BuildFlow bumped it from `2026-07-03` to `2026-07-13`
+9. ~~Evaluate go-output v0.30.2, v0.30.3, v0.30.4 changelogs for relevant fixes~~ done (v0.38.0 adopted)
+10. ~~Check if any other dependencies have migrated to `encoding/json/v2` upstream~~ done (README:96)
+11. ~~Pin `charmbracelet/ultraviolet` — BuildFlow bumped it from `2026-07-03` to `2026-07-13`~~ **Won't implement — indirect dep, moot.**
 
 ### CI Hardening
 
-12. Add a CI job that runs `go build ./...` before `go-auto-upgrade` could touch anything (early warning)
-13. Add fuzz test timeout configuration to avoid `--max-time` issues
-14. Verify the `stale-generation` CI check still passes after the schema regeneration
+12. ~~Add a CI job that runs `go build ./...` before `go-auto-upgrade` could touch anything (early warning)~~ **Won't implement — CI builds anyway.**
+13. ~~Add fuzz test timeout configuration to avoid `--max-time` issues~~ done (5m timeout)
+14. ~~Verify the `stale-generation` CI check still passes after the schema regeneration~~ done (stale-generation job)
 
 ### Code Quality (surfaced by BuildFlow warnings)
 
-15. `goimports:detect` was `○` (not run) — verify import ordering is clean
-16. `gofumpt:repair` was `○` — verify formatting is clean
-17. `jscpd` (copy-paste detection) was `○` — run manually to verify clone-free status
-18. `branching-flow` was `○` — run manually if desired
-19. `hierarchical-error` checks were `○` — run manually
+15. ~~`goimports:detect` was `○` (not run) — verify import ordering is clean~~ done (lint CI green)
+16. ~~`gofumpt:repair` was `○` — verify formatting is clean~~ done (lint CI green)
+17. ~~`jscpd` (copy-paste detection) was `○` — run manually to verify clone-free status~~ **Won't implement — one-off tool run.**
+18. ~~`branching-flow` was `○` — run manually if desired~~ **Won't implement — one-off tool run.**
+19. ~~`hierarchical-error` checks were `○` — run manually~~ done (go-error-family v0.10.0)
 
 ### Uncommitted Changes
 
-20. **Commit `.gitignore` + `flake.lock` changes** or discard them — currently in limbo
-21. Review `.gitignore` JS/TS patterns: are they relevant to this project? (Only if the website/ dir uses Node.js)
-22. Review flake.lock nixpkgs bump: `0bb7ec5` → `e7a3ca8` — any breaking changes?
+20. ~~**Commit `.gitignore` + `flake.lock` changes** or discard them — currently in limbo~~ done (committed)
+21. ~~Review `.gitignore` JS/TS patterns: are they relevant to this project? (Only if the website/ dir uses Node.js)~~ done (committed)
+22. ~~Review flake.lock nixpkgs bump: `0bb7ec5` → `e7a3ca8` — any breaking changes?~~ done (committed + drift guard)
 
 ### Documentation
 
-23. Update AGENTS.md Gotchas section: document the `go-auto-upgrade` → `encoding/json/v2` failure mode
-24. Add a "Known BuildFlow Issues" section to AGENTS.md
-25. Document the go-output version pinning decision when made
+23. ~~Update AGENTS.md Gotchas section: document the `go-auto-upgrade` → `encoding/json/v2` failure mode~~ done (AGENTS.md gotcha)
+24. ~~Add a "Known BuildFlow Issues" section to AGENTS.md~~ done (AGENTS.md gotchas)
+25. ~~Document the go-output version pinning decision when made~~ done (go.mod comment)
 
 ### Future-Proofing
 
-26. Plan migration to `encoding/json/v2` when Go 1.27 stabilizes it
-27. Evaluate whether `CompareServiceRefs` should be exported (it was public before the bot deleted it)
-28. Review whether the `go-output/testhelpers` indirect dep removal is safe
-29. Add a `golangci-lint` custom rule to flag `encoding/json/v2` imports
-30. Consider a `.buildflow.yaml` or equivalent config to exclude dangerous migrators
+26. ~~Plan migration to `encoding/json/v2` when Go 1.27 stabilizes it~~ **Won't implement — moot — json/v2 in use.**
+27. ~~Evaluate whether `CompareServiceRefs` should be exported (it was public before the bot deleted it)~~ done (diff.go:169)
+28. ~~Review whether the `go-output/testhelpers` indirect dep removal is safe~~ done (testhelpers/ public)
+29. ~~Add a `golangci-lint` custom rule to flag `encoding/json/v2` imports~~ **Won't implement — moot — json/v2 allowed.**
+30. ~~Consider a `.buildflow.yaml` or equivalent config to exclude dangerous migrators~~ done (.buildflow.yml exists)
 
 ### Testing
 
-31. Run the full coverage gate: `sh scripts/coverage-gate.sh` (CI gate: >=95%)
-32. Run `golangci-lint run` locally to verify the strict lint config passes
-33. Run `golangci-lint config verify` to validate lint config
-34. Run `govulncheck` to verify no new vulnerabilities
-35. Run the 3 fuzz targets individually with extended time
+31. ~~Run the full coverage gate: `sh scripts/coverage-gate.sh` (CI gate: >=95%)~~ done (gate green ~95.5%)
+32. ~~Run `golangci-lint run` locally to verify the strict lint config passes~~ done (lint CI green)
+33. ~~Run `golangci-lint config verify` to validate lint config~~ done (ci.yml:87)
+34. ~~Run `govulncheck` to verify no new vulnerabilities~~ done (ci.yml vulncheck)
+35. ~~Run the 3 fuzz targets individually with extended time~~ done (8 targets, 5m)
 
 ### Release Preparation
 
-36. Review CHANGELOG.md for accuracy after this fix
-37. Tag a patch release if this breakage affected any published artifacts
-38. Verify `go install ./cmd/auditlog` works from clean checkout
-39. Verify `nix run .#auditlog -- help` works
-40. Verify `nix run .#coverage` passes
+36. ~~Review CHANGELOG.md for accuracy after this fix~~ done (CHANGELOG maintained)
+37. ~~Tag a patch release if this breakage affected any published artifacts~~ done (tags v0.0.1..v0.10.0)
+38. ~~Verify `go install ./cmd/auditlog` works from clean checkout~~ done (goreleaser CI)
+39. ~~Verify `nix run .#auditlog -- help` works~~ done (apps.auditlog)
+40. ~~Verify `nix run .#coverage` passes~~ done (apps.coverage)
 
 ### Nix
 
-41. Run `nix build` to verify the Nix build still works after flake.lock bump
-42. Run `nix flake check` for full validation
-43. Verify `nix develop` still provides the correct toolchain
-44. Review whether the nixpkgs bump affects Go version (should still be 1.26.4)
+41. ~~Run `nix build` to verify the Nix build still works after flake.lock bump~~ done (checks.build)
+42. ~~Run `nix flake check` for full validation~~ done (checks build+format)
+43. ~~Verify `nix develop` still provides the correct toolchain~~ done (GOTOOLCHAIN pin)
+44. ~~Review whether the nixpkgs bump affects Go version (should still be 1.26.4)~~ done (check-go-version.sh)
 
 ### Website
 
-45. Check `website/flake.nix` syntax — is it intentionally JSON or is it malformed nix?
-46. Verify the website still builds after flake.lock bump
+45. ~~Check `website/flake.nix` syntax — is it intentionally JSON or is it malformed nix?~~ done (formatted)
+46. ~~Verify the website still builds after flake.lock bump~~ done (website.yml green)
 
 ### Process
 
-47. Consider adding a `Makefile`-equivalent `justfile`-equivalent `flake.nix` target: `nix run .#buildflow-check` that runs BuildFlow in detect-only mode
-48. Review BuildFlow's `go-auto-upgrade` source to understand why it targeted json/v2
-49. Consider filing a bug against BuildFlow's `go-auto-upgrade` migrator
-50. Evaluate whether other BuildFlow migrators (`go-fix`, `go-generate`) are safe to run with `--fix`
+47. ~~Consider adding a `Makefile`-equivalent `justfile`-equivalent `flake.nix` target: `nix run .#buildflow-check` that runs BuildFlow in detect-only mode~~ **Won't implement — migrator permanently skipped.**
+48. ~~Review BuildFlow's `go-auto-upgrade` source to understand why it targeted json/v2~~ **Won't implement — migrator permanently skipped.**
+49. ~~Consider filing a bug against BuildFlow's `go-auto-upgrade` migrator~~ **Won't implement — migrator permanently skipped.**
+50. ~~Evaluate whether other BuildFlow migrators (`go-fix`, `go-generate`) are safe to run with `--fix`~~ **Won't implement — BuildFlow configured.**
 
 ---
 

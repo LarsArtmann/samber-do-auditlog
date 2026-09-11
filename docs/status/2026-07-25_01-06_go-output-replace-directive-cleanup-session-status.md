@@ -247,25 +247,25 @@ At report time, all dependency and documentation edits from this session had dis
 
 ### Process improvements
 
-1. **Use a dependency-cleanup gate sequence:** `go mod edit` → `go mod tidy` → `go mod verify` → `go list -m all` → targeted tests → race tests → lint.
-2. **Disable workspace influence for module surgery:** consistently use `GOWORK=off` for all module and test commands until the standalone graph is proven.
-3. **Avoid cache-based false confidence:** use `go clean -testcache` only when necessary, or at minimum recognize cached results in output and pair tests with tidy and graph checks.
-4. **Inspect structured module state first:** use `go mod edit -json` before removing version-qualified directives.
-5. **Separate upstream repair from downstream mitigation:** label the current indirect pins as a mitigation, not an upstream fix.
-6. **Verify final persistence:** run `git status`, `git diff --check`, and a focused `git diff -- go.mod .golangci.yml ...` immediately before final response.
-7. **Handle concurrent changes explicitly:** if task edits disappear or unexpected changes appear, stop modifying and report the exact state rather than assuming success remains present.
-8. **Give a technically complete handoff:** include mechanism, residual risk, exact verification, and blockers.
+1. ~~**Use a dependency-cleanup gate sequence:** `go mod edit` → `go mod tidy` → `go mod verify` → `go list -m all` → targeted tests → race tests → lint.~~ **Won't implement — session process habit.**
+2. ~~**Disable workspace influence for module surgery:** consistently use `GOWORK=off` for all module and test commands until the standalone graph is proven.~~ **Won't implement — session process habit.**
+3. ~~**Avoid cache-based false confidence:** use `go clean -testcache` only when necessary, or at minimum recognize cached results in output and pair tests with tidy and graph checks.~~ **Won't implement — session process habit.**
+4. ~~**Inspect structured module state first:** use `go mod edit -json` before removing version-qualified directives.~~ **Won't implement — session process habit.**
+5. ~~**Separate upstream repair from downstream mitigation:** label the current indirect pins as a mitigation, not an upstream fix.~~ **Won't implement — session process habit.**
+6. ~~**Verify final persistence:** run `git status`, `git diff --check`, and a focused `git diff -- go.mod .golangci.yml ...` immediately before final response.~~ **Won't implement — session process habit.**
+7. ~~**Handle concurrent changes explicitly:** if task edits disappear or unexpected changes appear, stop modifying and report the exact state rather than assuming success remains present.~~ **Won't implement — session process habit.**
+8. ~~**Give a technically complete handoff:** include mechanism, residual risk, exact verification, and blockers.~~ **Won't implement — session process habit.**
 
 ### Technical improvements
 
-9. Add a CI check that rejects go-output testhelpers `replace` directives.
-10. Document why the explicit indirect requirements must not be removed by hand while using v0.31.1.
-11. Upgrade to the first corrected go-output release and then remove the indirect pins.
-12. Verify that `go mod tidy` removes the pins naturally after the upstream correction.
-13. Keep `gomoddirectives.replace-local: true`; it remains useful for detecting accidental replacements.
-14. Resolve the unrelated `tree.go` `err113` findings once ownership of that file is clear.
-15. Restore a fully green `golangci-lint run` before release.
-16. Confirm the current worktree still contains or reapply the dependency cleanup before committing.
+9. ~~Add a CI check that rejects go-output testhelpers `replace` directives.~~ done (gomoddirectives lint gate)
+10. ~~Document why the explicit indirect requirements must not be removed by hand while using v0.31.1.~~ done (AGENTS.md history note)
+11. ~~Upgrade to the first corrected go-output release and then remove the indirect pins.~~ done (go.mod v0.38.0, no pins)
+12. ~~Verify that `go mod tidy` removes the pins naturally after the upstream correction.~~ done (ci.yml mod-tidy)
+13. ~~Keep `gomoddirectives.replace-local: true`; it remains useful for detecting accidental replacements.~~ done (.golangci.yml replace-local true)
+14. ~~Resolve the unrelated `tree.go` `err113` findings once ownership of that file is clear.~~ done (tree.go:100,104 static wraps)
+15. ~~Restore a fully green `golangci-lint run` before release.~~ done (lint 0 issues)
+16. ~~Confirm the current worktree still contains or reapply the dependency cleanup before committing.~~ **Won't implement — superseded by v0.38.0.**
 
 ---
 
@@ -273,31 +273,31 @@ At report time, all dependency and documentation edits from this session had dis
 
 |  # | Priority | Action                                                                       | Why                                                      | Status                                    |
 | -: | -------- | ---------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------- |
-|  1 | Critical | Confirm whether the intended `go.mod` indirect pins currently exist          | Current status output suggests session edits disappeared | Not verified at report time               |
-|  2 | Critical | Confirm both go-output testhelpers `replace` directives are absent           | This is the core requested debt item                     | Not verified at report time               |
-|  3 | Critical | Confirm `.golangci.yml` no longer has `replace-allow-list`                   | Required companion cleanup                               | Not verified at report time               |
-|  4 | Critical | Reapply the cleanup if a concurrent actor restored the old state             | Makes the requested work durable                         | Pending state confirmation                |
-|  5 | High     | Run `GOWORK=off GOEXPERIMENT=jsonv2 go mod tidy` after confirming/reapplying | Proves graph resolution from manifests                   | Previously passed with pins               |
-|  6 | High     | Run `GOWORK=off GOEXPERIMENT=jsonv2 go mod verify`                           | Verifies downloaded module integrity                     | Previously passed                         |
-|  7 | High     | Run `GOWORK=off GOEXPERIMENT=jsonv2 go list -m all`                          | Proves complete module selection                         | Previously passed                         |
-|  8 | High     | Run `GOEXPERIMENT=jsonv2 go test -race ./...`                                | CI-equivalent behavioral confidence                      | Previously passed                         |
-|  9 | High     | Run `GOEXPERIMENT=jsonv2 go vet ./...`                                       | Static correctness gate                                  | Previously passed                         |
-| 10 | High     | Coordinate ownership of `tree.go`                                            | Prevents overwriting concurrent changes                  | Not started                               |
-| 11 | High     | Fix the two `tree.go` `err113` findings after ownership is clear             | Restores full lint green                                 | Not started                               |
-| 12 | High     | Run `golangci-lint run` to green                                             | Required release quality gate                            | Currently blocked by tree.go              |
-| 13 | High     | Review the final focused diff for only intended files                        | Prevents accidental scope creep                          | Needs repetition after state confirmation |
-| 14 | Medium   | Keep the `CHANGELOG.md` resolution entry                                     | Preserves historical sequence                            | Intended update existed                   |
-| 15 | Medium   | Keep `AGENTS.md` explanation of minimal version selection                    | Prevents future accidental pin removal                   | Intended update existed                   |
-| 16 | Medium   | Remove the completed TODO item                                               | Keeps technical-debt tracking honest                     | Intended update existed                   |
-| 17 | Medium   | Update ROADMAP stability wording                                             | Prevents stale claims about replacements                 | Intended update existed                   |
-| 18 | Medium   | Add a small script or CI assertion for forbidden helper replacements         | Encodes the debt invariant                               | Not started                               |
-| 19 | Medium   | Track the upstream corrected-release requirement                             | Ensures indirect pins are temporary                      | Documented conceptually                   |
-| 20 | Medium   | When upstream releases a fix, upgrade all go-output modules in lockstep      | Preserves mono-versioning invariant                      | Future work                               |
-| 21 | Medium   | After upgrading, remove both explicit indirect helper pins                   | Completes upstream debt elimination                      | Future work                               |
-| 22 | Medium   | Rerun tidy and verify pins stay gone                                         | Confirms corrected upstream metadata                     | Future work                               |
-| 23 | Low      | Add a dependency-graph note to release verification checklist                | Avoids recurrence                                        | Not started                               |
-| 24 | Low      | Recheck `git status` immediately before any eventual commit                  | Protects concurrent work                                 | Required                                  |
-| 25 | Low      | Commit only when explicitly instructed, staging only relevant files          | Preserves user control and unrelated changes             | Waiting for instruction                   |
+|  ~~1~~ | ~~Critical~~ **Won't implement — superseded by v0.38.0.** | ~~Confirm whether the intended `go.mod` indirect pins currently exist~~ | ~~Current status output suggests session edits disappeared~~ | ~~Not verified at report time~~ |
+|  ~~2~~ | ~~Critical~~ done — go.mod zero replaces | ~~Confirm both go-output testhelpers `replace` directives are absent~~ | ~~This is the core requested debt item~~ | ~~Not verified at report time~~ |
+|  ~~3~~ | ~~Critical~~ done — .golangci.yml allow-list empty | ~~Confirm `.golangci.yml` no longer has `replace-allow-list`~~ | ~~Required companion cleanup~~ | ~~Not verified at report time~~ |
+|  ~~4~~ | ~~Critical~~ **Won't implement — superseded by v0.38.0.** | ~~Reapply the cleanup if a concurrent actor restored the old state~~ | ~~Makes the requested work durable~~ | ~~Pending state confirmation~~ |
+|  ~~5~~ | ~~High~~ done — mod-tidy green | ~~Run `GOWORK=off GOEXPERIMENT=jsonv2 go mod tidy` after confirming/reapplying~~ | ~~Proves graph resolution from manifests~~ | ~~Previously passed with pins~~ |
+|  ~~6~~ | ~~High~~ done — module graph resolves | ~~Run `GOWORK=off GOEXPERIMENT=jsonv2 go mod verify`~~ | ~~Verifies downloaded module integrity~~ | ~~Previously passed~~ |
+|  ~~7~~ | ~~High~~ done — CI green | ~~Run `GOWORK=off GOEXPERIMENT=jsonv2 go list -m all`~~ | ~~Proves complete module selection~~ | ~~Previously passed~~ |
+|  ~~8~~ | ~~High~~ done — ci.yml -race | ~~Run `GOEXPERIMENT=jsonv2 go test -race ./...`~~ | ~~CI-equivalent behavioral confidence~~ | ~~Previously passed~~ |
+|  ~~9~~ | ~~High~~ done — ci.yml:36 | ~~Run `GOEXPERIMENT=jsonv2 go vet ./...`~~ | ~~Static correctness gate~~ | ~~Previously passed~~ |
+| ~~10~~ | ~~High~~ **Won't implement — tree.go resolved.** | ~~Coordinate ownership of `tree.go`~~ | ~~Prevents overwriting concurrent changes~~ | ~~Not started~~ |
+| ~~11~~ | ~~High~~ done — tree.go:100,104 | ~~Fix the two `tree.go` `err113` findings after ownership is clear~~ | ~~Restores full lint green~~ | ~~Not started~~ |
+| ~~12~~ | ~~High~~ done — lint 0 issues | ~~Run `golangci-lint run` to green~~ | ~~Required release quality gate~~ | ~~Currently blocked by tree.go~~ |
+| ~~13~~ | ~~High~~ **Won't implement — one-time review.** | ~~Review the final focused diff for only intended files~~ | ~~Prevents accidental scope creep~~ | ~~Needs repetition after state confirmation~~ |
+| ~~14~~ | ~~Medium~~ done — CHANGELOG entry | ~~Keep the `CHANGELOG.md` resolution entry~~ | ~~Preserves historical sequence~~ | ~~Intended update existed~~ |
+| ~~15~~ | ~~Medium~~ done — AGENTS.md note | ~~Keep `AGENTS.md` explanation of minimal version selection~~ | ~~Prevents future accidental pin removal~~ | ~~Intended update existed~~ |
+| ~~16~~ | ~~Medium~~ done — TODO_LIST maintained | ~~Remove the completed TODO item~~ | ~~Keeps technical-debt tracking honest~~ | ~~Intended update existed~~ |
+| ~~17~~ | ~~Medium~~ done — ROADMAP maintained | ~~Update ROADMAP stability wording~~ | ~~Prevents stale claims about replacements~~ | ~~Intended update existed~~ |
+| ~~18~~ | ~~Medium~~ done — gomoddirectives gate | ~~Add a small script or CI assertion for forbidden helper replacements~~ | ~~Encodes the debt invariant~~ | ~~Not started~~ |
+| ~~19~~ | ~~Medium~~ done — go.mod v0.38.0 | ~~Track the upstream corrected-release requirement~~ | ~~Ensures indirect pins are temporary~~ | ~~Documented conceptually~~ |
+| ~~20~~ | ~~Medium~~ done — v0.38.0 lockstep | ~~When upstream releases a fix, upgrade all go-output modules in lockstep~~ | ~~Preserves mono-versioning invariant~~ | ~~Future work~~ |
+| ~~21~~ | ~~Medium~~ done — no pins in go.mod | ~~After upgrading, remove both explicit indirect helper pins~~ | ~~Completes upstream debt elimination~~ | ~~Future work~~ |
+| ~~22~~ | ~~Medium~~ done — mod-tidy green | ~~Rerun tidy and verify pins stay gone~~ | ~~Confirms corrected upstream metadata~~ | ~~Future work~~ |
+| ~~23~~ | ~~Low~~ **Won't implement — covered by CI mod-tidy drift job.** | ~~Add a dependency-graph note to release verification checklist~~ | ~~Avoids recurrence~~ | ~~Not started~~ |
+| ~~24~~ | ~~Low~~ **Won't implement — one-time process.** | ~~Recheck `git status` immediately before any eventual commit~~ | ~~Protects concurrent work~~ | ~~Required~~ |
+| ~~25~~ | ~~Low~~ **Won't implement — one-time process.** | ~~Commit only when explicitly instructed, staging only relevant files~~ | ~~Preserves user control and unrelated changes~~ | ~~Waiting for instruction~~ |
 
 ---
 

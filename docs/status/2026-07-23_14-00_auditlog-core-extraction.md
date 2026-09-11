@@ -52,66 +52,66 @@
 
 ## e) WHAT WE SHOULD IMPROVE
 
-1. **SSE test performance** — Heartbeat interval defaults to 15s, causing SSE tests to take 5s each. Add a `WithHeartbeatInterval` to test configs to speed up CI.
-2. **Server handler test coverage** — No test for `handleReport` error path (nil provider), no test for `handleSSE` when flusher assertion fails.
-3. **auditlog-core needs `go.mod` replace workaround** — Both consuming projects use `replace` directives. These must be removed before publishing.
-4. **golangci-lint configuration** — auditlog-core has no `.golangci.yml`. Should add one matching the sibling projects.
-5. **The plan's NDJSON/loader extraction was deferred** — The 20% that delivers 80% was skipped. These are ~300 LOC of identical code still duplicated.
-6. **Dashboard HTML divergence** — `live/dashboard.go` in go-workflow uses `encoding/json/v2` + `jsontext` while samber-do uses `encoding/json` v1. The dashboard templates are ~130 lines each with different tab structures. Not extractable but could share a base template.
-7. **`WriteToFile` test coverage** — Only tests success and one error path. Missing: concurrent writes, directory creation failure, large file handling.
+1. ~~**SSE test performance** — Heartbeat interval defaults to 15s, causing SSE tests to take 5s each. Add a `WithHeartbeatInterval` to test configs to speed up CI.~~ done (Config.HeartbeatInterval + 835x speedup)
+2. ~~**Server handler test coverage** — No test for `handleReport` error path (nil provider), no test for `handleSSE` when flusher assertion fails.~~ done (server_test.go:1080,918)
+3. ~~**auditlog-core needs `go.mod` replace workaround** — Both consuming projects use `replace` directives. These must be removed before publishing.~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+4. ~~**golangci-lint configuration** — auditlog-core has no `.golangci.yml`. Should add one matching the sibling projects.~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+5. ~~**The plan's NDJSON/loader extraction was deferred** — The 20% that delivers 80% was skipped. These are ~300 LOC of identical code still duplicated.~~ **Won't implement — go-ndjson module instead.**
+6. ~~**Dashboard HTML divergence** — `live/dashboard.go` in go-workflow uses `encoding/json/v2` + `jsontext` while samber-do uses `encoding/json` v1. The dashboard templates are ~130 lines each with different tab structures. Not extractable but could share a base template.~~ **Won't implement — other repo.**
+7. ~~**`WriteToFile` test coverage** — Only tests success and one error path. Missing: concurrent writes, directory creation failure, large file handling.~~ **Won't implement — helper not in this repo.**
 
 ## f) UP TO 50 THINGS WE SHOULD GET DONE NEXT
 
-1. Fix go-workflow-auditlog `encoding/json/v2` environment issue (nix Go version)
-2. Publish `auditlog-core` to GitHub and remove `replace` directives
-3. Add `.golangci.yml` to `auditlog-core`
-4. Fix the 7 golangci-lint warnings in samber-do wrapper
-5. Add `README.md` to `auditlog-core` with usage examples
-6. Extract NDJSON read/write into `auditlog-core/ndjson/`
-7. Extract format detection/loader into `auditlog-core/loader/`
-8. Speed up SSE tests (configurable heartbeat interval)
-9. Add test for `WriteToFile` concurrent access
-10. Add test for `handleReport` with nil provider
-11. Add test for `handleSSE` without Flusher
-12. Update both `AGENTS.md` files with auditlog-core reference
-13. Update both `FEATURES.md` files
-14. Add `auditlog-core` to `go-workflow-auditlog`'s `flake.nix` devShell
-15. Add `auditlog-core` to `samber-do-auditlog`'s `flake.nix` devShell
-16. Run `golangci-lint` on auditlog-core and fix findings
-17. Add `context.Context` to `WriteToFile` for cancellation support
-18. Consider `WriteToFile` returning `*os.File` for streaming use cases
-19. Add `go vet ./...` to CI for auditlog-core
-20. Add `staticcheck` to auditlog-core CI
-21. Create `auditlog-core/.github/workflows/ci.yml`
-22. Add `CODEOWNERS` to auditlog-core
-23. Add `CONTRIBUTING.md` to auditlog-core
-24. Add `LICENSE` to auditlog-core (MIT, matching siblings)
-25. Consider extracting `normalizePrefix` to auditlog-core root (used by both wrappers)
-26. Consider extracting `errorToStringPtr` to auditlog-core (identical in both)
-27. Add `examples/` directory to auditlog-core with minimal working example
-28. Write integration test that creates auditlog-core server, connects SSE, sends events, verifies snapshot
-29. Add benchmark for Hub.OnEvent with N concurrent subscribers
-30. Add benchmark for Server SSE handler
-31. Review if `Subscriber` type should be an interface instead of concrete
-32. Consider making `Server` implement `http.Handler` interface explicitly (it already does via `ServeHTTP`)
-33. Add `go run` example in auditlog-core README
-34. Tag initial release `v0.1.0` for auditlog-core
-35. Update `samber-do-auditlog/go.mod` to use tagged version after publish
-36. Update `go-workflow-auditlog/go.mod` to use tagged version after publish
-37. Remove `hub.go` and `server.go` duplicate code from both projects (delete old files if still present)
-38. Verify no other files in either project import the old `live.Hub` or `live.Server` directly
-39. Check if `live/server_test.go` in go-workflow has the same `json.RawMessage` issue as samber-do
-40. Add `//go:build` constraint to handle json/v2 gracefully in dashboard.go
-41. Consider adding `go-workspace` setup for all three projects
-42. Write ADR for the extraction decision
-43. Add `docs/DOMAIN_LANGUAGE.md` to auditlog-core
-44. Review if `healthResponse` type should be in auditlog-core (currently duplicated in wrappers)
-45. Consider extracting `snapshotData`/`completeData` types to auditlog-core with generic fields
-46. Add `go run ./cmd/auditlog` example that uses the live server
-47. Run full CI pipeline on all three repos after publishing
-48. Update `STABILITY.md` in both projects
-49. Create GitHub release for auditlog-core
-50. Update `TODO_LIST.md` in both projects with extraction status
+1. ~~Fix go-workflow-auditlog `encoding/json/v2` environment issue (nix Go version)~~ **Won't implement — other repo.**
+2. ~~Publish `auditlog-core` to GitHub and remove `replace` directives~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+3. ~~Add `.golangci.yml` to `auditlog-core`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+4. ~~Fix the 7 golangci-lint warnings in samber-do wrapper~~ **Won't implement — lint 0 issues.**
+5. ~~Add `README.md` to `auditlog-core` with usage examples~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+6. ~~Extract NDJSON read/write into `auditlog-core/ndjson/`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+7. ~~Extract format detection/loader into `auditlog-core/loader/`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+8. ~~Speed up SSE tests (configurable heartbeat interval)~~ **Won't implement — shipped — see Resolution.**
+9. ~~Add test for `WriteToFile` concurrent access~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+10. ~~Add test for `handleReport` with nil provider~~ **Won't implement — server_test.go:1080.**
+11. ~~Add test for `handleSSE` without Flusher~~ **Won't implement — server_test.go:918.**
+12. ~~Update both `AGENTS.md` files with auditlog-core reference~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+13. ~~Update both `FEATURES.md` files~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+14. ~~Add `auditlog-core` to `go-workflow-auditlog`'s `flake.nix` devShell~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+15. ~~Add `auditlog-core` to `samber-do-auditlog`'s `flake.nix` devShell~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+16. ~~Run `golangci-lint` on auditlog-core and fix findings~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+17. ~~Add `context.Context` to `WriteToFile` for cancellation support~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+18. ~~Consider `WriteToFile` returning `*os.File` for streaming use cases~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+19. ~~Add `go vet ./...` to CI for auditlog-core~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+20. ~~Add `staticcheck` to auditlog-core CI~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+21. ~~Create `auditlog-core/.github/workflows/ci.yml`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+22. ~~Add `CODEOWNERS` to auditlog-core~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+23. ~~Add `CONTRIBUTING.md` to auditlog-core~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+24. ~~Add `LICENSE` to auditlog-core (MIT, matching siblings)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+25. ~~Consider extracting `normalizePrefix` to auditlog-core root (used by both wrappers)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+26. ~~Consider extracting `errorToStringPtr` to auditlog-core (identical in both)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+27. ~~Add `examples/` directory to auditlog-core with minimal working example~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+28. ~~Write integration test that creates auditlog-core server, connects SSE, sends events, verifies snapshot~~ **Won't implement — live SSE test suite.**
+29. ~~Add benchmark for Hub.OnEvent with N concurrent subscribers~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+30. ~~Add benchmark for Server SSE handler~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+31. ~~Review if `Subscriber` type should be an interface instead of concrete~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+32. ~~Consider making `Server` implement `http.Handler` interface explicitly (it already does via `ServeHTTP`)~~ **Won't implement — server.go ServeHTTP.**
+33. ~~Add `go run` example in auditlog-core README~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+34. ~~Tag initial release `v0.1.0` for auditlog-core~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+35. ~~Update `samber-do-auditlog/go.mod` to use tagged version after publish~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+36. ~~Update `go-workflow-auditlog/go.mod` to use tagged version after publish~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+37. ~~Remove `hub.go` and `server.go` duplicate code from both projects (delete old files if still present)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+38. ~~Verify no other files in either project import the old `live.Hub` or `live.Server` directly~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+39. ~~Check if `live/server_test.go` in go-workflow has the same `json.RawMessage` issue as samber-do~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+40. ~~Add `//go:build` constraint to handle json/v2 gracefully in dashboard.go~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+41. ~~Consider adding `go-workspace` setup for all three projects~~ **Won't implement — go.work workspace.**
+42. ~~Write ADR for the extraction decision~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+43. ~~Add `docs/DOMAIN_LANGUAGE.md` to auditlog-core~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+44. ~~Review if `healthResponse` type should be in auditlog-core (currently duplicated in wrappers)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+45. ~~Consider extracting `snapshotData`/`completeData` types to auditlog-core with generic fields~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+46. ~~Add `go run ./cmd/auditlog` example that uses the live server~~ **Won't implement — routed to ROADMAP.md — live/ extensibility hooks.**
+47. ~~Run full CI pipeline on all three repos after publishing~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+48. ~~Update `STABILITY.md` in both projects~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+49. ~~Create GitHub release for auditlog-core~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+50. ~~Update `TODO_LIST.md` in both projects with extraction status~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
 
 ## g) QUESTIONS I CANNOT ANSWER MYSELF
 

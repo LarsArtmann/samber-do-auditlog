@@ -57,71 +57,71 @@
 
 ## e) WHAT WE SHOULD IMPROVE
 
-1. **Multi-module verification discipline** — For any project with sub-modules (`go-workflow-auditlog/live/`), add a script that walks the tree and runs `go test ./...` in each module. Bake it into CI.
-2. **`GOEXPERIMENT=jsonv2` should be a project-level setting** — The `.golangci.yml` has it for linters but `go test`, `go build` need it too. Add a project Makefile or shell wrapper script.
-3. **`go.work` instead of `replace`** — Three sibling repos referencing each other is fragile. A top-level `go.work` with `./auditlog-core`, `./samber-do-auditlog`, `./go-workflow-auditlog` would let devs work without managing replace directives.
-4. **`golangci-lint` config inheritance** — `auditlog-core` has no config so it lints as a fresh project. Either reuse `.golangci.yml` from one of the siblings, or define a shared base config that all three extend.
-5. **The "wait, did I just trust the summary?" failure mode** — The session-start summary said "all tests pass" and I nearly accepted it at face value. The summary was stale relative to today's changes. **ALWAYS re-verify state when starting work, regardless of what summaries claim.**
-6. **Provider factories should live in `auditlog-core` as a generic option helper** — Both projects now have `makeReportProvider`, etc. with identical signatures. A `corelive.Provider[*PluginType]` generic helper would remove the boilerplate. But this is over-engineering until we have a third consumer.
-7. **Test speed is a real CI cost** — 5s × 3 SSE tests × 2 projects = 30s of CI time waiting for heartbeat timers. A `WithHeartbeatInterval(10 * time.Millisecond)` option in test setup would shave this to <1s.
-8. **`healthInfo` type semantic name** — `corelive.HealthInfo` is fine but the convention in Go prefers `HealthStatus` or `HealthResponse` (it's the response payload, not "information in general"). Minor.
-9. **The `Subscriber` type could be an interface** — Currently exposed as concrete `*Subscriber` from `Subscribe()`. An interface (`type Subscriber interface { ID() uint64; Events() <-chan json.RawMessage; Done() <-chan struct{} }`) would allow alternative implementations for testing.
-10. **`.golangci.yml` repos missing from auditlog-core** — Adding even a minimal config would catch the `errcheck` warnings on `defer resp.Body.Close()` patterns that aren't in the current code (auditlog-core has none, but if helpers expand it'll come up).
+1. ~~**Multi-module verification discipline** — For any project with sub-modules (`go-workflow-auditlog/live/`), add a script that walks the tree and runs `go test ./...` in each module. Bake it into CI.~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+2. ~~**`GOEXPERIMENT=jsonv2` should be a project-level setting** — The `.golangci.yml` has it for linters but `go test`, `go build` need it too. Add a project Makefile or shell wrapper script.~~ done (ci.yml + flake.nix + doc.go:15)
+3. ~~**`go.work` instead of `replace`** — Three sibling repos referencing each other is fragile. A top-level `go.work` with `./auditlog-core`, `./samber-do-auditlog`, `./go-workflow-auditlog` would let devs work without managing replace directives.~~ done (go.work; zero replaces)
+4. ~~**`golangci-lint` config inheritance** — `auditlog-core` has no config so it lints as a fresh project. Either reuse `.golangci.yml` from one of the siblings, or define a shared base config that all three extend.~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+5. ~~**The "wait, did I just trust the summary?" failure mode** — The session-start summary said "all tests pass" and I nearly accepted it at face value. The summary was stale relative to today's changes. **ALWAYS re-verify state when starting work, regardless of what summaries claim.**~~ **Won't implement — process lesson.**
+6. ~~**Provider factories should live in `auditlog-core` as a generic option helper** — Both projects now have `makeReportProvider`, etc. with identical signatures. A `corelive.Provider[*PluginType]` generic helper would remove the boilerplate. But this is over-engineering until we have a third consumer.~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+7. ~~**Test speed is a real CI cost** — 5s × 3 SSE tests × 2 projects = 30s of CI time waiting for heartbeat timers. A `WithHeartbeatInterval(10 * time.Millisecond)` option in test setup would shave this to <1s.~~ done (SSE tests ~0.006s)
+8. ~~**`healthInfo` type semantic name** — `corelive.HealthInfo` is fine but the convention in Go prefers `HealthStatus` or `HealthResponse` (it's the response payload, not "information in general"). Minor.~~ **Won't implement — local healthResponse.**
+9. ~~**The `Subscriber` type could be an interface** — Currently exposed as concrete `*Subscriber` from `Subscribe()`. An interface (`type Subscriber interface { ID() uint64; Events() <-chan json.RawMessage; Done() <-chan struct{} }`) would allow alternative implementations for testing.~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
+10. ~~**`.golangci.yml` repos missing from auditlog-core** — Adding even a minimal config would catch the `errcheck` warnings on `defer resp.Body.Close()` patterns that aren't in the current code (auditlog-core has none, but if helpers expand it'll come up).~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**
 
 ## f) UP TO 50 THINGS WE SHOULD GET DONE NEXT
 
 | #  | Task                                                                                     | Impact                                                             | Effort |
 | -- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------ |
-| 1  | Migrate go-workflow dashboard to standard `encoding/json` (drop json/v2)                 | High — unblocks dashboard code path in CI and production-like envs | M      |
-| 2  | Add `GOEXPERIMENT=jsonv2` wrapper or document in README                                  | High — saves devs from confusion                                   | XS     |
-| 3  | Publish `auditlog-core` to GitHub with tag `v0.1.0`                                      | High — unblocks downstream remove-replace work                     | M      |
-| 4  | Remove `replace` directives from both consumer `go.mod` after tag exists                 | High — required for real version resolution                        | XS     |
-| 5  | Set up `go.work` for all three projects                                                  | High — eliminates fragile local setup                              | M      |
-| 6  | Add `auditlog-core/.golangci.yml` matching sibling standards                             | Medium — proactive hygiene                                         | XS     |
-| 7  | Add `auditlog-core/README.md` with Hub+Server usage example                              | High — required for adoption                                       | M      |
-| 8  | Add `auditlog-core/LICENSE` (MIT)                                                        | High — required for open-source publish                            | XS     |
-| 9  | Add `auditlog-core/CONTRIBUTING.md`                                                      | Low — nice-to-have                                                 | S      |
-| 10 | Add `auditlog-core/CODEOWNERS`                                                           | Low — scales governance                                            | XS     |
-| 11 | Extract NDJSON read/write into `auditlog-core/ndjson/`                                   | High — 2nd 80/20 chunk of duplication                              | M      |
-| 12 | Extract format detection/loader into `auditlog-core/loader/`                             | High — completes plan phase 2                                      | M      |
-| 13 | Add `WithHeartbeatInterval(10ms)` to SSE tests via test setup helper                     | Medium — CI speed                                                  | S      |
-| 14 | Add benchmark for `Hub.OnEvent` with 1/10/100/1000 subscribers                           | Medium — regression detection                                      | XS     |
-| 15 | Add benchmark for `Server` SSE handler throughput                                        | Medium — regression detection                                      | XS     |
-| 16 | Add `context.Context` to `WriteToFile` for cancellation                                  | Medium — modern Go API hygiene                                     | XS     |
-| 17 | Add integration test: create core server, connect SSE, send events, verify snapshot      | High — real-world behavior validation                              | M      |
-| 18 | Add test for `WriteToFile` concurrent access                                             | Medium — robustness                                                | XS     |
-| 19 | Add test for `WriteToFile` directory-creation failure path                               | Low — robustness                                                   | XS     |
-| 20 | Add test for `handleReport` returning nil provider error                                 | Medium — error path coverage                                       | XS     |
-| 21 | Add test for SSE handler when `Flusher` assertion fails                                  | Low — edge case                                                    | XS     |
-| 22 | Update go-workflow `AGENTS.md` to reference `auditlog-core`                              | Medium — knowledge persistence                                     | XS     |
-| 23 | Update samber-do `AGENTS.md` to reference `auditlog-core`                                | Medium — knowledge persistence                                     | XS     |
-| 24 | Update go-workflow `FEATURES.md` to reflect extraction                                   | Low — doc drift prevention                                         | XS     |
-| 25 | Update samber-do `FEATURES.md` to reflect extraction                                     | Low — doc drift prevention                                         | XS     |
-| 26 | Write ADR explaining the auditlog-core extraction decision                               | Medium — institutional memory                                      | S      |
-| 27 | Add `docs/DOMAIN_LANGUAGE.md` to auditlog-core                                           | Low — scope definition                                             | S      |
-| 28 | Update both `flake.nix` devShells to include `../auditlog-core`                          | High — local dev parity                                            | S      |
-| 29 | Add `.github/workflows/ci.yml` to auditlog-core                                          | High — CI on its own repo                                          | M      |
-| 30 | Add cross-repo GitHub Actions workflow that tests all three together                     | High — catches breaking changes in core                            | M      |
-| 31 | Tag `go-workflow-auditlog` and `samber-do-auditlog` with versions that use core `v0.1.0` | High — release coordination                                        | XS     |
-| 32 | Add `go test -race` to CI for all three repos                                            | Medium — concurrency correctness                                   | XS     |
-| 33 | Add `go test -count=1` and `-v` to CI test commands                                      | High — surfaces stale-cache issues                                 | XS     |
-| 34 | Consolidate `makeReportProvider`/`Snapshot`/`Complete`/`Health` into shared helper       | Low — saves ~80 LOC per consumer                                   | S      |
-| 35 | Add `HealthInfo` to a generic response envelope with version field                       | Low — API stability                                                | XS     |
-| 36 | Add `ErrInvalidPrefix` to auditlog-core for malformed route prefixes                     | Low — error UX                                                     | XS     |
-| 37 | Document the `replace` → published-version migration in both consumers' READMEs          | Medium — migration story                                           | XS     |
-| 38 | Add `go mod tidy` to BuildFlow pre-commit (currently skipped)                            | Medium — go.mod hygiene                                            | XS     |
-| 39 | Refactor `With*Provider` to use `Option func(*Server) error` instead of fields           | Low — ergonomics                                                   | S      |
-| 40 | Add `Server.Handle(pattern string, handler http.Handler)` for extensibility              | Medium — embedding use case                                        | S      |
-| 41 | Replace the SSE 15s default heartbeat with per-`Accept` negotiated value                 | Low — over-engineering unless needed                               | M      |
-| 42 | Add `Subscriber` interface in auditlog-core instead of concrete pointer                  | Low — testability                                                  | XS     |
-| 43 | Document `SnapshotProvider`/`CompleteProvider` lifecycle in auditlog-core README         | Medium — adoption clarity                                          | XS     |
-| 44 | Add `OnSubscribe`/`OnUnsubscribe` callbacks to core Hub for metrics                      | Low — optional future use                                          | XS     |
-| 45 | Add Prometheus metrics interface for events-sent, clients-connected, etc.                | Low — optional future use                                          | M      |
-| 46 | Add `auditlog-core/examples/minimal` runnable demo                                       | Medium — adoption clarity                                          | S      |
-| 47 | Add `auditlog-core/cmd/auditlog-core-demo` CLI                                           | Low — nice-to-have                                                 | M      |
-| 48 | Run full `Taskfile` / `BuildFlow` on all three repos, document remaining warnings        | Medium — debt visibility                                           | XS     |
-| 49 | Verify both `replace` directives are identical (path-wise) — catch drift                 | Low — pre-publish sanity                                           | XS     |
-| 50 | Write a `MIGRATION.md` for downstream projects upgrading from in-tree Hub/Server to core | Medium — clear upgrade path                                        | M      |
+| ~~1~~  | ~~Migrate go-workflow dashboard to standard `encoding/json` (drop json/v2)~~ **Won't implement — other repo.** | ~~High — unblocks dashboard code path in CI and production-like envs~~ | ~~M~~ |
+| ~~2~~  | ~~Add `GOEXPERIMENT=jsonv2` wrapper or document in README~~ **Won't implement — README + website document it.** | ~~High — saves devs from confusion~~ | ~~XS~~ |
+| ~~3~~  | ~~Publish `auditlog-core` to GitHub with tag `v0.1.0`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High — unblocks downstream remove-replace work~~ | ~~M~~ |
+| ~~4~~  | ~~Remove `replace` directives from both consumer `go.mod` after tag exists~~ **Won't implement — go.mod zero replaces.** | ~~High — required for real version resolution~~ | ~~XS~~ |
+| ~~5~~  | ~~Set up `go.work` for all three projects~~ **Won't implement — go.work workspace.** | ~~High — eliminates fragile local setup~~ | ~~M~~ |
+| ~~6~~  | ~~Add `auditlog-core/.golangci.yml` matching sibling standards~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — proactive hygiene~~ | ~~XS~~ |
+| ~~7~~  | ~~Add `auditlog-core/README.md` with Hub+Server usage example~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High — required for adoption~~ | ~~M~~ |
+| ~~8~~  | ~~Add `auditlog-core/LICENSE` (MIT)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High — required for open-source publish~~ | ~~XS~~ |
+| ~~9~~  | ~~Add `auditlog-core/CONTRIBUTING.md`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — nice-to-have~~ | ~~S~~ |
+| ~~10~~ | ~~Add `auditlog-core/CODEOWNERS`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — scales governance~~ | ~~XS~~ |
+| ~~11~~ | ~~Extract NDJSON read/write into `auditlog-core/ndjson/`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High — 2nd 80/20 chunk of duplication~~ | ~~M~~ |
+| ~~12~~ | ~~Extract format detection/loader into `auditlog-core/loader/`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High — completes plan phase 2~~ | ~~M~~ |
+| ~~13~~ | ~~Add `WithHeartbeatInterval(10ms)` to SSE tests via test setup helper~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — CI speed~~ | ~~S~~ |
+| ~~14~~ | ~~Add benchmark for `Hub.OnEvent` with 1/10/100/1000 subscribers~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — regression detection~~ | ~~XS~~ |
+| ~~15~~ | ~~Add benchmark for `Server` SSE handler throughput~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — regression detection~~ | ~~XS~~ |
+| ~~16~~ | ~~Add `context.Context` to `WriteToFile` for cancellation~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — modern Go API hygiene~~ | ~~XS~~ |
+| ~~17~~ | ~~Add integration test: create core server, connect SSE, send events, verify snapshot~~ **Won't implement — live SSE test suite.** | ~~High — real-world behavior validation~~ | ~~M~~ |
+| ~~18~~ | ~~Add test for `WriteToFile` concurrent access~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — robustness~~ | ~~XS~~ |
+| ~~19~~ | ~~Add test for `WriteToFile` directory-creation failure path~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — robustness~~ | ~~XS~~ |
+| ~~20~~ | ~~Add test for `handleReport` returning nil provider error~~ **Won't implement — server_test.go:1080.** | ~~Medium — error path coverage~~ | ~~XS~~ |
+| ~~21~~ | ~~Add test for SSE handler when `Flusher` assertion fails~~ **Won't implement — server_test.go:918.** | ~~Low — edge case~~ | ~~XS~~ |
+| ~~22~~ | ~~Update go-workflow `AGENTS.md` to reference `auditlog-core`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — knowledge persistence~~ | ~~XS~~ |
+| ~~23~~ | ~~Update samber-do `AGENTS.md` to reference `auditlog-core`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — knowledge persistence~~ | ~~XS~~ |
+| ~~24~~ | ~~Update go-workflow `FEATURES.md` to reflect extraction~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — doc drift prevention~~ | ~~XS~~ |
+| ~~25~~ | ~~Update samber-do `FEATURES.md` to reflect extraction~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — doc drift prevention~~ | ~~XS~~ |
+| ~~26~~ | ~~Write ADR explaining the auditlog-core extraction decision~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — institutional memory~~ | ~~S~~ |
+| ~~27~~ | ~~Add `docs/DOMAIN_LANGUAGE.md` to auditlog-core~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — scope definition~~ | ~~S~~ |
+| ~~28~~ | ~~Update both `flake.nix` devShells to include `../auditlog-core`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High — local dev parity~~ | ~~S~~ |
+| ~~29~~ | ~~Add `.github/workflows/ci.yml` to auditlog-core~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High — CI on its own repo~~ | ~~M~~ |
+| ~~30~~ | ~~Add cross-repo GitHub Actions workflow that tests all three together~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High — catches breaking changes in core~~ | ~~M~~ |
+| ~~31~~ | ~~Tag `go-workflow-auditlog` and `samber-do-auditlog` with versions that use core `v0.1.0`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High — release coordination~~ | ~~XS~~ |
+| ~~32~~ | ~~Add `go test -race` to CI for all three repos~~ **Won't implement — ci.yml -race.** | ~~Medium — concurrency correctness~~ | ~~XS~~ |
+| ~~33~~ | ~~Add `go test -count=1` and `-v` to CI test commands~~ **Won't implement — ci.yml -count=1.** | ~~High — surfaces stale-cache issues~~ | ~~XS~~ |
+| ~~34~~ | ~~Consolidate `makeReportProvider`/`Snapshot`/`Complete`/`Health` into shared helper~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — saves ~80 LOC per consumer~~ | ~~S~~ |
+| ~~35~~ | ~~Add `HealthInfo` to a generic response envelope with version field~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — API stability~~ | ~~XS~~ |
+| ~~36~~ | ~~Add `ErrInvalidPrefix` to auditlog-core for malformed route prefixes~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — error UX~~ | ~~XS~~ |
+| ~~37~~ | ~~Document the `replace` → published-version migration in both consumers' READMEs~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — migration story~~ | ~~XS~~ |
+| ~~38~~ | ~~Add `go mod tidy` to BuildFlow pre-commit (currently skipped)~~ **Won't implement — ci.yml mod-tidy.** | ~~Medium — go.mod hygiene~~ | ~~XS~~ |
+| ~~39~~ | ~~Refactor `With*Provider` to use `Option func(*Server) error` instead of fields~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — ergonomics~~ | ~~S~~ |
+| ~~40~~ | ~~Add `Server.Handle(pattern string, handler http.Handler)` for extensibility~~ **Won't implement — routed to ROADMAP.md — live/ extensibility hooks.** | ~~Medium — embedding use case~~ | ~~S~~ |
+| ~~41~~ | ~~Replace the SSE 15s default heartbeat with per-`Accept` negotiated value~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — over-engineering unless needed~~ | ~~M~~ |
+| ~~42~~ | ~~Add `Subscriber` interface in auditlog-core instead of concrete pointer~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — testability~~ | ~~XS~~ |
+| ~~43~~ | ~~Document `SnapshotProvider`/`CompleteProvider` lifecycle in auditlog-core README~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — adoption clarity~~ | ~~XS~~ |
+| ~~44~~ | ~~Add `OnSubscribe`/`OnUnsubscribe` callbacks to core Hub for metrics~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — optional future use~~ | ~~XS~~ |
+| ~~45~~ | ~~Add Prometheus metrics interface for events-sent, clients-connected, etc.~~ **Won't implement — routed to ROADMAP.md — Observability.** | ~~Low — optional future use~~ | ~~M~~ |
+| ~~46~~ | ~~Add `auditlog-core/examples/minimal` runnable demo~~ **Won't implement — live/demo serves this.** | ~~Medium — adoption clarity~~ | ~~S~~ |
+| ~~47~~ | ~~Add `auditlog-core/cmd/auditlog-core-demo` CLI~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — nice-to-have~~ | ~~M~~ |
+| ~~48~~ | ~~Run full `Taskfile` / `BuildFlow` on all three repos, document remaining warnings~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — debt visibility~~ | ~~XS~~ |
+| ~~49~~ | ~~Verify both `replace` directives are identical (path-wise) — catch drift~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low — pre-publish sanity~~ | ~~XS~~ |
+| ~~50~~ | ~~Write a `MIGRATION.md` for downstream projects upgrading from in-tree Hub/Server to core~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium — clear upgrade path~~ | ~~M~~ |
 
 ## g) QUESTIONS I CANNOT ANSWER MYSELF
 

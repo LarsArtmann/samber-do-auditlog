@@ -183,7 +183,7 @@ Sorted by **impact × value ÷ effort** (descending).
 
 | #  | Task                                                                                 | Impact    | Effort | Status                                                                                       |
 | -- | ------------------------------------------------------------------------------------ | --------- | ------ | -------------------------------------------------------------------------------------------- |
-| 1  | **T10: Diff dependency edges** — implement dep comparison + fix `diff.go:43` doc lie | 🔴 High   | 75m    | ~~Not started~~ HALF-DONE (2026-09-01): doc lie fixed; `DepsChanged` feature in TODO_LIST.md |
+| 1  | **T10: Diff dependency edges** — implement dep comparison + fix `diff.go:43` doc lie | 🔴 High   | 75m    | ~~Not started~~ ~~HALF-DONE (2026-09-01): doc lie fixed; `DepsChanged` feature in TODO_LIST.md~~ done — `ServiceDiff.AddedDeps`/`RemovedDeps` shipped 2026-09-02 (diff.go:113) |
 | ~~2~~  | ~~**T8: JSON Schema file** — `schema/report.schema.json` for v0.2.0~~ done — schema/report.schema.json | ~~🔴 High~~ | ~~75m~~ | ~~Not started~~ |
 | ~~3~~  | ~~**T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`~~ done — cmd/auditlog | ~~🟠 Medium~~ | ~~60m~~ | ~~Not started~~ |
 | ~~4~~  | ~~**T6: CLI `import`** — `auditlog import <file> -o report.html`~~ done — cmd/auditlog convert | ~~🟠 Medium~~ | ~~75m~~ | ~~Not started~~ |
