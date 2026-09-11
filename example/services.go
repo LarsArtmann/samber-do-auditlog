@@ -69,6 +69,13 @@ var (
 	errLeakyRelease   = errors.New("leaky: failed to release connection pool")
 	errUnreliableDep  = errors.New("unreliable: dependency 'payment-gateway' unavailable")
 
+	errEmailNoSender           = errors.New("email-notifier: no sender configured")
+	errVehicleDecommissioned   = errors.New("vehicle: decommissioned")
+	errDriverNoVehicle         = errors.New("driver: no vehicle assigned")
+	errPassengerNoName         = errors.New("passenger: no name")
+	errMatchingEmpty           = errors.New("matching: no drivers or passengers available")
+	errHTTPServerNotConfigured = errors.New("httpserver: not configured")
+
 	_ do.ShutdownerWithError      = (*Cache)(nil)
 	_ do.HealthcheckerWithContext = (*Cache)(nil)
 )
@@ -111,7 +118,7 @@ func (e *EmailNotifier) Send(to, body string) error {
 
 func (e *EmailNotifier) HealthCheck(_ context.Context) error {
 	if e.From == "" {
-		return errors.New("email-notifier: no sender configured")
+		return errEmailNoSender
 	}
 
 	return nil
@@ -152,7 +159,7 @@ func (v *Vehicle) Shutdown() error {
 
 func (v *Vehicle) HealthCheck(_ context.Context) error {
 	if !v.Active {
-		return errors.New("vehicle: decommissioned")
+		return errVehicleDecommissioned
 	}
 
 	return nil
@@ -181,7 +188,7 @@ func (d *DriverService) Shutdown() error {
 
 func (d *DriverService) HealthCheck(_ context.Context) error {
 	if d.Vehicle == nil {
-		return errors.New("driver: no vehicle assigned")
+		return errDriverNoVehicle
 	}
 
 	return nil
@@ -209,7 +216,7 @@ func (p *PassengerService) Shutdown() error {
 
 func (p *PassengerService) HealthCheck(_ context.Context) error {
 	if p.Name == "" {
-		return errors.New("passenger: no name")
+		return errPassengerNoName
 	}
 
 	return nil
@@ -236,7 +243,7 @@ func (m *MatchingEngine) Shutdown() error {
 
 func (m *MatchingEngine) HealthCheck(_ context.Context) error {
 	if len(m.Drivers) == 0 || len(m.Passengers) == 0 {
-		return errors.New("matching: no drivers or passengers available")
+		return errMatchingEmpty
 	}
 
 	return nil
@@ -267,7 +274,7 @@ func (s *HTTPServer) Shutdown() error {
 
 func (s *HTTPServer) HealthCheck(_ context.Context) error {
 	if s.Config == nil || s.Port == 0 {
-		return errors.New("httpserver: not configured")
+		return errHTTPServerNotConfigured
 	}
 
 	return nil

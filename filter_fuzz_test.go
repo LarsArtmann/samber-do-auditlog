@@ -26,6 +26,40 @@ func fuzzFilterReport(t *testing.T) auditlog.Report {
 	return p.Report()
 }
 
+// fuzzFilterOptions derives filter options from the fuzz input: a name set
+// from null/newline-delimited tokens, an event type from the first byte, a
+// scope filter from the second byte's parity, and a time range from bytes 3-4.
+func fuzzFilterOptions(data []byte) []auditlog.ReportOption {
+	names := tokenize(data)
+
+	var opts []auditlog.ReportOption
+
+	if len(names) > 0 {
+		svcNames := make([]auditlog.ServiceName, 0, len(names))
+		for _, n := range names {
+			svcNames = append(svcNames, auditlog.ServiceName(n))
+		}
+
+		opts = append(opts, auditlog.WithServicesByName(svcNames...))
+	}
+
+	if len(data) > 0 {
+		opts = append(opts, auditlog.WithEventsByType(eventTypesByByte(data[0])))
+	}
+
+	if len(data) > 1 && data[1]%2 == 0 {
+		opts = append(opts, auditlog.WithScope("root"))
+	}
+
+	if len(data) > 3 {
+		from := time.Unix(int64(data[2]), 0)
+		to := time.Unix(int64(data[2])+int64(data[3])+1, 0)
+		opts = append(opts, auditlog.WithTimeRange(from, to))
+	}
+
+	return opts
+}
+
 // FuzzFilterInputs fuzzes Report.Filtered with arbitrary combinations of the
 // five filter options (name, type, event-type, scope, time range) derived from
 // the fuzz corpus. Invariants: it never panics, always passes Validate(), and
@@ -48,39 +82,8 @@ func FuzzFilterInputs(f *testing.F) {
 	f.Fuzz(func(t *testing.T, data []byte) {
 		report := fuzzFilterReport(t)
 
-		// Derive a name set from null/newline-delimited tokens in the input.
 		names := tokenize(data)
-
-		var opts []auditlog.ReportOption
-
-		if len(names) > 0 {
-			svcNames := make([]auditlog.ServiceName, 0, len(names))
-			for _, n := range names {
-				svcNames = append(svcNames, auditlog.ServiceName(n))
-			}
-
-			opts = append(opts, auditlog.WithServicesByName(svcNames...))
-		}
-
-		// Derive an event-type filter from the first byte.
-		if len(data) > 0 {
-			et := eventTypesByByte(data[0])
-			opts = append(opts, auditlog.WithEventsByType(et))
-		}
-
-		// Derive a scope filter from the second byte.
-		if len(data) > 1 && data[1]%2 == 0 {
-			opts = append(opts, auditlog.WithScope("root"))
-		}
-
-		// Derive a (possibly inverted) time range from two trailing bytes.
-		if len(data) > 3 {
-			from := time.Unix(int64(data[2]), 0)
-			to := time.Unix(int64(data[2])+int64(data[3])+1, 0)
-			opts = append(opts, auditlog.WithTimeRange(from, to))
-		}
-
-		filtered := report.Filtered(opts...)
+		filtered := report.Filtered(fuzzFilterOptions(data)...)
 
 		// Invariant 1: result is always valid.
 		if err := filtered.Validate(); err != nil {
