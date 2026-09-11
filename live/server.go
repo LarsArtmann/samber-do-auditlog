@@ -263,6 +263,11 @@ func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // --- HTTP Handlers ---
 
+// dashboardFramePolicy is delivered as an HTTP response header because the
+// CSP frame-ancestors directive is ignored by browsers when set via a
+// <meta> element — the meta tag in liveTemplate intentionally omits it.
+const dashboardFramePolicy = "frame-ancestors 'none'"
+
 func (srv *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	pfx := srv.config.Prefix
 	if r.URL.Path != pfx && r.URL.Path != pfx+"/" {
@@ -273,6 +278,7 @@ func (srv *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Content-Security-Policy", dashboardFramePolicy)
 	_, _ = w.Write([]byte(srv.dashboardHTML))
 }
 

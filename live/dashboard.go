@@ -26,12 +26,19 @@ var datastarJS string
 // exists — all data arrives via SSE as datastar-patch-elements events that
 // morph the DOM by element ID. The datastar.js runtime (~56KB) handles SSE
 // parsing, DOM morphing, and signal reactivity.
+//
+// CSP notes: script-src requires 'unsafe-eval' because the datastar runtime
+// compiles every data-* expression (signals, bindings, actions) with the
+// Function() constructor — without it the dashboard throws GenerateExpression
+// errors and nothing renders. frame-ancestors is deliberately NOT set here:
+// browsers ignore it in <meta> (header-only directive), so the server sends
+// it as a Content-Security-Policy response header instead (see handleDashboard).
 const liveTemplate = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; base-uri 'none';">
 <title>samber-do-auditlog Live</title>
 <style>
 %s
