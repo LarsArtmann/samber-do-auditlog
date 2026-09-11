@@ -58,7 +58,7 @@ for v in $FLAKE_VERSIONS; do
 	# The flake may pin a full toolchain version (go1.23.12) while go.mod
 	# declares the language line (go 1.23) — accept a patch-level extension.
 	case "$v" in
-	"$EXPECTED"|"$EXPECTED".*)
+	"$EXPECTED" | "$EXPECTED".*)
 		;;
 	*)
 		echo "FAIL: flake.nix GOTOOLCHAIN (go$v) vs go.mod ($EXPECTED)"

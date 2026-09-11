@@ -407,13 +407,13 @@ func unmarshalJSONForTest(t *testing.T, data []byte, out any, op string) {
 	}
 }
 
-func newPluginAndInjector() (*auditlog.Plugin, do.Injector) { //nolint:ireturn
+func newPluginAndInjector() (*auditlog.Plugin, do.Injector) {
 	p := mustNew(auditlog.Config{Enabled: true})
 
 	return p, do.NewWithOpts(p.Opts())
 }
 
-func newPluginAndInjectorWithID(containerID auditlog.ContainerID) (*auditlog.Plugin, do.Injector) { //nolint:ireturn
+func newPluginAndInjectorWithID(containerID auditlog.ContainerID) (*auditlog.Plugin, do.Injector) {
 	p := mustNew(auditlog.Config{Enabled: true, ContainerID: containerID})
 
 	return p, do.NewWithOpts(p.Opts())
@@ -422,7 +422,7 @@ func newPluginAndInjectorWithID(containerID auditlog.ContainerID) (*auditlog.Plu
 // setupWithDB returns a plugin and injector with a single *Database registered
 // under "db" and already invoked. The standard 4-line "register + invoke"
 // preamble that opens most plugin-level tests.
-func setupWithDB(url string) (*auditlog.Plugin, do.Injector) { //nolint:ireturn
+func setupWithDB(url string) (*auditlog.Plugin, do.Injector) {
 	p, injector := newPluginAndInjector()
 	provideDB(injector, "db", url)
 	_ = do.MustInvokeNamed[*Database](injector, "db")
@@ -464,7 +464,7 @@ func writeHTMLToString(t *testing.T) string {
 // that otherwise duplicate the same 8 lines of provideDB + MustInvokeNamed
 // boilerplate.
 //
-//nolint:ireturn // do.Injector is part of the public plugin API surface
+
 func setupRootAndChildScopeDBs(
 	rootName, rootURL, childName, childURL string,
 ) (*auditlog.Plugin, do.Injector, *do.Scope) {
@@ -535,7 +535,7 @@ func assertLen[T any](t *testing.T, label string, slice []T, want int) {
 	}
 }
 
-func newPluginWithCapture() (*auditlog.Plugin, *[]auditlog.Event, do.Injector) { //nolint:ireturn
+func newPluginWithCapture() (*auditlog.Plugin, *[]auditlog.Event, do.Injector) {
 	var captured []auditlog.Event
 
 	p := mustNew(auditlog.Config{
