@@ -323,6 +323,7 @@ Features:
 - **Export buttons** — download JSON/NDJSON/HTML snapshots
 - **Pagination** — handles 100+ services without overwhelming the browser
 - **CORS support** — embed the dashboard in external dashboards
+- **CSP-hardened** — `default-src 'none'` plus the `script-src 'unsafe-eval'` the embedded [Datastar](https://data-star.dev/) runtime needs (it compiles `data-*` expressions with `Function()`); `frame-ancestors 'none'` is enforced via an HTTP response header. Serve on localhost or a trusted network — this is a development tool, not a public-facing page.
 
 Run the standalone demo:
 
@@ -422,7 +423,7 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 
 | Signal                | Detail                                                                                     |
 | --------------------- | ------------------------------------------------------------------------------------------ |
-| **CSP hardened**      | HTML reports use `base-uri 'none'; frame-ancestors 'none'`                                 |
+| **CSP hardened**      | Reports pin `default-src 'none'` + `base-uri 'none'`; the live server enforces `frame-ancestors 'none'` as a response header |
 | **Fuzz tested**       | 8 fuzz targets covering HTML XSS, migration, diagrams, NDJSON                              |
 | **govulncheck**       | Runs on every CI push — zero known vulnerabilities                                         |
 | **108 linters**       | golangci-lint v2 with near-exhaustive linter set, minimal exemptions for tests and tooling |

@@ -45,6 +45,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **flake.nix `GOTOOLCHAIN` pinned to go1.26.7** (devShell + coverage + auditlog apps) in lockstep with go.mod.
 - **Docs synced to the above**: AGENTS.md toolchain-pin section (bump-in-same-commit rule), CONTRIBUTING.md, coverage-gate exclusion list, CSP claim (`default-src 'none'` is present), status reports.
 
+### Fixed — Website Deploy Pipeline (2026-09-02/04)
+
+- **Website workflow actually deploys**: the deploy job's second `setup-node` SHA was corrupted (unresolvable action), `firebase-tools` action-install was unreliable (switched to npm install, pinned `15.28.2`), the changelog guard ran from the wrong working directory, and `corepack` enablement had to precede `setup-node`. First fully green install → check → build → validate → deploy runs followed.
+- **HTML cache rule matches `cleanUrls` pages** (Firebase rewritten-path lookups were bypassing the cache headers).
+- **TypeScript pinned back to `^6.0.3`**: an automated dependency bump moved specifiers (TS `^7.0.2`/tsgo) without regenerating `pnpm-lock.yaml`, breaking `astro check` (`assertCompatibleTypeScript`) and the frozen-lockfile install; lockfile regenerated (also pulls `fast-uri 3.1.7`, closing four Dependabot advisories).
+- **Drift guards survive the `.golangci.yml` reformat** (`check-go-version.sh` no longer depends on single-line formatting).
+
+### Fixed — Live Dashboard (2026-09-04/11)
+
+- **SSE subscribe race closed** (`live/server.go`): a new SSE client's subscription was registered after the initial snapshot was rendered, so an event emitted in between existed in neither the snapshot nor the live stream — silently lost. Subscribe now happens before replay/snapshot: replay covers the past, the snapshot covers current state, everything after Subscribe arrives live.
+- **Live legend ordering uses `ProviderType` constants** instead of repeated string literals (removes a goconst/version-skew landmine).
+- **Dashboard ships with a working CSP again**: the embedded Datastar v1.0.2 runtime compiles every `data-*` expression with the `Function()` constructor, requiring `script-src 'unsafe-eval'` — the dashboard's CSP meta only allowed `'unsafe-inline'`, so the dashboard rendered nothing but `EvalError`s out of the box. CSP now includes `'unsafe-eval'` (documented tradeoff), and `frame-ancestors 'none'` — ignored inside `<meta>` per spec — is delivered as an HTTP response header by the live server instead. Static report meta cleaned of the dead directive (`base-uri 'none'` kept). New regression test `TestServer_DashboardCSP`; golden fixture regenerated.
+- **CI Lint job un-broken**: `.golangci.yml` used the schema-invalid key `min-length` (correct: `min-len`), which made `golangci-lint config verify` exit 3 on every golangci-lint version — killing the Lint job before `lint run` even started. Also: six inline `errors.New` in `example/services.go` converted to package-level sentinels (CI-blocking err113) and `FuzzFilterInputs` refactored below the gocognit threshold (behavior identical).
+
 ## [0.10.0] - 2026-08-14
 
 A minor release for integrations that must create the plugin before they know
