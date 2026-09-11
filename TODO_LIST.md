@@ -1,63 +1,53 @@
 # TODO List
 
-Short- and mid-term improvement tasks, verified against actual code state.
+Short- and mid-term improvement tasks, verified against actual code state on 2026-09-11.
 Completed items are in [CHANGELOG.md](CHANGELOG.md). Rejected proposals are in [ROADMAP.md](ROADMAP.md).
-Last updated: 2026-09-02
 
 ---
 
-## CI & Release (from the 2026-09-01 CI-repair + green-restoration sessions)
+## CI & Release
 
-- [x] ~~**Dependabot sweep**~~ — BLOCKED on Open Question 1 (merge vs supersede); not executable without the owner decision.
-- [x] ~~**Go-version drift guard**~~ DONE 2026-09-02 — `scripts/check-go-version.sh` asserts go.mod == ci.yml == flake GOTOOLCHAIN == .golangci.yml; self-tested (simulated drift → exit 1); wired into ci.yml test job + pre-commit; documented in AGENTS.md.
-- [x] ~~**`go mod tidy` / `go generate` retry wrapper in CI**~~ DONE 2026-09-02 — 3 attempts/15s on transport flakes only in both jobs (drift checks stay strict). Implemented under full-execution mandate; Open Question 2 remains open for ratification — revert if declined.
-- [x] ~~**Single-source coverage exclusions**~~ DONE 2026-09-02 — `scripts/coverage-exclusions.txt` consumed by both coverage-gate.sh and ci.yml; gate re-run at 95.2% parity.
-- [ ] **Website workflow end-to-end proof** — The 2026-09-01 run `33562593783` was the workflow's first real execution and died on missing `pnpm` (fixed in working tree: `pnpm/action-setup` v4.1.0 + `--frozen-lockfile`). Next `website/**` push must show the full install → `astro check` → build → html-validate → deploy path green. Also run the same steps locally once. Sources: run log, launch report §b.2, plan T06.
-- [x] ~~**CI ergonomics**~~ DONE 2026-09-02 — concurrency group, coverage step-summary (per-func table), `workflow_dispatch`, weekly vulncheck cron, per-job `timeout-minutes: 15`. The paths-ignore decision stays open (owner Q2).
-- [x] ~~**Pin govulncheck + firebase-tools; weekly scheduled vulncheck**~~ DONE 2026-09-02 — govulncheck pinned @v1.7.0, firebase-tools pinned @15.28.2, `schedule:` cron added.
-- [x] ~~**Lint infra**~~ DONE 2026-09-02 — golangci-lint binary cached via actions/cache (skips source compile on hit); depguard re-enabled as the import-boundary policy (only candidate with per-path rules for the cmd/genschema invopop exception; unconfigured gomodguard_v2 removed); nolint ledger corrected (3 of 4 sites were removed by `cf5f205`; remaining `live/fragments.go:181` goconst retires at pin ≥ 2.13).
-- [ ] **Release prep v0.10.1** — CHANGELOG Fixed entries (done for the CI repair below), re-baseline BENCHMARKS.md on Go 1.26.7 (table still records the 1.26.5 environment), tag from a fully green master, verify goreleaser v2.17.1 + tag flow, then confirm `go get …@latest` resolves. Sources: round-2 §f.16–17,46, plan T12. **Unreleased section is pre-filled (DepsChanged, strict enum validation, CI hardening); tagging remains blocked on push+green CI.**
-- [x] ~~**Plumbing truths**~~ DONE 2026-09-02 — locked nixpkgs go_1_26 = **1.26.7** (exact GOTOOLCHAIN match, hermetic). Smoke runs found and fixed **two real flake bugs**: `nix run` apps pointed at the store directory instead of `bin/<name>` (Permission denied), and the coverage app forced `CGO_ENABLED=0` breaking `-race`. Both apps now verified green (`.#auditlog -- help`, `.#coverage` → 95.2%).
-- [x] ~~**Full fuzz sweep on Go 1.26.7**~~ DONE 2026-09-02 — 8/8 targets × 20s, all clean.
-- [x] ~~**Nix templ-regression guard**~~ DONE 2026-09-02 — root cause confirmed fixed (all 3 generated files committed, no templ gitignore entry); CI guard added to stale-generation job asserting presence BEFORE `go generate` (which would otherwise mask the v0.9.0 retraction class).
-- [x] ~~**Sibling-repo pin audit**~~ DONE 2026-09-02 — **3 corrupted SHAs found and fixed in go-workflow-auditlog** (setup-node 39-char ×2, upload-artifact 36-char; verified unresolvable via GitHub API → GitHub 422). go-sse clean (all 40-char, `go-version-file` single-source); go-ndjson/go-health have no actions to audit.
-- [x] ~~**Website docs sync**~~ DONE 2026-09-02 — contributing.mdx updated (7 CI jobs incl. actionlint + example-smoke, pinned govulncheck invocation, Go 1.26.7); README/STABILITY re-verified via `scripts/check-doc-claims.sh` (green).
-- [ ] **Owner-side protections** (repo settings, admin only): branch protection with the 7 required checks + Website for website paths; Dependabot auto-merge + rebase strategy; master-failure notification. Sources: CI-repair §f.7–8,39, round-2 §f.22–24, plan T15.
+- [ ] **Release v0.10.1** — `[Unreleased]` is pre-filled (DepsChanged, strict enum validation, CI hardening, website deploy fixes, live dashboard CSP/SSE fixes); tag from green master, verify goreleaser v2.17.1 + tag flow, confirm `go get …@latest` resolves. Sources: round-2 §f.16–17, plan T12, 2026-09-11 §c.1.
+- [ ] **Push master and confirm all CI jobs green** — the 2026-09-11 CSP/lint fixes are local-verified only (`go test -race` green, lint 0 issues, gate 95.5%); master CI has not re-run since 2026-09-10. Push requires owner approval. Source: 2026-09-11 §b.2.
+- [ ] **Upgrade CI golangci-lint pin v2.12.2 → ≥ v2.13.x** — then retire the `live/fragments.go:181` `//nolint:goconst` version-skew ledger entry and re-verify the whole matrix. Sources: 2026-09-11 §f.11–12, version-skew ledger (AGENTS.md).
+- [ ] **Triage the 3 open Dependabot PRs** — go-sse/ssetest 0.2.0 → 0.3.0 (Go dep, closest to core), website astro 7.3.1, html-validate 11.15.0. Blocked on the owner merge-vs-supersede decision (Q1). Sources: 2026-09-11 §c.4, CI-repair §f.3.
+- [ ] **Extend the claims linter** beyond the 5 numeric fact families (method names, env-var semantics, feature counts) — the manual audits keep finding classes it misses. Source: 126-task run §e.9.
+- [ ] **Deeper go-sse/go-ndjson dependency audit** — retracted/poisoned tags, testhelpers pseudo-versions (the failure class that bit go-output v0.31.1). Source: 126-task run §f.49.
 
-## Website & Demo (from the 2026-09-01 launch session)
+## Live Dashboard & Browser QA
 
-- [x] ~~**Re-verify final mp4 frame at t≈21.2s**~~ DONE 2026-09-02 — ffmpeg frames at 21.2/22.8/23.1/23.6s visually inspected: terminal sequence clean, zero stray characters.
-- [x] ~~**og:image for docs pages**~~ DONE 2026-09-02 — og:image + twitter:card/twitter:image added to Starlight `head` config (site-wide, all docs pages); landing already had its own.
-- [ ] **Mobile + light-theme QA** — screenshots at 375/768/1024 of landing, docs, and video player; Starlight light theme + landing light mode after the redesign edits. Source: launch report §b.4–5.
-- [ ] **Real-browser playback smoke test of `/demo.mp4`** — click-play, seek, range requests through the site player. Source: launch report §b.3.
-- [ ] **Script the CHANGELOG.md → changelog.mdx sync** — the docs-site changelog drifted 2 releases behind before being manually synced; nothing enforces it. Source: launch report §b.6/e.2.
-- [x] ~~**Claims linter for README/docs**~~ DONE 2026-09-02 — `scripts/check-doc-claims.sh` (go/schema-version/coverage-gate/linter-count/fuzz-count vs sources); immediately caught 3 stale README claims (109→108 linters, 5→8 fuzz targets in two places); wired into pre-commit.
+- [ ] **Headless-chromium E2E smoke of the live dashboard** — open it, assert zero console errors, signals initialize, fragments render; also cover the export buttons (blob downloads under `default-src 'none'`) and `live/demo` (same server). The 2026-09-11 CSP fix was verified at string/header/test level only. Sources: 2026-09-11 §b.1/§f.2, 5, 19, 21.
+- [ ] **Investigate newer Datastar for CSP-safe expression evaluation** — would drop `script-src 'unsafe-eval'` from the dashboard CSP. Decides whether the unsafe-eval tradeoff is permanent. Source: 2026-09-11 §f.6.
+- [ ] **Add `X-Frame-Options: DENY`** next to the `frame-ancestors 'none'` response header (legacy-browser complement, XS). Source: 2026-09-11 §f.10.
+- [ ] **Parse the CSP meta tag properly in `TestServer_DashboardCSP`** instead of substring-matching the whole body; add the root-prefix (`Prefix: "/"`) variant. Sources: 2026-09-11 §f.13, 18.
+- [ ] **Sweep for other header-only CSP directives** (`sandbox`, `report-uri`) accidentally placed in any meta tag (XS). Source: 2026-09-11 §f.26.
+- [ ] **Check `WriteHTMLTree` (tree.go) HTML document for CSP needs/claims** (S). Source: 2026-09-11 §f.17.
+- [ ] **live/ coverage → 90%** — currently 79.8%; fragment-renderer error/empty-state tests are the biggest gap (per-function data 2026-09-02: `fragments_templ.go` 58–78%). Test batches 2–4 of the plan. Source: plan T69–T72, ROADMAP internal bar.
+
+## Library & Tooling
+
+- [ ] **CLI ergonomic flags** — `--input-format` for `convert`, `--verbose`/`--quiet`; requested in the v0.1.0-era report, still absent from `cmd/auditlog`. Source: v0.1.0 report §c.5–6.
+- [ ] **Investigate the empty `injector.Shutdown()` error** observed in the live fragment test fixture (non-nil, empty error from two plain services) — real samber/do quirk or something wrong on our side. Source: 126-task run §d.5.
+- [ ] **Fix the pre-existing gopls scannererr at `live/server_test.go:724`** (bufio Scanner without final `Err()` check, XS). Source: 2026-09-11 §c.6.
+- [ ] **`fuzzFilterOptions` → return `(opts, names)`** to avoid the double `tokenize(data)` (XS). Source: 2026-09-11 §f.15.
+- [ ] **Tidy `example/services.go` var-block** — sentinels + interface assertions sit under a misleading `// Cache implements…` comment (XS). Source: 2026-09-11 §f.16.
+- [ ] **BENCHMARKS.md benchstat comparison** vs the Go 1.26.5 baseline; label toolchain-vs-code deltas. Source: 126-task run §f.9.
+- [ ] **Add `SECURITY.md`** (security policy / reporting channel; XS). Source: regression-tests report §f.40.
+
+## Website & Docs
+
+- [ ] **Script the CHANGELOG.md → changelog.mdx sync** — the docs-site changelog drifted 2 releases behind before being synced manually; `check-changelog-sync.sh` catches drift but nothing automates it. Source: launch report §b.6/e.2.
+- [ ] **Mobile + light-theme QA** — screenshots at 375/768/1024 of landing, docs, and video player; Starlight light theme pass. Source: launch report §b.4–5.
+- [ ] **Real-browser playback smoke test of `/demo.mp4`** — click-play, seek, range requests. Source: launch report §b.3.
 - [ ] **Lighthouse audit** of landing + one docs page; fix top offenders. Source: launch report §f.13.
-
-## Library & Tooling (from the 2026-09-01 docs-health audit of historical reports)
-
-- [x] ~~**Diff: compare dependency edges**~~ DONE 2026-09-02 — `ServiceDiff.AddedDeps`/`RemovedDeps` implemented + 5 tests + STABILITY/CHANGELOG rows (doc-lie fixed 2026-09-01).
-- [x] ~~**Stale-changelog guard**~~ DONE 2026-09-02 — `scripts/check-changelog-sync.sh` (version-list comparison, POSIX-safe fail path); self-tested both paths (16 releases in sync / simulated drift → exit 1); wired into website.yml build job.
-- [x] ~~**`example/` CI smoke test**~~ DONE 2026-09-02 — `example-smoke` job added (verified locally: exit 0 with the 23-feature self-check).
-- [x] ~~**Strict event/report enum parsing**~~ DONE 2026-09-02 — validate-at-load (design: preserves forward compatibility vs strict UnmarshalJSON): `ReadEvents` now also rejects unknown `provider_type`; `ReplayEvents` validates all three enums per event (previously silently dropped unknown types = lossy replay); empty provider_type still legal; all sentinels classified Corruption; tested.
-- [ ] **CLI ergonomic flags** — `--input-format` for `convert`, `--verbose/--quiet`; both requested in the v0.1.0-era report, still absent from `cmd/auditlog`.
-
-## From the 2026-09-02 Pareto master plan
-
-Full 126-task breakdown: `docs/planning/2026-09-02_14-15-pareto-master-plan-all-126-todos.html`. Items below are new (not already listed above):
-
-- [x] ~~**Verify `example/ --live` premature-shutdown bug** — repro with `DO_AUDITLOG_ENABLED=true go run ./example --live`; restore a TODO item if real, annotate the audit report if fixed. Blocks on Open Question g.2. Source: plan T09–T10.~~ DONE 2026-09-02 — verified empirically: NOT a malfunction. Both `example/ --live` and `live/demo` intentionally run the full lifecycle at startup (~6s) then serve the final state until Ctrl+C ("Lifecycle complete. Dashboard shows final state."). Nothing crashes or shuts down early. The only defect was misleading instructions — fixed in both demos (lifecycle timing now stated). The ROADMAP pointer deleted in the docs-health session was correct cleanup.
-- [ ] **Ground the ROADMAP live/-coverage causal claim** — per-file coverage run; confirm or delete the "datastar rewrite outpaced tests" attribution. Source: plan T11–T12.
-- [ ] **Straggler annotations (one-time)** — strike items this session's fixes resolved: website report §b.7 (pnpm), round-2 self-critique 4, CI-repair self-critique 1–4. Source: plan T13–T15.
-- [ ] **live/ 90% coverage path** — per-file coverage table → fragment-renderer test plan → test batches (78.3% today; the ROADMAP internal-bar item). Source: plan T69–T72.
-- [x] ~~**Verify README Mermaid sample**~~ DONE 2026-09-02 — dumped real `WriteMermaidString()` output; sample + note rewritten truthfully (real node IDs are scope-UUID+FQN slugs, alias edges not drawn, warm-amber per-node styling).
-- [ ] **GOEXPERIMENT=jsonv2 note in `doc.go`** — godoc/pkg.go.dev discoverability of the build-flag requirement. Source: plan T74.
-- [x] ~~**Audit `docs/DOMAIN_LANGUAGE.md`**~~ DONE 2026-09-02 — added Streaming & Real-Time section (NDJSON, OnEvent, Streaming, MultiWriter, Run ID, Replay, Ring Buffer).
+- [ ] **Markdown formatter pass over the living docs** — table padding is ragged in places; no CI gate checks markdown. Source: docs-health 2026-09-02 critique 6.
+- [ ] **README polish** — Go Report Card badge, latest-release badge, table of contents. Sources: readme-fixes §f.16–17, 11-22 §TBL.29.
 
 ## Open Owner Questions (blockers, not tasks)
 
-1. Merge the 3 open Dependabot website PRs, or is the (now-committed) website overhaul meant to supersede them?
-2. Approve CI behavior changes: tidy-retry wrapper and/or docs-only `paths-ignore`? Both reduce random reds; both change what "a red X" means.
-3. Approve execution of the remaining Pareto waves (`docs/planning/2026-09-01_21-43_pareto-plan-master-ci-green.md` — T04–T19, ≈14h)?
-4. Register the SSH commit-signing key on GitHub (release tags currently show `unverified`) — admin-only, flagged in the v0.8.0 integrity reports.
-5. Auto-commit daemon policy: commits kept landing mid-session in v0.9.0/v0.10.0 despite sessions assuming manual control — is the daemon canonical, and should sessions pause it?
+1. Merge the 3 open Dependabot website/ssetest PRs, or supersede? (Blocks the triage TODO.)
+2. Approve CI behavior changes: tidy-retry wrapper (shipped, pending ratification) and/or docs-only `paths-ignore`?
+3. May master be pushed so CI can confirm green (CSP + lint fixes are local-verified only)? Includes rescuing the four substantive 2026-09-11 fixes from `chore: auto-commit` history via a properly-messaged follow-up commit.
+4. Register the SSH commit-signing key on GitHub (release tags show `unverified`) and enable branch protection + Dependabot auto-merge + master-failure notifications.
+5. Auto-commit daemon policy: is it canonical, and should sessions pause it before bulk work? (Recurred in v0.9.0, v0.10.0, the 126-task run, and 2026-09-11.)
+6. Is the live dashboard ever deployed beyond localhost/dev? Decides whether `script-src 'unsafe-eval'` is an acceptable permanent tradeoff or a Datastar upgrade becomes a priority.

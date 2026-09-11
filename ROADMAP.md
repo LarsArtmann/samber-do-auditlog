@@ -12,10 +12,10 @@ The public stability stage is **BETA** ([STABILITY.md](STABILITY.md)): the API i
 The internal quality bar on the path to 1.0:
 
 1. ~~`go-sse` and `go-ndjson` published to GitHub with stable tags~~ ✓ (replace directives removed). The temporary `go-output/testhelpers` replacements have also been removed; explicit indirect requirements select their valid published tags over upstream's broken pseudo-versions.
-2. `live/` sub-package coverage above 90% — **currently 78.3%** (2026-09-01 gate run; the datastar/templ rewrite and post-cleanup growth outpaced live tests — per-function data 2026-09-02 confirms the templ fragment renderers are the dominant gap, mostly 58–78% coverage). This is the main outstanding internal-bar item.
+2. `live/` sub-package coverage above 90% — **currently 79.8%** (2026-09-11 gate run; the datastar/templ rewrite and post-cleanup growth outpaced live tests — per-function data 2026-09-02 confirms the templ fragment renderers are the dominant gap, mostly 58–78% coverage). This is the main outstanding internal-bar item.
 3. `go-sse` dependency tracking is current (v0.5.1); keep the family of sibling libraries (go-output, go-sse, go-ndjson, go-atomic-write, go-error-family) on green, non-retracted tags.
 
-The coverage gate (94%, currently at 95.2%) and the `GOEXPERIMENT=jsonv2` flag are stable in CI. The live dashboard has reached feature parity with the static HTML export.
+The coverage gate (94%, currently at 95.5%) and the `GOEXPERIMENT=jsonv2` flag are stable in CI. The live dashboard has reached feature parity with the static HTML export.
 
 The path from BETA to 1.0 is:
 
@@ -43,7 +43,8 @@ The `live/` sub-package has reached feature parity with the static HTML export:
 
 - **Shipped**: scope tree tab, pagination, export buttons, CORS support, live demo (`live/demo/main.go`), `example/ --live` integration, SSE ring buffer replay, keyboard navigation, datastar-powered reactivity
 - **Shared CSS** ✓ — `DesignTokensCSS` (`design_tokens.go`) is the single source of truth, enforced by `TestDesignTokensInSync` and `TestSharedComponentCSSInSync`
-- **Raise live/ test coverage** — 78.3% today vs the 90% internal bar; the templ fragment renderers are the biggest untested surface (confirmed by per-function coverage 2026-09-02: `fragments_templ.go` functions at 58–78%, plus two 50% handlers in `server.go`)
+- **Raise live/ test coverage** — 79.8% today vs the 90% internal bar; the templ fragment renderers are the biggest untested surface (confirmed by per-function coverage 2026-09-02: `fragments_templ.go` functions at 58–78%, plus two 50% handlers in `server.go`)
+- **live/ benchmarks** — Hub broadcast, SSE stream, and fragment-render throughput have no benchmarks at all (root package has 12)
 - **Dark/light theme toggle** — The warm amber aesthetic currently has no light variant
 - **Cross-origin CSP** — CORS headers are set but `connect-src 'self'` blocks cross-origin dashboard embedding; needs configurable CSP or documentation of the limitation
 
@@ -78,16 +79,20 @@ Born from the 2026-09-01 outage post-mortem (33 days of red master):
 
 These are ideas that need design exploration before becoming TODO items:
 
-- **Diff deepening** — beyond the planned `DepsChanged` (TODO_LIST): a `ScopeDiff` type, event-type deltas, and a `--format` for CI-friendly diff output. Requested June 2026, design never explored.
+- **Diff deepening** — beyond the shipped `DepsChanged`: a `ScopeDiff` type, event-type deltas, and a `--format` for CI-friendly diff output. Requested June 2026, design never explored.
 - **Event schema versioning** — NDJSON event lines carry no `schema_version` (only the report does); replay of future-schema event streams is silently lossy. Needs a design before the next schema bump.
 - **Schema-validation mode** — optional `auditlog validate --schema` against the embedded JSON Schema via a validator dependency (stdlib-only CLI decision currently blocks this).
 - **Docker image for the CLI** — goreleaser docker section; requested June 2026.
-- **Status-report retention policy** — `docs/status/` grows unbounded (68+ files, none archived since June); define an archive rule (e.g. archive on docs-health pass when zero open items) so the directory stays navigable.
+- **`docs/releases/` practice** — pre-write `docs/releases/vX.Y.Z.md` notes and cross-link from CHANGELOG (the v0.7.1/v0.9.0 hotfix cycles showed release notes assembled ad hoc).
 - **Branded type enforcement** — `ContainerID`, `ScopeID`, `ServiceName` are named string types but carry no validation. Consider constructors (`NewServiceName(string) (ServiceName, error)`) that reject empty strings or whitespace. Blocked on deciding whether validation belongs in the type or in the constructor.
 - **Event type splitting** — Currently `Event` is one struct with a `Phase` field (before/after). Making before-events and after-events separate types would make impossible states unrepresentable (e.g., a "before" event with a `DurationMs`). Large blast radius; needs careful migration plan.
 - **ServiceInfo sub-struct placement review** — `IsShutdowner` is in `ServiceLifecycle` but `IsHealthchecker` is in `ServiceHealth`. Both are capability flags detected by `do.ExplainInjector`. This split-brain may be wrong. Moving `IsShutdowner` to `ServiceHealth` changes JSON field order.
 - **`ScopeName` as a named type** — Currently plain `string`, unlike `ScopeID` and `ServiceName`. Left as `string` because it's display-only. Consistency gap.
 - **Duration as `time.Duration`** — `DurationMs` is `*float64`. Could be `time.Duration` for idiomatic Go, but this would change the JSON schema and break consumers.
+- **`go-atomic-write` `WriteFuncVerified` / `WriteIfChanged` evaluation** — audit exports use plain `WriteFunc`; the verified/fingerprint and change-detecting variants were never evaluated for the export paths.
+- **Diagram regression tests beyond D2/DOT** — Mermaid/PlantUML hex-color quoting has no regression test (D2 and DOT do); cross-format color-consistency test would catch them together.
+- **Replay fidelity gaps** — `ReplayEvents` restores neither capability flags (`IsHealthchecker`/`IsShutdowner`, always false on replay — `replay.go` documents it) nor the parent/child scope tree (flattened). Both are accepted limitations today; fix if replay fidelity becomes a use case.
+- **Accessibility long-tail** — ARIA grid tables, `aria-live` announcements (filter counts, SSE connect/reconnect), WCAG contrast audit, graph keyboard traversal. The WAI-ARIA tablist/dialog baseline shipped; these are the follow-ups.
 
 ---
 
@@ -106,8 +111,8 @@ Ideas for deeper documentation (website + README):
 
 ## Open Questions (owner input needed)
 
-- Merge the 3 open Dependabot website PRs vs. treat the committed website overhaul as superseding them (blocks the Wave-0 finisher).
-- Approve CI behavior changes: tidy-retry wrapper, docs-only `paths-ignore`.
+Owner-blocking questions with task context live in [TODO_LIST.md](TODO_LIST.md); only product-direction questions live here.
+
 - Hero video: stay click-to-play, or muted autoplay/loop above the fold?
 - Deploy path: is "push-triggered CI deploy" the definition of deployed, or is manual `firebase deploy` a supported runbook step?
 
