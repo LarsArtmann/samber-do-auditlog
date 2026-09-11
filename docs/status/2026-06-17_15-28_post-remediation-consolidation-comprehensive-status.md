@@ -90,15 +90,15 @@ These were identified in previous audits but not attempted:
 6. ~~**CSV / TSV export** of services/events.~~ done (cmd/auditlog)
 7. ~~**CLI tool** for report conversion/export/visualization.~~ done (websocket-stream.md + live/ SSE)
 8. ~~**WebSocket live stream** bridge for `OnEvent`.~~ done (ci.yml actions v7)
-9. ~~**GitHub Actions version upgrades** — `actions/checkout@v4` → v5, `actions/setup-go@v5` → v6 (when stable).~~ done (ci.yml actionlint job)
-10. **actionlint** integration for workflow validation.
+9. ~~**GitHub Actions version upgrades** — `actions/checkout@v4` → v5, `actions/setup-go@v5` → v6 (when stable).~~ done (ci.yml actions v7)
+10. ~~**actionlint** integration for workflow validation.~~ done (ci.yml actionlint job)
 11. **gosec** already enabled in golangci-lint config, but a dedicated `gosec` CI step could provide deeper SAST.
 12. ~~**HTML integration test** realistic multi-service golden-file or DOM assertions.~~ done (html_golden_test.go)
 13. ~~**Fuzz filter inputs** — arbitrary `ReportOption` combinations.~~ done (FuzzFilterInputs)
 14. ~~**Flake app for coverage gate** to replace inline shell in CI.~~ done (flake.nix coverage app)
 15. ~~**`Report.Validate()` → constructor validation** — make invalid reports unrepresentable.~~ done (report.go NewReport)
 16. ~~**Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName` as distinct string types).~~ done (types.go named types)
-17. **Split `ServiceInfo`** into lifecycle sub-structs (identity / lifecycle / health / graph).
+17. ~~**Split `ServiceInfo`** into lifecycle sub-structs (identity / lifecycle / health / graph).~~ done (service.go sub-structs)
 
 ---
 
@@ -172,31 +172,31 @@ Sorted by **Impact × Customer-Value ÷ Effort**:
 
 | #  | Task                                                            | Impact | Effort     | Category     |
 | -- | --------------------------------------------------------------- | ------ | ---------- | ------------ |
-| 1  | **CHANGELOG + TODO + AGENTS update** (refactor visibility)      | 🟠 Med | ⚪ Trivial | Docs         |
-| 2  | **Fix `html_templ.go` drift** (`.gitattributes`)                | 🟠 Med | ⚪ Trivial | DevEx        |
-| 3  | **Parallelize remaining 18 sequential tests**                   | 🟡 Low | ⚪ Trivial | Testing      |
-| 4  | **Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`) | 🟠 Med | 🔵 Low     | Architecture |
-| 5  | **NDJSON import** (trivial now with `buildReportFromCore`)      | 🟠 Med | 🔵 Low     | Feature      |
-| 6  | **v0.1.0 release**                                              | 🟠 Med | 🟡 Med     | Release      |
-| 7  | **JSON Schema file**                                            | 🟠 Med | 🔵 Low     | Docs/API     |
-| 8  | **CSV/TSV export**                                              | 🟡 Low | 🔵 Low     | Feature      |
-| 9  | **Refactor `ServiceInfo` lifecycle concerns**                   | 🟠 Med | 🔴 High    | Architecture |
-| 10 | **Property-based `Diff` tests**                                 | 🟡 Low | 🔵 Low     | Testing      |
-| 11 | **Property-based `MigrateReport` tests**                        | 🟡 Low | 🔵 Low     | Testing      |
-| 12 | **Fuzz filter inputs**                                          | 🟡 Low | 🔵 Low     | Testing      |
-| 13 | **HTML golden-file test**                                       | 🟠 Med | 🟡 Med     | Testing      |
-| 14 | **`Report` constructor validation**                             | 🟠 Med | 🟡 Med     | Architecture |
-| 15 | **Prometheus exporter example**                                 | 🟠 Med | 🟡 Med     | Docs         |
-| 16 | **Add `actionlint` to CI**                                      | 🟡 Low | ⚪ Trivial | CI           |
-| 17 | **GitHub Actions version upgrades**                             | 🟡 Low | ⚪ Trivial | CI           |
-| 18 | **Flake app for coverage gate**                                 | 🟡 Low | 🔵 Low     | DevEx        |
-| 19 | **`RELEASING.md`** or release checklist                         | 🟡 Low | ⚪ Trivial | Docs         |
-| 20 | **CLI tool** for report conversion                              | 🟢 Low | 🔴 High    | Feature      |
-| 21 | **WebSocket live stream**                                       | 🟢 Low | 🔴 High    | Feature      |
-| 22 | **`pgregory/rapid`** for property-based testing                 | 🟡 Low | 🔵 Low     | Testing      |
-| 23 | **`invopop/jsonschema`** for schema generation                  | 🟠 Med | 🔵 Low     | Docs/API     |
+| ~~1~~  | ~~**CHANGELOG + TODO + AGENTS update** (refactor visibility)~~ done — CHANGELOG+docs updated | ~~🟠 Med~~ | ~~⚪ Trivial~~ | ~~Docs~~ |
+| ~~2~~  | ~~**Fix `html_templ.go` drift** (`.gitattributes`)~~ done — .gitattributes *_templ.go | ~~🟠 Med~~ | ~~⚪ Trivial~~ | ~~DevEx~~ |
+| ~~3~~  | ~~**Parallelize remaining 18 sequential tests**~~ done — 2026-06-17_18-50 session | ~~🟡 Low~~ | ~~⚪ Trivial~~ | ~~Testing~~ |
+| ~~4~~  | ~~**Typed identifiers** (`ContainerID`, `ScopeID`, `ServiceName`)~~ done — types.go | ~~🟠 Med~~ | ~~🔵 Low~~ | ~~Architecture~~ |
+| ~~5~~  | ~~**NDJSON import** (trivial now with `buildReportFromCore`)~~ done — loader.go ReadEvents | ~~🟠 Med~~ | ~~🔵 Low~~ | ~~Feature~~ |
+| ~~6~~  | ~~**v0.1.0 release**~~ done — v0.1.0 tagged — now v0.10.0 | ~~🟠 Med~~ | ~~🟡 Med~~ | ~~Release~~ |
+| ~~7~~  | ~~**JSON Schema file**~~ done — schema/report.schema.json | ~~🟠 Med~~ | ~~🔵 Low~~ | ~~Docs/API~~ |
+| ~~8~~  | ~~**CSV/TSV export**~~ done — csv.go | ~~🟡 Low~~ | ~~🔵 Low~~ | ~~Feature~~ |
+| ~~9~~  | ~~**Refactor `ServiceInfo` lifecycle concerns**~~ done — service.go | ~~🟠 Med~~ | ~~🔴 High~~ | ~~Architecture~~ |
+| ~~10~~ | ~~**Property-based `Diff` tests**~~ done — diff_property_test.go | ~~🟡 Low~~ | ~~🔵 Low~~ | ~~Testing~~ |
+| ~~11~~ | ~~**Property-based `MigrateReport` tests**~~ done — migration_property_test.go | ~~🟡 Low~~ | ~~🔵 Low~~ | ~~Testing~~ |
+| ~~12~~ | ~~**Fuzz filter inputs**~~ done — FuzzFilterInputs | ~~🟡 Low~~ | ~~🔵 Low~~ | ~~Testing~~ |
+| ~~13~~ | ~~**HTML golden-file test**~~ done — html_golden_test.go | ~~🟠 Med~~ | ~~🟡 Med~~ | ~~Testing~~ |
+| ~~14~~ | ~~**`Report` constructor validation**~~ done — report.go NewReport | ~~🟠 Med~~ | ~~🟡 Med~~ | ~~Architecture~~ |
+| ~~15~~ | ~~**Prometheus exporter example**~~ done — prometheus-bridge.md | ~~🟠 Med~~ | ~~🟡 Med~~ | ~~Docs~~ |
+| ~~16~~ | ~~**Add `actionlint` to CI**~~ done — ci.yml actionlint | ~~🟡 Low~~ | ~~⚪ Trivial~~ | ~~CI~~ |
+| ~~17~~ | ~~**GitHub Actions version upgrades**~~ done — ci.yml actions v7 | ~~🟡 Low~~ | ~~⚪ Trivial~~ | ~~CI~~ |
+| ~~18~~ | ~~**Flake app for coverage gate**~~ done — flake.nix | ~~🟡 Low~~ | ~~🔵 Low~~ | ~~DevEx~~ |
+| ~~19~~ | ~~**`RELEASING.md`** or release checklist~~ done — RELEASE.md | ~~🟡 Low~~ | ~~⚪ Trivial~~ | ~~Docs~~ |
+| ~~20~~ | ~~**CLI tool** for report conversion~~ done — cmd/auditlog | ~~🟢 Low~~ | ~~🔴 High~~ | ~~Feature~~ |
+| ~~21~~ | ~~**WebSocket live stream**~~ done — websocket-stream.md | ~~🟢 Low~~ | ~~🔴 High~~ | ~~Feature~~ |
+| ~~22~~ | ~~**`pgregory/rapid`** for property-based testing~~ **Won't implement — stdlib fuzz/property tests shipped instead.** | ~~🟡 Low~~ | ~~🔵 Low~~ | ~~Testing~~ |
+| ~~23~~ | ~~**`invopop/jsonschema`** for schema generation~~ done — go.mod invopop direct | ~~🟠 Med~~ | ~~🔵 Low~~ | ~~Docs/API~~ |
 | 24 | **Upgrade Go further** (1.27 when released)                     | 🟡 Low | ⚪ Trivial | Deps         |
-| 25 | **Explore `samber/do` v2.1+** new APIs                          | 🟡 Low | 🔵 Low     | Deps         |
+| ~~25~~ | ~~**Explore `samber/do` v2.1+** new APIs~~ done — go.mod samber/do v2.1.0 | ~~🟡 Low~~ | ~~🔵 Low~~ | ~~Deps~~ |
 
 ---
 
