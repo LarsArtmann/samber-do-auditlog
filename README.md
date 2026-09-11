@@ -421,14 +421,14 @@ In-memory capture — no file I/O during container operation. You pay the cost o
 
 ## Security & Quality
 
-| Signal                | Detail                                                                                     |
-| --------------------- | ------------------------------------------------------------------------------------------ |
+| Signal                | Detail                                                                                                                       |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | **CSP hardened**      | Reports pin `default-src 'none'` + `base-uri 'none'`; the live server enforces `frame-ancestors 'none'` as a response header |
-| **Fuzz tested**       | 8 fuzz targets covering HTML XSS, migration, diagrams, NDJSON                              |
-| **govulncheck**       | Runs on every CI push — zero known vulnerabilities                                         |
-| **108 linters**       | golangci-lint v2 with near-exhaustive linter set, minimal exemptions for tests and tooling |
-| **94% coverage gate** | CI fails if coverage drops below 94% of non-example/cmd statements                         |
-| **JSON Schema**       | Canonical Draft 2020-12 schema generated from Go types                                     |
+| **Fuzz tested**       | 8 fuzz targets covering HTML XSS, migration, diagrams, NDJSON                                                                |
+| **govulncheck**       | Runs on every CI push — zero known vulnerabilities                                                                           |
+| **108 linters**       | golangci-lint v2 with near-exhaustive linter set, minimal exemptions for tests and tooling                                   |
+| **94% coverage gate** | CI fails if coverage drops below 94% of non-example/cmd statements                                                           |
+| **JSON Schema**       | Canonical Draft 2020-12 schema generated from Go types                                                                       |
 
 ## Documentation
 

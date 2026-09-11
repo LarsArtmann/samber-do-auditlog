@@ -121,33 +121,33 @@
 
 Sorted by impact ÷ effort (highest first):
 
-| #  | Task                                                            | Impact | Effort  | Notes                                                             |
-| -- | --------------------------------------------------------------- | ------ | ------- | ----------------------------------------------------------------- |
-| ~~1~~  | ~~**Typed identifiers** (`ScopeID`, `ServiceName`, `ContainerID`)~~ done — types.go | ~~High~~ | ~~Low~~ | ~~Compiler-enforced safety; existing `ServiceRef` pattern to follow~~ |
-| ~~2~~  | ~~**NDJSON import** (`ReadNDJSON`)~~ done — ReadEvents | ~~Medium~~ | ~~Low~~ | ~~Symmetry with export; trivial via `buildReportFromCore`~~ |
-| ~~3~~  | ~~**CSV/TSV export**~~ done — csv.go | ~~Medium~~ | ~~Low~~ | ~~`encoding/csv`, no dep; high value for data analysis~~ |
-| ~~4~~  | ~~**JSON Schema file** (`schema.json`)~~ done — schema/report.schema.json | ~~High~~ | ~~Medium~~ | ~~Biggest gap for consumers; blocks v0.1.0~~ |
-| ~~5~~  | ~~**`NewReport(...)` constructor**~~ done — report.go NewReport | ~~Medium~~ | ~~Low~~ | ~~Makes invalid reports unrepresentable~~ |
-| ~~6~~  | ~~**HTML golden-file test**~~ done — html_golden_test.go | ~~Medium~~ | ~~Medium~~ | ~~Deterministic multi-service → golden file~~ |
-| ~~7~~  | ~~**DOT export** (via go-output v0.12.0)~~ done — dot.go | ~~Low~~ | ~~Low~~ | ~~Clean dep surface now; trigger to adopt go-output~~ |
-| ~~8~~  | ~~**Property-based `Diff` tests**~~ done — diff_property_test.go | ~~Medium~~ | ~~Low~~ | ~~Random reports, symmetry assertions~~ |
-| ~~9~~  | ~~**Property-based `MigrateReport` tests**~~ done — migration_property_test.go | ~~Medium~~ | ~~Low~~ | ~~Arbitrary JSON → migrate → validate~~ |
-| ~~10~~ | ~~**Split `ServiceInfo`** into identity/lifecycle/health/graph~~ done — service.go | ~~High~~ | ~~High~~ | ~~Breaking change; decide before v0.1.0~~ |
-| ~~11~~ | ~~**Fuzz filter inputs**~~ done — FuzzFilterInputs | ~~Low~~ | ~~Low~~ | ~~Arbitrary `ReportOption` combinations~~ |
-| ~~12~~ | ~~**Prometheus exporter example**~~ done — prometheus-bridge.md | ~~Medium~~ | ~~Low~~ | ~~Parallel to OTel bridge doc~~ |
-| ~~13~~ | ~~**`actionlint` in CI**~~ done — ci.yml actionlint | ~~Low~~ | ~~Trivial~~ | ~~Workflow validation~~ |
-| ~~14~~ | ~~**CLI tool** (`auditlog-convert`)~~ done — cmd/auditlog | ~~Medium~~ | ~~High~~ | ~~Report conversion/export binary~~ |
-| ~~15~~ | ~~**WebSocket live stream** bridge for `OnEvent`~~ done — websocket-stream.md | ~~Medium~~ | ~~High~~ | ~~Live dashboards~~ |
-| ~~16~~ | ~~**v0.1.0 release**~~ done — v0.1.0 tagged | ~~High~~ | ~~Medium~~ | ~~Blocked on #4 (schema) and decision on #10 (split)~~ |
-| ~~17~~ | ~~**`RELEASING.md`** or release checklist~~ done — RELEASE.md | ~~Low~~ | ~~Trivial~~ | ~~In CONTRIBUTING.md~~ |
-| ~~18~~ | ~~**`example/` smoke test**~~ done — ci.yml example-smoke | ~~Low~~ | ~~Low~~ | ~~At least a basic integration test~~ |
-| 19 | **Coverage gate as separate CI step**                           | Low    | Low     | Clearer failure messages                                          |
-| 20 | **Review `ServiceStatus` priority** for completeness            | Low    | Low     | Is there a missing state?                                         |
-| ~~21~~ | ~~**`docs/status/` retention policy**~~ **Won't implement — decided — archive/ + annotation practice.** | ~~Low~~ | ~~Trivial~~ | ~~Keep last 5, archive rest~~ |
-| 22 | **Benchmark the escaping functions**                            | Low    | Trivial | Ensure no hot-path regression                                     |
-| 23 | **Add diagram escaping edge cases to fuzz corpus**              | Low    | Trivial | Unicode, empty strings, very long names                           |
-| ~~24~~ | ~~**D2 export** (via go-output)~~ done — d2.go WriteD2 | ~~Low~~ | ~~Medium~~ | ~~Rich domain model; nice-to-have~~ |
-| ~~25~~ | ~~**Streaming report export**~~ done — stream.go NDJSONStreamer | ~~Medium~~ | ~~High~~ | ~~`io.Reader` for large reports~~ |
+| #      | Task                                                                                                    | Impact     | Effort      | Notes                                                                 |
+| ------ | ------------------------------------------------------------------------------------------------------- | ---------- | ----------- | --------------------------------------------------------------------- |
+| ~~1~~  | ~~**Typed identifiers** (`ScopeID`, `ServiceName`, `ContainerID`)~~ done — types.go                     | ~~High~~   | ~~Low~~     | ~~Compiler-enforced safety; existing `ServiceRef` pattern to follow~~ |
+| ~~2~~  | ~~**NDJSON import** (`ReadNDJSON`)~~ done — ReadEvents                                                  | ~~Medium~~ | ~~Low~~     | ~~Symmetry with export; trivial via `buildReportFromCore`~~           |
+| ~~3~~  | ~~**CSV/TSV export**~~ done — csv.go                                                                    | ~~Medium~~ | ~~Low~~     | ~~`encoding/csv`, no dep; high value for data analysis~~              |
+| ~~4~~  | ~~**JSON Schema file** (`schema.json`)~~ done — schema/report.schema.json                               | ~~High~~   | ~~Medium~~  | ~~Biggest gap for consumers; blocks v0.1.0~~                          |
+| ~~5~~  | ~~**`NewReport(...)` constructor**~~ done — report.go NewReport                                         | ~~Medium~~ | ~~Low~~     | ~~Makes invalid reports unrepresentable~~                             |
+| ~~6~~  | ~~**HTML golden-file test**~~ done — html_golden_test.go                                                | ~~Medium~~ | ~~Medium~~  | ~~Deterministic multi-service → golden file~~                         |
+| ~~7~~  | ~~**DOT export** (via go-output v0.12.0)~~ done — dot.go                                                | ~~Low~~    | ~~Low~~     | ~~Clean dep surface now; trigger to adopt go-output~~                 |
+| ~~8~~  | ~~**Property-based `Diff` tests**~~ done — diff_property_test.go                                        | ~~Medium~~ | ~~Low~~     | ~~Random reports, symmetry assertions~~                               |
+| ~~9~~  | ~~**Property-based `MigrateReport` tests**~~ done — migration_property_test.go                          | ~~Medium~~ | ~~Low~~     | ~~Arbitrary JSON → migrate → validate~~                               |
+| ~~10~~ | ~~**Split `ServiceInfo`** into identity/lifecycle/health/graph~~ done — service.go                      | ~~High~~   | ~~High~~    | ~~Breaking change; decide before v0.1.0~~                             |
+| ~~11~~ | ~~**Fuzz filter inputs**~~ done — FuzzFilterInputs                                                      | ~~Low~~    | ~~Low~~     | ~~Arbitrary `ReportOption` combinations~~                             |
+| ~~12~~ | ~~**Prometheus exporter example**~~ done — prometheus-bridge.md                                         | ~~Medium~~ | ~~Low~~     | ~~Parallel to OTel bridge doc~~                                       |
+| ~~13~~ | ~~**`actionlint` in CI**~~ done — ci.yml actionlint                                                     | ~~Low~~    | ~~Trivial~~ | ~~Workflow validation~~                                               |
+| ~~14~~ | ~~**CLI tool** (`auditlog-convert`)~~ done — cmd/auditlog                                               | ~~Medium~~ | ~~High~~    | ~~Report conversion/export binary~~                                   |
+| ~~15~~ | ~~**WebSocket live stream** bridge for `OnEvent`~~ done — websocket-stream.md                           | ~~Medium~~ | ~~High~~    | ~~Live dashboards~~                                                   |
+| ~~16~~ | ~~**v0.1.0 release**~~ done — v0.1.0 tagged                                                             | ~~High~~   | ~~Medium~~  | ~~Blocked on #4 (schema) and decision on #10 (split)~~                |
+| ~~17~~ | ~~**`RELEASING.md`** or release checklist~~ done — RELEASE.md                                           | ~~Low~~    | ~~Trivial~~ | ~~In CONTRIBUTING.md~~                                                |
+| ~~18~~ | ~~**`example/` smoke test**~~ done — ci.yml example-smoke                                               | ~~Low~~    | ~~Low~~     | ~~At least a basic integration test~~                                 |
+| 19     | **Coverage gate as separate CI step**                                                                   | Low        | Low         | Clearer failure messages                                              |
+| 20     | **Review `ServiceStatus` priority** for completeness                                                    | Low        | Low         | Is there a missing state?                                             |
+| ~~21~~ | ~~**`docs/status/` retention policy**~~ **Won't implement — decided — archive/ + annotation practice.** | ~~Low~~    | ~~Trivial~~ | ~~Keep last 5, archive rest~~                                         |
+| 22     | **Benchmark the escaping functions**                                                                    | Low        | Trivial     | Ensure no hot-path regression                                         |
+| 23     | **Add diagram escaping edge cases to fuzz corpus**                                                      | Low        | Trivial     | Unicode, empty strings, very long names                               |
+| ~~24~~ | ~~**D2 export** (via go-output)~~ done — d2.go WriteD2                                                  | ~~Low~~    | ~~Medium~~  | ~~Rich domain model; nice-to-have~~                                   |
+| ~~25~~ | ~~**Streaming report export**~~ done — stream.go NDJSONStreamer                                         | ~~Medium~~ | ~~High~~    | ~~`io.Reader` for large reports~~                                     |
 
 ---
 

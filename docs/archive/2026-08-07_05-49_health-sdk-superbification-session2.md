@@ -103,13 +103,13 @@ Cache delivers ~4.6× speedup over live evaluation.
 
 I changed `classify()` from two-state to three-state, but **5 doc comments across 3 files still describe the old behavior**. I discovered this during the self-review at the end of this session but did NOT fix them — the user asked for a status report, not more changes.
 
-| ~~File~~                 | ~~Line~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~Current text (stale)~~ | ~~What it should say~~ |
-| -------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| ~~`health/probe.go`~~    | ~~32~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~"non-critical failures are surfaced as individual check entries but do not affect the HTTP status code"~~ | ~~Should mention roll-up `warn`~~ |
-| ~~`health/probe.go`~~    | ~~68~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~"their failures appear in the response body but do not change the HTTP status code"~~ | ~~Should mention roll-up `warn`~~ |
+| ~~File~~                 | ~~Line~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**  | ~~Current text (stale)~~                                                                                                               | ~~What it should say~~                                          |
+| ------------------------ | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| ~~`health/probe.go`~~    | ~~32~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**    | ~~"non-critical failures are surfaced as individual check entries but do not affect the HTTP status code"~~                            | ~~Should mention roll-up `warn`~~                               |
+| ~~`health/probe.go`~~    | ~~68~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**    | ~~"their failures appear in the response body but do not change the HTTP status code"~~                                                | ~~Should mention roll-up `warn`~~                               |
 | ~~`health/handlers.go`~~ | ~~51-52~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~"200 when all critical services pass (non-critical failures appear as individual check entries but do not change the status code)"~~ | ~~Should mention three-state: 200 for pass+warn, 503 for fail~~ |
-| ~~`README.md`~~          | ~~340~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~"Non-critical failures surface as `warn` in the response body without triggering 503"~~ | ~~Should mention roll-up status is also `warn`~~ |
-| ~~`health/doc.go`~~      | ~~—~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** | ~~No mention of `Validate()` or three-state behavior~~ | ~~Should document both~~ |
+| ~~`README.md`~~          | ~~340~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**   | ~~"Non-critical failures surface as `warn` in the response body without triggering 503"~~                                              | ~~Should mention roll-up status is also `warn`~~                |
+| ~~`health/doc.go`~~      | ~~—~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**     | ~~No mention of `Validate()` or three-state behavior~~                                                                                 | ~~Should document both~~                                        |
 
 **Why this matters:** These are the user-facing descriptions that consumers read first. They now under-describe the actual behavior. The code is correct; the docs are stale.
 
@@ -121,19 +121,19 @@ I changed `classify()` from two-state to three-state, but **5 doc comments acros
 
 ## c) NOT STARTED
 
-| ~~Item~~                                      | ~~Why it matters~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ~~**Fix 5 stale doc comments**~~              | ~~User-facing descriptions now under-describe the three-state behavior. See section b.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~Item~~                                      | ~~Why it matters~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**                                                                                                                                                 |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ~~**Fix 5 stale doc comments**~~              | ~~User-facing descriptions now under-describe the three-state behavior. See section b.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**                                                                           |
 | ~~**Fuzz test for `writeResponse`**~~         | ~~`writeResponse` marshals arbitrary `Response` values to JSON. No fuzz test verifies it can't panic on edge-case inputs (nil maps, very long strings, unicode).~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
-| ~~**`WithGracePeriod(d)` option**~~           | ~~Guide Step 7 shows `time.Sleep(gracePeriod)` between `MarkShuttingDown` and resource close. SDK has `MarkShuttingDown` but no built-in sleep mechanism.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
-| ~~**`LivenessChecker` interface**~~           | ~~Guide Step 6 mentions "optionally check a deadlock watchdog." No pluggable hook for goroutine-starvation detection.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
-| ~~**slog integration**~~                      | ~~No structured logging of slow checks, failures, or state transitions.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
-| ~~**`WithIndentJSON()` option**~~             | ~~No human-readable JSON for development. Compact JSON only.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
-| ~~**Integration test with `live/`**~~         | ~~No test verifying `health/` and `live/` routes don't conflict on same mux.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
-| ~~**Restart test**~~                          | ~~No test for `Shutdown` then `Start` (restart scenario). `Start` is no-op-safe for double-call, but restart after full shutdown is untested.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
-| ~~**Per-service latency in `Check` struct**~~ | ~~No `LatencyMs int64` field for per-service timing visibility.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
-| ~~**`Probe.Status()` method**~~               | ~~No way to get current cached status without serving an HTTP request (for external monitoring).~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
-| ~~**`WithOnStateChange` callback**~~          | ~~No callback for external alerting when status transitions (pass→warn→fail).~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.** |
+| ~~**`WithGracePeriod(d)` option**~~           | ~~Guide Step 7 shows `time.Sleep(gracePeriod)` between `MarkShuttingDown` and resource close. SDK has `MarkShuttingDown` but no built-in sleep mechanism.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**        |
+| ~~**`LivenessChecker` interface**~~           | ~~Guide Step 6 mentions "optionally check a deadlock watchdog." No pluggable hook for goroutine-starvation detection.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**                                            |
+| ~~**slog integration**~~                      | ~~No structured logging of slow checks, failures, or state transitions.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**                                                                                          |
+| ~~**`WithIndentJSON()` option**~~             | ~~No human-readable JSON for development. Compact JSON only.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**                                                                                                     |
+| ~~**Integration test with `live/`**~~         | ~~No test verifying `health/` and `live/` routes don't conflict on same mux.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**                                                                                     |
+| ~~**Restart test**~~                          | ~~No test for `Shutdown` then `Start` (restart scenario). `Start` is no-op-safe for double-call, but restart after full shutdown is untested.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**                    |
+| ~~**Per-service latency in `Check` struct**~~ | ~~No `LatencyMs int64` field for per-service timing visibility.~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**                                                                                                  |
+| ~~**`Probe.Status()` method**~~               | ~~No way to get current cached status without serving an HTTP request (for external monitoring).~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**                                                                 |
+| ~~**`WithOnStateChange` callback**~~          | ~~No callback for external alerting when status transitions (pass→warn→fail).~~ **Won't implement — superseded — health/ extracted to github.com/larsartmann/go-health.**                                                                                    |
 
 ---
 
@@ -269,7 +269,6 @@ I added `Probe.Validate()` and 5 tests for it, but I never wired it into `New()`
 ## g) Questions
 
 > **Resolution (2026-09-11):** superseded — `health/` was extracted to [github.com/larsartmann/go-health](https://github.com/larsartmann/go-health) as its own repository with its own go.mod; `*Plugin` satisfies its `HealthRecorder` interface implicitly.
-
 
 ### 1. Should `Validate()` be enforced or opt-in?
 

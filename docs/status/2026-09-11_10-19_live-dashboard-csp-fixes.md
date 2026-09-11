@@ -68,36 +68,36 @@ Along the way, **two additional open CI breakages on master** were discovered an
 
 ## f) NEXT TASKS (28, impact-sorted)
 
-| #  | Task                                                                                                                           | Impact  | Effort |
-| -- | ------------------------------------------------------------------------------------------------------------------------------ | ------- | ------ |
-| 1  | Push master → confirm all 7 CI jobs green (first green Lint since 2026-09-10)                                                  | 🔴 High | XS     |
-| 2  | Headless-chromium E2E: open live dashboard, assert **zero** console errors, signals initialize, fragments render               | 🔴 High | M      |
-| ~~3~~  | ~~`CHANGELOG.md`: entry for live-dashboard CSP fix (broken-out-of-the-box bug)~~ done — CHANGELOG [Unreleased] — Live Dashboard (2026-09-04/11) entry | ~~🔴 High~~ | ~~XS~~ |
-| ~~4~~  | ~~Grep README / website / FEATURES.md for stale `frame-ancestors` claims; fix~~ done — README:425 + FEATURES.md CSP rows fixed this pass; website guide verified clean | ~~🟠 Med~~ | ~~S~~ |
-| 5  | Verify export buttons (JSON/NDJSON/HTML blob downloads) work under the CSP in a real browser                                   | 🟠 Med  | S      |
-| 6  | Investigate newer Datastar: CSP-safe expression evaluation → drop `'unsafe-eval'`                                              | 🟠 Med  | M      |
-| 7  | Triage dependabot PR: go-sse/ssetest 0.2.0 → 0.3.0 (Go dep, closest to core)                                                   | 🟠 Med  | S      |
-| 8  | Triage dependabot PRs: website astro 7.3.1 + html-validate 11.15.0                                                             | 🟠 Med  | S      |
-| 9  | Decide + document `'unsafe-eval'` threat-model acceptance (dashboard = dev tool?)                                              | 🟠 Med  | S      |
-| 10 | Add `X-Frame-Options: DENY` next to the frame-ancestors header                                                                 | 🟡 Low  | XS     |
-| 11 | Upgrade CI golangci-lint pin v2.12.2 → ≥ v2.13.x; re-verify whole matrix                                                       | 🟠 Med  | M      |
-| ~~12~~ | ~~Retire `live/fragments.go:181` `//nolint:goconst` once pin ≥ 2.13 (ledger item)~~ **Won't implement — tracked — TODO_LIST lint-pin item + AGENTS version-skew ledger.** | ~~🟡 Low~~ | ~~XS~~ |
-| 13 | Parse CSP meta tag properly in `TestServer_DashboardCSP` instead of substring                                                  | 🟡 Low  | XS     |
-| 14 | Fix pre-existing gopls scannererr `live/server_test.go:724` (scanner.Err check)                                                | 🟡 Low  | XS     |
-| 15 | `fuzzFilterOptions` → return `(opts, names)` to avoid double `tokenize`                                                        | 🟡 Low  | XS     |
-| 16 | Tidy `example/services.go` var-block: sentinels + interface assertions mixed under a misleading "// Cache implements…" comment | 🟡 Low  | XS     |
-| 17 | Check `WriteHTMLTree` (tree.go) HTML document: does it need/claim a CSP?                                                       | 🟡 Low  | S      |
-| 18 | Add dashboard CSP contract test for root-prefix mount (`Prefix: "/"`)                                                          | 🟡 Low  | XS     |
-| 19 | Consider a tiny browser-console-error assertion helper for future dashboard E2E                                                | 🟡 Low  | S      |
-| ~~20~~ | ~~HARVEST: route items 1–19 above into `TODO_LIST.md` (docs-health)~~ done — routed to TODO_LIST.md this pass (docs-health 2026-09-11) | ~~🟡 Low~~ | ~~S~~ |
-| 21 | Review whether `live/demo` also needs the CSP smoke (it embeds the same server)                                                | 🟡 Low  | XS     |
-| ~~22~~ | ~~Website `guides/live-dashboard.mdx`: verify no CSP claims now stale~~ done — verified clean — no frame-ancestors/unsafe-eval claims in guides | ~~🟡 Low~~ | ~~XS~~ |
-| ~~23~~ | ~~`lsp_restart` / clear stale golangci-lint-ls diagnostics in this workspace~~ **Won't implement — one-time session hygiene.** | ~~🟡 Low~~ | ~~XS~~ |
-| 24 | Consider blob:-URL CSP test in `testhelpers/` for downstream consumers                                                         | ⚪ Nice | M      |
-| 25 | Add the pasted console output (redacted) as a regression fixture next to the CSP test                                          | ⚪ Nice | XS     |
-| 26 | Sweep for other header-only CSP directives (`sandbox`, `report-uri`) accidentally placed in any meta                           | ⚪ Nice | XS     |
-| ~~27~~ | ~~Document in README "Live dashboard" section that Datastar requires `unsafe-eval`~~ done — README Live Dashboard section notes unsafe-eval + dev-tool framing | ~~⚪ Nice~~ | ~~XS~~ |
-| ~~28~~ | ~~Post-verification: run `docs-health` VERIFY on this report next session~~ done — this docs-health pass (2026-09-11) | ~~⚪ Nice~~ | ~~S~~ |
+| #      | Task                                                                                                                                                                      | Impact      | Effort |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------ |
+| 1      | Push master → confirm all 7 CI jobs green (first green Lint since 2026-09-10)                                                                                             | 🔴 High     | XS     |
+| 2      | Headless-chromium E2E: open live dashboard, assert **zero** console errors, signals initialize, fragments render                                                          | 🔴 High     | M      |
+| ~~3~~  | ~~`CHANGELOG.md`: entry for live-dashboard CSP fix (broken-out-of-the-box bug)~~ done — CHANGELOG [Unreleased] — Live Dashboard (2026-09-04/11) entry                     | ~~🔴 High~~ | ~~XS~~ |
+| ~~4~~  | ~~Grep README / website / FEATURES.md for stale `frame-ancestors` claims; fix~~ done — README:425 + FEATURES.md CSP rows fixed this pass; website guide verified clean    | ~~🟠 Med~~  | ~~S~~  |
+| 5      | Verify export buttons (JSON/NDJSON/HTML blob downloads) work under the CSP in a real browser                                                                              | 🟠 Med      | S      |
+| 6      | Investigate newer Datastar: CSP-safe expression evaluation → drop `'unsafe-eval'`                                                                                         | 🟠 Med      | M      |
+| 7      | Triage dependabot PR: go-sse/ssetest 0.2.0 → 0.3.0 (Go dep, closest to core)                                                                                              | 🟠 Med      | S      |
+| 8      | Triage dependabot PRs: website astro 7.3.1 + html-validate 11.15.0                                                                                                        | 🟠 Med      | S      |
+| 9      | Decide + document `'unsafe-eval'` threat-model acceptance (dashboard = dev tool?)                                                                                         | 🟠 Med      | S      |
+| 10     | Add `X-Frame-Options: DENY` next to the frame-ancestors header                                                                                                            | 🟡 Low      | XS     |
+| 11     | Upgrade CI golangci-lint pin v2.12.2 → ≥ v2.13.x; re-verify whole matrix                                                                                                  | 🟠 Med      | M      |
+| ~~12~~ | ~~Retire `live/fragments.go:181` `//nolint:goconst` once pin ≥ 2.13 (ledger item)~~ **Won't implement — tracked — TODO_LIST lint-pin item + AGENTS version-skew ledger.** | ~~🟡 Low~~  | ~~XS~~ |
+| 13     | Parse CSP meta tag properly in `TestServer_DashboardCSP` instead of substring                                                                                             | 🟡 Low      | XS     |
+| 14     | Fix pre-existing gopls scannererr `live/server_test.go:724` (scanner.Err check)                                                                                           | 🟡 Low      | XS     |
+| 15     | `fuzzFilterOptions` → return `(opts, names)` to avoid double `tokenize`                                                                                                   | 🟡 Low      | XS     |
+| 16     | Tidy `example/services.go` var-block: sentinels + interface assertions mixed under a misleading "// Cache implements…" comment                                            | 🟡 Low      | XS     |
+| 17     | Check `WriteHTMLTree` (tree.go) HTML document: does it need/claim a CSP?                                                                                                  | 🟡 Low      | S      |
+| 18     | Add dashboard CSP contract test for root-prefix mount (`Prefix: "/"`)                                                                                                     | 🟡 Low      | XS     |
+| 19     | Consider a tiny browser-console-error assertion helper for future dashboard E2E                                                                                           | 🟡 Low      | S      |
+| ~~20~~ | ~~HARVEST: route items 1–19 above into `TODO_LIST.md` (docs-health)~~ done — routed to TODO_LIST.md this pass (docs-health 2026-09-11)                                    | ~~🟡 Low~~  | ~~S~~  |
+| 21     | Review whether `live/demo` also needs the CSP smoke (it embeds the same server)                                                                                           | 🟡 Low      | XS     |
+| ~~22~~ | ~~Website `guides/live-dashboard.mdx`: verify no CSP claims now stale~~ done — verified clean — no frame-ancestors/unsafe-eval claims in guides                           | ~~🟡 Low~~  | ~~XS~~ |
+| ~~23~~ | ~~`lsp_restart` / clear stale golangci-lint-ls diagnostics in this workspace~~ **Won't implement — one-time session hygiene.**                                            | ~~🟡 Low~~  | ~~XS~~ |
+| 24     | Consider blob:-URL CSP test in `testhelpers/` for downstream consumers                                                                                                    | ⚪ Nice     | M      |
+| 25     | Add the pasted console output (redacted) as a regression fixture next to the CSP test                                                                                     | ⚪ Nice     | XS     |
+| 26     | Sweep for other header-only CSP directives (`sandbox`, `report-uri`) accidentally placed in any meta                                                                      | ⚪ Nice     | XS     |
+| ~~27~~ | ~~Document in README "Live dashboard" section that Datastar requires `unsafe-eval`~~ done — README Live Dashboard section notes unsafe-eval + dev-tool framing            | ~~⚪ Nice~~ | ~~XS~~ |
+| ~~28~~ | ~~Post-verification: run `docs-health` VERIFY on this report next session~~ done — this docs-health pass (2026-09-11)                                                     | ~~⚪ Nice~~ | ~~S~~  |
 
 ## g) QUESTIONS I CANNOT ANSWER MYSELF ❓
 

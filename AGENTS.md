@@ -8,29 +8,29 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 
 ## Commands
 
-| Command               | Purpose                                         |
-| --------------------- | ----------------------------------------------- |
-| `go generate ./...`   | Regenerate templ (and any other generated code) |
-| `go test ./...`       | Run all tests                                   |
-| `go test -race ./...` | Run all tests with race detector (CI uses this) |
+| Command                                                                             | Purpose                                                                                                                                   |
+| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `go generate ./...`                                                                 | Regenerate templ (and any other generated code)                                                                                           |
+| `go test ./...`                                                                     | Run all tests                                                                                                                             |
+| `go test -race ./...`                                                               | Run all tests with race detector (CI uses this)                                                                                           |
 | `GOEXPERIMENT=jsonv2 go test -race -coverprofile=cover.out -covermode=atomic ./...` | Tests with coverage (CI gate: ≥94% of non-`example/`/`cmd/` code) — `GOEXPERIMENT=jsonv2` is set automatically in the Nix devShell and CI |
-| `go test -run TestPlugin_DisabledIsNoOp` | Run single test |
-| `go vet ./...` | Static analysis (**`GOEXPERIMENT=jsonv2` required** — set automatically in Nix devShell) |
-| `golangci-lint config verify` | Validate the lint config (CI runs this before `lint run`) |
-| `golangci-lint run` | Full lint (heavy config, see below) |
-| `go mod tidy` | Sync `go.sum` (CI `mod-tidy` job fails on drift) |
-| `nix develop` | Enter devShell (Go 1.26.7, golangci-lint, govulncheck, actionlint, golines, **GOEXPERIMENT=jsonv2 enabled**) |
-| `go run ./example` | Run the example (set `DO_AUDITLOG_ENABLED=true`) |
-| `go run ./example --live` | Example + real-time SSE dashboard |
-| `go run ./cmd/auditlog help` | CLI: info/convert/diff/validate/stats/schema subcommands |
-| `go install ./cmd/auditlog` | Install the `auditlog` CLI to `$GOBIN` |
-| `nix run .#auditlog -- help` | Run the CLI via Nix (no install) |
-| `nix run .#coverage` | Run the CI-equivalent coverage gate via Nix |
-| `sh scripts/coverage-gate.sh` | Coverage gate (exclusions single-sourced in `scripts/coverage-exclusions.txt`; ≥94%) |
-| `sh scripts/check-go-version.sh` | Go-version drift guard: go.mod == ci.yml == flake GOTOOLCHAIN == .golangci.yml (CI + pre-commit) |
-| `sh scripts/check-doc-claims.sh` | Claims linter: go version, schema version, coverage gate, linter count, fuzz count vs machine truth (pre-commit) |
-| `sh scripts/check-changelog-sync.sh` | CHANGELOG.md ↔ website changelog.mdx version-list sync (website CI) |
-| `git config core.hooksPath scripts/hooks` | Install the pre-commit hook |
+| `go test -run TestPlugin_DisabledIsNoOp`                                            | Run single test                                                                                                                           |
+| `go vet ./...`                                                                      | Static analysis (**`GOEXPERIMENT=jsonv2` required** — set automatically in Nix devShell)                                                  |
+| `golangci-lint config verify`                                                       | Validate the lint config (CI runs this before `lint run`)                                                                                 |
+| `golangci-lint run`                                                                 | Full lint (heavy config, see below)                                                                                                       |
+| `go mod tidy`                                                                       | Sync `go.sum` (CI `mod-tidy` job fails on drift)                                                                                          |
+| `nix develop`                                                                       | Enter devShell (Go 1.26.7, golangci-lint, govulncheck, actionlint, golines, **GOEXPERIMENT=jsonv2 enabled**)                              |
+| `go run ./example`                                                                  | Run the example (set `DO_AUDITLOG_ENABLED=true`)                                                                                          |
+| `go run ./example --live`                                                           | Example + real-time SSE dashboard                                                                                                         |
+| `go run ./cmd/auditlog help`                                                        | CLI: info/convert/diff/validate/stats/schema subcommands                                                                                  |
+| `go install ./cmd/auditlog`                                                         | Install the `auditlog` CLI to `$GOBIN`                                                                                                    |
+| `nix run .#auditlog -- help`                                                        | Run the CLI via Nix (no install)                                                                                                          |
+| `nix run .#coverage`                                                                | Run the CI-equivalent coverage gate via Nix                                                                                               |
+| `sh scripts/coverage-gate.sh`                                                       | Coverage gate (exclusions single-sourced in `scripts/coverage-exclusions.txt`; ≥94%)                                                      |
+| `sh scripts/check-go-version.sh`                                                    | Go-version drift guard: go.mod == ci.yml == flake GOTOOLCHAIN == .golangci.yml (CI + pre-commit)                                          |
+| `sh scripts/check-doc-claims.sh`                                                    | Claims linter: go version, schema version, coverage gate, linter count, fuzz count vs machine truth (pre-commit)                          |
+| `sh scripts/check-changelog-sync.sh`                                                | CHANGELOG.md ↔ website changelog.mdx version-list sync (website CI)                                                                       |
+| `git config core.hooksPath scripts/hooks`                                           | Install the pre-commit hook                                                                                                               |
 
 A `flake.nix` devShell is available for Nix users. No Makefile, no justfile.
 

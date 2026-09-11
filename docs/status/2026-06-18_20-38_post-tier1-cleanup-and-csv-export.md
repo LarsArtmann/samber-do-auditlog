@@ -266,53 +266,53 @@ Sorted by **impact ÷ effort** (highest first).
 
 ### Tier 1 — Do Now (high impact, low effort)
 
-| # | Task                                                                                          | Effort | Impact |
-| - | --------------------------------------------------------------------------------------------- | ------ | ------ |
-| ~~1~~ | ~~**v0.0.5 release** — tag current state, 35 commits since v0.0.4~~ done — v0.0.5+ tagged — now v0.10.0 | ~~30min~~ | ~~HIGH~~ |
-| ~~2~~ | ~~**Add `WriteCSV`/`WriteTSV` to `Plugin` export methods** — wire through from Plugin to Report~~ done — plugin.go:216 WriteCSV | ~~15min~~ | ~~MED~~ |
-| ~~3~~ | ~~**HTML golden-file test** — deterministic report → assert output matches committed file~~ done — html_golden_test.go | ~~1h~~ | ~~MED~~ |
-| ~~4~~ | ~~**Property-based `Diff` tests** — `Diff(a,a)` empty, `Diff(a,b)`/`Diff(b,a)` symmetry~~ done — diff_property_test.go | ~~2h~~ | ~~MED~~ |
-| ~~5~~ | ~~**`actionlint` in CI** — validate `.github/workflows/ci.yml`~~ done — ci.yml actionlint | ~~30min~~ | ~~LOW~~ |
+| #     | Task                                                                                                                            | Effort    | Impact   |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------- | --------- | -------- |
+| ~~1~~ | ~~**v0.0.5 release** — tag current state, 35 commits since v0.0.4~~ done — v0.0.5+ tagged — now v0.10.0                         | ~~30min~~ | ~~HIGH~~ |
+| ~~2~~ | ~~**Add `WriteCSV`/`WriteTSV` to `Plugin` export methods** — wire through from Plugin to Report~~ done — plugin.go:216 WriteCSV | ~~15min~~ | ~~MED~~  |
+| ~~3~~ | ~~**HTML golden-file test** — deterministic report → assert output matches committed file~~ done — html_golden_test.go          | ~~1h~~    | ~~MED~~  |
+| ~~4~~ | ~~**Property-based `Diff` tests** — `Diff(a,a)` empty, `Diff(a,b)`/`Diff(b,a)` symmetry~~ done — diff_property_test.go          | ~~2h~~    | ~~MED~~  |
+| ~~5~~ | ~~**`actionlint` in CI** — validate `.github/workflows/ci.yml`~~ done — ci.yml actionlint                                       | ~~30min~~ | ~~LOW~~  |
 
 ### Tier 2 — High Impact, Medium Effort
 
-| #  | Task                                                                           | Effort | Impact |
-| -- | ------------------------------------------------------------------------------ | ------ | ------ |
-| ~~6~~  | ~~**`NewReport()` constructor** — `(Report, error)` enforcing `Validate()`~~ done — report.go NewReport | ~~2h~~ | ~~HIGH~~ |
-| ~~7~~  | ~~**Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` distinct types~~ done — types.go | ~~2h~~ | ~~HIGH~~ |
-| ~~8~~  | ~~**JSON Schema generation** — derive `schema.json` from Go types~~ done — invopop/jsonschema | ~~3h~~ | ~~HIGH~~ |
-| ~~9~~  | ~~**Property-based `MigrateReport` tests** — arbitrary JSON → migrate → validate~~ done — migration_property_test.go | ~~2h~~ | ~~MED~~ |
-| ~~10~~ | ~~**Prometheus exporter example** — parallel to OTel example~~ done — prometheus-bridge.md | ~~2h~~ | ~~MED~~ |
+| #      | Task                                                                                                                 | Effort | Impact   |
+| ------ | -------------------------------------------------------------------------------------------------------------------- | ------ | -------- |
+| ~~6~~  | ~~**`NewReport()` constructor** — `(Report, error)` enforcing `Validate()`~~ done — report.go NewReport              | ~~2h~~ | ~~HIGH~~ |
+| ~~7~~  | ~~**Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` distinct types~~ done — types.go                   | ~~2h~~ | ~~HIGH~~ |
+| ~~8~~  | ~~**JSON Schema generation** — derive `schema.json` from Go types~~ done — invopop/jsonschema                        | ~~3h~~ | ~~HIGH~~ |
+| ~~9~~  | ~~**Property-based `MigrateReport` tests** — arbitrary JSON → migrate → validate~~ done — migration_property_test.go | ~~2h~~ | ~~MED~~  |
+| ~~10~~ | ~~**Prometheus exporter example** — parallel to OTel example~~ done — prometheus-bridge.md                           | ~~2h~~ | ~~MED~~  |
 
 ### Tier 3 — Medium Impact, Medium Effort
 
-| #  | Task                                                                     | Effort | Impact |
-| -- | ------------------------------------------------------------------------ | ------ | ------ |
-| ~~11~~ | ~~**CLI tool** — `auditlog convert --format html report.json`~~ done — cmd/auditlog | ~~4h~~ | ~~HIGH~~ |
-| ~~12~~ | ~~**WebSocket live stream** bridge — `OnEvent` → browser dashboard~~ done — websocket-stream.md | ~~3h~~ | ~~MED~~ |
-| ~~13~~ | ~~**Split `ServiceInfo` into 4 structs** — identity/lifecycle/health/graph~~ done — service.go | ~~6h~~ | ~~HIGH~~ |
-| ~~14~~ | ~~**Flake app for coverage gate** — replace inline shell in CI~~ done — flake.nix | ~~1h~~ | ~~LOW~~ |
-| ~~15~~ | ~~**Fuzz filter inputs** — arbitrary `ReportOption` combinations~~ done — FuzzFilterInputs | ~~2h~~ | ~~LOW~~ |
+| #      | Task                                                                                            | Effort | Impact   |
+| ------ | ----------------------------------------------------------------------------------------------- | ------ | -------- |
+| ~~11~~ | ~~**CLI tool** — `auditlog convert --format html report.json`~~ done — cmd/auditlog             | ~~4h~~ | ~~HIGH~~ |
+| ~~12~~ | ~~**WebSocket live stream** bridge — `OnEvent` → browser dashboard~~ done — websocket-stream.md | ~~3h~~ | ~~MED~~  |
+| ~~13~~ | ~~**Split `ServiceInfo` into 4 structs** — identity/lifecycle/health/graph~~ done — service.go  | ~~6h~~ | ~~HIGH~~ |
+| ~~14~~ | ~~**Flake app for coverage gate** — replace inline shell in CI~~ done — flake.nix               | ~~1h~~ | ~~LOW~~  |
+| ~~15~~ | ~~**Fuzz filter inputs** — arbitrary `ReportOption` combinations~~ done — FuzzFilterInputs      | ~~2h~~ | ~~LOW~~  |
 
 ### Tier 4 — Lower Priority
 
-| #  | Task                                                            | Effort | Impact |
-| -- | --------------------------------------------------------------- | ------ | ------ |
-| ~~16~~ | ~~**DOT diagram format** via `go-output` v0.12.0~~ done — dot.go | ~~3h~~ | ~~LOW~~ |
-| ~~17~~ | ~~**`go-output` adoption** — replace custom Mermaid/PlantUML~~ done — go-output family | ~~4h~~ | ~~LOW~~ |
+| #      | Task                                                                                                | Effort    | Impact  |
+| ------ | --------------------------------------------------------------------------------------------------- | --------- | ------- |
+| ~~16~~ | ~~**DOT diagram format** via `go-output` v0.12.0~~ done — dot.go                                    | ~~3h~~    | ~~LOW~~ |
+| ~~17~~ | ~~**`go-output` adoption** — replace custom Mermaid/PlantUML~~ done — go-output family              | ~~4h~~    | ~~LOW~~ |
 | ~~18~~ | ~~**Pre-commit hook** — `go generate + lint + test` before commit~~ done — scripts/hooks/pre-commit | ~~30min~~ | ~~LOW~~ |
-| ~~19~~ | ~~**Coverage gate as Nix flake check** — replace inline CI shell~~ done — flake.nix checks | ~~1h~~ | ~~LOW~~ |
-| 20 | **BDD tests** for critical user journeys (via Ginkgo)           | 3h     | LOW    |
+| ~~19~~ | ~~**Coverage gate as Nix flake check** — replace inline CI shell~~ done — flake.nix checks          | ~~1h~~    | ~~LOW~~ |
+| 20     | **BDD tests** for critical user journeys (via Ginkgo)                                               | 3h        | LOW     |
 
 ### Tier 5 — Rejected / Deferred
 
-| #  | Task                             | Status                                            |
-| -- | -------------------------------- | ------------------------------------------------- |
-| ~~21~~ | ~~**Multi-module split**~~ **Won't implement — rejected — see ROADMAP Explicitly Rejected.** | ~~❌ Rejected — too small (1 package)~~ |
-| ~~22~~ | ~~**External storage backends**~~ **Won't implement — rejected — see ROADMAP Explicitly Rejected.** | ~~❌ Rejected — file + io.Writer sufficient~~ |
-| ~~23~~ | ~~**`samber/lo` dependency**~~ **Won't implement — rejected — see ROADMAP Explicitly Rejected.** | ~~❌ Rejected — stdlib slices/cmp sufficient~~ |
-| ~~24~~ | ~~**`encoding/json/v2`**~~ **Won't implement — rejected — json/v2 policy section.** | ~~❌ Rejected — risk of breaking JSON format~~ |
-| ~~25~~ | ~~**NDJSON import (`ReadNDJSON`)**~~ done — ReadEvents | ~~✅ Already done via `ReadEvents` + `ReplayEvents`~~ |
+| #      | Task                                                                                                | Status                                                |
+| ------ | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| ~~21~~ | ~~**Multi-module split**~~ **Won't implement — rejected — see ROADMAP Explicitly Rejected.**        | ~~❌ Rejected — too small (1 package)~~               |
+| ~~22~~ | ~~**External storage backends**~~ **Won't implement — rejected — see ROADMAP Explicitly Rejected.** | ~~❌ Rejected — file + io.Writer sufficient~~         |
+| ~~23~~ | ~~**`samber/lo` dependency**~~ **Won't implement — rejected — see ROADMAP Explicitly Rejected.**    | ~~❌ Rejected — stdlib slices/cmp sufficient~~        |
+| ~~24~~ | ~~**`encoding/json/v2`**~~ **Won't implement — rejected — json/v2 policy section.**                 | ~~❌ Rejected — risk of breaking JSON format~~        |
+| ~~25~~ | ~~**NDJSON import (`ReadNDJSON`)**~~ done — ReadEvents                                              | ~~✅ Already done via `ReadEvents` + `ReplayEvents`~~ |
 
 ---
 

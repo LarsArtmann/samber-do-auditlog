@@ -180,48 +180,48 @@ Sorted by impact ÷ effort (highest first).
 
 ### Tier 1 — High Impact, Low Effort (Do Now)
 
-| # | Task                                                   | Effort | Impact | Why                                                                  |
-| - | ------------------------------------------------------ | ------ | ------ | -------------------------------------------------------------------- |
-| ~~1~~ | ~~**Fix `replay.go` unused `key` parameters**~~ done — fixed 20-38 session | ~~10min~~ | ~~MED~~ | ~~LSP warns on 3 unused params. Clean up or use them.~~ |
-| ~~2~~ | ~~**Update CHANGELOG.md `[Unreleased]`**~~ done — CHANGELOG maintained | ~~15min~~ | ~~LOW~~ | ~~Document dedup session changes.~~ |
-| ~~3~~ | ~~**Update AGENTS.md Architecture section**~~ done — AGENTS.md maintained | ~~15min~~ | ~~MED~~ | ~~File descriptions reference stale helper names.~~ |
-| ~~4~~ | ~~**Add `//nolint` or comment on `example/register.go`**~~ done — register.go:95 comment | ~~5min~~ | ~~LOW~~ | ~~Document that ProvideValue/OverrideValue duplication is intentional.~~ |
-| ~~5~~ | ~~**Restart LSP to clear stale diagnostics**~~ **Won't implement — one-time action.** | ~~1min~~ | ~~LOW~~ | ~~gopls shows warnings for deleted code.~~ |
+| #     | Task                                                                                     | Effort    | Impact  | Why                                                                      |
+| ----- | ---------------------------------------------------------------------------------------- | --------- | ------- | ------------------------------------------------------------------------ |
+| ~~1~~ | ~~**Fix `replay.go` unused `key` parameters**~~ done — fixed 20-38 session               | ~~10min~~ | ~~MED~~ | ~~LSP warns on 3 unused params. Clean up or use them.~~                  |
+| ~~2~~ | ~~**Update CHANGELOG.md `[Unreleased]`**~~ done — CHANGELOG maintained                   | ~~15min~~ | ~~LOW~~ | ~~Document dedup session changes.~~                                      |
+| ~~3~~ | ~~**Update AGENTS.md Architecture section**~~ done — AGENTS.md maintained                | ~~15min~~ | ~~MED~~ | ~~File descriptions reference stale helper names.~~                      |
+| ~~4~~ | ~~**Add `//nolint` or comment on `example/register.go`**~~ done — register.go:95 comment | ~~5min~~  | ~~LOW~~ | ~~Document that ProvideValue/OverrideValue duplication is intentional.~~ |
+| ~~5~~ | ~~**Restart LSP to clear stale diagnostics**~~ **Won't implement — one-time action.**    | ~~1min~~  | ~~LOW~~ | ~~gopls shows warnings for deleted code.~~                               |
 
 ### Tier 2 — High Impact, Medium Effort
 
-| #  | Task                                                            | Effort | Impact | Why                                                       |
-| -- | --------------------------------------------------------------- | ------ | ------ | --------------------------------------------------------- |
-| ~~6~~  | ~~**Typed identifiers (`ContainerID`, `ScopeID`, `ServiceName`)**~~ done — types.go | ~~2h~~ | ~~HIGH~~ | ~~Compiler-enforced type safety. Biggest architectural win.~~ |
-| ~~7~~  | ~~**JSON Schema generation from Go types**~~ done — schema.go | ~~3h~~ | ~~HIGH~~ | ~~Enables cross-language validation. Blocks v0.1.0.~~ |
-| ~~8~~  | ~~**`Report` constructor (`NewReport() → (Report, error)`)**~~ done — report.go NewReport | ~~2h~~ | ~~HIGH~~ | ~~Makes invalid reports unrepresentable.~~ |
-| ~~9~~  | ~~**CSV/TSV export**~~ done — csv.go | ~~1h~~ | ~~MED~~ | ~~High value for data analysis workflows. Low effort.~~ |
-| ~~10~~ | ~~**Property-based `Diff` tests**~~ done — diff_property_test.go | ~~2h~~ | ~~MED~~ | ~~Catches symmetry/inverse bugs.~~ |
-| ~~11~~ | ~~**HTML golden-file test**~~ done — html_golden_test.go | ~~1h~~ | ~~MED~~ | ~~Catches templ rendering regressions.~~ |
-| ~~12~~ | ~~**v0.0.5 release**~~ done — v0.0.5+ tagged — now v0.10.0 | ~~30min~~ | ~~MED~~ | ~~Tag current state. Multiple commits since v0.0.4.~~ |
+| #      | Task                                                                                      | Effort    | Impact   | Why                                                           |
+| ------ | ----------------------------------------------------------------------------------------- | --------- | -------- | ------------------------------------------------------------- |
+| ~~6~~  | ~~**Typed identifiers (`ContainerID`, `ScopeID`, `ServiceName`)**~~ done — types.go       | ~~2h~~    | ~~HIGH~~ | ~~Compiler-enforced type safety. Biggest architectural win.~~ |
+| ~~7~~  | ~~**JSON Schema generation from Go types**~~ done — schema.go                             | ~~3h~~    | ~~HIGH~~ | ~~Enables cross-language validation. Blocks v0.1.0.~~         |
+| ~~8~~  | ~~**`Report` constructor (`NewReport() → (Report, error)`)**~~ done — report.go NewReport | ~~2h~~    | ~~HIGH~~ | ~~Makes invalid reports unrepresentable.~~                    |
+| ~~9~~  | ~~**CSV/TSV export**~~ done — csv.go                                                      | ~~1h~~    | ~~MED~~  | ~~High value for data analysis workflows. Low effort.~~       |
+| ~~10~~ | ~~**Property-based `Diff` tests**~~ done — diff_property_test.go                          | ~~2h~~    | ~~MED~~  | ~~Catches symmetry/inverse bugs.~~                            |
+| ~~11~~ | ~~**HTML golden-file test**~~ done — html_golden_test.go                                  | ~~1h~~    | ~~MED~~  | ~~Catches templ rendering regressions.~~                      |
+| ~~12~~ | ~~**v0.0.5 release**~~ done — v0.0.5+ tagged — now v0.10.0                                | ~~30min~~ | ~~MED~~  | ~~Tag current state. Multiple commits since v0.0.4.~~         |
 
 ### Tier 3 — Medium Impact, Medium Effort
 
-| #  | Task                                     | Effort | Impact | Why                                                             |
-| -- | ---------------------------------------- | ------ | ------ | --------------------------------------------------------------- |
-| ~~13~~ | ~~**CLI tool for report conversion**~~ done — cmd/auditlog | ~~4h~~ | ~~HIGH~~ | ~~Standalone binary: `auditlog convert --format html report.json`~~ |
-| ~~14~~ | ~~**Property-based `MigrateReport` tests**~~ done — migration_property_test.go | ~~2h~~ | ~~MED~~ | ~~Validates schema migration robustness.~~ |
-| ~~15~~ | ~~**`actionlint` in CI**~~ done — ci.yml actionlint | ~~30min~~ | ~~LOW~~ | ~~Validates `.github/workflows/ci.yml` syntax.~~ |
-| ~~16~~ | ~~**Split `ServiceInfo` into 4 structs**~~ done — service.go | ~~6h~~ | ~~HIGH~~ | ~~Breaking change. Decide before v0.1.0.~~ |
-| ~~17~~ | ~~**Flake app for coverage gate**~~ done — flake.nix | ~~1h~~ | ~~LOW~~ | ~~Replaces inline shell in CI.~~ |
-| ~~18~~ | ~~**WebSocket live stream example**~~ done — websocket-stream.md | ~~3h~~ | ~~MED~~ | ~~Bridges `OnEvent` to browser dashboards.~~ |
-| ~~19~~ | ~~**Prometheus exporter example**~~ done — prometheus-bridge.md | ~~2h~~ | ~~MED~~ | ~~Parallel to existing OTel example.~~ |
+| #      | Task                                                                           | Effort    | Impact   | Why                                                                 |
+| ------ | ------------------------------------------------------------------------------ | --------- | -------- | ------------------------------------------------------------------- |
+| ~~13~~ | ~~**CLI tool for report conversion**~~ done — cmd/auditlog                     | ~~4h~~    | ~~HIGH~~ | ~~Standalone binary: `auditlog convert --format html report.json`~~ |
+| ~~14~~ | ~~**Property-based `MigrateReport` tests**~~ done — migration_property_test.go | ~~2h~~    | ~~MED~~  | ~~Validates schema migration robustness.~~                          |
+| ~~15~~ | ~~**`actionlint` in CI**~~ done — ci.yml actionlint                            | ~~30min~~ | ~~LOW~~  | ~~Validates `.github/workflows/ci.yml` syntax.~~                    |
+| ~~16~~ | ~~**Split `ServiceInfo` into 4 structs**~~ done — service.go                   | ~~6h~~    | ~~HIGH~~ | ~~Breaking change. Decide before v0.1.0.~~                          |
+| ~~17~~ | ~~**Flake app for coverage gate**~~ done — flake.nix                           | ~~1h~~    | ~~LOW~~  | ~~Replaces inline shell in CI.~~                                    |
+| ~~18~~ | ~~**WebSocket live stream example**~~ done — websocket-stream.md               | ~~3h~~    | ~~MED~~  | ~~Bridges `OnEvent` to browser dashboards.~~                        |
+| ~~19~~ | ~~**Prometheus exporter example**~~ done — prometheus-bridge.md                | ~~2h~~    | ~~MED~~  | ~~Parallel to existing OTel example.~~                              |
 
 ### Tier 4 — Lower Priority
 
-| #  | Task                             | Effort | Impact | Why                                                         |
-| -- | -------------------------------- | ------ | ------ | ----------------------------------------------------------- |
-| ~~20~~ | ~~**Fuzz filter inputs**~~ done — FuzzFilterInputs | ~~2h~~ | ~~LOW~~ | ~~Arbitrary `ReportOption` combinations.~~ |
-| ~~21~~ | ~~**DOT diagram format**~~ done — dot.go | ~~3h~~ | ~~LOW~~ | ~~3rd diagram format. `go-output` now viable.~~ |
-| ~~22~~ | ~~**`go-output` adoption**~~ done — go-output family in go.mod | ~~4h~~ | ~~LOW~~ | ~~Replaces custom Mermaid/PlantUML.~~ |
-| ~~23~~ | ~~**NDJSON import (`ReadNDJSON`)**~~ done — ReadEvents | ~~1h~~ | ~~LOW~~ | ~~Already effectively done via `ReadEvents` + `ReplayEvents`.~~ |
-| ~~24~~ | ~~**RELEASING.md checklist**~~ done — RELEASE.md | ~~30min~~ | ~~LOW~~ | ~~Already in CONTRIBUTING.md.~~ |
-| ~~25~~ | ~~**Multi-module split**~~ **Won't implement — rejected in this report.** | ~~—~~ | ~~—~~ | ~~Explicitly rejected. Too small.~~ |
+| #      | Task                                                                      | Effort    | Impact  | Why                                                             |
+| ------ | ------------------------------------------------------------------------- | --------- | ------- | --------------------------------------------------------------- |
+| ~~20~~ | ~~**Fuzz filter inputs**~~ done — FuzzFilterInputs                        | ~~2h~~    | ~~LOW~~ | ~~Arbitrary `ReportOption` combinations.~~                      |
+| ~~21~~ | ~~**DOT diagram format**~~ done — dot.go                                  | ~~3h~~    | ~~LOW~~ | ~~3rd diagram format. `go-output` now viable.~~                 |
+| ~~22~~ | ~~**`go-output` adoption**~~ done — go-output family in go.mod            | ~~4h~~    | ~~LOW~~ | ~~Replaces custom Mermaid/PlantUML.~~                           |
+| ~~23~~ | ~~**NDJSON import (`ReadNDJSON`)**~~ done — ReadEvents                    | ~~1h~~    | ~~LOW~~ | ~~Already effectively done via `ReadEvents` + `ReplayEvents`.~~ |
+| ~~24~~ | ~~**RELEASING.md checklist**~~ done — RELEASE.md                          | ~~30min~~ | ~~LOW~~ | ~~Already in CONTRIBUTING.md.~~                                 |
+| ~~25~~ | ~~**Multi-module split**~~ **Won't implement — rejected in this report.** | ~~—~~     | ~~—~~   | ~~Explicitly rejected. Too small.~~                             |
 
 ---
 

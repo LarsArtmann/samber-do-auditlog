@@ -65,58 +65,58 @@
 
 ## f) UP TO 50 THINGS WE SHOULD GET DONE NEXT
 
-| #  | Task                                                                                          | Impact | Effort |
-| -- | --------------------------------------------------------------------------------------------- | ------ | ------ |
-| ~~1~~  | ~~Publish `auditlog-core` to GitHub (fix sum verification — `GONOSUMDB`/`GONOSUMCHECK`)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High~~ | ~~S~~ |
-| ~~2~~  | ~~Tag `auditlog-core` `v0.1.0`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High~~ | ~~XS~~ |
-| ~~3~~  | ~~Remove `replace` directives from all `go.mod` files after publish~~ **Won't implement — go.mod zero replaces.** | ~~High~~ | ~~XS~~ |
-| ~~4~~  | ~~Consolidate go-workflow `helpers.go:WriteToFile` to delegate to `auditlogcore.WriteToFile`~~ **Won't implement — other repo.** | ~~High~~ | ~~S~~ |
-| ~~5~~  | ~~Cascade `context.Context` through go-workflow export API (`ExportJSON`, `ExportNDJSON`)~~ **Won't implement — other repo.** | ~~Medium~~ | ~~M~~ |
-| ~~6~~  | ~~Extract `sseConnect`/`readSSEEvent`/`skipSnapshot` into `auditlog-core/live/testutil`~~ **Won't implement — go-sse/ssetest dep.** | ~~High~~ | ~~S~~ |
-| ~~7~~  | ~~Standardize on `encoding/json` OR `encoding/json/v2` across all three projects~~ **Won't implement — GOEXPERIMENT=jsonv2 adopted.** | ~~High~~ | ~~M~~ |
-| ~~8~~  | ~~Extract NDJSON read/write into `auditlog-core/ndjson/` (after #7)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High~~ | ~~M~~ |
-| ~~9~~  | ~~Extract format detection/loader into `auditlog-core/loader/` (after #7)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High~~ | ~~M~~ |
-| ~~10~~ | ~~Add `.github/workflows/ci.yml` to auditlog-core (build + test -race + lint)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High~~ | ~~S~~ |
-| ~~11~~ | ~~Add cross-repo CI that tests all three together~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High~~ | ~~M~~ |
-| ~~12~~ | ~~Add `go test -race -count=1` to all CI pipelines~~ **Won't implement — ci.yml -race.** | ~~High~~ | ~~XS~~ |
-| ~~13~~ | ~~Add reconnection test to integration test (disconnect, reconnect, verify snapshot)~~ **Won't implement — server_test.go:1200.** | ~~High~~ | ~~S~~ |
-| ~~14~~ | ~~Add concurrent-write test for `WriteToFile`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium~~ | ~~XS~~ |
-| ~~15~~ | ~~Add SSE end-to-end benchmark (connect → N events → disconnect)~~ **Won't implement — routed to ROADMAP.md — live/ benchmarks.** | ~~Medium~~ | ~~S~~ |
-| ~~16~~ | ~~Rename `HealthInfo` → `HealthResponse` before v0.1.0 (breaking change, do it now)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium~~ | ~~S~~ |
-| ~~17~~ | ~~Make `Subscriber` an interface (`ID()`, `Events()`, `Done()`)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~ | ~~S~~ |
-| ~~18~~ | ~~Create multi-module test runner script (`find . -name go.mod -execdir go test ./... \;`)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High~~ | ~~XS~~ |
-| ~~19~~ | ~~Add `.envrc` with `export GOEXPERIMENT=jsonv2` to all three projects~~ **Won't implement — .envrc.example.** | ~~Medium~~ | ~~XS~~ |
-| ~~20~~ | ~~Migrate go-workflow dashboard.go to standard `encoding/json` (drop json/v2)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High~~ | ~~M~~ |
-| ~~21~~ | ~~Add `//go:build goexperiment.jsonv2` constraint OR remove json/v2 from go-workflow~~ **Won't implement — jsonv2 adopted.** | ~~High~~ | ~~S~~ |
-| ~~22~~ | ~~Update both `FEATURES.md` to reflect auditlog-core extraction~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~ | ~~XS~~ |
-| ~~23~~ | ~~Add `docs/DOMAIN_LANGUAGE.md` to samber-do-auditlog~~ **Won't implement — docs/DOMAIN_LANGUAGE.md.** | ~~Low~~ | ~~S~~ |
-| ~~24~~ | ~~Write `MIGRATION.md` for downstream projects upgrading to core~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium~~ | ~~S~~ |
-| ~~25~~ | ~~Add `auditlog-core/examples/minimal` runnable demo~~ **Won't implement — live/demo.** | ~~Medium~~ | ~~S~~ |
-| ~~26~~ | ~~Add `auditlog-core/cmd/auditlog-core-demo` CLI~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~ | ~~M~~ |
-| ~~27~~ | ~~Add `flake.nix` to auditlog-core for devShell parity~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~ | ~~S~~ |
-| ~~28~~ | ~~Add `go mod tidy` to pre-commit hooks~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium~~ | ~~XS~~ |
-| ~~29~~ | ~~Add Prometheus metrics interface (events-sent, clients-connected)~~ **Won't implement — routed to ROADMAP.md — Observability.** | ~~Low~~ | ~~M~~ |
-| ~~30~~ | ~~Add `OnSubscribe`/`OnUnsubscribe` callbacks to Hub for metrics~~ **Won't implement — routed to ROADMAP.md — live/ extensibility hooks.** | ~~Low~~ | ~~XS~~ |
-| ~~31~~ | ~~Add `Server.Handle(pattern, handler)` for extensibility~~ **Won't implement — routed to ROADMAP.md — live/ extensibility hooks.** | ~~Low~~ | ~~S~~ |
-| ~~32~~ | ~~Document `SnapshotProvider`/`CompleteProvider` lifecycle in README~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium~~ | ~~XS~~ |
-| ~~33~~ | ~~Add `ErrInvalidPrefix` sentinel for malformed route prefixes~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~ | ~~XS~~ |
-| ~~34~~ | ~~Add `WithHeartbeatInterval` as a public test helper option~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~ | ~~XS~~ |
-| ~~35~~ | ~~Consolidate `makeReportProvider`/`Snapshot`/`Complete`/`Health` factories into generic helper~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~ | ~~S~~ |
-| ~~36~~ | ~~Refactor `With*Provider` options to use `Option func(*Server) error`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~ | ~~S~~ |
-| ~~37~~ | ~~Add test for `handleReport` returning nil provider error~~ **Won't implement — server_test.go:1080.** | ~~Medium~~ | ~~XS~~ |
-| ~~38~~ | ~~Add test for SSE handler when `Flusher` assertion fails~~ **Won't implement — server_test.go:918.** | ~~Low~~ | ~~XS~~ |
-| ~~39~~ | ~~Add test for `WriteToFile` directory-creation failure path~~ **Won't implement — superseded by ssetest.** | ~~Low~~ | ~~XS~~ |
-| ~~40~~ | ~~Tag go-workflow and samber-do versions that use core `v0.1.0`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~High~~ | ~~XS~~ |
-| ~~41~~ | ~~Verify both `replace` directives are path-consistent (catch drift)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~ | ~~XS~~ |
-| ~~42~~ | ~~Add `go work sync` to CI to keep workspace in sync~~ **Won't implement — moot — CI builds the module, not the workspace.** | ~~Low~~ | ~~XS~~ |
-| ~~43~~ | ~~Create `auditlog-core/CHANGELOG.md` entry for v0.1.0~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Medium~~ | ~~XS~~ |
-| ~~44~~ | ~~Add `healthResponse` version field for API stability~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~ | ~~XS~~ |
-| ~~45~~ | ~~Add `context.Context` to `CheckNoClobber` (currently takes only path)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~ | ~~XS~~ |
-| ~~46~~ | ~~Add SSE backpressure test (fill buffer, verify drop, verify no block)~~ **Won't implement — replay_test.go:107.** | ~~Medium~~ | ~~S~~ |
-| ~~47~~ | ~~Add `go vet` to CI alongside golangci-lint~~ **Won't implement — ci.yml:36.** | ~~Low~~ | ~~XS~~ |
-| ~~48~~ | ~~Add `gosec` to CI for security scanning~~ **Won't implement — .golangci.yml gosec.** | ~~Low~~ | ~~XS~~ |
-| ~~49~~ | ~~Add `govulncheck` to CI for vulnerability scanning~~ **Won't implement — ci.yml vulncheck.** | ~~Low~~ | ~~XS~~ |
-| ~~50~~ | ~~Create architecture diagram (D2 or Mermaid) showing all three projects + dependencies~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~ | ~~S~~ |
+| #      | Task                                                                                                                                                                            | Impact     | Effort |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
+| ~~1~~  | ~~Publish `auditlog-core` to GitHub (fix sum verification — `GONOSUMDB`/`GONOSUMCHECK`)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**         | ~~High~~   | ~~S~~  |
+| ~~2~~  | ~~Tag `auditlog-core` `v0.1.0`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                                                  | ~~High~~   | ~~XS~~ |
+| ~~3~~  | ~~Remove `replace` directives from all `go.mod` files after publish~~ **Won't implement — go.mod zero replaces.**                                                               | ~~High~~   | ~~XS~~ |
+| ~~4~~  | ~~Consolidate go-workflow `helpers.go:WriteToFile` to delegate to `auditlogcore.WriteToFile`~~ **Won't implement — other repo.**                                                | ~~High~~   | ~~S~~  |
+| ~~5~~  | ~~Cascade `context.Context` through go-workflow export API (`ExportJSON`, `ExportNDJSON`)~~ **Won't implement — other repo.**                                                   | ~~Medium~~ | ~~M~~  |
+| ~~6~~  | ~~Extract `sseConnect`/`readSSEEvent`/`skipSnapshot` into `auditlog-core/live/testutil`~~ **Won't implement — go-sse/ssetest dep.**                                             | ~~High~~   | ~~S~~  |
+| ~~7~~  | ~~Standardize on `encoding/json` OR `encoding/json/v2` across all three projects~~ **Won't implement — GOEXPERIMENT=jsonv2 adopted.**                                           | ~~High~~   | ~~M~~  |
+| ~~8~~  | ~~Extract NDJSON read/write into `auditlog-core/ndjson/` (after #7)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                             | ~~High~~   | ~~M~~  |
+| ~~9~~  | ~~Extract format detection/loader into `auditlog-core/loader/` (after #7)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                       | ~~High~~   | ~~M~~  |
+| ~~10~~ | ~~Add `.github/workflows/ci.yml` to auditlog-core (build + test -race + lint)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                   | ~~High~~   | ~~S~~  |
+| ~~11~~ | ~~Add cross-repo CI that tests all three together~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                               | ~~High~~   | ~~M~~  |
+| ~~12~~ | ~~Add `go test -race -count=1` to all CI pipelines~~ **Won't implement — ci.yml -race.**                                                                                        | ~~High~~   | ~~XS~~ |
+| ~~13~~ | ~~Add reconnection test to integration test (disconnect, reconnect, verify snapshot)~~ **Won't implement — server_test.go:1200.**                                               | ~~High~~   | ~~S~~  |
+| ~~14~~ | ~~Add concurrent-write test for `WriteToFile`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                                   | ~~Medium~~ | ~~XS~~ |
+| ~~15~~ | ~~Add SSE end-to-end benchmark (connect → N events → disconnect)~~ **Won't implement — routed to ROADMAP.md — live/ benchmarks.**                                               | ~~Medium~~ | ~~S~~  |
+| ~~16~~ | ~~Rename `HealthInfo` → `HealthResponse` before v0.1.0 (breaking change, do it now)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**             | ~~Medium~~ | ~~S~~  |
+| ~~17~~ | ~~Make `Subscriber` an interface (`ID()`, `Events()`, `Done()`)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                 | ~~Low~~    | ~~S~~  |
+| ~~18~~ | ~~Create multi-module test runner script (`find . -name go.mod -execdir go test ./... \;`)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**      | ~~High~~   | ~~XS~~ |
+| ~~19~~ | ~~Add `.envrc` with `export GOEXPERIMENT=jsonv2` to all three projects~~ **Won't implement — .envrc.example.**                                                                  | ~~Medium~~ | ~~XS~~ |
+| ~~20~~ | ~~Migrate go-workflow dashboard.go to standard `encoding/json` (drop json/v2)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                   | ~~High~~   | ~~M~~  |
+| ~~21~~ | ~~Add `//go:build goexperiment.jsonv2` constraint OR remove json/v2 from go-workflow~~ **Won't implement — jsonv2 adopted.**                                                    | ~~High~~   | ~~S~~  |
+| ~~22~~ | ~~Update both `FEATURES.md` to reflect auditlog-core extraction~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                 | ~~Low~~    | ~~XS~~ |
+| ~~23~~ | ~~Add `docs/DOMAIN_LANGUAGE.md` to samber-do-auditlog~~ **Won't implement — docs/DOMAIN_LANGUAGE.md.**                                                                          | ~~Low~~    | ~~S~~  |
+| ~~24~~ | ~~Write `MIGRATION.md` for downstream projects upgrading to core~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                | ~~Medium~~ | ~~S~~  |
+| ~~25~~ | ~~Add `auditlog-core/examples/minimal` runnable demo~~ **Won't implement — live/demo.**                                                                                         | ~~Medium~~ | ~~S~~  |
+| ~~26~~ | ~~Add `auditlog-core/cmd/auditlog-core-demo` CLI~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                                | ~~Low~~    | ~~M~~  |
+| ~~27~~ | ~~Add `flake.nix` to auditlog-core for devShell parity~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                          | ~~Low~~    | ~~S~~  |
+| ~~28~~ | ~~Add `go mod tidy` to pre-commit hooks~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                                         | ~~Medium~~ | ~~XS~~ |
+| ~~29~~ | ~~Add Prometheus metrics interface (events-sent, clients-connected)~~ **Won't implement — routed to ROADMAP.md — Observability.**                                               | ~~Low~~    | ~~M~~  |
+| ~~30~~ | ~~Add `OnSubscribe`/`OnUnsubscribe` callbacks to Hub for metrics~~ **Won't implement — routed to ROADMAP.md — live/ extensibility hooks.**                                      | ~~Low~~    | ~~XS~~ |
+| ~~31~~ | ~~Add `Server.Handle(pattern, handler)` for extensibility~~ **Won't implement — routed to ROADMAP.md — live/ extensibility hooks.**                                             | ~~Low~~    | ~~S~~  |
+| ~~32~~ | ~~Document `SnapshotProvider`/`CompleteProvider` lifecycle in README~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                            | ~~Medium~~ | ~~XS~~ |
+| ~~33~~ | ~~Add `ErrInvalidPrefix` sentinel for malformed route prefixes~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                  | ~~Low~~    | ~~XS~~ |
+| ~~34~~ | ~~Add `WithHeartbeatInterval` as a public test helper option~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                    | ~~Low~~    | ~~XS~~ |
+| ~~35~~ | ~~Consolidate `makeReportProvider`/`Snapshot`/`Complete`/`Health` factories into generic helper~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.** | ~~Low~~    | ~~S~~  |
+| ~~36~~ | ~~Refactor `With*Provider` options to use `Option func(*Server) error`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                          | ~~Low~~    | ~~S~~  |
+| ~~37~~ | ~~Add test for `handleReport` returning nil provider error~~ **Won't implement — server_test.go:1080.**                                                                         | ~~Medium~~ | ~~XS~~ |
+| ~~38~~ | ~~Add test for SSE handler when `Flusher` assertion fails~~ **Won't implement — server_test.go:918.**                                                                           | ~~Low~~    | ~~XS~~ |
+| ~~39~~ | ~~Add test for `WriteToFile` directory-creation failure path~~ **Won't implement — superseded by ssetest.**                                                                     | ~~Low~~    | ~~XS~~ |
+| ~~40~~ | ~~Tag go-workflow and samber-do versions that use core `v0.1.0`~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                 | ~~High~~   | ~~XS~~ |
+| ~~41~~ | ~~Verify both `replace` directives are path-consistent (catch drift)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                            | ~~Low~~    | ~~XS~~ |
+| ~~42~~ | ~~Add `go work sync` to CI to keep workspace in sync~~ **Won't implement — moot — CI builds the module, not the workspace.**                                                    | ~~Low~~    | ~~XS~~ |
+| ~~43~~ | ~~Create `auditlog-core/CHANGELOG.md` entry for v0.1.0~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                          | ~~Medium~~ | ~~XS~~ |
+| ~~44~~ | ~~Add `healthResponse` version field for API stability~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                                          | ~~Low~~    | ~~XS~~ |
+| ~~45~~ | ~~Add `context.Context` to `CheckNoClobber` (currently takes only path)~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**                         | ~~Low~~    | ~~XS~~ |
+| ~~46~~ | ~~Add SSE backpressure test (fill buffer, verify drop, verify no block)~~ **Won't implement — replay_test.go:107.**                                                             | ~~Medium~~ | ~~S~~  |
+| ~~47~~ | ~~Add `go vet` to CI alongside golangci-lint~~ **Won't implement — ci.yml:36.**                                                                                                 | ~~Low~~    | ~~XS~~ |
+| ~~48~~ | ~~Add `gosec` to CI for security scanning~~ **Won't implement — .golangci.yml gosec.**                                                                                          | ~~Low~~    | ~~XS~~ |
+| ~~49~~ | ~~Add `govulncheck` to CI for vulnerability scanning~~ **Won't implement — ci.yml vulncheck.**                                                                                  | ~~Low~~    | ~~XS~~ |
+| ~~50~~ | ~~Create architecture diagram (D2 or Mermaid) showing all three projects + dependencies~~ **Won't implement — auditlog-core module dropped — live/ is self-contained.**         | ~~Low~~    | ~~S~~  |
 
 ## g) QUESTIONS I CANNOT ANSWER MYSELF
 

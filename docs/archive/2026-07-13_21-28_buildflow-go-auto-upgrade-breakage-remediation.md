@@ -35,11 +35,11 @@ Nothing partially done. The revert was binary — either the code compiles or it
 
 ## c) NOT STARTED
 
-| # | Item                                                | Notes                                                                                                                                                                                                                                         |
-| - | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ~~1~~ | ~~Go-output v0.30.4 upgrade~~ done — go-output v0.38.0 lockstep | ~~The upgrade itself may be desirable (v0.30.4 could have real fixes), but it's blocked until Go 1.26.4's build constraints are resolved or go-output drops `encoding/json/v2`. Not attempted this session — out of scope for emergency repair.~~ |
-| ~~2~~ | ~~Committing the revert~~ done — committed — see Resolution | ~~Not committed — per project rules, no commit without explicit user instruction.~~ |
-| ~~3~~ | ~~Investigating whether Go 1.27+ would enable json/v2~~ done — GOEXPERIMENT=jsonv2 adopted | ~~Not researched.~~ |
+| #     | Item                                                                                       | Notes                                                                                                                                                                                                                                             |
+| ----- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~1~~ | ~~Go-output v0.30.4 upgrade~~ done — go-output v0.38.0 lockstep                            | ~~The upgrade itself may be desirable (v0.30.4 could have real fixes), but it's blocked until Go 1.26.4's build constraints are resolved or go-output drops `encoding/json/v2`. Not attempted this session — out of scope for emergency repair.~~ |
+| ~~2~~ | ~~Committing the revert~~ done — committed — see Resolution                                | ~~Not committed — per project rules, no commit without explicit user instruction.~~                                                                                                                                                               |
+| ~~3~~ | ~~Investigating whether Go 1.27+ would enable json/v2~~ done — GOEXPERIMENT=jsonv2 adopted | ~~Not researched.~~                                                                                                                                                                                                                               |
 
 ---
 

@@ -220,33 +220,33 @@ Consumers (the planned CLI, third-party tools, future dashboard rebuilds) have n
 
 Sorted by **impact × value ÷ effort** (descending). Tier labels refer to the Pareto plan at `docs/planning/2026-06-18_09-18-cli-ndjson-import-json-schema.html`.
 
-| #  | Task                                                                                                                                | Impact      | Effort        | Source                  |
-| -- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------- | ----------------------- |
-| ~~1~~  | ~~**T1+T2: Replay engine** — extract event-application logic from Recorder hooks into pure `ReplayEvents([]Event) → Report`~~ done — replay.go ReplayEvents | ~~🔴 Critical~~ | ~~L (100m)~~ | ~~Plan T1+T2~~ |
-| ~~2~~  | ~~**T3: NDJSON reader** — `ReadEvents(io.Reader) ([]Event, error)` with per-line errors~~ done — ndjson.go ReadEvents | ~~🔴 Critical~~ | ~~S (45m)~~ | ~~Plan T3~~ |
-| ~~3~~  | ~~**T4: Loader API** — `LoadReport(path)` auto-detects JSON vs NDJSON~~ done — loader.go LoadReport | ~~🔴 Critical~~ | ~~M (60m)~~ | ~~Plan T4~~ |
-| ~~4~~  | ~~**D1 fix: Implement dependency-edge diffing + correct `diff.go:43` doc lie**~~ done — diff.go AddedDeps/RemovedDeps | ~~🔴 High~~ | ~~M (75m)~~ | ~~Plan T10, integrity bug~~ |
-| ~~5~~  | ~~**T15: Replay golden tests** — capture demo fixture, assert `ReplayEvents(ndjson) ≈ report` modulo capability flags~~ done — replayFromPlugin helper | ~~🔴 High~~ | ~~L (90m)~~ | ~~Plan T15~~ |
-| ~~6~~  | ~~**T8: JSON Schema file** (`schema/report.schema.json`) for v0.2.0 — all 4 enums, RFC3339 timestamps, omitempty-aware required lists~~ done — schema/report.schema.json | ~~🔴 High~~ | ~~M (75m)~~ | ~~Plan T8, TODO:76~~ |
-| ~~7~~  | ~~**T9: Embedded schema validator** — `ValidateAgainstSchema(Report)` via `santhosh-tekuri/jsonschema`~~ done — schema.go JSONSchema() | ~~🟠 Medium~~ | ~~M (60m)~~ | ~~Plan T9~~ |
-| ~~8~~  | ~~**T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`, persistent flags~~ done — cmd/auditlog | ~~🟠 Medium~~ | ~~M (60m)~~ | ~~Plan T5, FEATURES:170~~ |
-| ~~9~~  | ~~**T6: CLI `import`** — `auditlog import <file> -o report.html` round-trip works~~ done — cmd/auditlog convert | ~~🟠 Medium~~ | ~~M (75m)~~ | ~~Plan T6~~ |
-| ~~10~~ | ~~**T7: CLI `export`** — 5 formats via library APIs~~ done — cmd/auditlog convert | ~~🟠 Medium~~ | ~~S (60m)~~ | ~~Plan T7~~ |
-| ~~11~~ | ~~**T11: Diff scope tree** — flatten ScopeNode by path, set-diff added/removed scopes~~ **Won't implement — routed to ROADMAP.md — Diff deepening (ScopeDiff).** | ~~🟠 Medium~~ | ~~M (60m)~~ | ~~Plan T11~~ |
-| ~~12~~ | ~~**T26: samber/ro reactive adapter** — `EventsAsObservable()` via BehaviorSubject~~ done — samber-ro-adapter.md | ~~🟠 Medium~~ | ~~M (75m)~~ | ~~Plan T26~~ |
-| ~~13~~ | ~~**T2.5: Add `Report.Reconstructed` field** — lets consumers detect capability-flag absence~~ done — report.go Reconstructed | ~~🟡 Low~~ | ~~XS (10m)~~ | ~~Plan, Risk A mitigation~~ |
-| ~~14~~ | ~~**T12: CLI `validate`** — `auditlog validate <file>` runs `Report.Validate()` + schema check~~ done — cmd/auditlog/validate.go | ~~🟡 Low~~ | ~~S (45m)~~ | ~~Plan T12~~ |
-| ~~15~~ | ~~**T13: CLI `diff`** — `auditlog diff <a> <b>` text + JSON output, exit 3 on non-empty~~ done — cmd/auditlog/diff.go | ~~🟡 Low~~ | ~~S (60m)~~ | ~~Plan T13~~ |
-| ~~16~~ | ~~**T14: CLI `info`** — summary stats, `--json` output~~ done — cmd/auditlog/info.go | ~~🟡 Low~~ | ~~XS (30m)~~ | ~~Plan T14~~ |
-| ~~17~~ | ~~**T16+T17: NDJSON reader + CLI golden tests** — roundtrip, fuzz, exit codes~~ done — cli_integration_test.go | ~~🟡 Low~~ | ~~M (135m)~~ | ~~Plan T16+T17~~ |
-| ~~18~~ | ~~**Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` distinct types; breaking change~~ done — types.go | ~~🟡 Low~~ | ~~S (60m)~~ | ~~TODO:54~~ |
-| ~~19~~ | ~~**`NewReport(...)` constructor** — invalid Reports unrepresentable~~ done — report.go NewReport | ~~🟡 Low~~ | ~~S (45m)~~ | ~~TODO:56~~ |
-| ~~20~~ | ~~**T18: `nix build .#auditlog` binary** — replace README stub with real `buildGoModule`~~ done — flake.nix auditlog app | ~~🟡 Low~~ | ~~S (45m)~~ | ~~Plan T18, D4 fix~~ |
-| ~~21~~ | ~~**T19: CI cross-compile matrix** — linux/darwin/windows × amd64/arm64, ldflags version injection, artifact upload~~ done — .goreleaser.yml matrix | ~~🟡 Low~~ | ~~M (60m)~~ | ~~Plan T19~~ |
-| ~~22~~ | ~~**CSV/TSV export** — tabular export of services/events for spreadsheets~~ done — csv.go | ~~🟡 Low~~ | ~~S (60m)~~ | ~~FEATURES:169, TODO:62~~ |
-| ~~23~~ | ~~**Property-based Diff tests** — `rapid`/`gopter`, assert symmetry + identity~~ done — diff_property_test.go | ~~🟡 Low~~ | ~~S (60m)~~ | ~~TODO:68~~ |
-| ~~24~~ | ~~**HTML golden-file test** — deterministic multi-service report → committed golden~~ done — html_golden_test.go | ~~🟡 Low~~ | ~~S (45m)~~ | ~~TODO:71~~ |
-| ~~25~~ | ~~**T21-T25: Docs sync** — README CLI section, AGENTS.md update, FEATURES/TODO flip to DONE, cli-workflow.md, CHANGELOG~~ done — README + docs synced | ~~🟡 Low~~ | ~~L (~3h total)~~ | ~~Plan T21-T25~~ |
+| #      | Task                                                                                                                                                                     | Impact          | Effort            | Source                      |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- | ----------------- | --------------------------- |
+| ~~1~~  | ~~**T1+T2: Replay engine** — extract event-application logic from Recorder hooks into pure `ReplayEvents([]Event) → Report`~~ done — replay.go ReplayEvents              | ~~🔴 Critical~~ | ~~L (100m)~~      | ~~Plan T1+T2~~              |
+| ~~2~~  | ~~**T3: NDJSON reader** — `ReadEvents(io.Reader) ([]Event, error)` with per-line errors~~ done — ndjson.go ReadEvents                                                    | ~~🔴 Critical~~ | ~~S (45m)~~       | ~~Plan T3~~                 |
+| ~~3~~  | ~~**T4: Loader API** — `LoadReport(path)` auto-detects JSON vs NDJSON~~ done — loader.go LoadReport                                                                      | ~~🔴 Critical~~ | ~~M (60m)~~       | ~~Plan T4~~                 |
+| ~~4~~  | ~~**D1 fix: Implement dependency-edge diffing + correct `diff.go:43` doc lie**~~ done — diff.go AddedDeps/RemovedDeps                                                    | ~~🔴 High~~     | ~~M (75m)~~       | ~~Plan T10, integrity bug~~ |
+| ~~5~~  | ~~**T15: Replay golden tests** — capture demo fixture, assert `ReplayEvents(ndjson) ≈ report` modulo capability flags~~ done — replayFromPlugin helper                   | ~~🔴 High~~     | ~~L (90m)~~       | ~~Plan T15~~                |
+| ~~6~~  | ~~**T8: JSON Schema file** (`schema/report.schema.json`) for v0.2.0 — all 4 enums, RFC3339 timestamps, omitempty-aware required lists~~ done — schema/report.schema.json | ~~🔴 High~~     | ~~M (75m)~~       | ~~Plan T8, TODO:76~~        |
+| ~~7~~  | ~~**T9: Embedded schema validator** — `ValidateAgainstSchema(Report)` via `santhosh-tekuri/jsonschema`~~ done — schema.go JSONSchema()                                   | ~~🟠 Medium~~   | ~~M (60m)~~       | ~~Plan T9~~                 |
+| ~~8~~  | ~~**T5: CLI skeleton** — `cmd/auditlog` with cobra, `--version`, persistent flags~~ done — cmd/auditlog                                                                  | ~~🟠 Medium~~   | ~~M (60m)~~       | ~~Plan T5, FEATURES:170~~   |
+| ~~9~~  | ~~**T6: CLI `import`** — `auditlog import <file> -o report.html` round-trip works~~ done — cmd/auditlog convert                                                          | ~~🟠 Medium~~   | ~~M (75m)~~       | ~~Plan T6~~                 |
+| ~~10~~ | ~~**T7: CLI `export`** — 5 formats via library APIs~~ done — cmd/auditlog convert                                                                                        | ~~🟠 Medium~~   | ~~S (60m)~~       | ~~Plan T7~~                 |
+| ~~11~~ | ~~**T11: Diff scope tree** — flatten ScopeNode by path, set-diff added/removed scopes~~ **Won't implement — routed to ROADMAP.md — Diff deepening (ScopeDiff).**         | ~~🟠 Medium~~   | ~~M (60m)~~       | ~~Plan T11~~                |
+| ~~12~~ | ~~**T26: samber/ro reactive adapter** — `EventsAsObservable()` via BehaviorSubject~~ done — samber-ro-adapter.md                                                         | ~~🟠 Medium~~   | ~~M (75m)~~       | ~~Plan T26~~                |
+| ~~13~~ | ~~**T2.5: Add `Report.Reconstructed` field** — lets consumers detect capability-flag absence~~ done — report.go Reconstructed                                            | ~~🟡 Low~~      | ~~XS (10m)~~      | ~~Plan, Risk A mitigation~~ |
+| ~~14~~ | ~~**T12: CLI `validate`** — `auditlog validate <file>` runs `Report.Validate()` + schema check~~ done — cmd/auditlog/validate.go                                         | ~~🟡 Low~~      | ~~S (45m)~~       | ~~Plan T12~~                |
+| ~~15~~ | ~~**T13: CLI `diff`** — `auditlog diff <a> <b>` text + JSON output, exit 3 on non-empty~~ done — cmd/auditlog/diff.go                                                    | ~~🟡 Low~~      | ~~S (60m)~~       | ~~Plan T13~~                |
+| ~~16~~ | ~~**T14: CLI `info`** — summary stats, `--json` output~~ done — cmd/auditlog/info.go                                                                                     | ~~🟡 Low~~      | ~~XS (30m)~~      | ~~Plan T14~~                |
+| ~~17~~ | ~~**T16+T17: NDJSON reader + CLI golden tests** — roundtrip, fuzz, exit codes~~ done — cli_integration_test.go                                                           | ~~🟡 Low~~      | ~~M (135m)~~      | ~~Plan T16+T17~~            |
+| ~~18~~ | ~~**Typed identifiers** — `ContainerID`, `ScopeID`, `ServiceName` distinct types; breaking change~~ done — types.go                                                      | ~~🟡 Low~~      | ~~S (60m)~~       | ~~TODO:54~~                 |
+| ~~19~~ | ~~**`NewReport(...)` constructor** — invalid Reports unrepresentable~~ done — report.go NewReport                                                                        | ~~🟡 Low~~      | ~~S (45m)~~       | ~~TODO:56~~                 |
+| ~~20~~ | ~~**T18: `nix build .#auditlog` binary** — replace README stub with real `buildGoModule`~~ done — flake.nix auditlog app                                                 | ~~🟡 Low~~      | ~~S (45m)~~       | ~~Plan T18, D4 fix~~        |
+| ~~21~~ | ~~**T19: CI cross-compile matrix** — linux/darwin/windows × amd64/arm64, ldflags version injection, artifact upload~~ done — .goreleaser.yml matrix                      | ~~🟡 Low~~      | ~~M (60m)~~       | ~~Plan T19~~                |
+| ~~22~~ | ~~**CSV/TSV export** — tabular export of services/events for spreadsheets~~ done — csv.go                                                                                | ~~🟡 Low~~      | ~~S (60m)~~       | ~~FEATURES:169, TODO:62~~   |
+| ~~23~~ | ~~**Property-based Diff tests** — `rapid`/`gopter`, assert symmetry + identity~~ done — diff_property_test.go                                                            | ~~🟡 Low~~      | ~~S (60m)~~       | ~~TODO:68~~                 |
+| ~~24~~ | ~~**HTML golden-file test** — deterministic multi-service report → committed golden~~ done — html_golden_test.go                                                         | ~~🟡 Low~~      | ~~S (45m)~~       | ~~TODO:71~~                 |
+| ~~25~~ | ~~**T21-T25: Docs sync** — README CLI section, AGENTS.md update, FEATURES/TODO flip to DONE, cli-workflow.md, CHANGELOG~~ done — README + docs synced                    | ~~🟡 Low~~      | ~~L (~3h total)~~ | ~~Plan T21-T25~~            |
 
 **Out of scope for next iteration** (deferred to roadmap): WebSocket live stream, multi-module split, Prometheus dep, `encoding/json/v2` migration, HTML diff visualization, NDJSON sidecar metadata.
 
