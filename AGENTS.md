@@ -166,6 +166,10 @@ The requirement exists because `go-output` (diagram/table rendering), `go-brande
 
 `website.yml` builds/deploys the docs site on pushes touching `website/**` (see Website section below).
 
+## Health-wash ratchet (samber-linter)
+
+`.samber-linter-baseline.json` (schema v2) locks the health-wash floor at **12/20 = 60%** coverage: the ratchet fails on any new unchecked registration or coverage-ratio drop. Regenerate deliberately with `samber-linter --set-baseline ./...` (e.g. `go run github.com/larsartmann/samber-linter/cmd/samber-linter@<version>`, needs `GOEXPERIMENT=jsonv2`). CI job wiring is **pending**: the job must pin a samber-linter release that supports baseline schema v2 (v2 landed after v0.2.1) — add the job in the same change as that version pin.
+
 ## Lint Configuration (.golangci.yml)
 
 Extremely strict — nearly every golangci-lint linter enabled (~108). Key implications:
