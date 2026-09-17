@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "html-validate": "^11.16.0",
+    "html-validate": "^11.15.0",
     "typescript": "^7.0.2"
   },
   "overrides": {
