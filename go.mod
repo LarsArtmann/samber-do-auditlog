@@ -8,7 +8,7 @@ retract v0.9.0
 
 require (
 	github.com/larsartmann/go-sse v0.6.0
-	github.com/larsartmann/go-sse/ssetest v0.2.0
+	github.com/larsartmann/go-sse/ssetest v0.3.0
 )
 
 require (
