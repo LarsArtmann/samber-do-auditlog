@@ -1,6 +1,6 @@
 module github.com/larsartmann/samber-do-auditlog
 
-go 1.26.7
+go 1.27.1
 
 // v0.9.0 is retracted: missing live/fragments_templ.go (gitignored generated file).
 // Broke Nix builds that vendor source without running templ generate.
@@ -15,7 +15,7 @@ require (
 	github.com/a-h/templ v0.3.1020
 	github.com/invopop/jsonschema v0.14.0
 	github.com/larsartmann/go-atomic-write v0.5.1
-	github.com/larsartmann/go-error-family v0.10.0
+	github.com/larsartmann/go-error-family v0.10.1
 	github.com/larsartmann/go-ndjson v0.0.1
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
 	// are tagged together at the same version. Pin them in lockstep.
@@ -70,7 +70,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/samber/go-type-to-string v1.8.0 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
-	github.com/xo/terminfo v1.0.0 // indirect
+	github.com/xo/terminfo v1.2.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.6 // indirect
 	golang.org/x/mod v0.37.0 // indirect
