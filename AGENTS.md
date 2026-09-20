@@ -168,7 +168,7 @@ The requirement exists because `go-output` (diagram/table rendering), `go-brande
 
 ## Health-wash ratchet (samber-linter)
 
-`.samber-linter-baseline.json` (schema v2) locks the health-wash floor at **12/20 = 60%** coverage: the ratchet fails on any new unchecked registration or coverage-ratio drop. Regenerate deliberately with `samber-linter --set-baseline ./...` (e.g. `go run github.com/larsartmann/samber-linter/cmd/samber-linter@<version>`, needs `GOEXPERIMENT=jsonv2`). CI job wiring is **pending**: the job must pin a samber-linter release that supports baseline schema v2 (v2 landed after v0.2.1) — add the job in the same change as that version pin.
+`.samber-linter-baseline.json` (schema v2) locks the health-wash floor at **12/20 = 60%** coverage: the ratchet fails on any new unchecked registration or coverage-ratio drop. Regenerate deliberately with `samber-linter --set-baseline ./...` (e.g. `go run github.com/larsartmann/samber-linter/cmd/samber-linter@<version>`, needs `GOEXPERIMENT=jsonv2`). CI: the `healthwash` job in `ci.yml` pins `@v0.2.2` — the first release with baseline schema v2 (loud validation + gate composition; v0.2.1 carries both driver defects). Bump the pin deliberately and re-run locally first. Verified green at v0.2.2 on 2026-09-20 (12/20 = 60%, baseline acknowledged).
 
 ## Lint Configuration (.golangci.yml)
 

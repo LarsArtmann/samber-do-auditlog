@@ -32,13 +32,13 @@
           ...
         }:
         let
-          goPkg = pkgs.go_1_26;
+          goPkg = pkgs.go_1_27;
         in
         {
           devShells.default = pkgs.mkShellNoCC {
             packages = builtins.attrValues {
               inherit (pkgs)
-                go_1_26
+                go_1_27
                 golangci-lint
                 actionlint
                 govulncheck
@@ -48,7 +48,7 @@
             };
 
             GOEXPERIMENT = "jsonv2";
-            GOTOOLCHAIN = "go1.26.7";
+            GOTOOLCHAIN = "go1.27.1";
             BUILDFLOW_LANGUAGE = "go";
           };
 
@@ -79,7 +79,7 @@
                   text = ''
                     # -race requires cgo; the C toolchain must be on PATH.
                     export CGO_ENABLED=1
-                    export GOTOOLCHAIN=go1.26.7
+                    export GOTOOLCHAIN=go1.27.1
                     exec sh ./scripts/coverage-gate.sh "$@"
                   '';
                 }
@@ -94,7 +94,7 @@
                   runtimeInputs = [ goPkg ];
                   text = ''
                     export CGO_ENABLED=0
-                    export GOTOOLCHAIN=go1.26.7
+                    export GOTOOLCHAIN=go1.27.1
                     exec go run ./cmd/auditlog "$@"
                   '';
                 }

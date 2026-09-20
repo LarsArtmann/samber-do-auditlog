@@ -31,7 +31,7 @@ jobs:
         run: ./scripts/check-go-version.sh
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.27.1"
           cache: true
       - name: go vet
         run: go vet ./...
@@ -74,7 +74,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.27.1"
           cache: true
       - name: Cache golangci-lint binary
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -88,6 +88,21 @@ jobs:
       - name: golangci-lint
         run: golangci-lint run --timeout=10m
 
+  healthwash:
+    name: Health-wash ratchet (samber-linter)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27.1"
+          cache: true
+      - name: samber-linter ratchet
+        # v0.2.2 is the first release with baseline schema v2 (validation +
+        # gate composition); bump deliberately and re-run locally first.
+        run: go run github.com/larsartmann/samber-linter/cmd/samber-linter@v0.2.2 ./...
+
   vulncheck:
     name: Vulnerability scan
     runs-on: ubuntu-latest
@@ -96,7 +111,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.27.1"
           cache: true
       - name: govulncheck
         # Pinned for reproducibility (@latest is non-reproducible). Bump deliberately.
@@ -110,7 +125,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.27.1"
           cache: true
       - name: go mod tidy (transport-flake tolerant)
         # 2026-09-01: 2 of 3 CI runs died on transient proxy.golang.org
@@ -141,7 +156,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.27.1"
           cache: true
       - name: Generated files must be committed
         # v0.9.0 was retracted because live/fragments_templ.go was gitignored
@@ -180,7 +195,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.27.1"
           cache: true
       - name: Install actionlint
         run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
@@ -195,7 +210,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.27.1"
           cache: true
       - name: Run example self-check (23-feature integration check)
         env:
@@ -210,7 +225,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.26.7"
+          go-version: "1.27.1"
           cache: true
       - name: Install goreleaser
         # Pinned to the newest release whose go directive is satisfiable by the
