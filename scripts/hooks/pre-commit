@@ -22,13 +22,17 @@ START=$(date +%s)
 # (e.g. the analysis.Options -> stats.Options incident that sat broken in master
 # for 3 sessions). The per-module loop below also catches this via go build ./...,
 # but this explicit gate gives a clear, immediate error message and runs first.
-# Cached builds are ~1s.
-echo "Verifying main binary compiles (go build ./cmd/buildflow)..."
-go build ./cmd/buildflow || {
-    echo "❌ BUILD GATE FAILED: go build ./cmd/buildflow"
-    echo "   The main binary does not compile. Fix the error above before committing."
-    exit 1
-}
+# Cached builds are ~1s. Guarded by existence: only repos WITH ./cmd/buildflow
+# (BuildFlow itself) run it — the template is installed fleet-wide and other
+# repos do not have this directory.
+if [ -d ./cmd/buildflow ]; then
+    echo "Verifying main binary compiles (go build ./cmd/buildflow)..."
+    go build ./cmd/buildflow || {
+        echo "❌ BUILD GATE FAILED: go build ./cmd/buildflow"
+        echo "   The main binary does not compile. Fix the error above before committing."
+        exit 1
+    }
+fi
 
 # Compile-check every workspace module before running BuildFlow.
 # BuildFlow's pre-commit + --staged-only mode skips test steps, so a broken
@@ -50,8 +54,11 @@ fi
 # Run the repo-wide audit gate (em-dash ratchet, banned-symbol guards, dead
 # Ginkgo suite detection, flag-default CHANGELOG guard). ~0.5s. This is what
 # stops auto-commits from landing ratchet regressions that the full test gate
-# would catch too late.
-go test ./audit/ -count=1
+# would catch too late. Guarded by existence: the audit suite lives in
+# BuildFlow's own repo; other repos skip silently.
+if [ -d ./audit ]; then
+    go test ./audit/ -count=1
+fi
 
 # Doc consistency gate (T2): provider/module count claims, cross-refs, and
 # gotcha anchors verified against the live registry. Blocking so doc drift
