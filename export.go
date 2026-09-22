@@ -1,7 +1,8 @@
 package auditlog
 
 import (
-	"encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"fmt"
 	"io"
 )
@@ -10,10 +11,10 @@ import (
 // Shared by Plugin.WriteEventsNDJSON and Report.WriteNDJSON to keep error
 // wrapping consistent across both entry points.
 func writeEventsNDJSON(writer io.Writer, events []Event) error {
-	enc := json.NewEncoder(writer)
+	enc := jsontext.NewEncoder(writer)
 
 	for _, event := range events {
-		err := enc.Encode(event)
+		err := json.MarshalEncode(enc, event)
 		if err != nil {
 			return fmt.Errorf("encode event %d: %w", event.Sequence, err)
 		}

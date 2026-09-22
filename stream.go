@@ -2,7 +2,8 @@ package auditlog
 
 import (
 	"bufio"
-	"encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"fmt"
 	"io"
 	"os"
@@ -48,7 +49,7 @@ type NDJSONStreamer struct {
 
 	writer     io.Writer
 	buf        *bufio.Writer
-	encoder    *json.Encoder
+	encoder    *jsontext.Encoder
 	err        error
 	autoFlush  bool
 	flushEvery time.Duration
@@ -114,7 +115,7 @@ func NewNDJSONStreamer(w io.Writer, opts ...NDJSONStreamerOption) *NDJSONStreame
 		streamer.buf = bufio.NewWriterSize(w, ndjsonStreamBufferSize)
 	}
 
-	streamer.encoder = json.NewEncoder(streamer.buf)
+	streamer.encoder = jsontext.NewEncoder(streamer.buf)
 
 	return streamer
 }
@@ -147,7 +148,7 @@ func (streamer *NDJSONStreamer) OnEvent(evt Event) {
 		return
 	}
 
-	encodeErr := streamer.encoder.Encode(evt)
+	encodeErr := json.MarshalEncode(streamer.encoder, evt)
 	if encodeErr != nil {
 		streamer.err = fmt.Errorf("encode event %d: %w", evt.Sequence, encodeErr)
 

@@ -8,10 +8,12 @@
 package main
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"encoding/json/jsontext"
 
 	"github.com/invopop/jsonschema"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
@@ -30,7 +32,7 @@ func main() {
 	schema.Title = "do-auditlog Report"
 	schema.Description = "Report exported by the samber-do-auditlog plugin."
 
-	data, err := json.MarshalIndent(schema, "", "  ")
+	data, err := json.Marshal(schema, jsontext.WithIndentPrefix(""), jsontext.WithIndent("  "))
 	if err != nil {
 		dief("marshal schema: %v\n", err)
 	}

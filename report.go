@@ -1,7 +1,8 @@
 package auditlog
 
 import (
-	"encoding/json"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"io"
@@ -436,10 +437,9 @@ func (r Report) WriteNDJSON(writer io.Writer) error {
 
 // WriteJSON writes the full report as indented JSON to the writer.
 func (r Report) WriteJSON(writer io.Writer) error {
-	enc := json.NewEncoder(writer)
-	enc.SetIndent("", "  ")
+	enc := jsontext.NewEncoder(writer, jsontext.WithIndent("  "))
 
-	err := enc.Encode(r)
+	err := json.MarshalEncode(enc, r)
 	if err != nil {
 		return fmt.Errorf("encode report: %w", err)
 	}

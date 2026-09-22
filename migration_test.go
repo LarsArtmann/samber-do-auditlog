@@ -2,11 +2,13 @@ package auditlog_test
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"math"
 	"testing"
 	"time"
+
+	"encoding/json/jsontext"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/samber/do/v2"
@@ -137,10 +139,9 @@ func TestMigrateReport_RoundTrip(t *testing.T) {
 
 	var buf bytes.Buffer
 
-	enc := json.NewEncoder(&buf)
-	enc.SetIndent("", "  ")
+	enc := jsontext.NewEncoder(&buf, jsontext.WithIndent("  "))
 
-	err := enc.Encode(original)
+	err := json.MarshalEncode(enc, original)
 	if err != nil {
 		t.Fatalf("encode: %v", err)
 	}

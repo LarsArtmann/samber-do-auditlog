@@ -3,13 +3,15 @@ package live
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"encoding/json/jsontext"
 
 	"github.com/larsartmann/go-sse"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
@@ -541,9 +543,9 @@ func makeReportJSON(plugin *auditlog.Plugin) ([]byte, error) {
 
 	var buf bytes.Buffer
 
-	encoder := json.NewEncoder(&buf)
+	encoder := jsontext.NewEncoder(&buf)
 
-	if err := encoder.Encode(report); err != nil {
+	if err := json.MarshalEncode(encoder, report); err != nil {
 		return nil, fmt.Errorf("encode report: %w", err)
 	}
 

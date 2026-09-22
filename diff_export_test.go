@@ -2,7 +2,7 @@ package auditlog_test
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json/v2"
 	"testing"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"

@@ -2,10 +2,12 @@ package auditlog_test
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"strings"
 	"testing"
+
+	"encoding/json/jsontext"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/samber/do/v2"
@@ -113,8 +115,8 @@ func FuzzMigrateReport(f *testing.F) {
 		// Re-migrating a current-schema report should be a no-op and stay valid.
 		var buf bytes.Buffer
 
-		enc := json.NewEncoder(&buf)
-		if encodeErr := enc.Encode(report); encodeErr != nil {
+		enc := jsontext.NewEncoder(&buf)
+		if encodeErr := json.MarshalEncode(enc, report); encodeErr != nil {
 			t.Fatalf("encode migrated report: %v", encodeErr)
 		}
 
@@ -354,8 +356,8 @@ func TestNestedScopeExport(t *testing.T) {
 			// Normalize via MigrateReport so all denormalized fields are set.
 			var rawBuf bytes.Buffer
 
-			enc := json.NewEncoder(&rawBuf)
-			if encodeErr := enc.Encode(rawReport); encodeErr != nil {
+			enc := jsontext.NewEncoder(&rawBuf)
+			if encodeErr := json.MarshalEncode(enc, rawReport); encodeErr != nil {
 				t.Fatalf("JSON encode error: %v", encodeErr)
 			}
 

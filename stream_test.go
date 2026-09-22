@@ -2,7 +2,7 @@ package auditlog_test
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +10,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"encoding/json/jsontext"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
@@ -504,9 +506,9 @@ func TestNDJSONStreamer_OutputMatchesBatchEncoding(t *testing.T) {
 	// Batch path (replicates writeEventsNDJSON encoding exactly).
 	var batchBuf bytes.Buffer
 
-	batchEnc := json.NewEncoder(&batchBuf)
+	batchEnc := jsontext.NewEncoder(&batchBuf)
 	for _, evt := range events {
-		if err := batchEnc.Encode(evt); err != nil {
+		if err := json.MarshalEncode(batchEnc, evt); err != nil {
 			t.Fatalf("batch encode event %d: %v", evt.Sequence, err)
 		}
 	}
