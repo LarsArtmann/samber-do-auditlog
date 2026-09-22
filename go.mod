@@ -9,7 +9,7 @@ retract v0.9.0
 require (
 	github.com/a-h/templ v0.3.1020
 	github.com/invopop/jsonschema v0.14.0
-	github.com/larsartmann/go-atomic-write v0.5.1
+	github.com/larsartmann/go-atomic-write v0.5.2
 	github.com/larsartmann/go-error-family v0.10.1
 	github.com/larsartmann/go-ndjson v0.0.1
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
