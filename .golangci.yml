@@ -39,7 +39,7 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - exhaustruct_v5
+    - exhaustruct
     - exptostd
     - fatcontext
     - forbidigo
@@ -145,7 +145,7 @@ linters:
         - fmt.Println
         - (*strings.Builder).WriteString
         - (*bytes.Buffer).WriteString
-    exhaustruct_v5:
+    exhaustruct:
       exclude:
         - os/exec.Cmd
         - do.InjectorOpts
@@ -256,7 +256,7 @@ linters:
     rules:
       - path: _test\.go
         linters:
-          - exhaustruct_v5
+          - exhaustruct
           - testpackage
           - gochecknoglobals
           - funlen
@@ -283,7 +283,7 @@ linters:
           - unparam
           - varnamelen
           - noinlineerr
-          - exhaustruct_v5
+          - exhaustruct
           - errcheck
           - err113
           - nlreturn
@@ -296,7 +296,7 @@ linters:
           - unparam
           - varnamelen
           - noinlineerr
-          - exhaustruct_v5
+          - exhaustruct
           - gosec
           - err113
           - errcheck
@@ -309,7 +309,7 @@ linters:
           - noinlineerr
           - gosec
           - varnamelen
-          - exhaustruct_v5
+          - exhaustruct
           - testpackage
           - gochecknoglobals
           - funlen
