@@ -1,0 +1,8 @@
+# samber-do-auditlog is a library whose PUBLIC API is the root package
+# (github.com/larsartmann/samber-do-auditlog) — consumers import it directly,
+# so moving root .go files into internal/ would break the import path.
+# The "flat" exclusion preset disables the standard-layout rules that do not
+# apply to this project shape (root-package-files, root-main-go,
+# cmd-directory, internal-directory, docs-directory). Precedent:
+# go-datastar ADR-002.
+presets: [flat]
