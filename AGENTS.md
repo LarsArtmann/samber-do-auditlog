@@ -2,7 +2,7 @@
 
 Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI container lifecycle event (registration, invocation, shutdown) with timestamps, dependency graph inference, build duration tracking, and export to JSON / NDJSON / self-contained HTML.
 
-**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.26.7 (go.mod + devShell) · **Status**: BETA (per [STABILITY.md](STABILITY.md); internal 1.0 bar tracked in ROADMAP.md)
+**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.27.1 (go.mod minor-only `go 1.27` + devShell) · **Status**: BETA (per [STABILITY.md](STABILITY.md); internal 1.0 bar tracked in ROADMAP.md)
 
 ---
 
@@ -19,7 +19,7 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | `golangci-lint config verify`                                                       | Validate the lint config (CI runs this before `lint run`)                                                                                 |
 | `golangci-lint run`                                                                 | Full lint (heavy config, see below)                                                                                                       |
 | `go mod tidy`                                                                       | Sync `go.sum` (CI `mod-tidy` job fails on drift)                                                                                          |
-| `nix develop`                                                                       | Enter devShell (Go 1.26.7, golangci-lint, govulncheck, actionlint, golines, **GOEXPERIMENT=jsonv2 enabled**)                              |
+| `nix develop`                                                                       | Enter devShell (Go 1.27.1, golangci-lint, govulncheck, actionlint, golines, **GOEXPERIMENT=jsonv2 enabled**)                              |
 | `go run ./example`                                                                  | Run the example (set `DO_AUDITLOG_ENABLED=true`)                                                                                          |
 | `go run ./example --live`                                                           | Example + real-time SSE dashboard                                                                                                         |
 | `go run ./cmd/auditlog help`                                                        | CLI: info/convert/diff/validate/stats/schema subcommands                                                                                  |
@@ -137,17 +137,17 @@ live/demo/          — Self-contained real-time demo (services implement do.Hea
 
 **The project requires `GOEXPERIMENT=jsonv2` to build, and consumers need it too** — a downstream module that imports this library fails with `imports encoding/json/v2: build constraints exclude all Go files` without it (verified empirically with a minimal consumer). README Install + website Installation page document this; keep them in sync. Set automatically in: Nix devShell, CI workflows, `scripts/coverage-gate.sh`, direnv (`.envrc`), `.buildflow.yml`.
 
-The requirement exists because `go-output` (diagram/table rendering), `go-branded-id` (transitive), and `go-ndjson` use `encoding/json/v2` features. This project's own code does NOT import `encoding/json/v2` (exclusion policy below). When Go 1.27 stabilizes `json/v2`, the flag requirement disappears.
+The requirement exists because `go-output` (diagram/table rendering), `go-branded-id` (transitive), and `go-ndjson` use `encoding/json/v2` features. This project's own code does NOT import `encoding/json/v2` (exclusion policy below). Go 1.27 stabilized `json/v2`, but the flag requirement STAYS: transitive deps built from source still sit on lower go directives and fail the go1.27 symbol gate without it (see CONTRIBUTING.md) — re-evaluate as the dependency graph converges on 1.27.
 
-### Go 1.26.7 toolchain pin
+### Go 1.27 toolchain pin
 
-**The canonical Go version is 1.26.7**, pinned across (1) `go.mod`, (2) `.github/workflows/ci.yml`, (3) `flake.nix` (`GOTOOLCHAIN=go1.26.7`), (4) `CONTRIBUTING.md`/`BENCHMARKS.md`. `scripts/check-go-version.sh` asserts all four agree.
+**The canonical Go version is 1.27.1** (go.mod carries minor-only `go 1.27` per the fleet policy; the devShell/CI/GOTOOLCHAIN pin the patch), pinned across (1) `go.mod`, (2) `.github/workflows/ci.yml`, (3) `flake.nix` (`GOTOOLCHAIN=go1.27.1`, `go_1_27`), (4) `CONTRIBUTING.md`/`BENCHMARKS.md`. `scripts/check-go-version.sh` asserts all four agree.
 
 **Rule: bump `go-version` in ci.yml and `GOTOOLCHAIN` in flake.nix in the SAME commit as any `go.mod` bump.** GitHub runners set `GOTOOLCHAIN=local`; a CI go-version below go.mod's requirement fails every Go job instantly. (This exact mismatch broke all Go jobs on master once — see git history.)
 
-**Gotcha:** a separately-installed `go` nix-store derivation can shadow the devShell's `go_1_26` on PATH; the `GOTOOLCHAIN` env var pins the effective toolchain anyway. Outside the devShell, prefix with `GOTOOLCHAIN=go1.26.7`.
+**Gotcha:** a separately-installed `go` nix-store derivation can shadow the devShell's `go_1_26` on PATH; the `GOTOOLCHAIN` env var pins the effective toolchain anyway. Outside the devShell, prefix with `GOTOOLCHAIN=go1.27.1`.
 
-**goreleaser coupling:** goreleaser v2.18.0+ declares `go >= 1.27.0` and fails under runner `GOTOOLCHAIN=local` on Go 1.26.x. CI pins goreleaser to `v2.17.1`; revisit when CI's Go reaches 1.27.
+**goreleaser coupling:** goreleaser v2.18.0+ declares `go >= 1.27.0` and fails under runner `GOTOOLCHAIN=local` on Go 1.26.x. CI pins goreleaser to `v2.17.1`; CI's Go reached 1.27.1 on 2026-09-22, so the v2.18+ bump is unblocked (verify `goreleaser check` against `.goreleaser.yml` at the new version before merging the pin bump).
 
 ---
 

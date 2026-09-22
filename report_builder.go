@@ -78,7 +78,7 @@ func buildServicesFromMap(services map[svcKey]*serviceRecord) []ServiceInfo {
 // and IsShutdowner are left as zero values — the caller sets them after calling
 // this function.
 func serviceRecordToInfo(rec *serviceRecord) ServiceInfo {
-	//nolint:modernize // embedlit's promoted-field flattening conflicts with exhaustruct v4 (which cannot see promoted fields as exhaustive); exhaustruct_v5 panics on the live package (v5.0.3), so the nested literal stays until v5 is usable
+	//nolint:modernize // embedlit's promoted-field flattening conflicts with exhaustruct v4 (which cannot see promoted fields as exhaustive); exhaustruct_v5 panics on the live package (v5.0.3, retried 2026-09-22 under golangci-lint 2.13.2: identical makeslice panic), so the nested literal stays until v5 ships a fix
 	return ServiceInfo{
 		ServiceIdentity: ServiceIdentity{
 			ServiceRef: ServiceRef{
