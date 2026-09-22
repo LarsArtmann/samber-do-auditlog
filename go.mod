@@ -27,7 +27,7 @@ require (
 	github.com/larsartmann/go-output/table v0.38.0
 	github.com/larsartmann/go-output/tree v0.38.0
 	github.com/larsartmann/go-sse v0.6.0
-	github.com/larsartmann/go-sse/ssetest v0.2.0
+	github.com/larsartmann/go-sse/ssetest v0.3.0
 	github.com/samber/do/v2 v2.1.0
 )
 
