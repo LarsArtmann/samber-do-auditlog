@@ -6,3 +6,5 @@
 # cmd-directory, internal-directory, docs-directory). Precedent:
 # go-datastar ADR-002.
 presets: [flat]
+
+# Verified 2026-09-22: 37 root-package-files errors drop to 0 warnings under gsl v0.11.0+.
