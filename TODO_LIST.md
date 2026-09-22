@@ -32,6 +32,7 @@ Completed items are in [CHANGELOG.md](CHANGELOG.md). Rejected proposals are in [
 - [ ] **`fuzzFilterOptions` → return `(opts, names)`** to avoid the double `tokenize(data)` (XS). Source: 2026-09-11 §f.15.
 - [ ] **Tidy `example/services.go` var-block** — sentinels + interface assertions sit under a misleading `// Cache implements…` comment (XS). Source: 2026-09-11 §f.16.
 - [ ] **BENCHMARKS.md benchstat comparison** vs the Go 1.26.5 baseline; label toolchain-vs-code deltas. Source: 126-task run §f.9.
+- [ ] **Retry the `exhaustruct` → `exhaustruct_v5` migration once golangci-lint bundles exhaustruct ≥ v5.2.0** (current v2.13.2 pins the panicking v5.0.3). Root cause (verified 2026-09-22 with a minimal repro): v5.0.3 panics `makeslice: cap out of range` on Go 1.27 promoted-field composite-literal keys (the `live` package's `ServiceInfo{...}` literals); fixed upstream in v5.2.0 (PR GaijinEntertainment/go-exhaustruct#171, tracked as golangci-lint#6780). After the bump: revert the report_builder.go embedlit nolint if v5 coexists with embedlit.
 - [ ] **Add `SECURITY.md`** (security policy / reporting channel; XS). Source: regression-tests report §f.40.
 
 ## Website & Docs
