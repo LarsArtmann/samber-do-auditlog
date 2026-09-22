@@ -7,11 +7,6 @@ go 1.27.1
 retract v0.9.0
 
 require (
-	github.com/larsartmann/go-sse v0.6.0
-	github.com/larsartmann/go-sse/ssetest v0.2.0
-)
-
-require (
 	github.com/a-h/templ v0.3.1020
 	github.com/invopop/jsonschema v0.14.0
 	github.com/larsartmann/go-atomic-write v0.5.1
@@ -31,6 +26,8 @@ require (
 	github.com/larsartmann/go-output/serialization v0.38.0
 	github.com/larsartmann/go-output/table v0.38.0
 	github.com/larsartmann/go-output/tree v0.38.0
+	github.com/larsartmann/go-sse v0.6.0
+	github.com/larsartmann/go-sse/ssetest v0.2.0
 	github.com/samber/do/v2 v2.1.0
 )
 
