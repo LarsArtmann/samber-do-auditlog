@@ -147,7 +147,7 @@ The requirement exists because `go-output` (diagram/table rendering), `go-brande
 
 **Gotcha:** a separately-installed `go` nix-store derivation can shadow the devShell's `go_1_26` on PATH; the `GOTOOLCHAIN` env var pins the effective toolchain anyway. Outside the devShell, prefix with `GOTOOLCHAIN=go1.27.1`.
 
-**goreleaser coupling:** goreleaser v2.18.0+ declares `go >= 1.27.0` and fails under runner `GOTOOLCHAIN=local` on Go 1.26.x. CI pins goreleaser to `v2.17.1`; CI's Go reached 1.27.1 on 2026-09-22, so the v2.18+ bump is unblocked (verify `goreleaser check` against `.goreleaser.yml` at the new version before merging the pin bump).
+**goreleaser coupling:** goreleaser v2.18.0+ declares `go >= 1.27.0` and fails under runner `GOTOOLCHAIN=local` on Go 1.26.x. CI pins goreleaser to `v2.18.2` (bumped 2026-09-22 once CI's Go reached 1.27.1, unblocking the v2.18+ `go >= 1.27.0` requirement; `goreleaser check` validated `.goreleaser.yml` at v2.18.2 locally before the bump).
 
 ---
 

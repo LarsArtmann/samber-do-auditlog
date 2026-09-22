@@ -231,6 +231,6 @@ jobs:
         # Pinned to the newest release whose go directive is satisfiable by the
         # setup-go toolchain above (v2.18.0+ requires go >= 1.27.0 and the
         # runners force GOTOOLCHAIN=local).
-        run: go install github.com/goreleaser/goreleaser/v2@v2.17.1
+        run: go install github.com/goreleaser/goreleaser/v2@v2.18.2
       - name: goreleaser check
         run: goreleaser check
