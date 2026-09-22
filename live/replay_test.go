@@ -13,12 +13,10 @@ import (
 
 func makeReplayEvent(seq int) auditlog.Event {
 	return auditlog.Event{
-		Sequence:  seq,
-		EventType: auditlog.EventTypeRegistration,
-		Phase:     auditlog.PhaseBefore,
-		ServiceRef: auditlog.ServiceRef{
-			ServiceName: auditlog.ServiceName(fmt.Sprintf("svc-%d", seq)),
-		},
+		Sequence:    seq,
+		EventType:   auditlog.EventTypeRegistration,
+		Phase:       auditlog.PhaseBefore,
+		ServiceName: auditlog.ServiceName(fmt.Sprintf("svc-%d", seq)),
 	}
 }
 

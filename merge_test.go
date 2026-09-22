@@ -147,20 +147,16 @@ func TestMergeReports_EarlierExportedAtPreserved(t *testing.T) {
 
 	r1 := mkNewReport(t, "c1", base, []auditlog.ServiceInfo{
 		{
-			ServiceIdentity: auditlog.ServiceIdentity{ServiceRef: rootRef("svc-a")},
-			ServiceLifecycle: auditlog.ServiceLifecycle{
-				RegisteredAt: base,
-			},
+			ServiceRef:   rootRef("svc-a"),
+			RegisteredAt: base,
 		},
 	}, rootScopeTree("svc-a"))
 	r1.ExportedAt = base
 
 	r2 := mkNewReport(t, "c2", earlier, []auditlog.ServiceInfo{
 		{
-			ServiceIdentity: auditlog.ServiceIdentity{ServiceRef: rootRef("svc-b")},
-			ServiceLifecycle: auditlog.ServiceLifecycle{
-				RegisteredAt: earlier,
-			},
+			ServiceRef:   rootRef("svc-b"),
+			RegisteredAt: earlier,
 		},
 	}, rootScopeTree("svc-b"))
 	r2.ExportedAt = earlier

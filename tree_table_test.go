@@ -20,12 +20,8 @@ func activeSvcReport(containerID auditlog.ContainerID, serviceName auditlog.Serv
 		ContainerID: containerID,
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: rootRef(serviceName),
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status: auditlog.ServiceStatusActive,
-				},
+				ServiceRef: rootRef(serviceName),
+				Status:     auditlog.ServiceStatusActive,
 			},
 		},
 	}
@@ -248,14 +244,10 @@ func TestReport_WriteTable_ShutdownError(t *testing.T) {
 		ContainerID: "err-test",
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: rootRef("crashing-svc"),
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status:               auditlog.ServiceStatusShutdownError,
-					ShutdownError:        &shutdownErr,
-					FirstBuildDurationMs: &buildMs,
-				},
+				ServiceRef:           rootRef("crashing-svc"),
+				Status:               auditlog.ServiceStatusShutdownError,
+				ShutdownError:        &shutdownErr,
+				FirstBuildDurationMs: &buildMs,
 			},
 		},
 	}
@@ -284,16 +276,10 @@ func TestReport_WriteTree_AllServicesHaveDeps(t *testing.T) {
 		ContainerID: "all-deps",
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: rootRef("svc-a"),
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status: auditlog.ServiceStatusActive,
-				},
-				ServiceGraph: auditlog.ServiceGraph{
-					Dependencies: []auditlog.ServiceRef{
-						{ScopeID: "ext", ScopeName: "external", ServiceName: "ext-svc"},
-					},
+				ServiceRef: rootRef("svc-a"),
+				Status:     auditlog.ServiceStatusActive,
+				Dependencies: []auditlog.ServiceRef{
+					{ScopeID: "ext", ScopeName: "external", ServiceName: "ext-svc"},
 				},
 			},
 		},
@@ -445,18 +431,12 @@ func TestReport_WriteCSV_WithErrors(t *testing.T) {
 		ContainerID: "csv-errors",
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: rootRef("failing-svc"),
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status:          auditlog.ServiceStatusInvocationError,
-					InvocationError: &invErr,
-					ShutdownError:   &shutdownErr,
-				},
-				ServiceHealth: auditlog.ServiceHealth{
-					HealthCheckError: &hcErr,
-					HealthCheckCount: 3,
-				},
+				ServiceRef:       rootRef("failing-svc"),
+				Status:           auditlog.ServiceStatusInvocationError,
+				InvocationError:  &invErr,
+				ShutdownError:    &shutdownErr,
+				HealthCheckError: &hcErr,
+				HealthCheckCount: 3,
 			},
 		},
 	}
@@ -492,12 +472,8 @@ func TestReport_WriteTree_EmptyContainerID(t *testing.T) {
 		Version: auditlog.SchemaVersion,
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: rootRef("svc"),
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status: auditlog.ServiceStatusRegistered,
-				},
+				ServiceRef: rootRef("svc"),
+				Status:     auditlog.ServiceStatusRegistered,
 			},
 		},
 	}
@@ -522,16 +498,10 @@ func TestReport_WriteTree_DanglingDependent(t *testing.T) {
 		ContainerID: "dangling-test",
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: rootRef("root-svc"),
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status: auditlog.ServiceStatusRegistered,
-				},
-				ServiceGraph: auditlog.ServiceGraph{
-					Dependents: []auditlog.ServiceRef{
-						rootRef("nonexistent-service"),
-					},
+				ServiceRef: rootRef("root-svc"),
+				Status:     auditlog.ServiceStatusRegistered,
+				Dependents: []auditlog.ServiceRef{
+					rootRef("nonexistent-service"),
 				},
 			},
 		},

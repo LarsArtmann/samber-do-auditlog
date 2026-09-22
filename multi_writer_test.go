@@ -28,12 +28,10 @@ func TestMultiWriter_FansOutToAllCallbacks(t *testing.T) {
 	mw := auditlog.NewMultiWriter(callback, callback, callback)
 
 	evt := auditlog.Event{
-		Sequence:  1,
-		EventType: auditlog.EventTypeRegistration,
-		Phase:     auditlog.PhaseBefore,
-		ServiceRef: auditlog.ServiceRef{
-			ServiceName: "s1",
-		},
+		Sequence:    1,
+		EventType:   auditlog.EventTypeRegistration,
+		Phase:       auditlog.PhaseBefore,
+		ServiceName: "s1",
 	}
 
 	wg.Add(3)

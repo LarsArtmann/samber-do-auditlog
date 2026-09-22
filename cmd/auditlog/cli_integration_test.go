@@ -51,9 +51,7 @@ func mkRegEvent(
 	containerID auditlog.ContainerID,
 ) auditlog.Event {
 	return auditlog.Event{
-		ServiceRef: auditlog.ServiceRef{
-			ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: serviceName,
-		},
+		ScopeID: "root", ScopeName: auditlog.RootScopeName, ServiceName: serviceName,
 		Sequence:    seq,
 		Timestamp:   ts,
 		EventType:   auditlog.EventTypeRegistration,

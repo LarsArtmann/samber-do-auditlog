@@ -2,12 +2,11 @@ package auditlog_test
 
 import (
 	"bytes"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"fmt"
 	"strings"
 	"testing"
-
-	"encoding/json/jsontext"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/samber/do/v2"
@@ -324,26 +323,16 @@ func TestNestedScopeExport(t *testing.T) {
 
 			services := make([]auditlog.ServiceInfo, 0, depth+1)
 			services = append(services, auditlog.ServiceInfo{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: rootRef("root-svc"),
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status: auditlog.ServiceStatusActive,
-				},
+				ServiceRef: rootRef("root-svc"),
+				Status:     auditlog.ServiceStatusActive,
 			})
 
 			for i := range depth {
 				services = append(services, auditlog.ServiceInfo{
-					ServiceIdentity: auditlog.ServiceIdentity{
-						ServiceRef: auditlog.ServiceRef{
-							ScopeID:     auditlog.ScopeID(fmt.Sprintf("scope-%d", i)),
-							ScopeName:   fmt.Sprintf("scope-%d", i),
-							ServiceName: auditlog.ServiceName(fmt.Sprintf("svc-%d", i)),
-						},
-					},
-					ServiceLifecycle: auditlog.ServiceLifecycle{
-						Status: auditlog.ServiceStatusActive,
-					},
+					ScopeID:     auditlog.ScopeID(fmt.Sprintf("scope-%d", i)),
+					ScopeName:   fmt.Sprintf("scope-%d", i),
+					ServiceName: auditlog.ServiceName(fmt.Sprintf("svc-%d", i)),
+					Status:      auditlog.ServiceStatusActive,
 				})
 			}
 

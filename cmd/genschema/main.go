@@ -8,12 +8,11 @@
 package main
 
 import (
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"encoding/json/jsontext"
 
 	"github.com/invopop/jsonschema"
 	auditlog "github.com/larsartmann/samber-do-auditlog"

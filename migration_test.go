@@ -2,13 +2,12 @@ package auditlog_test
 
 import (
 	"bytes"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"fmt"
 	"math"
 	"testing"
 	"time"
-
-	"encoding/json/jsontext"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 	"github.com/samber/do/v2"

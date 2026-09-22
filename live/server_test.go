@@ -415,14 +415,12 @@ func TestServer_SSE_SnapshotOnConnect(t *testing.T) {
 	server := newTestServer(t)
 
 	server.OnEvent(auditlog.Event{
-		ServiceRef: auditlog.ServiceRef{
-			ScopeID:     "root",
-			ScopeName:   "[root]",
-			ServiceName: "db",
-		},
-		Sequence:  1,
-		EventType: auditlog.EventTypeRegistration,
-		Phase:     auditlog.PhaseAfter,
+		ScopeID:     "root",
+		ScopeName:   "[root]",
+		ServiceName: "db",
+		Sequence:    1,
+		EventType:   auditlog.EventTypeRegistration,
+		Phase:       auditlog.PhaseAfter,
 	})
 
 	ts := httptest.NewServer(server)
@@ -583,12 +581,10 @@ func TestHub_OnEventDelivery(t *testing.T) {
 	defer hub.Unsubscribe(ch)
 
 	evt := auditlog.Event{
-		Sequence: 42,
-		ServiceRef: auditlog.ServiceRef{
-			ScopeID:     "root",
-			ScopeName:   "[root]",
-			ServiceName: "test",
-		},
+		Sequence:    42,
+		ScopeID:     "root",
+		ScopeName:   "[root]",
+		ServiceName: "test",
 	}
 
 	hub.OnEvent(evt)
@@ -1008,14 +1004,12 @@ func TestServer_HealthEndpoint_WithEvents(t *testing.T) {
 
 	// Emit some events so the health endpoint reports non-zero counts.
 	server.OnEvent(auditlog.Event{
-		ServiceRef: auditlog.ServiceRef{
-			ScopeID:     "root",
-			ScopeName:   "[root]",
-			ServiceName: "health-test-svc",
-		},
-		Sequence:  1,
-		EventType: auditlog.EventTypeRegistration,
-		Phase:     auditlog.PhaseAfter,
+		ScopeID:     "root",
+		ScopeName:   "[root]",
+		ServiceName: "health-test-svc",
+		Sequence:    1,
+		EventType:   auditlog.EventTypeRegistration,
+		Phase:       auditlog.PhaseAfter,
 	})
 
 	ctx := t.Context()

@@ -12,9 +12,9 @@ import (
 // refs. Centralizes the struct literal so each DepsChanged test stays 1 line.
 func depServiceFixture(name auditlog.ServiceName, exported time.Time, deps []auditlog.ServiceRef) auditlog.ServiceInfo {
 	return auditlog.ServiceInfo{
-		ServiceIdentity:  auditlog.ServiceIdentity{ServiceRef: rootRef(name)},
-		ServiceLifecycle: auditlog.ServiceLifecycle{RegisteredAt: exported},
-		ServiceGraph:     auditlog.ServiceGraph{Dependencies: deps},
+		ServiceRef:   rootRef(name),
+		RegisteredAt: exported,
+		Dependencies: deps,
 	}
 }
 

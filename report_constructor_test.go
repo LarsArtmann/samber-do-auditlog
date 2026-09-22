@@ -14,21 +14,13 @@ func TestNewReport_ValidAndDerivesAggregates(t *testing.T) {
 
 	services := []auditlog.ServiceInfo{
 		{
-			ServiceIdentity: auditlog.ServiceIdentity{
-				ServiceRef: rootRef("db"),
-			},
-			ServiceLifecycle: auditlog.ServiceLifecycle{
-				RegisteredAt:    exported,
-				InvocationCount: 3,
-			},
+			ServiceRef:      rootRef("db"),
+			RegisteredAt:    exported,
+			InvocationCount: 3,
 		},
 		{
-			ServiceIdentity: auditlog.ServiceIdentity{
-				ServiceRef: rootRef("cache"),
-			},
-			ServiceLifecycle: auditlog.ServiceLifecycle{
-				RegisteredAt: exported,
-			},
+			ServiceRef:   rootRef("cache"),
+			RegisteredAt: exported,
 		},
 	}
 
@@ -53,9 +45,7 @@ func TestNewReport_ReDerivesStatus(t *testing.T) {
 
 	services := []auditlog.ServiceInfo{
 		{
-			ServiceIdentity: auditlog.ServiceIdentity{
-				ServiceRef: rootRef("db"),
-			},
+			ServiceRef: rootRef("db"),
 			ServiceLifecycle: auditlog.ServiceLifecycle{
 				RegisteredAt:    exported,
 				FirstInvokedAt:  &invokedAt,
@@ -126,10 +116,8 @@ func TestNewReport_ValidationFailure(t *testing.T) {
 		nil,
 		[]auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{ServiceRef: rootRef("svc")},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					RegisteredAt: epochTime,
-				},
+				ServiceRef:   rootRef("svc"),
+				RegisteredAt: epochTime,
 			},
 		},
 		rootScopeTree("svc"),
@@ -152,12 +140,10 @@ func TestValidate_StatusDrift(t *testing.T) {
 	report := mkNewReport(t, "drift-test", epochTime,
 		[]auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{ServiceRef: rootRef("svc")},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					RegisteredAt:    epochTime,
-					InvocationCount: 1,
-					FirstInvokedAt:  &epochTime,
-				},
+				ServiceRef:      rootRef("svc"),
+				RegisteredAt:    epochTime,
+				InvocationCount: 1,
+				FirstInvokedAt:  &epochTime,
 			},
 		},
 		rootScopeTree("svc"),

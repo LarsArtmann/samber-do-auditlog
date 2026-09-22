@@ -125,14 +125,10 @@ func TestReport_WriteCSV_NilPointersEmpty(t *testing.T) {
 		ExportedAt:  time.Now(),
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef:  csvServiceRef("bare-svc"),
-					ServiceType: auditlog.ProviderTypeLazy,
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status:       auditlog.ServiceStatusRegistered,
-					RegisteredAt: csvRegisteredAt,
-				},
+				ServiceRef:   csvServiceRef("bare-svc"),
+				ServiceType:  auditlog.ProviderTypeLazy,
+				Status:       auditlog.ServiceStatusRegistered,
+				RegisteredAt: csvRegisteredAt,
 			},
 		},
 	}
@@ -167,32 +163,22 @@ func buildCSVTestReport() auditlog.Report {
 		ExportedAt:  time.Now(),
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef:  configRef,
-					ServiceType: auditlog.ProviderTypeLazy,
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status:          auditlog.ServiceStatusActive,
-					RegisteredAt:    registeredAt,
-					FirstInvokedAt:  &invokedAt,
-					InvocationCount: 1,
-				},
+				ServiceRef:      configRef,
+				ServiceType:     auditlog.ProviderTypeLazy,
+				Status:          auditlog.ServiceStatusActive,
+				RegisteredAt:    registeredAt,
+				FirstInvokedAt:  &invokedAt,
+				InvocationCount: 1,
 			},
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef:  dbRef,
-					ServiceType: auditlog.ProviderTypeLazy,
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status:               auditlog.ServiceStatusActive,
-					RegisteredAt:         registeredAt,
-					FirstInvokedAt:       &invokedAt,
-					InvocationCount:      1,
-					FirstBuildDurationMs: &buildMs,
-				},
-				ServiceGraph: auditlog.ServiceGraph{
-					Dependencies: []auditlog.ServiceRef{configRef},
-				},
+				ServiceRef:           dbRef,
+				ServiceType:          auditlog.ProviderTypeLazy,
+				Status:               auditlog.ServiceStatusActive,
+				RegisteredAt:         registeredAt,
+				FirstInvokedAt:       &invokedAt,
+				InvocationCount:      1,
+				FirstBuildDurationMs: &buildMs,
+				Dependencies:         []auditlog.ServiceRef{configRef},
 			},
 		},
 	}

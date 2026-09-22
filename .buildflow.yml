@@ -1,10 +1,13 @@
 # BuildFlow Configuration for samber-do-auditlog
 #
-# go-auto-upgrade is SKIPPED: its jsonv1tov2 migrator is incompatible with
-# this project's encoding/json/v2 exclusion policy (see AGENTS.md). The
-# migrator naively rewrites encoding/json to encoding/json/v2 +
-# encoding/json/jsontext, breaking API calls (e.g. enc.SetIndent has no
-# jsontext.Encoder equivalent). Re-enable when Go 1.27 stabilizes json/v2.
+# go-auto-upgrade: UNSKIPPED 2026-09-22 (retested against gau v0.6.3). The
+# old blockers are gone: Go 1.27 stabilized encoding/json/v2 (this module is
+# at go 1.27), and v0.6.3 fixed the codec-struct-field half-rewrite that
+# broke stream.go (json.NewEncoder left behind under a v2 import — the
+# compile gate rolled back 21 files on the first retest). v0.5.3 unknown-API
+# blocking plus the v0.6.x gates (go-version, dependency,
+# unclaimed-constructor) make the swap fail-safe; the 2026-09-22 migration
+# landed 46 files green (vet, full test suite, BuildFlow verify all pass).
 
 build_mode: full
 

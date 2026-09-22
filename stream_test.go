@@ -2,6 +2,7 @@ package auditlog_test
 
 import (
 	"bytes"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"fmt"
 	"os"
@@ -10,8 +11,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	"encoding/json/jsontext"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
@@ -529,12 +528,10 @@ func TestNDJSONStreamer_WithFlushInterval_Bounds(t *testing.T) {
 
 	for i := range 50 {
 		streamer.OnEvent(auditlog.Event{
-			Sequence:  i + 1,
-			EventType: auditlog.EventTypeRegistration,
-			Phase:     auditlog.PhaseBefore,
-			ServiceRef: auditlog.ServiceRef{
-				ServiceName: auditlog.ServiceName(fmt.Sprintf("burst-%d", i)),
-			},
+			Sequence:    i + 1,
+			EventType:   auditlog.EventTypeRegistration,
+			Phase:       auditlog.PhaseBefore,
+			ServiceName: auditlog.ServiceName(fmt.Sprintf("burst-%d", i)),
 		})
 	}
 
@@ -545,12 +542,10 @@ func TestNDJSONStreamer_WithFlushInterval_Bounds(t *testing.T) {
 	time.Sleep(interval + 50*time.Millisecond)
 
 	streamer.OnEvent(auditlog.Event{
-		Sequence:  51,
-		EventType: auditlog.EventTypeRegistration,
-		Phase:     auditlog.PhaseBefore,
-		ServiceRef: auditlog.ServiceRef{
-			ServiceName: "trigger",
-		},
+		Sequence:    51,
+		EventType:   auditlog.EventTypeRegistration,
+		Phase:       auditlog.PhaseBefore,
+		ServiceName: "trigger",
 	})
 
 	if buf.Len() == 0 {
@@ -580,12 +575,10 @@ func TestNDJSONStreamer_WithFlushInterval_IgnoredForZeroAndNegative(t *testing.T
 			streamer := auditlog.NewNDJSONStreamer(&buf, auditlog.WithFlushInterval(d))
 
 			streamer.OnEvent(auditlog.Event{
-				Sequence:  1,
-				EventType: auditlog.EventTypeRegistration,
-				Phase:     auditlog.PhaseBefore,
-				ServiceRef: auditlog.ServiceRef{
-					ServiceName: "x",
-				},
+				Sequence:    1,
+				EventType:   auditlog.EventTypeRegistration,
+				Phase:       auditlog.PhaseBefore,
+				ServiceName: "x",
 			})
 
 			if buf.Len() != 0 {
@@ -611,12 +604,10 @@ func TestNDJSONStreamer_WithAutoFlushTakesPrecedence(t *testing.T) {
 	)
 
 	streamer.OnEvent(auditlog.Event{
-		Sequence:  1,
-		EventType: auditlog.EventTypeRegistration,
-		Phase:     auditlog.PhaseBefore,
-		ServiceRef: auditlog.ServiceRef{
-			ServiceName: "x",
-		},
+		Sequence:    1,
+		EventType:   auditlog.EventTypeRegistration,
+		Phase:       auditlog.PhaseBefore,
+		ServiceName: "x",
 	})
 
 	if buf.Len() == 0 {

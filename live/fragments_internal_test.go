@@ -385,10 +385,10 @@ func TestCountErrors(t *testing.T) {
 	t.Parallel()
 
 	services := []auditlog.ServiceInfo{
-		{ServiceLifecycle: auditlog.ServiceLifecycle{Status: "active"}},
-		{ServiceLifecycle: auditlog.ServiceLifecycle{Status: "invocation_error"}},
-		{ServiceLifecycle: auditlog.ServiceLifecycle{Status: "shutdown_error"}},
-		{ServiceLifecycle: auditlog.ServiceLifecycle{Status: "active"}},
+		{Status: "active"},
+		{Status: "invocation_error"},
+		{Status: "shutdown_error"},
+		{Status: "active"},
 	}
 
 	if count := countErrors(services); count != 2 {
@@ -407,7 +407,7 @@ func TestTimelineMaxDurations(t *testing.T) {
 	shutdownMs := 50.0
 
 	services := []auditlog.ServiceInfo{
-		{ServiceLifecycle: auditlog.ServiceLifecycle{FirstBuildDurationMs: &buildMs, ShutdownDurationMs: &shutdownMs}},
+		{FirstBuildDurationMs: &buildMs, ShutdownDurationMs: &shutdownMs},
 	}
 
 	maxBuild, maxShutdown := timelineMaxDurations(services)
@@ -450,9 +450,9 @@ func TestWaveformTooltip(t *testing.T) {
 	t.Parallel()
 
 	evt := auditlog.Event{
-		ServiceRef: auditlog.ServiceRef{ServiceName: "db"},
-		EventType:  "invocation",
-		Phase:      "after",
+		ServiceName: "db",
+		EventType:   "invocation",
+		Phase:       "after",
 	}
 	dur := 15.0
 	evt.DurationMs = &dur
@@ -498,9 +498,9 @@ func TestComputeLegendItems(t *testing.T) {
 
 	report := auditlog.Report{
 		Services: []auditlog.ServiceInfo{
-			{ServiceIdentity: auditlog.ServiceIdentity{ServiceType: "lazy"}},
-			{ServiceIdentity: auditlog.ServiceIdentity{ServiceType: "lazy"}},
-			{ServiceIdentity: auditlog.ServiceIdentity{ServiceType: "eager"}},
+			{ServiceType: "lazy"},
+			{ServiceType: "lazy"},
+			{ServiceType: "eager"},
 		},
 	}
 
@@ -518,9 +518,7 @@ func TestRowSignalsJSON(t *testing.T) {
 	t.Parallel()
 
 	svc := auditlog.ServiceInfo{
-		ServiceIdentity: auditlog.ServiceIdentity{
-			ServiceRef: auditlog.ServiceRef{ServiceName: "db", ScopeName: "[root]"},
-		},
+		ServiceName: "db", ScopeName: "[root]",
 	}
 
 	json := rowSignalsJSON(svc, 3)
@@ -561,10 +559,8 @@ func TestGraphFragment_Render(t *testing.T) {
 		report := auditlog.Report{
 			Services: []auditlog.ServiceInfo{
 				{
-					ServiceIdentity: auditlog.ServiceIdentity{
-						ServiceRef:  auditlog.ServiceRef{ServiceName: "db"},
-						ServiceType: "lazy",
-					},
+					ServiceName: "db",
+					ServiceType: "lazy",
 				},
 			},
 		}
@@ -605,12 +601,8 @@ func TestTimelineFragment_Render(t *testing.T) {
 		report := auditlog.Report{
 			Services: []auditlog.ServiceInfo{
 				{
-					ServiceIdentity: auditlog.ServiceIdentity{
-						ServiceRef: auditlog.ServiceRef{ServiceName: "cache"},
-					},
-					ServiceLifecycle: auditlog.ServiceLifecycle{
-						FirstBuildDurationMs: &buildMs,
-					},
+					ServiceName:          "cache",
+					FirstBuildDurationMs: &buildMs,
 				},
 			},
 		}
@@ -679,26 +671,18 @@ func TestServicesTbody_Render(t *testing.T) {
 		report := auditlog.Report{
 			Services: []auditlog.ServiceInfo{
 				{
-					ServiceIdentity: auditlog.ServiceIdentity{
-						ServiceRef:  auditlog.ServiceRef{ServiceName: "db", ScopeName: "[root]"},
-						ServiceType: "lazy",
-					},
-					ServiceLifecycle: auditlog.ServiceLifecycle{
-						Status:               "active",
-						InvocationCount:      3,
-						FirstBuildDurationMs: &buildMs,
-					},
+					ServiceName: "db", ScopeName: "[root]",
+					ServiceType:          "lazy",
+					Status:               "active",
+					InvocationCount:      3,
+					FirstBuildDurationMs: &buildMs,
 				},
 				{
-					ServiceIdentity: auditlog.ServiceIdentity{
-						ServiceRef:  auditlog.ServiceRef{ServiceName: "cache", ScopeName: "[root]"},
-						ServiceType: "eager",
-					},
-					ServiceLifecycle: auditlog.ServiceLifecycle{
-						Status:          "invocation_error",
-						InvocationCount: 1,
-						InvocationError: &invErr,
-					},
+					ServiceName: "cache", ScopeName: "[root]",
+					ServiceType:     "eager",
+					Status:          "invocation_error",
+					InvocationCount: 1,
+					InvocationError: &invErr,
 				},
 			},
 		}
@@ -742,18 +726,18 @@ func TestEventsTbody_Render(t *testing.T) {
 
 		events := []auditlog.Event{
 			{
-				ServiceRef: auditlog.ServiceRef{ServiceName: "db"},
-				EventType:  "registration",
-				Phase:      "after",
-				Timestamp:  parseTime("2025-01-01T10:00:00Z"),
+				ServiceName: "db",
+				EventType:   "registration",
+				Phase:       "after",
+				Timestamp:   parseTime("2025-01-01T10:00:00Z"),
 			},
 			{
-				ServiceRef: auditlog.ServiceRef{ServiceName: "cache"},
-				EventType:  "invocation",
-				Phase:      "after",
-				Timestamp:  parseTime("2025-01-01T10:00:01Z"),
-				DurationMs: &dur,
-				Error:      &errMsg,
+				ServiceName: "cache",
+				EventType:   "invocation",
+				Phase:       "after",
+				Timestamp:   parseTime("2025-01-01T10:00:01Z"),
+				DurationMs:  &dur,
+				Error:       &errMsg,
 			},
 		}
 

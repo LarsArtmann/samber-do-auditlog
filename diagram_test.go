@@ -24,17 +24,11 @@ func singleServiceWithExternalDepReport() auditlog.Report {
 		ExportedAt:  now,
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: rootRef("my-service"),
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status:       auditlog.ServiceStatusActive,
-					RegisteredAt: now,
-				},
-				ServiceGraph: auditlog.ServiceGraph{
-					Dependencies: []auditlog.ServiceRef{
-						rootRef("external-dep"),
-					},
+				ServiceRef:   rootRef("my-service"),
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: now,
+				Dependencies: []auditlog.ServiceRef{
+					rootRef("external-dep"),
 				},
 			},
 		},
@@ -139,13 +133,9 @@ func TestReport_WriteDOT_LabelEscaping(t *testing.T) {
 		ExportedAt:  time.Now(),
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: rootRef(`svc"quote`),
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status:       auditlog.ServiceStatusActive,
-					RegisteredAt: time.Now(),
-				},
+				ServiceRef:   rootRef(`svc"quote`),
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
 			},
 		},
 	}
@@ -226,28 +216,18 @@ func reportWithDuplicateEdges() auditlog.Report {
 		ExportedAt:  time.Now(),
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: rootRef("svc-a"),
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status:       auditlog.ServiceStatusActive,
-					RegisteredAt: time.Now(),
-				},
-				ServiceGraph: auditlog.ServiceGraph{
-					Dependencies: []auditlog.ServiceRef{
-						rootRef("svc-b"),
-						rootRef("svc-b"),
-					},
+				ServiceRef:   rootRef("svc-a"),
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
+				Dependencies: []auditlog.ServiceRef{
+					rootRef("svc-b"),
+					rootRef("svc-b"),
 				},
 			},
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: rootRef("svc-b"),
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status:       auditlog.ServiceStatusActive,
-					RegisteredAt: time.Now(),
-				},
+				ServiceRef:   rootRef("svc-b"),
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
 			},
 		},
 	}
@@ -361,13 +341,9 @@ func reportWithSpecialCharService() auditlog.Report {
 		ExportedAt:  time.Now(),
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: rootRef(`evil]"svc`),
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status:       auditlog.ServiceStatusActive,
-					RegisteredAt: time.Now(),
-				},
+				ServiceRef:   rootRef(`evil]"svc`),
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
 			},
 		},
 	}
@@ -432,17 +408,11 @@ func TestWriteD2_EscapesControlChars(t *testing.T) {
 		ExportedAt:  time.Now(),
 		Services: []auditlog.ServiceInfo{
 			{
-				ServiceIdentity: auditlog.ServiceIdentity{
-					ServiceRef: auditlog.ServiceRef{
-						ScopeName:   auditlog.RootScopeName,
-						ScopeID:     auditlog.RootScopeName,
-						ServiceName: "a\\b\n\tc",
-					},
-				},
-				ServiceLifecycle: auditlog.ServiceLifecycle{
-					Status:       auditlog.ServiceStatusActive,
-					RegisteredAt: time.Now(),
-				},
+				ScopeName:    auditlog.RootScopeName,
+				ScopeID:      auditlog.RootScopeName,
+				ServiceName:  "a\\b\n\tc",
+				Status:       auditlog.ServiceStatusActive,
+				RegisteredAt: time.Now(),
 			},
 		},
 	}

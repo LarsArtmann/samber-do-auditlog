@@ -54,13 +54,11 @@ func FuzzNDJSONStreamer(f *testing.F) {
 		}
 
 		evt := auditlog.Event{
-			Sequence:  sequence,
-			EventType: auditlog.EventType(eventType),
-			Phase:     auditlog.Phase(phase),
-			ServiceRef: auditlog.ServiceRef{
-				ServiceName: auditlog.ServiceName(serviceName),
-				ScopeID:     auditlog.ScopeID(scopeID),
-			},
+			Sequence:    sequence,
+			EventType:   auditlog.EventType(eventType),
+			Phase:       auditlog.Phase(phase),
+			ServiceName: auditlog.ServiceName(serviceName),
+			ScopeID:     auditlog.ScopeID(scopeID),
 		}
 
 		var buf bytes.Buffer
@@ -128,10 +126,8 @@ func FuzzMultiWriter(f *testing.F) {
 		}
 
 		evt := auditlog.Event{
-			Sequence: sequence,
-			ServiceRef: auditlog.ServiceRef{
-				ServiceName: auditlog.ServiceName(serviceName),
-			},
+			Sequence:    sequence,
+			ServiceName: auditlog.ServiceName(serviceName),
 		}
 
 		var mu sync.Mutex
