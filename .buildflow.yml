@@ -16,5 +16,4 @@ default_step_timeout: 5m
 env:
   GOEXPERIMENT: jsonv2
 
-skip_steps:
-  - go-auto-upgrade
+skip_steps: []
