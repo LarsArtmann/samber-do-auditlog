@@ -48,23 +48,32 @@
             };
 
             GOEXPERIMENT = "jsonv2";
-            GOTOOLCHAIN = "go1.27.1";
+            # go_1_27 IS 1.27.1; `local` stops go from downloading the
+            # exact-version toolchain (GOTOOLCHAIN=go1.27.1 would fetch it
+            # whenever the ambient go differs — sandbox DNS death).
+            GOTOOLCHAIN = "local";
             BUILDFLOW_LANGUAGE = "go";
           };
 
-          packages.default =
-            pkgs.runCommand "samber-do-auditlog"
-              {
-                meta = with lib; {
-                  description = "Audit logging plugin for samber/do v2";
-                  homepage = "https://github.com/larsartmann/samber-do-auditlog";
-                  license = licenses.mit;
-                  platforms = platforms.unix;
-                };
-              }
-              ''
-                mkdir -p $out
-              '';
+          # Real package: the auditlog CLI (cmd/auditlog). Replaces a former
+          # `mkdir -p $out` marker whose checks.build asserted nothing.
+          packages.default = pkgs.buildGo127Module {
+            pname = "auditlog";
+            version = self.shortRev or self.dirtyShortRev or "dev";
+            src = lib.fileset.toSource {
+              root = ./.;
+              fileset = lib.fileset.gitTracked ./.;
+            };
+            subPackages = [ "cmd/auditlog" ];
+            vendorHash = "sha256-1vNoG2t5V1KEFMhWZiMza9OHCHoUl68Mw1KWLRTfC1k=";
+            meta = with lib; {
+              description = "Audit logging CLI for samber/do v2";
+              homepage = "https://github.com/larsartmann/samber-do-auditlog";
+              license = licenses.mit;
+              platforms = platforms.unix;
+              mainProgram = "auditlog";
+            };
+          };
 
           apps = {
             coverage = {
@@ -79,7 +88,7 @@
                   text = ''
                     # -race requires cgo; the C toolchain must be on PATH.
                     export CGO_ENABLED=1
-                    export GOTOOLCHAIN=go1.27.1
+                    export GOTOOLCHAIN=local
                     exec sh ./scripts/coverage-gate.sh "$@"
                   '';
                 }
@@ -94,7 +103,7 @@
                   runtimeInputs = [ goPkg ];
                   text = ''
                     export CGO_ENABLED=0
-                    export GOTOOLCHAIN=go1.27.1
+                    export GOTOOLCHAIN=local
                     exec go run ./cmd/auditlog "$@"
                   '';
                 }
