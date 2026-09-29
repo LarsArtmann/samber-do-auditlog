@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
-    "@astrojs/starlight": "^0.42.1",
+    "@astrojs/starlight": "^0.42.4",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.3",
     "tailwindcss": "^4.3.3"
