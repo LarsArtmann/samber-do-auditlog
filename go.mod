@@ -1,6 +1,6 @@
 module github.com/larsartmann/samber-do-auditlog
 
-go 1.27
+go 1.27.1
 
 // v0.9.0 is retracted: missing live/fragments_templ.go (gitignored generated file).
 // Broke Nix builds that vendor source without running templ generate.
@@ -14,18 +14,18 @@ require (
 	github.com/larsartmann/go-ndjson v0.0.1
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
 	// are tagged together at the same version. Pin them in lockstep.
-	github.com/larsartmann/go-output v0.38.0
+	github.com/larsartmann/go-output v0.38.1
 	github.com/larsartmann/go-output/d2 v0.38.0
 	github.com/larsartmann/go-output/daghtml v0.38.0
-	github.com/larsartmann/go-output/delimited v0.38.0
-	github.com/larsartmann/go-output/escape v0.38.0
+	github.com/larsartmann/go-output/delimited v0.38.1
+	github.com/larsartmann/go-output/escape v0.38.1
 	github.com/larsartmann/go-output/graph v0.38.0
-	github.com/larsartmann/go-output/markdown v0.38.0
-	github.com/larsartmann/go-output/markup v0.38.0
+	github.com/larsartmann/go-output/markdown v0.38.1
+	github.com/larsartmann/go-output/markup v0.38.1
 	github.com/larsartmann/go-output/plantuml v0.38.0
-	github.com/larsartmann/go-output/serialization v0.38.0
+	github.com/larsartmann/go-output/serialization v0.38.1
 	github.com/larsartmann/go-output/table v0.38.0
-	github.com/larsartmann/go-output/tree v0.38.0
+	github.com/larsartmann/go-output/tree v0.38.2
 	github.com/larsartmann/go-sse v0.6.0
 	github.com/larsartmann/go-sse/ssetest v0.2.0
 	github.com/samber/do/v2 v2.1.0
@@ -55,7 +55,7 @@ require (
 	github.com/go-faster/yaml v0.4.6 // indirect
 	github.com/gofrs/flock v0.13.1 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/larsartmann/go-branded-id v0.5.1 // indirect
+	github.com/larsartmann/go-branded-id v0.6.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.1 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
