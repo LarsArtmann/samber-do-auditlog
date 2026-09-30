@@ -60,8 +60,8 @@ github.com/larsartmann/go-error-family v0.10.1 h1:lf1RNjpdK7k+tCzphkg5qRolAY76U8
 github.com/larsartmann/go-error-family v0.10.1/go.mod h1:SYSVwVMTkw2GcqXI4khjMYOg7ey39o8sh7rXC9LfNcY=
 github.com/larsartmann/go-ndjson v0.0.1 h1:wchwH5pv+0ZnFem/WrlGZA8dDGvZumT+OcVn5dbou3A=
 github.com/larsartmann/go-ndjson v0.0.1/go.mod h1:ueEJJ39Jei+zfPCEx455kpunYWZf/pkwn7HqETHrQkU=
-github.com/larsartmann/go-output v0.38.1 h1:iiFdggay4OdX+qY3n29aQC2KSRLmvlrovBLAcxtouPw=
-github.com/larsartmann/go-output v0.38.1/go.mod h1:E8cCAWWBcND96zqS3Fc0jhRDmyjz43SPXrVNF5Qcg34=
+github.com/larsartmann/go-output v0.38.2 h1:8uWXanLinSOS5KiN+7X3n+0QKuPkUpJf+so5lNbL5tI=
+github.com/larsartmann/go-output v0.38.2/go.mod h1:7J5xKQoNozdI/kJSJ9CbQUJdrlYi4B8rD6rJJgkRFbw=
 github.com/larsartmann/go-output/d2 v0.38.0 h1:2jftwHTiTjWQRliwSc2T/WRUDxwZeWxtXK7o5iRWplo=
 github.com/larsartmann/go-output/d2 v0.38.0/go.mod h1:WOq12m9Cxgb1BG30kfjO5T/iekR/Mo22Dhj9Jg6Jb8U=
 github.com/larsartmann/go-output/daghtml v0.38.0 h1:lr7tw9BTx+XpshLRf1L+MNzM1IE56neqKhN4hz6V5Oc=
