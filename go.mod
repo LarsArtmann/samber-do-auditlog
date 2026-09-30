@@ -16,7 +16,7 @@ require (
 	// are tagged together at the same version. Pin them in lockstep.
 	github.com/larsartmann/go-output v0.38.2
 	github.com/larsartmann/go-output/d2 v0.38.0
-	github.com/larsartmann/go-output/daghtml v0.38.0
+	github.com/larsartmann/go-output/daghtml v0.38.2
 	github.com/larsartmann/go-output/delimited v0.38.1
 	github.com/larsartmann/go-output/escape v0.38.1
 	github.com/larsartmann/go-output/graph v0.38.0
