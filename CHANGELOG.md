@@ -12,6 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Command execution events
+
+- **`Plugin.RecordCommand` / `Recorder.RecordCommand`**: integrations that wrap
+  command execution (e.g. cmdguard's middleware) can now record command-level
+  audit events — `PhaseBefore` at start, `PhaseAfter` with wall-clock duration
+  and error at completion. New `EventTypeCommand` (`"command"`, label
+  "Command") and `Event.IsCommand()`. Commands are not DI services: no service
+  record is created and they never appear in `Report.Services` — they surface
+  in `Report.Events` / the NDJSON event stream only, with the command name in
+  `ServiceRef.ServiceName`. Unblocks cmdguard's "command-level audit
+  middleware" (cmdguard TODO F1).
+
 ### Changed — Strict enum validation on load
 
 - **Corrupt event streams now fail loudly**: `ReadEvents` additionally rejects unknown `provider_type` values (previously only `event_type`/`phase` were checked), and `ReplayEvents` now validates all three enum fields per event — an unknown value previously caused `applyEvent` to silently drop the event, producing a lossy "successful" replay. Empty `provider_type` remains valid ("undetermined"). All three sentinels (`unknown event_type`, `unknown phase`, `unknown provider_type`) are classified as `errorfamily.Corruption`. Design note: validate-at-load was chosen over strict `UnmarshalJSON` on the enum types to preserve forward compatibility (older binaries can still parse newer streams) — see TODO plan T33.

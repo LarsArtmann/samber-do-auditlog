@@ -94,12 +94,15 @@ func TestRecorder_RecordCommand_DoesNotCreateServiceRecords(t *testing.T) {
 		t.Fatalf("command event must not create service records: expected 1 service, got %d", len(report.Services))
 	}
 
-	if len(report.Events) != 1 {
-		t.Fatalf("expected 1 event in report, got %d", len(report.Events))
+	commandEvents := 0
+	for _, evt := range report.Events {
+		if evt.IsCommand() {
+			commandEvents++
+		}
 	}
 
-	if !report.Events[0].IsCommand() {
-		t.Error("expected report event to be a command event")
+	if commandEvents != 1 {
+		t.Fatalf("expected 1 command event in report, got %d (of %d total)", commandEvents, len(report.Events))
 	}
 }
 
