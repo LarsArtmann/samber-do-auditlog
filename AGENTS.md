@@ -186,6 +186,10 @@ Extremely strict — nearly every golangci-lint linter enabled (~108). Key impli
 
 ## Gotchas
 
+- **`.envrc` must NOT pin `GOTOOLCHAIN`** — the file is untracked, so pins
+  rot invisibly: a leftover `GOTOOLCHAIN=go1.26.5` made every go command fail
+  with "go.mod requires go >= 1.27.1" (removed 2026-10-04). The devShell's
+  flake.nix `GOTOOLCHAIN=go1.27.1` pin is the only canonical location.
 - **Repo directory is `samber-do-metrics`** but `go.mod` says `samber-do-auditlog`. The module name is canonical.
 - **JSON tags use snake_case** (`scope_name`, `service_name`, …) via `tagliatelle` — intentional for JSON API compatibility.
 - **Package doc comment lives in `doc.go`** (with the GOEXPERIMENT note); `plugin.go` has no package comment.
