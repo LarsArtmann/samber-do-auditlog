@@ -29,6 +29,11 @@ func (e Event) IsShutdown() bool { return e.EventType == EventTypeShutdown }
 // IsHealthCheck returns true if the event is a health check event.
 func (e Event) IsHealthCheck() bool { return e.EventType == EventTypeHealthCheck }
 
+// IsCommand returns true if the event is a command execution event (recorded
+// via RecordCommand). For command events ServiceRef.ServiceName carries the
+// command name, not a DI service name.
+func (e Event) IsCommand() bool { return e.EventType == EventTypeCommand }
+
 // IsBefore returns true if the event is the start (before) phase of an operation.
 func (e Event) IsBefore() bool { return e.Phase == PhaseBefore }
 

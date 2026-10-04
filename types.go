@@ -34,6 +34,7 @@ const (
 	EventTypeInvocation   EventType = "invocation"
 	EventTypeShutdown     EventType = "shutdown"
 	EventTypeHealthCheck  EventType = "health_check"
+	EventTypeCommand      EventType = "command"
 )
 
 // eventTypeMeta pairs the human-readable label with the CSS color token.
@@ -60,6 +61,7 @@ var eventTypeMetaTable = map[EventType]eventTypeMeta{
 	EventTypeInvocation:   {label: "Invocation", color: cssColorSuccess},
 	EventTypeShutdown:     {label: "Shutdown", color: cssColorWarning},
 	EventTypeHealthCheck:  {label: "Health", color: cssColorInfo},
+	EventTypeCommand:      {label: "Command", color: cssColorAccent},
 }
 
 // Label returns the human-readable display label for this event type.
