@@ -117,6 +117,13 @@ for doc in AGENTS.md FEATURES.md README.md; do
 	fi
 done
 
+# 11. README Go-version badge must match go.mod's major.minor.
+GO_MOD_MINOR="$(printf '%s' "$GO_MOD_VERSION" | cut -d. -f1,2)"
+DOC_BADGE_GO="$(grep -oE 'Go-[0-9]+\.[0-9]+\+' README.md | grep -oE '[0-9]+\.[0-9]+' | head -n 1 || true)"
+if [ -n "$DOC_BADGE_GO" ] && [ "$DOC_BADGE_GO" != "$GO_MOD_MINOR" ]; then
+	claim_fail "README Go version badge" "Go-$DOC_BADGE_GO+" "go.mod: $GO_MOD_VERSION"
+fi
+
 # --- Result ---------------------------------------------------------------
 
 if [ "$fail" -ne 0 ]; then
