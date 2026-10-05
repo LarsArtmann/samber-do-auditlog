@@ -8,7 +8,7 @@ import (
 
 // runInfo prints a human-readable summary of a report.
 func runInfo(args []string) error {
-	report, _, err := loadSingleReportSubcommand("info", args, "usage: auditlog info <file>")
+	report, _, _, err := loadSingleReportSubcommand("info", args, "usage: auditlog info <file>")
 	if err != nil {
 		return err
 	}

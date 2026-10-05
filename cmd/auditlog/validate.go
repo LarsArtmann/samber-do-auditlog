@@ -6,7 +6,7 @@ import (
 
 // runValidate loads a report and verifies internal consistency via Validate().
 func runValidate(args []string) error {
-	report, path, err := loadSingleReportSubcommand("validate", args, "usage: auditlog validate <file>")
+	report, path, flags, err := loadSingleReportSubcommand("validate", args, "usage: auditlog validate <file>")
 	if err != nil {
 		return err
 	}
@@ -15,8 +15,10 @@ func runValidate(args []string) error {
 		return fmt.Errorf("%s: invalid: %w", path, err)
 	}
 
-	fmt.Printf("OK: %s is valid (%d services, %d events, %d scopes)\n",
-		path, report.ServiceCount, report.EventCount, report.ScopeCount)
+	if !*flags.quiet {
+		fmt.Printf("OK: %s is valid (%d services, %d events, %d scopes)\n",
+			path, report.ServiceCount, report.EventCount, report.ScopeCount)
+	}
 
 	return nil
 }

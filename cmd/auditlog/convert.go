@@ -14,6 +14,7 @@ import (
 // runConvert loads a report and writes it in the requested format.
 func runConvert(args []string) (err error) {
 	fs := newFlagSet("convert")
+	flags := registerCommonFlags(fs)
 
 	output := fs.String("o", "", "output file (default: stdout)")
 	format := fs.String(
@@ -30,10 +31,21 @@ func runConvert(args []string) (err error) {
 		return errors.New("usage: auditlog convert <input> [-o output] [-f format]")
 	}
 
-	report, err := loadFile(fs.Arg(0))
+	if err := flags.validate(); err != nil {
+		return err
+	}
+
+	inputFormat, err := flags.format()
 	if err != nil {
 		return err
 	}
+
+	report, usedFormat, err := loadFile(fs.Arg(0), inputFormat)
+	if err != nil {
+		return err
+	}
+
+	flags.logLoaded(os.Stderr, fs.Arg(0), usedFormat, report)
 
 	fmtName := *format
 	if fmtName == "" && *output != "" {

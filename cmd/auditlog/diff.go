@@ -2,26 +2,36 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
 // runDiff loads two reports and prints their structural differences.
 func runDiff(args []string) error {
-	fs, err := parseFlagSet("diff", args, 2, "usage: auditlog diff <a> <b>")
+	fs, flags, err := parseCommonFlagSet("diff", args, 2, "usage: auditlog diff <a> <b>")
 	if err != nil {
 		return err
 	}
 
-	a, err := loadFile(fs.Arg(0))
+	format, err := flags.format()
 	if err != nil {
 		return err
 	}
 
-	b, err := loadFile(fs.Arg(1))
+	a, usedA, err := loadFile(fs.Arg(0), format)
 	if err != nil {
 		return err
 	}
+
+	flags.logLoaded(os.Stderr, fs.Arg(0), usedA, a)
+
+	b, usedB, err := loadFile(fs.Arg(1), format)
+	if err != nil {
+		return err
+	}
+
+	flags.logLoaded(os.Stderr, fs.Arg(1), usedB, b)
 
 	result := a.Diff(b)
 

@@ -8,7 +8,7 @@ import (
 
 // runStats prints aggregate statistics for a report.
 func runStats(args []string) error {
-	report, _, err := loadSingleReportSubcommand("stats", args, "usage: auditlog stats <file>")
+	report, _, _, err := loadSingleReportSubcommand("stats", args, "usage: auditlog stats <file>")
 	if err != nil {
 		return err
 	}

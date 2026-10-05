@@ -86,11 +86,19 @@ Usage:
   auditlog validate <file>
       Load and validate a report (consistency + denormalized counts).
 
+  auditlog stats <file>
+      Print aggregate statistics over the report's services.
+
   auditlog schema
       Print the canonical JSON Schema for the report format.
 
   auditlog version
       Print the CLI and schema versions.
+
+Shared flags (info, convert, diff, validate, stats):
+  --input-format auto|json|ndjson   force the input format (default: auto)
+  --verbose                         print load diagnostics to stderr
+  --quiet                           suppress informational output (e.g. validate's OK line)
 `)
 }
 
