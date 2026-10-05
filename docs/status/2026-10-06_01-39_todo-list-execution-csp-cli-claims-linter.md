@@ -33,7 +33,7 @@ Every claim below was verified by running the checking command, not by assuming.
 ## b) PARTIALLY DONE
 
 1. **live/ coverage → 90% target**: reached 83.8%, not 90%. Honest ceiling analysis: the remaining ~16% is dominated by templ-generated error-propagation branches that cannot be reached through the public API (they require a failing `io.Writer`, which the render path never provides). Options (writer injection / coverage exclusion for `fragments_templ.go` / accepting 84%) escalated to owner as **Q7** — this is a policy decision, not more test-writing.
-2. **"Assess larger/blocked TODO_LIST items"**: the *assessment* is done (each remaining item in TODO_LIST.md annotated with feasibility/blocker), but the items themselves (headless E2E, Datastar CSP research, benchstat comparison, dependency audit, website QA battery) were not attempted — several are genuinely blocked on owner questions or infrastructure, and none were in the carry-forward list.
+2. **"Assess larger/blocked TODO_LIST items"**: the _assessment_ is done (each remaining item in TODO_LIST.md annotated with feasibility/blocker), but the items themselves (headless E2E, Datastar CSP research, benchstat comparison, dependency audit, website QA battery) were not attempted — several are genuinely blocked on owner questions or infrastructure, and none were in the carry-forward list.
 
 ---
 
@@ -45,16 +45,16 @@ Every claim below was verified by running the checking command, not by assuming.
 - Mobile + light-theme QA, `/demo.mp4` playback smoke, Lighthouse audit.
 - go-sse/go-ndjson dependency audit (retracted/poisoned tags).
 - Markdown formatter pass over living docs.
-- Website TypeScript-pin regression *guard* (item recorded in TODO_LIST, not built).
+- Website TypeScript-pin regression _guard_ (item recorded in TODO_LIST, not built).
 - flake.lock nixpkgs bump so devShell golangci-lint reaches v2.14 (BuildFlow's `update` owns this).
 
 ---
 
 ## d) TOTALLY FUCKED UP (honest accounting)
 
-1. **I truncated `live/server_test.go` to 193 lines** (from ~1500) with a careless Python string-slice that rebuilt the file as `s[:index(parseCSPDirectives)] + new_parse` — silently deleting every test *after* that function (~35 tests, the heartbeat test, CORS, exports, lifecycle tests). Caught it only because `go vet` flagged `bufio imported and not used`. Recovered with `git show HEAD:live/server_test.go >` and re-applied the edits surgically. Lesson: never do file-level string surgery on a file I haven't fully re-read after daemon commits; the daemon had rewritten the file mid-session, which is also why an earlier `multiedit` failed on stale content.
+1. **I truncated `live/server_test.go` to 193 lines** (from ~1500) with a careless Python string-slice that rebuilt the file as `s[:index(parseCSPDirectives)] + new_parse` — silently deleting every test _after_ that function (~35 tests, the heartbeat test, CORS, exports, lifecycle tests). Caught it only because `go vet` flagged `bufio imported and not used`. Recovered with `git show HEAD:live/server_test.go >` and re-applied the edits surgically. Lesson: never do file-level string surgery on a file I haven't fully re-read after daemon commits; the daemon had rewritten the file mid-session, which is also why an earlier `multiedit` failed on stale content.
 2. **My first lint pass produced 9 new findings** — I wrote new code against a 108-linter config without running the linter until the end. The err113/gocognit/modernize/golines findings were all avoidable had I linted each change as I made it (the project's own workflow says so). Cost: one extra repair cycle.
-3. **I introduced a data race** in the new fixture (unsynchronized slice append from parallel shutdown hooks) and only discovered it because the verification step ran `-race`. The TODO asked for more tests; my first draft made the suite *unsafe*. The fix (eventCollector) is now the canonical pattern, but the error shouldn't have happened.
+3. **I introduced a data race** in the new fixture (unsynchronized slice append from parallel shutdown hooks) and only discovered it because the verification step ran `-race`. The TODO asked for more tests; my first draft made the suite _unsafe_. The fix (eventCollector) is now the canonical pattern, but the error shouldn't have happened.
 4. **Minor**: two `multiedit` calls failed on whitespace/stale-file mismatches (documented failure modes), and my first TOC-anchor validator script had a wrong slug function that mis-flagged two correct anchors (`&` → double-dash). Both self-caught, but they were wasted cycles from not reading closely enough first.
 
 ---
@@ -64,7 +64,7 @@ Every claim below was verified by running the checking command, not by assuming.
 1. **Lint per-change, not per-session** — 9 findings at the end is process smell. Run the pinned linter after each non-trivial edit.
 2. **Daemon interference protocol** — the auto-commit daemon rewrote files mid-session twice, breaking edit-tool expectations. Re-read (or `git diff`) before editing files after any long test/lint run. Consider asking the owner to pause the daemon during bulk sessions (owner Q5, still unanswered).
 3. **Coverage-exclusion decision debt** — the `live/fragments_templ.go` question existed before this session; nobody decided. Undecided policy compounds: TODO items keep gesturing at "90%" when the reachable ceiling is ~84%. Decide once (Q7), record, stop re-litigating.
-4. **Claims linter still misses semantic drift** — it checks counts and spellings, but the "23-feature self-check" claim was *narratively* false (the example has no assertion logic; it exits 0 unless `log.Fatalf` fires) and no numeric check catches that class. Doc-truth auditing needs either runtime-derived numbers or human review.
+4. **Claims linter still misses semantic drift** — it checks counts and spellings, but the "23-feature self-check" claim was _narratively_ false (the example has no assertion logic; it exits 0 unless `log.Fatalf` fires) and no numeric check catches that class. Doc-truth auditing needs either runtime-derived numbers or human review.
 5. **AGENTS.md had accumulated wrong claims** ("checklist enumerated in example/summary.go" — it isn't; "8 CI jobs"; Go badge drift). The claims linter extension fixes the countable ones; the qualitative ones required this session's manual pass. A periodic docs-health sweep remains necessary.
 6. **Test fixtures that call `injector.Shutdown()` need the mutex pattern by default** — now documented in TODO_LIST; should also go into AGENTS.md testing-patterns section.
 
@@ -73,6 +73,7 @@ Every claim below was verified by running the checking command, not by assuming.
 ## f) NEXT 50 (ordered by impact/effort)
 
 **Decide & unblock (owner)**
+
 1. Q3: push master (~11 commits ahead, all gates green locally) — CI has never confirmed this batch.
 2. Q7: exclude `live/fragments_templ.go` from coverage or accept 84% for live/.
 3. Q6: is the live dashboard ever deployed beyond localhost? (decides Datastar upgrade priority).
@@ -108,7 +109,7 @@ Every claim below was verified by running the checking command, not by assuming.
 27. Claims linter: derive "N benchmarks" in BENCHMARKS.md from a runtime artifact instead of grep.
 28. Claims linter: verify the website's `astro`/`html-validate`/`typescript` pins against a recorded compatibility matrix.
 29. Fuzz corpus: promote interesting seeds from this session's fuzz runs into `testdata/`.
-30. Add a `TestExampleMain` smoke that asserts the example's *summary output* (not just exit 0), closing the "self-check" narrative gap.
+30. Add a `TestExampleMain` smoke that asserts the example's _summary output_ (not just exit 0), closing the "self-check" narrative gap.
 31. Investigate whether `ShutdownReport` empty-error quirk deserves an upstream samber/do issue (docs-only).
 
 **Docs & website**
@@ -140,8 +141,8 @@ Every claim below was verified by running the checking command, not by assuming.
 
 1. **Push approval (Q3)**: master is ~11 commits ahead of origin, all gates green locally, but the entire CI-recovery batch (drift guard, lint pin, exhaustruct_v5, changelog sync, TS re-pin) plus this session's work has never run on CI. May I push (and would you like the auto-commit blobs rescued into a properly-messaged commit first)?
 2. **live/ coverage policy (Q7)**: 83.8% is the reachable ceiling with `fragments_templ.go` included (generated error plumbing). Exclude that file from the coverage gate, or accept ~84% for live/ as the documented number? (Both are one-line changes; I just shouldn't pick the policy for you.)
-3. **The "self-checking example" claim**: the example has no assertion logic — it exits 0 unless `log.Fatalf` fires, and the "23 features" narrative was aspirational. I corrected the docs to "runnable feature tour". Do you want me to *build* a real self-check (assert summary output, exit non-zero on regression), or is the honest re-label sufficient?
+3. **The "self-checking example" claim**: the example has no assertion logic — it exits 0 unless `log.Fatalf` fires, and the "23 features" narrative was aspirational. I corrected the docs to "runnable feature tour". Do you want me to _build_ a real self-check (assert summary output, exit non-zero on regression), or is the honest re-label sufficient?
 
 ---
 
-*Report written after full verification; working tree clean except the daemon's final auto-commit. Awaiting instructions.*
+_Report written after full verification; working tree clean except the daemon's final auto-commit. Awaiting instructions._
