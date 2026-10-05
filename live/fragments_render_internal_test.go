@@ -281,3 +281,41 @@ func TestRenderAllFragments_FailedAndScopedStates(t *testing.T) {
 		}
 	}
 }
+
+func TestRenderAllFragments_CanceledContext(t *testing.T) {
+	t.Parallel()
+
+	report, events := newFixtureReport(t)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	// A canceled context makes every templ component return ctx.Err() at
+	// entry; renderAllFragments must still produce all patches (with the
+	// error marker per fragment) instead of panicking.
+	patches := renderAllFragments(ctx, report, events, auditlog.BuildTypeMetadata())
+	if len(patches) != 10 {
+		t.Fatalf("expected 10 fragments with canceled context, got %d", len(patches))
+	}
+}
+
+func TestRenderAllFragments_ShutdownErrorAndIdleStates(t *testing.T) {
+	t.Parallel()
+
+	report, events := newRichFixtureReport(t)
+	patches := renderAllFragments(context.Background(), report, events, auditlog.BuildTypeMetadata())
+
+	bySelector := make(map[string]string, len(patches))
+	for _, p := range patches {
+		bySelector[p.selector] = p.html
+	}
+
+	svc := bySelector["#services-tbody"]
+	if !strings.Contains(svc, "shutdown boom") {
+		t.Errorf("#services-tbody missing shutdown error text:\n%s", svc)
+	}
+
+	if !strings.Contains(svc, "idle") {
+		t.Errorf("#services-tbody missing never-invoked service row:\n%s", svc)
+	}
+}

@@ -1503,3 +1503,20 @@ func TestServer_ExportHTML_WriteError(t *testing.T) {
 		t.Errorf("expected 500 on write failure, got %d", rec.Code)
 	}
 }
+
+func TestServer_ReportWithoutPlugin(t *testing.T) {
+	t.Parallel()
+
+	// A server constructed without a plugin answers 503 on data endpoints
+	// (requirePlugin path) instead of panicking.
+	server := live.NewServer(live.NewHub(), nil, live.Config{})
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/debug/di/api/report", nil)
+	rec := httptest.NewRecorder()
+
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf("expected 503 without plugin, got %d (body: %s)", rec.Code, rec.Body.String())
+	}
+}
