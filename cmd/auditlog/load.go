@@ -91,7 +91,12 @@ func loadFile(path string, format auditlog.Format) (auditlog.Report, auditlog.Fo
 // parseCommonFlagSet parses flags for a subcommand that accepts the shared
 // flags plus expectedNArg positional arguments. Flags are reordered before
 // positional arguments so `info report.json --quiet` parses naturally.
-func parseCommonFlagSet(name string, args []string, expectedNArg int, usage string) (*flag.FlagSet, commonFlags, error) {
+func parseCommonFlagSet(
+	name string,
+	args []string,
+	expectedNArg int,
+	usage string,
+) (*flag.FlagSet, commonFlags, error) {
 	fs := newFlagSet(name)
 	flags := registerCommonFlags(fs)
 
@@ -115,7 +120,11 @@ func parseCommonFlagSet(name string, args []string, expectedNArg int, usage stri
 // count, load the report, and return it together with the source path. The
 // usage string is used in the "usage: ..." error returned when the arg count
 // is wrong.
-func loadSingleReportSubcommand(name string, args []string, usage string) (auditlog.Report, string, commonFlags, error) {
+func loadSingleReportSubcommand(
+	name string,
+	args []string,
+	usage string,
+) (auditlog.Report, string, commonFlags, error) {
 	fs, flags, err := parseCommonFlagSet(name, args, 1, usage)
 	if err != nil {
 		return auditlog.Report{}, "", commonFlags{}, err
