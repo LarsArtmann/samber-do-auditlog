@@ -8,7 +8,9 @@ Audit-log plugin for [samber/do v2](https://github.com/samber/do) — track ever
 
 [![CI](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml/badge.svg)](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/samber-do-auditlog.svg)](https://pkg.go.dev/github.com/larsartmann/samber-do-auditlog)
-[![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/larsartmann/samber-do-auditlog)](https://goreportcard.com/report/github.com/larsartmann/samber-do-auditlog)
+[![Release](https://img.shields.io/github/v/release/LarsArtmann/samber-do-auditlog?include_prereleases&sort=semver)](https://github.com/LarsArtmann/samber-do-auditlog/releases)
+[![Go Version](https://img.shields.io/badge/Go-1.27+-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
 [![Coverage](https://img.shields.io/badge/Coverage-94%25-brightgreen)](https://github.com/LarsArtmann/samber-do-auditlog/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -18,6 +20,26 @@ Audit-log plugin for [samber/do v2](https://github.com/samber/do) — track ever
 
 > [!CAUTION]
 > **Beta.** The API is stabilizing but breaking changes are still possible before 1.0. Pin to a specific version (`go get github.com/larsartmann/samber-do-auditlog@vX.Y.Z`) if you depend on it in production. See [STABILITY.md](STABILITY.md) for the stability promise. Feedback welcome in [Issues](https://github.com/larsartmann/samber-do-auditlog/issues) — [CONTRIBUTING.md](CONTRIBUTING.md) has everything you need to get started.
+
+## Contents
+
+- [What does it look like?](#what-does-it-look-like) — a single self-contained HTML file
+- [Why?](#why) / [Who is this for?](#who-is-this-for) / [When NOT to use this](#when-not-to-use-this)
+- [Install](#install) — requirements, `GOEXPERIMENT=jsonv2`, env-var toggle
+- [Quick Start](#quick-start) — three lines, then export
+- [Features](#features) — the full inventory
+- [How It Works](#how-it-works) — hooks, stack-based dependency inference
+- [Export Formats](#export-formats) — JSON, NDJSON, HTML, CSV, diagrams, trees, tables
+- [Filtered Reports](#filtered-reports) — server-side slices of the audit log
+- [Health Checks](#health-checks) — recording wrapper for `injector.HealthCheck`
+- [Real-Time Event Streaming](#real-time-event-streaming) — NDJSONStreamer, MultiWriter
+- [Live Dashboard](#live-dashboard) — SSE + datastar, no hand-written rendering JS
+- [Health Probes](#health-probes) — `go-health` integration
+- [CLI Tool](#cli-tool) — info / convert / diff / validate / stats / schema
+- [Loading & Migrating Reports](#loading--migrating-reports) — auto-detect, schema upgrades
+- [Performance](#performance) — hot-path costs, benchmarks
+- [Security & Quality](#security--quality) — CSP, fuzzing, coverage, lint
+- [Documentation](#documentation) / [Contributing](#contributing) / [License](#license)
 
 ---
 

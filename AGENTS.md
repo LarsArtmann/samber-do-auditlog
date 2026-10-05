@@ -28,7 +28,7 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | `nix run .#coverage`                                                                | Run the CI-equivalent coverage gate via Nix                                                                                               |
 | `sh scripts/coverage-gate.sh`                                                       | Coverage gate (exclusions single-sourced in `scripts/coverage-exclusions.txt`; ≥94%)                                                      |
 | `sh scripts/check-go-version.sh`                                                    | Go-version drift guard: go.mod == ci.yml == flake GOTOOLCHAIN == .golangci.yml (CI + pre-commit)                                          |
-| `sh scripts/check-doc-claims.sh`                                                    | Claims linter: go version, schema version, coverage gate, linter count, fuzz count vs machine truth (pre-commit)                          |
+| `sh scripts/check-doc-claims.sh`                                                    | Claims linter (10 fact families): go/schema version, coverage gate, linter+fuzz+benchmark+CI-job+diagram counts, env-var spelling vs machine truth (pre-commit)                          |
 | `sh scripts/check-changelog-sync.sh`                                                | CHANGELOG.md ↔ website changelog.mdx version-list sync (website CI)                                                                       |
 | `git config core.hooksPath scripts/hooks`                                           | Install the pre-commit hook                                                                                                               |
 
@@ -153,10 +153,11 @@ The requirement exists because `go-output` (diagram/table rendering), `go-brande
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every push and PR (plus a weekly cron) with 8 parallel jobs:
+`.github/workflows/ci.yml` runs on every push and PR (plus a weekly cron) with 9 parallel jobs:
 
 - **test**: `go vet`, `go build`, `go test -race` with coverage, and the **coverage gate** (≥94% of non-`example/`/`cmd/` statements; exclusions from `scripts/coverage-exclusions.txt`; per-function step summary) + `check-go-version.sh` drift guard.
 - **lint**: `golangci-lint config verify` then the pinned `golangci-lint v2.14.0` run (binary cached; v2.14.0 bundles exhaustruct v5.2.0 — the first release whose exhaustruct_v5 doesn't panic on Go 1.27 promoted-field literals).
+- **healthwash**: `samber-linter` baseline ratchet pinned `@v0.2.2` (see the section below).
 - **vulncheck**: govulncheck pinned `@v1.7.0`.
 - **mod-tidy**: `go mod tidy` fails on `go.sum` drift (transport-flake retry wrapper).
 - **stale-generation**: `go generate ./...` fails on diff (uses `go tool templ` from the go.mod `tool` directive — no manual install) + committed-generated-files guard (a v0.9.0-retraction-class failure).
