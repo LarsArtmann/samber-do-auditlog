@@ -42,8 +42,10 @@ func newFixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
 		t.Fatalf("invoke db: %v", err)
 	}
 
-	// Shutdown errors are irrelevant to fragment rendering; ignore err (a
-	// plain *strings.Reader has no Shutdowner semantics in do v2).
+	// Shutdown returns *do.ShutdownReport, which implements error but renders
+	// as an empty string on success — non-nil does not mean failure. Discarded:
+	// the call exists to fire the shutdown hooks so the fixture exercises the
+	// shutdown-path fragments.
 	_ = injector.Shutdown()
 
 	return plugin.Report(), events
