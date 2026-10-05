@@ -62,7 +62,7 @@ func (d *Database) Shutdown() error {
 	return nil
 }
 
-// Cache implements do.ShutdownerWithError and do.HealthcheckerWithContext.
+// Sentinel errors returned by the demo services' health checks and shutdowns.
 var (
 	errDatabaseNoConn = errors.New("database: no connection string")
 	errCacheUnhealthy = errors.New("cache: unhealthy")
@@ -75,7 +75,10 @@ var (
 	errPassengerNoName         = errors.New("passenger: no name")
 	errMatchingEmpty           = errors.New("matching: no drivers or passengers available")
 	errHTTPServerNotConfigured = errors.New("httpserver: not configured")
+)
 
+// Cache implements do.ShutdownerWithError and do.HealthcheckerWithContext.
+var (
 	_ do.ShutdownerWithError      = (*Cache)(nil)
 	_ do.HealthcheckerWithContext = (*Cache)(nil)
 )

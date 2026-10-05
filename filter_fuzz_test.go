@@ -29,7 +29,9 @@ func fuzzFilterReport(t *testing.T) auditlog.Report {
 // fuzzFilterOptions derives filter options from the fuzz input: a name set
 // from null/newline-delimited tokens, an event type from the first byte, a
 // scope filter from the second byte's parity, and a time range from bytes 3-4.
-func fuzzFilterOptions(data []byte) []auditlog.ReportOption {
+// It also returns the tokenized names so callers can assert against the name
+// filter without re-tokenizing the input.
+func fuzzFilterOptions(data []byte) ([]auditlog.ReportOption, []string) {
 	names := tokenize(data)
 
 	var opts []auditlog.ReportOption
@@ -57,7 +59,7 @@ func fuzzFilterOptions(data []byte) []auditlog.ReportOption {
 		opts = append(opts, auditlog.WithTimeRange(from, to))
 	}
 
-	return opts
+	return opts, names
 }
 
 // FuzzFilterInputs fuzzes Report.Filtered with arbitrary combinations of the
@@ -82,8 +84,8 @@ func FuzzFilterInputs(f *testing.F) {
 	f.Fuzz(func(t *testing.T, data []byte) {
 		report := fuzzFilterReport(t)
 
-		names := tokenize(data)
-		filtered := report.Filtered(fuzzFilterOptions(data)...)
+		opts, names := fuzzFilterOptions(data)
+		filtered := report.Filtered(opts...)
 
 		// Invariant 1: result is always valid.
 		if err := filtered.Validate(); err != nil {

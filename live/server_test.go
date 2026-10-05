@@ -726,6 +726,11 @@ func TestServer_SSE_Heartbeat(t *testing.T) {
 		}
 	}
 
+	err = scanner.Err()
+	if err != nil {
+		t.Fatalf("read snapshot frame: %v", err)
+	}
+
 	// Wait for a heartbeat comment line.
 	foundHeartbeat := false
 
@@ -738,6 +743,11 @@ func TestServer_SSE_Heartbeat(t *testing.T) {
 				break
 			}
 		}
+	}
+
+	err = scanner.Err()
+	if err != nil {
+		t.Fatalf("read heartbeat lines: %v", err)
 	}
 
 	if !foundHeartbeat {
