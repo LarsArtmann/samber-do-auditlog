@@ -204,6 +204,14 @@ func newRichFixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
 
 		return nil, errors.New("boom: provider failed")
 	})
+	// Registered but never invoked: exercises the nil-duration ("—") row.
+	do.ProvideNamed(injector, "idle", func(do.Injector) (*strings.Builder, error) {
+		return &strings.Builder{}, nil
+	})
+	// Invoked and shut down with an error: exercises the ShutdownError row.
+	do.ProvideNamed(injector, "flaky", func(do.Injector) (*flakyService, error) {
+		return &flakyService{}, nil
+	})
 
 	driverScope := injector.Scope("drivers")
 	do.ProvideNamed(driverScope, "alice", func(do.Injector) (*strings.Builder, error) {
@@ -217,8 +225,19 @@ func newRichFixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
 
 	// Scoped invocation drives the child-scope fragment branches.
 	_ = do.MustInvokeNamed[*strings.Builder](driverScope, "alice")
+	_ = do.MustInvokeNamed[*flakyService](injector, "flaky")
+
+	// Shutdown records the flaky service's ShutdownError.
+	_ = injector.Shutdown()
 
 	return plugin.Report(), events
+}
+
+// flakyService is a do.ShutdownerWithError whose shutdown always fails.
+type flakyService struct{}
+
+func (f *flakyService) Shutdown() error {
+	return errors.New("shutdown boom")
 }
 
 func TestRenderAllFragments_FailedAndScopedStates(t *testing.T) {
