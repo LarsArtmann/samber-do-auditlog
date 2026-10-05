@@ -3,12 +3,20 @@
 #
 # The Aug-2026 outage class: go.mod bumped to a newer Go while ci.yml still
 # pinned the old version (or vice versa) -> 33 days of red master. This script
-# asserts all four pinned sources agree:
+# asserts all four pinned sources agree with go.mod:
 #
-#   1. go.mod            `go` directive           (canonical source)
-#   2. .github/workflows/ci.yml   every `go-version:` value
-#   3. flake.nix         every `GOTOOLCHAIN = "goX.Y.Z"` value
-#   4. .golangci.yml     `run.go` setting
+#   1. go.mod                          `go` directive (canonical source,
+#                                      minor-only per fleet policy, e.g. `go 1.27`)
+#   2. .github/workflows/ci.yml        every `go-version:` value
+#   3. flake.nix                       GOTOOLCHAIN pins and Go package refs
+#   4. .golangci.yml                   `run.go` setting
+#
+# go.mod carries the minor-only language line while the toolchain pins may
+# carry a patch level (1.27 vs 1.27.1): patch extensions of the expected
+# version are accepted everywhere. flake.nix may either pin
+# `GOTOOLCHAIN = "goX.Y.Z"` explicitly or use `GOTOOLCHAIN = "local"` — in
+# that case the nixpkgs Go package (go_1_MM / buildGo<MM>Module) supplies the
+# exact toolchain and its minor version is checked against go.mod instead.
 #
 # Exit 0 = all agree. Exit 1 = drift detected (message says exactly where).
 
@@ -28,12 +36,25 @@ if [ -z "$EXPECTED" ]; then
 	exit 1
 fi
 
+# matches_policy <version>: OK when identical to go.mod's directive or a
+# patch-level extension of it (1.27 matches `go 1.27`; so does 1.27.1).
+matches_policy() {
+	case "$1" in
+	"$EXPECTED" | "$EXPECTED".*)
+		return 0
+		;;
+	*)
+		return 1
+		;;
+	esac
+}
+
 check() {
-	# check <description> <expected> <actual>
-	if [ "$2" != "$3" ]; then
+	# check <description> <version>
+	if ! matches_policy "$2"; then
 		echo "FAIL: $1"
-		echo "      expected: $2"
-		echo "      actual:   $3"
+		echo "      expected: $EXPECTED (or $EXPECTED.x)"
+		echo "      actual:   $2"
 		fail=1
 	fi
 }
@@ -45,27 +66,41 @@ if [ -z "$CI_VERSIONS" ]; then
 	fail=1
 fi
 for v in $CI_VERSIONS; do
-	check "ci.yml go-version ($v) vs go.mod ($EXPECTED)" "$EXPECTED" "$v"
+	check "ci.yml go-version ($v) vs go.mod ($EXPECTED)" "$v"
 done
 
-# 3. flake.nix — every GOTOOLCHAIN assignment must be go<expected>.
+# 3. flake.nix — explicit GOTOOLCHAIN pins must match; a `GOTOOLCHAIN =
+# "local"` pin is allowed only when the nixpkgs Go packages/builders it
+# relies on match go.mod's minor version.
 FLAKE_VERSIONS="$(sed -n 's/^.*GOTOOLCHAIN *= *"go\([0-9][0-9.]*\)".*$/\1/p' "$ROOT/flake.nix" | sort -u)"
-if [ -z "$FLAKE_VERSIONS" ]; then
+FLAKE_LOCAL="$(sed -n 's/^.*GOTOOLCHAIN *= *"local".*$/local/p' "$ROOT/flake.nix" | sort -u)"
+if [ -z "$FLAKE_VERSIONS" ] && [ -z "$FLAKE_LOCAL" ]; then
 	echo "FAIL: no GOTOOLCHAIN pin found in flake.nix"
 	fail=1
 fi
 for v in $FLAKE_VERSIONS; do
-	# The flake may pin a full toolchain version (go1.23.12) while go.mod
-	# declares the language line (go 1.23) — accept a patch-level extension.
-	case "$v" in
-	"$EXPECTED" | "$EXPECTED".*)
-		;;
-	*)
-		echo "FAIL: flake.nix GOTOOLCHAIN (go$v) vs go.mod ($EXPECTED)"
-		echo "      expected: $EXPECTED or $EXPECTED.x"
+	check "flake.nix GOTOOLCHAIN (go$v) vs go.mod ($EXPECTED)" "$v"
+done
+
+# go_1_MM package refs: minor version must equal go.mod's minor.
+FLAKE_GO_PKGS="$(sed -n 's/^.*\(go_[0-9]*_[0-9]*\).*/\1/p' "$ROOT/flake.nix" | sort -u)"
+# buildGo<MM>Module builder refs: digits are major+minor without separators.
+FLAKE_GO_BUILDERS="$(sed -n 's/^.*\(buildGo[0-9]*Module\).*/\1/p' "$ROOT/flake.nix" | sort -u)"
+if [ -n "$FLAKE_LOCAL" ] && [ -z "$FLAKE_GO_PKGS" ] && [ -z "$FLAKE_GO_BUILDERS" ]; then
+	echo "FAIL: flake.nix sets GOTOOLCHAIN=local but pins no nixpkgs Go package/builder (go_1_MM / buildGo<MM>Module)"
+	fail=1
+fi
+for pkg in $FLAKE_GO_PKGS; do
+	minor="$(printf '%s' "$pkg" | sed 's/^go_\([0-9]*\)_\([0-9]*\)$/\1.\2/')"
+	check "flake.nix Go package ($pkg = go $minor) vs go.mod ($EXPECTED)" "$minor"
+done
+EXPECTED_NODOTS="$(printf '%s' "$EXPECTED" | tr -d '.')"
+for builder in $FLAKE_GO_BUILDERS; do
+	digits="$(printf '%s' "$builder" | sed 's/^buildGo\([0-9]*\)Module$/\1/')"
+	if [ "$digits" != "$EXPECTED_NODOTS" ]; then
+		echo "FAIL: flake.nix Go builder ($builder, digits $digits) vs go.mod ($EXPECTED, digits $EXPECTED_NODOTS)"
 		fail=1
-		;;
-	esac
+	fi
 done
 
 # 4. .golangci.yml — run.go must match (quoted or bare).
@@ -74,7 +109,7 @@ if [ -z "$LINT_VERSION" ]; then
 	echo "FAIL: could not read run.go from .golangci.yml"
 	fail=1
 else
-	check ".golangci.yml run.go vs go.mod ($EXPECTED)" "$EXPECTED" "$LINT_VERSION"
+	check ".golangci.yml run.go ($LINT_VERSION) vs go.mod ($EXPECTED)" "$LINT_VERSION"
 fi
 
 if [ "$fail" -ne 0 ]; then

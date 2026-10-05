@@ -141,7 +141,7 @@ The requirement exists because `go-output` (diagram/table rendering), `go-brande
 
 ### Go 1.27 toolchain pin
 
-**The canonical Go version is 1.27.1** (go.mod carries minor-only `go 1.27` per the fleet policy; the devShell/CI/GOTOOLCHAIN pin the patch), pinned across (1) `go.mod`, (2) `.github/workflows/ci.yml`, (3) `flake.nix` (`GOTOOLCHAIN=go1.27.1`, `go_1_27`), (4) `CONTRIBUTING.md`/`BENCHMARKS.md`. `scripts/check-go-version.sh` asserts all four agree.
+**The canonical Go version is 1.27.1** (go.mod carries minor-only `go 1.27` per the fleet policy; the devShell/CI/GOTOOLCHAIN pin the patch), pinned across (1) `go.mod`, (2) `.github/workflows/ci.yml` (`1.27.1`), (3) `flake.nix` (`go_1_27` package + `buildGo127Module` builder + `GOTOOLCHAIN = "local"` — go_1_27 IS 1.27.1, and `local` stops Go from re-downloading the exact toolchain), (4) `CONTRIBUTING.md`/`BENCHMARKS.md`. `scripts/check-go-version.sh` asserts all agree: patch-level extensions of the go.mod minor are accepted everywhere; a flake `GOTOOLCHAIN=local` is validated against its `go_1_MM`/`buildGo<MM>Module` refs.
 
 **Rule: bump `go-version` in ci.yml and `GOTOOLCHAIN` in flake.nix in the SAME commit as any `go.mod` bump.** GitHub runners set `GOTOOLCHAIN=local`; a CI go-version below go.mod's requirement fails every Go job instantly. (This exact mismatch broke all Go jobs on master once — see git history.)
 
@@ -189,7 +189,8 @@ Extremely strict — nearly every golangci-lint linter enabled (~108). Key impli
 - **`.envrc` must NOT pin `GOTOOLCHAIN`** — the file is untracked, so pins
   rot invisibly: a leftover `GOTOOLCHAIN=go1.26.5` made every go command fail
   with "go.mod requires go >= 1.27.1" (removed 2026-10-04). The devShell's
-  flake.nix `GOTOOLCHAIN=go1.27.1` pin is the only canonical location.
+  flake.nix `GOTOOLCHAIN = "local"` + `go_1_27` package pin is the only
+  canonical location.
 - **Repo directory is `samber-do-metrics`** but `go.mod` says `samber-do-auditlog`. The module name is canonical.
 - **JSON tags use snake_case** (`scope_name`, `service_name`, …) via `tagliatelle` — intentional for JSON API compatibility.
 - **Package doc comment lives in `doc.go`** (with the GOEXPERIMENT note); `plugin.go` has no package comment.
