@@ -14,11 +14,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Nothing yet.
+- `scripts/sync-changelog.sh`: inserts missing release sections from
+  `CHANGELOG.md` into `website/src/content/docs/changelog.mdx` (MDX-escaped,
+  insert-only) and runs the changelog-sync guard as its final verdict.
 
 ### Fixed
 
-- Nothing yet.
+- CI drift guard (`scripts/check-go-version.sh`): rewritten for the minor-only
+  `go 1.27` go.mod directive and `GOTOOLCHAIN = "local"` + `go_1_27` flake
+  policy — patch-level extensions of go.mod's minor are accepted everywhere,
+  so the Test job no longer fails on the fleet toolchain policy.
+- CI Lint job: golangci-lint pin bumped `v2.12.2` → `v2.14.0` (first release
+  built with go1.27 and exhaustruct v5.2.0 — resolves both the `config verify`
+  refusal on go1.27.1 targets and the exhaustruct `makeslice` panic).
+- `.golangci.yml`: remaining `exhaustruct` exclusion entries renamed to
+  `exhaustruct_v5`, plus all `//nolint:exhaustruct` directives.
+- `ReplayEvents`: `applyEvent` now handles `EventTypeCommand` explicitly
+  (commands are not services; the event still flows into `Report.Events`).
+- `LoadReportFromBytes`: explicit `FormatAuto` case with rationale instead of a
+  silent empty fallthrough.
+- Website: re-pinned `typescript` to `^6.0.3` — TypeScript 7.0.2 crashes
+  `astro check` (`assertCompatibleTypeScript`), regressing the v0.11.0 pin.
 
 ## [0.11.0] - 2026-10-05
 
