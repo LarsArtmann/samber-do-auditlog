@@ -80,40 +80,30 @@ func buildServicesFromMap(services map[svcKey]*serviceRecord) []ServiceInfo {
 func serviceRecordToInfo(rec *serviceRecord) ServiceInfo {
 	//nolint:modernize // embedlit's promoted-field flattening conflicts with exhaustruct v4 (which cannot see promoted fields as exhaustive); exhaustruct_v5 panics on the live package (v5.0.3, retried 2026-09-22 under golangci-lint 2.13.2: identical makeslice panic), so the nested literal stays until v5 ships a fix
 	return ServiceInfo{
-		ServiceIdentity: ServiceIdentity{
-			ServiceRef: ServiceRef{
-				ServiceName: rec.serviceName,
-				ScopeID:     rec.scopeID,
-				ScopeName:   rec.scopeName,
-			},
-			ServiceType: rec.serviceType,
-		},
-		ServiceLifecycle: ServiceLifecycle{
-			Status: deriveServiceStatus(
-				rec.invocationError, rec.shutdownError,
-				rec.shutdownAt, rec.firstInvokedAt,
-			),
-			RegisteredAt:         rec.registeredAt,
-			FirstInvokedAt:       rec.firstInvokedAt,
-			InvocationCount:      rec.invocationCount,
-			InvocationOrder:      rec.invocationOrder,
-			FirstBuildDurationMs: rec.firstBuildDurationMs,
-			ShutdownAt:           rec.shutdownAt,
-			ShutdownDurationMs:   rec.shutdownDurationMs,
-			ShutdownError:        rec.shutdownError,
-			InvocationError:      rec.invocationError,
-			IsShutdowner:         false,
-		},
-		ServiceHealth: ServiceHealth{
-			IsHealthchecker:   false,
-			LastHealthCheckAt: rec.lastHealthCheckAt,
-			HealthCheckError:  rec.healthCheckError,
-			HealthCheckCount:  rec.healthCheckCount,
-		},
-		ServiceGraph: ServiceGraph{
-			Dependencies: nil,
-			Dependents:   nil,
-		},
+		ServiceName: rec.serviceName,
+		ScopeID:     rec.scopeID,
+		ScopeName:   rec.scopeName,
+		ServiceType: rec.serviceType,
+		Status: deriveServiceStatus(
+			rec.invocationError, rec.shutdownError,
+			rec.shutdownAt, rec.firstInvokedAt,
+		),
+		RegisteredAt:         rec.registeredAt,
+		FirstInvokedAt:       rec.firstInvokedAt,
+		InvocationCount:      rec.invocationCount,
+		InvocationOrder:      rec.invocationOrder,
+		FirstBuildDurationMs: rec.firstBuildDurationMs,
+		ShutdownAt:           rec.shutdownAt,
+		ShutdownDurationMs:   rec.shutdownDurationMs,
+		ShutdownError:        rec.shutdownError,
+		InvocationError:      rec.invocationError,
+		IsShutdowner:         false,
+		IsHealthchecker:      false,
+		LastHealthCheckAt:    rec.lastHealthCheckAt,
+		HealthCheckError:     rec.healthCheckError,
+		HealthCheckCount:     rec.healthCheckCount,
+		Dependencies:         nil,
+		Dependents:           nil,
 	}
 }
 
