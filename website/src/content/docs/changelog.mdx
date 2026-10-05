@@ -20,6 +20,67 @@ description: All notable changes to do-auditlog.
 - Contributing page coverage gate corrected to 94% (was 95%).
 - Landing demo terminal now matches real example output.
 
+## [0.11.0] — 2026-10-05
+
+### Added — Command execution events
+
+- **`Plugin.RecordCommand` / `Recorder.RecordCommand`**: integrations that wrap
+  command execution (e.g. cmdguard's middleware) can now record command-level
+  audit events — `PhaseBefore` at start, `PhaseAfter` with wall-clock duration
+  and error at completion. New `EventTypeCommand` (`"command"`, label
+  "Command") and `Event.IsCommand()`. Commands are not DI services: no service
+  record is created and they never appear in `Report.Services` — they surface
+  in `Report.Events` / the NDJSON event stream only, with the command name in
+  `ServiceRef.ServiceName`. Unblocks cmdguard's "command-level audit
+  middleware" (cmdguard TODO F1).
+
+### Changed — Strict enum validation on load
+
+- **Corrupt event streams now fail loudly**: `ReadEvents` additionally rejects unknown `provider_type` values (previously only `event_type`/`phase` were checked), and `ReplayEvents` now validates all three enum fields per event — an unknown value previously caused `applyEvent` to silently drop the event, producing a lossy "successful" replay. Empty `provider_type` remains valid ("undetermined"). All three sentinels (`unknown event_type`, `unknown phase`, `unknown provider_type`) are classified as `errorfamily.Corruption`. Design note: validate-at-load was chosen over strict `UnmarshalJSON` on the enum types to preserve forward compatibility (older binaries can still parse newer streams) — see TODO plan T33.
+
+### Added — Dependency-edge diffing
+
+- **`Report.Diff` now compares dependency edges**: `ServiceDiff` gained `AddedDeps` / `RemovedDeps` (`[]ServiceRef`, JSON `added_deps` / `removed_deps`, omitted when empty). Rewiring an existing service's dependencies is now reported as a per-service change instead of being silently ignored — closing the gap the June 2026 status report flagged and the (then-untruthful) doc comment claimed. Both lists use the canonical ServiceRef ordering.
+
+### Added — Public Presence Overhaul
+
+- **Demo video**: 25s silent promo (real example output, real report screenshots) rendered with HyperFrames, embedded above the fold at `do-auditlog.lars.software/#demo` with poster, `og:image`, `VideoObject` JSON-LD, and long-cache headers. Composition committed under `website/video/`.
+- **Live Dashboard guide** (`guides/live-dashboard.mdx`): the `live/` sub-package finally has docs — routes, config, CORS, reconnection replay.
+- **README trust sections**: "Who is this for?" (5 personas) and "When NOT to use this" (with alternatives).
+- **GOEXPERIMENT=jsonv2 documented for consumers**: a downstream build fails without the flag (verified empirically); README and the website Installation page now say so with the exact error text.
+- **Docs retrofit**: Starlight `lastUpdated` + `editLink` enabled; curated "Where to go next" on every docs page; OG image (1200x630); Related Tools gained the sibling libraries (go-health, go-workflow-auditlog, go-sse, go-ndjson).
+
+### Fixed — Website Accuracy
+
+- **Changelog page synced**: the docs changelog stopped at v0.8.0 (live site even at v0.6.0); now includes v0.9.0 and v0.10.0.
+- **API reference updated**: `Config.RunID`/`MaxEvents`/`InitialEventCapacity`, `SetOnEvent`, `Enable`, `DroppedEventCount`, `Write*String` methods, `StreamEvents`, `MultiWriter`, live package section; sample JSON schema version corrected to `0.3.0`.
+- **Coverage gate number**: website Contributing page said 95%; the actual CI gate is 94%.
+- **Landing demo terminal**: numbers now match real example output (Services 20, Events ~145, Scopes 4); removed fabricated "45.2ms" build time.
+- **Env-var semantics corrected**: installation docs claimed `DO_AUDITLOG_ENABLED` overrides `Config.Enabled`; the env var is only consulted when `Config.Enabled` is the zero value.
+
+### Fixed — CI & Toolchain (2026-09-01 repair sessions)
+
+- **Master CI restored to green after 33 days red**: `ci.yml` `go-version` aligned with go.mod (1.26.7) in all jobs — a 2026-08-29 go.mod bump without the matching CI bump failed every Go job with `GOTOOLCHAIN=local` on runners. goreleaser pinned to v2.17.1 (v2.18.0+ requires Go ≥ 1.27).
+- **Coverage gate made enforceable again**: the CI grep now excludes generated `*_templ.go` (matching `scripts/coverage-gate.sh`); without it the gate read 87% and failed since Aug 14 while later failures masked it. Gate now passes at 95.2%.
+- **`go-sse/ssetest` promoted from `// indirect` to direct requirement** in `go.mod` (directly imported by tests since the ssetest migration, but the `go mod tidy` drift was pending).
+- **Website workflow can now run**: `setup-node` SHA typo fixed (every run died at action resolution in ~6s since ~Aug 14), cache path corrected to `pnpm-lock.yaml`, and `pnpm/action-setup` (v4.1.0, SHA-pinned) added to both jobs — runners do not ship pnpm, and the workflow's first real execution (2026-09-01) died on exactly that. `pnpm install` now runs `--frozen-lockfile` to catch manifest/lockfile drift.
+- **flake.nix `GOTOOLCHAIN` pinned to go1.26.7** (devShell + coverage + auditlog apps) in lockstep with go.mod.
+- **Docs synced to the above**: AGENTS.md toolchain-pin section (bump-in-same-commit rule), CONTRIBUTING.md, coverage-gate exclusion list, CSP claim (`default-src 'none'` is present), status reports.
+
+### Fixed — Website Deploy Pipeline (2026-09-02/04)
+
+- **Website workflow actually deploys**: the deploy job's second `setup-node` SHA was corrupted (unresolvable action), `firebase-tools` action-install was unreliable (switched to npm install, pinned `15.28.2`), the changelog guard ran from the wrong working directory, and `corepack` enablement had to precede `setup-node`. First fully green install → check → build → validate → deploy runs followed.
+- **HTML cache rule matches `cleanUrls` pages** (Firebase rewritten-path lookups were bypassing the cache headers).
+- **TypeScript pinned back to `^6.0.3`**: an automated dependency bump moved specifiers (TS `^7.0.2`/tsgo) without regenerating `pnpm-lock.yaml`, breaking `astro check` (`assertCompatibleTypeScript`) and the frozen-lockfile install; lockfile regenerated (also pulls `fast-uri 3.1.7`, closing four Dependabot advisories).
+- **Drift guards survive the `.golangci.yml` reformat** (`check-go-version.sh` no longer depends on single-line formatting).
+
+### Fixed — Live Dashboard (2026-09-04/11)
+
+- **SSE subscribe race closed** (`live/server.go`): a new SSE client's subscription was registered after the initial snapshot was rendered, so an event emitted in between existed in neither the snapshot nor the live stream — silently lost. Subscribe now happens before replay/snapshot: replay covers the past, the snapshot covers current state, everything after Subscribe arrives live.
+- **Live legend ordering uses `ProviderType` constants** instead of repeated string literals (removes a goconst/version-skew landmine).
+- **Dashboard ships with a working CSP again**: the embedded Datastar v1.0.2 runtime compiles every `data-*` expression with the `Function()` constructor, requiring `script-src 'unsafe-eval'` — the dashboard's CSP meta only allowed `'unsafe-inline'`, so the dashboard rendered nothing but `EvalError`s out of the box. CSP now includes `'unsafe-eval'` (documented tradeoff), and `frame-ancestors 'none'` — ignored inside `<meta>` per spec — is delivered as an HTTP response header by the live server instead. Static report meta cleaned of the dead directive (`base-uri 'none'` kept). New regression test `TestServer_DashboardCSP`; golden fixture regenerated.
+- **CI Lint job un-broken**: `.golangci.yml` used the schema-invalid key `min-length` (correct: `min-len`), which made `golangci-lint config verify` exit 3 on every golangci-lint version — killing the Lint job before `lint run` even started. Also: six inline `errors.New` in `example/services.go` converted to package-level sentinels (CI-blocking err113) and `FuzzFilterInputs` refactored below the gocognit threshold (behavior identical).
+
 ## [0.10.0] — 2026-08-14
 
 A minor release for integrations that must create the plugin before they know their runtime configuration. Non-breaking.
