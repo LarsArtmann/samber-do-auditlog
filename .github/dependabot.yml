@@ -22,7 +22,7 @@ updates:
     groups:
       actions:
         patterns:
-          - '*'
+          - "*"
     labels:
       - dependencies
       - ci
