@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -11,18 +12,40 @@ import (
 	"github.com/samber/do/v2"
 )
 
+// eventCollector is a concurrency-safe OnEvent sink for fixtures: do's
+// Shutdown runs service shutdowns in parallel goroutines, so the callback can
+// fire concurrently and a bare slice append would race.
+type eventCollector struct {
+	mu     sync.Mutex
+	events []auditlog.Event
+}
+
+func (c *eventCollector) onEvent(evt auditlog.Event) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.events = append(c.events, evt)
+}
+
+func (c *eventCollector) snapshot() []auditlog.Event {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return append([]auditlog.Event(nil), c.events...)
+}
+
 // newFixtureReport builds a small plugin + injector with two services in a
 // dependency relationship, invokes them, and returns the report plus its
 // event stream. Exercises the same recording path the dashboard sees live.
 func newFixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
 	t.Helper()
 
-	var events []auditlog.Event
+	collector := &eventCollector{}
 
 	plugin, err := auditlog.New(auditlog.Config{
 		Enabled:     true,
 		ContainerID: "frag-test",
-		OnEvent:     func(evt auditlog.Event) { events = append(events, evt) },
+		OnEvent:     collector.onEvent,
 	})
 	if err != nil {
 		t.Fatalf("create plugin: %v", err)
@@ -49,7 +72,7 @@ func newFixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
 	// shutdown-path fragments.
 	_ = injector.Shutdown()
 
-	return plugin.Report(), events
+	return plugin.Report(), collector.snapshot()
 }
 
 func TestRenderAllFragments_AllSelectorsRender(t *testing.T) {
@@ -183,12 +206,12 @@ func TestRenderAllFragments_EmptyReport(t *testing.T) {
 func newRichFixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
 	t.Helper()
 
-	var events []auditlog.Event
+	collector := &eventCollector{}
 
 	plugin, err := auditlog.New(auditlog.Config{
 		Enabled:     true,
 		ContainerID: "rich-frag-test",
-		OnEvent:     func(evt auditlog.Event) { events = append(events, evt) },
+		OnEvent:     collector.onEvent,
 	})
 	if err != nil {
 		t.Fatalf("create plugin: %v", err)
@@ -230,7 +253,7 @@ func newRichFixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
 	// Shutdown records the flaky service's ShutdownError.
 	_ = injector.Shutdown()
 
-	return plugin.Report(), events
+	return plugin.Report(), collector.snapshot()
 }
 
 // flakyService is a do.ShutdownerWithError whose shutdown always fails.

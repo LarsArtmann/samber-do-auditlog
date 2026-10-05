@@ -83,7 +83,7 @@ cmd/auditlog/       — CLI binary: info/convert/diff/validate/stats subcommands
 testhelpers/        — Exported test helpers (JS syntax validation, etc.) for downstream integration testing
 scripts/hooks/      — pre-commit hook (generate drift + vet + lint + test); install via `git config core.hooksPath scripts/hooks`
 scripts/            — coverage-gate.sh, coverage-exclusions.txt, check-go-version.sh, check-doc-claims.sh, check-changelog-sync.sh
-example/            — Self-checking demo with 23 samber/do v2 features
+example/            — Demo app: 20 services across 4 scopes with health checks, shutdowns, and invocation errors (feature tour in main.go's doc comment)
 live/               — Real-time SSE dashboard sub-package (see below)
 ```
 
@@ -162,7 +162,7 @@ The requirement exists because `go-output` (diagram/table rendering), `go-brande
 - **stale-generation**: `go generate ./...` fails on diff (uses `go tool templ` from the go.mod `tool` directive — no manual install) + committed-generated-files guard (a v0.9.0-retraction-class failure).
 - **actionlint**: workflow lint.
 - **goreleaser**: `goreleaser check` on `.goreleaser.yml`.
-- **example-smoke**: runs the example's 23-feature self-check; fails if it exits non-zero.
+- **example-smoke**: runs the example end-to-end; fails if it exits non-zero (log.Fatalf) or panics.
 
 `website.yml` builds/deploys the docs site on pushes touching `website/**` (see Website section below).
 
@@ -242,13 +242,13 @@ Extremely strict — nearly every golangci-lint linter enabled (~108). Key impli
 - Nearly all tests use `t.Parallel()` — only `t.Setenv()` tests run sequentially.
 - Coverage gate ≥94% excluding `example/`, `cmd/`, generated `*_templ.go` (exclusions single-sourced in `scripts/coverage-exclusions.txt`). Current numbers: FEATURES.md footer.
 - Benchmarks (12) cover hot paths: Invocation, Disabled, Registration, ConcurrentInvocation, BuildReport (50/100/500), EventsCopy, OnEventCallback, HealthCheck, WriteD2 — see BENCHMARKS.md.
-- The HTML report's feature inventory (5-tab layout, waveform, Sugiyama DAG, filter chips, pagination, etc.) is owned by FEATURES.md; example/ verifies 23 features via its self-check (exit code 0 = all pass; the Unreliable/Leaky "failures" are intentional showcase).
+- The HTML report's feature inventory (5-tab layout, waveform, Sugiyama DAG, filter chips, pagination, etc.) is owned by FEATURES.md; example/ is a runnable feature tour — the `example-smoke` CI job runs it end-to-end (exit 0 = the demo executed cleanly; the Unreliable/Leaky "failures" are intentional showcase).
 
 ---
 
 ## Example
 
-The `example/` package (`main.go`, `register.go`, `services.go`, `summary.go`) demonstrates 23 samber/do v2 features with a ride-sharing domain model and a **self-checking feature checklist** (CI runs it as the `example-smoke` job). Run with `DO_AUDITLOG_ENABLED=true go run ./example`; add `--live` for the dashboard. The checklist and APIs are enumerated in `example/summary.go`.
+The `example/` package (`main.go`, `register.go`, `services.go`, `summary.go`) demonstrates the library across a ride-sharing domain model (20 services in 4 scopes; the exercised samber/do APIs are enumerated in `main.go`'s doc comment). CI runs it as the `example-smoke` job. Run with `DO_AUDITLOG_ENABLED=true go run ./example`; add `--live` for the dashboard. The printed summary lives in `example/summary.go`.
 
 ---
 

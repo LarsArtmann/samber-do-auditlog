@@ -34,6 +34,10 @@ fi
 COVERAGE_GATE="$(grep -oE 'below [0-9]+(\.[0-9]+)?%' .github/workflows/ci.yml | grep -oE '[0-9]+(\.[0-9]+)?' | head -n 1)"
 LINTER_COUNT="$(sed -n "$(grep -n '^ *enable:' .golangci.yml | head -1 | cut -d: -f1),$(grep -n '^ *settings:' .golangci.yml | head -1 | cut -d: -f1)p" .golangci.yml | grep -c '^ *- ' || true)"
 FUZZ_COUNT="$(grep -rh -o -E '^func (Fuzz[A-Za-z]+)' --include='*_test.go' . | wc -l | tr -d ' ')"
+BENCH_COUNT="$(grep -rh -c -E '^func Benchmark[A-Za-z]+' --include='*_test.go' . | awk -F: '{s+=$1} END {print s+0}')"
+CI_JOB_COUNT="$(sed -n '/^jobs:/,$p' .github/workflows/ci.yml | grep -cE '^  [a-z][a-z-]*:$')"
+ENV_KEY="$(grep -oE 'EnvKeyEnabled = "[A-Z_]+"' plugin.go | grep -oE '"[A-Z_]+"' | tr -d '"' | head -n 1)"
+DIAGRAM_COUNT="$(ls mermaid.go plantuml.go dot.go d2.go 2>/dev/null | wc -l | tr -d ' ')"
 
 # --- Checks ---------------------------------------------------------------
 
@@ -65,6 +69,54 @@ if [ -n "$DOC_COV" ] && [ "$DOC_COV" != "$COVERAGE_GATE" ]; then
 	claim_fail "README coverage gate" "$DOC_COV% coverage gate" "$COVERAGE_GATE% (ci.yml)"
 fi
 
+# 6. Env-var toggle claims must quote the exact EnvKeyEnabled constant.
+if [ -n "$ENV_KEY" ]; then
+	for doc in README.md AGENTS.md; do
+		if grep -qE 'DO_AUDITLOG_[A-Z_]+' "$doc" && ! grep -q "$ENV_KEY" "$doc"; then
+			claim_fail "$doc env var name" "(no exact $ENV_KEY mention)" "plugin.go: $ENV_KEY"
+		fi
+	done
+	# Any env-var spelling that differs from the constant is a stale claim.
+	for doc in README.md AGENTS.md; do
+		bad_env="$(grep -oE 'DO_AUDITLOG_[A-Z_]+' "$doc" | sort -u | grep -v "^$ENV_KEY$" || true)"
+		if [ -n "$bad_env" ]; then
+			claim_fail "$doc env var spelling" "$bad_env" "plugin.go: $ENV_KEY"
+		fi
+	done
+fi
+
+# 7. Benchmark count claims ("Benchmarks (N)" / "N benchmarks") must match the test grep.
+for doc in AGENTS.md BENCHMARKS.md; do
+	DOC_BENCH="$(grep -oE '[0-9]+ benchmarks?|Benchmarks \([0-9]+\)' "$doc" | grep -oE '[0-9]+' | head -n 1 || true)"
+	if [ -n "$DOC_BENCH" ] && [ "$DOC_BENCH" != "$BENCH_COUNT" ]; then
+		claim_fail "$doc benchmark count" "$DOC_BENCH" "$BENCH_COUNT (grep '^func Benchmark')"
+	fi
+done
+
+# 8. CI job count claims ("N parallel jobs") must match ci.yml's jobs block.
+for doc in AGENTS.md FEATURES.md; do
+	DOC_JOBS="$(grep -oE '[0-9]+ parallel jobs' "$doc" | grep -oE '[0-9]+' | head -n 1 || true)"
+	if [ -n "$DOC_JOBS" ] && [ "$DOC_JOBS" != "$CI_JOB_COUNT" ]; then
+		claim_fail "$doc CI job count" "$DOC_JOBS parallel jobs" "$CI_JOB_COUNT jobs (ci.yml)"
+	fi
+done
+
+# 9. Fuzz-target count claims ("N targets") in AGENTS.md and FEATURES.md.
+for doc in AGENTS.md FEATURES.md; do
+	DOC_FUZZ2="$(grep -oE '\([0-9]+ targets?\)|[0-9]+ fuzz targets?' "$doc" | grep -oE '[0-9]+' | head -n 1 || true)"
+	if [ -n "$DOC_FUZZ2" ] && [ "$DOC_FUZZ2" != "$FUZZ_COUNT" ]; then
+		claim_fail "$doc fuzz target count" "$DOC_FUZZ2 targets" "$FUZZ_COUNT targets"
+	fi
+done
+
+# 10. Diagram-format count claims ("N diagram exports/formats") must match the renderer files.
+for doc in AGENTS.md FEATURES.md README.md; do
+	DOC_DIAG="$(grep -oE '[0-9]+ diagram (exports|formats)' "$doc" | grep -oE '[0-9]+' | head -n 1 || true)"
+	if [ -n "$DOC_DIAG" ] && [ "$DOC_DIAG" != "$DIAGRAM_COUNT" ]; then
+		claim_fail "$doc diagram format count" "$DOC_DIAG diagram formats" "$DIAGRAM_COUNT renderer files (mermaid/plantuml/dot/d2.go)"
+	fi
+done
+
 # --- Result ---------------------------------------------------------------
 
 if [ "$fail" -ne 0 ]; then
@@ -73,4 +125,4 @@ if [ "$fail" -ne 0 ]; then
 	exit 1
 fi
 
-echo "doc claims OK: go=$GO_MOD_VERSION schema=$SCHEMA_VERSION coverage-gate=$COVERAGE_GATE% linters=$LINTER_COUNT fuzz=$FUZZ_COUNT"
+echo "doc claims OK: go=$GO_MOD_VERSION schema=$SCHEMA_VERSION coverage-gate=$COVERAGE_GATE% linters=$LINTER_COUNT fuzz=$FUZZ_COUNT benchmarks=$BENCH_COUNT ci-jobs=$CI_JOB_COUNT env-key=$ENV_KEY diagram-formats=$DIAGRAM_COUNT"
