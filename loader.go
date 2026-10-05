@@ -93,9 +93,13 @@ func LoadReportFromBytes(data []byte, format Format) (Report, Format, error) {
 		return loadJSONFromBytes(data)
 	case FormatNDJSON:
 		return loadNDJSONFromBytes(data)
-	default:
-		return Report{}, FormatAuto, fmt.Errorf("%w: %s", ErrUnsupportedFormat, format)
+	case FormatAuto:
+		// Unreachable in practice: FormatAuto is resolved by detection
+		// above. Listed so `exhaustive` guards future loader.Format
+		// members; falls through to the shared unsupported-format error.
 	}
+
+	return Report{}, FormatAuto, fmt.Errorf("%w: %s", ErrUnsupportedFormat, format)
 }
 
 func loadJSONFromBytes(data []byte) (Report, Format, error) {

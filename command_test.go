@@ -1,7 +1,6 @@
 package auditlog_test
 
 import (
-	"errors"
 	"testing"
 
 	auditlog "github.com/larsartmann/samber-do-auditlog"
@@ -60,7 +59,7 @@ func TestRecorder_RecordCommand_Error(t *testing.T) {
 	p := mustNew(auditlog.Config{Enabled: true})
 
 	duration := 3.0
-	p.RecordCommand("migrate", auditlog.PhaseAfter, &duration, errors.New("connection refused"))
+	p.RecordCommand("migrate", auditlog.PhaseAfter, &duration, errConnectionRefused)
 
 	events := p.Events()
 	if len(events) != 1 {

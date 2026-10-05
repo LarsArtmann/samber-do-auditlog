@@ -154,6 +154,11 @@ func applyEvent(evt Event, state *replayState) {
 		if evt.Phase == PhaseAfter {
 			state.applyHealthCheck(evt)
 		}
+
+	case EventTypeCommand:
+		// Commands are not DI services: they surface in the event stream
+		// only (buildReportFromCore receives every event) and must not
+		// create or mutate service records.
 	}
 }
 
