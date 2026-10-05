@@ -256,7 +256,7 @@ linters:
     rules:
       - path: _test\.go
         linters:
-          - exhaustruct
+          - exhaustruct_v5
           - testpackage
           - gochecknoglobals
           - funlen
@@ -283,7 +283,7 @@ linters:
           - unparam
           - varnamelen
           - noinlineerr
-          - exhaustruct
+          - exhaustruct_v5
           - errcheck
           - err113
           - nlreturn
@@ -296,7 +296,7 @@ linters:
           - unparam
           - varnamelen
           - noinlineerr
-          - exhaustruct
+          - exhaustruct_v5
           - gosec
           - err113
           - errcheck
@@ -309,7 +309,6 @@ linters:
           - noinlineerr
           - gosec
           - varnamelen
-          - exhaustruct
           - testpackage
           - gochecknoglobals
           - funlen

@@ -120,7 +120,7 @@ func buildReportFromCore(
 	services []ServiceInfo,
 	scopeTree ScopeNode,
 ) Report {
-	report := Report{ //nolint:exhaustruct
+	report := Report{ //nolint:exhaustruct_v5
 		Version:           version,
 		ContainerID:       containerID,
 		RunID:             runID,
@@ -241,7 +241,7 @@ func buildMergedRootScope(scopeSet map[ScopeID]ScopeNode) ScopeNode {
 		return scopes[0]
 	}
 
-	return ScopeNode{} //nolint:exhaustruct
+	return ScopeNode{} //nolint:exhaustruct_v5
 }
 
 // mergeScopeTree adds all scopes from a tree into the scope set.
@@ -251,7 +251,7 @@ func mergeScopeTree(scopeSet map[ScopeID]ScopeNode, tree ScopeNode) {
 	}
 
 	if _, exists := scopeSet[tree.ID]; !exists {
-		scopeSet[tree.ID] = ScopeNode{ //nolint:exhaustruct // children merged recursively below
+		scopeSet[tree.ID] = ScopeNode{ //nolint:exhaustruct_v5 // children merged recursively below
 			ID:       tree.ID,
 			Name:     tree.Name,
 			Services: tree.Services,

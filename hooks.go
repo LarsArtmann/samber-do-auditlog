@@ -72,7 +72,7 @@ func popStackFrame(stack []stackEntry, scopeID ScopeID, serviceName ServiceName)
 		}
 	}
 
-	return stack, stackEntry{}, false //nolint:exhaustruct // zero-value sentinel for not-found
+	return stack, stackEntry{}, false //nolint:exhaustruct_v5 // zero-value sentinel for not-found
 }
 
 // recordDependencyFromStack inspects the current invocation stack and, if

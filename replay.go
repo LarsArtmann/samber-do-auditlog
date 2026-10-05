@@ -28,7 +28,7 @@ type replayState struct {
 
 // newReplayState initializes an empty replay state.
 func newReplayState() *replayState {
-	return &replayState{ //nolint:exhaustruct
+	return &replayState{ //nolint:exhaustruct_v5
 		services:      make(map[svcKey]*serviceRecord),
 		scopes:        make(map[ScopeID]scopeMeta),
 		shutdownStart: make(map[svcKey]time.Time),

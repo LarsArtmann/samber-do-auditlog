@@ -246,7 +246,7 @@ func buildScopeTreeFromMeta[T any](
 	scopeServices map[ScopeID][]ServiceName,
 ) ScopeNode {
 	if len(sorted) == 0 {
-		return ScopeNode{} //nolint:exhaustruct
+		return ScopeNode{} //nolint:exhaustruct_v5
 	}
 
 	root, ok := findRootScope(sorted, metaParent)

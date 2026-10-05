@@ -126,7 +126,7 @@ type Recorder struct {
 
 // NewRecorder creates a new event recorder.
 func NewRecorder(containerID ContainerID, runID RunID, onEvent func(Event)) *Recorder {
-	return &Recorder{ //nolint:exhaustruct
+	return &Recorder{ //nolint:exhaustruct_v5
 		mu:            sync.RWMutex{},
 		events:        make([]Event, 0, initialEventCapacity),
 		services:      make(map[svcKey]*serviceRecord),

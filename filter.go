@@ -70,7 +70,7 @@ func WithScope(scopeID ScopeID) ReportOption {
 }
 
 func newReportFilter(opts ...ReportOption) *reportFilter {
-	filter := &reportFilter{} //nolint:exhaustruct
+	filter := &reportFilter{} //nolint:exhaustruct_v5
 
 	for _, opt := range opts {
 		opt(filter)
@@ -212,7 +212,7 @@ func pruneScopeTreeRecursive(node ScopeNode, allowed map[ScopeID]map[ServiceName
 		}, count + 1
 	}
 
-	return ScopeNode{ //nolint:exhaustruct
+	return ScopeNode{ //nolint:exhaustruct_v5
 		ID:   "",
 		Name: "",
 	}, 0

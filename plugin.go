@@ -126,10 +126,10 @@ func envIsEnabled() bool {
 // When Enabled is false the returned opts are harmless no-ops.
 func (p *Plugin) Opts() *do.InjectorOpts {
 	if !p.config.Enabled {
-		return &do.InjectorOpts{} //nolint:exhaustruct
+		return &do.InjectorOpts{} //nolint:exhaustruct_v5
 	}
 
-	return &do.InjectorOpts{ //nolint:exhaustruct
+	return &do.InjectorOpts{ //nolint:exhaustruct_v5
 		HookBeforeRegistration: []func(*do.Scope, string){p.recorder.OnBeforeRegistration},
 		HookAfterRegistration:  []func(*do.Scope, string){p.recorder.OnAfterRegistration},
 		HookBeforeInvocation:   []func(*do.Scope, string){p.recorder.OnBeforeInvocation},
