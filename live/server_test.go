@@ -116,11 +116,11 @@ func TestServer_DashboardCSP(t *testing.T) {
 			directives := parseCSPDirectives(t, rec.Body.String())
 
 			for directive, want := range map[string][]string{
-				"default-src":  {"'none'"},
-				"style-src":    {"'unsafe-inline'"},
-				"script-src":   {"'unsafe-inline'", "'unsafe-eval'"},
-				"connect-src":  {"'self'"},
-				"base-uri":     {"'none'"},
+				"default-src": {"'none'"},
+				"style-src":   {"'unsafe-inline'"},
+				"script-src":  {"'unsafe-inline'", "'unsafe-eval'"},
+				"connect-src": {"'self'"},
+				"base-uri":    {"'none'"},
 			} {
 				got, ok := directives[directive]
 				if !ok {

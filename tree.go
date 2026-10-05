@@ -114,7 +114,9 @@ func (r Report) WriteTree(writer io.Writer) error {
 }
 
 // WriteHTMLTree writes the service dependency DAG as an HTML nested list tree.
-// Nodes are labeled with service name and provider-type icon.
+// Nodes are labeled with service name and provider-type icon. The output is a
+// fragment (<ul>…</ul>), not a full document — it carries no <head> or CSP
+// meta tag; the embedding page's Content-Security-Policy applies.
 func (r Report) WriteHTMLTree(writer io.Writer) error {
 	return r.writeTree(writer, markup.NewHTMLTreeRenderer())
 }

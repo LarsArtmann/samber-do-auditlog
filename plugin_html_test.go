@@ -53,6 +53,59 @@ func TestPlugin_WriteHTMLBuffer(t *testing.T) {
 	assertHTMLContains(t, html, "db")
 }
 
+// TestWriteHTML_CSPMeta pins the static report's CSP meta policy at the
+// directive level: every directive meta-delivered (exact source lists), and no
+// header-only directives (frame-ancestors, sandbox, report-uri) that browsers
+// silently ignore inside <meta>.
+func TestWriteHTML_CSPMeta(t *testing.T) {
+	t.Parallel()
+
+	html := writeHTMLToString(t)
+
+	const metaTag = `<meta http-equiv="Content-Security-Policy" content="`
+
+	start := strings.Index(html, metaTag)
+	if start < 0 {
+		t.Fatal("static report HTML missing Content-Security-Policy meta tag")
+	}
+
+	content := html[start+len(metaTag):]
+
+	end := strings.Index(content, `"`)
+	if end < 0 {
+		t.Fatal("CSP meta content attribute not terminated")
+	}
+
+	directives := make(map[string]string)
+
+	for _, directive := range strings.Split(content[:end], ";") {
+		name, sources, found := strings.Cut(strings.TrimSpace(directive), " ")
+		if !found {
+			continue
+		}
+
+		directives[name] = sources
+	}
+
+	for name, wantSources := range map[string]string{
+		"default-src": "'none'",
+		"style-src":   "'unsafe-inline' https://fonts.googleapis.com",
+		"script-src":  "'unsafe-inline'",
+		"font-src":    "https://fonts.gstatic.com",
+		"base-uri":    "'none'",
+	} {
+		if directives[name] != wantSources {
+			t.Errorf("static report CSP %s = %q, want %q", name, directives[name], wantSources)
+		}
+	}
+
+	for _, forbidden := range []string{"frame-ancestors", "sandbox", "report-uri"} {
+		if _, ok := directives[forbidden]; ok {
+			t.Errorf("static report CSP meta must not contain %s: ignored in <meta> (header-only directive)", forbidden)
+		}
+	}
+}
+
 func TestWriteHTML_EventsTabContent(t *testing.T) {
 	t.Parallel()
 
