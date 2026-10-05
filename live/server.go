@@ -280,6 +280,7 @@ func (srv *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Content-Security-Policy", dashboardFramePolicy)
+	w.Header().Set("X-Frame-Options", "DENY")
 	_, _ = w.Write([]byte(srv.dashboardHTML))
 }
 

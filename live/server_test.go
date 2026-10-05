@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -24,6 +25,12 @@ import (
 func newTestServer(t *testing.T) *live.Server {
 	t.Helper()
 
+	return newTestServerWithConfig(t, live.Config{})
+}
+
+func newTestServerWithConfig(t *testing.T, cfg live.Config) *live.Server {
+	t.Helper()
+
 	hub := live.NewHub()
 
 	plugin, err := auditlog.New(auditlog.Config{
@@ -35,9 +42,7 @@ func newTestServer(t *testing.T) *live.Server {
 		t.Fatalf("create plugin: %v", err)
 	}
 
-	server := live.NewServer(hub, plugin, live.Config{})
-
-	return server
+	return live.NewServer(hub, plugin, cfg)
 }
 
 func TestServer_DashboardHTML(t *testing.T) {
@@ -77,34 +82,99 @@ func TestServer_DashboardHTML(t *testing.T) {
 func TestServer_DashboardCSP(t *testing.T) {
 	t.Parallel()
 
-	server := newTestServer(t)
+	for _, tc := range []struct {
+		name   string
+		prefix string
+		path   string
+	}{
+		{name: "default prefix", prefix: "/debug/di", path: "/debug/di/"},
+		{name: "root prefix", prefix: "/", path: "/"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	ctx := t.Context()
+			server := newTestServerWithConfig(t, live.Config{Prefix: tc.prefix})
 
-	req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/debug/di/", nil)
-	rec := httptest.NewRecorder()
+			req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, tc.path, nil)
+			rec := httptest.NewRecorder()
 
-	server.ServeHTTP(rec, req)
+			server.ServeHTTP(rec, req)
 
-	if rec.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", rec.Code)
+			if rec.Code != http.StatusOK {
+				t.Fatalf("expected 200, got %d", rec.Code)
+			}
+
+			csp := rec.Header().Get("Content-Security-Policy")
+			if csp != "frame-ancestors 'none'" {
+				t.Errorf("expected frame-ancestors CSP response header, got %q", csp)
+			}
+
+			if xfo := rec.Header().Get("X-Frame-Options"); xfo != "DENY" {
+				t.Errorf("expected X-Frame-Options DENY response header, got %q", xfo)
+			}
+
+			directives := parseCSPDirectives(t, rec.Body.String())
+
+			for directive, want := range map[string][]string{
+				"default-src":  {"'none'"},
+				"style-src":    {"'unsafe-inline'"},
+				"script-src":   {"'unsafe-inline'", "'unsafe-eval'"},
+				"connect-src":  {"'self'"},
+				"base-uri":     {"'none'"},
+			} {
+				got, ok := directives[directive]
+				if !ok {
+					t.Errorf("dashboard CSP meta missing %s directive", directive)
+
+					continue
+				}
+
+				if !slices.Equal(got, want) {
+					t.Errorf("dashboard CSP meta %s = %v, want %v", directive, got, want)
+				}
+			}
+
+			for _, forbidden := range []string{"frame-ancestors", "sandbox", "report-uri"} {
+				if _, ok := directives[forbidden]; ok {
+					t.Errorf("dashboard CSP meta must not contain %s: ignored in <meta> (header-only directive)", forbidden)
+				}
+			}
+		})
+	}
+}
+
+// parseCSPDirectives extracts the Content-Security-Policy meta tag from a
+// dashboard document and splits its policy into a directive-name → source-list
+// map, so tests assert exact directives instead of substring coincidences.
+func parseCSPDirectives(t *testing.T, htmlBody string) map[string][]string {
+	t.Helper()
+
+	const metaTag = `<meta http-equiv="Content-Security-Policy" content="`
+
+	start := strings.Index(htmlBody, metaTag)
+	if start < 0 {
+		t.Fatal("dashboard HTML missing Content-Security-Policy meta tag")
 	}
 
-	csp := rec.Header().Get("Content-Security-Policy")
-	if csp != "frame-ancestors 'none'" {
-		t.Errorf("expected frame-ancestors CSP response header, got %q", csp)
+	content := htmlBody[start+len(metaTag):]
+
+	end := strings.Index(content, `"`)
+	if end < 0 {
+		t.Fatal("CSP meta content attribute not terminated")
 	}
 
-	body := rec.Body.String()
+	directives := make(map[string][]string)
 
-	meta := `script-src 'unsafe-inline' 'unsafe-eval'`
-	if !strings.Contains(body, meta) {
-		t.Errorf("dashboard CSP meta must allow 'unsafe-eval' for datastar expressions, missing %q", meta)
+	for _, directive := range strings.Split(content[:end], ";") {
+		tokens := strings.Fields(directive)
+		if len(tokens) == 0 {
+			continue
+		}
+
+		directives[tokens[0]] = tokens[1:]
 	}
 
-	if strings.Contains(body, "frame-ancestors") {
-		t.Error("dashboard CSP meta must not contain frame-ancestors: ignored in <meta> (header-only directive)")
-	}
+	return directives
 }
 
 func TestServer_HealthEndpoint(t *testing.T) {

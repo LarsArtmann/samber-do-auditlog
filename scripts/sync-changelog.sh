@@ -82,12 +82,12 @@ for version in $(grep -oE '^## \[[0-9]+\.[0-9]+\.[0-9]+\]' "$MAIN_CHANGELOG" | s
 
 	if [ -n "$insert_before" ]; then
 		tmp="$(mktemp)"
-		head -n "$((insert_before - 1))" "$SITE_CHANGELOG" > "$tmp"
-		printf '%s\n\n' "$body" >> "$tmp"
-		tail -n "+$insert_before" "$SITE_CHANGELOG" >> "$tmp"
+		head -n "$((insert_before - 1))" "$SITE_CHANGELOG" >"$tmp"
+		printf '%s\n\n' "$body" >>"$tmp"
+		tail -n "+$insert_before" "$SITE_CHANGELOG" >>"$tmp"
 		mv "$tmp" "$SITE_CHANGELOG"
 	else
-		printf '\n%s\n' "$body" >> "$SITE_CHANGELOG"
+		printf '\n%s\n' "$body" >>"$SITE_CHANGELOG"
 	fi
 
 	echo "inserted [$version] section into changelog.mdx"

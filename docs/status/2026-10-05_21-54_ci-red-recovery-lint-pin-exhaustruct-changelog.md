@@ -12,15 +12,15 @@ The pasted TODO list (from 2026-09-11) was partially stale: v0.11.0 shipped, Dep
 
 ## What was done
 
-| # | Change | State |
-|---|--------|-------|
-| 1 | `scripts/check-go-version.sh` rewritten: patch-extension policy for ci.yml/.golangci.yml; flake `GOTOOLCHAIN=local` validated via `go_1_MM`/`buildGo<MM>Module` refs | committed (9aec8a2) |
-| 2 | AGENTS.md toolchain-pin section + `.envrc` gotcha updated to the flake's real `local` pattern | committed (9aec8a2, d81d230) |
-| 3 | CI golangci-lint pin v2.12.2 → **v2.14.0** (bundles exhaustruct v5.2.0 — the Go 1.27 promoted-field panic fix) | committed (3ba8a93) |
-| 4 | `.golangci.yml`: 3 exclusion entries `exhaustruct` → `exhaustruct_v5`, 1 duplicate dropped; 12 `//nolint:exhaustruct` → `//nolint:exhaustruct_v5` | committed (3ba8a93) |
-| 5 | 3 real lint findings fixed: err113 (reuse `errConnectionRefused` sentinel), exhaustive ×2 (loader.go explicit `FormatAuto` case + shared trailing error; replay.go explicit `EventTypeCommand` no-op — a genuine v0.11.0 replay gap) | committed (4a454bd) |
-| 6 | `scripts/sync-changelog.sh` written (inserts missing releases verbatim, MDX-escapes `<`/`{` outside code spans, em-dash headings, never rewrites editorial sections); ran it → `[0.11.0]` inserted, guard green (17 releases both) | **untracked file** + changelog.mdx modified, uncommitted |
-| 7 | AGENTS.md lint-pin/ledger/devShell-gotcha updates | modified, uncommitted |
+| # | Change                                                                                                                                                                                                                               | State                                                    |
+| - | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| 1 | `scripts/check-go-version.sh` rewritten: patch-extension policy for ci.yml/.golangci.yml; flake `GOTOOLCHAIN=local` validated via `go_1_MM`/`buildGo<MM>Module` refs                                                                 | committed (9aec8a2)                                      |
+| 2 | AGENTS.md toolchain-pin section + `.envrc` gotcha updated to the flake's real `local` pattern                                                                                                                                        | committed (9aec8a2, d81d230)                             |
+| 3 | CI golangci-lint pin v2.12.2 → **v2.14.0** (bundles exhaustruct v5.2.0 — the Go 1.27 promoted-field panic fix)                                                                                                                       | committed (3ba8a93)                                      |
+| 4 | `.golangci.yml`: 3 exclusion entries `exhaustruct` → `exhaustruct_v5`, 1 duplicate dropped; 12 `//nolint:exhaustruct` → `//nolint:exhaustruct_v5`                                                                                    | committed (3ba8a93)                                      |
+| 5 | 3 real lint findings fixed: err113 (reuse `errConnectionRefused` sentinel), exhaustive ×2 (loader.go explicit `FormatAuto` case + shared trailing error; replay.go explicit `EventTypeCommand` no-op — a genuine v0.11.0 replay gap) | committed (4a454bd)                                      |
+| 6 | `scripts/sync-changelog.sh` written (inserts missing releases verbatim, MDX-escapes `<`/`{` outside code spans, em-dash headings, never rewrites editorial sections); ran it → `[0.11.0]` inserted, guard green (17 releases both)   | **untracked file** + changelog.mdx modified, uncommitted |
+| 7 | AGENTS.md lint-pin/ledger/devShell-gotcha updates                                                                                                                                                                                    | modified, uncommitted                                    |
 
 ## Verification
 
