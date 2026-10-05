@@ -2,6 +2,7 @@ package live
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -172,5 +173,92 @@ func TestRenderAllFragments_EmptyReport(t *testing.T) {
 
 	if len(patches) != 10 {
 		t.Fatalf("expected 10 fragments for empty report, got %d", len(patches))
+	}
+}
+
+// newRichFixtureReport builds a report exercising the fragment branches the
+// happy-path fixture misses: a failing provider (invocation error on the
+// service row and the event stream), a successful root service, and services
+// in two named child scopes (nested scope tree).
+func newRichFixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
+	t.Helper()
+
+	var events []auditlog.Event
+
+	plugin, err := auditlog.New(auditlog.Config{
+		Enabled:     true,
+		ContainerID: "rich-frag-test",
+		OnEvent:     func(evt auditlog.Event) { events = append(events, evt) },
+	})
+	if err != nil {
+		t.Fatalf("create plugin: %v", err)
+	}
+
+	injector := do.NewWithOpts(plugin.Opts())
+
+	do.ProvideNamed(injector, "logger", func(do.Injector) (*strings.Builder, error) {
+		return &strings.Builder{}, nil
+	})
+	do.ProvideNamed(injector, "broken", func(i do.Injector) (*strings.Reader, error) {
+		_ = do.MustInvokeNamed[*strings.Builder](i, "logger")
+
+		return nil, errors.New("boom: provider failed")
+	})
+
+	driverScope := injector.Scope("drivers")
+	do.ProvideNamed(driverScope, "alice", func(do.Injector) (*strings.Builder, error) {
+		return &strings.Builder{}, nil
+	})
+
+	// The failing invocation is recorded as an after-event with the error.
+	if _, err := do.InvokeNamed[*strings.Reader](injector, "broken"); err == nil {
+		t.Fatal("invoke broken: expected provider error")
+	}
+
+	// Scoped invocation drives the child-scope fragment branches.
+	_ = do.MustInvokeNamed[*strings.Builder](driverScope, "alice")
+
+	return plugin.Report(), events
+}
+
+func TestRenderAllFragments_FailedAndScopedStates(t *testing.T) {
+	t.Parallel()
+
+	report, events := newRichFixtureReport(t)
+	meta := auditlog.BuildTypeMetadata()
+
+	patches := renderAllFragments(context.Background(), report, events, meta)
+
+	bySelector := make(map[string]string, len(patches))
+	for _, p := range patches {
+		bySelector[p.selector] = p.html
+	}
+
+	// Failed service row surfaces the truncated invocation error.
+	svc := bySelector["#services-tbody"]
+	if !strings.Contains(svc, "boom") {
+		t.Errorf("#services-tbody missing invocation error text:\n%s", svc)
+	}
+
+	// Events table carries the invocation error event.
+	evts := bySelector["#events-tbody"]
+	if !strings.Contains(evts, "boom") {
+		t.Errorf("#events-tbody missing error event text:\n%s", evts)
+	}
+
+	// Scope tree nests the child scope under root.
+	tree := bySelector["#scope-tree-container"]
+	for _, want := range []string{"root", "drivers", "alice"} {
+		if !strings.Contains(tree, want) {
+			t.Errorf("#scope-tree-container missing %q:\n%s", want, tree)
+		}
+	}
+
+	// Graph still renders every node across scopes.
+	graph := bySelector["#graph-container"]
+	for _, want := range []string{"broken", "logger", "alice"} {
+		if !strings.Contains(graph, want) {
+			t.Errorf("#graph-container missing %q:\n%s", want, graph)
+		}
 	}
 }
