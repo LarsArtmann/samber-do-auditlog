@@ -156,7 +156,7 @@ The requirement exists because `go-output` (diagram/table rendering), `go-brande
 `.github/workflows/ci.yml` runs on every push and PR (plus a weekly cron) with 8 parallel jobs:
 
 - **test**: `go vet`, `go build`, `go test -race` with coverage, and the **coverage gate** (≥94% of non-`example/`/`cmd/` statements; exclusions from `scripts/coverage-exclusions.txt`; per-function step summary) + `check-go-version.sh` drift guard.
-- **lint**: `golangci-lint config verify` then the pinned `golangci-lint v2.12.2` run (binary cached).
+- **lint**: `golangci-lint config verify` then the pinned `golangci-lint v2.14.0` run (binary cached; v2.14.0 bundles exhaustruct v5.2.0 — the first release whose exhaustruct_v5 doesn't panic on Go 1.27 promoted-field literals).
 - **vulncheck**: govulncheck pinned `@v1.7.0`.
 - **mod-tidy**: `go mod tidy` fails on `go.sum` drift (transport-flake retry wrapper).
 - **stale-generation**: `go generate ./...` fails on diff (uses `go tool templ` from the go.mod `tool` directive — no manual install) + committed-generated-files guard (a v0.9.0-retraction-class failure).
@@ -174,12 +174,12 @@ The requirement exists because `go-output` (diagram/table rendering), `go-brande
 
 Extremely strict — nearly every golangci-lint linter enabled (~108). Key implications:
 
-- **exhaustruct**: All struct fields must be explicitly initialized (tests exempted). `newEventFromRef()` and `newServiceRecordCore()` centralize field init to satisfy it in one place.
+- **exhaustruct_v5**: All struct fields must be explicitly initialized (tests exempted). `newEventFromRef()` and `newServiceRecordCore()` centralize field init to satisfy it in one place. Inline suppressions are `//nolint:exhaustruct_v5`.
 - **depguard**: per-path import rules — keep external non-stdlib deps out of `cmd/` (sole exception: `cmd/genschema` may use `invopop/jsonschema`).
 - **noinlineerr**: `err := ...` then check, not `if err := ...; err != nil`.
 - **forbidigo**: `fmt.Print*` forbidden in non-example code.
 - **goconst config key is `min-len`, NOT `min-length`** — every golangci-lint version rejects `min-length` at `config verify` with exit 3, killing the CI Lint job before `lint run` even starts.
-- Test relaxations (`*_test.go`): exhaustruct, testpackage, gochecknoglobals, funlen, cyclop, goconst.
+- Test relaxations (`*_test.go`): exhaustruct_v5, testpackage, gochecknoglobals, funlen, cyclop, goconst.
 - Formatters: gci, goimports, gofumpt, golines (max-len 120).
 
 ---
@@ -227,7 +227,7 @@ Extremely strict — nearly every golangci-lint linter enabled (~108). Key impli
 - **`.prettierignore`** excludes `testdata/`, `schema/`, `docs/`, `CHANGELOG.md` from oxfmt — without it the golden HTML fixture, generated schema, and status reports get reformatted and break tests/CI.
 - **Website workflow needs pnpm on the runner** — runners don't ship pnpm; `pnpm/action-setup` must run BEFORE `actions/setup-node` (cache: pnpm fails otherwise).
 - **Proxy transport flakes**: a red job with `stream error … INTERNAL_ERROR; received from peer` on module download is proxy.golang.org instability — `gh run rerun --failed` after a cooldown; never "fix" code for it. CI's retry wrappers cover mod-tidy/generate.
-- **Version-skew ledger**: `live/fragments.go:181` carries `//nolint:goconst` (provider-type literals) needed by CI's pinned golangci-lint v2.12.2 but flagged unused by local v2.13.x nolintlint — retire when the CI pin bumps ≥ 2.13.
+- **Version-skew ledger**: (empty — the `live/fragments.go` goconst entry was retired with the 0.11.0 ProviderType-constants fix and the CI pin bump to v2.14.0.)
 - **Auto-commit daemon**: a daemon may commit working-tree changes mid-session as `chore: auto-commit …` heuristic blobs. Expect it; it never runs tests. Substantive fixes buried in those blobs need follow-up CHANGELOG/doc entries.
 - **docs/status/ is point-in-time**: status reports are historical snapshots, never rewritten — resolved items are annotated inline (`~~…~~ done at …`) by docs-health passes, and fully-resolved files are `git mv`'d to `docs/archive/`. Recent reports are the primary TODO_LIST harvest source.
 
