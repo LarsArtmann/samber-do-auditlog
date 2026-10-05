@@ -95,6 +95,7 @@ func TestRecorder_RecordCommand_DoesNotCreateServiceRecords(t *testing.T) {
 	}
 
 	commandEvents := 0
+
 	for _, evt := range report.Events {
 		if evt.IsCommand() {
 			commandEvents++
