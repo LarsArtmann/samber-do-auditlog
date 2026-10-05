@@ -115,31 +115,48 @@ func TestServer_DashboardCSP(t *testing.T) {
 
 			directives := parseCSPDirectives(t, rec.Body.String())
 
-			for directive, want := range map[string][]string{
-				"default-src": {"'none'"},
-				"style-src":   {"'unsafe-inline'"},
-				"script-src":  {"'unsafe-inline'", "'unsafe-eval'"},
-				"connect-src": {"'self'"},
-				"base-uri":    {"'none'"},
-			} {
-				got, ok := directives[directive]
-				if !ok {
-					t.Errorf("dashboard CSP meta missing %s directive", directive)
-
-					continue
-				}
-
-				if !slices.Equal(got, want) {
-					t.Errorf("dashboard CSP meta %s = %v, want %v", directive, got, want)
-				}
-			}
-
-			for _, forbidden := range []string{"frame-ancestors", "sandbox", "report-uri"} {
-				if _, ok := directives[forbidden]; ok {
-					t.Errorf("dashboard CSP meta must not contain %s: ignored in <meta> (header-only directive)", forbidden)
-				}
-			}
+			assertExpectedDirectives(t, directives)
+			assertNoHeaderOnlyDirectives(t, directives)
 		})
+	}
+}
+
+// assertExpectedDirectives pins the dashboard CSP meta policy directive by
+// directive so a reordered or extra directive cannot silently pass.
+func assertExpectedDirectives(t *testing.T, directives map[string][]string) {
+	t.Helper()
+
+	expected := map[string][]string{
+		"default-src": {"'none'"},
+		"style-src":   {"'unsafe-inline'"},
+		"script-src":  {"'unsafe-inline'", "'unsafe-eval'"},
+		"connect-src": {"'self'"},
+		"base-uri":    {"'none'"},
+	}
+
+	for directive, want := range expected {
+		got, ok := directives[directive]
+		if !ok {
+			t.Errorf("dashboard CSP meta missing %s directive", directive)
+
+			continue
+		}
+
+		if !slices.Equal(got, want) {
+			t.Errorf("dashboard CSP meta %s = %v, want %v", directive, got, want)
+		}
+	}
+}
+
+// assertNoHeaderOnlyDirectives fails when a directive browsers ignore inside
+// <meta> appears in the dashboard CSP meta tag.
+func assertNoHeaderOnlyDirectives(t *testing.T, directives map[string][]string) {
+	t.Helper()
+
+	for _, forbidden := range []string{"frame-ancestors", "sandbox", "report-uri"} {
+		if _, ok := directives[forbidden]; ok {
+			t.Errorf("dashboard CSP meta must not contain %s: ignored in <meta> (header-only directive)", forbidden)
+		}
 	}
 }
 
@@ -151,21 +168,19 @@ func parseCSPDirectives(t *testing.T, htmlBody string) map[string][]string {
 
 	const metaTag = `<meta http-equiv="Content-Security-Policy" content="`
 
-	start := strings.Index(htmlBody, metaTag)
-	if start < 0 {
+	_, rest, found := strings.Cut(htmlBody, metaTag)
+	if !found {
 		t.Fatal("dashboard HTML missing Content-Security-Policy meta tag")
 	}
 
-	content := htmlBody[start+len(metaTag):]
-
-	end := strings.Index(content, `"`)
-	if end < 0 {
+	content, _, terminated := strings.Cut(rest, `"`)
+	if !terminated {
 		t.Fatal("CSP meta content attribute not terminated")
 	}
 
 	directives := make(map[string][]string)
 
-	for _, directive := range strings.Split(content[:end], ";") {
+	for directive := range strings.SplitSeq(content, ";") {
 		tokens := strings.Fields(directive)
 		if len(tokens) == 0 {
 			continue

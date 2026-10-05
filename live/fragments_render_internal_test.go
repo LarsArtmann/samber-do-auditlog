@@ -199,6 +199,13 @@ func TestRenderAllFragments_EmptyReport(t *testing.T) {
 	}
 }
 
+// Fixture error sentinels (static errors per the err113 policy): the
+// provider failure and the shutdown failure surfaced in fragment rows.
+var (
+	errProviderBoom = errors.New("boom: provider failed")
+	errShutdownBoom = errors.New("shutdown boom")
+)
+
 // newRichFixtureReport builds a report exercising the fragment branches the
 // happy-path fixture misses: a failing provider (invocation error on the
 // service row and the event stream), a successful root service, and services
@@ -225,7 +232,7 @@ func newRichFixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
 	do.ProvideNamed(injector, "broken", func(i do.Injector) (*strings.Reader, error) {
 		_ = do.MustInvokeNamed[*strings.Builder](i, "logger")
 
-		return nil, errors.New("boom: provider failed")
+		return nil, errProviderBoom
 	})
 	// Registered but never invoked: exercises the nil-duration ("—") row.
 	do.ProvideNamed(injector, "idle", func(do.Injector) (*strings.Builder, error) {
@@ -260,7 +267,7 @@ func newRichFixtureReport(t *testing.T) (auditlog.Report, []auditlog.Event) {
 type flakyService struct{}
 
 func (f *flakyService) Shutdown() error {
-	return errors.New("shutdown boom")
+	return errShutdownBoom
 }
 
 func TestRenderAllFragments_FailedAndScopedStates(t *testing.T) {

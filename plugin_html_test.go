@@ -64,23 +64,21 @@ func TestWriteHTML_CSPMeta(t *testing.T) {
 
 	const metaTag = `<meta http-equiv="Content-Security-Policy" content="`
 
-	start := strings.Index(html, metaTag)
-	if start < 0 {
+	_, rest, found := strings.Cut(html, metaTag)
+	if !found {
 		t.Fatal("static report HTML missing Content-Security-Policy meta tag")
 	}
 
-	content := html[start+len(metaTag):]
-
-	end := strings.Index(content, `"`)
-	if end < 0 {
+	content, _, terminated := strings.Cut(rest, `"`)
+	if !terminated {
 		t.Fatal("CSP meta content attribute not terminated")
 	}
 
 	directives := make(map[string]string)
 
-	for _, directive := range strings.Split(content[:end], ";") {
-		name, sources, found := strings.Cut(strings.TrimSpace(directive), " ")
-		if !found {
+	for directive := range strings.SplitSeq(content, ";") {
+		name, sources, cut := strings.Cut(strings.TrimSpace(directive), " ")
+		if !cut {
 			continue
 		}
 
