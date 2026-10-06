@@ -36,6 +36,16 @@ A `flake.nix` devShell is available for Nix users. No Makefile, no justfile.
 
 ---
 
+## Forwarding (PapDashboard collector)
+
+`forward/` streams events to a PapDashboard audit-run collector (unix socket by
+default, probed once at construction; HTTP targets with a bearer key). `live.New`
+auto-attaches an enabled Forwarder — `DO_AUDITLOG_FORWARD_TARGET=off` keeps a
+dashboard entirely local. Batching: 250ms / 200 events, drop-oldest under burst;
+`Shutdown` flushes. Completion is derived from the root-scope shutdown event AND
+explicitly forwarded on `SignalComplete` — the server applies the same predicate.
+Stdlib-only (public repo; no new dependencies).
+
 ## Architecture
 
 Single-package library (`auditlog`) with these source files:

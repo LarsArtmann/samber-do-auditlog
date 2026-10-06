@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`forward` package — stream audit events to a PapDashboard audit-run collector** (2026-10-06): batches events per run (250ms / 200-event flush, drop-oldest under burst) and POSTs them over a unix socket (zero config — the default `$XDG_RUNTIME_DIR/papdashboard/audit-runs.sock` is probed once; `DO_AUDITLOG_FORWARD_TARGET` accepts `off`, `unix:///path`, a bare path, or an `http(s)://` URL with `DO_AUDITLOG_FORWARD_API_KEY`). `live.New` auto-attaches an enabled Forwarder to the pipeline (events fan out to the hub AND the collector; `SignalComplete` forwards the terminal marker alongside the server-side root-shutdown derivation; `Shutdown` flushes). Stdlib-only — the package adds no dependencies.
 - `scripts/sync-changelog.sh`: inserts missing release sections from
   `CHANGELOG.md` into `website/src/content/docs/changelog.mdx` (MDX-escaped,
   insert-only) and runs the changelog-sync guard as its final verdict.
