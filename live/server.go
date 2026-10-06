@@ -14,6 +14,7 @@ import (
 
 	"github.com/larsartmann/go-sse"
 	auditlog "github.com/larsartmann/samber-do-auditlog"
+	"github.com/larsartmann/samber-do-auditlog/forward"
 )
 
 const (
@@ -78,6 +79,10 @@ type Server struct {
 	plugin *auditlog.Plugin
 	config Config
 
+	// forwarder, when non-nil, mirrors every event into a PapDashboard
+	// audit-run collector (attached by New; nil means local-only).
+	forwarder *forward.Forwarder
+
 	serverMu   sync.Mutex
 	httpServer *http.Server
 	mux        *http.ServeMux
@@ -91,10 +96,25 @@ type Server struct {
 // New is the convenience constructor. It creates a Hub, wires it as the
 // auditlog OnEvent callback, creates the Plugin, and returns a ready-to-use
 // Server.
+// New starts the live dashboard over the given audit config: an enabled
+// plugin, an SSE hub, and an HTTP server. When a PapDashboard audit-run
+// collector is reachable (unix socket at the conventional path, or an
+// explicit DO_AUDITLOG_FORWARD_TARGET), every event is ALSO forwarded there
+// — zero extra wiring for consumers. Set DO_AUDITLOG_FORWARD_TARGET=off to
+// keep this dashboard entirely local.
 func New(auditCfg auditlog.Config, serverCfg Config) (*Server, *auditlog.Plugin, error) {
 	hub := NewHubWithReplay(serverCfg.ReplayBufferSize)
 
-	auditCfg.OnEvent = hub.OnEvent
+	forwarder := forward.New("")
+	if forwarder.Enabled() {
+		if auditCfg.OnEvent != nil {
+			auditCfg.OnEvent = auditlog.NewMultiWriter(auditCfg.OnEvent, forwarder.OnEvent).OnEvent
+		} else {
+			auditCfg.OnEvent = forwarder.OnEvent
+		}
+	}
+
+	auditCfg.OnEvent = composeOnEvent(auditCfg.OnEvent, hub.OnEvent)
 	auditCfg.Enabled = true
 
 	plugin, err := auditlog.New(auditCfg)
@@ -103,8 +123,19 @@ func New(auditCfg auditlog.Config, serverCfg Config) (*Server, *auditlog.Plugin,
 	}
 
 	server := NewServer(hub, plugin, serverCfg)
+	server.forwarder = forwarder
 
 	return server, plugin, nil
+}
+
+// composeOnEvent chains an optional existing callback with the hub
+// broadcast (the hub is always last so local viewers see every event).
+func composeOnEvent(existing, hub auditlog.MultiWriterCallback) auditlog.MultiWriterCallback {
+	if existing == nil {
+		return hub
+	}
+
+	return auditlog.NewMultiWriter(existing, hub).OnEvent
 }
 
 // NewServer creates a Server from an existing Hub and Plugin.
@@ -221,18 +252,24 @@ func (srv *Server) Addr() string {
 	return srv.httpServer.Addr
 }
 
-// Shutdown gracefully shuts down the server and drains the broadcaster.
+// Shutdown gracefully shuts down the server, flushes the forwarder (when
+// one is attached), and drains the broadcaster.
 func (srv *Server) Shutdown(ctx context.Context) error {
 	srv.serverMu.Lock()
 	server := srv.httpServer
+	forwarder := srv.forwarder
 	srv.serverMu.Unlock()
 
-	if server == nil {
-		return nil
+	if server != nil {
+		if err := server.Shutdown(ctx); err != nil {
+			return fmt.Errorf("shutdown: %w", err)
+		}
 	}
 
-	if err := server.Shutdown(ctx); err != nil {
-		return fmt.Errorf("shutdown: %w", err)
+	if forwarder != nil {
+		if err := forwarder.Shutdown(ctx); err != nil {
+			return fmt.Errorf("flush forwarder: %w", err)
+		}
 	}
 
 	if err := srv.hub.Shutdown(ctx); err != nil {
@@ -242,9 +279,14 @@ func (srv *Server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// SignalComplete marks the container lifecycle as finished.
+// SignalComplete marks the container lifecycle as finished and forwards the
+// completion marker to the collector (when one is attached).
 func (srv *Server) SignalComplete() {
 	srv.hub.SignalComplete()
+
+	if srv.forwarder != nil {
+		srv.forwarder.Complete()
+	}
 }
 
 // OnEvent broadcasts an event to all connected SSE clients.

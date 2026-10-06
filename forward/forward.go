@@ -40,7 +40,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/larsartmann/samber-do-auditlog"
+	auditlog "github.com/larsartmann/samber-do-auditlog"
 )
 
 // Env knobs: target selection, HTTP bearer key, and the source label the
@@ -96,6 +96,7 @@ type Forwarder struct {
 
 	events    chan auditlog.Event
 	complete  chan string
+	lastRun   atomic.Value // string: most recent RunID seen
 	dropped   atomic.Int64
 	closed    atomic.Bool
 	closeOnce sync.Once
@@ -231,6 +232,10 @@ func (f *Forwarder) OnEvent(evt auditlog.Event) {
 		return
 	}
 
+	if runID := string(evt.RunID); runID != "" {
+		f.lastRun.Store(runID)
+	}
+
 	select {
 	case f.events <- evt:
 		return
@@ -251,11 +256,16 @@ func (f *Forwarder) OnEvent(evt auditlog.Event) {
 	}
 }
 
-// Complete marks a run as finished (explicit terminal marker). The
-// collector also derives completion from root-scope shutdown events, so
-// this is belt-and-braces for explicit lifecycle ends.
-func (f *Forwarder) Complete(runID string) {
-	if !f.Enabled() || f.closed.Load() || runID == "" {
+// Complete marks the most recently seen run as finished (explicit terminal
+// marker). The collector also derives completion from root-scope shutdown
+// events, so this is belt-and-braces for explicit lifecycle ends.
+func (f *Forwarder) Complete() {
+	if !f.Enabled() || f.closed.Load() {
+		return
+	}
+
+	runID, _ := f.lastRun.Load().(string)
+	if runID == "" {
 		return
 	}
 
