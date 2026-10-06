@@ -37,6 +37,10 @@ FUZZ_COUNT="$(grep -rh -o -E '^func (Fuzz[A-Za-z]+)' --include='*_test.go' . | w
 BENCH_COUNT="$(grep -rh -c -E '^func Benchmark[A-Za-z]+' --include='*_test.go' . | awk -F: '{s+=$1} END {print s+0}')"
 CI_JOB_COUNT="$(sed -n '/^jobs:/,$p' .github/workflows/ci.yml | grep -cE '^  [a-z][a-z-]*:$')"
 ENV_KEY="$(grep -oE 'EnvKeyEnabled = "[A-Z_]+"' plugin.go | grep -oE '"[A-Z_]+"' | tr -d '"' | head -n 1)"
+# Full env-var inventory: every DO_AUDITLOG_* string constant in the source
+# tree (plugin + forwarder). Docs may mention any of these and NOTHING
+# else — the forwarder wave added FORWARD_* knobs beyond EnvKeyEnabled.
+ENV_INVENTORY="$(grep -rhoE '"DO_AUDITLOG_[A-Z_]+"' plugin.go forward/*.go 2>/dev/null | tr -d '"' | sort -u || true)"
 DIAGRAM_COUNT="$(ls mermaid.go plantuml.go dot.go d2.go 2>/dev/null | wc -l | tr -d ' ')"
 
 # --- Checks ---------------------------------------------------------------
@@ -69,19 +73,24 @@ if [ -n "$DOC_COV" ] && [ "$DOC_COV" != "$COVERAGE_GATE" ]; then
 	claim_fail "README coverage gate" "$DOC_COV% coverage gate" "$COVERAGE_GATE% (ci.yml)"
 fi
 
-# 6. Env-var toggle claims must quote the exact EnvKeyEnabled constant.
+# 6. Env-var claims must quote real source constants: at least the master
+# toggle, and never a spelling outside the source inventory.
 if [ -n "$ENV_KEY" ]; then
 	for doc in README.md AGENTS.md; do
 		if grep -qE 'DO_AUDITLOG_[A-Z_]+' "$doc" && ! grep -q "$ENV_KEY" "$doc"; then
 			claim_fail "$doc env var name" "(no exact $ENV_KEY mention)" "plugin.go: $ENV_KEY"
 		fi
 	done
-	# Any env-var spelling that differs from the constant is a stale claim.
+	# Any env-var spelling absent from the source inventory is a stale claim.
 	for doc in README.md AGENTS.md; do
-		bad_env="$(grep -oE 'DO_AUDITLOG_[A-Z_]+' "$doc" | sort -u | grep -v "^$ENV_KEY$" || true)"
-		if [ -n "$bad_env" ]; then
-			claim_fail "$doc env var spelling" "$bad_env" "plugin.go: $ENV_KEY"
-		fi
+		while IFS= read -r mentioned; do
+			[ -z "$mentioned" ] && continue
+			if ! printf '%s\n' "$ENV_INVENTORY" | grep -qx "$mentioned"; then
+				claim_fail "$doc env var spelling" "$mentioned" "source inventory: $(echo "$ENV_INVENTORY" | tr '\n' ' ')"
+			fi
+		done <<-EOF
+			$(grep -oE 'DO_AUDITLOG_[A-Z_]+' "$doc" | sort -u || true)
+		EOF
 	done
 fi
 
