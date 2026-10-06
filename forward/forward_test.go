@@ -245,8 +245,15 @@ func TestForwarder_OffModes(t *testing.T) {
 }
 
 func TestForwarder_AutoTargetActivatesWhenSocketAppears(t *testing.T) {
-	// The conventional socket path is pinned to a temp runtime dir.
-	runtimeDir := t.TempDir()
+	// The conventional socket path is pinned to a SHORT temp runtime dir —
+	// unix socket paths must stay under the kernel's 108-byte sun_path limit.
+	runtimeDir, err := os.MkdirTemp("", "fwd-xdg-*")
+	if err != nil {
+		t.Fatalf("temp runtime dir: %v", err)
+	}
+
+	t.Cleanup(func() { _ = os.RemoveAll(runtimeDir) })
+
 	t.Setenv("XDG_RUNTIME_DIR", runtimeDir)
 
 	fwd := forward.NewWithTarget("", "late-app")
