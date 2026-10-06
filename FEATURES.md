@@ -170,6 +170,20 @@ Honest inventory of what `samber-do-auditlog` actually does, verified against th
 | **Live demo application**        | `live/demo/main.go` registers services with delays, invokes them, runs health checks, serves dashboard until Ctrl+C                                                                                                    | `live/demo/main.go`                                |
 | **Example `--live` flag**        | `go run ./example --live` starts the dashboard alongside the ride-sharing demo, registering 20 services across 4 scopes                                                                                                | `example/main.go`                                  |
 
+### Forwarding to PapDashboard (`forward/` Sub-Package)
+
+| Feature                          | Description                                                                                                                                                          | Verified                                     |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| **Zero-code auto-attach**        | `live.New` attaches an enabled Forwarder to the audit pipeline without consumer code; plain-plugin consumers compose `forward.New(sourceID)` themselves               | `live/live.go`, `forward/forward.go`         |
+| **Armed auto-target**            | Unset `DO_AUDITLOG_FORWARD_TARGET` arms the conventional socket (`$XDG_RUNTIME_DIR/papdashboard/audit-runs.sock`) and probes until it answers; early events stay buffered, so processes booting before PapDashboard still deliver | `forward/forward.go` (`targetAuto`, `activateDue`) |
+| **Fan-out**                      | Comma-separated target spec forwards to multiple collectors concurrently; `off`/`disabled` entries drop out                                                            | `forward/forward.go` (`resolveTargets`)      |
+| **Target forms**                 | `unix:///path`, bare absolute path, `http(s)://…` (remote collector with bearer key)                                                                                  | `forward/forward.go` (`resolveTarget`)       |
+| **Per-run batching**             | Events batch per run; flush wakes on the earlier of a full batch (`DO_AUDITLOG_FORWARD_BATCH_MAX`, default 200, 1–8192) or the flush interval (`DO_AUDITLOG_FORWARD_FLUSH_MS`, default 250, 16–60000) | `forward/forward.go` (`envInt`, `loop`) |
+| **Best-effort delivery**         | Failed POSTs counted (`Failed()`), logged on state change, never retried in place — the collector dedups by `(run_id, sequence)`, so a later batch re-delivers losses safely | `forward/forward.go` (`post`, `deliveryFailed`) |
+| **Completion marking**           | Explicit `Complete()` sends the terminal marker; the collector ALSO derives completion from root-scope DI shutdown (same predicate both sides — the marker is the guarantee, the derivation is the safety net) | `forward/forward.go` (`Complete`, `isRootShutdown`) |
+| **Non-blocking ingest**          | `OnEvent` never blocks: bounded channel, overflow drops the OLDEST event (local dashboard keeps full history; counter via `Dropped()`)                                | `forward/forward.go` (`OnEvent`)             |
+| **Stdlib-only**                  | Zero third-party imports so the public repo stays fetchable through proxy.golang.org                                                                                 | `forward/forward.go`                         |
+
 ### Health Probes (Extracted to [go-health](https://github.com/larsartmann/go-health))
 
 The health-probe SDK has been extracted to its own standalone project: **[github.com/larsartmann/go-health](https://github.com/larsartmann/go-health)**. It depends only on `samber/do/v2` — no transitive dependency on auditlog's heavier stack (go-output, go-sse, templ, etc.). `auditlog.Plugin` satisfies go-health's `HealthRecorder` interface implicitly.
