@@ -449,12 +449,16 @@ func TestDefaultSocketPath(t *testing.T) {
 	runtimeDir := t.TempDir()
 
 	t.Setenv("XDG_RUNTIME_DIR", runtimeDir)
-	if got, want := forward.DefaultSocketPath(), filepath.Join(runtimeDir, "papdashboard", "audit-runs.sock"); got != want {
+
+	want := filepath.Join(runtimeDir, "papdashboard", "audit-runs.sock")
+	if got := forward.DefaultSocketPath(); got != want {
 		t.Fatalf("XDG set: got %q want %q", got, want)
 	}
 
 	t.Setenv("XDG_RUNTIME_DIR", "")
-	if got, want := forward.DefaultSocketPath(), filepath.Join(os.TempDir(), "papdashboard", "audit-runs.sock"); got != want {
+
+	want = filepath.Join(os.TempDir(), "papdashboard", "audit-runs.sock")
+	if got := forward.DefaultSocketPath(); got != want {
 		t.Fatalf("empty XDG must fall back to the temp dir: got %q want %q", got, want)
 	}
 }
@@ -494,7 +498,7 @@ func TestNewWithTarget_SourceFallbackChain(t *testing.T) {
 	// Garbage and out-of-range knobs exercise envInt's fallback and clamp
 	// branches while the envelope assertions below run.
 	t.Setenv("DO_AUDITLOG_FORWARD_BATCH_MAX", "not-a-number")
-	t.Setenv("DO_AUDITLOG_FORWARD_FLUSH_MS", "1") // below-min clamps to 16ms: exercise the clamp branch without slowing the test
+	t.Setenv("DO_AUDITLOG_FORWARD_FLUSH_MS", "1") // below-min clamps to 16ms: clamp branch, fast test
 
 	// newSinkServer returns a collector URL whose every accepted envelope
 	// body lands on the returned channel.

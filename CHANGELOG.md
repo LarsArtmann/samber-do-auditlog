@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-07
+
 ### Added
 
 - **`forward` package — stream audit events to a PapDashboard audit-run collector** (2026-10-06): batches events per run (`DO_AUDITLOG_FORWARD_FLUSH_MS` default 250ms, range 16–60000 / `DO_AUDITLOG_FORWARD_BATCH_MAX` default 200 events, range 1–8192, drop-oldest under burst) and POSTs them over a unix socket or HTTP. Target selection via `DO_AUDITLOG_FORWARD_TARGET` (`off`, `unix:///path`, a bare path, or an `http(s)://` URL, comma-separated for fan-out; `DO_AUDITLOG_FORWARD_API_KEY` for keyed collectors; `DO_AUDITLOG_FORWARD_SOURCE` overrides the source label). The zero-config default (`$XDG_RUNTIME_DIR/papdashboard/audit-runs.sock`) is an **armed target**: it re-probes every 30s while idle and at flush cadence once events pend, so a PapDashboard that boots later still receives the run. `live.New` auto-attaches an enabled Forwarder to the pipeline (events fan out to the hub AND the collector; `SignalComplete` forwards the terminal marker alongside the server-side root-shutdown derivation; `Shutdown` flushes). Forwarding is best-effort: delivery failures are logged, never fail the audited application. Stdlib-only — the package adds no dependencies.
