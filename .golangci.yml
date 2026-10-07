@@ -39,7 +39,11 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - exhaustruct_v5
+    # exhaustruct_v5 dropped 2026-10-07: the bundled analyzer (v5.0.3) panics
+    # with "makeslice: cap out of range" on this repo's core and live packages,
+    # killing the whole run (verified pre-existing at v0.11.0 — same treatment
+    # as PapDashboard 2026-09-12). The curated ignore list below stays for the
+    # day the upstream fix lets us re-enable it.
     - exptostd
     - fatcontext
     - forbidigo

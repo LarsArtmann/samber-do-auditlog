@@ -242,8 +242,9 @@ func TestForwarder_OffModes(t *testing.T) {
 
 func TestForwarder_AutoTargetActivatesWhenSocketAppears(t *testing.T) {
 	// The conventional socket path is pinned to a SHORT temp runtime dir —
-	// unix socket paths must stay under the kernel's 108-byte sun_path limit.
-	runtimeDir, err := os.MkdirTemp("", "fwd-xdg-*")
+	// unix socket paths must stay under the kernel's 108-byte sun_path limit
+	// (t.TempDir() derives from the test name and overflows it).
+	runtimeDir, err := os.MkdirTemp("", "fwd-xdg-*") //nolint:usetesting // sun_path 108-byte limit needs a short prefix
 	if err != nil {
 		t.Fatalf("temp runtime dir: %v", err)
 	}
@@ -618,6 +619,7 @@ func TestForwarder_FailThenRecoverSkipsInactive(t *testing.T) {
 	t.Cleanup(server.Close)
 
 	fwd := forward.NewWithTarget("auto,"+server.URL, "mixed-app")
+
 	t.Cleanup(func() { _ = fwd.Shutdown(context.Background()) })
 
 	fwd.OnEvent(diEvent("run-rec", 1, auditlog.EventTypeInvocation, auditlog.PhaseBefore))
