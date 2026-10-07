@@ -137,10 +137,10 @@ type target struct {
 // live view values freshness over completeness — the local live dashboard
 // keeps everything).
 type Forwarder struct {
-	targets   []target
-	apiKey    string
-	sourceID  string
-	batchMax  int
+	targets       []target
+	apiKey        string
+	sourceID      string
+	batchMax      int
 	flushInterval time.Duration
 
 	events   chan auditlog.Event
@@ -188,15 +188,17 @@ func NewWithTarget(spec, sourceID string) *Forwarder {
 	}
 
 	f := &Forwarder{
-		targets:   targets,
-		apiKey:    os.Getenv(EnvAPIKey),
-		sourceID:  sourceID,
-		batchMax:     envInt(EnvBatchMax, defaultMaxBatchEvents, 1, 8192),
-		flushInterval: time.Duration(envInt(EnvFlushMs, int(defaultFlushInterval.Milliseconds()), 16, 60_000)) * time.Millisecond,
-		events:    make(chan auditlog.Event, channelCap),
-		complete:  make(chan string, 16),
-		stop:      make(chan struct{}),
-		stopped:   make(chan struct{}),
+		targets:  targets,
+		apiKey:   os.Getenv(EnvAPIKey),
+		sourceID: sourceID,
+		batchMax: envInt(EnvBatchMax, defaultMaxBatchEvents, 1, 8192),
+		flushInterval: time.Duration(
+			envInt(EnvFlushMs, int(defaultFlushInterval.Milliseconds()), 16, 60_000),
+		) * time.Millisecond,
+		events:   make(chan auditlog.Event, channelCap),
+		complete: make(chan string, 16),
+		stop:     make(chan struct{}),
+		stopped:  make(chan struct{}),
 	}
 
 	go f.loop()
@@ -215,7 +217,7 @@ func resolveTargets(spec string) []target {
 
 	var targets []target
 
-	for _, raw := range strings.Split(spec, ",") {
+	for raw := range strings.SplitSeq(spec, ",") {
 		one := strings.TrimSpace(raw)
 		if one == "" {
 			continue
@@ -237,6 +239,7 @@ func resolveTarget(spec string) (target, bool) {
 
 	case strings.HasPrefix(spec, "unix://"):
 		path := strings.TrimPrefix(spec, "unix://")
+
 		return unixTarget(path), true
 
 	case strings.HasPrefix(spec, "http://"), strings.HasPrefix(spec, "https://"):
@@ -302,6 +305,7 @@ func probeSocket(path string) bool {
 	if err != nil {
 		return false
 	}
+
 	_ = conn.Close()
 
 	return true
@@ -560,13 +564,15 @@ func (f *Forwarder) post(t *target, payload envelope) {
 	response, err := t.client.Do(request)
 	if err != nil {
 		f.deliveryFailed(t, err)
+
 		return
 	}
 
-	defer func() { _, _ = io.Copy(io.Discard, response.Body) }() //nolint:errcheck // drain for keep-alive
+	defer func() { _, _ = io.Copy(io.Discard, response.Body) }()
 
 	if response.StatusCode >= http.StatusBadRequest {
 		f.deliveryFailed(t, fmt.Errorf("collector answered %s", response.Status))
+
 		return
 	}
 
@@ -577,6 +583,7 @@ func (f *Forwarder) post(t *target, payload envelope) {
 // into failure and then only every logEveryFails-th consecutive failure.
 func (f *Forwarder) deliveryFailed(t *target, err error) {
 	t.fails++
+
 	f.failed.Add(1)
 
 	switch {

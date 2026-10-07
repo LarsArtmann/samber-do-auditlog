@@ -72,12 +72,10 @@ func startFakeCollectorAtPath(t *testing.T, path string) *fakeCollector {
 	})
 
 	collector.server = &http.Server{Handler: mux, ReadHeaderTimeout: time.Second} //nolint:exhaustruct // test double
-	collector.wg.Add(1)
 
-	go func() {
-		defer collector.wg.Done()
+	collector.wg.Go(func() {
 		_ = collector.server.Serve(listener)
-	}()
+	})
 
 	t.Cleanup(func() {
 		_ = collector.server.Close()
@@ -116,16 +114,14 @@ func (c *fakeCollector) awaitEnvelopes(t *testing.T, want int) []map[string]any 
 
 func diEvent(runID string, sequence int, eventType auditlog.EventType, phase auditlog.Phase) auditlog.Event {
 	return auditlog.Event{
-		ServiceRef: auditlog.ServiceRef{
-			ScopeID:     "scope-1",
-			ScopeName:   auditlog.RootScopeName,
-			ServiceName: "database",
-		},
-		RunID:     auditlog.RunID(runID),
-		Sequence:  sequence,
-		Timestamp: time.Now().UTC(),
-		EventType: eventType,
-		Phase:     phase,
+		ScopeID:     "scope-1",
+		ScopeName:   auditlog.RootScopeName,
+		ServiceName: "database",
+		RunID:       auditlog.RunID(runID),
+		Sequence:    sequence,
+		Timestamp:   time.Now().UTC(),
+		EventType:   eventType,
+		Phase:       phase,
 	}
 }
 
@@ -281,6 +277,7 @@ func TestForwarder_AutoTargetActivatesWhenSocketAppears(t *testing.T) {
 	fwd.Complete()
 
 	all := collector.awaitEnvelopes(t, 3)
+
 	last := all[len(all)-1]
 	if last["complete"] != true || last["runId"] != "run-late" {
 		t.Fatalf("explicit complete must flow after activation: %+v", last)
@@ -327,6 +324,7 @@ func TestForwarder_FanOutToUnixAndHTTP(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		body, _ := io.ReadAll(request.Body)
 		httpSink <- string(body)
+
 		writer.WriteHeader(http.StatusOK)
 	}))
 	t.Cleanup(server.Close)
@@ -360,6 +358,7 @@ func TestForwarder_PostFailuresCountedAndLogged(t *testing.T) {
 	var logBuf bytes.Buffer
 
 	original := slog.Default()
+
 	slog.SetDefault(slog.New(slog.NewTextHandler(&logBuf, nil)))
 	t.Cleanup(func() { slog.SetDefault(original) })
 
@@ -413,6 +412,7 @@ func TestForwarder_BatchMaxChunksEnvelopes(t *testing.T) {
 	}
 
 	total := 0
+
 	for _, envelope := range envelopes {
 		events, _ := envelope["events"].([]any)
 		total += len(events)
