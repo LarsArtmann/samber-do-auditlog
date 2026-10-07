@@ -378,15 +378,15 @@ if fwd.Enabled() {
 
 Environment knobs (all optional):
 
-| Knob                            | Default            | Meaning                                                                                                                       |
-| ------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `DO_AUDITLOG_FORWARD_TARGET`    | armed auto-target  | Comma-separated for fan-out to multiple collectors; `off`/`disabled` never forwards; `unix:///path`, `/path`, `http(s)://…`    |
-| `DO_AUDITLOG_FORWARD_API_KEY`   | none               | Bearer key for remote HTTP collectors (pair with an `http(s)://` target)                                                      |
-| `DO_AUDITLOG_FORWARD_SOURCE`    | executable name    | The source label the collector UI shows for this process                                                                     |
-| `DO_AUDITLOG_FORWARD_BATCH_MAX` | `200` (1–8192)     | Events per POST batch; the flusher wakes on the earlier of a full batch or the flush interval                                 |
-| `DO_AUDITLOG_FORWARD_FLUSH_MS`  | `250` (16–60000)   | Batch flush interval in milliseconds                                                                                          |
+| Knob                            | Default           | Meaning                                                                                                                     |
+| ------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `DO_AUDITLOG_FORWARD_TARGET`    | armed auto-target | Comma-separated for fan-out to multiple collectors; `off`/`disabled` never forwards; `unix:///path`, `/path`, `http(s)://…` |
+| `DO_AUDITLOG_FORWARD_API_KEY`   | none              | Bearer key for remote HTTP collectors (pair with an `http(s)://` target)                                                    |
+| `DO_AUDITLOG_FORWARD_SOURCE`    | executable name   | The source label the collector UI shows for this process                                                                    |
+| `DO_AUDITLOG_FORWARD_BATCH_MAX` | `200` (1–8192)    | Events per POST batch; the flusher wakes on the earlier of a full batch or the flush interval                               |
+| `DO_AUDITLOG_FORWARD_FLUSH_MS`  | `250` (16–60000)  | Batch flush interval in milliseconds                                                                                        |
 
-With the target **unset** the forwarder *arms* the conventional socket (`$XDG_RUNTIME_DIR/papdashboard/audit-runs.sock`) and probes until it answers — events seen while it is down stay buffered, so a process that boots **before** PapDashboard still forwards its early run events once it appears.
+With the target **unset** the forwarder _arms_ the conventional socket (`$XDG_RUNTIME_DIR/papdashboard/audit-runs.sock`) and probes until it answers — events seen while it is down stay buffered, so a process that boots **before** PapDashboard still forwards its early run events once it appears.
 
 Delivery is best-effort: failed POSTs are counted (`Failed()`), logged on state change, and never retried in place — the collector dedups by `(run_id, sequence)`, so a later batch safely re-delivers anything lost. Run completion is marked by the explicit `fwd.Complete()` call, and the collector also derives it from root-scope DI shutdown (same predicate on both sides).
 
