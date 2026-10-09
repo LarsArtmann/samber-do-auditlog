@@ -27,7 +27,7 @@ require (
 	github.com/larsartmann/go-output/table v0.38.4
 	github.com/larsartmann/go-output/tree v0.38.4
 	github.com/larsartmann/go-sse v0.6.2
-	github.com/larsartmann/go-sse/ssetest v0.3.0
+	github.com/larsartmann/go-sse/ssetest v0.4.0
 	github.com/samber/do/v2 v2.1.0
 )
 
@@ -55,6 +55,7 @@ require (
 	github.com/go-faster/yaml v0.4.6 // indirect
 	github.com/gofrs/flock v0.13.1 // indirect
 	github.com/larsartmann/go-branded-id v0.7.0 // indirect
+	github.com/larsartmann/go-sse/sseparse v0.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.1 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
