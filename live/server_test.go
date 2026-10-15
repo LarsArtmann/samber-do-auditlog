@@ -1458,7 +1458,7 @@ func (f *failingBodyRecorder) Write([]byte) (int, error) {
 	return 0, errWriteFailed
 }
 
-var errWriteFailed = writeError("simulated write failure")
+var errWriteFailed error = writeError("simulated write failure")
 
 type writeError string
 
