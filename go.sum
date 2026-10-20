@@ -68,8 +68,8 @@ github.com/larsartmann/go-output/daghtml v0.38.3 h1:ox2sxFzcqdiwp8PyPYLbyAEv/2cB
 github.com/larsartmann/go-output/daghtml v0.38.3/go.mod h1:AIJjGy8TLJ7RsmmgxWrUA3Uii5mBeUtKvVnp2rsjwMk=
 github.com/larsartmann/go-output/delimited v0.38.4 h1:jbZs/IAQuYQMCeGPFUD0YkEYKnIe4nW4RhwMsfP5rnk=
 github.com/larsartmann/go-output/delimited v0.38.4/go.mod h1:/5xEExzHEidlnM+G3sHmpaLSsuNiwZvR8MSj6F6HP04=
-github.com/larsartmann/go-output/escape v0.38.3 h1:dk3WJ3NhQ07gO8kFGcuyDXSRtQm9mTLI005frUjsX5s=
-github.com/larsartmann/go-output/escape v0.38.3/go.mod h1:0iTFd6fhBaMPWf0vtY4fIqTC6K/zpkK8yvVA8gYDck0=
+github.com/larsartmann/go-output/escape v0.38.5 h1:M9tqorCiUjFlH6Ofge39uK2ikxlPxF5uqnpIiS1UA20=
+github.com/larsartmann/go-output/escape v0.38.5/go.mod h1:0iTFd6fhBaMPWf0vtY4fIqTC6K/zpkK8yvVA8gYDck0=
 github.com/larsartmann/go-output/graph v0.38.4 h1:TAQOcGQXXE1TSd01jl/em3wkYuR9W+kKQgHooArkdio=
 github.com/larsartmann/go-output/graph v0.38.4/go.mod h1:5FAwCpE+EUGRyigeMMb0V4LYQ8mUsEcAqMWaXUN3k24=
 github.com/larsartmann/go-output/markdown v0.38.4 h1:93xkTvX7iLPa7C1k/TtQSQGHOrmG70dYVEut/voxPgc=
