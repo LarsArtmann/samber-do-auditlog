@@ -74,8 +74,8 @@ github.com/larsartmann/go-output/graph v0.38.4 h1:TAQOcGQXXE1TSd01jl/em3wkYuR9W+
 github.com/larsartmann/go-output/graph v0.38.4/go.mod h1:5FAwCpE+EUGRyigeMMb0V4LYQ8mUsEcAqMWaXUN3k24=
 github.com/larsartmann/go-output/markdown v0.38.4 h1:93xkTvX7iLPa7C1k/TtQSQGHOrmG70dYVEut/voxPgc=
 github.com/larsartmann/go-output/markdown v0.38.4/go.mod h1:1YP34I53dJYgr5bN6WnTs+XFDiMJAM5JOoBXnDy8VJM=
-github.com/larsartmann/go-output/markup v0.38.4 h1:+i4AcqiMGDmXUXTEc4jUbtCy2ydSJo91ibkTmX+aYp8=
-github.com/larsartmann/go-output/markup v0.38.4/go.mod h1:sbzYxejSLcdx2Z/E563HQ6jEee3Omc7LdY7haDHi1qQ=
+github.com/larsartmann/go-output/markup v0.38.5 h1:AXFZpPUAivaMDx8efBVHFtJ1ygL/A3E09KOzzq7t8Oo=
+github.com/larsartmann/go-output/markup v0.38.5/go.mod h1:ieVSZIkHRKW2ZR4OCA4OBwi3nOf1R4yC2d1ru6FJX4U=
 github.com/larsartmann/go-output/plantuml v0.38.4 h1:5oG8gwcpfZ2jQC7TzliggGKXcgPrI0N2hEYi7OpxQLY=
 github.com/larsartmann/go-output/plantuml v0.38.4/go.mod h1:K2O7WX5oRE8fTApm+rSQKbqSJ6S9eIpgMc+SMus7yKY=
 github.com/larsartmann/go-output/serialization v0.38.4 h1:MZFmq6d/PKE6/eOz9Af6crOdjS5OU65t1IVcX/lPkdA=
