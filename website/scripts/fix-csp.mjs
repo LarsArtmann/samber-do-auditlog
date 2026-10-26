@@ -37,10 +37,12 @@ async function main() {
 
     const missingHashes = new Set();
     for (const [, , body] of fixed.matchAll(INLINE_SCRIPT_RE)) {
-      const trimmed = body.trim();
-      if (!trimmed) continue;
-      const hash = sha256Base64(trimmed);
-      missingHashes.add(`'${hash}'`);
+      // Browsers hash the RAW bytes between <script> and </script> — trimming
+      // here produced hashes that never matched for scripts with leading or
+      // trailing newlines, silently blocking them at runtime (found via
+      // Lighthouse 2026-10-26: BP 93 → errors-in-console).
+      if (!body.trim()) continue;
+      missingHashes.add(`'${sha256Base64(body)}'`);
     }
 
     if (missingHashes.size > 0) {
