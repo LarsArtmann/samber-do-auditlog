@@ -12,6 +12,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Website QA sweep with real-browser verification** (2026-10-26): landing screenshots at 375/768/1024 in dark + light, `demo.mp4` playback/seek/206-range checks, and a Lighthouse audit — **Perf 100 / A11y 100 / BP 100 / SEO 100**.
+- `scripts/e2e-live-smoke/`: real-browser E2E smoke of the live dashboard (puppeteer-core + headless Chromium against `live/demo`) asserting zero console errors, all fragments rendered, and all 5 tabs activating via clicks — the first browser-level verification of the datastar/CSP stack (previously string/test-level only). 12/12 checks green on Chromium 152.
+- `docs/architecture.md`: full source-file map + data-flow walkthrough, moved out of AGENTS.md to satisfy the fleet 220-line ratchet (AGENTS.md now 202 lines).
+- SECURITY.md: new "Security practices" section (escaping-by-construction, CSP-as-contract, fuzz targets, dependency hygiene).
+- claims-linter check 12: pins `website/package.json` `typescript` to `^6.0.3` (astro check rejects TS 7.0), plus a website.yml grep step before `astro check` — the pin had already silently regressed again via an auto-commit blob.
+
+### Fixed
+
+- **Landing page horizontal overflow at mobile widths**: the hero's code window kept its flex/grid ancestors from shrinking below ~580px, clipping the headline and body copy at 375px (`min-w-0` on the hero flex item and code-window grid item).
+- **Website CSP blocked an inline script in production**: `scripts/fix-csp.mjs` hashed *trimmed* inline-script bodies while browsers hash the raw bytes, so any script with leading/trailing newlines was allowlisted under the wrong hash and silently blocked at runtime. The fixer now hashes raw content (found via Lighthouse `errors-in-console`; Best-Practices 93 → 100).
+- `flake.nix` vendorHash refreshed after the dependency wave had left `nix build` failing with a hash mismatch; flake.lock nixpkgs updated 2026-09-16 → 2026-10-23, bringing golangci-lint **v2.15.0** into the devShell (retires the v2.13.2 devShell lag).
+- `forward/` lint debt (13 findings): named constants for batching/HTTP tuning knobs, context-dialer socket probe (`noctx`), static sentinel error with `%w` wrapping (`err113`), env-var-name `golangci-lint` credential false positive suppressed with rationale, and a deliberate `tagliatelle` exclusion for the PapDashboard camelCase wire contract (documented in `.golangci.yml`).
+- README linter-count claim drifted (108 → 107); claims linter now green across all 12 checks.
+- AGENTS.md stale claims corrected: exhaustruct_v5 documented as DISABLED (dropped 2026-10-07 after analyzer panics; dead settings removed by golangci-lint-auto-configure), pre-commit hook described as the BuildFlow-generated template it actually is, Go 1.26-era json/v2 policy notes updated to the post-1.27 state.
+
+### Changed
+
+- `go-sse/ssetest` v0.3.0 → **v0.5.0** after a supply-chain audit of the go-sse/go-ndjson families: zero retracted versions, GitHub↔proxy tag sets identical, all pins real tags. v0.4.0+ converges ssetest onto the minor-form `go 1.27` directive and the tagged `sseparse` module (new transitive dep v0.2.1).
+- BENCHMARKS.md re-baselined on **Go 1.27.1** (count=5): every benchmark faster (−3% to −40%) with byte-identical allocation counts and no code changes on benchmarked paths — deltas attributed to the toolchain; the BuildReport services=100 outlier (−40%) is flagged for the next re-baseline.
+
 ## [0.12.0] - 2026-10-07
 
 ### Added
