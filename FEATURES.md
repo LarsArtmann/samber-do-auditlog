@@ -238,8 +238,8 @@ The health-probe SDK has been extracted to its own standalone project: **[github
 
 | Feature                 | Status    | Note                                                                         |
 | ----------------------- | --------- | ---------------------------------------------------------------------------- |
-| Live dashboard coverage | Below bar | 79.8% vs the 90% internal goal; templ fragment renderers are the biggest gap |
-| Coverage gate margin    | Headroom  | 95.5% vs 94% threshold; adding code without tests erodes the 1.5pp margin    |
+| Live dashboard coverage | Below bar | 83.7% vs the 90% internal goal; templ fragment renderers are the biggest gap |
+| Coverage gate margin    | Headroom  | 96.4% vs 94% threshold; adding code without tests erodes the 2.4pp margin    |
 
 ---
 
@@ -252,4 +252,4 @@ The health-probe SDK has been extracted to its own standalone project: **[github
 
 ---
 
-_Last verified against the codebase on 2026-09-11. Coverage: 95.5% gate (root 94.9%, live 79.8%, testhelpers 91.1%; generated `*_templ.go` excluded)._
+_Last verified against the codebase on 2026-10-26. Coverage: 96.4% gate (root 96.4%, live 83.7%, testhelpers 91.8%; generated `*_templ.go` excluded)._
