@@ -55,6 +55,22 @@ Reports are most valuable when they affect that contract, for example:
 - Secrets that host applications pass into service names, DSNs, or provider
   closures — the logger records names it is given; do not put secrets there.
 
+## Security practices
+
+How this repo actively defends the attack surface above:
+
+- **Escaping by construction**: every user-controlled string in the static
+  HTML report passes through the template's escape helper; guarded by the
+  `FuzzPluginHTML` XSS fuzz target plus a JS-syntax validation test.
+- **CSP as a contract**: the static report ships `default-src 'none'`; the
+  live server sends a strict response header including `frame-ancestors
+  'none'`. Both are pinned by tests (`TestWriteHTML_CSPMeta`,
+  `TestServer_DashboardCSP`) so a CSP regression fails CI.
+- **Fuzzing at the input boundary**: 8 fuzz targets cover HTML generation,
+  report migration, NDJSON parsing, filtering, and adversarial error chains.
+- **Dependency hygiene**: govulncheck runs in CI; the go-output family is
+  pinned in lockstep to avoid pseudo-version manifest drift.
+
 ## Response targets
 
 - Acknowledgement: within 7 days.
