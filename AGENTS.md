@@ -28,7 +28,7 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | `nix run .#coverage`                                                                | Run the CI-equivalent coverage gate via Nix                                                                                                                     |
 | `sh scripts/coverage-gate.sh`                                                       | Coverage gate (exclusions single-sourced in `scripts/coverage-exclusions.txt`; ≥94%)                                                                            |
 | `sh scripts/check-go-version.sh`                                                    | Go-version drift guard: go.mod == ci.yml == flake GOTOOLCHAIN == .golangci.yml (CI + pre-commit)                                                                |
-| `sh scripts/check-doc-claims.sh`                                                    | Claims linter (10 fact families): go/schema version, coverage gate, linter+fuzz+benchmark+CI-job+diagram counts, env-var spelling vs machine truth (pre-commit) |
+| `sh scripts/check-doc-claims.sh`                                                    | Claims linter (12 checks): go/schema version, coverage gate, linter+fuzz+benchmark+CI-job+diagram counts, env-var spelling vs machine truth, website TypeScript pin |
 | `sh scripts/check-changelog-sync.sh`                                                | CHANGELOG.md ↔ website changelog.mdx version-list sync (website CI)                                                                                             |
 | `git config core.hooksPath scripts/hooks`                                           | Install the pre-commit hook                                                                                                                                     |
 
@@ -183,7 +183,7 @@ The requirement exists because `go-output` (diagram/table rendering), `go-brande
 
 ## Lint Configuration (.golangci.yml)
 
-Extremely strict — nearly every golangci-lint linter enabled (~108). Key implications:
+Extremely strict — nearly every golangci-lint linter enabled (~107). Key implications:
 
 - **exhaustruct_v5**: All struct fields must be explicitly initialized (tests exempted). `newEventFromRef()` and `newServiceRecordCore()` centralize field init to satisfy it in one place. Inline suppressions are `//nolint:exhaustruct_v5`.
 - **depguard**: per-path import rules — keep external non-stdlib deps out of `cmd/` (sole exception: `cmd/genschema` may use `invopop/jsonschema`).
@@ -267,6 +267,6 @@ The `example/` package (`main.go`, `register.go`, `services.go`, `summary.go`) d
 
 The docs site (`website/`, Astro + Starlight + Tailwind v4 + Firebase Hosting) deploys on pushes touching `website/**` via `.github/workflows/website.yml` → **do-auditlog.lars.software** (Firebase shared project `lars-software`, hosting target `do-auditlog`). Quality gates: `astro check` = 0 errors, `html-validate dist/**/*.html`, `check-changelog-sync.sh` (CHANGELOG ↔ changelog.mdx).
 
-- **`website/package.json` must keep `typescript: ^6.0.3`** — TypeScript 7 (tsgo) crashes `astro check` (`assertCompatibleTypeScript`).
+- **`website/package.json` must keep `typescript: ^6.0.3`** — TypeScript 7 (tsgo) crashes `astro check` ("astro check does not currently support TypeScript 7.0"; verified against astro 7.3.5 + @astrojs/check 0.9.10 on 2026-10-26). The pin has regressed twice via bulk dependency/auto-commit blobs (restored in d092158, re-broken in f9c7491); it is now guarded by claims-linter check 12 AND a website.yml grep step before `astro check`. When astro officially supports TS 7 (experimental `ts-content-mapper` path exists), bump the pin, this note, and both guards together.
 - **`website/pnpm-workspace.yaml`** sets `allowBuilds: {esbuild: true, sharp: true}` (pnpm v11 blocks native postinstalls otherwise).
 - **Demo video**: 25s promo composition at `website/video/videos/do-auditlog-demo/`, deployed as `website/public/demo.mp4` (`#demo` anchor). Re-render via the HyperFrames CLI directly (`node …/hyperframes/dist/cli.js render`; `npx` wrappers fail on NixOS — set `HYPERFRAMES_BROWSER_PATH` to a nix chromium). Size target <3MB (`ffmpeg -crf 25`).

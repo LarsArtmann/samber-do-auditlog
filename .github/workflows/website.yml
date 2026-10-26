@@ -53,7 +53,12 @@ jobs:
         continue-on-error: true
 
       - name: TypeScript pin guard (astro check rejects TS 7.0)
-        run: grep -q '"typescript": "\^6\.0\.3"' package.json || { echo "ERROR: typescript must stay ^6.0.3 — astro check hard-fails on TS 7.0. Bump deliberately together with scripts/check-doc-claims.sh check 12 once astro supports it."; exit 1; }
+        run: |
+          grep -q '"typescript": "\^6\.0\.3"' package.json || {
+            echo "ERROR: typescript must stay ^6.0.3; astro check hard-fails on TS 7.0."
+            echo "Bump deliberately together with scripts/check-doc-claims.sh check 12 once astro supports it."
+            exit 1
+          }
         working-directory: website
 
       - run: pnpm exec astro check
