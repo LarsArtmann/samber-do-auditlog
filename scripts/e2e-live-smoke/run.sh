@@ -22,6 +22,7 @@
 set -eu
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CHROME="${CHROME:?set CHROME to a chromium binary path}"
 PORT="${PORT:-7777}"
 DASH_URL="http://localhost:${PORT}/debug/di/"
@@ -38,7 +39,7 @@ trap 'kill "${DEMO_PID:-0}" 2>/dev/null || true; rm -f "$DEMO_BIN"' EXIT
 cd "$ROOT"
 go build -o "$DEMO_BIN" ./live/demo
 
-"$DEMO_BIN" > /tmp/do-live-demo-e2e.log 2>&1 &
+"$DEMO_BIN" >/tmp/do-live-demo-e2e.log 2>&1 &
 DEMO_PID=$!
 
 # The demo lifecycle takes ~10s (services build with delays); wait it out so
@@ -51,4 +52,4 @@ for i in $(seq 1 40); do
 done
 sleep 12
 
-DASH_URL="$DASH_URL" CHROME="$CHROME" node "$(dirname "$0")/smoke.mjs"
+DASH_URL="$DASH_URL" CHROME="$CHROME" node "$SCRIPT_DIR/smoke.mjs"

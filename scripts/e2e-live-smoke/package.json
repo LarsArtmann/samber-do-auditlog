@@ -1,1 +1,1 @@
-{"name":"dash-e2e","private":true,"dependencies":{"puppeteer-core":"^24.43.1"}}
+{ "name": "dash-e2e", "private": true, "dependencies": { "puppeteer-core": "^24.43.1" } }
