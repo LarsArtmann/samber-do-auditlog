@@ -1,7 +1,7 @@
 version: "2"
 run:
   timeout: 5m
-  go: 1.27.1
+  go: "1.27"
   build-tags:
     - goexperiment.arenas
     - goexperiment.goroutineleakprofile
@@ -39,11 +39,6 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    # exhaustruct_v5 dropped 2026-10-07: the bundled analyzer (v5.0.3) panics
-    # with "makeslice: cap out of range" on this repo's core and live packages,
-    # killing the whole run (verified pre-existing at v0.11.0 — same treatment
-    # as PapDashboard 2026-09-12). The curated ignore list below stays for the
-    # day the upstream fix lets us re-enable it.
     - exptostd
     - fatcontext
     - forbidigo
@@ -149,26 +144,6 @@ linters:
         - fmt.Println
         - (*strings.Builder).WriteString
         - (*bytes.Buffer).WriteString
-    exhaustruct_v5:
-      ignore-patterns:
-        - os/exec.Cmd
-        - do.InjectorOpts
-        - sync.RWMutex
-        - sync.Mutex
-        - atomic.Int64
-        - github.com/larsartmann/go-sse.Event
-        - github.com/larsartmann/samber-do-auditlog/live.Hub
-        - github.com/larsartmann/samber-do-auditlog/live.Server
-        - github.com/larsartmann/samber-do-auditlog/live.healthResponse
-        - github.com/larsartmann/samber-do-auditlog/health.Response
-        - github.com/larsartmann/samber-do-auditlog/health.Check
-        - github.com/larsartmann/samber-do-auditlog/health.Routes
-        - github.com/larsartmann/samber-do-auditlog/health.Probe
-        - github.com/larsartmann/samber-do-auditlog.NDJSONStreamer
-        - github.com/larsartmann/samber-do-auditlog.Config
-        - github.com/larsartmann/samber-do-auditlog.live.Config
-        - github.com/larsartmann/samber-do-auditlog.MultiWriter
-        - github.com/larsartmann/samber-do-auditlog.live.eventRingBuffer
     funlen:
       lines: 200
       statements: 100
@@ -347,5 +322,5 @@ formatters:
     paths:
       - _templ\.go$
 issues:
-  max-issues-per-linter: 50
-  max-same-issues: 10
+  max-issues-per-linter: 0
+  max-same-issues: 0
