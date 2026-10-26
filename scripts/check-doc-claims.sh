@@ -133,6 +133,17 @@ if [ -n "$DOC_BADGE_GO" ] && [ "$DOC_BADGE_GO" != "$GO_MOD_MINOR" ]; then
 	claim_fail "README Go version badge" "Go-$DOC_BADGE_GO+" "go.mod: $GO_MOD_VERSION"
 fi
 
+# 12. Website TypeScript pin must stay on the 6.x line: astro check hard-fails
+# on TypeScript 7.0 ("astro check does not currently support TypeScript 7.0",
+# verified against astro 7.3.5 + @astrojs/check 0.9.10 on 2026-10-26), and the
+# pin has already regressed twice via bulk dependency bumps (d092158 restore,
+# f9c7491 re-break). When astro officially supports TS 7, bump this constant
+# AND the pin together, deliberately.
+WEBSITE_TS_PIN="$(grep -oE '"typescript": "[^"]+"' website/package.json | head -n 1 || true)"
+if [ "$WEBSITE_TS_PIN" != '"typescript": "^6.0.3"' ]; then
+	claim_fail "website TypeScript pin" "${WEBSITE_TS_PIN:-missing}" '"typescript": "^6.0.3" (astro check rejects TS 7.0)'
+fi
+
 # --- Result ---------------------------------------------------------------
 
 if [ "$fail" -ne 0 ]; then
