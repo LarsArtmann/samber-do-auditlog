@@ -68,7 +68,7 @@
               fileset = lib.fileset.gitTracked ./.;
             };
             subPackages = [ "cmd/auditlog" ];
-            vendorHash = "sha256-Nm/UGY0xg6bcB17K9XScTbmgbWpfcXgOs3fFqvoBLOM=";
+            vendorHash = "sha256-BK4/0aCmQ/gsSVvPg8pVSL/NDOP4npCGKH9A2ZG///k=";
             meta = with lib; {
               description = "Audit logging CLI for samber/do v2";
               homepage = "https://github.com/larsartmann/samber-do-auditlog";
