@@ -10,7 +10,7 @@ require (
 	github.com/a-h/templ v0.3.1070
 	github.com/invopop/jsonschema v0.14.0
 	github.com/larsartmann/go-atomic-write v0.6.0
-	github.com/larsartmann/go-error-family v0.11.0
+	github.com/larsartmann/go-error-family v0.12.0
 	github.com/larsartmann/go-ndjson v0.0.1
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
 	// are tagged together at the same version. Pin them in lockstep.
