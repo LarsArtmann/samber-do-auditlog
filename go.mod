@@ -14,7 +14,7 @@ require (
 	github.com/larsartmann/go-ndjson v0.0.1
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
 	// are tagged together at the same version. Pin them in lockstep.
-	github.com/larsartmann/go-output v0.38.4
+	github.com/larsartmann/go-output v0.38.5
 	github.com/larsartmann/go-output/d2 v0.38.4
 	github.com/larsartmann/go-output/daghtml v0.38.3
 	github.com/larsartmann/go-output/delimited v0.38.4
@@ -24,7 +24,7 @@ require (
 	github.com/larsartmann/go-output/markup v0.38.4
 	github.com/larsartmann/go-output/plantuml v0.38.4
 	github.com/larsartmann/go-output/serialization v0.38.4
-	github.com/larsartmann/go-output/table v0.38.4
+	github.com/larsartmann/go-output/table v0.38.7
 	github.com/larsartmann/go-output/tree v0.38.4
 	github.com/larsartmann/go-sse v0.6.2
 	github.com/larsartmann/go-sse/ssetest v0.5.0
