@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -154,7 +155,7 @@ func TestReport_WriteHTML_EmptyReportExplainsItself(t *testing.T) {
 		"DO_AUDITLOG_ENABLED=true",
 		"No events recorded.",
 	} {
-		if !bytes.Contains([]byte(html), []byte(want)) {
+		if !strings.Contains(html, want) {
 			t.Errorf("empty-report HTML must explain itself: %q not found", want)
 		}
 	}
