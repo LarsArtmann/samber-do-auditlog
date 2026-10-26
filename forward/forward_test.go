@@ -47,6 +47,7 @@ func startFakeCollectorAtPath(t *testing.T, path string) *fakeCollector {
 	}
 
 	var lc net.ListenConfig
+
 	listener, err := lc.Listen(context.Background(), "unix", path)
 	if err != nil {
 		t.Fatalf("listen unix: %v", err)

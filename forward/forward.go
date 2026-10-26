@@ -97,6 +97,7 @@ const (
 	// in memory; the flush floor keeps the ticker from spinning hot).
 	envBatchMaxCeiling = 8192
 	envFlushMinMs      = 16
+	envFlushMaxMs      = 60_000
 
 	// Completion queue caps: runs are few (one per root scope), so these are
 	// generosity, not load-bearing.
@@ -212,7 +213,7 @@ func NewWithTarget(spec, sourceID string) *Forwarder {
 		sourceID: sourceID,
 		batchMax: envInt(EnvBatchMax, defaultMaxBatchEvents, 1, envBatchMaxCeiling),
 		flushInterval: time.Duration(
-			envInt(EnvFlushMs, int(defaultFlushInterval.Milliseconds()), envFlushMinMs, 60_000),
+			envInt(EnvFlushMs, int(defaultFlushInterval.Milliseconds()), envFlushMinMs, envFlushMaxMs),
 		) * time.Millisecond,
 		events:   make(chan auditlog.Event, channelCap),
 		complete: make(chan string, completionChanCap),
@@ -321,6 +322,7 @@ func unixClient(socketPath string) *http.Client {
 // probeSocket reports whether a unix socket answers a dial.
 func probeSocket(path string) bool {
 	dialer := &net.Dialer{Timeout: dialTimeout}
+
 	conn, err := dialer.DialContext(context.Background(), "unix", path)
 	if err != nil {
 		return false
