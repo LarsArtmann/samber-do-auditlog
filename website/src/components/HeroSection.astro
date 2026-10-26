@@ -57,7 +57,7 @@ const highlightedCode = `<span class="text-text-muted">package</span> <span clas
 
 <section class="relative flex items-center justify-center overflow-hidden pt-24 pb-12">
   <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-accent/5 blur-[120px] rounded-full pointer-events-none"></div>
-  <div class="relative max-w-3xl xl:max-w-6xl mx-auto px-6 text-center">
+  <div class="relative min-w-0 max-w-3xl xl:max-w-6xl mx-auto px-6 text-center">
     <a class="inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-border rounded-md text-text-secondary text-[0.8125rem] font-medium no-underline hover:border-accent hover:text-accent transition-all duration-150 mb-6" href={siteConfig.github} target="_blank" rel="noopener">
       <Icon name="star" size={14} />
       {starsText}
@@ -76,7 +76,7 @@ const highlightedCode = `<span class="text-text-muted">package</span> <span clas
     </div>
 
     <div id="demo" class="grid gap-6 xl:grid-cols-2 items-start text-left scroll-mt-24">
-      <div class="relative">
+      <div class="relative min-w-0">
         <div class="absolute -inset-4 bg-gradient-to-r from-accent/10 via-transparent to-accent/10 rounded-2xl blur-6 pointer-events-none"></div>
         <div class="relative rounded-xl border border-border bg-bg-code shadow-2xl overflow-hidden code-preview">
           <div class="flex items-center gap-1.5 px-4 py-3 border-b border-border">
