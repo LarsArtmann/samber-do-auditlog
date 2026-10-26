@@ -22,7 +22,7 @@ updates:
     groups:
       actions:
         patterns:
-          - "*"
+          - '*'
     labels:
       - dependencies
       - ci
@@ -59,6 +59,16 @@ updates:
           - patch
   - package-ecosystem: npm
     directory: /website/video
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+  - package-ecosystem: npm
+    directory: /scripts/e2e-live-smoke
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
