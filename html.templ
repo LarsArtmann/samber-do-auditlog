@@ -647,7 +647,7 @@ templ reportHTML(report Report) {
 								</tr>
 							</thead>
 							<tbody id="services-tbody"></tbody>
-							<tbody id="services-empty" class="empty-state" style="display:none"><tr><td colspan="11">No services registered.</td></tr></tbody>
+							<tbody id="services-empty" class="empty-state" style="display:none"><tr><td colspan="11">No services captured. If you expected your container here, the auditlog plugin was most likely DISABLED when the container was created: capture must be on BEFORE services register (auditlog.Config.Enabled = true, or DO_AUDITLOG_ENABLED=true as a fallback) — boot-time events cannot be recovered later.</td></tr></tbody>
 						</table>
 					</div>
 				</div>
@@ -675,7 +675,7 @@ templ reportHTML(report Report) {
 								<tr><th scope="col">#</th><th scope="col">Time</th><th scope="col">Type</th><th scope="col">Provider</th><th scope="col">Phase</th><th scope="col">Scope</th><th scope="col">Service</th><th scope="col">Duration</th><th scope="col">Error</th></tr>
 							</thead>
 							<tbody id="events-tbody"></tbody>
-							<tbody id="events-empty" class="empty-state" style="display:none"><tr><td colspan="9">No events recorded.</td></tr></tbody>
+							<tbody id="events-empty" class="empty-state" style="display:none"><tr><td colspan="9">No events recorded. An empty report almost always means the plugin was disabled at container creation — see the Services tab for the fix.</td></tr></tbody>
 						</table>
 					</div>
 				</div>

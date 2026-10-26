@@ -127,3 +127,35 @@ func TestReport_WriteHTML_GoldenFile(t *testing.T) {
 			goldenPath, len(want), diffPath, len(got))
 	}
 }
+
+// TestReport_WriteHTML_EmptyReportExplainsItself pins the empty-state hint:
+// a report with zero services must never be a silent hollow template — the
+// Services tab's empty-state cell carries the likely cause (the auditlog
+// plugin was disabled at container creation) and the fix. The cells are
+// static template text; the dashboard script reveals them when the embedded
+// report is empty. (A disabled plugin cannot record boot-time events, so
+// "re-enable and re-run" is the only honest advice.)
+func TestReport_WriteHTML_EmptyReportExplainsItself(t *testing.T) {
+	t.Parallel()
+
+	report := auditlog.Report{}
+
+	var buf bytes.Buffer
+
+	if err := report.WriteHTML(&buf); err != nil {
+		t.Fatalf("WriteHTML: %v", err)
+	}
+
+	html := buf.String()
+
+	for _, want := range []string{
+		"No services captured.",
+		"auditlog.Config.Enabled = true",
+		"DO_AUDITLOG_ENABLED=true",
+		"No events recorded.",
+	} {
+		if !bytes.Contains([]byte(html), []byte(want)) {
+			t.Errorf("empty-report HTML must explain itself: %q not found", want)
+		}
+	}
+}
