@@ -46,7 +46,8 @@ func startFakeCollectorAtPath(t *testing.T, path string) *fakeCollector {
 		t.Fatalf("mkdir socket dir: %v", err)
 	}
 
-	listener, err := net.Listen("unix", path)
+	var lc net.ListenConfig
+	listener, err := lc.Listen(context.Background(), "unix", path)
 	if err != nil {
 		t.Fatalf("listen unix: %v", err)
 	}

@@ -37,6 +37,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -57,7 +58,7 @@ import (
 // collector's UI shows for this process, and the batching bounds.
 const (
 	EnvTarget   = "DO_AUDITLOG_FORWARD_TARGET"
-	EnvAPIKey   = "DO_AUDITLOG_FORWARD_API_KEY"
+	EnvAPIKey   = "DO_AUDITLOG_FORWARD_API_KEY" //nolint:gosec // env-var NAME, not a credential
 	EnvSource   = "DO_AUDITLOG_FORWARD_SOURCE"
 	EnvBatchMax = "DO_AUDITLOG_FORWARD_BATCH_MAX"
 	EnvFlushMs  = "DO_AUDITLOG_FORWARD_FLUSH_MS"
@@ -91,6 +92,20 @@ const (
 
 	// logEveryFails throttles repeat failure logs while a target stays down.
 	logEveryFails = 100
+
+	// envInt bounds for the batching knobs (ceiling keeps one burst bounded
+	// in memory; the flush floor keeps the ticker from spinning hot).
+	envBatchMaxCeiling = 8192
+	envFlushMinMs      = 16
+
+	// Completion queue caps: runs are few (one per root scope), so these are
+	// generosity, not load-bearing.
+	completionChanCap = 16
+	completedCap      = 8
+
+	// HTTP client tuning for small, fast POSTs to a local collector.
+	httpMaxIdleConnsPerHost = 4
+	httpIdleConnTimeout     = 30 * time.Second
 )
 
 // envelope is the PapDashboard ingest contract (kind "di"). Events ride
@@ -103,6 +118,10 @@ type envelope struct {
 	Events   []auditlog.Event `json:"events"`
 	Complete bool             `json:"complete"`
 }
+
+// errCollectorStatus marks non-2xx collector responses; the concrete status
+// text rides along via %w wrapping at the delivery site.
+var errCollectorStatus = errors.New("collector answered non-2xx")
 
 // targetKind distinguishes how a target becomes deliverable.
 type targetKind uint8
@@ -187,23 +206,23 @@ func NewWithTarget(spec, sourceID string) *Forwarder {
 		}
 	}
 
-	f := &Forwarder{
+	fwd := &Forwarder{
 		targets:  targets,
 		apiKey:   os.Getenv(EnvAPIKey),
 		sourceID: sourceID,
-		batchMax: envInt(EnvBatchMax, defaultMaxBatchEvents, 1, 8192),
+		batchMax: envInt(EnvBatchMax, defaultMaxBatchEvents, 1, envBatchMaxCeiling),
 		flushInterval: time.Duration(
-			envInt(EnvFlushMs, int(defaultFlushInterval.Milliseconds()), 16, 60_000),
+			envInt(EnvFlushMs, int(defaultFlushInterval.Milliseconds()), envFlushMinMs, 60_000),
 		) * time.Millisecond,
 		events:   make(chan auditlog.Event, channelCap),
-		complete: make(chan string, 16),
+		complete: make(chan string, completionChanCap),
 		stop:     make(chan struct{}),
 		stopped:  make(chan struct{}),
 	}
 
-	go f.loop()
+	go fwd.loop()
 
-	return f
+	return fwd
 }
 
 // resolveTargets maps a comma-separated target spec onto delivery targets.
@@ -293,15 +312,16 @@ func unixClient(socketPath string) *http.Client {
 
 				return dialer.DialContext(ctx, "unix", socketPath)
 			},
-			MaxIdleConnsPerHost: 4,
-			IdleConnTimeout:     30 * time.Second,
+			MaxIdleConnsPerHost: httpMaxIdleConnsPerHost,
+			IdleConnTimeout:     httpIdleConnTimeout,
 		},
 	}
 }
 
 // probeSocket reports whether a unix socket answers a dial.
 func probeSocket(path string) bool {
-	conn, err := net.DialTimeout("unix", path, dialTimeout)
+	dialer := &net.Dialer{Timeout: dialTimeout}
+	conn, err := dialer.DialContext(context.Background(), "unix", path)
 	if err != nil {
 		return false
 	}
@@ -412,7 +432,7 @@ func (f *Forwarder) loop() {
 	defer close(f.stopped)
 
 	pending := make([]auditlog.Event, 0, f.batchMax)
-	completed := make([]string, 0, 8)
+	completed := make([]string, 0, completedCap)
 
 	ticker := time.NewTicker(f.flushInterval)
 	defer ticker.Stop()
@@ -571,7 +591,7 @@ func (f *Forwarder) post(t *target, payload envelope) {
 	defer func() { _, _ = io.Copy(io.Discard, response.Body) }()
 
 	if response.StatusCode >= http.StatusBadRequest {
-		f.deliveryFailed(t, fmt.Errorf("collector answered %s", response.Status))
+		f.deliveryFailed(t, fmt.Errorf("%w: %s", errCollectorStatus, response.Status))
 
 		return
 	}

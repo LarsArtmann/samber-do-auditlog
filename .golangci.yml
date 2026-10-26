@@ -282,6 +282,12 @@ linters:
           - wrapcheck
           - nlreturn
           - goconst
+      # The forward/ envelope is the PapDashboard ingest wire contract:
+      # sourceId/runId are camelCase ON PURPOSE (the collector's RawEvent is
+      # the superset). snake_case here would break the collector handshake.
+      - path: forward/
+        linters:
+          - tagliatelle
       - path: _test\.go
         linters:
           - paralleltest
