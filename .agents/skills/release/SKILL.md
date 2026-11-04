@@ -63,15 +63,18 @@ proceed if a gate fails.
 Determine whether a release is warranted and what version it should be.
 
 1. **Count unreleased commits:**
+
    ```bash
    last_tag=$(git describe --tags --abbrev=0)
    git log ${last_tag}..HEAD --oneline
    git log ${last_tag}..HEAD --oneline | wc -l
    ```
+
    A release is typically warranted at 20+ commits or when significant
    features/breaking changes have accumulated.
 
 2. **Categorize changes** to determine the version bump:
+
    ```bash
    git log ${last_tag}..HEAD --format='%s' | grep -iE '^[a-z]+\(' | sed -E 's/\(.*//' | sort | uniq -c | sort -rn
    ```
@@ -102,6 +105,7 @@ sh scripts/coverage-gate.sh   # ≥94% (excludes example/, cmd/, live/demo/, tes
 ```
 
 Then run fuzz tests — they catch edge cases unit tests miss:
+
 ```bash
 for fuzz in FuzzPluginHTML FuzzMigrateReport FuzzDiagramSpecialChars FuzzFilterInputs FuzzReadEvents FuzzMultiWriter FuzzNDJSONStreamer FuzzClassifyAdversarialChains; do
   echo "=== ${fuzz} ==="
@@ -110,12 +114,14 @@ done
 ```
 
 Verify no generated-code drift (CI's `stale-generation` job checks this):
+
 ```bash
 go generate ./...
 git diff --exit-code   # should be no changes
 ```
 
 Verify no go.mod/go.sum drift (CI's `mod-tidy` job checks this):
+
 ```bash
 GOTOOLCHAIN=go1.26.7 go mod tidy
 git diff --exit-code go.mod go.sum
@@ -137,16 +143,20 @@ Move the `[Unreleased]` section's entries to a new versioned section:
 Release summary paragraph — 2-4 sentences covering the headline changes.
 
 ### Added
+
 - **Feature name** (`file.go`): description.
 
 ### Breaking
+
 - **What changed**: old → new. Migration path if applicable.
 
 ### Fixed
+
 - **Issue**: root cause and fix.
 ```
 
 Accuracy rules:
+
 - Only document what actually shipped. If a feature was added AND removed
   within the same unreleased period, it must NOT appear — verify against the
   codebase, not just commit messages.
@@ -177,6 +187,7 @@ document them in the Concurrency Model or Gotchas sections.
 ### Phase 4: Bump Version References
 
 Update `CLIVersion` in `cmd/auditlog/main.go`:
+
 ```go
 var CLIVersion = "X.Y.Z"  // was the previous version
 ```
@@ -188,6 +199,7 @@ current for `go run ./cmd/auditlog` and `go install` users.
 ### Phase 5: Commit and Push
 
 Create two logical commits:
+
 1. **Code fixes** (if any verification failures were fixed): `fix: ...`
 2. **Release docs**: `docs(release): prepare vX.Y.Z release`
 
@@ -226,6 +238,7 @@ impact). Include a link to the full CHANGELOG.
 If goreleaser CI is configured to run on tag push, it will build CLI binaries
 (linux/darwin amd64/arm64) and attach them automatically. Otherwise, run it
 manually:
+
 ```bash
 GORELEASER_CURRENT_TAG=vX.Y.Z GOEXPERIMENT=jsonv2 goreleaser release --clean
 ```
@@ -296,17 +309,17 @@ different `go` binary shadows the devShell's. Always prefix with
 
 ## Version History Reference
 
-| Tag | Type | Headline |
-|-----|------|----------|
+| Tag    | Type             | Headline                                                    |
+| ------ | ---------------- | ----------------------------------------------------------- |
 | v0.9.0 | MINOR (breaking) | RunID, MultiWriter, StreamEvents, SSE replay, keyboard a11y |
-| v0.8.1 | PATCH | Dependency updates |
-| v0.8.0 | MINOR | ALPHA→BETA, exported sentinels, Go 1.26.5 |
-| v0.7.1 | PATCH | Go version regression |
-| v0.7.0 | MINOR (breaking) | Typed identifiers, ServiceInfo domain split |
-| v0.6.0 | MINOR | Live dashboard, diagram exports, CLI |
-| v0.5.0 | MINOR | Health checks, filtering, D2 export |
-| v0.4.0 | MINOR | Report validation, schema, CLI |
-| v0.3.0 | MINOR | Tree/table export, CLI format coverage |
+| v0.8.1 | PATCH            | Dependency updates                                          |
+| v0.8.0 | MINOR            | ALPHA→BETA, exported sentinels, Go 1.26.5                   |
+| v0.7.1 | PATCH            | Go version regression                                       |
+| v0.7.0 | MINOR (breaking) | Typed identifiers, ServiceInfo domain split                 |
+| v0.6.0 | MINOR            | Live dashboard, diagram exports, CLI                        |
+| v0.5.0 | MINOR            | Health checks, filtering, D2 export                         |
+| v0.4.0 | MINOR            | Report validation, schema, CLI                              |
+| v0.3.0 | MINOR            | Tree/table export, CLI format coverage                      |
 
 The versioning pattern: minor releases carry features and breaking changes;
 patch releases carry only fixes and dependency bumps. No v1.0.0 until the

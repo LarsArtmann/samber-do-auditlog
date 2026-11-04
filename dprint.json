@@ -10,10 +10,5 @@
   "yaml": {},
   "markdown": {},
   "dockerfile": {},
-  "excludes": [
-    "vendor/**",
-    ".git/**",
-    "node_modules/**",
-    "**/CHANGELOG.md"
-  ]
+  "excludes": ["vendor/**", ".git/**", "node_modules/**", "**/CHANGELOG.md"]
 }

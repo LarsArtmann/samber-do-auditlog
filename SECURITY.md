@@ -64,7 +64,7 @@ How this repo actively defends the attack surface above:
   `FuzzPluginHTML` XSS fuzz target plus a JS-syntax validation test.
 - **CSP as a contract**: the static report ships `default-src 'none'`; the
   live server sends a strict response header including `frame-ancestors
-  'none'`. Both are pinned by tests (`TestWriteHTML_CSPMeta`,
+'none'`. Both are pinned by tests (`TestWriteHTML_CSPMeta`,
   `TestServer_DashboardCSP`) so a CSP regression fails CI.
 - **Fuzzing at the input boundary**: 8 fuzz targets cover HTML generation,
   report migration, NDJSON parsing, filtering, and adversarial error chains.

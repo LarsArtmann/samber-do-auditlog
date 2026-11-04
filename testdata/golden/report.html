@@ -1116,7 +1116,7 @@ function initDAGGraph(containerId, dataScriptId) {
     var ek = s + "->" + t;
     if (!edgeSet[ek]) {
       edgeSet[ek] = true;
-      intEdges.push({ source: s, target: t });
+      intEdges.push({ source: s, target: t, label: e.label || "" });
     }
   });
 
@@ -1340,6 +1340,16 @@ function initDAGGraph(containerId, dataScriptId) {
     );
     p.setAttribute("marker-end", "url(#arrow)");
     g.appendChild(p);
+
+    // Labelled edges expose their relationship text as a native SVG tooltip,
+    // so hovering the edge shows it without adding layout clutter.
+    if (e.label) {
+      g.dataset.label = e.label;
+      var edgeTitle = document.createElementNS(ns, "title");
+      edgeTitle.textContent = e.label;
+      g.appendChild(edgeTitle);
+    }
+
     svg.appendChild(g);
     edgeEls.push(g);
   });

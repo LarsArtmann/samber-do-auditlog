@@ -7,25 +7,25 @@ go 1.27
 retract v0.9.0
 
 require (
-	github.com/a-h/templ v0.3.1070
+	github.com/a-h/templ v0.3.1100
 	github.com/invopop/jsonschema v0.14.0
 	github.com/larsartmann/go-atomic-write v0.6.0
-	github.com/larsartmann/go-error-family v0.11.0
+	github.com/larsartmann/go-error-family v0.12.0
 	github.com/larsartmann/go-ndjson v0.0.1
 	// go-output uses mono-versioning: all sub-modules (d2/escape/graph/plantuml)
 	// are tagged together at the same version. Pin them in lockstep.
-	github.com/larsartmann/go-output v0.38.4
-	github.com/larsartmann/go-output/d2 v0.38.4
-	github.com/larsartmann/go-output/daghtml v0.38.3
-	github.com/larsartmann/go-output/delimited v0.38.4
-	github.com/larsartmann/go-output/escape v0.38.3
-	github.com/larsartmann/go-output/graph v0.38.4
-	github.com/larsartmann/go-output/markdown v0.38.4
-	github.com/larsartmann/go-output/markup v0.38.4
-	github.com/larsartmann/go-output/plantuml v0.38.4
-	github.com/larsartmann/go-output/serialization v0.38.4
-	github.com/larsartmann/go-output/table v0.38.4
-	github.com/larsartmann/go-output/tree v0.38.4
+	github.com/larsartmann/go-output v0.38.7
+	github.com/larsartmann/go-output/d2 v0.38.7
+	github.com/larsartmann/go-output/daghtml v0.38.7
+	github.com/larsartmann/go-output/delimited v0.38.7
+	github.com/larsartmann/go-output/escape v0.38.7
+	github.com/larsartmann/go-output/graph v0.38.7
+	github.com/larsartmann/go-output/markdown v0.38.7
+	github.com/larsartmann/go-output/markup v0.38.7
+	github.com/larsartmann/go-output/plantuml v0.38.7
+	github.com/larsartmann/go-output/serialization v0.38.7
+	github.com/larsartmann/go-output/table v0.38.7
+	github.com/larsartmann/go-output/tree v0.38.7
 	github.com/larsartmann/go-sse v0.6.2
 	github.com/larsartmann/go-sse/ssetest v0.5.0
 	github.com/samber/do/v2 v2.1.0
@@ -34,13 +34,13 @@ require (
 require (
 	charm.land/lipgloss/v2 v2.0.6 // indirect
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect
-	github.com/andybalholm/brotli v1.2.6 // indirect
+	github.com/andybalholm/brotli v1.2.7 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.6.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20261008173134-6b8d4baf91b4 // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20261023060817-a45b7c86333f // indirect
 	github.com/charmbracelet/x/ansi v0.11.9 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
@@ -68,7 +68,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/samber/go-type-to-string v1.8.0 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
-	github.com/xo/terminfo v1.2.0 // indirect
+	github.com/xo/terminfo v1.3.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/net v0.59.0 // indirect
