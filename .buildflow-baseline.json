@@ -1,0 +1,7 @@
+{
+  "rule_accepts": [
+    "pnpm-audit:GHSA-7pqw-9j4j-h8q3",
+    "pnpm-audit:GHSA-jmr9-qjv8-65gv"
+  ],
+  "schema_version": 1
+}

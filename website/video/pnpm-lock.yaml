@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  undici: ^8.12.2
+
 importers:
 
   .:
@@ -581,9 +584,9 @@ packages:
   typed-query-selector@2.12.3:
     resolution: {integrity: sha512-/dtuMZyutHLlrxWhhC1uib00ELUr2dZ8C9B8YzZYsJmeE3V56OxRblrSM2UaF142pcMtak7ehZ6+poWGeehNIg==}
 
-  undici@7.25.0:
-    resolution: {integrity: sha512-xXnp4kTyor2Zq+J1FfPI6Eq3ew5h6Vl0F/8d9XU5zZQf1tX9s2Su1/3PiMmUANFULpmksxkClamIZcaUqryHsQ==}
-    engines: {node: '>=20.18.1'}
+  undici@8.12.3:
+    resolution: {integrity: sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw==}
+    engines: {node: '>=22.19.0'}
 
   unicode-properties@1.4.1:
     resolution: {integrity: sha512-CLjCCLQ6UuMxWnbIylkisbRj31qxHPAurvena/0iwSVbQ2G1VY5/HjV0IRabOEbDHlzZlRdCrD4NhB0JtU40Pg==}
@@ -974,7 +977,7 @@ snapshots:
       open: 10.2.0
       postcss: 8.5.32
       puppeteer-core: 25.16.0(yauzl@3.4.0)
-      undici: 7.25.0
+      undici: 8.12.3
       yauzl: 3.4.0
     optionalDependencies:
       sharp: 0.35.5
@@ -1103,7 +1106,7 @@ snapshots:
 
   typed-query-selector@2.12.3: {}
 
-  undici@7.25.0: {}
+  undici@8.12.3: {}
 
   unicode-properties@1.4.1:
     dependencies:
