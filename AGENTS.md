@@ -113,7 +113,7 @@ live in [docs/architecture.md](docs/architecture.md). Non-obvious anchors:
 
 ## Lint Configuration (.golangci.yml)
 
-Extremely strict — nearly every golangci-lint linter enabled (~107). Key implications:
+Extremely strict — nearly every golangci-lint linter enabled (~105). Key implications:
 
 - **exhaustruct_v5 is DISABLED** (dropped 2026-10-07): bundled analyzer builds panic (`makeslice: cap out of range`) on this repo's core/live packages; golangci-lint-auto-configure removed the dead settings block 2026-10-26. `newEventFromRef()` and `newServiceRecordCore()` still centralize struct-field init by convention. Re-enable only from a golangci-lint release proven panic-free here.
 - **depguard**: per-path import rules — keep external non-stdlib deps out of `cmd/` (sole exception: `cmd/genschema` may use `invopop/jsonschema`).

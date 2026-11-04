@@ -14,28 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Website QA sweep with real-browser verification** (2026-10-26): landing screenshots at 375/768/1024 in dark + light, `demo.mp4` playback/seek/206-range checks, and a Lighthouse audit — **Perf 100 / A11y 100 / BP 100 / SEO 100**.
-- `scripts/e2e-live-smoke/`: real-browser E2E smoke of the live dashboard (puppeteer-core + headless Chromium against `live/demo`) asserting zero console errors, all fragments rendered, and all 5 tabs activating via clicks — the first browser-level verification of the datastar/CSP stack (previously string/test-level only). 12/12 checks green on Chromium 152.
-- `docs/architecture.md`: full source-file map + data-flow walkthrough, moved out of AGENTS.md to satisfy the fleet 220-line ratchet (AGENTS.md now 202 lines).
-- SECURITY.md: new "Security practices" section (escaping-by-construction, CSP-as-contract, fuzz targets, dependency hygiene).
-- claims-linter check 12: pins `website/package.json` `typescript` to `^6.0.3` (astro check rejects TS 7.0), plus a website.yml grep step before `astro check` — the pin had already silently regressed again via an auto-commit blob.
+- Nothing yet.
 
 ### Fixed
 
-- **Empty reports explain themselves instead of rendering a silent hollow template** (2026-10-26): a report with zero services/events rendered the full interactive dashboard with bare "No services registered." / "No events recorded." rows and no indication WHY — the classic shape is a consumer that created the plugin without `Enabled` (the zero value falls back to `DO_AUDITLOG_ENABLED`, and boot-time registration/invocation events fire before anything can opt in, so the report is permanently empty). The Services/Events empty-state cells now carry the likely cause and the fix (set `auditlog.Config.Enabled = true` BEFORE services register, or `DO_AUDITLOG_ENABLED=true` as a fallback). Pinned by `TestReport_WriteHTML_EmptyReportExplainsItself`; golden re-cut for the static text.
-- **Landing page horizontal overflow at mobile widths**: the hero's code window kept its flex/grid ancestors from shrinking below ~580px, clipping the headline and body copy at 375px (`min-w-0` on the hero flex item and code-window grid item).
-- **Website CSP blocked an inline script in production**: `scripts/fix-csp.mjs` hashed *trimmed* inline-script bodies while browsers hash the raw bytes, so any script with leading/trailing newlines was allowlisted under the wrong hash and silently blocked at runtime. The fixer now hashes raw content (found via Lighthouse `errors-in-console`; Best-Practices 93 → 100).
-- `flake.nix` vendorHash refreshed after the dependency wave had left `nix build` failing with a hash mismatch; flake.lock nixpkgs updated 2026-09-16 → 2026-10-23, bringing golangci-lint **v2.15.0** into the devShell (retires the v2.13.2 devShell lag).
-- `forward/` lint debt (13 findings): named constants for batching/HTTP tuning knobs, context-dialer socket probe (`noctx`), static sentinel error with `%w` wrapping (`err113`), env-var-name `golangci-lint` credential false positive suppressed with rationale, and a deliberate `tagliatelle` exclusion for the PapDashboard camelCase wire contract (documented in `.golangci.yml`).
-- README linter-count claim drifted (108 → 107); claims linter now green across all 12 checks.
-- AGENTS.md stale claims corrected: exhaustruct_v5 documented as DISABLED (dropped 2026-10-07 after analyzer panics; dead settings removed by golangci-lint-auto-configure), pre-commit hook described as the BuildFlow-generated template it actually is, Go 1.26-era json/v2 policy notes updated to the post-1.27 state.
+- Nothing yet.
 
-### Changed
-
-- `go-sse/ssetest` v0.3.0 → **v0.5.0** after a supply-chain audit of the go-sse/go-ndjson families: zero retracted versions, GitHub↔proxy tag sets identical, all pins real tags. v0.4.0+ converges ssetest onto the minor-form `go 1.27` directive and the tagged `sseparse` module (new transitive dep v0.2.1).
-- BENCHMARKS.md re-baselined on **Go 1.27.1** (count=5): every benchmark faster (−3% to −40%) with byte-identical allocation counts and no code changes on benchmarked paths — deltas attributed to the toolchain; the BuildReport services=100 outlier (−40%) is flagged for the next re-baseline.
-
-## [0.12.0] - 2026-10-07
+## [0.12.0] - 2026-11-04
 
 ### Added
 
@@ -43,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/sync-changelog.sh`: inserts missing release sections from
   `CHANGELOG.md` into `website/src/content/docs/changelog.mdx` (MDX-escaped,
   insert-only) and runs the changelog-sync guard as its final verdict.
+- **Website QA sweep with real-browser verification** (2026-10-26): landing screenshots at 375/768/1024 in dark + light, `demo.mp4` playback/seek/206-range checks, and a Lighthouse audit — **Perf 100 / A11y 100 / BP 100 / SEO 100**.
+- `scripts/e2e-live-smoke/`: real-browser E2E smoke of the live dashboard (puppeteer-core + headless Chromium against `live/demo`) asserting zero console errors, all fragments rendered, and all 5 tabs activating via clicks — the first browser-level verification of the datastar/CSP stack (previously string/test-level only). 12/12 checks green on Chromium 152.
+- `docs/architecture.md`: full source-file map + data-flow walkthrough, moved out of AGENTS.md to satisfy the fleet 220-line ratchet (AGENTS.md now 202 lines).
+- SECURITY.md: new "Security practices" section (escaping-by-construction, CSP-as-contract, fuzz targets, dependency hygiene).
+- claims-linter check 12: pins `website/package.json` `typescript` to `^6.0.3` (astro check rejects TS 7.0), plus a website.yml grep step before `astro check` — the pin had already silently regressed again via an auto-commit blob.
 
 ### Fixed
 
@@ -61,6 +51,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   silent empty fallthrough.
 - Website: re-pinned `typescript` to `^6.0.3` — TypeScript 7.0.2 crashes
   `astro check` (`assertCompatibleTypeScript`), regressing the v0.11.0 pin.
+- **Regenerated templ code for templ v0.3.1100** (GHSA-94c2-xg24-pwhv): the templ security release removed `templ.ResolveAttributeValue`, `templ.RenderAttributes`, and `templ.JoinURLErrs`, so any consumer whose module graph resolves templ ≥ v0.3.1100 (e.g. BuildFlow via securitymd v1.1.0) failed to compile with `undefined: templ.ResolveAttributeValue` against v0.11.0's stale generated files. `html_templ.go` / `live/fragments_templ.go` are now v0.3.1100 output (idempotent `go tool templ generate` re-check, updates=0), verified by the race suite incl. the `live/` render tests and goldens.
+- **govulncheck findings cleared**: CI's Go toolchain pin moved 1.27.1 → **1.27.3** (GO-2026-6809 crypto/x509 needs ≥ 1.27.3; GO-2026-6617 net/http needs ≥ 1.27.2) and `golang.org/x/net` bumped v0.59.0 → **v0.60.0** (GO-2026-6617's x/net/http2 half); go.mod keeps the minor-only `go 1.27` floor per fleet policy.
+- **Empty reports explain themselves instead of rendering a silent hollow template** (2026-10-26): a report with zero services/events rendered the full interactive dashboard with bare "No services registered." / "No events recorded." rows and no indication WHY — the classic shape is a consumer that created the plugin without `Enabled` (the zero value falls back to `DO_AUDITLOG_ENABLED`, and boot-time registration/invocation events fire before anything can opt in, so the report is permanently empty). The Services/Events empty-state cells now carry the likely cause and the fix (set `auditlog.Config.Enabled = true` BEFORE services register, or `DO_AUDITLOG_ENABLED=true` as a fallback). Pinned by `TestReport_WriteHTML_EmptyReportExplainsItself`; golden re-cut for the static text.
+- **Landing page horizontal overflow at mobile widths**: the hero's code window kept its flex/grid ancestors from shrinking below ~580px, clipping the headline and body copy at 375px (`min-w-0` on the hero flex item and code-window grid item).
+- **Website CSP blocked an inline script in production**: `scripts/fix-csp.mjs` hashed *trimmed* inline-script bodies while browsers hash the raw bytes, so any script with leading/trailing newlines was allowlisted under the wrong hash and silently blocked at runtime. The fixer now hashes raw content (found via Lighthouse `errors-in-console`; Best-Practices 93 → 100).
+- `flake.nix` vendorHash refreshed after the dependency wave had left `nix build` failing with a hash mismatch; flake.lock nixpkgs updated 2026-09-16 → 2026-10-23, bringing golangci-lint **v2.15.0** into the devShell (retires the v2.13.2 devShell lag).
+- `forward/` lint debt (13 findings): named constants for batching/HTTP tuning knobs, context-dialer socket probe (`noctx`), static sentinel error with `%w` wrapping (`err113`), env-var-name `golangci-lint` credential false positive suppressed with rationale, and a deliberate `tagliatelle` exclusion for the PapDashboard camelCase wire contract (documented in `.golangci.yml`).
+- README linter-count claim drifted (108 → 107); claims linter now green across all 12 checks.
+- AGENTS.md stale claims corrected: exhaustruct_v5 documented as DISABLED (dropped 2026-10-07 after analyzer panics; dead settings removed by golangci-lint-auto-configure), pre-commit hook described as the BuildFlow-generated template it actually is, Go 1.26-era json/v2 policy notes updated to the post-1.27 state.
+
+### Changed
+
+- Dependency wave: `templ` v0.3.1070 → **v0.3.1100** (security), go-output consolidated to **v0.38.7** lockstep (`daghtml` had lagged at v0.38.3), `go-error-family` v0.11.0 → **v0.12.0**, `go-sse/ssetest` v0.3.0 → **v0.5.0** after a supply-chain audit of the go-sse/go-ndjson families: zero retracted versions, GitHub↔proxy tag sets identical, all pins real tags. v0.4.0+ converges ssetest onto the minor-form `go 1.27` directive and the tagged `sseparse` module (new transitive dep v0.2.1).
+- BENCHMARKS.md re-baselined on **Go 1.27.1** (count=5): every benchmark faster (−3% to −40%) with byte-identical allocation counts and no code changes on benchmarked paths — deltas attributed to the toolchain; the BuildReport services=100 outlier (−40%) is flagged for the next re-baseline.
 
 ## [0.11.0] - 2026-10-05
 
