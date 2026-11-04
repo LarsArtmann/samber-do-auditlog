@@ -43,7 +43,11 @@
 1. **The fix itself.** Working tree is green, but `html_templ.go` + `live/fragments_templ.go` are **uncommitted** → HEAD (`a6111f3`) still does not compile until they land. Remaining: a deliberate commit (daemon pickup is possible but has a known blind spot). Effort: S.
 2. **Post-fix verification.** Plain `go test` only. Remaining for CI-equivalence: `-race`, coverage gate, `go vet`, `go generate ./...` zero-diff check. Effort: S.
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 3. **Re-break diagnosis.** Established that _something_ regenerated files with templ v0.3.1020 at 02:15:44 and that a watcher is connected, but the owning process (editor LSP? editor extension version?) was never identified. Until it is, regeneration races can recur at any time. Effort: M.
+=======
+3. **Re-break diagnosis.** Established that *something* regenerated files with templ v0.3.1020 at 02:15:44 and that a watcher is connected, but the owning process (editor LSP? editor extension version?) was never identified. Until it is, regeneration races can recur at any time. Effort: M.
+>>>>>>> Stashed changes
 =======
 3. **Re-break diagnosis.** Established that *something* regenerated files with templ v0.3.1020 at 02:15:44 and that a watcher is connected, but the owning process (editor LSP? editor extension version?) was never identified. Until it is, regeneration races can recur at any time. Effort: M.
 >>>>>>> Stashed changes
@@ -67,7 +71,11 @@
 1. **HEAD `a6111f3` does not compile.** Severity: blocks every consumer of master and all CI jobs (stale-generation job will fail on diff; build jobs fail on `undefined: templ.ResolveAttributeValue`). Root cause: templ bumped to v0.3.1100 (API removed) while generated content stayed at v0.3.1020/1070-era output. Mitigation: my regenerated files are on disk and green — but uncommitted. Anyone cloning/checkout of `a6111f3` gets a broken build.
 2. **Two writers are fighting over generated files.** My pinned-CLI regeneration vs. an editor-side templ v0.3.1020 regen (02:15:44 mass-touch) — the same flip-flop can recur arbitrarily. Root cause: no single source of truth for generation; the editor's binary version differs from the repo pin. Mitigation: none currently; needs the system-templ bump or LSP config fix.
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 3. **A commit landed mid-session with an unverified tree.** `a6111f3` was authored with a detailed message but its generated-file changes were header-only — the authoring session did not (or could not) run the build gate. The existing `stale-generation` CI job _would_ catch this post-push; nothing caught it pre-commit.
+=======
+3. **A commit landed mid-session with an unverified tree.** `a6111f3` was authored with a detailed message but its generated-file changes were header-only — the authoring session did not (or could not) run the build gate. The existing `stale-generation` CI job *would* catch this post-push; nothing caught it pre-commit.
+>>>>>>> Stashed changes
 =======
 3. **A commit landed mid-session with an unverified tree.** `a6111f3` was authored with a detailed message but its generated-file changes were header-only — the authoring session did not (or could not) run the build gate. The existing `stale-generation` CI job *would* catch this post-push; nothing caught it pre-commit.
 >>>>>>> Stashed changes
@@ -85,6 +93,7 @@
 
 Ranked by impact. Effort: S <30min, M 30min–2h, L >2h. Category: Bug / Quality / Documentation / Cleanup / Feature.
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 | #  | Task                                                                                                                                             | Impact   | Effort | Category      |
 | -- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------ | ------------- |
@@ -139,6 +148,8 @@ Ranked by impact. Effort: S <30min, M 30min–2h, L >2h. Category: Bug / Quality
 | 49 | Record the concurrent-session contention protocol as a candidate lesson (crush-config `references/lessons.md`)                                   | Low      | S      | Documentation |
 | 50 | Consider retracting/re-tagging if a release was cut from the broken `a6111f3` tree (release-state audit)                                         | Medium   | S      | Cleanup       |
 =======
+=======
+>>>>>>> Stashed changes
 | # | Task | Impact | Effort | Category |
 |---|------|--------|--------|----------|
 | 1 | Commit the regenerated `html_templ.go` + `live/fragments_templ.go` so HEAD compiles again | Critical | S | Bug |
@@ -191,6 +202,9 @@ Ranked by impact. Effort: S <30min, M 30min–2h, L >2h. Category: Bug / Quality
 | 48 | Reconcile `BENCHMARKS.md` (12 benchmarks) against claims-linter counts after its reformatting | Low | S | Quality |
 | 49 | Record the concurrent-session contention protocol as a candidate lesson (crush-config `references/lessons.md`) | Low | S | Documentation |
 | 50 | Consider retracting/re-tagging if a release was cut from the broken `a6111f3` tree (release-state audit) | Medium | S | Cleanup |
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 **HARVEST note:** items 33/12/13/14/15/30 are immediate docs work; items 1–11 are the critical path. Everything else is harvestable into TODO_LIST (specific) vs ROADMAP (policy/audit items: 11, 29, 40, 46, 50).
