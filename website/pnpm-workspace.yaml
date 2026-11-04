@@ -5,3 +5,4 @@ allowBuilds:
 overrides:
   http-cache-semantics: ^4.2.1
   postcss-selector-parser: ^7.1.6
+  undici: ^8.12.2
