@@ -20,6 +20,18 @@ description: All notable changes to do-auditlog.
 - Contributing page coverage gate corrected to 94% (was 95%).
 - Landing demo terminal now matches real example output.
 
+## [0.12.2] — 2026-11-05
+
+### Fixed
+
+- **Regenerated templ output against templ v0.3.1100 — the generated code no longer calls functions that templ v0.3.1100 removed.** v0.12.0/v0.12.1 were generated with templ v0.3.1070, whose runtime exposed `templ.ResolveAttributeValue` and `templ.JoinURLErrs`; templ v0.3.1100 removed both. Consumers whose module graph resolved templ ≥ v0.3.1100 via MVS (any consumer pulling a newer templ through another dependency — for the cqrs-htmx family, go-sse v0.7.0) failed to build with `undefined: templ.ResolveAttributeValue` inside this module's packages. v0.12.2 regenerates `html_templ.go` + `live/fragments_templ.go` with the v0.3.1100 generator (zero occurrences of the removed symbols; `go generate` verified idempotent) and pins templ v0.3.1070 → v0.3.1100. No API change, wire shape unchanged — a pure generated-code refresh. Full suite green: vet, `go test -race ./...`, coverage 96.4% (≥ 94% gate, canonical exclusions).
+
+## [0.12.1] — 2026-11-04
+
+### Fixed
+
+- (Backfilled 2026-11-05 — this release shipped without a CHANGELOG section.) Regenerated `live/fragments_templ.go` for the templ v0.3.1070 pin after master stopped compiling (`02783c9`), plus dependency updates: go-atomic-write v0.6.1 temp-file leak fix (`981322a`) and a general dependency refresh (`b5af57e`). NOTE: the regenerated code still targeted the v0.3.1070 runtime, so v0.12.1 remained build-broken for consumers resolving templ ≥ v0.3.1100 — the fix those consumers need is v0.12.2.
+
 ## [0.12.0] — 2026-10-07
 
 ### Added
