@@ -1286,7 +1286,7 @@ func TestServer_SSE_EventBroadcast(t *testing.T) {
 	assertSSEDetectsService(t, "broadcast-test", "broadcast-svc", "value")
 }
 
-func TestServer_SSE_ReconnectReplay(t *testing.T) {
+func TestServer_SSE_ReconnectSnapshot(t *testing.T) {
 	t.Parallel()
 
 	hub := live.NewHub()

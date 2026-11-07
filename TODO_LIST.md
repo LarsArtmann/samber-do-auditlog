@@ -7,6 +7,7 @@ Completed items are in [CHANGELOG.md](CHANGELOG.md). Rejected proposals are in [
 
 ## CI & Release
 
+- [ ] **Decide the concurrent-session protocol: file-ownership map or per-session worktrees** — two live sessions collided this week (auto-commit daemon mid-edit, overlapping docs/status annotations). Pick the ownership rule, record it in AGENTS.md. Source: docs-health harvest 2026-11-07.
 - [x] ~~Release v0.10.1~~ — done as **v0.11.0** (2026-10-05; command events, CLI stats subcommand).
 - [x] ~~Upgrade CI golangci-lint pin~~ — done 2026-10-05: v2.12.2 → **v2.14.0** (bundles exhaustruct v5.2.0); exhaustruct_v5 migration complete, `//nolint:goconst` version-skew ledger entry retired.
 - [ ] **Push master and confirm all CI jobs green** — master is 10+ commits ahead of origin; all gates verified locally (race tests, coverage ≥94%, lint 0 issues at v2.14.0, claims linter, changelog sync). Push requires owner approval (Q3).
@@ -18,6 +19,8 @@ Completed items are in [CHANGELOG.md](CHANGELOG.md). Rejected proposals are in [
 
 ## Live Dashboard & Browser QA
 
+- [ ] **Add direct unit tests for `drainEvents`** (burst coalescing + channel-close path) and the `makeReportJSON` marshal-error path — SSE-level tests exercise them only implicitly. Source: docs-health harvest 2026-11-07.
+- [ ] **Benchmark `renderAllFragments`** and profile a 500-service report — the hot fragment-render path has no benchmark (BENCHMARKS.md covers exports only). Source: docs-health harvest 2026-11-07.
 - [x] ~~Headless-chromium E2E smoke of the live dashboard~~ — done 2026-10-26: `scripts/e2e-live-smoke/` (puppeteer-core + store chromium against `live/demo`) — **12/12 green**: zero console/page errors, all fragments render (services, events, stats, legend, scope tree, graph, timeline), all 5 tabs activate via clicks (proves datastar expression evaluation works under the dashboard CSP in a real Chromium 152). Export-button premise corrected: both dashboards export via server navigation (`location.href`), not blob downloads — CSP-independent; the NDJSON endpoint was verified serving a full 29-event stream.
 - [x] ~~Investigate newer Datastar for CSP-safe expression evaluation~~ — done 2026-10-26 (research, verified at data-star.dev/reference/security + GitHub releases): **Datastar v1.0.3 (2026-08-27) added an opt-in CSP mode** — `<html data-nonce="{nonce}">` + `script-src 'nonce-{nonce}'` with no `unsafe-eval` (per-response random nonce; v1.0.4 adds aliased nonce attributes). We embed v1.0.2, which only supports the Function()-constructor default. **Answer to owner Q6: the unsafe-eval tradeoff is NOT permanent.**
 - [ ] **Migrate the live dashboard to Datastar ≥ v1.0.4 CSP mode** — bump `live/datastar.js`, generate a per-response nonce in `live/server.go`, inject `data-nonce` on `<html>` (`live/dashboard.go`), replace `script-src 'unsafe-eval'` with the nonce directive, update `TestServer_DashboardCSP` + the E2E smoke. Answers owner Q6 affirmatively. (CSP mode still compiles expressions; it is nonce allow-listing, not expression sanitization — XSS escaping rules unchanged.)
@@ -30,6 +33,8 @@ Completed items are in [CHANGELOG.md](CHANGELOG.md). Rejected proposals are in [
 
 ## Library & Tooling
 
+- [ ] **Add an `ErrExportWriteFailed` sentinel** and wrap go-atomic-write errors with it, matching the error-family convention used across the export surface. Source: docs-health harvest 2026-11-07.
+- [ ] **CLI color flags**: `--no-color`, respect `NO_COLOR`, honor `FORCE_COLOR` across info/convert/diff/validate/stats output. Source: docs-health harvest 2026-11-07.
 - [x] ~~CLI ergonomic flags~~ — done 2026-10-05: `--input-format auto|json|ndjson`, `--verbose` (stderr load diagnostics), `--quiet` (suppresses validate's OK line), mutually-exclusive validation; wired through info/convert/diff/validate/stats + 4 integration tests.
 - [x] ~~Investigate the empty `injector.Shutdown()` error~~ — resolved 2026-10-05: `Shutdown()` returns `*do.ShutdownReport` (not `error`); it implements `error` but renders empty on success — non-nil ≠ failure. Fixture comment corrected.
 - [x] ~~Fix the pre-existing gopls scannererr at `live/server_test.go`~~ — done 2026-10-05: `scanner.Err()` checks after both scan loops in `TestServer_SSE_Heartbeat`.

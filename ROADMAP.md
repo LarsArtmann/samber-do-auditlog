@@ -119,6 +119,23 @@ Owner-blocking questions with task context live in [TODO_LIST.md](TODO_LIST.md);
 
 ---
 
+## Harvested Website & Docs Ideas (raw, unscheduled)
+
+Pulled forward from status reports during the 2026-11-07 docs-gates archive ritual. Raw ideas — refine before promoting to TODO_LIST.
+
+- **Docs pages backlog**: dedicated pages for `diff`, `replay`, and the `scope` tree, plus a JSON `schema` validation guide (guides already cover health checks, filters, exports, live dashboard, dependency tracking, performance; api-reference covers the Go surface). Include the `ResolveServiceScope` advanced health-check pattern.
+- **Dependency detail popover** on the live dashboard dependency graph.
+- **Brand**: a more distinctive favicon/logo (a functional manifest favicon ships today).
+- **Lighthouse CI** workflow (`.github/workflows/lighthouse.yml` + `lighthouserc.json`); audits currently run by hand per change.
+- **Docs tooling**: `md-go-validator` for docs code-block validation; a stale-reference check in the spirit of gogenfilter's deleted-files check (lychee + the claims linter cover part of this already).
+- **Version selector** on the docs site (when v1.0.0 lands).
+- **Social proof**: "Star this repo" call-to-action, "Used by" section (when there are users), Sponsors section (when there are sponsors).
+- **Operations**: uptime monitoring for do-auditlog.lars.software; sitemap verification.
+- **Infra hygiene**: SOPS/age-encrypted tfvars for Namecheap credentials; a `terraform plan` CI check (needs credentials in CI).
+- **Open Graph meta tags** for the live dashboard (for shared dashboard URLs).
+- **Large-report UX**: virtual scrolling for 500+ service reports (pagination + filter chips cover today's sizes); WebP screenshot conversion (Lighthouse Perf is already 100); coordinated tab slide+fade animation orchestration on the static report.
+
+
 ## Explicitly Rejected
 
 Proposals evaluated and deliberately not pursued. Documented here so they are not re-proposed without new context.

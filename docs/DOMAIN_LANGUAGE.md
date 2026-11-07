@@ -32,6 +32,10 @@ Every term below should mean the **same thing** to everyone who reads it.
 | SSE            | Server-Sent Events — the transport for real-time dashboard updates    | Live dashboard transport      |
 | Report         | A consolidated snapshot of all captured events and service metadata   | Export output                 |
 | Schema Version | The version of the report data format                                 | Forward compatibility         |
+| Forwarder      | The component that streams audit events to an external collector      | `forward/` sub-package        |
+| Collector      | A downstream audit-run sink (e.g. PapDashboard) receiving events      | Forwarding target             |
+| Forward Target | Destination for forwarded events: unix socket or HTTP + bearer key    | Forwarder configuration       |
+| Completion     | A run is complete when the root-scope shutdown fires and `SignalComplete` is called | Forwarding lifecycle |
 
 ## Entities
 
