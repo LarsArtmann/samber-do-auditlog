@@ -9,7 +9,7 @@ This project uses the standard Go toolchain. A `flake.nix` devShell is available
 ## Prerequisites
 
 - [Go 1.27.3](https://go.dev/dl/) (CI-pinned patch; `go.mod` carries minor-only `go 1.27`)
-- [golangci-lint](https://golangci-lint.run/usage/install/) (latest v2.x)
+- [golangci-lint](https://golangci-lint.run/docs/welcome/install/) (latest v2.x)
 - [templ](https://templ.guide/) (only if you edit `html.templ`)
 
 **Nix users:** Run `nix develop` to get Go 1.27 (nixpkgs `go_1_27`), golangci-lint, govulncheck, and golines pinned in `flake.nix`.

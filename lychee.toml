@@ -1,0 +1,11 @@
+# Lychee link-checker intent excludes (honored by BuildFlow's lychee step).
+# Per-repo excludes encode intent, not mechanics — see BuildFlow gotcha #207
+# for the fleet FP taxonomy this file implements.
+
+# Video-production artifacts: captured page snapshots and frame packets carry
+# root-relative links that cannot resolve outside the served site, plus
+# point-in-time embeds. Not living docs; excluded from link scanning.
+# The archived status corpus is point-in-time history (BuildFlow's defaults
+# exclude docs/status/**; the archived subdir is listed explicitly so the
+# intent survives defaults changes).
+exclude_path = ["website/video", "docs/status/archived", "docs/research"]

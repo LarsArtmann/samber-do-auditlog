@@ -1,12 +1,15 @@
 # TODO List
 
-Short- and mid-term improvement tasks. Last re-verified against code state on 2026-10-26.
+Short- and mid-term improvement tasks. Last re-verified against code state on 2026-11-07.
 Completed items are in [CHANGELOG.md](CHANGELOG.md). Rejected proposals are in [ROADMAP.md](ROADMAP.md).
 
 ---
 
 ## CI & Release
 
+- [ ] **Rebuild and reinstall the `buildflow` binary** (`nix build .` in the BuildFlow repo + `nix run .#reinstall`), verify `type -a buildflow` PATH precedence, then re-run the full battery under the fresh binary — the current one (e35e902) lags a same-day HEAD that moved twice during the gate-regreen session. Source: docs-health harvest 2026-11-08.
+- [ ] **File the verified BuildFlow defect**: `nix-flake-update`/`nix-hash-fix` exit `not applicable (language mismatch (project: go))` on Go+Nix repos (TODO Open Question 8); needs a valid `gh` token. Source: docs-health harvest 2026-11-08.
+- [ ] **Online re-run of `pnpm-audit` + `govulncheck`** to confirm the two extract-zip baseline accepts match findings again (offline runs produce none, making the accepts warn as no-match). Source: docs-health harvest 2026-11-08.
 - [ ] **Decide the concurrent-session protocol: file-ownership map or per-session worktrees** — two live sessions collided this week (auto-commit daemon mid-edit, overlapping docs/status annotations). Pick the ownership rule, record it in AGENTS.md. Source: docs-health harvest 2026-11-07.
 - [x] ~~Release v0.10.1~~ — done as **v0.11.0** (2026-10-05; command events, CLI stats subcommand).
 - [x] ~~Upgrade CI golangci-lint pin~~ — done 2026-10-05: v2.12.2 → **v2.14.0** (bundles exhaustruct v5.2.0); exhaustruct_v5 migration complete, `//nolint:goconst` version-skew ledger entry retired.
@@ -33,6 +36,9 @@ Completed items are in [CHANGELOG.md](CHANGELOG.md). Rejected proposals are in [
 
 ## Library & Tooling
 
+- [ ] **Add `meta.description` to the three flake apps** (`default`, `coverage`, `auditlog` — the only warnings `nix flake check` emits). Source: docs-health harvest 2026-11-08.
+- [ ] **Run the on-demand tools**: `buildflow -s gitleaks`, `-s codespell`, `-s markdown-lint` (config-skipped, never run this session). Source: docs-health harvest 2026-11-08.
+- [ ] **Drill into the two failed `buildflow format` steps** (`buildflow format -v`; suspected network-dependent audits under the offline preflight). Source: docs-health harvest 2026-11-08.
 - [ ] **Add an `ErrExportWriteFailed` sentinel** and wrap go-atomic-write errors with it, matching the error-family convention used across the export surface. Source: docs-health harvest 2026-11-07.
 - [ ] **CLI color flags**: `--no-color`, respect `NO_COLOR`, honor `FORCE_COLOR` across info/convert/diff/validate/stats output. Source: docs-health harvest 2026-11-07.
 - [x] ~~CLI ergonomic flags~~ — done 2026-10-05: `--input-format auto|json|ndjson`, `--verbose` (stderr load diagnostics), `--quiet` (suppresses validate's OK line), mutually-exclusive validation; wired through info/convert/diff/validate/stats + 4 integration tests.

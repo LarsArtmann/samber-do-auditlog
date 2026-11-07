@@ -15,3 +15,10 @@ baseline: .buildflow-baseline.json
 
 # encoding/json/v2 usage (direct + via go-output, go-branded-id, go-ndjson)
 # is auto-detected by BuildFlow, which sets GOEXPERIMENT for tool subprocesses.
+
+# CI pins the exact patch (1.27.3, moved for govulncheck; the flake's go_1_27
+# tracks nixpkgs patches under GOTOOLCHAIN=local). Tell go-version-auto-
+# configure this is deliberate instead of flagging every go-version line.
+tool_options:
+  go-version-auto-configure:
+    respect_patch_floor: true
