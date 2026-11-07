@@ -15,7 +15,7 @@
 
 - Pushed to master just before this plan was written: `2cd47f6..65c213a` (4 semantic commits: ci.yml fix, website.yml fix, go.mod ssetest promotion, flake+docs sync). Status-report commit `3500517` included.
 - ~~CI run **33551336011** queued on that push — Wave 0 verification is already in flight.~~ That run hit a transport flake (stale-gen job, proxy.golang.org) and was superseded; **33551718914** is the green verification run (7/7 jobs), after one lint-fix cycle (`cf5f205`).
-- ~~Untracked/modified `website/**` + `README.md` belong to a parallel session — **do not touch**.~~ Landed 2026-09-01 as `c249f5d` (website launch overhaul).
+- ~~Untracked/modified `website/**` + `README.md` belong to a parallel session — **do not touch**.~~ Done 2026-09-01: landed as `c249f5d` (website launch overhaul).
 - Unanswered owner decisions: Dependabot PR intent (Q2), repo protections (Q3). — still unanswered as of the docs-health session (2026-09-01 late).
 
 ## 1. Pareto breakdown

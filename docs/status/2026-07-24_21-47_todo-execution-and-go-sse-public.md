@@ -94,7 +94,7 @@
 
 ## d) TOTALLY FUCKED UP
 
-1. **I oversold the CSS sharing.** The TODO said "Share CSS between the static templ dashboard and the live dashboard to prevent drift." I shared 24 CSS variable definitions and wrote a test for them. But the component CSS (the actual styling rules that USE those variables) is still ~570 lines duplicated between `html.templ` and `live/base_css.go`. I marked this task as "completed" when it's only partially done. The honest truth: I prevented palette drift but NOT style drift. A complete solution would require extracting shared component CSS into a `go:embed`ed file that both dashboards consume — but that's architecturally difficult because `html.templ` is a templ file (CSS must be inline for self-contained HTML) while `live/base_css.go` is a Go string constant.
+1. **I oversold the CSS sharing.** The TODO said "Share CSS between the static templ dashboard and the live dashboard to prevent drift." I shared 24 CSS variable definitions and wrote a test for them. But the component CSS (the actual styling rules that USE those variables) is still ~570 lines duplicated between `html.templ` and `live/base_css.go`. I marked this task as "completed" when it's only partially done. The honest truth: I prevented palette drift but NOT style drift. A complete solution would require extracting shared component CSS into a file embedded via `go:embed` that both dashboards consume — but that's architecturally difficult because `html.templ` is a templ file (CSS must be inline for self-contained HTML) while `live/base_css.go` is a Go string constant.
 
 2. **I let auto-commits happen AGAIN.** This was flagged as a process failure in the prior session's status report. I did nothing to prevent it this session. The git log now has 5+ generic commit messages from concurrent processes. I should have either: (a) committed early and often myself, (b) disabled the auto-commit hook, or (c) at minimum checked `git status` before declaring done.
 
@@ -142,7 +142,7 @@
 7. Add integration test for `example/ --live` mode (start server, curl dashboard, send SIGINT, verify clean shutdown)
 8. Add integration test for `live/demo` (start server, curl health endpoint, verify Healthchecker results)
 9. Replace `jsStripper` with `node --check` or a proper JS parser if Node.js is available in CI
-10. Extract shared component CSS into a `go:embed`ed `.css` file consumed by both dashboards (architectural change)
+10. Extract shared component CSS into a single `.css` file embedded via `go:embed`, consumed by both dashboards (architectural change)
 
 ### P2 — Release
 
@@ -209,7 +209,7 @@ I padded `html-timeline.jpg` and `html-realworld.jpg` from 1400x1100 to 1400x130
 
 ### Q2: Is the component CSS duplication between dashboards acceptable, or should it be fully extracted?
 
-The TODO said "Share CSS between the static templ dashboard and the live dashboard." I shared the 24 design tokens (CSS `:root` variables) and wrote a sync test. But the component CSS (`.stat-card`, `.waveform`, `.tab-bar`, etc. — ~570 lines in `html.templ`, ~60 lines in `live/base_css.go`) is still duplicated. A full solution would require extracting component CSS into a shared `go:embed`ed file, but that conflicts with the self-contained HTML requirement (the static report inlines all CSS). **Question:** Is token-level sharing + sync test sufficient, or do you want a full component CSS extraction despite the self-contained HTML constraint?
+The TODO said "Share CSS between the static templ dashboard and the live dashboard." I shared the 24 design tokens (CSS `:root` variables) and wrote a sync test. But the component CSS (`.stat-card`, `.waveform`, `.tab-bar`, etc. — ~570 lines in `html.templ`, ~60 lines in `live/base_css.go`) is still duplicated. A full solution would require extracting component CSS into a shared file embedded via `go:embed`, but that conflicts with the self-contained HTML requirement (the static report inlines all CSS). **Question:** Is token-level sharing + sync test sufficient, or do you want a full component CSS extraction despite the self-contained HTML constraint?
 
 ### Q3: Should I tag v0.7.0 now, or do you want to verify the changes first?
 

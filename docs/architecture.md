@@ -81,7 +81,7 @@ live/demo/          — Self-contained real-time demo (services implement do.Hea
 ## Data Flow
 
 1. User creates `Plugin` via `New(Config)` → gets `*do.InjectorOpts` via `Opts()`
-2. Hooks fire on every registration/invocation/shutdown → `Recorder` captures timestamped `Event`s
+2. Hooks fire on every registration/invocation/shutdown → `Recorder` captures timestamped `Event` records
 3. Invocation stack (`Recorder.stack`) infers dependencies: if service A is on-stack when B's before-hook fires, A→B is a dependency
 4. `Report()` / `BuildReport()` assembles `ServiceInfo` slice (with forward + reverse deps), scope tree, and event stream
 5. Export methods serialize to JSON, NDJSON, or self-contained HTML
