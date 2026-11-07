@@ -3,7 +3,7 @@ package forward_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"io"
 	"log/slog"
 	"net"
@@ -57,7 +57,7 @@ func startFakeCollectorAtPath(t *testing.T, path string) *fakeCollector {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /events", func(writer http.ResponseWriter, request *http.Request) {
 		var envelope map[string]any
-		if err := json.NewDecoder(request.Body).Decode(&envelope); err != nil {
+		if err := json.UnmarshalRead(request.Body, &envelope); err != nil {
 			writer.WriteHeader(http.StatusBadRequest)
 
 			return
