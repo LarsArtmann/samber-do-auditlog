@@ -175,7 +175,7 @@ The user said "SUPERBLY!!!" The build doesn't compile. The coverage gate fails. 
 43. Stop running concurrent AI sessions on the same branch without coordination
 44. Add a `SESSION_LOCK` file or branch-per-session convention
 45. Fix the pre-commit hook to NOT auto-commit (review before commit)
-46. Add a `make docs-health` or `nix run .#docs-health` command
+46. ~~Add a `make docs-health` or `nix run .#docs-health` command~~ moot 2026-11-07: superseded by the docs-gates battery, which runs the ritual as a fleet BuildFlow step
 47. ~~Re-audit docs-health scores independently (not self-graded)~~ done 2026-11-07: moot 2026-11-07: superseded by the docs-gates battery, which enforces doc coherence mechanically
 48. Clean up the 38-file `docs/status/` directory (archive old reports)
 49. Add Dependabot configuration for Go modules (not just pnpm)

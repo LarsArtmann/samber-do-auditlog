@@ -176,7 +176,7 @@ But `MigrateReport` now upgrades ANY version and also repairs current-schema rep
 ### Website docs sync
 
 31. Verify website changelog.mdx matches CHANGELOG.md (status report flagged this as not synced)
-32. Add CHANGELOG sync CI check (mentioned in status reports, never done)
+32. ~~Add CHANGELOG sync CI check (mentioned in status reports, never done)~~ done 2026-11-07: the changelog-sync drift guard gates the website workflow; the insert-only sync script shipped 2026-10-05
 33. Verify website API reference matches README API tables
 34. Port deeper docs from AGENTS.md to website pages (CLI usage, replay/migration, real-time streaming)
 
