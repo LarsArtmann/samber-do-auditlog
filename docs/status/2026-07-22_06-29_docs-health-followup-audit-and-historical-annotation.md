@@ -189,7 +189,7 @@ The `## Resolution` appendices cite commits like `fb56b6a` (BuildFlow revert), `
 ### CI/CD hardening
 
 31. Add Lighthouse CI workflow (`.github/workflows/lighthouse.yml`)
-32. Add md-go-validator for docs code block validation
+32. ~~Add md-go-validator for docs code block validation~~ done 2026-11-07: harvested to ROADMAP docs-tooling backlog
 33. Pin all GitHub Actions to SHA hashes (currently using @v6/@v7/@v8)
 34. Add stale-reference check for deleted files referenced in docs
 35. Add a CI guard for `encoding/json/v2` imports in `.go` files

@@ -70,7 +70,7 @@ One **near-miss**: when extracting `renderTransformWithErr` (with dynamic `errFm
 
 ## f) Up to 50 Next Steps
 
-1. Add new helpers to AGENTS.md "Test helpers" section
+1. ~~Add new helpers to AGENTS.md "Test helpers" section~~ done 2026-11-07: the AGENTS.md test-helpers bullet carries the shared factory inventory
 2. Add entry to CHANGELOG.md (unreleased → dedup pass)
 3. Run benchmarks before/after `tree.go` refactor to confirm no regression
 4. Add `//nolint:err113` lesson to AGENTS.md gotchas
@@ -90,7 +90,7 @@ One **near-miss**: when extracting `renderTransformWithErr` (with dynamic `errFm
 18. Run `go test -fuzz` for full fuzz coverage (5 fuzz targets × 30s each = 2.5m minimum)
 19. Check if `depguard` allows the new `fmt.Errorf("...%w", err)` static error wraps (should — they're stdlib)
 20. Add unit tests for `parseFlagSet` and `loadSingleReportSubcommand` helpers
-21. Document `singleServiceWithExternalDepReportAndBuf` in AGENTS.md test helpers list
+21. ~~Document `singleServiceWithExternalDepReportAndBuf` in AGENTS.md test helpers list~~ done 2026-11-07: moot 2026-11-07: the helper is gone after later dedup passes; AGENTS.md lists current factories
 22. Update `diagram_direction_test.go` and `table_columns_test.go` imports to drop unused `bytes` if any
 23. Check if `gci` config needs updating after reformatting
 24. Run `golangci-lint --fix` to catch any other minor issues across the codebase
@@ -102,9 +102,9 @@ One **near-miss**: when extracting `renderTransformWithErr` (with dynamic `errFm
 30. Update ROADMAP.md if the dedup work changes any near-term plans
 31. Confirm CoverageBadge in README still shows the correct percentage (94.2% → maybe 94.9% if exclusion changes)
 32. Audit other test files for similar `report := singleServiceWithExternalDepReport()` + `var buf bytes.Buffer` patterns
-33. Audit `replay_test.go` for `setupWithDB` helper opportunities
+33. ~~Audit `replay_test.go` for `setupWithDB` helper opportunities~~ done 2026-11-07: audit performed across later dedup sessions; zero harmful clones maintained at the art-dupl threshold
 34. Audit `csv_export_test.go`, `diff_export_test.go`, `healthcheck_export_test.go` for shared setup helpers
-35. Audit `plugin_errors_test.go`, `plugin_provider_test.go` for shared provider factories
+35. ~~Audit `plugin_errors_test.go`, `plugin_provider_test.go` for shared provider factories~~ done 2026-11-07: audit performed across later dedup sessions; zero harmful clones maintained at the art-dupl threshold
 36. Add `tree.writeTree` to godoc examples (the canonical usage pattern)
 37. Add docstring to `loadSingleReportSubcommand` mentioning that it returns `(report, path, err)` tuple
 38. Verify `Info` command output is byte-identical to pre-refactor output (snapshot diff)
@@ -117,9 +117,9 @@ One **near-miss**: when extracting `renderTransformWithErr` (with dynamic `errFm
 45. Add integration test: `auditlog info nonexistent.json` returns usage error, not panic
 46. Verify `live/demo` still works end-to-end after the `live/server.go` refactor
 47. Confirm the `pre-commit` hook (`scripts/hooks/pre-commit`) doesn't break with the new file structure
-48. Add a `docs/research/dedup-session-2026-07-25.md` capturing what was learned (skill did not require, but a record is useful)
+48. ~~Add a `docs/research/dedup-session-2026-07-25.md` capturing what was learned (skill did not require, but a record is useful)~~ done 2026-11-07: Won't implement 2026-11-07: the status report is the record; a duplicate research doc adds drift
 49. Schedule a follow-up session to push to `-t 2` (extreme) by extracting the 3-statement test preamble pattern more aggressively
-50. Re-evaluate the `setupRootAndChildScopeDBs` helper name — `RootAndChildScopeDBs` is a mouthful; could be `setupRootChildScopeDBs` or `setupTwoScopeDBs`
+50. ~~Re-evaluate the `setupRootAndChildScopeDBs` helper name — `RootAndChildScopeDBs` is a mouthful; could be `setupRootChildScopeDBs` or `setupTwoScopeDBs`~~ done 2026-11-07: Won't implement 2026-11-07: the helper reads clearly at call sites; rename churn without gain
 
 ## g) Questions I Cannot Answer Myself
 

@@ -105,11 +105,11 @@
 4. Extract magic numbers in `humanizeDuration` to named constants
 5. Fix `wsl_v5` whitespace violations in test helpers
 6. Fix `nlreturn` violations (blank line before return)
-7. Fix `errchkjson` — check `json.Marshal` errors in fragment rendering
+7. ~~Fix `errchkjson` — check `json.Marshal` errors in fragment rendering~~ done 2026-11-07: lint runs clean at the v2.14.0 CI pin
 8. Fix `dupl` — extract shared SSE test helper
 9. Fix `cyclop` — split `renderWaveformFragment` into sub-functions
-10. Fix `funlen` — split `renderEventsTbody` into sub-functions
-11. Fix `staticcheck` — use `fmt.Fprintf` instead of `WriteString(fmt.Sprintf(...))`
+10. ~~Fix `funlen` — split `renderEventsTbody` into sub-functions~~ done 2026-11-07: lint runs clean at the v2.14.0 CI pin
+11. ~~Fix `staticcheck` — use `fmt.Fprintf` instead of `WriteString(fmt.Sprintf(...))`~~ done 2026-11-07: lint runs clean at the v2.14.0 CI pin
 12. Fix `makezero` — use `make([]string, 0, len(deps))` + append
 13. Fix `golines` — break long lines at 120 chars
 14. Fix `gochecknoglobals` — move show expressions to function locals or `//nolint`
@@ -128,7 +128,7 @@
 
 22. Remove `sendDatastarUpdate` indirection (just calls `sendDatastarSnapshot`)
 23. Delete or re-wire dead `replay.go` / `eventStore` code
-24. Rename `TestServer_SSE_ReconnectReplay` to `TestServer_SSE_ReconnectSnapshot` (no replay anymore)
+24. ~~Rename `TestServer_SSE_ReconnectReplay` to `TestServer_SSE_ReconnectSnapshot` (no replay anymore)~~ done 2026-11-07: renamed to the Snapshot name
 25. Remove `sseConnectWithLastID` if Last-Event-ID is no longer used for replay
 26. Consider per-section fragment updates (only send changed sections)
 27. Add CSP nonce support instead of `'unsafe-inline'` for scripts
@@ -137,10 +137,10 @@
 
 28. Write browser E2E test (Playwright) for dashboard
 29. Add test for burst event coalescing (N events → 1 render)
-30. Add test for `drainEvents` function
+30. ~~Add test for `drainEvents` function~~ done 2026-11-07: harvested to TODO_LIST micro-coverage row
 31. Improve live/ coverage from 83.6% to ≥94% (CI gate)
-32. Add test for empty report fragment rendering
-33. Add test for large report (500 services) fragment rendering
+32. ~~Add test for empty report fragment rendering~~ done 2026-11-07: the empty-report fragment test ships
+33. ~~Add test for large report (500 services) fragment rendering~~ done 2026-11-07: harvested to TODO_LIST micro-coverage row
 34. Add test for datastar signal patch format correctness
 35. Add test for event filter chip reactivity
 36. Add test for search filter reactivity
@@ -149,7 +149,7 @@
 ### Performance
 
 38. Benchmark SSE fragment throughput (events/sec → fragments/sec)
-39. Profile `renderAllFragments` for large reports
+39. ~~Profile `renderAllFragments` for large reports~~ done 2026-11-07: harvested to TODO_LIST benchmark row
 40. Consider `strings.Builder` pooling for fragment rendering
 41. Measure datastar.js morphing performance with 500 rows
 42. Consider `datastar-patch-signals` for incremental updates instead of full re-render
@@ -158,7 +158,7 @@
 
 43. Update `live/demo/` README if it references old dashboard JS
 44. Add datastar adoption section to CHANGELOG.md
-45. Write `docs/research/datastar-adoption.md` with lessons learned
+45. ~~Write `docs/research/datastar-adoption.md` with lessons learned~~ done 2026-11-07: Won't implement 2026-11-07: conclusions live in the TODO_LIST CSP research row and code comments
 46. Update FEATURES.md with datastar dashboard features
 47. Document the datastar wire format in live/doc.go
 48. Add architecture diagram showing datastar event flow

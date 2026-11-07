@@ -157,7 +157,7 @@ I wrote fresh AGENTS.md and README.md files without checking what was already th
 4. Create `scripts/coverage-gate.sh` — ≥94% threshold
 5. Create `scripts/hooks/pre-commit` — vet + lint + test
 6. Set up `git config core.hooksPath scripts/hooks`
-7. Run `gosec ./...` on go-health
+7. ~~Run `gosec ./...` on go-health~~ done 2026-11-07: Won't implement 2026-11-07: owned by the go-health repository's own quality gates
 8. Run `govulncheck ./...` on go-health
 9. Create `.gitignore` (if not already present — verify)
 10. Add go-health to parent `go.work` workspace (if one exists)

@@ -137,7 +137,7 @@ These messages are useless for git archaeology. A `git log --oneline` tells you 
 7. Add `String()` method to `ContainerID`, `ScopeID`, `ServiceName`
 8. Add `Validate()` methods to typed identifiers
 9. Add constructor functions: `NewContainerID()`, `NewScopeID()`, `NewServiceName()`
-10. Add a compile-time type-safety test file
+10. ~~Add a compile-time type-safety test file~~ done 2026-11-07: typed identifiers ship with test coverage; distinct-type boundaries are compiler-enforced
 11. Consider `ScopeName` as a named type for consistency
 12. Consider `Phase` and `EventType` already being typed — audit for completeness
 

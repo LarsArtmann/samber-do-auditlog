@@ -113,7 +113,7 @@ Impact-ranked; effort S <30 min, M 30 min–2 h, L >2 h. Items marked ★ are NE
 | 33 | Investigate why setup-go cache didn't shield mod-tidy from downloads (cache hit asymmetry across jobs)                                   | Low      | S      | Quality       |
 | 34 | Check `33551556727` final conclusion; document why two red master runs are permanent-but-superseded                                      | Low      | S      | Documentation |
 | 35 | Investigate auto-commit daemon non-behavior during this session (expected per AGENTS.md)                                                 | Low      | S      | Cleanup       |
-| 36 | Decide concurrent-session protocol: file-ownership map or per-session worktrees                                                          | Medium   | S      | Quality       |
+| 36 | ~~Decide concurrent-session protocol: file-ownership map or per-session worktrees~~ done 2026-11-07: harvested to TODO_LIST protocol row; a candidate lesson is recorded in the crush-config lessons file | Medium   | S      | Quality       |
 | 37 | Verify `nix build` path end-to-end post-flake-change (templ-regression guard prerequisite)                                               | Medium   | S      | Quality       |
 | 38 | Sweep AGENTS.md for any remaining stale claims surfaced by this session (nix-develop table, hooksPath)                                   | Low      | S      | Documentation |
 | 39 | Add `check-latest` / SHA-pin review pass over all workflow pins after dependabot github-actions bumps                                    | Low      | S      | Quality       |

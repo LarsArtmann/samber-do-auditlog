@@ -174,7 +174,7 @@
 27. Write migration guide for v0.1.0 → v0.2.0+ (MigrateReport exists but undocumented)
 28. Add architecture deep-dive doc (concurrency model, hook system, stack inference)
 29. Re-baseline BENCHMARKS.md (current data is from 2026-06-21, pre-live-dashboard)
-30. Add `BenchmarkWriteD2` companion benchmarks for Mermaid/PlantUML/DOT
+30. ~~Add `BenchmarkWriteD2` companion benchmarks for Mermaid/PlantUML/DOT~~ done 2026-11-07: harvested to TODO_LIST benchmark row
 31. Add benchmark for live SSE event delivery throughput
 32. Verify `nix run .#auditlog -- help` works (documented but not tested)
 33. Verify `nix run .#coverage` works (documented but not tested)

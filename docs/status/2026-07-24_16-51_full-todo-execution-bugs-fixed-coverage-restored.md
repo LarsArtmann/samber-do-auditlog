@@ -164,7 +164,7 @@ I brought coverage from 91.4% to 94.2%, but the margin is thin. Adding any code 
 | #  | Task                                                         | Effort |
 | -- | ------------------------------------------------------------ | ------ |
 | 6  | Create `live/demo/main.go` — self-contained real-time demo   | 30m    |
-| 7  | Add scope tree tab to live dashboard JS                      | 1h     |
+| 7  | ~~Add scope tree tab to live dashboard JS~~ done 2026-11-07: the scope tree tab ships, verified by the browser E2E smoke | 1h     |
 | 8  | Add "Show all" pagination to live dashboard                  | 30m    |
 | 9  | Share CSS between static templ and live dashboards           | 30m    |
 | 10 | Add CORS headers to live/ API endpoints                      | 10m    |
@@ -193,7 +193,7 @@ I brought coverage from 91.4% to 94.2%, but the margin is thin. Adding any code 
 | 23 | Add property-based tests for filter round-trips                      | 30m    |
 | 24 | Add SSE end-to-end benchmark (connect → N events → disconnect)       | 20m    |
 | 25 | Add fuzz test targeting struct embedding (nil embedded structs)      | 15m    |
-| 26 | Add fuzz test for live/ SSE event parsing                            | 15m    |
+| 26 | ~~Add fuzz test for live/ SSE event parsing~~ done 2026-11-07: Won't implement 2026-11-07: SSE wire parsing is owned by go-sse's own suite; this repo fuzzes the boundaries it owns (8 targets) | 15m    |
 | 27 | Add test for `WriteToFile` concurrent access                         | 10m    |
 | 28 | Review all 13 auto-commits for unintended changes                    | 15m    |
 
@@ -202,7 +202,7 @@ I brought coverage from 91.4% to 94.2%, but the margin is thin. Adding any code 
 | #  | Task                                                                       | Effort |
 | -- | -------------------------------------------------------------------------- | ------ |
 | 29 | Add live/ section to README.md (currently not mentioned)                   | 15m    |
-| 30 | Add live/ API to documentation website                                     | 30m    |
+| 30 | ~~Add live/ API to documentation website~~ done 2026-11-07: the live-dashboard guide and api-reference page ship | 30m    |
 | 31 | Add migration guide docs page (MigrateReport exists, no docs page)         | 30m    |
 | 32 | Add architecture deep-dive page (concurrency model, hook system)           | 1h     |
 | 33 | Add GOEXPERIMENT=jsonv2 note to CONTRIBUTING.md                            | 5m     |

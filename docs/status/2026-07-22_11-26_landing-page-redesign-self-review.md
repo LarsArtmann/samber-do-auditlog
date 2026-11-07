@@ -93,7 +93,7 @@ Redesign the landing page to move screenshots higher and use horizontal space be
 ### Critical (live site broken/stale)
 
 1. Push 7 unpushed commits to origin/master
-2. Clean up `website/flake.lock` git state (staged deletion + worktree recreation)
+2. ~~Clean up `website/flake.lock` git state (staged deletion + worktree recreation)~~ done 2026-11-07: the file is tracked cleanly; the staged-deletion state is gone
 3. Verify live site after push (CI/CD deploy triggers automatically)
 4. Merge Dependabot PR #1 (`gh pr merge 1 --squash`)
 

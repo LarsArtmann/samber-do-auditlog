@@ -167,7 +167,7 @@
 41. **Add `prefers-reduced-motion` handling** — the dashboard has animations (`step-fade-in`, `event-slide-in`) that should be disabled for users with motion sensitivity
 42. **Add ARIA live regions** for SSE connection status changes — screen readers currently don't announce "connected"/"disconnected"
 43. **Add `<link rel="icon">` to the live dashboard** — currently has no favicon
-44. **Add Open Graph meta tags** — for when the dashboard URL is shared in Slack/Discord
+44. ~~**Add Open Graph meta tags** — for when the dashboard URL is shared in Slack/Discord~~ done 2026-11-07: harvested to ROADMAP dashboard backlog
 45. **Normalize the `waveform` rendering** — currently rebuilds all event markers on every update; could append only new markers
 46. **Add keyboard shortcut `g`** to jump to the graph tab (currently only 1-5 number keys work)
 47. **Add a "copy curl" button** next to the API endpoints — useful for debugging

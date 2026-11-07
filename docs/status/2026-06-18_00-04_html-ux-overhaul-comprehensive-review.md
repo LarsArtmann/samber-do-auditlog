@@ -177,10 +177,10 @@ The only "scare" was coverage dropping from 95.0% to 94.4% when I added `{ repor
 | 7  | Chronological event timeline (Gantt-style time axis)                | Medium   | 4h     |
 | 8  | Print stylesheet (`@media print`)                                   | Medium   | 2h     |
 | 9  | In-page "Download JSON" / "Copy NDJSON" buttons                     | Medium   | 1h     |
-| 10 | Virtual scrolling for 500+ service reports                          | Medium   | 4h     |
+| 10 | ~~Virtual scrolling for 500+ service reports~~ done 2026-11-07: harvested to ROADMAP large-report UX backlog; pagination and filter chips cover current sizes | Medium   | 4h     |
 | 11 | Keyboard shortcut help overlay (press `?`)                          | Low      | 1h     |
 | 12 | Graph edge labels on hover (dependency type/count)                  | Low      | 2h     |
-| 13 | Animation orchestration (coordinated tab slide+fade)                | Low      | 2h     |
+| 13 | ~~Animation orchestration (coordinated tab slide+fade)~~ done 2026-11-07: harvested to ROADMAP backlog | Low      | 2h     |
 | 14 | WCAG AAA contrast audit on all text/background pairs                | Medium   | 2h     |
 | 15 | ARIA live regions for filter result count announcements             | Low      | 1h     |
 | 16 | Configurable page sizes (dropdown: 25/50/100/All)                   | Low      | 1h     |

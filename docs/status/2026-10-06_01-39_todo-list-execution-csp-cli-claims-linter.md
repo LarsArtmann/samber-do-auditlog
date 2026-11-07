@@ -96,14 +96,14 @@ Every claim below was verified by running the checking command, not by assuming.
 16. Datastar upgrade spike: does a CSP-safe expression mode exist? Drop `unsafe-eval` if yes.
 17. `X-Frame-Options` on the static report? (file:// — likely N/A, but decide and document.)
 18. Test `handleReport` error path (503 vs 500) — currently 71.4% covered.
-19. Cover `drainEvents` (80%) and `EventsAfter` (89.5%) in live/.
+19. ~~Cover `drainEvents` (80%) and `EventsAfter` (89.5%) in live/.~~ done 2026-11-07: the October push landed 83.8% live coverage with all reachable branches; the residual drainEvents gap is harvested to TODO_LIST
 20. Add `SECURITY.md` link to README's Security & Quality section.
 
 **Library & tooling**
 21. BENCHMARKS.md benchstat run vs the 1.26.5 baseline; label toolchain-vs-code deltas.
 22. go-sse/go-ndjson dependency audit (retracted tags, testhelpers pseudo-versions).
 23. CLI: `-o` directory creation? (currently fails on missing dir — decide UX).
-24. CLI: `--no-color` / respect `NO_COLOR`, `FORCE_COLOR`.
+24. ~~CLI: `--no-color` / respect `NO_COLOR`, `FORCE_COLOR`.~~ done 2026-11-07: harvested to TODO_LIST color-flags row
 25. CLI: shell-completion generation (std flag makes this hard; consider cobra only if justified).
 26. CLI: exit codes spec (2 usage / 1 runtime) — document in main.go usage.
 27. Claims linter: derive "N benchmarks" in BENCHMARKS.md from a runtime artifact instead of grep.
@@ -132,7 +132,7 @@ Every claim below was verified by running the checking command, not by assuming.
 46. Run `scripts/check-changelog-sync.sh` after next release cuts `[Unreleased]` into a version.
 47. Review the auto-committed blob history for any substantive fixes needing CHANGELOG entries (daemon policy known gap).
 48. Add `eventCollector` pattern to AGENTS.md Testing Patterns section.
-49. Add "lint per change" to AGENTS.md workflow guidance.
+49. ~~Add "lint per change" to AGENTS.md workflow guidance.~~ done 2026-11-07: the pre-commit hook compiles, vets, and lints every workspace module
 50. Schedule the next docs-health VERIFY pass (last was 2026-09-11; quarterly cadence overdue).
 
 ---

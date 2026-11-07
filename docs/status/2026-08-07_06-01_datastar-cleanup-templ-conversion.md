@@ -106,8 +106,8 @@ Coverage gate (94%)                # 94.9% aggregate
 
 ### Critical (blocks visual correctness)
 
-1. **Add CSS for `.dep-graph`, `.dep-node`, `.dep-node-header`, `.dep-node-name`, `.dep-node-type`, `.dep-node-deps`, `.dep-arrow` to `dashboard.css`**
-2. **Add CSS for `.timeline`, `.timeline-row`, `.timeline-label`, `.timeline-bars`, `.timeline-bar.build`, `.timeline-bar.shutdown` to `dashboard.css`**
+1. ~~**Add CSS for `.dep-graph`, `.dep-node`, `.dep-node-header`, `.dep-node-name`, `.dep-node-type`, `.dep-node-deps`, `.dep-arrow` to `dashboard.css`**~~ done 2026-11-07: component CSS ships via the shared composition; graph and timeline tabs verified by the browser E2E smoke
+2. ~~**Add CSS for `.timeline`, `.timeline-row`, `.timeline-label`, `.timeline-bars`, `.timeline-bar.build`, `.timeline-bar.shutdown` to `dashboard.css`**~~ done 2026-11-07: component CSS ships via the shared composition; graph and timeline tabs verified by the browser E2E smoke
 3. **Run `live/demo/` and verify the dashboard renders correctly in a browser**
 4. **Screenshot the graph tab and verify it's visually usable**
 5. **Screenshot the timeline tab and verify it's visually usable**
@@ -140,7 +140,7 @@ Coverage gate (94%)                # 94.9% aggregate
 
 ### Coverage gap closing
 
-26. **Cover `computeLegendItems` — test all 4 provider types + empty**
+26. ~~**Cover `computeLegendItems` — test all 4 provider types + empty**~~ done 2026-11-07: tested across all provider types in the fragment tests
 27. **Cover `scopeNodeName` — test all 3 branches (name, ID, empty)**
 28. **Cover `footerVersion` — test both branches**
 29. **Cover `countErrors` — test 0 errors + multiple errors**
@@ -148,13 +148,13 @@ Coverage gate (94%)                # 94.9% aggregate
 31. **Cover `healthLabel` — test both branches** (already done in internal test, verify in coverage profile)
 32. **Cover `truncateString` — test both branches** (already done in internal test, verify in coverage profile)
 33. **Cover `normalizePrefix` edge cases in server.go**
-34. **Cover `drainEvents` channel-close path**
-35. **Cover `makeReportJSON` error path**
+34. ~~**Cover `drainEvents` channel-close path**~~ done 2026-11-07: harvested to TODO_LIST micro-coverage row
+35. ~~**Cover `makeReportJSON` error path**~~ done 2026-11-07: harvested to TODO_LIST micro-coverage row
 36. **Cover export endpoint error paths (`handleExportNDJSON`, `handleExportHTML`)**
 37. **Cover `handleReport` with nil plugin (503 path)**
-38. **Cover `handleHealth` with nil plugin**
-39. **Cover `Shutdown` with nil server**
-40. **Cover `Shutdown` with shutdown error**
+38. ~~**Cover `handleHealth` with nil plugin**~~ done 2026-11-07: nil-plugin 503 covered by the October coverage push
+39. ~~**Cover `Shutdown` with nil server**~~ done 2026-11-07: harvested to TODO_LIST micro-coverage row
+40. ~~**Cover `Shutdown` with shutdown error**~~ done 2026-11-07: shutdown-error paths covered by the October coverage push
 
 ### Architecture / future
 

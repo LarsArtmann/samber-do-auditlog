@@ -212,8 +212,8 @@ The dashboard starts, services register, then the server immediately shuts down.
 | 11 | Add tests for 0% functions: `ServeHTTP`, `sendComplete`, `makeReportJSON`, `normalizePrefix` | 20m    |
 | 12 | Push coverage to 95%+ for real headroom (currently 94.1%)                                    | 30m    |
 | 13 | Add property-based test for filter round-trips                                               | 30m    |
-| 14 | Add SSE end-to-end benchmark                                                                 | 20m    |
-| 15 | Add fuzz test for live/ SSE event parsing                                                    | 15m    |
+| 14 | ~~Add SSE end-to-end benchmark~~ done 2026-11-07: harvested to TODO_LIST benchmark row | 20m    |
+| 15 | ~~Add fuzz test for live/ SSE event parsing~~ done 2026-11-07: Won't implement 2026-11-07: SSE wire parsing is owned by go-sse's own suite; this repo fuzzes the boundaries it owns (8 targets) | 15m    |
 | 16 | Add fuzz test targeting struct embedding (nil embedded structs)                              | 15m    |
 | 17 | Add test for `WriteToFile` concurrent access                                                 | 10m    |
 
@@ -223,7 +223,7 @@ The dashboard starts, services register, then the server immediately shuts down.
 | -- | --------------------------------------------------------------------- | ------ |
 | 18 | Publish `go-sse` to GitHub (public) and remove `replace` directive    | 15m    |
 | 19 | Publish `go-ndjson` to GitHub (public) and remove `replace` directive | 15m    |
-| 20 | Create GitHub Releases for v0.1.0-v0.6.0                              | 30m    |
+| 20 | ~~Create GitHub Releases for v0.1.0-v0.6.0~~ done 2026-11-07: moot 2026-11-07: releases flow from goreleaser-tagged builds; retroactive backfill adds nothing | 30m    |
 | 21 | Tag and release v0.7.0                                                | 10m    |
 | 22 | Create v0.7.0 GitHub Release with CHANGELOG notes                     | 10m    |
 
@@ -237,7 +237,7 @@ The dashboard starts, services register, then the server immediately shuts down.
 | 26 | Rewrite the `encoding/json/v2` exclusion policy in AGENTS.md to be clearer | 10m    |
 | 27 | Add comparison section to README (vs manual logging, vs OpenTelemetry)     | 30m    |
 | 28 | Verify all internal markdown links across full docs/ tree                  | 15m    |
-| 29 | Add live/ section to documentation website                                 | 30m    |
+| 29 | ~~Add live/ section to documentation website~~ done 2026-11-07: the live-dashboard guide and api-reference page ship | 30m    |
 | 30 | Add README Mermaid note about simplified node IDs                          | 5m     |
 
 ### P5 — Architecture & code quality

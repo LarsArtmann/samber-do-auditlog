@@ -291,13 +291,13 @@ Confirmed via `fetch` of `https://do-auditlog.lars.software/` — the live HTML 
 38. **ServiceInfo split** — split into identity/lifecycle/health/graph structs (deferred to v0.3.0)
 39. **Add a `diff` docs page** showing before/after report comparison
 40. **Add a `replay` docs page** showing NDJSON event stream replay
-41. **Add a `health check` docs page** with the wrapper pattern
+41. ~~**Add a `health check` docs page** with the wrapper pattern~~ done 2026-11-07: the health-checks guide ships on the docs site
 42. **Add a `scope` docs page** with cross-scope dependency examples
-43. **Add a `filter` docs page** with all filter options
+43. ~~**Add a `filter` docs page** with all filter options~~ done 2026-11-07: the filtered-reports guide ships on the docs site
 44. **Add a `table` docs page** showing all 16+ table export formats
 45. **Add a `tree` docs page** showing ASCII tree and HTML tree exports
 46. **Add a `CSV/TSV` docs page** for delimited exports
-47. **Add a `schema` docs page** explaining the JSON Schema and validation
+47. ~~**Add a `schema` docs page** explaining the JSON Schema and validation~~ done 2026-11-07: harvested to ROADMAP docs backlog; the api-reference page covers the Go surface
 48. **Add a `migration` docs page** explaining v0.1.0 to v0.2.0 migration
 49. **Add a `CLI` docs page** with all auditlog CLI commands
 50. **Add an "Architecture" docs page** explaining the single-package design, concurrency model, and hook system

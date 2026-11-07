@@ -165,11 +165,11 @@ I updated the feature grid to "16+ Export Formats" but missed the identical clai
 7. Remove `frame-ancestors` from `<meta>` tag in `html.templ`
 8. Add headless browser test for HTML report JS execution
 9. Add OG image generation (`astro-og-canvas`)
-10. Optimize screenshots to WebP
+10. ~~Optimize screenshots to WebP~~ done 2026-11-07: harvested to ROADMAP backlog; Lighthouse performance is already 100
 11. Add "What's New" badge to landing page
 12. Pin GitHub Actions to SHA hashes
-13. Add "Who is this for?" section to README
-14. Add "When NOT to use this" section to README
+13. ~~Add "Who is this for?" section to README~~ done 2026-11-07: the README section ships
+14. ~~Add "When NOT to use this" section to README~~ done 2026-11-07: the README section ships
 15. Add error boundary for `JSON.parse` in HTML report
 16. Add deploy-failure notification (Slack/email/GitHub issue)
 17. Remove `continue-on-error` from pnpm audit or log output
@@ -183,22 +183,22 @@ I updated the feature grid to "16+ Export Formats" but missed the identical clai
 22. Add CLI docs page with all subcommands
 23. Add architecture docs page
 24. Add recipes section for common patterns
-25. Add diff docs page
-26. Add replay docs page
-27. Add health check docs page
-28. Add scope docs page
-29. Add filter docs page
-30. Add table export docs page
-31. Add tree export docs page
+25. ~~Add diff docs page~~ done 2026-11-07: harvested to ROADMAP docs backlog
+26. ~~Add replay docs page~~ done 2026-11-07: harvested to ROADMAP docs backlog
+27. ~~Add health check docs page~~ done 2026-11-07: the health-checks guide ships on the docs site
+28. ~~Add scope docs page~~ done 2026-11-07: harvested to ROADMAP docs backlog
+29. ~~Add filter docs page~~ done 2026-11-07: the filtered-reports guide ships on the docs site
+30. ~~Add table export docs page~~ done 2026-11-07: the export-formats guide covers table exports
+31. ~~Add tree export docs page~~ done 2026-11-07: the export-formats guide covers tree exports
 32. Add CSV/TSV docs page
-33. Add schema docs page
+33. ~~Add schema docs page~~ done 2026-11-07: harvested to ROADMAP docs backlog
 34. Add contributing page to Starlight docs
 35. Add stability page to Starlight docs
-36. Add Google Analytics
+36. ~~Add Google Analytics~~ done 2026-11-07: decided 2026-11-07: no analytics trackers on lars.software sites
 37. Add "Used in production" section (BuildFlow)
 38. Replace `<table>` screenshot layout in README
 39. Add visual diagram to "How it works" section
-40. Add sitemap verification
+40. ~~Add sitemap verification~~ done 2026-11-07: harvested to ROADMAP operations backlog
 
 ### Long-term / aspirational
 
@@ -207,11 +207,11 @@ I updated the feature grid to "16+ Export Formats" but missed the identical clai
 43. TypeScript types for CLI
 44. Go 1.27 migration when json/v2 stabilizes
 45. Typed identifiers (ContainerID/ScopeID/ServiceName)
-46. ServiceInfo struct split
+46. ~~ServiceInfo struct split~~ done 2026-11-07: the ServiceIdentity/ServiceInfo split ships in the core
 47. Add "Star History" chart to README
-48. Add Sponsors section
+48. ~~Add Sponsors section~~ done 2026-11-07: harvested to ROADMAP social-proof backlog
 49. Add CSP hash verification test
-50. Add cross-browser testing for the HTML report
+50. ~~Add cross-browser testing for the HTML report~~ done 2026-11-07: Won't implement 2026-11-07: evergreen-browsers-only fleet policy; golden and JS-syntax tests pin structure
 
 ---
 

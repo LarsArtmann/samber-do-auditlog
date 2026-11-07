@@ -126,8 +126,8 @@
 10. Verify README Quick Start code compiles (the skill says to trace through it)
 11. Add README Mermaid example note about UUID-based scope prefixes
 12. Re-read TODO_LIST.md end-to-end for coherence after rebuild
-13. Re-read ROADMAP.md end-to-end for coherence after edits
-14. Re-read FEATURES.md end-to-end for coherence after edits
+13. ~~Re-read ROADMAP.md end-to-end for coherence after edits~~ done 2026-11-07: moot 2026-11-07: the docs-gates battery enforces living-doc coherence mechanically; last full re-verify 2026-10-26
+14. ~~Re-read FEATURES.md end-to-end for coherence after edits~~ done 2026-11-07: moot 2026-11-07: the docs-gates battery enforces living-doc coherence mechanically; last full re-verify 2026-10-26
 15. Compute and document post-fix health report scores (Accuracy/10, Fitness/10)
 
 ### P2 — Quality & Testing
@@ -171,7 +171,7 @@
 ### P6 — Polish
 
 42. Re-baseline BENCHMARKS.md (current data is from 2026-06-21, pre-live-dashboard)
-43. Add `BenchmarkWriteD2` companion benchmarks for Mermaid/PlantUML/DOT
+43. ~~Add `BenchmarkWriteD2` companion benchmarks for Mermaid/PlantUML/DOT~~ done 2026-11-07: harvested to TODO_LIST benchmark row
 44. Add benchmark for live SSE event delivery throughput
 45. Verify `nix run .#auditlog -- help` works (documented but not tested this session)
 46. Verify `nix run .#coverage` works (documented but not tested this session)

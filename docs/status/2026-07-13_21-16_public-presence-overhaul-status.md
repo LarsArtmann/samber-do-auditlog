@@ -133,7 +133,7 @@
 ### Deployment & Infrastructure (must-do)
 
 1. Create Firebase hosting target `do-auditlog` in `lars-software` project
-2. Set `FIREBASE_SERVICE_ACCOUNT` GitHub secret
+2. ~~Set `FIREBASE_SERVICE_ACCOUNT` GitHub secret~~ done 2026-11-07: the website deploy workflow consumes the secret; the site ships
 3. Configure DNS for `do-auditlog.lars.software` (CNAME to Firebase)
 4. Deploy the website
 5. Commit `package-lock.json` after first clean `pnpm install`
@@ -155,7 +155,7 @@
 15. Generate OG images via astro-og-canvas (per-page social preview)
 16. Add a screenshot of the HTML visualization to the landing page
 17. Add a screenshot of the Mermaid/D2 diagram output to docs
-18. Design a more distinctive favicon/logo
+18. ~~Design a more distinctive favicon/logo~~ done 2026-11-07: harvested to ROADMAP brand backlog
 19. Add a demo GIF or video of the HTML visualization (tab switching, graph pan/zoom)
 20. Add a "metrics row" to the hero section (like go-atomic-write: "9 Formats", "~1.7us", "95% Coverage", "0 Deps")
 
@@ -164,9 +164,9 @@
 21. Add CHANGELOG sync validation to website.yml CI
 22. Add Lighthouse CI (.github/workflows/lighthouse.yml + lighthouserc.json)
 23. Add HTML validation to CI (already in workflow but verify it runs)
-24. Add md-go-validator for docs code block validation
+24. ~~Add md-go-validator for docs code block validation~~ done 2026-11-07: harvested to ROADMAP docs-tooling backlog
 25. Add jscpd code duplication check for website source
-26. Add stale-reference check (like gogenfilter's deleted-files check)
+26. ~~Add stale-reference check (like gogenfilter's deleted-files check)~~ done 2026-11-07: harvested to ROADMAP docs-tooling backlog; lychee and the claims linter cover the core
 27. Add import path validation (ensure docs reference correct module path)
 28. Pin all GitHub Actions to SHA hashes (currently using @v6/@v7/@v8)
 
@@ -185,17 +185,17 @@
 36. Add prev/next navigation at the bottom of doc pages (Starlight does this by default — verify)
 37. Add a search bar (Starlight Pagefind — already built, verify it works)
 38. Add i18n support (probably overkill for ALPHA)
-39. Add a version selector (when v1.0.0 lands)
+39. ~~Add a version selector (when v1.0.0 lands)~~ done 2026-11-07: harvested to ROADMAP (v1.0.0 precondition)
 
 ### README Enhancements
 
 40. Add a "What it looks like" section with a screenshot of the HTML visualization
 41. Add a coverage badge (95%+)
 42. Add a Go version badge
-43. Add a "Star this repo" call-to-action
+43. ~~Add a "Star this repo" call-to-action~~ done 2026-11-07: harvested to ROADMAP social-proof backlog
 44. Add a table of contents (for quick navigation in the long README)
 45. Add a "Comparison with alternatives" section (uber/dig, wire)
-46. Add a "Used by" section (when there are users)
+46. ~~Add a "Used by" section (when there are users)~~ done 2026-11-07: harvested to ROADMAP social-proof backlog
 
 ### Website Architecture
 

@@ -201,7 +201,7 @@ The prior session's self-review explicitly called out this exact failure mode: "
 | 24 | Add FAQ section (common questions about overhead, security, compatibility)             | 15m    |
 | 25 | Document the NDJSON replay workflow end-to-end (export → store → replay → analyze)     | 10m    |
 | 26 | Add `Index()` method mention for O(1) multi-query use cases                            | 5m     |
-| 27 | Add `ResolveServiceScope` mention for advanced health check use                        | 5m     |
+| 27 | ~~Add `ResolveServiceScope` mention for advanced health check use~~ done 2026-11-07: harvested to ROADMAP docs backlog | 5m     |
 | 28 | Add mention of `a-h/templ` as the HTML template engine (transparency)                  | 2m     |
 | 29 | Add mention of schema versioning independence (release tags vs schema version)         | 5m     |
 | 30 | Consider adding "Migration from v0.1.0" callout for early adopters                     | 5m     |

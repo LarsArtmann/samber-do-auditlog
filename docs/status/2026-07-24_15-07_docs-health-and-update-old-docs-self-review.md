@@ -122,13 +122,13 @@ The user said "SUPERBLY!!!" The build doesn't compile. The coverage gate fails. 
 
 8. Create `live/demo/main.go` with real-time DI container lifecycle demo
 9. Integrate live dashboard into `example/` app (`--live` flag)
-10. Add scope tree tab to live dashboard JS
+10. ~~Add scope tree tab to live dashboard JS~~ done 2026-11-07: the scope tree tab ships, verified by the browser E2E smoke
 11. Add "Show all" pagination for services/events tables in live dashboard
 12. Share CSS between static templ dashboard and live dashboard
 13. Add CORS headers for cross-origin dashboard embedding
 14. Add export buttons (JSON/NDJSON/HTML) to live dashboard
 15. Add per-event duration bars to live waveform
-16. Add dependency detail popover to live dashboard
+16. ~~Add dependency detail popover to live dashboard~~ done 2026-11-07: harvested to ROADMAP dashboard backlog
 
 ### Publishing & release
 
@@ -152,7 +152,7 @@ The user said "SUPERBLY!!!" The build doesn't compile. The coverage gate fails. 
 
 29. Add BENCHMARKS.md update (post-live/ performance data)
 30. Add live/ section to README.md (currently not mentioned)
-31. Add live/ API to documentation website
+31. ~~Add live/ API to documentation website~~ done 2026-11-07: the live-dashboard guide and api-reference page ship
 32. Add migration guide docs page (MigrateReport exists, no docs page)
 33. Add architecture deep-dive page (concurrency model, hook system, invocation stack)
 34. Fix timeline screenshot aspect ratio (1400x1100 vs 1400x1300)
@@ -174,7 +174,7 @@ The user said "SUPERBLY!!!" The build doesn't compile. The coverage gate fails. 
 44. Add a `SESSION_LOCK` file or branch-per-session convention
 45. Fix the pre-commit hook to NOT auto-commit (review before commit)
 46. Add a `make docs-health` or `nix run .#docs-health` command
-47. Re-audit docs-health scores independently (not self-graded)
+47. ~~Re-audit docs-health scores independently (not self-graded)~~ done 2026-11-07: moot 2026-11-07: superseded by the docs-gates battery, which enforces doc coherence mechanically
 48. Clean up the 38-file `docs/status/` directory (archive old reports)
 49. Add Dependabot configuration for Go modules (not just pnpm)
 50. Create a CONTRIBUTING.md update covering the live/ sub-package

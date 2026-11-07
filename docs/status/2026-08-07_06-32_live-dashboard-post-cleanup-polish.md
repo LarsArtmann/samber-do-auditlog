@@ -148,7 +148,7 @@ Done for the SSE handler path. The two remaining `//nolint:contextcheck` annotat
 ### High Impact (P0)
 
 1. **Run `live/demo/` in browser** — Start the demo server, open the dashboard, verify graph/timeline tabs render with actual data, verify SSE reconnection works, verify search/filter/pagination
-2. **Convert `renderEventFilterChips()` to templ** — Last raw-HTML-string holdout in `live/`
+2. ~~**Convert `renderEventFilterChips()` to templ** — Last raw-HTML-string holdout in `live/`~~ done 2026-11-07: Won't implement 2026-11-07: post-datastar fragments are server-composed strings by design; a templ round-trip adds machinery without behavioral gain
 3. **Update AGENTS.md `live/` section** — Correct file sizes, add new tests, document CSS completeness test pattern
 4. **Annotate prior status report** (`docs/status/2026-08-07_03-36_datastar-migration-brutal-self-review.md`) — Mark resolved items as DONE
 
@@ -181,7 +181,7 @@ Done for the SSE handler path. The two remaining `//nolint:contextcheck` annotat
 26. **Test `sendDatastarSnapshot` with nil plugin** — Returns early but not tested
 27. **Test `sendDatastarComplete` with nil plugin** — Returns early but not tested
 28. **Test `drainEvents` with closed channel** — The `ok == false` path
-29. **Test `Shutdown` with already-stopped server** — Edge case in server lifecycle
+29. ~~**Test `Shutdown` with already-stopped server** — Edge case in server lifecycle~~ done 2026-11-07: harvested to TODO_LIST micro-coverage row
 30. **Test concurrent `sendDatastarSnapshot` calls** — Race condition verification
 
 ### Infrastructure (P3)
@@ -191,14 +191,14 @@ Done for the SSE handler path. The two remaining `//nolint:contextcheck` annotat
 33. **Add Datastar SSE event format test** — Verify `sendPatchElements` produces valid datastar wire format
 34. **Add snapshot signal JSON schema test** — Verify `snapshotSignals` struct matches what `dashboard.js` expects
 35. **Add `datastar.js` version pin test** — Verify embedded Datastar runtime hasn't drifted from v1.0.2
-36. **Benchmark `renderAllFragments`** — Currently no benchmark for the hot-path render function
+36. ~~**Benchmark `renderAllFragments`** — Currently no benchmark for the hot-path render function~~ done 2026-11-07: harvested to TODO_LIST benchmark row
 37. **Benchmark `sendDatastarSnapshot`** — End-to-end SSE render+send timing
 38. **Add memory allocation profile test** — Verify fragment rendering doesn't over-allocate
 39. **Add fuzz test for `cssHasSelector`** — The CSS matching logic is hand-rolled and could have edge cases
 40. **Add fuzz test for `humanizeDuration`** — Edge cases at float64 boundaries
 41. **Review `waveformBounds` for timezone issues** — Uses `UnixMilli()` which is timezone-independent, but verify
 42. **Add integration test: full lifecycle → export → re-import** — Verify round-trip integrity through the live dashboard
-43. **Add test for `computeWaveformMarks` with error events** — Error events should use `var(--error)` color
+43. ~~**Add test for `computeWaveformMarks` with error events** — Error events should use `var(--error)` color~~ done 2026-11-07: harvested to TODO_LIST micro-coverage row
 44. **Add test for `computeWaveformMarks` with duration scaling** — Verify height encoding is proportional
 45. **Review `dashboard.css` for unused selectors** — Some selectors (`.graph-controls`, `.tooltip`, `.graph-info`) may be dead from the old SVG graph
 46. **Consolidate `mdash` / `cssVarTextMuted` constants** — These are in `fragments.go` but some are also inlined in `dashboard.go` and `base_css.go`

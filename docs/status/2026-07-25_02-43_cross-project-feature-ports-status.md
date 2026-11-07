@@ -187,7 +187,7 @@ I created a package-level `errInnerTest` sentinel just to satisfy the `err113` l
 
 ### Documentation debt
 
-21. Update docs/DOMAIN_LANGUAGE.md with new terms
+21. ~~Update docs/DOMAIN_LANGUAGE.md with new terms~~ done 2026-11-07: forwarding terms (forwarder, collector, forward target, completion) added
 22. Update STABILITY.md with new API surface
 23. Update CONTRIBUTING.md with streaming example
 24. Add godoc examples (`ExampleNDJSONStreamer`, `ExampleWithDirection`, `ExampleWithColumns`)
@@ -210,7 +210,7 @@ I created a package-level `errInnerTest` sentinel just to satisfy the `err113` l
 
 36. Port `WithDirection` to the HTML tree export (`WriteHTMLTree`)
 37. Port `WithColumns` to the HTML services table in the live dashboard
-38. Add `ErrExportWriteFailed` sentinel and wrap atomic-write errors with it
+38. ~~Add `ErrExportWriteFailed` sentinel and wrap atomic-write errors with it~~ done 2026-11-07: harvested to TODO_LIST sentinel row
 39. Classify the `live/` sub-package's `ErrServerAlreadyRunning` sentinel
 40. Port go-workflow-auditlog's `ExportGraphviz` naming (currently `WriteDOT`/`ExportToDOT`)
 41. Consider `NDJSONStreamer.WriteTo(io.Writer)` for pipewriter compatibility

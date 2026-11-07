@@ -184,10 +184,10 @@ Sorted by **Impact × Customer-Value ÷ Effort**:
 | 14 | **HTML golden-file test**                                       | 🟠 Med | 🟡 Med     | Testing      |
 | 15 | **`Report` constructor validation**                             | 🟠 Med | 🟡 Med     | Architecture |
 | 16 | **Prometheus exporter example**                                 | 🟠 Med | 🟡 Med     | Docs         |
-| 17 | **Add `actionlint` to CI**                                      | 🟡 Low | ⚪ Trivial | CI           |
+| 17 | ~~**Add `actionlint` to CI**~~ done 2026-11-07: the actionlint CI job runs on every push | 🟡 Low | ⚪ Trivial | CI           |
 | 18 | **GitHub Actions version upgrades**                             | 🟡 Low | ⚪ Trivial | CI           |
 | 19 | **Flake app for coverage gate**                                 | 🟡 Low | 🔵 Low     | DevEx        |
-| 20 | **`RELEASING.md`** or release checklist                         | 🟡 Low | ⚪ Trivial | Docs         |
+| 20 | ~~**`RELEASING.md`** or release checklist~~ done 2026-11-07: Won't implement 2026-11-07: release ritual owned by the fleet go-release skill; AGENTS.md keeps project-specific pins only | 🟡 Low | ⚪ Trivial | Docs         |
 | 21 | **Add buildflow to flake.nix + AGENTS.md**                      | 🟡 Low | 🔵 Low     | DevEx        |
 | 22 | **`pgregory/rapid`** for property-based testing                 | 🟡 Low | 🔵 Low     | Testing      |
 | 23 | **`invopop/jsonschema`** for schema generation                  | 🟠 Med | 🔵 Low     | Docs/API     |

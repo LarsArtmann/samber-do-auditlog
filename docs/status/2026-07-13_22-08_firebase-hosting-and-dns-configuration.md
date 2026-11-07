@@ -109,7 +109,7 @@
 ### Commit Hygiene
 
 6. **Commit `samber-do-auditlog` repo**: README.md + website/ + .github/workflows/website.yml + .prettierignore
-7. **Commit `samber-do-auditlog` repo**: `website/package-lock.json`
+7. ~~**Commit `samber-do-auditlog` repo**: `website/package-lock.json`~~ done 2026-11-07: moot 2026-11-04: npm trees deleted; pnpm is the package manager of record
 8. **Review and commit `domains` repo**: all pre-existing staged changes + do-auditlog DNS records
 9. **Push both repos** to trigger CI (website build/deploy workflow)
 
@@ -119,7 +119,7 @@
 11. **Verify pnpm cache works** in CI (package-lock.json now exists)
 12. **Verify HTML validation** passes in CI
 13. **Verify astro check** passes in CI
-14. **Fix any CI issues** that arise
+14. ~~**Fix any CI issues** that arise~~ done 2026-11-07: moot 2026-11-07: the website deploy runs green (astro check, html-validate, changelog sync)
 
 ### Website Polish (from prior session status report, still applicable)
 
@@ -127,22 +127,22 @@
 16. Add screenshots of the HTML visualization to landing page
 17. Add a metrics row to hero ("9 Formats", "~1.7us", "95% Coverage")
 18. Add Lighthouse CI workflow
-19. Add CHANGELOG sync validation to CI
+19. ~~Add CHANGELOG sync validation to CI~~ done 2026-11-07: the changelog-sync drift guard gates the website workflow
 20. Add deeper docs (CLI usage, replay/migration, real-time streaming)
-21. Design a more distinctive favicon
+21. ~~Design a more distinctive favicon~~ done 2026-11-07: harvested to ROADMAP brand backlog
 
 ### DNS/Infrastructure Hardening
 
-22. Set up SOPS or age-encrypted tfvars for Namecheap credentials
-23. Add a `terraform plan` CI check (would need credentials in CI)
-24. Document the DNS provisioning workflow in `domains/AGENTS.md`
+22. ~~Set up SOPS or age-encrypted tfvars for Namecheap credentials~~ done 2026-11-07: harvested to ROADMAP infra-hygiene backlog
+23. ~~Add a `terraform plan` CI check (would need credentials in CI)~~ done 2026-11-07: harvested to ROADMAP infra-hygiene backlog
+24. ~~Document the DNS provisioning workflow in `domains/AGENTS.md`~~ done 2026-11-07: Won't implement 2026-11-07: DNS documentation lives in the domains repository, not here
 25. Add DNS record count assertion (catch accidental record deletion)
 
 ### Post-Launch
 
 26. Submit sitemap to Google Search Console
 27. Verify Open Graph preview renders correctly on Twitter/Slack/Discord
-28. Set up uptime monitoring for `do-auditlog.lars.software`
+28. ~~Set up uptime monitoring for `do-auditlog.lars.software`~~ done 2026-11-07: harvested to ROADMAP operations backlog
 29. Add `do-auditlog.lars.software` to the Better Stack status page (already configured for `status.lars.software`)
 30. Consider adding a `.well-known/security.txt` file
 
