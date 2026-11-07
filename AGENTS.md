@@ -2,7 +2,7 @@
 
 Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI container lifecycle event (registration, invocation, shutdown) with timestamps, dependency graph inference, build duration tracking, and export to JSON / NDJSON / self-contained HTML.
 
-**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.27.1 (go.mod minor-only `go 1.27` + devShell) · **Status**: BETA (per [STABILITY.md](STABILITY.md); internal 1.0 bar tracked in ROADMAP.md)
+**Module**: `github.com/larsartmann/samber-do-auditlog` · **Package**: `auditlog` · **Go**: 1.27.3 toolchain (go.mod minor-only `go 1.27` + devShell/CI) · **Status**: BETA (per [STABILITY.md](STABILITY.md); internal 1.0 bar tracked in ROADMAP.md)
 
 ---
 
@@ -19,7 +19,7 @@ Go plugin for [samber/do v2](https://github.com/samber/do) that records every DI
 | `golangci-lint config verify`                                                       | Validate the lint config (CI runs this before `lint run`)                                                                                                           |
 | `golangci-lint run`                                                                 | Full lint (heavy config, see below)                                                                                                                                 |
 | `go mod tidy`                                                                       | Sync `go.sum` (CI `mod-tidy` job fails on drift)                                                                                                                    |
-| `nix develop`                                                                       | Enter devShell (Go 1.27.1, golangci-lint, govulncheck, actionlint, golines, **GOEXPERIMENT=jsonv2 enabled**)                                                        |
+| `nix develop`                                                                       | Enter devShell (Go 1.27.3, golangci-lint, govulncheck, actionlint, golines, **GOEXPERIMENT=jsonv2 enabled**)                                                        |
 | `go run ./example`                                                                  | Run the example (set `DO_AUDITLOG_ENABLED=true`)                                                                                                                    |
 | `go run ./example --live`                                                           | Example + real-time SSE dashboard                                                                                                                                   |
 | `go run ./cmd/auditlog help`                                                        | CLI: info/convert/diff/validate/stats/schema subcommands                                                                                                            |
@@ -81,11 +81,11 @@ live in [docs/architecture.md](docs/architecture.md). Non-obvious anchors:
 
 ### Go 1.27 toolchain pin
 
-**The canonical Go version is 1.27.1** (go.mod carries minor-only `go 1.27` per the fleet policy; the devShell/CI/GOTOOLCHAIN pin the patch), pinned across (1) `go.mod`, (2) `.github/workflows/ci.yml` (`1.27.1`), (3) `flake.nix` (`go_1_27` package + `buildGo127Module` builder + `GOTOOLCHAIN = "local"` — go_1_27 IS 1.27.1, and `local` stops Go from re-downloading the exact toolchain), (4) `CONTRIBUTING.md`/`BENCHMARKS.md`. `scripts/check-go-version.sh` asserts all agree: patch-level extensions of the go.mod minor are accepted everywhere; a flake `GOTOOLCHAIN=local` is validated against its `go_1_MM`/`buildGo<MM>Module` refs.
+**The canonical language line is go.mod's minor-only `go 1.27`** (fleet policy); toolchain pins may extend it by patch level. CI pins **1.27.3** — moved 1.27.1 → 1.27.3 on 2026-11-04 for govulncheck (GO-2026-6809 crypto/x509 needs ≥ 1.27.3; GO-2026-6617 net/http needs ≥ 1.27.2) — and the devShell's nixpkgs `go_1_27` ships 1.27.3 at the current flake.lock pin. Pinned across (1) `go.mod` (canonical), (2) `.github/workflows/ci.yml` (`1.27.3`), (3) `flake.nix` (`go_1_27` package + `buildGo127Module` builder + `GOTOOLCHAIN = "local"` — `local` stops Go from re-downloading an exact toolchain; the patch tracks nixpkgs), (4) `CONTRIBUTING.md`. `scripts/check-go-version.sh` asserts all agree: patch-level extensions of the go.mod minor are accepted everywhere; a flake `GOTOOLCHAIN=local` is validated against its `go_1_MM`/`buildGo<MM>Module` refs.
 
 **Rule: bump `go-version` in ci.yml and `GOTOOLCHAIN` in flake.nix in the SAME commit as any `go.mod` bump.** GitHub runners set `GOTOOLCHAIN=local`; a CI go-version below go.mod's requirement fails every Go job instantly. (This exact mismatch broke all Go jobs on master once — see git history.)
 
-**Gotcha:** a separately-installed `go` nix-store derivation can shadow the devShell's `go_1_27` on PATH; the `GOTOOLCHAIN` env var pins the effective toolchain anyway. Outside the devShell, prefix with `GOTOOLCHAIN=go1.27.1`.
+**Gotcha:** a separately-installed `go` nix-store derivation can shadow the devShell's `go_1_27` on PATH; the `GOTOOLCHAIN` env var pins the effective toolchain anyway. Outside the devShell, prefix with `GOTOOLCHAIN=go1.27.3`.
 
 **goreleaser coupling:** CI pins goreleaser `v2.18.2` because v2.18.0+ declares `go >= 1.27.0` and fails under runner `GOTOOLCHAIN=local` on older Go. Bump the pin only together with CI's Go version (`goreleaser check` locally first).
 

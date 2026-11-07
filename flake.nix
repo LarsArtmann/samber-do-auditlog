@@ -51,9 +51,10 @@
             };
 
             GOEXPERIMENT = "jsonv2";
-            # go_1_27 IS 1.27.1; `local` stops go from downloading the
-            # exact-version toolchain (GOTOOLCHAIN=go1.27.1 would fetch it
-            # whenever the ambient go differs — sandbox DNS death).
+            # go_1_27 tracks the nixpkgs patch release (1.27.3 at this pin);
+            # `local` stops go from downloading the exact-version toolchain
+            # (GOTOOLCHAIN=go1.27.3 would fetch it whenever the ambient go
+            # differs — sandbox DNS death).
             GOTOOLCHAIN = "local";
             BUILDFLOW_LANGUAGE = "go";
           };
