@@ -211,16 +211,16 @@ Keep a Changelog format has Added/Changed/Deprecated/Removed/Fixed/Security sect
 
 ### P4 — live/ Sub-Package Improvements
 
-| #  | Task                                                                                   | Effort |
-| -- | -------------------------------------------------------------------------------------- | ------ |
-| 21 | Create `live/demo/main.go` — self-contained demo with delayed services                 | 30m    |
+| #  | Task                                                                                                                                                         | Effort |
+| -- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 21 | Create `live/demo/main.go` — self-contained demo with delayed services                                                                                       | 30m    |
 | 22 | ~~Fix ~14 lint warnings in `live/` (exhaustruct, varnamelen, gci, errchkjson, modernize)~~ done 2026-11-07: lint runs clean at the v2.14.0 CI pin (0 issues) | 20m    |
-| 23 | ~~Add scope tree tab to live dashboard JS~~ done 2026-11-07: the scope tree tab ships, verified by the browser E2E smoke | 1h     |
-| 24 | Add "Show all" pagination for services and events tables                               | 30m    |
-| 25 | Share CSS between static and live dashboards                                           | 30m    |
-| 26 | Add CORS headers for cross-origin embedding                                            | 10m    |
-| 27 | Integrate live dashboard into `example/` app with `--live` flag                        | 30m    |
-| 28 | Add export buttons (JSON/NDJSON/HTML) to live dashboard                                | 20m    |
+| 23 | ~~Add scope tree tab to live dashboard JS~~ done 2026-11-07: the scope tree tab ships, verified by the browser E2E smoke                                     | 1h     |
+| 24 | Add "Show all" pagination for services and events tables                                                                                                     | 30m    |
+| 25 | Share CSS between static and live dashboards                                                                                                                 | 30m    |
+| 26 | Add CORS headers for cross-origin embedding                                                                                                                  | 10m    |
+| 27 | Integrate live dashboard into `example/` app with `--live` flag                                                                                              | 30m    |
+| 28 | Add export buttons (JSON/NDJSON/HTML) to live dashboard                                                                                                      | 20m    |
 
 ### P5 — Publishing & Release
 

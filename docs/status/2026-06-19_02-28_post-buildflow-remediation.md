@@ -92,7 +92,7 @@
 | Component            | Status                                                                                 |
 | -------------------- | -------------------------------------------------------------------------------------- |
 | `flake.nix` devShell | Go 1.26.4, templ, golangci-lint, govulncheck, actionlint                               |
-| JSON Schema          | Draft 2020-12, generated from Go types, embedded via `go:embed`                                  |
+| JSON Schema          | Draft 2020-12, generated from Go types, embedded via `go:embed`                        |
 | Pre-commit hook      | generate + vet + lint + test                                                           |
 | `.prettierignore`    | Protects golden files, generated schema, docs from oxfmt                               |
 | Documentation        | README, CHANGELOG, FEATURES.md, TODO_LIST.md, STABILITY.md, CONTRIBUTING.md, AGENTS.md |

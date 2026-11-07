@@ -135,7 +135,6 @@ Pulled forward from status reports during the 2026-11-07 docs-gates archive ritu
 - **Open Graph meta tags** for the live dashboard (for shared dashboard URLs).
 - **Large-report UX**: virtual scrolling for 500+ service reports (pagination + filter chips cover today's sizes); WebP screenshot conversion (Lighthouse Perf is already 100); coordinated tab slide+fade animation orchestration on the static report.
 
-
 ## Explicitly Rejected
 
 Proposals evaluated and deliberately not pursued. Documented here so they are not re-proposed without new context.

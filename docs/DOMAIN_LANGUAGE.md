@@ -7,35 +7,35 @@ Every term below should mean the **same thing** to everyone who reads it.
 
 ## Glossary
 
-| Term           | Definition                                                            | Context                       |
-| -------------- | --------------------------------------------------------------------- | ----------------------------- |
-| Audit Log      | The complete record of DI container lifecycle events                  | What this library produces    |
-| Plugin         | The top-level entry point that wires into samber/do hooks             | `auditlog.New()` creates one  |
-| Recorder       | The internal state machine that captures and stores events            | In-memory event capture       |
-| Event          | A single timestamped observation from the DI container                | Core domain concept           |
-| Service        | A named dependency registered in the DI container                     | samber/do service             |
-| Scope          | A hierarchical context for service isolation                          | samber/do scope               |
-| Container      | The DI container (samber/do Injector)                                 | Host for services             |
-| Invocation     | The act of resolving/creating a service instance                      | Service lifecycle phase       |
-| Registration   | The act of declaring a service provider to the container              | Service lifecycle phase       |
-| Shutdown       | The act of cleaning up a service when the container shuts down        | Service lifecycle phase       |
-| Phase          | Whether an event is the start (before) or end (after) of an operation | Event attribute               |
-| Dependency     | A service that another service needs to function                      | A→B relationship              |
-| Dependent      | A service that depends on another service                             | Reverse of dependency         |
-| Scope Tree     | The hierarchical structure of scopes in the container                 | Visualization concept         |
-| Health Check   | A diagnostic check that verifies a service is operational             | Service lifecycle phase       |
-| Provider Type  | How a service was registered: lazy, eager, transient, or alias        | Service metadata              |
-| Service Status | Computed lifecycle state: registered, active, invocation_error, etc.  | Service metadata              |
-| Capability     | Whether a service implements Healthchecker or Shutdowner interfaces   | Service metadata              |
-| Live Dashboard | Real-time SSE-powered visualization of the DI container lifecycle     | `live/` sub-package           |
-| Hub            | Fan-out broadcaster that delivers events to all connected SSE clients | Live dashboard infrastructure |
-| SSE            | Server-Sent Events — the transport for real-time dashboard updates    | Live dashboard transport      |
-| Report         | A consolidated snapshot of all captured events and service metadata   | Export output                 |
-| Schema Version | The version of the report data format                                 | Forward compatibility         |
-| Forwarder      | The component that streams audit events to an external collector      | `forward/` sub-package        |
-| Collector      | A downstream audit-run sink (e.g. PapDashboard) receiving events      | Forwarding target             |
-| Forward Target | Destination for forwarded events: unix socket or HTTP + bearer key    | Forwarder configuration       |
-| Completion     | A run is complete when the root-scope shutdown fires and `SignalComplete` is called | Forwarding lifecycle |
+| Term           | Definition                                                                          | Context                       |
+| -------------- | ----------------------------------------------------------------------------------- | ----------------------------- |
+| Audit Log      | The complete record of DI container lifecycle events                                | What this library produces    |
+| Plugin         | The top-level entry point that wires into samber/do hooks                           | `auditlog.New()` creates one  |
+| Recorder       | The internal state machine that captures and stores events                          | In-memory event capture       |
+| Event          | A single timestamped observation from the DI container                              | Core domain concept           |
+| Service        | A named dependency registered in the DI container                                   | samber/do service             |
+| Scope          | A hierarchical context for service isolation                                        | samber/do scope               |
+| Container      | The DI container (samber/do Injector)                                               | Host for services             |
+| Invocation     | The act of resolving/creating a service instance                                    | Service lifecycle phase       |
+| Registration   | The act of declaring a service provider to the container                            | Service lifecycle phase       |
+| Shutdown       | The act of cleaning up a service when the container shuts down                      | Service lifecycle phase       |
+| Phase          | Whether an event is the start (before) or end (after) of an operation               | Event attribute               |
+| Dependency     | A service that another service needs to function                                    | A→B relationship              |
+| Dependent      | A service that depends on another service                                           | Reverse of dependency         |
+| Scope Tree     | The hierarchical structure of scopes in the container                               | Visualization concept         |
+| Health Check   | A diagnostic check that verifies a service is operational                           | Service lifecycle phase       |
+| Provider Type  | How a service was registered: lazy, eager, transient, or alias                      | Service metadata              |
+| Service Status | Computed lifecycle state: registered, active, invocation_error, etc.                | Service metadata              |
+| Capability     | Whether a service implements Healthchecker or Shutdowner interfaces                 | Service metadata              |
+| Live Dashboard | Real-time SSE-powered visualization of the DI container lifecycle                   | `live/` sub-package           |
+| Hub            | Fan-out broadcaster that delivers events to all connected SSE clients               | Live dashboard infrastructure |
+| SSE            | Server-Sent Events — the transport for real-time dashboard updates                  | Live dashboard transport      |
+| Report         | A consolidated snapshot of all captured events and service metadata                 | Export output                 |
+| Schema Version | The version of the report data format                                               | Forward compatibility         |
+| Forwarder      | The component that streams audit events to an external collector                    | `forward/` sub-package        |
+| Collector      | A downstream audit-run sink (e.g. PapDashboard) receiving events                    | Forwarding target             |
+| Forward Target | Destination for forwarded events: unix socket or HTTP + bearer key                  | Forwarder configuration       |
+| Completion     | A run is complete when the root-scope shutdown fires and `SignalComplete` is called | Forwarding lifecycle          |
 
 ## Entities
 
