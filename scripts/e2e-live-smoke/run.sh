@@ -44,7 +44,7 @@ DEMO_PID=$!
 
 # The demo lifecycle takes ~10s (services build with delays); wait it out so
 # assertions see the final state (health checks, completion status).
-for i in $(seq 1 40); do
+for _ in $(seq 1 40); do
 	if timeout 1 sh -c "exec 3<>/dev/tcp/127.0.0.1/${PORT}" 2>/dev/null; then
 		break
 	fi

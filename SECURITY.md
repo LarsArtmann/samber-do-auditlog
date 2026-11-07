@@ -73,7 +73,7 @@ How this repo actively defends the attack surface above:
 
 ## Response targets
 
-- Acknowledgement: within 7 days.
+- Initial response: within 7 days.
 - Triage and severity assessment: within 14 days.
 - Fix or mitigation for accepted reports: within 30 days, released as a patch
   version with credit to the reporter unless anonymity is requested.
