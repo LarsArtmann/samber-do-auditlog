@@ -42,16 +42,8 @@
 
 1. **The fix itself.** Working tree is green, but `html_templ.go` + `live/fragments_templ.go` are **uncommitted** → HEAD (`a6111f3`) still does not compile until they land. Remaining: a deliberate commit (daemon pickup is possible but has a known blind spot). Effort: S.
 2. **Post-fix verification.** Plain `go test` only. Remaining for CI-equivalence: `-race`, coverage gate, `go vet`, `go generate ./...` zero-diff check. Effort: S.
-   <<<<<<< Updated upstream
-   <<<<<<< Updated upstream
-3. # **Re-break diagnosis.** Established that _something_ regenerated files with templ v0.3.1020 at 02:15:44 and that a watcher is connected, but the owning process (editor LSP? editor extension version?) was never identified. Until it is, regeneration races can recur at any time. Effort: M.
-4. **Re-break diagnosis.** Established that _something_ regenerated files with templ v0.3.1020 at 02:15:44 and that a watcher is connected, but the owning process (editor LSP? editor extension version?) was never identified. Until it is, regeneration races can recur at any time. Effort: M.
-
->>>>>>> # Stashed changes
 
 3. **Re-break diagnosis.** Established that _something_ regenerated files with templ v0.3.1020 at 02:15:44 and that a watcher is connected, but the owning process (editor LSP? editor extension version?) was never identified. Until it is, regeneration races can recur at any time. Effort: M.
-
->>>>>>> Stashed changes
 
 4. **Original BuildFlow failures.** Root cause fixed; the two failed steps were never re-run to confirm green end-to-end (`buildflow -s go-mod-update -v`, `-s govalid-generate -v`). Effort: M.
 
@@ -72,17 +64,7 @@
 
 1. **HEAD `a6111f3` does not compile.** Severity: blocks every consumer of master and all CI jobs (stale-generation job will fail on diff; build jobs fail on `undefined: templ.ResolveAttributeValue`). Root cause: templ bumped to v0.3.1100 (API removed) while generated content stayed at v0.3.1020/1070-era output. Mitigation: my regenerated files are on disk and green — but uncommitted. Anyone cloning/checkout of `a6111f3` gets a broken build.
 2. **Two writers are fighting over generated files.** My pinned-CLI regeneration vs. an editor-side templ v0.3.1020 regen (02:15:44 mass-touch) — the same flip-flop can recur arbitrarily. Root cause: no single source of truth for generation; the editor's binary version differs from the repo pin. Mitigation: none currently; needs the system-templ bump or LSP config fix.
-   <<<<<<< Updated upstream
-   <<<<<<< Updated upstream
-3. # **A commit landed mid-session with an unverified tree.** `a6111f3` was authored with a detailed message but its generated-file changes were header-only — the authoring session did not (or could not) run the build gate. The existing `stale-generation` CI job _would_ catch this post-push; nothing caught it pre-commit.
-4. **A commit landed mid-session with an unverified tree.** `a6111f3` was authored with a detailed message but its generated-file changes were header-only — the authoring session did not (or could not) run the build gate. The existing `stale-generation` CI job _would_ catch this post-push; nothing caught it pre-commit.
-
->>>>>>> # Stashed changes
-
 3. **A commit landed mid-session with an unverified tree.** `a6111f3` was authored with a detailed message but its generated-file changes were header-only — the authoring session did not (or could not) run the build gate. The existing `stale-generation` CI job _would_ catch this post-push; nothing caught it pre-commit.
-
->>>>>>> Stashed changes
-
 4. **My own premature "fixed?" claim.** After the first repair I answered "fixed" on the strength of `go build` + `go test ./live/` only; the very next full-suite run exposed the golden FAIL. Caught and corrected within one exchange, but the claim was wrong when made. Lesson recorded in (e).
 
 ## e) WHAT WE SHOULD IMPROVE
@@ -96,9 +78,6 @@
 ## f) 50 Things To Get Done Next
 
 Ranked by impact. Effort: S <30min, M 30min–2h, L >2h. Category: Bug / Quality / Documentation / Cleanup / Feature.
-
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 
 | #       | Task                                                                                                                                             | Impact   | Effort | Category      |
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------ | ------------- |
@@ -150,69 +129,8 @@ Ranked by impact. Effort: S <30min, M 30min–2h, L >2h. Category: Bug / Quality
 | 46      | Verify golden test passes in a clean clone (catches local-artifact-only greens)                                                                  | Medium   | M      | Quality       |
 | 47      | Check whether `forward/` go-auto-upgrade advisory warnings changed after the go-error-family bump                                                | Low      | M      | Quality       |
 | 48      | Reconcile `BENCHMARKS.md` (12 benchmarks) against claims-linter counts after its reformatting                                                    | Low      | S      | Quality       |
-| 49      | Record the concurrent-session contention protocol as a candidate lesson (crush-config `references/lessons.md`)                                   | Low      | S      | Documentation |
+| 49      | ~~Record the concurrent-session contention protocol as a candidate lesson (crush-config `references/lessons.md`)~~ done 2026-11-07: recorded as a committed lesson in the crush-config repository                                   | Low      | S      | Documentation |
 | 50      | Consider retracting/re-tagging if a release was cut from the broken `a6111f3` tree (release-state audit)                                         | Medium   | S      | Cleanup       |
-| ======= |                                                                                                                                                  |          |        |               |
-| ======= |                                                                                                                                                  |          |        |               |
-
->>>>>>> Stashed changes
->>>>>>>
->>>>>>> | #                        | Task                                                                                                                                             | Impact   | Effort | Category      |
->>>>>>> | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------ | ------------- |
->>>>>>> | 1                        | Commit the regenerated `html_templ.go` + `live/fragments_templ.go` so HEAD compiles again                                                        | Critical | S      | Bug           |
->>>>>>> | 2                        | Check whether `a6111f3` was pushed to origin; if yes, watch the CI `stale-generation`/build jobs and follow up immediately                       | Critical | S      | Bug           |
->>>>>>> | 3                        | Run CI-equivalent verification on the working tree: `GOEXPERIMENT=jsonv2 go test -race ./...`                                                    | Critical | S      | Quality       |
->>>>>>> | 4                        | `GOEXPERIMENT=jsonv2 go vet ./...`                                                                                                               | High     | S      | Quality       |
->>>>>>> | 5                        | `sh scripts/coverage-gate.sh` (≥94% gate after regen)                                                                                            | High     | S      | Quality       |
->>>>>>> | 6                        | `GOEXPERIMENT=jsonv2 go generate ./...` → assert zero diff (stale-generation CI equivalence, would have caught `a6111f3`)                        | High     | S      | Quality       |
->>>>>>> | 7                        | Re-run `buildflow -s go-mod-update -v` to confirm the originally failing step is now green                                                       | High     | M      | Quality       |
->>>>>>> | 8                        | Re-run `buildflow -s govalid-generate -v`                                                                                                        | High     | M      | Quality       |
->>>>>>> | 9                        | Diagnose "9 tools unavailable (health check failed)" via `buildflow doctor`                                                                      | High     | M      | Quality       |
->>>>>>> | 10                       | Identify the templ watcher/LSP regenerating with v0.3.1020 (editor? which binary?) and neutralize or upgrade it                                  | High     | M      | Bug           |
->>>>>>> | 11                       | Decide and execute system templ bump (nixpkgs → ≥v0.3.1100) or fleet policy "go tool templ only"                                                 | High     | M      | Cleanup       |
->>>>>>> | 12                       | Add CHANGELOG entry: templ v0.3.1100, go-output v0.38.7 edge-label tooltips, golden regeneration                                                 | High     | S      | Documentation |
->>>>>>> | 13                       | Add AGENTS.md gotcha: `ResolveAttributeValue` removal + regen-via-`go tool`-only rule + editor-LSP trap                                          | High     | S      | Documentation |
->>>>>>> | 14                       | Update FEATURES.md HTML-report inventory: edge labels render as native SVG tooltips                                                              | Medium   | S      | Documentation |
->>>>>>> | 15                       | Fix stale go.mod retraction comment ("gitignored generated file" — the file is tracked now)                                                      | Medium   | S      | Documentation |
->>>>>>> | 16                       | Review go-output v0.38.3→v0.38.7 upstream changelog for behavior changes beyond edge labels                                                      | Medium   | M      | Quality       |
->>>>>>> | 17                       | Review go-error-family v0.11→v0.12 bump notes (landed unreviewed in `a6111f3`)                                                                   | Medium   | S      | Quality       |
->>>>>>> | 18                       | Verify all four diagram renderers (Mermaid/DOT/D2/PlantUML) unaffected by the go-output bump                                                     | Medium   | M      | Quality       |
->>>>>>> | 19                       | `nix build` / vendorHash check after go.mod churn                                                                                                | Medium   | M      | Quality       |
->>>>>>> | 20                       | Run on-demand tools: `buildflow -s gitleaks`, `-s codespell`, `-s markdown-lint`                                                                 | Medium   | S      | Quality       |
->>>>>>> | 21                       | `sh scripts/check-doc-claims.sh` after the doc updates (12/12 checks)                                                                            | Medium   | S      | Quality       |
->>>>>>> | 22                       | `sh scripts/check-changelog-sync.sh` after the CHANGELOG entry                                                                                   | Medium   | S      | Quality       |
->>>>>>> | 23                       | `sh scripts/check-go-version.sh` drift guard after go.mod churn                                                                                  | Medium   | S      | Quality       |
->>>>>>> | 24                       | Example smoke: `DO_AUDITLOG_ENABLED=true go run ./example` end-to-end after dep bumps                                                            | Medium   | S      | Quality       |
->>>>>>> | 25                       | Audit why `a6111f3` updated generated-file headers but not content (which CLI did that session run?)                                             | Medium   | S      | Bug           |
->>>>>>> | 26                       | `go mod tidy` zero-drift check (CI mod-tidy job equivalence)                                                                                     | Medium   | S      | Quality       |
->>>>>>> | 27                       | Race-test the `live/` SSE/dashboard package specifically (transport-heavy)                                                                       | Medium   | S      | Quality       |
->>>>>>> | 28                       | Verify all 8 fuzz targets still pass after dep bumps                                                                                             | Medium   | M      | Quality       |
->>>>>>> | 29                       | Decide whether an extra CI guard is needed beyond `stale-generation` (build right after generate) or whether #6 proves the existing job suffices | Medium   | S      | Quality       |
->>>>>>> | 30                       | Document the UPDATE_GOLDEN workflow for templ/go-output bumps (when golden drift is legitimate vs. a regression)                                 | Medium   | S      | Documentation |
->>>>>>> | 31                       | Verify next-release implications: tag must include regenerated files (v0.9.0-retraction class)                                                   | Medium   | S      | Cleanup       |
->>>>>>> | 32                       | Check `git config core.hooksPath scripts/hooks` is still installed (documented rot risk)                                                         | Low      | S      | Cleanup       |
->>>>>>> | 33                       | Harvest this report's section (f) into TODO_LIST.md / ROADMAP.md (docs-health HARVEST)                                                           | High     | S      | Documentation |
->>>>>>> | 34                       | Annotate the two re-formatted 2026-10-26 status reports (docs-health ANNOTATE, non-destructive)                                                  | Low      | M      | Documentation |
->>>>>>> | 35                       | Verify `.prettierignore` still covers `testdata/` (golden reformat protection after the golden change)                                           | Low      | S      | Cleanup       |
->>>>>>> | 36                       | Investigate the 02:15:44 mass-mtime event (why source `.templ` files were touched too)                                                           | Low      | M      | Bug           |
->>>>>>> | 37                       | Sweep templ v0.3.1100 release notes for other API removals that could bite future regens                                                         | Low      | M      | Quality       |
->>>>>>> | 38                       | Decide whether an "Unreleased" CHANGELOG section should open for the dep bumps                                                                   | Medium   | S      | Documentation |
->>>>>>> | 39                       | Confirm the `tool` directive + version comment in go.mod are current                                                                             | Low      | S      | Cleanup       |
->>>>>>> | 40                       | Evaluate a pre-commit guard that blocks committing generated files that fail `go build`                                                          | Medium   | M      | Quality       |
->>>>>>> | 41                       | Verify `schema/report.schema.json` committed content matches `cmd/genschema` output (regen-identical check)                                      | Low      | S      | Quality       |
->>>>>>> | 42                       | Review remaining `a6111f3` items for follow-ups (package.json reorder, pnpm/action-setup v6.1.1 bump verification)                               | Low      | S      | Cleanup       |
->>>>>>> | 43                       | Confirm website changelog.mdx needs no entry yet (website deploys only on `website/**` pushes)                                                   | Low      | S      | Documentation |
->>>>>>> | 44                       | Decide on a version-skew ledger entry in AGENTS.md if the templ-version flap recurs                                                              | Low      | S      | Documentation |
->>>>>>> | 45                       | Add editor guidance (docs note): "regenerate only via `go tool templ generate`; system templ may lag"                                            | Low      | S      | Documentation |
->>>>>>> | 46                       | Verify golden test passes in a clean clone (catches local-artifact-only greens)                                                                  | Medium   | M      | Quality       |
->>>>>>> | 47                       | Check whether `forward/` go-auto-upgrade advisory warnings changed after the go-error-family bump                                                | Low      | M      | Quality       |
->>>>>>> | 48                       | Reconcile `BENCHMARKS.md` (12 benchmarks) against claims-linter counts after its reformatting                                                    | Low      | S      | Quality       |
->>>>>>> | 49                       | Record the concurrent-session contention protocol as a candidate lesson (crush-config `references/lessons.md`)                                   | Low      | S      | Documentation |
->>>>>>> | 50                       | Consider retracting/re-tagging if a release was cut from the broken `a6111f3` tree (release-state audit)                                         | Medium   | S      | Cleanup       |
->>>>>>> | <<<<<<< Updated upstream |                                                                                                                                                  |          |        |               |
->>>>>>> | Stashed changes          |                                                                                                                                                  |          |        |               |
->>>>>>> | =======                  |                                                                                                                                                  |          |        |               |
->>>>>>> | Stashed changes          |                                                                                                                                                  |          |        |               |
 
 **HARVEST note:** items 33/12/13/14/15/30 are immediate docs work; items 1–11 are the critical path. Everything else is harvestable into TODO_LIST (specific) vs ROADMAP (policy/audit items: 11, 29, 40, 46, 50).
 

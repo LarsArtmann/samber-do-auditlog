@@ -128,7 +128,7 @@ The `2026-07-22_18-14` report claimed "BUILD GREEN, ALL TESTS PASS, COVERAGE 94.
 4. Run `govulncheck` — verify no known vulnerabilities
 5. Run `art-dupl -t 15 --semantic` — verify no new duplication from the `string()` conversions
 6. Review ALL `string()` conversions — ensure none hide a type confusion bug
-7. Check if `ServiceRef.String()` needs `string(r.ServiceName)` update — it uses `%s` which should work on `~string`
+7. ~~Check if `ServiceRef.String()` needs `string(r.ServiceName)` update — it uses `%s` which should work on `~string`~~ done 2026-11-07: verified — %s formats the named string types and an explicit conversion guards the root return; covered by the type-method tests
 8. Verify `table.go` `WriteTable` — builds `[][]string` from typed fields, verify all conversions correct
 9. Check `loader.go` `LoadReport` — delegates to `MigrateReport`/`ReplayEvents`, verify no string assumptions
 10. Check `ndjson.go` `ReadEvents` — returns `[]Event`, verify no string assumptions
