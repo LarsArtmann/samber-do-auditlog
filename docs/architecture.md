@@ -7,16 +7,20 @@ moved there to keep AGENTS.md lean (go-structure-linter: max 220 lines).
 ## Source map — `auditlog` package
 
 ```
-plugin.go           — Public API: New(), Opts(), Enable(), SetOnEvent(), Report(), Export*(), Write*(), Events(), RecordHealthCheck*
+plugin.go           — Public API core: New(), Opts(), Enable(), SetOnEvent(), Report(), Events(), RecordHealthCheck*
+plugin_export.go    — Export family: Write*/Export* for JSON, NDJSON, CSV/TSV, diagrams, tree, table (shared writeToFile helper stays in plugin.go)
 recorder.go         — Core state machine: event capture, invocation stack, service aggregation
-hooks.go            — Hook methods + shared helpers (newEventFromRef, newServiceRecordCore, inferServiceType, getOrCreateServiceRecord, recordDependencyFromStack)
+hooks.go            — Hook methods (OnBefore/AfterRegistration/Invocation/Shutdown, fireEvent, publishLockedEvent, begin*/after helpers)
+event_builders.go   — Shared constructors/helpers: newEventFromRef, newServiceRecordCore, getOrCreateServiceRecord, popStackFrame, recordDependencyFromStack, inferServiceType
 types.go            — Domain enums: EventType, Phase, ProviderType, ServiceStatus, ServiceRef
 metadata.go         — TypeMetadata struct + BuildTypeMetadata() — Go enum display metadata for HTML
 event.go            — Event type + convenience methods (IsRegistration, Duration, etc.)
 service.go          — ServiceInfo (split into ServiceIdentity/ServiceLifecycle/ServiceHealth/ServiceGraph embedded structs), ScopeNode types + methods (Uptime, HasHealthError, DeriveStatus)
-report.go           — Report type + Validate() + query methods (ServiceByName, EventsByType, Index, WriteNDJSON, WriteJSON, etc.) + buildReportFromCore/finalizeDenormalized (unified construction)
+report.go           — Report type + Validate() + buildReportFromCore/finalizeDenormalized (unified construction) + MergeReports
+report_query.go     — Query + export methods: ServiceByName/ByRef, ServicesByScope, EventsBy*, Failed/UnhealthyServices, Index, WriteNDJSON/WriteJSON
 diff.go             — Report.Diff(other) + DiffResult/ServiceDiff types (incl. AddedDeps/RemovedDeps)
-report_builder.go   — BuildReport assembly: services, scope tree, capability enrichment, shared helpers (serviceRecordToInfo, buildServiceDeps, sortServiceInfos)
+report_builder.go   — BuildReport assembly: services, dependency/dependent graphs, capability enrichment, shared helpers (serviceRecordToInfo, buildServiceDeps, sortServiceInfos)
+scope_tree.go       — Scope-tree construction: buildScopeTreeLocked, generic buildScopeTreeFromMeta/findRootScope/buildScopeChildren, sortedScopes
 report_helpers.go   — Report aggregate helpers (sumBuildMs, deriveServiceStatus, etc.)
 replay.go           — ReplayEvents: reconstructs Report from a flat event stream (inverse of hook-based recording)
 ndjson.go           — ReadEvents + StreamEvents: re-exports go-ndjson reader + callback-based NDJSON line scanner
@@ -51,7 +55,7 @@ scripts/hooks/      — pre-commit hook (BuildFlow-generated; see AGENTS.md); in
 scripts/            — coverage-gate.sh, coverage-exclusions.txt, check-go-version.sh, check-doc-claims.sh, check-changelog-sync.sh
 example/            — Demo app: 20 services across 4 scopes with health checks, shutdowns, and invocation errors (feature tour in main.go's doc comment)
 live/               — Real-time SSE dashboard sub-package (see below)
-forward/            — PapDashboard audit-run collector forwarding (see AGENTS.md Forwarding)
+forward/            — PapDashboard audit-run collector forwarding (see AGENTS.md Forwarding). forward.go holds the Forwarder lifecycle (New, loop, flush); target.go target resolution (unix/HTTP/auto, envInt); deliver.go delivery (OnEvent, postAll, post, failure/recovery tracking)
 ```
 
 **Note:** The `health/` sub-package was extracted to its own project:
@@ -63,18 +67,21 @@ implicitly via `RecordHealthCheckWithContext`.
 
 ```
 live/hub.go         — Hub: facade over sse.Broadcaster[sse.Event] (subscriber buffer 128, ring-buffer replay via ReplayBufferSize, SignalComplete, OnEvent, EventStore()/BufferedEventCount(), Shutdown/Health). Defines sseEventType.
-live/server.go      — HTTP server with 6 endpoints (dashboard, report JSON, SSE, health, export NDJSON, export HTML), configurable prefix, CORS, graceful shutdown, CSP response header.
+live/server.go      — HTTP server core: Config/Server types, New/NewServer, routes, CORS, lifecycle (ListenAndServe/Shutdown/SignalComplete), ServeHTTP, CSP response header.
+live/server_handlers.go — HTTP + SSE handlers: dashboard, report, health, NDJSON/HTML exports, handleSSE, drainEvents, datastar snapshot/complete, JSON/prefix helpers
 live/replay.go      — Ring-buffer EventStore + reconnection replay on top of sse.Replay.
-live/fragments.go   — Go helpers for fragment rendering: signal structs, renderAllFragments(), pure helpers (humanizeDuration, providerIcon, computeWaveformMarks…), renderToString.
+live/fragments.go   — Fragment descriptors + rendering: signal structs, renderAllFragments(), renderToString, compute helpers (computeLegendItems, computeWaveformMarks, waveformBounds/Tooltip, buildStatsEntries).
+live/fragments_format.go — Pure formatting helpers: humanizeDuration, providerIcon/statusIcon, badge color/label, signals JSON marshaling, truncate, footer version.
 live/fragments.templ / fragments_templ.go — Templ components for all dashboard sections (stats, legend, waveform, services/events tbody, scope tree, graph, timeline, footer).
-live/fragments_internal_test.go / fragments_render_internal_test.go — Internal tests for fragment helpers + renderers.
+live/fragments_*_test.go — Internal tests, split by concern: format helpers, waveform, CSS completeness, stats/badges, per-fragment render tests, render states.
 live/dashboard.go   — Dashboard HTML template (datastar attributes: data-signals, data-init, data-bind, data-show, data-class:active, data-on:click). Embeds datastar.js via go:embed.
 live/dashboard.css  — Dashboard stylesheet (warm amber theme, responsive)
 live/dashboard.js   — Keyboard nav (handleKeydown), export helpers, scope tree toggle, keyboard help dialog (~223 lines)
 live/datastar.js    — Datastar v1.0.2 runtime (~56KB, go:embed). SSE parsing, DOM morphing by element ID, reactive signals.
 live/base_css.go    — Composes shared tokens (auditlog.DesignTokensCSS + SharedComponentCSS) + live aliases + base component styles
 live/doc.go         — Package doc comment
-live/server_test.go / replay_test.go — External tests: server lifecycle, SSE streaming, handler edge cases, CORS, exports, replay
+live/server_*_test.go — External tests split by concern: dashboard/CSP/report endpoints, prefix handling, SSE streaming, hub fan-out, server lifecycle, SSE edge cases, network shutdown, export error paths.
+replay_test.go (root) + event_factory/replay_lifecycle/replay_edge/events_read/report_load/report_diff_test.go — Replay, event factories, ReadEvents/LoadReport, Diff
 live/demo/          — Self-contained real-time demo (services implement do.Healthchecker)
 ```
 
