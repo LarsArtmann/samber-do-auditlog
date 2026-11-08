@@ -124,16 +124,23 @@ func compareService(prev, other ServiceInfo) (ServiceDiff, bool) {
 	return diff, changed
 }
 
+// indexByKey indexes items by a computed key.
+func indexByKey[T any](items []T, key func(T) string) map[string]T {
+	idx := make(map[string]T, len(items))
+
+	for _, item := range items {
+		idx[key(item)] = item
+	}
+
+	return idx
+}
+
 // serviceRefSet indexes ServiceRefs by the canonical (scope_id, service_name)
 // key used throughout the diff logic.
 func serviceRefSet(refs []ServiceRef) map[string]ServiceRef {
-	set := make(map[string]ServiceRef, len(refs))
-
-	for _, ref := range refs {
-		set[serviceKey(ref.ScopeID, ref.ServiceName)] = ref
-	}
-
-	return set
+	return indexByKey(refs, func(ref ServiceRef) string {
+		return serviceKey(ref.ScopeID, ref.ServiceName)
+	})
 }
 
 // serviceRefsOnlyIn returns the refs present in `a` but not in `b`, sorted
@@ -154,13 +161,9 @@ func serviceRefsOnlyIn(a, b map[string]ServiceRef) []ServiceRef {
 }
 
 func indexServicesByKey(services []ServiceInfo) map[string]ServiceInfo {
-	idx := make(map[string]ServiceInfo, len(services))
-
-	for _, svc := range services {
-		idx[serviceKey(svc.ScopeID, svc.ServiceName)] = svc
-	}
-
-	return idx
+	return indexByKey(services, func(svc ServiceInfo) string {
+		return serviceKey(svc.ScopeID, svc.ServiceName)
+	})
 }
 
 // CompareServiceRefs is the canonical sort ordering for ServiceRef slices:

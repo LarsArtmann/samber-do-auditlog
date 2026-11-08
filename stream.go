@@ -158,22 +158,26 @@ func (streamer *NDJSONStreamer) OnEvent(evt Event) {
 	if streamer.autoFlush {
 		flushErr := streamer.buf.Flush()
 		if flushErr != nil {
-			streamer.err = fmt.Errorf("flush ndjson stream: %w", flushErr)
+			streamer.setFlushError(flushErr)
 		}
 
 		return
-	}
+		}
 
 	if streamer.flushEvery > 0 && time.Since(streamer.lastFlush) >= streamer.flushEvery {
 		flushErr := streamer.buf.Flush()
 		if flushErr != nil {
-			streamer.err = fmt.Errorf("flush ndjson stream: %w", flushErr)
+			streamer.setFlushError(flushErr)
 
 			return
 		}
 
 		streamer.lastFlush = time.Now()
 	}
+}
+
+func (streamer *NDJSONStreamer) setFlushError(err error) {
+	streamer.err = fmt.Errorf("flush ndjson stream: %w", err)
 }
 
 // Flush writes any buffered data to the underlying [io.Writer].
@@ -188,7 +192,7 @@ func (streamer *NDJSONStreamer) Flush() error {
 
 	err := streamer.buf.Flush()
 	if err != nil {
-		streamer.err = fmt.Errorf("flush ndjson stream: %w", err)
+		streamer.setFlushError(err)
 
 		return streamer.err
 	}

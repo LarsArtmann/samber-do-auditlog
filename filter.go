@@ -79,50 +79,31 @@ func newReportFilter(opts ...ReportOption) *reportFilter {
 	return filter
 }
 
+// setAllows reports whether key passes the filter set: an empty set allows
+// everything, otherwise the key must be a member.
+func setAllows[K comparable](set map[K]struct{}, key K) bool {
+	if len(set) == 0 {
+		return true
+	}
+
+	_, ok := set[key]
+
+	return ok
+}
+
 func (filter *reportFilter) matchService(svc ServiceInfo) bool {
-	if len(filter.serviceNames) > 0 {
-		if _, ok := filter.serviceNames[svc.ServiceName]; !ok {
-			return false
-		}
-	}
-
-	if len(filter.serviceTypes) > 0 {
-		if _, ok := filter.serviceTypes[svc.ServiceType]; !ok {
-			return false
-		}
-	}
-
-	if len(filter.scopeIDs) > 0 {
-		if _, ok := filter.scopeIDs[svc.ScopeID]; !ok {
-			return false
-		}
-	}
-
-	return true
+	return setAllows(filter.serviceNames, svc.ServiceName) &&
+		setAllows(filter.serviceTypes, svc.ServiceType) &&
+		setAllows(filter.scopeIDs, svc.ScopeID)
 }
 
 func (filter *reportFilter) matchEvent(evt Event) bool {
-	if len(filter.eventTypes) > 0 {
-		if _, ok := filter.eventTypes[evt.EventType]; !ok {
-			return false
-		}
-	}
+	inWindow := (filter.timeFrom == nil || !evt.Timestamp.Before(*filter.timeFrom)) &&
+		(filter.timeTo == nil || !evt.Timestamp.After(*filter.timeTo))
 
-	if len(filter.scopeIDs) > 0 {
-		if _, ok := filter.scopeIDs[evt.ScopeID]; !ok {
-			return false
-		}
-	}
-
-	if filter.timeFrom != nil && evt.Timestamp.Before(*filter.timeFrom) {
-		return false
-	}
-
-	if filter.timeTo != nil && evt.Timestamp.After(*filter.timeTo) {
-		return false
-	}
-
-	return true
+	return inWindow &&
+		setAllows(filter.eventTypes, evt.EventType) &&
+		setAllows(filter.scopeIDs, evt.ScopeID)
 }
 
 // Filtered returns a new Report with the given filters applied.
@@ -132,21 +113,8 @@ func (filter *reportFilter) matchEvent(evt Event) bool {
 func (r Report) Filtered(opts ...ReportOption) Report {
 	filter := newReportFilter(opts...)
 
-	filteredServices := make([]ServiceInfo, 0, len(r.Services))
-
-	for _, svc := range r.Services {
-		if filter.matchService(svc) {
-			filteredServices = append(filteredServices, svc)
-		}
-	}
-
-	filteredEvents := make([]Event, 0, len(r.Events))
-
-	for _, evt := range r.Events {
-		if filter.matchEvent(evt) {
-			filteredEvents = append(filteredEvents, evt)
-		}
-	}
+	filteredServices := filterInto(r.Services, filter.matchService)
+	filteredEvents := filterInto(r.Events, filter.matchEvent)
 
 	scopeTree, _ := pruneScopeTree(r.ScopeTree, filteredServices)
 
