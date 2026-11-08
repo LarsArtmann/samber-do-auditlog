@@ -2,6 +2,7 @@ package auditlog
 
 import (
 	"cmp"
+	"maps"
 	"slices"
 )
 
@@ -115,11 +116,7 @@ func buildScopeTreeFromMeta[T any](
 }
 
 func sortedScopes(scopes map[ScopeID]scopeMeta) []scopeMeta {
-	result := make([]scopeMeta, 0, len(scopes))
-
-	for _, meta := range scopes {
-		result = append(result, meta)
-	}
+	result := slices.Collect(maps.Values(scopes))
 
 	slices.SortFunc(result, func(a, b scopeMeta) int {
 		return cmp.Compare(a.id, b.id)

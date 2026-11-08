@@ -62,12 +62,7 @@ func depNamesString(deps []auditlog.ServiceRef) string {
 		return mdash
 	}
 
-	parts := make([]string, 0, len(deps))
-	for _, dep := range deps {
-		parts = append(parts, string(dep.ServiceName))
-	}
-
-	return strings.Join(parts, ", ")
+	return strings.Join(auditlog.ServiceRefNames(deps), ", ")
 }
 
 func rowSignalsJSON(svc auditlog.ServiceInfo, idx int) string {

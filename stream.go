@@ -162,7 +162,7 @@ func (streamer *NDJSONStreamer) OnEvent(evt Event) {
 		}
 
 		return
-		}
+	}
 
 	if streamer.flushEvery > 0 && time.Since(streamer.lastFlush) >= streamer.flushEvery {
 		flushErr := streamer.buf.Flush()

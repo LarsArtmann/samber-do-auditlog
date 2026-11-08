@@ -147,12 +147,7 @@ func extractDependenciesCell(svc ServiceInfo) string {
 		return ""
 	}
 
-	names := make([]string, 0, len(svc.Dependencies))
-	for _, dep := range svc.Dependencies {
-		names = append(names, string(dep.ServiceName))
-	}
-
-	return strings.Join(names, ", ")
+	return strings.Join(ServiceRefNames(svc.Dependencies), ", ")
 }
 
 func extractDependentsCell(svc ServiceInfo) string {
@@ -160,12 +155,7 @@ func extractDependentsCell(svc ServiceInfo) string {
 		return ""
 	}
 
-	names := make([]string, 0, len(svc.Dependents))
-	for _, dep := range svc.Dependents {
-		names = append(names, string(dep.ServiceName))
-	}
-
-	return strings.Join(names, ", ")
+	return strings.Join(ServiceRefNames(svc.Dependents), ", ")
 }
 
 // TableOption configures service summary table output.

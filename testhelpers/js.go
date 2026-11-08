@@ -71,29 +71,16 @@ func stripJSNoise(js string) string {
 		lastCh: 0,
 	}
 
-	for scanner.pos < len(scanner.src) {
-		if scanner.skipLineComment() {
-			continue
+scan:
+	for scanner.remaining() {
+		if scanner.skipLineComment() || scanner.skipBlockComment() || scanner.skipRegex() {
+			continue scan
 		}
 
-		if scanner.skipBlockComment() {
-			continue
-		}
-
-		if scanner.skipRegex() {
-			continue
-		}
-
-		if scanner.skipQuoted('\'') {
-			continue
-		}
-
-		if scanner.skipQuoted('"') {
-			continue
-		}
-
-		if scanner.skipQuoted('`') {
-			continue
+		for _, quote := range [...]byte{'\'', '"', '`'} {
+			if scanner.skipQuoted(quote) {
+				continue scan
+			}
 		}
 
 		scanner.copyByte()
@@ -110,6 +97,23 @@ func (scanner *jsStripper) at(p int) byte {
 	}
 
 	return 0
+}
+
+// advanceEscapedUntil consumes bytes up to (not including) terminator,
+// treating a backslash as escaping the byte that follows it.
+func (scanner *jsStripper) advanceEscapedUntil(terminator byte) {
+	for scanner.remaining() && scanner.src[scanner.pos] != terminator {
+		if scanner.src[scanner.pos] == '\\' {
+			scanner.pos++
+		}
+
+		scanner.pos++
+	}
+}
+
+func (scanner *jsStripper) emitBlank() {
+	scanner.out.WriteByte(' ')
+	scanner.lastCh = ' '
 }
 
 func (scanner *jsStripper) skipLineComment() bool {
@@ -178,8 +182,7 @@ func (scanner *jsStripper) skipRegex() bool {
 		scanner.pos++
 	}
 
-	scanner.out.WriteByte(' ')
-	scanner.lastCh = ' '
+	scanner.emitBlank()
 
 	return true
 }
@@ -187,13 +190,7 @@ func (scanner *jsStripper) skipRegex() bool {
 func (scanner *jsStripper) skipCharClass() {
 	scanner.pos++ // [
 
-	for scanner.remaining() && scanner.src[scanner.pos] != ']' {
-		if scanner.src[scanner.pos] == '\\' {
-			scanner.pos++
-		}
-
-		scanner.pos++
-	}
+	scanner.advanceEscapedUntil(']')
 }
 
 func (scanner *jsStripper) skipQuoted(quote byte) bool {
@@ -203,18 +200,10 @@ func (scanner *jsStripper) skipQuoted(quote byte) bool {
 
 	scanner.pos++
 
-	for scanner.remaining() && scanner.src[scanner.pos] != quote {
-		if scanner.src[scanner.pos] == '\\' {
-			scanner.pos++
-		}
+	scanner.advanceEscapedUntil(quote)
+	scanner.pos++ // closing quote
 
-		scanner.pos++
-	}
-
-	scanner.pos++
-
-	scanner.out.WriteByte(' ')
-	scanner.lastCh = ' '
+	scanner.emitBlank()
 
 	return true
 }

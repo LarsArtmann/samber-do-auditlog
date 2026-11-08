@@ -3,6 +3,8 @@ package auditlog
 import (
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"time"
 )
 
@@ -226,11 +228,7 @@ func MergeReports(reports []Report) (Report, error) {
 // buildMergedRootScope collects scopes from the set, sorts them, and returns
 // the first as the root.
 func buildMergedRootScope(scopeSet map[ScopeID]ScopeNode) ScopeNode {
-	scopes := make([]ScopeNode, 0, len(scopeSet))
-
-	for _, sc := range scopeSet {
-		scopes = append(scopes, sc)
-	}
+	scopes := slices.Collect(maps.Values(scopeSet))
 
 	sortScopeNodes(scopes)
 
