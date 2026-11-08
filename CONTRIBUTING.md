@@ -16,7 +16,7 @@ This project uses the standard Go toolchain. A `flake.nix` devShell is available
 
 ### GOEXPERIMENT=jsonv2 (required)
 
-This project must be built with `GOEXPERIMENT=jsonv2`. A transitive dependency (`larsartmann/go-output`) imports `encoding/json/v2`, which requires the build experiment flag in Go 1.26. Without it, compilation fails.
+This project must be built with `GOEXPERIMENT=jsonv2`. A transitive dependency (`larsartmann/go-output`) imports `encoding/json/v2`, which required the build experiment flag before Go 1.27 stabilized it. Without it, compilation fails.
 
 Go 1.27 stabilized `encoding/json/v2` for THIS module, but transitive dependencies built from source still sit on lower go directives (their files fail the go1.27 symbol gate without the experiment flag), so the flag stays until the dependency graph converges on 1.27.
 
