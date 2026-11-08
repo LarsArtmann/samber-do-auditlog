@@ -31,82 +31,50 @@ func (r Report) ServiceByRef(scopeID ScopeID, serviceName ServiceName) *ServiceI
 	return nil
 }
 
-// ServicesByScope returns all services in the given scope.
-func (r Report) ServicesByScope(scopeID ScopeID) []ServiceInfo {
-	var result []ServiceInfo
+// filterInto returns the items for which keep returns true.
+// The result is non-nil even when empty.
+func filterInto[T any](items []T, keep func(T) bool) []T {
+	out := make([]T, 0, len(items))
 
-	for _, s := range r.Services {
-		if s.ScopeID == scopeID {
-			result = append(result, s)
+	for _, item := range items {
+		if keep(item) {
+			out = append(out, item)
 		}
 	}
 
-	return result
+	return out
+}
+
+// ServicesByScope returns all services in the given scope.
+func (r Report) ServicesByScope(scopeID ScopeID) []ServiceInfo {
+	return filterInto(r.Services, func(s ServiceInfo) bool { return s.ScopeID == scopeID })
 }
 
 // EventsByService returns all events for the given service name.
 func (r Report) EventsByService(serviceName ServiceName) []Event {
-	var result []Event
-
-	for _, e := range r.Events {
-		if e.ServiceName == serviceName {
-			result = append(result, e)
-		}
-	}
-
-	return result
+	return filterInto(r.Events, func(e Event) bool { return e.ServiceName == serviceName })
 }
 
 // EventsByType returns all events matching the given event type.
 func (r Report) EventsByType(t EventType) []Event {
-	var result []Event
-
-	for _, e := range r.Events {
-		if e.EventType == t {
-			result = append(result, e)
-		}
-	}
-
-	return result
+	return filterInto(r.Events, func(e Event) bool { return e.EventType == t })
 }
 
 // FailedServices returns all services with invocation or shutdown errors.
 func (r Report) FailedServices() []ServiceInfo {
-	var failed []ServiceInfo
-
-	for _, s := range r.Services {
-		if s.Status.IsError() {
-			failed = append(failed, s)
-		}
-	}
-
-	return failed
+	return filterInto(r.Services, func(s ServiceInfo) bool { return s.Status.IsError() })
 }
 
 // UnhealthyServices returns all services with a health check error.
 func (r Report) UnhealthyServices() []ServiceInfo {
-	var unhealthy []ServiceInfo
-
-	for _, s := range r.Services {
-		if s.HealthCheckError != nil {
-			unhealthy = append(unhealthy, s)
-		}
-	}
-
-	return unhealthy
+	return filterInto(r.Services, func(s ServiceInfo) bool { return s.HealthCheckError != nil })
 }
 
 // EventsByRef returns all events for the given scope ID and service name.
 func (r Report) EventsByRef(scopeID ScopeID, serviceName ServiceName) []Event {
-	var result []Event
-
-	for _, e := range r.Events {
-		if e.ScopeID == scopeID && e.ServiceName == serviceName {
-			result = append(result, e)
-		}
-	}
-
-	return result
+	return filterInto(r.Events, func(e Event) bool {
+		return e.ScopeID == scopeID && e.ServiceName == serviceName
+	})
 }
 
 // ReportIndex provides O(1) lookups into a Report.
