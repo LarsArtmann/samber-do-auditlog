@@ -184,6 +184,7 @@ func (p *Plugin) ReportFiltered(opts ...ReportOption) Report {
 	return p.Report().Filtered(opts...)
 }
 
+// Events returns a defensive copy of all captured events.
 func (p *Plugin) Events() []Event {
 	return p.recorder.Events()
 }

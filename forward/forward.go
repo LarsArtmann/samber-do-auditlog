@@ -176,6 +176,8 @@ func New(sourceID string) *Forwarder {
 	return NewWithTarget(os.Getenv(EnvTarget), sourceID)
 }
 
+// Enabled reports whether any target is armed (an armed auto target counts
+// as enabled — delivery starts when its socket answers).
 func (f *Forwarder) Enabled() bool { return len(f.targets) > 0 }
 
 // Dropped returns how many events were dropped from a full buffer.

@@ -20,6 +20,17 @@ description: All notable changes to do-auditlog.
 - Contributing page coverage gate corrected to 94% (was 95%).
 - Landing demo terminal now matches real example output.
 
+## [0.12.3] — 2026-11-08
+
+### Fixed
+
+- **Three godoc comments lost or detached in the 2026-11-07 file split** — `Plugin.Events`, `Report.ServiceByRef`, and `Forwarder.Enabled` shipped without their documentation comments on master (a blank line detached `ServiceByRef`'s; the other two were dropped outright), degrading pkg.go.dev output. All three restored; the exported API surface is again byte-identical to v0.12.2 (verified via `go doc -all` diff across `.`, `live`, `forward`, `testhelpers`: zero deltas).
+
+### Changed
+
+- **File-size gate compliance — internal refactor, zero behavior change.** All hand-written `.go` files over 350 lines were split (BuildFlow's `file-size-check` gate): `plugin.go` → `plugin_export.go`, `report.go`/`report_builder.go` → `report_query.go` + `scope_tree.go`, `hooks.go` → `event_builders.go`, `live/fragments.go` → `live/fragments_format.go`, `live/server.go` → `live/server_handlers.go`, `forward/forward.go` → `forward/deliver.go` + `forward/target.go`; the oversized test files were reorganized the same way. Pure code movement: no API, behavior, or wire-format change.
+- Repository/tooling upkeep bundled in the same window: `lychee.toml` (link checking), flake `vendorHash` refresh, docs wave (ROADMAP harvested ideas, TODO_LIST re-verified 2026-11-07, architecture.md source map for the new file layout).
+
 ## [0.12.2] — 2026-11-05
 
 ### Fixed

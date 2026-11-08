@@ -21,7 +21,6 @@ func (r Report) ServiceByName(name ServiceName) *ServiceInfo {
 
 // ServiceByRef returns the ServiceInfo matching the given scope ID and service name.
 // Returns nil if no service matches.
-
 func (r Report) ServiceByRef(scopeID ScopeID, serviceName ServiceName) *ServiceInfo {
 	for i := range r.Services {
 		if r.Services[i].ScopeID == scopeID && r.Services[i].ServiceName == serviceName {
