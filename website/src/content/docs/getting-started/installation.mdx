@@ -5,7 +5,7 @@ description: Install do-auditlog in your Go project.
 
 ## Requirements
 
-- Go 1.26 or later
+- Go 1.27 or later
 - [samber/do v2](https://github.com/samber/do) in your project
 - An active Go module (`go.mod`)
 - The `GOEXPERIMENT=jsonv2` build flag (see below)
@@ -18,7 +18,7 @@ go get github.com/larsartmann/samber-do-auditlog
 
 ## GOEXPERIMENT=jsonv2 (required)
 
-Transitive dependencies of do-auditlog use Go's next-generation `encoding/json/v2` packages, which are gated behind the `jsonv2` experiment in Go 1.26. Without the flag, the build fails with:
+Transitive dependencies of do-auditlog use Go's next-generation `encoding/json/v2` packages. Go 1.27 stabilized them, but the flag is still required: those dependencies are built from source on lower `go` directives that fail Go 1.27's symbol gate without the experiment. Without the flag, the build fails with:
 
 ```text
 imports github.com/larsartmann/go-ndjson
@@ -33,7 +33,7 @@ go build ./...
 ```
 
 :::tip
-Put the export in your shell profile, CI environment, or Nix devShell once and forget it. When Go 1.27 stabilizes `encoding/json/v2`, the flag becomes unnecessary.
+Put the export in your shell profile, CI environment, or Nix devShell once and forget it. The flag stays required until the dependency graph converges on Go 1.27; it will be re-evaluated then.
 :::
 
 ## Quick Usage

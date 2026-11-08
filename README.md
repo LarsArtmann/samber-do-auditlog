@@ -113,10 +113,10 @@ Skip this library if:
 go get github.com/larsartmann/samber-do-auditlog
 ```
 
-Requires Go 1.26+ and [samber/do v2](https://github.com/samber/do).
+Requires Go 1.27+ and [samber/do v2](https://github.com/samber/do).
 
 > [!IMPORTANT]
-> **Build flag required:** transitive dependencies use `encoding/json/v2`, which is gated behind an experiment in Go 1.26. Set `GOEXPERIMENT=jsonv2` wherever you build or test code that imports this library (shell profile, CI env, or Nix devShell), or the build fails with `build constraints exclude all Go files`. This requirement disappears when Go 1.27 stabilizes json/v2.
+> **Build flag required:** transitive dependencies use `encoding/json/v2`, which Go 1.27 has stabilized — but the `GOEXPERIMENT=jsonv2` flag is still required, because those dependencies are built from source on lower `go` directives that fail Go 1.27's symbol gate without it. Set the flag wherever you build or test code that imports this library (shell profile, CI env, or Nix devShell), or the build fails with `build constraints exclude all Go files`. This will be re-evaluated as the dependency graph converges on Go 1.27.
 
 > **Try the demo:** `git clone` this repo and run `DO_AUDITLOG_ENABLED=true go run ./example` — 20 services across 4 scopes with health checks, shutdowns, and invocation errors.
 
