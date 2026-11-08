@@ -41,7 +41,7 @@ One session, started 2026-11-07 ~20:08 CET on a red `buildflow --fix --build-mod
 1. **The AGENTS.md multiedit replaced three bullets instead of adding alongside them** — the pre-commit hook, auto-commit daemon, and version-skew ledger entries were momentarily destroyed by my own edit. Caught on read-back and all three restored, but the mistake class (replace-the-nearest-bullet instead of insert) is exactly what the memory-update rules warn about.
 2. **The file splitter took three iterations and damaged three files on the way.** First run: `end=None` meant "stop at next function", mangling report.go, live/server.go, and live/fragments.go into 6–30-line fragment moves; a job crashed mid-table because an earlier job had already moved the block a later `end` regex pointed at. Second run re-moved the same fragments before I noticed. Repairs + append-mode moves + fixed semantics converged, and the build/tests prove the end state — but the path was sloppy for a session whose theme was exactness.
 3. **Off-by-one in the conflict reconstruction deleted the clean §b item 3** from the 2026-11-04 report; caught by seam inspection and re-inserted verbatim.
-4. **`force_pkg` strings missing the `package ` prefix** produced two test files with invalid package lines (`main`, `forward_test` as bare words) — the build caught it.
+4. **`force_pkg` strings missing the `package` prefix** produced two test files with invalid package lines (`main`, `forward_test` as bare words) — the build caught it.
 5. **The `rg -r` trap hit three times** — the host hook blocked the same replace-flag misread three separate times. A known pattern on this machine; should be muscle memory by now.
 6. **Misread my own offset-past-EOF view of SECURITY.md as concurrent-session interference** and spent a detour on git provenance before re-reading. The file had shrunk by exactly my own view window.
 7. **Observed, not mine: the concurrent session committed the corrupted 2026-11-04 report** (conflict markers and all) at 20:06 while the docs gates it feeds were red — the collision this repo's Open Question 5/49 keeps predicting.
@@ -59,53 +59,53 @@ One session, started 2026-11-07 ~20:08 CET on a red `buildflow --fix --build-mod
 
 Harvested into TODO_LIST.md/ROADMAP.md in this pass; tokens match the living docs so the freshness replay sees them.
 
-| #       | Task                                                                                                             | Impact | Effort | Category      |
-| ------- | ---------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------- |
-| 1       | Migrate the live dashboard to Datastar ≥ v1.0.4 CSP mode (nonce directive, drop `unsafe-eval`)                    | High   | M      | Bug           |
-| 2       | Add direct unit tests for `drainEvents` (burst coalescing + channel-close) and the `makeReportJSON` error path    | Medium | S      | Quality       |
-| 3       | Benchmark `renderAllFragments`, add an SSE end-to-end broadcast benchmark, Mermaid/PlantUML/DOT companions        | Medium | M      | Quality       |
-| 4       | Add an `ErrExportWriteFailed` sentinel wrapping go-atomic-write errors                                            | Low    | S      | Quality       |
-| 5       | CLI color flags: `--no-color`, respect `NO_COLOR`, honor `FORCE_COLOR`                                            | Low    | S      | DevEx         |
-| 6       | Decide the concurrent-session protocol: file-ownership map or per-session worktrees                               | High   | M      | Process       |
-| 7       | live/ coverage owner decision: exclude `live/fragments_templ.go` from the gate or accept 84%                      | Medium | S      | Quality       |
-| 8       | Push master and confirm all CI jobs green (owner approval pending)                                                | High   | S      | CI            |
-| 9       | Register the SSH commit-signing key; enable branch protection, Dependabot auto-merge, failure notifications        | Medium | M      | CI            |
-| 10      | Ratify the auto-commit daemon policy (pause before bulk work?)                                                    | Medium | S      | Process       |
-| 11      | Decide CI docs-only `paths-ignore` for the website workflow                                                       | Low    | S      | CI            |
-| 12      | Markdown formatter pass over the living docs (ragged table padding)                                               | Low    | M      | Documentation |
-| 13      | Rebuild and reinstall the `buildflow` binary; verify PATH precedence; re-run the battery fresh                     | High   | S      | Tooling       |
-| 14      | File the BuildFlow nix-steps not-applicable defect (needs a valid `gh` token)                                      | Medium | S      | Upstream      |
-| 15      | Online re-run of `pnpm-audit` + `govulncheck` to validate the extract-zip baseline accepts                         | Medium | S      | Security      |
-| 16      | Add `meta.description` to the three flake apps (only remaining `nix flake check` warnings)                         | Low    | S      | DevEx         |
-| 17      | Run the on-demand tools: gitleaks, codespell, markdown-lint                                                        | Medium | S      | Security      |
-| 18      | Drill into the two failed `buildflow format` steps with verbose output                                             | Medium | S      | Tooling       |
-| 19      | Dedicated `diff` docs page                                                                                         | Low    | M      | Documentation |
-| 20      | Dedicated `replay` docs page                                                                                       | Low    | M      | Documentation |
-| 21      | Dedicated `scope` tree docs page                                                                                   | Low    | M      | Documentation |
-| 22      | JSON `schema` validation guide page                                                                                | Medium | M      | Documentation |
-| 23      | `ResolveServiceScope` advanced health-check pattern in the docs                                                    | Low    | S      | Documentation |
-| 24      | Dependency detail popover on the live dashboard graph                                                              | Low    | M      | Feature       |
-| 25      | Design a more distinctive favicon/logo                                                                             | Low    | M      | Website       |
-| 26      | Lighthouse CI workflow (currently run by hand per change)                                                          | Low    | S      | CI            |
-| 27      | `md-go-validator` for docs code-block validation                                                                   | Low    | M      | Documentation |
-| 28      | Stale-reference check in the spirit of gogenfilter's deleted-files check                                           | Low    | M      | Documentation |
-| 29      | Docs-site version selector (when v1.0.0 lands)                                                                     | Low    | S      | Website       |
-| 30      | "Star this repo" call-to-action on the docs site                                                                   | Low    | S      | Website       |
-| 31      | Social-proof "Used by" section for the docs site                                                                           | Low    | S      | Website       |
-| 32      | Sponsors section (when there are sponsors)                                                                         | Low    | S      | Website       |
-| 33      | Uptime monitoring for do-auditlog.lars.software                                                                    | Low    | S      | Ops           |
-| 34      | Sitemap verification                                                                                               | Low    | S      | Ops           |
-| 35      | SOPS or age-encrypted tfvars for Namecheap credentials                                                             | Low    | M      | Ops           |
-| 36      | `terraform plan` CI check (needs credentials in CI)                                                                | Low    | M      | Ops           |
-| 37      | Open Graph tags for shared dashboard URLs                                                                        | Low    | S      | Website       |
-| 38      | Virtual scrolling for 500+ service reports                                                                         | Low    | L      | Feature       |
-| 39      | WebP screenshot conversion                                                                                         | Low    | S      | Website       |
-| 40      | Coordinated tab slide+fade animation orchestration                                                                 | Low    | M      | Website       |
-| 41      | Identify the templ watcher/LSP behind the 02:15:44 mass-touch; decide system-templ fleet policy                    | Medium | M      | Bug           |
-| 42      | Golden test verification in a clean clone; `nix flake check --all-systems` for aarch64                             | Medium | M      | Quality       |
-| 43      | Watch extract-zip upstream for a fixed release, then drop the two baseline accepts                                 | Medium | S      | Security      |
-| 44      | Investigate the go-licenses "no license found" noise on fleet pseudo-versions                                      | Low    | S      | Tooling       |
-| 45      | Decide an Unreleased CHANGELOG policy for maintenance-only waves                                                   | Low    | S      | Process       |
+| #  | Task                                                                                                           | Impact | Effort | Category      |
+| -- | -------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------- |
+| 1  | Migrate the live dashboard to Datastar ≥ v1.0.4 CSP mode (nonce directive, drop `unsafe-eval`)                 | High   | M      | Bug           |
+| 2  | Add direct unit tests for `drainEvents` (burst coalescing + channel-close) and the `makeReportJSON` error path | Medium | S      | Quality       |
+| 3  | Benchmark `renderAllFragments`, add an SSE end-to-end broadcast benchmark, Mermaid/PlantUML/DOT companions     | Medium | M      | Quality       |
+| 4  | Add an `ErrExportWriteFailed` sentinel wrapping go-atomic-write errors                                         | Low    | S      | Quality       |
+| 5  | CLI color flags: `--no-color`, respect `NO_COLOR`, honor `FORCE_COLOR`                                         | Low    | S      | DevEx         |
+| 6  | Decide the concurrent-session protocol: file-ownership map or per-session worktrees                            | High   | M      | Process       |
+| 7  | live/ coverage owner decision: exclude `live/fragments_templ.go` from the gate or accept 84%                   | Medium | S      | Quality       |
+| 8  | Push master and confirm all CI jobs green (owner approval pending)                                             | High   | S      | CI            |
+| 9  | Register the SSH commit-signing key; enable branch protection, Dependabot auto-merge, failure notifications    | Medium | M      | CI            |
+| 10 | Ratify the auto-commit daemon policy (pause before bulk work?)                                                 | Medium | S      | Process       |
+| 11 | Decide CI docs-only `paths-ignore` for the website workflow                                                    | Low    | S      | CI            |
+| 12 | Markdown formatter pass over the living docs (ragged table padding)                                            | Low    | M      | Documentation |
+| 13 | Rebuild and reinstall the `buildflow` binary; verify PATH precedence; re-run the battery fresh                 | High   | S      | Tooling       |
+| 14 | File the BuildFlow nix-steps not-applicable defect (needs a valid `gh` token)                                  | Medium | S      | Upstream      |
+| 15 | Online re-run of `pnpm-audit` + `govulncheck` to validate the extract-zip baseline accepts                     | Medium | S      | Security      |
+| 16 | Add `meta.description` to the three flake apps (only remaining `nix flake check` warnings)                     | Low    | S      | DevEx         |
+| 17 | Run the on-demand tools: gitleaks, codespell, markdown-lint                                                    | Medium | S      | Security      |
+| 18 | Drill into the two failed `buildflow format` steps with verbose output                                         | Medium | S      | Tooling       |
+| 19 | Dedicated `diff` docs page                                                                                     | Low    | M      | Documentation |
+| 20 | Dedicated `replay` docs page                                                                                   | Low    | M      | Documentation |
+| 21 | Dedicated `scope` tree docs page                                                                               | Low    | M      | Documentation |
+| 22 | JSON `schema` validation guide page                                                                            | Medium | M      | Documentation |
+| 23 | `ResolveServiceScope` advanced health-check pattern in the docs                                                | Low    | S      | Documentation |
+| 24 | Dependency detail popover on the live dashboard graph                                                          | Low    | M      | Feature       |
+| 25 | Design a more distinctive favicon/logo                                                                         | Low    | M      | Website       |
+| 26 | Lighthouse CI workflow (currently run by hand per change)                                                      | Low    | S      | CI            |
+| 27 | `md-go-validator` for docs code-block validation                                                               | Low    | M      | Documentation |
+| 28 | Stale-reference check in the spirit of gogenfilter's deleted-files check                                       | Low    | M      | Documentation |
+| 29 | Docs-site version selector (when v1.0.0 lands)                                                                 | Low    | S      | Website       |
+| 30 | "Star this repo" call-to-action on the docs site                                                               | Low    | S      | Website       |
+| 31 | Social-proof "Used by" section for the docs site                                                               | Low    | S      | Website       |
+| 32 | Sponsors section (when there are sponsors)                                                                     | Low    | S      | Website       |
+| 33 | Uptime monitoring for do-auditlog.lars.software                                                                | Low    | S      | Ops           |
+| 34 | Sitemap verification                                                                                           | Low    | S      | Ops           |
+| 35 | SOPS or age-encrypted tfvars for Namecheap credentials                                                         | Low    | M      | Ops           |
+| 36 | `terraform plan` CI check (needs credentials in CI)                                                            | Low    | M      | Ops           |
+| 37 | Open Graph tags for shared dashboard URLs                                                                      | Low    | S      | Website       |
+| 38 | Virtual scrolling for 500+ service reports                                                                     | Low    | L      | Feature       |
+| 39 | WebP screenshot conversion                                                                                     | Low    | S      | Website       |
+| 40 | Coordinated tab slide+fade animation orchestration                                                             | Low    | M      | Website       |
+| 41 | Identify the templ watcher/LSP behind the 02:15:44 mass-touch; decide system-templ fleet policy                | Medium | M      | Bug           |
+| 42 | Golden test verification in a clean clone; `nix flake check --all-systems` for aarch64                         | Medium | M      | Quality       |
+| 43 | Watch extract-zip upstream for a fixed release, then drop the two baseline accepts                             | Medium | S      | Security      |
+| 44 | Investigate the go-licenses "no license found" noise on fleet pseudo-versions                                  | Low    | S      | Tooling       |
+| 45 | Decide an Unreleased CHANGELOG policy for maintenance-only waves                                               | Low    | S      | Process       |
 
 ## g) Questions I Cannot Answer Myself
 
