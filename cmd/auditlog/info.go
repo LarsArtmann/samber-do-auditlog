@@ -60,13 +60,7 @@ func runInfo(args []string) error {
 
 func printServices(report auditlog.Report) {
 	for _, svc := range report.Services {
-		scope := svc.ScopeName
-
-		if scope == "" {
-			scope = auditlog.RootScopeName
-		}
-
 		fmt.Printf("  • %-6s %-20s [%s] type=%s invocations=%d\n",
-			scope, svc.ServiceName, svc.Status, svc.ServiceType, svc.InvocationCount)
+			displayScope(svc.ScopeName), svc.ServiceName, svc.Status, svc.ServiceType, svc.InvocationCount)
 	}
 }

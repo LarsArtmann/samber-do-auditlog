@@ -87,11 +87,15 @@ func printChangedServices(changed []auditlog.ServiceDiff) {
 
 func printRefs(refs []auditlog.ServiceRef) {
 	for _, ref := range refs {
-		scope := ref.ScopeName
-		if scope == "" {
-			scope = auditlog.RootScopeName
-		}
-
-		fmt.Printf("  • %-6s %s\n", scope, ref.ServiceName)
+		fmt.Printf("  • %-6s %s\n", displayScope(ref.ScopeName), ref.ServiceName)
 	}
+}
+
+// displayScope falls back to the root scope name for scopeless services.
+func displayScope(scope string) string {
+	if scope == "" {
+		return auditlog.RootScopeName
+	}
+
+	return scope
 }
