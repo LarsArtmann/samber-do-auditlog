@@ -238,8 +238,8 @@ The health-probe SDK has been extracted to its own standalone project: **[github
 
 | Feature                 | Status    | Note                                                                         |
 | ----------------------- | --------- | ---------------------------------------------------------------------------- |
-| Live dashboard coverage | Below bar | 83.7% vs the 90% internal goal; templ fragment renderers are the biggest gap |
-| Coverage gate margin    | Headroom  | 96.4% vs 94% threshold; adding code without tests erodes the 2.4pp margin    |
+| Live dashboard coverage | Below bar | 81.3% vs the 90% internal goal; templ fragment renderers are the biggest gap |
+| Coverage gate margin    | Headroom  | 95.2% vs 94% threshold; adding code without tests erodes the 1.2pp margin    |
 
 ---
 
@@ -252,4 +252,6 @@ The health-probe SDK has been extracted to its own standalone project: **[github
 
 ---
 
-_Last verified against the codebase on 2026-10-26. Coverage: 96.4% gate (root 96.4%, live 83.7%, testhelpers 91.8%; generated `*_templ.go` excluded)._
+_Last verified against the codebase on 2026-11-08. Coverage: 95.2% total non-example (root 94.9%, live 81.3%, testhelpers 91.3%, forward 94.9%; generated `*_templ.go` excluded)._
+
+_Coverage note: the 2026-11-08 clone-group cleanup shrank hand-rolled loops into shared helpers (`filterInto`, `setAllows`, `indexByKey`, `ServiceRefNames`) whose branches are exercised only indirectly through existing call-site tests; direct unit tests for the new helpers are tracked as follow-up work._
