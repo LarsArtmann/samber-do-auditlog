@@ -205,3 +205,14 @@ func (r ServiceRef) String() string {
 func (r ServiceRef) IsRoot() bool {
 	return r.ScopeName == "" || r.ScopeName == RootScopeName
 }
+
+// ServiceRefNames returns the service names of the given refs.
+func ServiceRefNames(refs []ServiceRef) []string {
+	names := make([]string, 0, len(refs))
+
+	for _, ref := range refs {
+		names = append(names, string(ref.ServiceName))
+	}
+
+	return names
+}
