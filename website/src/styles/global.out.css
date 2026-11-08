@@ -388,6 +388,9 @@
   .table {
     display: table;
   }
+  .table-row {
+    display: table-row;
+  }
   .h-2 {
     height: calc(var(--spacing) * 2);
   }
