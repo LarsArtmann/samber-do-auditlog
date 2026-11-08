@@ -162,7 +162,7 @@
 44. Add datastar adoption section to CHANGELOG.md
 45. ~~Write `docs/research/datastar-adoption.md` with lessons learned~~ done 2026-11-07: Won't implement 2026-11-07: conclusions live in the TODO_LIST CSP research row and code comments
 46. Update FEATURES.md with datastar dashboard features
-47. Document the datastar wire format in live/doc.go
+47. ~~Document the datastar wire format in live/doc.go~~ done 2026-11-08: live/doc.go Protocol section now documents datastar-patch-signals + datastar-patch-elements, snapshot-as-replay, burst coalescing, and the completion signal
 48. Add architecture diagram showing datastar event flow
 49. Update CONTRIBUTING.md with datastar dashboard development guide
 50. Consider contributing the datastar adoption pattern back to go-sse docs

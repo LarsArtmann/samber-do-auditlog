@@ -30,10 +30,12 @@
 //
 // The live server uses SSE (Server-Sent Events) for real-time communication:
 //
-//   - GET /            - Interactive dashboard HTML (static, cached)
-//   - GET /api/report  - Current report as JSON (point-in-time snapshot)
-//   - GET /api/events  - SSE stream (snapshot + live events + completion)
-//   - GET /api/health  - Health check
+//   - GET /                   - Interactive dashboard HTML (static, cached)
+//   - GET /api/report         - Current report as JSON (point-in-time snapshot)
+//   - GET /api/events         - SSE stream (snapshots + live updates, below)
+//   - GET /api/health         - Health check
+//   - GET /api/export/ndjson  - Full event stream as NDJSON
+//   - GET /api/export/html    - Self-contained static HTML report
 //
 // SSE was chosen over WebSocket because the data flow is one-way
 // (server to browser), SSE has native browser support via EventSource,
@@ -41,12 +43,23 @@
 //
 // # Protocol
 //
-// The SSE stream sends three named event types:
+// The dashboard is driven by Datastar (embedded, no build step): the server
+// renders templ fragments and ships them as SSE events that the client
+// runtime morphs into the DOM. The stream carries two named event types:
 //
-//   - snapshot: Initial state on connect (report + events + metadata + DAG)
-//   - event: Individual events as they fire during container lifecycle
-//   - complete: Final report with full DAG structure after completion
+//   - datastar-patch-signals: a JSON "signals" payload for client state
+//     (connStatus: connected|complete, complete, servicesOverflow,
+//     eventsOverflow)
+//   - datastar-patch-elements: an HTML fragment with "selector <css>" and
+//     "mode inner" directives; Datastar replaces the inner HTML of the
+//     matching element (tabs, stats, table rows, waveform, legend)
 //
-// Late clients receive the full state via the snapshot event, including all
-// events captured so far. After completion, new clients get the final report.
+// On connect the server sends one full snapshot (all fragments + signals).
+// Reconnecting clients that present a Last-Event-ID first receive a replay
+// of missed events, then a fresh full snapshot — the snapshot IS the replay.
+// During the lifecycle, event bursts are coalesced into a single re-render.
+// On container completion the server sends the final snapshot plus a
+// {"complete":true,"connStatus":"complete"} signal patch and closes the
+// stream. Periodic SSE heartbeats run for the lifetime of the connection
+// to keep proxies from closing it.
 package live

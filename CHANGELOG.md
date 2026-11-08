@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`live/doc.go` documented a wire protocol that no longer exists** — the Protocol section still described the pre-Datastar named events (`snapshot`/`event`/`complete`); the live dashboard actually ships `datastar-patch-signals` + `datastar-patch-elements` SSE events (server-rendered templ fragments morphed into the DOM by the embedded Datastar runtime). The Architecture route list was also missing `/api/export/ndjson` and `/api/export/html`. Both sections now match the implementation (an open item since the 2026-08-07 datastar migration review).
 - **Three godoc comments lost or detached in the 2026-11-07 file split** — `Plugin.Events`, `Report.ServiceByRef`, and `Forwarder.Enabled` shipped without their documentation comments on master (a blank line detached `ServiceByRef`'s; the other two were dropped outright), degrading pkg.go.dev output. All three restored; the exported API surface is again byte-identical to v0.12.2 (verified via `go doc -all` diff across `.`, `live`, `forward`, `testhelpers`: zero deltas).
 
 ### Changed
