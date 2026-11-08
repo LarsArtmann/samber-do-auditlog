@@ -116,6 +116,14 @@ func (scanner *jsStripper) emitBlank() {
 	scanner.lastCh = ' '
 }
 
+// endLiteral consumes a literal's closing delimiter and emits the blank
+// that replaces the literal in the stripped output.
+func (scanner *jsStripper) endLiteral() {
+	scanner.pos++
+
+	scanner.emitBlank()
+}
+
 func (scanner *jsStripper) skipLineComment() bool {
 	if scanner.at(scanner.pos) != '/' || scanner.at(scanner.pos+1) != '/' {
 		return false
@@ -201,9 +209,7 @@ func (scanner *jsStripper) skipQuoted(quote byte) bool {
 	scanner.pos++
 
 	scanner.advanceEscapedUntil(quote)
-	scanner.pos++ // closing quote
-
-	scanner.emitBlank()
+	scanner.endLiteral() // closing quote
 
 	return true
 }

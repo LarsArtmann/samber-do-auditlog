@@ -14,7 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Nothing yet.
+- **`ServiceRefNames(refs []ServiceRef) []string`** — returns the service names of the given refs, replacing three hand-rolled collect loops (static table cells, live dashboard fragments, example summary).
+
+### Changed
+
+- **Clone-group cleanup — internal refactor, zero behavior change.** The 2026-11-08 art-dupl audit eliminated every actionable clone family at the repo's `-t 3 --semantic` policy gate: shared generics `filterInto`/`indexByKey`/`setAllows` now back the report query methods, `Report.Filtered`, the diff index builders, and the filter predicates; the `jsStripper` state machine deduplicated its escape-scanning and literal-tail logic (`advanceEscapedUntil`/`emitBlank`/`endLiteral`); `NDJSONStreamer` centralizes its flush-error wrapping; map→slice collects use stdlib `slices.Collect(maps.Values(...))`; remaining groups are recorded as accepted in AGENTS.md (template markup and trivial cross-package accessors).
 
 ### Fixed
 
