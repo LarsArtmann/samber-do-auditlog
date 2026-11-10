@@ -88,8 +88,8 @@ github.com/larsartmann/go-output/testhelpers/graphtest v0.38.5 h1:ynYEtkHWtqh+F3
 github.com/larsartmann/go-output/testhelpers/graphtest v0.38.5/go.mod h1:kNkMg2CzD6EHn7APJLZEHh7KFgRtWGmtWeYkM+4GZ1c=
 github.com/larsartmann/go-output/tree v0.38.7 h1:NdmX+Ydxlz1JIt3DfIl2jngZp56x703y70zJ8eRaXJQ=
 github.com/larsartmann/go-output/tree v0.38.7/go.mod h1:ls6UUCL3oXG6YawQVZZIqwesA3W5fc/Bz08rDCNMD/Q=
-github.com/larsartmann/go-sse v0.6.2 h1:a1f/EnjhWlsNnxo0U1DygpYMy2XbUfyGBuKMWhwQg0U=
-github.com/larsartmann/go-sse v0.6.2/go.mod h1:PVVDLkzjkTR2MvqcqL3/XmWY8cdSUpEe8YWaouHVVz4=
+github.com/larsartmann/go-sse v0.7.0 h1:dLT0eBk5hrxfajew84MmFoWHnEZ1eZfokqzbaA9qxH0=
+github.com/larsartmann/go-sse v0.7.0/go.mod h1:ZsW88AQMBRy+ZEhCWl8FGyEoXcb/YwvwosKYQEDLgBs=
 github.com/larsartmann/go-sse/sseparse v0.2.1 h1:GHn8SFFZkMJRhLkmusJwtchgSPJV0/b5Keq6z3xop9k=
 github.com/larsartmann/go-sse/sseparse v0.2.1/go.mod h1:1Nql3y1hf9v/IVd4/26AfRilz0/OiDyF7YA2mvwwtHw=
 github.com/larsartmann/go-sse/ssetest v0.5.0 h1:6QQ9rURjqScKfkV8BmpNdoMSW5pxsNVs+ioLOqERS4k=
