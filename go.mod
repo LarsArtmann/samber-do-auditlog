@@ -26,7 +26,7 @@ require (
 	github.com/larsartmann/go-output/serialization v0.38.7
 	github.com/larsartmann/go-output/table v0.38.7
 	github.com/larsartmann/go-output/tree v0.38.7
-	github.com/larsartmann/go-sse v0.6.2
+	github.com/larsartmann/go-sse v0.7.0
 	github.com/larsartmann/go-sse/ssetest v0.5.0
 	github.com/samber/do/v2 v2.1.0
 )
